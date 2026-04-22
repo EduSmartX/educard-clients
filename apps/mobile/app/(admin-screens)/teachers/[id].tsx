@@ -45,7 +45,12 @@ export default function TeacherDetailScreen() {
       {teacher?.subjects?.length ? (
         <Animated.View entering={FadeInDown.delay(300)}>
           <DetailSection title="Subjects" icon="📚">
-            <ChipRow items={teacher.subjects.map((s) => ({ key: s.public_id, label: `${s.name}${s.code ? ` (${s.code})` : ''}` }))} />
+            <ChipRow
+              items={teacher.subjects.map((s) => ({
+                key: s.public_id,
+                label: `${s.name}${s.code ? ` (${s.code})` : ''}`,
+              }))}
+            />
           </DetailSection>
         </Animated.View>
       ) : null}

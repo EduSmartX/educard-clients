@@ -23,18 +23,12 @@ export function LoadingSpinner({
   const content = (
     <View className="items-center justify-center">
       <ActivityIndicator size={size} color={color} />
-      {text && (
-        <Text className="text-secondary-500 mt-3 text-sm">{text}</Text>
-      )}
+      {text && <Text className="mt-3 text-sm text-secondary-500">{text}</Text>}
     </View>
   );
 
   if (fullScreen) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white">
-        {content}
-      </View>
-    );
+    return <View className="flex-1 items-center justify-center bg-white">{content}</View>;
   }
 
   return content;

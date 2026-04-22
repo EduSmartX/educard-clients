@@ -5,14 +5,7 @@
  */
 
 import React from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  FlatList,
-  Image,
-  Animated as RNAnimated,
-} from 'react-native';
+import { View, Text, ScrollView, FlatList, Image, Animated as RNAnimated } from 'react-native';
 
 // Re-export plain View as Animated default
 const AnimatedView = RNAnimated.View;
@@ -58,12 +51,7 @@ const LinearTransition = createChainableAnimation();
 // Create a wrapper that strips reanimated-specific props (entering, exiting, layout)
 function createAnimatedComponent(BaseComponent: any) {
   return React.forwardRef((props: any, ref: any) => {
-    const {
-      entering,
-      exiting,
-      layout: layoutProp,
-      ...rest
-    } = props;
+    const { entering, exiting, layout: layoutProp, ...rest } = props;
     return <BaseComponent ref={ref} {...rest} />;
   });
 }
@@ -115,19 +103,11 @@ const Easing = {
 };
 
 // interpolate
-function interpolate(
-  value: number,
-  inputRange: number[],
-  outputRange: number[],
-) {
+function interpolate(value: number, inputRange: number[], outputRange: number[]) {
   // Simple linear interpolation
   if (inputRange.length < 2) return outputRange[0] ?? 0;
-  const ratio =
-    (value - inputRange[0]) / (inputRange[inputRange.length - 1] - inputRange[0]);
-  return (
-    outputRange[0] +
-    ratio * (outputRange[outputRange.length - 1] - outputRange[0])
-  );
+  const ratio = (value - inputRange[0]) / (inputRange[inputRange.length - 1] - inputRange[0]);
+  return outputRange[0] + ratio * (outputRange[outputRange.length - 1] - outputRange[0]);
 }
 
 // runOnJS / runOnUI - just call the function

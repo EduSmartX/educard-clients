@@ -81,13 +81,13 @@ export default function ManagementScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { data: profilePhoto } = useMyProfilePhoto();
-  
+
   // Fetch counts from API
   const { data: teachersData } = useTeachers({ page_size: 1 });
   const { data: studentsData } = useStudents({ page_size: 1 });
   const { data: classesData } = useClasses({ page_size: 1 });
   const { data: subjectsData } = useSubjects({ page_size: 1 });
-  
+
   // Build counts map
   const counts: Record<string, number | undefined> = {
     teachers: teachersData?.totalCount,
@@ -105,15 +105,15 @@ export default function ManagementScreen() {
       <LinearGradient colors={adminGradient} style={styles.header}>
         <Animated.View entering={FadeIn.delay(100)} style={styles.circle1} />
         <Animated.View entering={FadeIn.delay(200)} style={styles.circle2} />
-        
+
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
             <Text style={styles.headerTitle}>Management</Text>
             <Text style={styles.headerSubtitle}>Manage your organization</Text>
           </View>
-          
+
           {/* Profile */}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.profileButton}
             onPress={() => router.push('/(tabs)/(admin)/settings')}
           >
@@ -126,20 +126,20 @@ export default function ManagementScreen() {
         </View>
       </LinearGradient>
 
-      <ScrollView 
-        style={styles.content} 
+      <ScrollView
+        style={styles.content}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
         {/* Management Icons Grid - 3 per row with pastel backgrounds */}
         <Animated.View entering={FadeInDown.delay(200).duration(500)} style={styles.gridContainer}>
           {managementItemsConfig.map((item, index) => (
-            <Animated.View 
-              key={item.id} 
+            <Animated.View
+              key={item.id}
               entering={FadeInDown.delay(300 + index * 80).duration(400)}
               style={styles.gridItem}
             >
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.iconCard}
                 onPress={() => router.push(item.route as any)}
                 activeOpacity={0.8}
@@ -148,7 +148,9 @@ export default function ManagementScreen() {
                 <View style={[styles.iconCircle, { backgroundColor: item.bgColor }]}>
                   <item.icon size={28} color={item.iconColor} strokeWidth={2} />
                 </View>
-                <Text style={styles.iconLabel} numberOfLines={1}>{item.title}</Text>
+                <Text style={styles.iconLabel} numberOfLines={1}>
+                  {item.title}
+                </Text>
                 {counts[item.id] !== undefined && (
                   <View style={[styles.countBadge, { backgroundColor: item.bgColor }]}>
                     <Text style={[styles.iconCount, { color: item.iconColor }]}>

@@ -13,7 +13,17 @@ import {
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated';
-import { Mail, ArrowLeft, Send, CheckCircle, RefreshCw, KeyRound, Lock, Eye, EyeOff } from 'lucide-react-native';
+import {
+  Mail,
+  ArrowLeft,
+  Send,
+  CheckCircle,
+  RefreshCw,
+  KeyRound,
+  Lock,
+  Eye,
+  EyeOff,
+} from 'lucide-react-native';
 import { authApi } from '@/api/auth';
 import { otpApi } from '@/api/otp';
 import { Colors } from '@educard/shared';
@@ -31,7 +41,7 @@ export default function ForgotPasswordScreen() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
-  
+
   const otpRefs = useRef<(TextInput | null)[]>([]);
 
   const handleSendOTP = useCallback(async () => {
@@ -76,14 +86,14 @@ export default function ForgotPasswordScreen() {
     setIsLoading(true);
     try {
       const otpCode = otp.join('');
-      await authApi.verifyPasswordResetOtp({ 
-        email: email.trim(), 
-        otp: otpCode, 
+      await authApi.verifyPasswordResetOtp({
+        email: email.trim(),
+        otp: otpCode,
         new_password: newPassword,
-        confirm_password: confirmPassword 
+        confirm_password: confirmPassword,
       });
       Alert.alert('Success', 'Password reset successfully', [
-        { text: 'OK', onPress: () => router.replace('/(auth)/login') }
+        { text: 'OK', onPress: () => router.replace('/(auth)/login') },
       ]);
     } catch (error) {
       Alert.alert('Error', error instanceof Error ? error.message : 'Failed to reset password');
@@ -99,7 +109,7 @@ export default function ForgotPasswordScreen() {
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
-    
+
     if (value && index < 5) {
       otpRefs.current[index + 1]?.focus();
     }
@@ -128,8 +138,14 @@ export default function ForgotPasswordScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient colors={['#f97316', '#ea580c', '#dc2626']} style={styles.gradientBg} />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.flex}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
               <ArrowLeft size={24} color="#fff" />
@@ -143,8 +159,13 @@ export default function ForgotPasswordScreen() {
           <Animated.View entering={FadeInUp.delay(200).duration(600)} style={styles.formCard}>
             <View style={styles.inputWrapper}>
               <Text style={styles.inputLabel}>Email Address</Text>
-              <View style={[styles.inputContainer, focusedInput === 'email' && styles.inputFocused]}>
-                <Mail size={20} color={focusedInput === 'email' ? Colors.primary[500] : Colors.gray[400]} />
+              <View
+                style={[styles.inputContainer, focusedInput === 'email' && styles.inputFocused]}
+              >
+                <Mail
+                  size={20}
+                  color={focusedInput === 'email' ? Colors.primary[500] : Colors.gray[400]}
+                />
                 <TextInput
                   style={styles.input}
                   placeholder="Enter your email"
@@ -158,7 +179,11 @@ export default function ForgotPasswordScreen() {
                 />
               </View>
             </View>
-            <TouchableOpacity onPress={handleSendOTP} disabled={isLoading} style={styles.sendButton}>
+            <TouchableOpacity
+              onPress={handleSendOTP}
+              disabled={isLoading}
+              style={styles.sendButton}
+            >
               <LinearGradient colors={['#f97316', '#ea580c']} style={styles.sendGradient}>
                 <Send size={20} color="#fff" />
                 <Text style={styles.sendButtonText}>{isLoading ? 'Sending...' : 'Send OTP'}</Text>
@@ -181,30 +206,101 @@ const styles = StyleSheet.create({
   gradientBg: { position: 'absolute', top: 0, left: 0, right: 0, height: '50%' },
   scrollContent: { flexGrow: 1, paddingBottom: 40 },
   header: { paddingTop: 50, paddingHorizontal: 24, paddingBottom: 32, alignItems: 'center' },
-  backButton: { position: 'absolute', top: 50, left: 24, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
-  iconGradient: { width: 72, height: 72, borderRadius: 24, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconGradient: {
+    width: 72,
+    height: 72,
+    borderRadius: 24,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
   headerTitle: { fontSize: 28, fontWeight: '800', color: '#ffffff', marginBottom: 8 },
   headerSubtitle: { fontSize: 15, color: 'rgba(255,255,255,0.9)' },
-  formCard: { backgroundColor: '#ffffff', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 28, flex: 1 },
+  formCard: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    padding: 28,
+    flex: 1,
+  },
   inputWrapper: { marginBottom: 24 },
   inputLabel: { fontSize: 14, fontWeight: '600', color: Colors.gray[700], marginBottom: 8 },
-  inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.gray[50], borderRadius: 16, borderWidth: 2, borderColor: Colors.gray[100], paddingHorizontal: 16, height: 56, gap: 12 },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.gray[50],
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: Colors.gray[100],
+    paddingHorizontal: 16,
+    height: 56,
+    gap: 12,
+  },
   inputFocused: { borderColor: Colors.primary[500], backgroundColor: '#fff' },
   input: { flex: 1, fontSize: 16, color: Colors.gray[900] },
   sendButton: { borderRadius: 16, overflow: 'hidden' },
-  sendGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 18, gap: 10 },
+  sendGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 18,
+    gap: 10,
+  },
   sendButtonText: { fontSize: 17, fontWeight: '700', color: '#ffffff' },
-  backLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 24, gap: 8 },
+  backLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 24,
+    gap: 8,
+  },
   backLinkText: { fontSize: 15, color: Colors.gray[600], fontWeight: '500' },
   successContainer: { flex: 1, justifyContent: 'center', paddingHorizontal: 24 },
-  successContent: { backgroundColor: '#ffffff', borderRadius: 28, padding: 32, alignItems: 'center' },
-  successIconGradient: { width: 96, height: 96, borderRadius: 48, backgroundColor: '#f0fdf4', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
+  successContent: {
+    backgroundColor: '#ffffff',
+    borderRadius: 28,
+    padding: 32,
+    alignItems: 'center',
+  },
+  successIconGradient: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: '#f0fdf4',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
   successTitle: { fontSize: 24, fontWeight: '800', color: Colors.gray[900], marginBottom: 8 },
   successSubtitle: { fontSize: 15, color: Colors.gray[500] },
-  emailText: { fontSize: 16, fontWeight: '600', color: Colors.primary[600], marginTop: 4, marginBottom: 24 },
+  emailText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.primary[600],
+    marginTop: 4,
+    marginBottom: 24,
+  },
   resendButton: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20 },
   resendText: { fontSize: 14, color: Colors.primary[600], fontWeight: '600' },
   backToLoginButton: { borderRadius: 16, overflow: 'hidden', width: '100%' },
-  backToLoginGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, gap: 10 },
+  backToLoginGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    gap: 10,
+  },
   backToLoginText: { fontSize: 16, fontWeight: '700', color: '#ffffff' },
 });

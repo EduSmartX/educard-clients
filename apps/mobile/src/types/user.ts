@@ -35,7 +35,7 @@ export interface AuthTokens {
 }
 
 export interface LoginCredentials {
-  username: string;  // Can be email or username
+  username: string; // Can be email or username
   password: string;
 }
 

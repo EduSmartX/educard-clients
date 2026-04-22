@@ -4,15 +4,9 @@
  */
 
 import { FilterField } from './FilterModal';
-import {
-  makeDeletedToggle,
-  getDeletedLabel,
-  type FilterLabel,
-} from './SharedFilterFields';
+import { makeDeletedToggle, getDeletedLabel, type FilterLabel } from './SharedFilterFields';
 
-export const CLASS_FILTER_FIELDS: FilterField[] = [
-  makeDeletedToggle('classes'),
-];
+export const CLASS_FILTER_FIELDS: FilterField[] = [makeDeletedToggle('classes')];
 
 export function getClassFilterLabels(filters: Record<string, any>): FilterLabel[] {
   const result: FilterLabel[] = [];

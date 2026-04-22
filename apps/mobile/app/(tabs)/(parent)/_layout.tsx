@@ -63,9 +63,7 @@ export default function ParentTabLayout() {
         name="attendance"
         options={{
           title: 'Attendance',
-          tabBarIcon: ({ color, size }) => (
-            <Calendar size={size} color={color} strokeWidth={1.5} />
-          ),
+          tabBarIcon: ({ color, size }) => <Calendar size={size} color={color} strokeWidth={1.5} />,
         }}
       />
       <Tabs.Screen
@@ -81,9 +79,7 @@ export default function ParentTabLayout() {
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: ({ color, size }) => (
-            <Settings size={size} color={color} strokeWidth={1.5} />
-          ),
+          tabBarIcon: ({ color, size }) => <Settings size={size} color={color} strokeWidth={1.5} />,
         }}
       />
     </Tabs>

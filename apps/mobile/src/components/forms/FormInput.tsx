@@ -16,7 +16,16 @@ interface FormInputProps extends TextInputProps {
   onBlurValidate?: () => void;
 }
 
-export function FormInput({ label, error, required, hint, style, onBlurValidate, onBlur, ...props }: FormInputProps) {
+export function FormInput({
+  label,
+  error,
+  required,
+  hint,
+  style,
+  onBlurValidate,
+  onBlur,
+  ...props
+}: FormInputProps) {
   const [focused, setFocused] = useState(false);
 
   const handleBlur = (e: any) => {
@@ -33,7 +42,13 @@ export function FormInput({ label, error, required, hint, style, onBlurValidate,
         {label}
         {required && <Text style={styles.required}> *</Text>}
       </Text>
-      <View style={[styles.inputWrapper, hasError && styles.inputWrapperError, focused && !hasError && styles.inputWrapperFocused]}>
+      <View
+        style={[
+          styles.inputWrapper,
+          hasError && styles.inputWrapperError,
+          focused && !hasError && styles.inputWrapperFocused,
+        ]}
+      >
         <TextInput
           style={[styles.input, style]}
           placeholderTextColor="#94a3b8"

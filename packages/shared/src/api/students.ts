@@ -2,14 +2,19 @@
  * Shared API - Students
  */
 
-import type { AxiosInstance } from 'axios';
-import type { ApiResponse, PaginatedResponse, PaginationParams, Student } from '../types';
+import type { AxiosInstance } from "axios";
+import type {
+  ApiResponse,
+  PaginatedResponse,
+  PaginationParams,
+  Student,
+} from "../types";
 
 export interface CreateStudentData {
   admission_number: string;
   name: string;
   date_of_birth: string;
-  gender: 'male' | 'female' | 'other';
+  gender: "male" | "female" | "other";
   class_id: string;
   section?: string;
   roll_number?: string;
@@ -32,8 +37,13 @@ export function createStudentsApi(client: AxiosInstance) {
     /**
      * Get all students with pagination
      */
-    getAll: async (params?: PaginationParams): Promise<PaginatedResponse<Student>> => {
-      const response = await client.get<PaginatedResponse<Student>>('/students/', { params });
+    getAll: async (
+      params?: PaginationParams,
+    ): Promise<PaginatedResponse<Student>> => {
+      const response = await client.get<PaginatedResponse<Student>>(
+        "/students/",
+        { params },
+      );
       return response.data;
     },
 
@@ -41,7 +51,9 @@ export function createStudentsApi(client: AxiosInstance) {
      * Get a single student by ID
      */
     getById: async (id: string): Promise<Student> => {
-      const response = await client.get<ApiResponse<Student>>(`/students/${id}/`);
+      const response = await client.get<ApiResponse<Student>>(
+        `/students/${id}/`,
+      );
       return response.data.data;
     },
 
@@ -49,7 +61,10 @@ export function createStudentsApi(client: AxiosInstance) {
      * Create a new student
      */
     create: async (data: CreateStudentData): Promise<Student> => {
-      const response = await client.post<ApiResponse<Student>>('/students/', data);
+      const response = await client.post<ApiResponse<Student>>(
+        "/students/",
+        data,
+      );
       return response.data.data;
     },
 
@@ -57,7 +72,10 @@ export function createStudentsApi(client: AxiosInstance) {
      * Update a student
      */
     update: async (id: string, data: UpdateStudentData): Promise<Student> => {
-      const response = await client.patch<ApiResponse<Student>>(`/students/${id}/`, data);
+      const response = await client.patch<ApiResponse<Student>>(
+        `/students/${id}/`,
+        data,
+      );
       return response.data.data;
     },
 
@@ -71,8 +89,14 @@ export function createStudentsApi(client: AxiosInstance) {
     /**
      * Get students by class
      */
-    getByClass: async (classId: string, params?: PaginationParams): Promise<PaginatedResponse<Student>> => {
-      const response = await client.get<PaginatedResponse<Student>>(`/classes/${classId}/students/`, { params });
+    getByClass: async (
+      classId: string,
+      params?: PaginationParams,
+    ): Promise<PaginatedResponse<Student>> => {
+      const response = await client.get<PaginatedResponse<Student>>(
+        `/classes/${classId}/students/`,
+        { params },
+      );
       return response.data;
     },
 
@@ -80,17 +104,25 @@ export function createStudentsApi(client: AxiosInstance) {
      * Get students by parent
      */
     getByParent: async (parentId: string): Promise<Student[]> => {
-      const response = await client.get<ApiResponse<Student[]>>(`/parents/${parentId}/children/`);
+      const response = await client.get<ApiResponse<Student[]>>(
+        `/parents/${parentId}/children/`,
+      );
       return response.data.data;
     },
 
     /**
      * Search students
      */
-    search: async (query: string, params?: PaginationParams): Promise<PaginatedResponse<Student>> => {
-      const response = await client.get<PaginatedResponse<Student>>('/students/', {
-        params: { ...params, search: query },
-      });
+    search: async (
+      query: string,
+      params?: PaginationParams,
+    ): Promise<PaginatedResponse<Student>> => {
+      const response = await client.get<PaginatedResponse<Student>>(
+        "/students/",
+        {
+          params: { ...params, search: query },
+        },
+      );
       return response.data;
     },
   };

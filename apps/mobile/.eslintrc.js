@@ -17,7 +17,7 @@ module.exports = {
   rules: {
     // Console - only warn and error allowed
     'no-console': ['error', { allow: ['warn', 'error'] }],
-    
+
     // TypeScript
     '@typescript-eslint/no-explicit-any': 'error',
     '@typescript-eslint/explicit-function-return-type': 'off',
@@ -26,25 +26,18 @@ module.exports = {
     '@typescript-eslint/no-non-null-assertion': 'warn',
     '@typescript-eslint/prefer-nullish-coalescing': 'error',
     '@typescript-eslint/prefer-optional-chain': 'error',
-    
+
     // React
     'react/prop-types': 'off',
     'react/react-in-jsx-scope': 'off',
     'react-hooks/rules-of-hooks': 'error',
     'react-hooks/exhaustive-deps': 'error',
-    
+
     // Import
     'import/order': [
       'error',
       {
-        groups: [
-          'builtin',
-          'external',
-          'internal',
-          'parent',
-          'sibling',
-          'index',
-        ],
+        groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
         'newlines-between': 'always',
         alphabetize: {
           order: 'asc',
@@ -53,7 +46,7 @@ module.exports = {
       },
     ],
     'import/no-duplicates': 'error',
-    
+
     // Prettier
     'prettier/prettier': 'error',
   },

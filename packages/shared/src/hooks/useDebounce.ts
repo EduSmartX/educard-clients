@@ -3,7 +3,7 @@
  * Debounces a value for a specified delay
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from "react";
 
 /**
  * Debounce a value by a specified delay
@@ -33,11 +33,11 @@ export function useDebounce<T>(value: T, delay: number = 500): T {
  */
 export function useDebouncedCallback<T extends (...args: any[]) => any>(
   callback: T,
-  delay: number = 500
+  delay: number = 500,
 ): T {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const callbackRef = useRef(callback);
-  
+
   // Update callback ref when callback changes
   useEffect(() => {
     callbackRef.current = callback;
@@ -53,7 +53,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
         callbackRef.current(...args);
       }, delay);
     }) as T,
-    [delay]
+    [delay],
   );
 
   // Cleanup on unmount

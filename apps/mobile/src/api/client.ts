@@ -9,7 +9,13 @@ import { router } from 'expo-router';
 
 import { API_CONFIG, STORAGE_KEYS } from '@/constants/config';
 // Use shared error handler
-export { parseApiError, parseError, getErrorMessage, getFieldErrors, isValidationError } from '@educard/shared';
+export {
+  parseApiError,
+  parseError,
+  getErrorMessage,
+  getFieldErrors,
+  isValidationError,
+} from '@educard/shared';
 
 /** Default page size for all paginated API calls */
 export const DEFAULT_PAGE_SIZE = API_CONFIG.DEFAULT_PAGE_SIZE;
@@ -46,11 +52,12 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
     // Skip token refresh for auth endpoints (login, register, etc.)
-    const isAuthEndpoint = originalRequest.url?.includes('/auth/login') || 
-                          originalRequest.url?.includes('/auth/register') ||
-                          originalRequest.url?.includes('/auth/token') ||
-                          originalRequest.url?.includes('/organizations/register') ||
-                          originalRequest.url?.includes('/organizations/otp');
+    const isAuthEndpoint =
+      originalRequest.url?.includes('/auth/login') ||
+      originalRequest.url?.includes('/auth/register') ||
+      originalRequest.url?.includes('/auth/token') ||
+      originalRequest.url?.includes('/organizations/register') ||
+      originalRequest.url?.includes('/organizations/otp');
 
     // Handle 401 - Token expired (but not for auth endpoints)
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
@@ -58,7 +65,7 @@ apiClient.interceptors.response.use(
 
       try {
         const refreshToken = await SecureStore.getItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
-        
+
         if (!refreshToken) {
           // No refresh token - redirect to login
           await clearAuthTokens();
@@ -72,7 +79,7 @@ apiClient.interceptors.response.use(
         });
 
         const { access } = response.data;
-        
+
         // Store new access token
         await SecureStore.setItemAsync(STORAGE_KEYS.ACCESS_TOKEN, access);
 
@@ -80,7 +87,7 @@ apiClient.interceptors.response.use(
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${access}`;
         }
-        
+
         return apiClient(originalRequest);
       } catch (refreshError) {
         // Clear tokens and redirect to login

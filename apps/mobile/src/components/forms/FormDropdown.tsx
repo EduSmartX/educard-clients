@@ -50,9 +50,10 @@ export function FormDropdown({
   const [search, setSearch] = useState('');
 
   const selectedLabel = options.find((o) => o.value === value)?.label;
-  const filtered = searchable && search
-    ? options.filter((o) => o.label.toLowerCase().includes(search.toLowerCase()))
-    : options;
+  const filtered =
+    searchable && search
+      ? options.filter((o) => o.label.toLowerCase().includes(search.toLowerCase()))
+      : options;
 
   const handleSelect = (val: string) => {
     onChange(val);
@@ -88,7 +89,12 @@ export function FormDropdown({
           <View style={styles.modal}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{label}</Text>
-              <TouchableOpacity onPress={() => { setVisible(false); setSearch(''); }}>
+              <TouchableOpacity
+                onPress={() => {
+                  setVisible(false);
+                  setSearch('');
+                }}
+              >
                 <X size={24} color="#64748b" />
               </TouchableOpacity>
             </View>
@@ -124,15 +130,17 @@ export function FormDropdown({
                   </TouchableOpacity>
                 );
               }}
-              ListEmptyComponent={
-                <Text style={styles.empty}>No options found</Text>
-              }
+              ListEmptyComponent={<Text style={styles.empty}>No options found</Text>}
             />
 
             {value ? (
               <TouchableOpacity
                 style={styles.clearBtn}
-                onPress={() => { onChange(''); setVisible(false); setSearch(''); }}
+                onPress={() => {
+                  onChange('');
+                  setVisible(false);
+                  setSearch('');
+                }}
               >
                 <Text style={styles.clearText}>Clear Selection</Text>
               </TouchableOpacity>
@@ -207,6 +215,13 @@ const styles = StyleSheet.create({
   optionText: { fontSize: 15, color: '#334155' },
   optionTextSelected: { color: '#7c3aed', fontWeight: '600' },
   empty: { padding: 24, textAlign: 'center', color: '#94a3b8', fontSize: 15 },
-  clearBtn: { marginHorizontal: 16, marginTop: 8, padding: 12, alignItems: 'center', borderRadius: 10, backgroundColor: '#fef2f2' },
+  clearBtn: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    padding: 12,
+    alignItems: 'center',
+    borderRadius: 10,
+    backgroundColor: '#fef2f2',
+  },
   clearText: { color: '#ef4444', fontWeight: '600', fontSize: 14 },
 });

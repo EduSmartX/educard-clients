@@ -4,48 +4,56 @@
  * Used by both Web and Mobile applications
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 // ============================================================================
 // Reusable Field Validators
 // ============================================================================
 
 const requiredString = (label: string) =>
-  z.string({ required_error: `${label} is required` })
+  z
+    .string({ required_error: `${label} is required` })
     .min(1, `${label} is required`);
 
-const optionalString = () =>
-  z.string().optional().or(z.literal(''));
+const optionalString = () => z.string().optional().or(z.literal(""));
 
-const emailField = (label = 'Email') =>
-  z.string()
+const emailField = (label = "Email") =>
+  z
+    .string()
     .min(1, `${label} is required`)
-    .email('Please enter a valid email address');
+    .email("Please enter a valid email address");
 
 const optionalEmail = () =>
-  z.string()
-    .email('Please enter a valid email address')
+  z
+    .string()
+    .email("Please enter a valid email address")
     .optional()
-    .or(z.literal(''));
+    .or(z.literal(""));
 
-const phoneField = (label = 'Phone') =>
-  z.string()
+const phoneField = (label = "Phone") =>
+  z
+    .string()
     .regex(/^[6-9]\d{9}$/, `${label} must be a valid 10-digit mobile number`)
     .optional()
-    .or(z.literal(''));
+    .or(z.literal(""));
 
 const optionalDate = () =>
-  z.string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format')
+  z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format")
     .optional()
-    .or(z.literal(''));
+    .or(z.literal(""));
 
 const genderField = () =>
-  z.enum(['M', 'F', 'O'], { errorMap: () => ({ message: 'Please select a gender' }) });
+  z.enum(["M", "F", "O"], {
+    errorMap: () => ({ message: "Please select a gender" }),
+  });
 
 const requiredGender = () =>
-  z.string().min(1, 'Gender is required')
-    .refine((v) => ['M', 'F', 'O'].includes(v), 'Please select a valid gender');
+  z
+    .string()
+    .min(1, "Gender is required")
+    .refine((v) => ["M", "F", "O"].includes(v), "Please select a valid gender");
 
 // ============================================================================
 // TEACHER Form Schemas
@@ -53,34 +61,38 @@ const requiredGender = () =>
 
 /** Quick-add teacher: only required fields */
 export const teacherQuickSchema = z.object({
-  employee_id: requiredString('Employee ID'),
-  email: emailField('Email'),
-  first_name: requiredString('First name').min(2, 'First name must be at least 2 characters'),
-  last_name: requiredString('Last name'),
+  employee_id: requiredString("Employee ID"),
+  email: emailField("Email"),
+  first_name: requiredString("First name").min(
+    2,
+    "First name must be at least 2 characters",
+  ),
+  last_name: requiredString("Last name"),
   gender: requiredGender(),
 });
 
 /** Full teacher form: all fields */
 export const teacherFullSchema = teacherQuickSchema.extend({
   organization_role: optionalString(),
-  phone: phoneField('Phone'),
+  phone: phoneField("Phone"),
   blood_group: optionalString(),
   date_of_birth: optionalDate(),
   designation: optionalString(),
   highest_qualification: optionalString(),
   specialization: optionalString(),
-  experience_years: z.string()
+  experience_years: z
+    .string()
     .refine((v) => {
-      if (!v || v === '') return true;
+      if (!v || v === "") return true;
       const n = Number(v);
       return !isNaN(n) && n >= 0 && n <= 70;
-    }, 'Experience must be between 0 and 70')
+    }, "Experience must be between 0 and 70")
     .optional()
-    .or(z.literal('')),
+    .or(z.literal("")),
   supervisor_email: optionalEmail(),
   joining_date: optionalDate(),
   emergency_contact_name: optionalString(),
-  emergency_contact_number: phoneField('Emergency contact'),
+  emergency_contact_number: phoneField("Emergency contact"),
   street_address: optionalString(),
   city: optionalString(),
   state: optionalString(),
@@ -94,29 +106,32 @@ export const teacherFullSchema = teacherQuickSchema.extend({
 
 /** Quick-add student: only required fields */
 export const studentQuickSchema = z.object({
-  class_id: requiredString('Class'),
-  first_name: requiredString('First name').min(2, 'First name must be at least 2 characters'),
-  last_name: requiredString('Last name'),
-  roll_number: requiredString('Roll number'),
+  class_id: requiredString("Class"),
+  first_name: requiredString("First name").min(
+    2,
+    "First name must be at least 2 characters",
+  ),
+  last_name: requiredString("Last name"),
+  roll_number: requiredString("Roll number"),
 });
 
 /** Full student form: all fields */
 export const studentFullSchema = studentQuickSchema.extend({
   email: optionalEmail(),
-  phone: phoneField('Phone'),
+  phone: phoneField("Phone"),
   gender: optionalString(),
   blood_group: optionalString(),
   date_of_birth: optionalDate(),
   admission_number: optionalString(),
   admission_date: optionalDate(),
   guardian_name: optionalString(),
-  guardian_phone: phoneField('Guardian phone'),
+  guardian_phone: phoneField("Guardian phone"),
   guardian_email: optionalEmail(),
   guardian_relationship: optionalString(),
   medical_conditions: optionalString(),
   description: optionalString(),
   emergency_contact_name: optionalString(),
-  emergency_contact_phone: phoneField('Emergency contact'),
+  emergency_contact_phone: phoneField("Emergency contact"),
   previous_school_name: optionalString(),
   previous_school_class: optionalString(),
   previous_school_address: optionalString(),
@@ -132,16 +147,17 @@ export const studentFullSchema = studentQuickSchema.extend({
 // ============================================================================
 
 export const classFormSchema = z.object({
-  class_master: requiredString('Class'),
-  name: requiredString('Section name'),
-  capacity: z.string()
+  class_master: requiredString("Class"),
+  name: requiredString("Section name"),
+  capacity: z
+    .string()
     .refine((v) => {
-      if (!v || v === '') return true;
+      if (!v || v === "") return true;
       const n = Number(v);
       return !isNaN(n) && n >= 1 && n <= 500;
-    }, 'Capacity must be between 1 and 500')
+    }, "Capacity must be between 1 and 500")
     .optional()
-    .or(z.literal('')),
+    .or(z.literal("")),
   class_teacher_id: optionalString(),
   room_number: optionalString(),
   info: optionalString(),
@@ -152,8 +168,8 @@ export const classFormSchema = z.object({
 // ============================================================================
 
 export const subjectFormSchema = z.object({
-  class_id: requiredString('Class'),
-  subject_id: requiredString('Subject'),
+  class_id: requiredString("Class"),
+  subject_id: requiredString("Subject"),
   teacher_id: optionalString(),
   description: optionalString(),
 });

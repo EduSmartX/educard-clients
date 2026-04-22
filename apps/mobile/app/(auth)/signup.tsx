@@ -27,7 +27,14 @@ import {
   EyeOff,
   Phone,
 } from 'lucide-react-native';
-import { Colors, APP_INFO, ORGANIZATION_TYPES, BOARD_AFFILIATIONS, SIGNUP_STEP_LABELS, SIGNUP_STEP_TITLES } from '@educard/shared';
+import {
+  Colors,
+  APP_INFO,
+  ORGANIZATION_TYPES,
+  BOARD_AFFILIATIONS,
+  SIGNUP_STEP_LABELS,
+  SIGNUP_STEP_TITLES,
+} from '@educard/shared';
 import type { SignupStep } from '@educard/shared';
 import { useModal } from '@/components/ui';
 import { sendOtps, verifyOtp, parseApiError, registerOrganization } from '@/api';
@@ -67,7 +74,7 @@ export default function SignupScreen() {
 
   // Helper to update address fields
   const handleAddressChange = useCallback((field: keyof AddressData, value: string) => {
-    setOrgAddress(prev => ({ ...prev, [field]: value }));
+    setOrgAddress((prev) => ({ ...prev, [field]: value }));
   }, []);
 
   // Step 4: Admin Details
@@ -102,28 +109,30 @@ export default function SignupScreen() {
         ? [{ email: adminEmail, category: 'admin' as const, purpose: 'organization_registration' }]
         : [
             { email: adminEmail, category: 'admin' as const, purpose: 'organization_registration' },
-            { email: orgEmail, category: 'organization' as const, purpose: 'organization_registration' },
+            {
+              email: orgEmail,
+              category: 'organization' as const,
+              purpose: 'organization_registration',
+            },
           ];
 
       // Call API to send OTPs
       const response = await sendOtps(emailsToSend);
-      
+
       if (!response.all_success) {
         // Check for individual failures
-        const failedEmail = response.results.find(r => !r.success);
+        const failedEmail = response.results.find((r) => !r.success);
         modal.error('Error', failedEmail?.message || 'Failed to send verification codes');
         return;
       }
-      
+
       if (useSameEmail) {
         setOrgEmail(adminEmail);
       }
-      
+
       modal.success(
         'Verification Codes Sent',
-        useSameEmail
-          ? `Code sent to ${adminEmail}`
-          : `Codes sent to ${adminEmail} and ${orgEmail}`,
+        useSameEmail ? `Code sent to ${adminEmail}` : `Codes sent to ${adminEmail} and ${orgEmail}`,
         () => setCurrentStep(2)
       );
     } catch (error) {
@@ -145,12 +154,12 @@ export default function SignupScreen() {
     try {
       // Call API to verify OTP
       const response = await verifyOtp(adminEmail, adminOtp, 'organization_registration');
-      
+
       if (!response.success) {
         modal.error('Error', response.message || 'Invalid verification code');
         return;
       }
-      
+
       setAdminOtpVerified(true);
       if (useSameEmail) {
         setOrgOtpVerified(true);
@@ -174,12 +183,12 @@ export default function SignupScreen() {
     try {
       // Call API to verify OTP
       const response = await verifyOtp(orgEmail, orgOtp, 'organization_registration');
-      
+
       if (!response.success) {
         modal.error('Error', response.message || 'Invalid verification code');
         return;
       }
-      
+
       setOrgOtpVerified(true);
       modal.success('Success', 'Organization email verified!');
     } catch (error) {
@@ -250,7 +259,8 @@ export default function SignupScreen() {
       };
 
       // Add address info if any field is filled
-      const hasAddress = orgAddress.streetAddress || orgAddress.city || orgAddress.state || orgAddress.zipCode;
+      const hasAddress =
+        orgAddress.streetAddress || orgAddress.city || orgAddress.state || orgAddress.zipCode;
       if (hasAddress) {
         registrationData.address_info = {
           street_address: orgAddress.streetAddress || '',
@@ -264,7 +274,7 @@ export default function SignupScreen() {
 
       // Call the registration API
       const response = await registerOrganization(registrationData);
-      
+
       if (response.success) {
         modal.success(
           'Registration Submitted! 🎉',
@@ -276,15 +286,29 @@ export default function SignupScreen() {
       }
     } catch (error) {
       const apiError = parseApiError(error);
-      modal.error('Registration Failed', apiError.message || 'Something went wrong. Please try again.');
+      modal.error(
+        'Registration Failed',
+        apiError.message || 'Something went wrong. Please try again.'
+      );
     } finally {
       setIsLoading(false);
     }
   }, [
-    firstName, lastName, password, confirmPassword, 
-    orgName, orgType, orgEmail, orgPhone, boardAffiliation, orgAddress,
-    adminEmail, useSameEmail, phoneNumber,
-    router, modal
+    firstName,
+    lastName,
+    password,
+    confirmPassword,
+    orgName,
+    orgType,
+    orgEmail,
+    orgPhone,
+    boardAffiliation,
+    orgAddress,
+    adminEmail,
+    useSameEmail,
+    phoneNumber,
+    router,
+    modal,
   ]);
 
   const goBack = () => {
@@ -316,16 +340,19 @@ export default function SignupScreen() {
                 {isCompleted ? (
                   <CheckCircle2 size={16} color="#fff" />
                 ) : (
-                  <Text style={[styles.stepNumber, (isCompleted || isCurrent) && styles.stepNumberActive]}>
+                  <Text
+                    style={[
+                      styles.stepNumber,
+                      (isCompleted || isCurrent) && styles.stepNumberActive,
+                    ]}
+                  >
                     {step}
                   </Text>
                 )}
               </View>
               <Text style={[styles.stepLabel, isCurrent && styles.stepLabelActive]}>{title}</Text>
             </View>
-            {idx < 3 && (
-              <View style={[styles.stepLine, isCompleted && styles.stepLineCompleted]} />
-            )}
+            {idx < 3 && <View style={[styles.stepLine, isCompleted && styles.stepLineCompleted]} />}
           </View>
         );
       })}
@@ -355,7 +382,10 @@ export default function SignupScreen() {
       <View style={styles.inputWrapper}>
         <Text style={styles.inputLabel}>Administrator Email *</Text>
         <View style={[styles.inputContainer, focusedInput === 'adminEmail' && styles.inputFocused]}>
-          <Mail size={20} color={focusedInput === 'adminEmail' ? Colors.primary[500] : Colors.gray[400]} />
+          <Mail
+            size={20}
+            color={focusedInput === 'adminEmail' ? Colors.primary[500] : Colors.gray[400]}
+          />
           <TextInput
             style={styles.input}
             placeholder="admin@yourschool.edu"
@@ -389,7 +419,10 @@ export default function SignupScreen() {
         <View style={styles.inputWrapper}>
           <Text style={styles.inputLabel}>Organization Email *</Text>
           <View style={[styles.inputContainer, focusedInput === 'orgEmail' && styles.inputFocused]}>
-            <Building2 size={20} color={focusedInput === 'orgEmail' ? Colors.primary[500] : Colors.gray[400]} />
+            <Building2
+              size={20}
+              color={focusedInput === 'orgEmail' ? Colors.primary[500] : Colors.gray[400]}
+            />
             <TextInput
               style={styles.input}
               placeholder="contact@yourschool.edu"
@@ -407,7 +440,10 @@ export default function SignupScreen() {
 
       {/* Action Buttons */}
       <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.secondaryButton} onPress={() => router.replace('/(auth)/login')}>
+        <TouchableOpacity
+          style={styles.secondaryButton}
+          onPress={() => router.replace('/(auth)/login')}
+        >
           <ArrowLeft size={20} color={Colors.gray[600]} />
           <Text style={styles.secondaryButtonText}>Login</Text>
         </TouchableOpacity>
@@ -510,7 +546,11 @@ export default function SignupScreen() {
           <Text style={styles.secondaryButtonText}>Back</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.primaryButton, !(useSameEmail ? adminOtpVerified : adminOtpVerified && orgOtpVerified) && styles.buttonDisabled]}
+          style={[
+            styles.primaryButton,
+            !(useSameEmail ? adminOtpVerified : adminOtpVerified && orgOtpVerified) &&
+              styles.buttonDisabled,
+          ]}
           onPress={handleStep2Submit}
           disabled={!(useSameEmail ? adminOtpVerified : adminOtpVerified && orgOtpVerified)}
         >
@@ -528,7 +568,10 @@ export default function SignupScreen() {
       <View style={styles.inputWrapper}>
         <Text style={styles.inputLabel}>Organization Name *</Text>
         <View style={[styles.inputContainer, focusedInput === 'orgName' && styles.inputFocused]}>
-          <Building2 size={20} color={focusedInput === 'orgName' ? Colors.primary[500] : Colors.gray[400]} />
+          <Building2
+            size={20}
+            color={focusedInput === 'orgName' ? Colors.primary[500] : Colors.gray[400]}
+          />
           <TextInput
             style={styles.input}
             placeholder="ABC International School"
@@ -551,7 +594,12 @@ export default function SignupScreen() {
               style={[styles.pickerOption, orgType === type.value && styles.pickerOptionSelected]}
               onPress={() => setOrgType(type.value)}
             >
-              <Text style={[styles.pickerOptionText, orgType === type.value && styles.pickerOptionTextSelected]}>
+              <Text
+                style={[
+                  styles.pickerOptionText,
+                  orgType === type.value && styles.pickerOptionTextSelected,
+                ]}
+              >
                 {type.label}
               </Text>
             </TouchableOpacity>
@@ -566,10 +614,18 @@ export default function SignupScreen() {
           {BOARD_AFFILIATIONS.map((board) => (
             <TouchableOpacity
               key={board.value}
-              style={[styles.pickerOption, boardAffiliation === board.value && styles.pickerOptionSelected]}
+              style={[
+                styles.pickerOption,
+                boardAffiliation === board.value && styles.pickerOptionSelected,
+              ]}
               onPress={() => setBoardAffiliation(board.value)}
             >
-              <Text style={[styles.pickerOptionText, boardAffiliation === board.value && styles.pickerOptionTextSelected]}>
+              <Text
+                style={[
+                  styles.pickerOptionText,
+                  boardAffiliation === board.value && styles.pickerOptionTextSelected,
+                ]}
+              >
                 {board.label}
               </Text>
             </TouchableOpacity>
@@ -581,7 +637,10 @@ export default function SignupScreen() {
       <View style={styles.inputWrapper}>
         <Text style={styles.inputLabel}>Organization Phone</Text>
         <View style={[styles.inputContainer, focusedInput === 'orgPhone' && styles.inputFocused]}>
-          <Phone size={20} color={focusedInput === 'orgPhone' ? Colors.primary[500] : Colors.gray[400]} />
+          <Phone
+            size={20}
+            color={focusedInput === 'orgPhone' ? Colors.primary[500] : Colors.gray[400]}
+          />
           <TextInput
             style={styles.input}
             placeholder="+91 98765 43210"
@@ -625,8 +684,13 @@ export default function SignupScreen() {
       <View style={styles.row}>
         <View style={[styles.inputWrapper, styles.halfWidth]}>
           <Text style={styles.inputLabel}>First Name *</Text>
-          <View style={[styles.inputContainer, focusedInput === 'firstName' && styles.inputFocused]}>
-            <User size={18} color={focusedInput === 'firstName' ? Colors.primary[500] : Colors.gray[400]} />
+          <View
+            style={[styles.inputContainer, focusedInput === 'firstName' && styles.inputFocused]}
+          >
+            <User
+              size={18}
+              color={focusedInput === 'firstName' ? Colors.primary[500] : Colors.gray[400]}
+            />
             <TextInput
               style={styles.input}
               placeholder="John"
@@ -642,7 +706,10 @@ export default function SignupScreen() {
         <View style={[styles.inputWrapper, styles.halfWidth]}>
           <Text style={styles.inputLabel}>Last Name *</Text>
           <View style={[styles.inputContainer, focusedInput === 'lastName' && styles.inputFocused]}>
-            <User size={18} color={focusedInput === 'lastName' ? Colors.primary[500] : Colors.gray[400]} />
+            <User
+              size={18}
+              color={focusedInput === 'lastName' ? Colors.primary[500] : Colors.gray[400]}
+            />
             <TextInput
               style={styles.input}
               placeholder="Doe"
@@ -661,7 +728,10 @@ export default function SignupScreen() {
       <View style={styles.inputWrapper}>
         <Text style={styles.inputLabel}>Phone Number</Text>
         <View style={[styles.inputContainer, focusedInput === 'phone' && styles.inputFocused]}>
-          <Phone size={20} color={focusedInput === 'phone' ? Colors.primary[500] : Colors.gray[400]} />
+          <Phone
+            size={20}
+            color={focusedInput === 'phone' ? Colors.primary[500] : Colors.gray[400]}
+          />
           <TextInput
             style={styles.input}
             placeholder="+91 98765 43210"
@@ -679,7 +749,10 @@ export default function SignupScreen() {
       <View style={styles.inputWrapper}>
         <Text style={styles.inputLabel}>Password *</Text>
         <View style={[styles.inputContainer, focusedInput === 'password' && styles.inputFocused]}>
-          <Lock size={20} color={focusedInput === 'password' ? Colors.primary[500] : Colors.gray[400]} />
+          <Lock
+            size={20}
+            color={focusedInput === 'password' ? Colors.primary[500] : Colors.gray[400]}
+          />
           <TextInput
             style={styles.input}
             placeholder="Create a strong password"
@@ -691,7 +764,11 @@ export default function SignupScreen() {
             onBlur={() => setFocusedInput(null)}
           />
           <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-            {showPassword ? <EyeOff size={20} color={Colors.gray[400]} /> : <Eye size={20} color={Colors.gray[400]} />}
+            {showPassword ? (
+              <EyeOff size={20} color={Colors.gray[400]} />
+            ) : (
+              <Eye size={20} color={Colors.gray[400]} />
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -699,8 +776,13 @@ export default function SignupScreen() {
       {/* Confirm Password */}
       <View style={styles.inputWrapper}>
         <Text style={styles.inputLabel}>Confirm Password *</Text>
-        <View style={[styles.inputContainer, focusedInput === 'confirmPassword' && styles.inputFocused]}>
-          <Lock size={20} color={focusedInput === 'confirmPassword' ? Colors.primary[500] : Colors.gray[400]} />
+        <View
+          style={[styles.inputContainer, focusedInput === 'confirmPassword' && styles.inputFocused]}
+        >
+          <Lock
+            size={20}
+            color={focusedInput === 'confirmPassword' ? Colors.primary[500] : Colors.gray[400]}
+          />
           <TextInput
             style={styles.input}
             placeholder="Confirm your password"
@@ -712,7 +794,11 @@ export default function SignupScreen() {
             onBlur={() => setFocusedInput(null)}
           />
           <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-            {showConfirmPassword ? <EyeOff size={20} color={Colors.gray[400]} /> : <Eye size={20} color={Colors.gray[400]} />}
+            {showConfirmPassword ? (
+              <EyeOff size={20} color={Colors.gray[400]} />
+            ) : (
+              <Eye size={20} color={Colors.gray[400]} />
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -745,8 +831,14 @@ export default function SignupScreen() {
     <View style={styles.container}>
       <LinearGradient colors={['#f0fdfa', '#ecfeff', '#f5f3ff']} style={StyleSheet.absoluteFill} />
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.flex}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
           {/* Header with Logo */}
           <Animated.View entering={FadeInDown.delay(100).duration(500)} style={styles.header}>
             <TouchableOpacity onPress={goBack} style={styles.backButton}>
@@ -816,11 +908,22 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   logo: { width: 60, height: 60, borderRadius: 30 },
-  title: { fontSize: 26, fontWeight: '700', color: Colors.gray[900], marginBottom: 4, letterSpacing: -0.5 },
+  title: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: Colors.gray[900],
+    marginBottom: 4,
+    letterSpacing: -0.5,
+  },
   subtitle: { fontSize: 15, color: Colors.gray[500], fontWeight: '400' },
 
   // Progress Steps
-  progressContainer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', marginBottom: 24 },
+  progressContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    marginBottom: 24,
+  },
   stepWrapper: { flexDirection: 'row', alignItems: 'flex-start' },
   stepItem: { alignItems: 'center' },
   stepCircle: {
@@ -843,7 +946,13 @@ const styles = StyleSheet.create({
   stepNumberActive: { color: '#fff' },
   stepLabel: { fontSize: 11, color: Colors.gray[500], fontWeight: '500' },
   stepLabelActive: { color: Colors.primary[600], fontWeight: '700' },
-  stepLine: { width: 24, height: 3, backgroundColor: Colors.gray[200], marginHorizontal: 4, marginTop: 16 },
+  stepLine: {
+    width: 24,
+    height: 3,
+    backgroundColor: Colors.gray[200],
+    marginHorizontal: 4,
+    marginTop: 16,
+  },
   stepLineCompleted: { backgroundColor: Colors.primary[500] },
 
   // Form Card
@@ -874,7 +983,14 @@ const styles = StyleSheet.create({
 
   // Inputs
   inputWrapper: { marginBottom: 0 },
-  inputLabel: { fontSize: 13, fontWeight: '600', color: Colors.gray[600], marginBottom: 8, letterSpacing: 0.2, textTransform: 'uppercase' },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.gray[600],
+    marginBottom: 8,
+    letterSpacing: 0.2,
+    textTransform: 'uppercase',
+  },
   stepBadge: {
     backgroundColor: Colors.primary[100],
     color: Colors.primary[700],
@@ -923,7 +1039,14 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: Colors.gray[200],
   },
-  otpLabel: { fontSize: 13, fontWeight: '600', color: Colors.gray[600], marginBottom: 12, letterSpacing: 0.2, textTransform: 'uppercase' },
+  otpLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.gray[600],
+    marginBottom: 12,
+    letterSpacing: 0.2,
+    textTransform: 'uppercase',
+  },
   otpRow: { flexDirection: 'row', gap: 12 },
   otpInput: {
     flex: 1,

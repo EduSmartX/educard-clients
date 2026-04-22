@@ -6,13 +6,7 @@
 import { Tabs } from 'expo-router';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  LayoutDashboard,
-  BookOpen,
-  ClipboardList,
-  Calendar,
-  Settings,
-} from 'lucide-react-native';
+import { LayoutDashboard, BookOpen, ClipboardList, Calendar, Settings } from 'lucide-react-native';
 
 import { colors } from '@/constants/colors';
 
@@ -54,9 +48,7 @@ export default function EmployeeTabLayout() {
         name="classes"
         options={{
           title: 'My Classes',
-          tabBarIcon: ({ color, size }) => (
-            <BookOpen size={size} color={color} strokeWidth={1.5} />
-          ),
+          tabBarIcon: ({ color, size }) => <BookOpen size={size} color={color} strokeWidth={1.5} />,
         }}
       />
       <Tabs.Screen
@@ -72,18 +64,14 @@ export default function EmployeeTabLayout() {
         name="schedule"
         options={{
           title: 'Schedule',
-          tabBarIcon: ({ color, size }) => (
-            <Calendar size={size} color={color} strokeWidth={1.5} />
-          ),
+          tabBarIcon: ({ color, size }) => <Calendar size={size} color={color} strokeWidth={1.5} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: ({ color, size }) => (
-            <Settings size={size} color={color} strokeWidth={1.5} />
-          ),
+          tabBarIcon: ({ color, size }) => <Settings size={size} color={color} strokeWidth={1.5} />,
         }}
       />
     </Tabs>

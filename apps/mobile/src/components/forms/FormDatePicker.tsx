@@ -17,12 +17,32 @@ import {
 import { Calendar, X, ChevronLeft, ChevronRight, Check } from 'lucide-react-native';
 
 const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 const SHORT_MONTHS = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
 ];
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
@@ -115,13 +135,17 @@ export function FormDatePicker({
   }, [viewYear, viewMonth]);
 
   const goToPrevMonth = () => {
-    if (viewMonth === 0) { setViewMonth(11); setViewYear(viewYear - 1); }
-    else setViewMonth(viewMonth - 1);
+    if (viewMonth === 0) {
+      setViewMonth(11);
+      setViewYear(viewYear - 1);
+    } else setViewMonth(viewMonth - 1);
   };
 
   const goToNextMonth = () => {
-    if (viewMonth === 11) { setViewMonth(0); setViewYear(viewYear + 1); }
-    else setViewMonth(viewMonth + 1);
+    if (viewMonth === 11) {
+      setViewMonth(0);
+      setViewYear(viewYear + 1);
+    } else setViewMonth(viewMonth + 1);
   };
 
   const selectDay = (day: number) => {
@@ -230,7 +254,9 @@ export function FormDatePicker({
                 {/* Weekday headers */}
                 <View style={styles.weekRow}>
                   {WEEKDAYS.map((d) => (
-                    <Text key={d} style={styles.weekDay}>{d}</Text>
+                    <Text key={d} style={styles.weekDay}>
+                      {d}
+                    </Text>
                   ))}
                 </View>
 
@@ -242,7 +268,11 @@ export function FormDatePicker({
                       style={[
                         styles.dayCell,
                         day ? (isSelected(day) ? styles.dayCellSelected : undefined) : undefined,
-                        day ? (isToday(day) && !isSelected(day) ? styles.dayCellToday : undefined) : undefined,
+                        day
+                          ? isToday(day) && !isSelected(day)
+                            ? styles.dayCellToday
+                            : undefined
+                          : undefined,
                       ]}
                       onPress={() => day && selectDay(day)}
                       disabled={!day}

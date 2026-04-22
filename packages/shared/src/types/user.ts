@@ -2,7 +2,7 @@
  * Shared Types - User & Authentication
  */
 
-import type { UserRoleValue } from '../constants/user-constants';
+import type { UserRoleValue } from "../constants/user-constants";
 
 // Re-export UserRole type for convenience
 export type UserRole = UserRoleValue;
@@ -83,4 +83,3 @@ export interface AuthState {
   isInitialized: boolean;
   error: string | null;
 }
-

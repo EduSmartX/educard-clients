@@ -3,13 +3,7 @@
  */
 
 import React, { useState } from 'react';
-import {
-  View,
-  TextInput,
-  Text,
-  TouchableOpacity,
-  type TextInputProps,
-} from 'react-native';
+import { View, TextInput, Text, TouchableOpacity, type TextInputProps } from 'react-native';
 import { Eye, EyeOff, LucideIcon } from 'lucide-react-native';
 
 import { Colors } from '@/constants/colors';
@@ -40,7 +34,7 @@ export function Input({
 }: InputProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  
+
   const hasValue = value && value.length > 0;
   const isFloating = isFocused || hasValue;
   const isPassword = secureTextEntry !== undefined;
@@ -71,12 +65,7 @@ export function Input({
   return (
     <View className={`mb-4 ${containerClassName || ''}`}>
       <View
-        className={`
-          relative flex-row items-center
-          bg-white rounded-xl border-2
-          ${getBorderColor()}
-          px-4 py-3
-        `}
+        className={`relative flex-row items-center rounded-xl border-2 bg-white ${getBorderColor()} px-4 py-3`}
       >
         {/* Left Icon - either as component or rendered element */}
         {leftIcon}
@@ -92,30 +81,18 @@ export function Input({
         <View className="flex-1">
           {/* Floating Label */}
           <Text
-            className={`
-              absolute left-0
-              ${isFloating 
-                ? '-top-2 text-xs' 
-                : 'top-1/2 -translate-y-1/2 text-base'
-              }
-              ${isFocused 
-                ? 'text-primary-500' 
-                : error 
-                  ? 'text-danger-500' 
-                  : 'text-secondary-400'
-              }
-              transition-all duration-200
-            `}
+            className={`absolute left-0 ${
+              isFloating ? '-top-2 text-xs' : 'top-1/2 -translate-y-1/2 text-base'
+            } ${
+              isFocused ? 'text-primary-500' : error ? 'text-danger-500' : 'text-secondary-400'
+            } transition-all duration-200`}
           >
             {label}
           </Text>
 
           {/* Text Input */}
           <TextInput
-            className={`
-              text-base text-secondary-900
-              ${isFloating ? 'pt-2' : ''}
-            `}
+            className={`text-base text-secondary-900 ${isFloating ? 'pt-2' : ''} `}
             placeholderTextColor={Colors.secondary[400]}
             value={value}
             onFocus={handleFocus}
@@ -127,10 +104,7 @@ export function Input({
 
         {/* Password Toggle */}
         {isPassword && (
-          <TouchableOpacity
-            onPress={togglePasswordVisibility}
-            className="p-1"
-          >
+          <TouchableOpacity onPress={togglePasswordVisibility} className="p-1">
             {isPasswordVisible ? (
               <EyeOff size={20} color={Colors.secondary[400]} />
             ) : (
@@ -141,22 +115,14 @@ export function Input({
 
         {/* Right Icon */}
         {RightIcon && !isPassword && (
-          <TouchableOpacity
-            onPress={onRightIconPress}
-            className="p-1"
-            disabled={!onRightIconPress}
-          >
+          <TouchableOpacity onPress={onRightIconPress} className="p-1" disabled={!onRightIconPress}>
             <RightIcon size={20} color={Colors.secondary[400]} />
           </TouchableOpacity>
         )}
       </View>
 
       {/* Error Message */}
-      {error && (
-        <Text className="text-danger-500 text-sm mt-1 ml-1">
-          {error}
-        </Text>
-      )}
+      {error && <Text className="ml-1 mt-1 text-sm text-danger-500">{error}</Text>}
     </View>
   );
 }

@@ -17,6 +17,7 @@ educard-clients/
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js 18+
 - npm 9+
 - For mobile: Xcode (iOS) or Android Studio (Android)
@@ -58,11 +59,13 @@ npm run build:mobile:android
 ## Apps
 
 ### Web App (`apps/web`)
+
 - React + Vite
 - Tailwind CSS
 - For desktop/laptop browsers
 
 ### Mobile App (`apps/mobile`)
+
 - Expo (React Native)
 - iOS and Android only (no web output)
 - For smartphones
@@ -70,6 +73,7 @@ npm run build:mobile:android
 ## Shared Packages
 
 ### `packages/shared`
+
 - TypeScript types/interfaces
 - API client functions
 - Utility functions

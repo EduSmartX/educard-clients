@@ -26,7 +26,7 @@ export default function VerifyOTPScreen() {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   const inputRefs = useRef<(TextInput | null)[]>([]);
 
   const handleOtpChange = (value: string, index: number) => {
@@ -68,7 +68,7 @@ export default function VerifyOTPScreen() {
 
   const handleResendOtp = async () => {
     if (!email) return;
-    
+
     setIsLoading(true);
     try {
       await requestPasswordResetOtp(email);
@@ -94,10 +94,7 @@ export default function VerifyOTPScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {/* Back Button */}
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color="#1f2937" />
           </TouchableOpacity>
 
@@ -118,7 +115,9 @@ export default function VerifyOTPScreen() {
             {otp.map((digit, index) => (
               <TextInput
                 key={index}
-                ref={(ref) => (inputRefs.current[index] = ref)}
+                ref={(ref: TextInput | null) => {
+                  inputRefs.current[index] = ref;
+                }}
                 style={[
                   styles.otpInput,
                   digit && styles.otpInputFilled,
@@ -142,9 +141,7 @@ export default function VerifyOTPScreen() {
             onPress={handleVerify}
             disabled={isLoading}
           >
-            <Text style={styles.verifyButtonText}>
-              {isLoading ? 'Verifying...' : 'Verify OTP'}
-            </Text>
+            <Text style={styles.verifyButtonText}>{isLoading ? 'Verifying...' : 'Verify OTP'}</Text>
           </TouchableOpacity>
 
           {/* Resend OTP */}

@@ -4,7 +4,15 @@
 
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { QueryKeys } from '@educard/shared';
-import { getClasses, getClassById, createClass, updateClass, deleteClass, restoreClass, type ClassQueryParams } from '../api/classes-api';
+import {
+  getClasses,
+  getClassById,
+  createClass,
+  updateClass,
+  deleteClass,
+  restoreClass,
+  type ClassQueryParams,
+} from '../api/classes-api';
 import { DEFAULT_PAGE_SIZE } from '@/api/client';
 
 export const classKeys = {
@@ -21,11 +29,12 @@ export function useClasses(params?: Omit<ClassQueryParams, 'page'>) {
 
   return useInfiniteQuery({
     queryKey: classKeys.infinite(params),
-    queryFn: ({ pageParam = 1 }) => getClasses({
-      ...params,
-      page: pageParam,
-      page_size: pageSize,
-    }),
+    queryFn: ({ pageParam = 1 }) =>
+      getClasses({
+        ...params,
+        page: pageParam,
+        page_size: pageSize,
+      }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       if (lastPage.pagination.has_next) {
@@ -34,7 +43,7 @@ export function useClasses(params?: Omit<ClassQueryParams, 'page'>) {
       return undefined;
     },
     select: (data) => ({
-      classes: data.pages.flatMap(page => page.data),
+      classes: data.pages.flatMap((page) => page.data),
       totalCount: data.pages[0]?.pagination.count ?? 0,
       hasMore: data.pages[data.pages.length - 1]?.pagination.has_next ?? false,
     }),
@@ -57,7 +66,8 @@ export function useClassDetail(publicId: string) {
 export function useCreateClass() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ data, forceCreate }: { data: any; forceCreate?: boolean }) => createClass(data, forceCreate),
+    mutationFn: ({ data, forceCreate }: { data: any; forceCreate?: boolean }) =>
+      createClass(data, forceCreate),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: classKeys.all });
     },
@@ -67,7 +77,8 @@ export function useCreateClass() {
 export function useUpdateClass() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ publicId, data }: { publicId: string; data: any }) => updateClass(publicId, data),
+    mutationFn: ({ publicId, data }: { publicId: string; data: any }) =>
+      updateClass(publicId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: classKeys.all });
     },

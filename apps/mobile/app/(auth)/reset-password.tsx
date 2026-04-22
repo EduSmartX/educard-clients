@@ -22,7 +22,7 @@ import { verifyPasswordResetOtp, parseApiError } from '@/api';
 export default function ResetPasswordScreen() {
   const router = useRouter();
   const { email, otp } = useLocalSearchParams<{ email: string; otp: string }>();
-  
+
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -44,7 +44,7 @@ export default function ResetPasswordScreen() {
 
   const handleResetPassword = async () => {
     setError('');
-    
+
     if (!validatePassword()) {
       return;
     }
@@ -58,7 +58,7 @@ export default function ResetPasswordScreen() {
         new_password: password,
         confirm_password: confirmPassword,
       });
-      
+
       // Navigate to login with success message
       router.replace('/(auth)/login');
     } catch (err) {
@@ -89,10 +89,7 @@ export default function ResetPasswordScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {/* Back Button */}
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color="#1f2937" />
           </TouchableOpacity>
 
@@ -148,7 +145,12 @@ export default function ResetPasswordScreen() {
                       style={[
                         styles.strengthFill,
                         {
-                          width: strength.label === 'Weak' ? '33%' : strength.label === 'Medium' ? '66%' : '100%',
+                          width:
+                            strength.label === 'Weak'
+                              ? '33%'
+                              : strength.label === 'Medium'
+                                ? '66%'
+                                : '100%',
                           backgroundColor: strength.color,
                         },
                       ]}

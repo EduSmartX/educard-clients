@@ -45,12 +45,12 @@ function getColorFromName(name: string): string {
     '#06B6D4', // cyan
     '#F97316', // orange
   ];
-  
+
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);
   }
-  
+
   return colors[Math.abs(hash) % colors.length];
 }
 
@@ -88,9 +88,7 @@ export function Avatar({
             backgroundColor: bgColor,
           }}
         >
-          <Text className={`font-semibold text-white ${config.text}`}>
-            {initials}
-          </Text>
+          <Text className={`font-semibold text-white ${config.text}`}>{initials}</Text>
         </View>
       ) : (
         <View

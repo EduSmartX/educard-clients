@@ -65,18 +65,14 @@ export default function AdminSettingsScreen() {
   const { user, logout } = useAuthStore();
 
   const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: logout,
-        },
-      ]
-    );
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: logout,
+      },
+    ]);
   };
 
   return (
@@ -91,12 +87,12 @@ export default function AdminSettingsScreen() {
             onPress={() => router.push('/(tabs)/(employee)/profile' as any)}
           >
             <Avatar name={user?.full_name || user?.first_name || 'A'} size="lg" />
-            <View className="flex-1 ml-4">
-              <Text className="text-gray-900 font-semibold text-lg">
+            <View className="ml-4 flex-1">
+              <Text className="text-lg font-semibold text-gray-900">
                 {user?.full_name || user?.first_name || 'Admin User'}
               </Text>
               <Text className="text-gray-500">{user?.email || 'admin@school.com'}</Text>
-              <Text className="text-primary-600 text-sm mt-1">
+              <Text className="mt-1 text-sm text-primary-600">
                 {user?.role === 'admin' ? 'Administrator' : 'Staff'}
               </Text>
             </View>
@@ -107,9 +103,7 @@ export default function AdminSettingsScreen() {
 
       {/* Settings Options */}
       <View className="px-4 pt-6">
-        <Text className="text-sm font-medium text-gray-500 mb-3 px-1">
-          GENERAL
-        </Text>
+        <Text className="mb-3 px-1 text-sm font-medium text-gray-500">GENERAL</Text>
         <Card>
           {settingsOptions.map((option, index) => (
             <TouchableOpacity
@@ -119,7 +113,7 @@ export default function AdminSettingsScreen() {
               }`}
               onPress={() => router.push(option.route as any)}
             >
-              <View className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center mr-3">
+              <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-gray-100">
                 <option.icon size={20} color={colors.gray[600]} strokeWidth={1.5} />
               </View>
               <Text className="flex-1 text-gray-900">{option.title}</Text>
@@ -130,23 +124,20 @@ export default function AdminSettingsScreen() {
       </View>
 
       {/* Logout Button */}
-      <View className="px-4 pt-6 pb-8">
+      <View className="px-4 pb-8 pt-6">
         <Card>
-          <TouchableOpacity
-            className="flex-row items-center py-4"
-            onPress={handleLogout}
-          >
-            <View className="w-10 h-10 bg-danger-100 rounded-full items-center justify-center mr-3">
+          <TouchableOpacity className="flex-row items-center py-4" onPress={handleLogout}>
+            <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-danger-100">
               <LogOut size={20} color={colors.danger[600]} strokeWidth={1.5} />
             </View>
-            <Text className="flex-1 text-danger-600 font-medium">Logout</Text>
+            <Text className="flex-1 font-medium text-danger-600">Logout</Text>
           </TouchableOpacity>
         </Card>
       </View>
 
       {/* App Version */}
       <View className="items-center pb-6">
-        <Text className="text-gray-400 text-sm">EduCard v1.0.0</Text>
+        <Text className="text-sm text-gray-400">EduCard v1.0.0</Text>
       </View>
     </Screen>
   );

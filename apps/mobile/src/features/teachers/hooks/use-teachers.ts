@@ -5,7 +5,15 @@
 
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { QueryKeys } from '@educard/shared';
-import { getTeachers, getTeacherById, createTeacher, updateTeacher, deleteTeacher, restoreTeacher, type TeacherQueryParams } from '../api/teachers-api';
+import {
+  getTeachers,
+  getTeacherById,
+  createTeacher,
+  updateTeacher,
+  deleteTeacher,
+  restoreTeacher,
+  type TeacherQueryParams,
+} from '../api/teachers-api';
 import { DEFAULT_PAGE_SIZE } from '@/api/client';
 
 // Query Keys — thin wrappers over shared QueryKeys for backward compat
@@ -13,7 +21,8 @@ export const teacherKeys = {
   all: QueryKeys.TEACHERS.ALL,
   lists: () => QueryKeys.TEACHERS.LISTS(),
   list: (params?: Omit<TeacherQueryParams, 'page'>) => QueryKeys.TEACHERS.LIST(params as any),
-  infinite: (params?: Omit<TeacherQueryParams, 'page'>) => QueryKeys.TEACHERS.INFINITE(params as any),
+  infinite: (params?: Omit<TeacherQueryParams, 'page'>) =>
+    QueryKeys.TEACHERS.INFINITE(params as any),
   details: () => QueryKeys.TEACHERS.DETAILS(),
   detail: (id: string) => QueryKeys.TEACHERS.DETAIL(id),
 };
@@ -26,11 +35,12 @@ export function useTeachers(params?: Omit<TeacherQueryParams, 'page'>) {
 
   return useInfiniteQuery({
     queryKey: teacherKeys.infinite(params),
-    queryFn: ({ pageParam = 1 }) => getTeachers({
-      ...params,
-      page: pageParam,
-      page_size: pageSize,
-    }),
+    queryFn: ({ pageParam = 1 }) =>
+      getTeachers({
+        ...params,
+        page: pageParam,
+        page_size: pageSize,
+      }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       if (lastPage.pagination.has_next) {
@@ -39,7 +49,7 @@ export function useTeachers(params?: Omit<TeacherQueryParams, 'page'>) {
       return undefined;
     },
     select: (data) => ({
-      teachers: data.pages.flatMap(page => page.data),
+      teachers: data.pages.flatMap((page) => page.data),
       totalCount: data.pages[0]?.pagination.count ?? 0,
       hasMore: data.pages[data.pages.length - 1]?.pagination.has_next ?? false,
     }),
@@ -70,8 +80,13 @@ export function useTeacherDetail(publicId: string) {
 export function useCreateTeacher() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ data, forceCreate }: { data: Parameters<typeof createTeacher>[0]; forceCreate?: boolean }) =>
-      createTeacher(data, forceCreate),
+    mutationFn: ({
+      data,
+      forceCreate,
+    }: {
+      data: Parameters<typeof createTeacher>[0];
+      forceCreate?: boolean;
+    }) => createTeacher(data, forceCreate),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: teacherKeys.all });
     },
@@ -84,7 +99,8 @@ export function useCreateTeacher() {
 export function useUpdateTeacher() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ publicId, data }: { publicId: string; data: any }) => updateTeacher(publicId, data),
+    mutationFn: ({ publicId, data }: { publicId: string; data: any }) =>
+      updateTeacher(publicId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: teacherKeys.all });
     },

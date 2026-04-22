@@ -25,7 +25,7 @@ export function ActiveFilters({ filters, onRemove, onClearAll }: ActiveFiltersPr
   return (
     <Animated.View entering={FadeInDown.delay(100)} style={styles.container}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        {filters.map(filter => (
+        {filters.map((filter) => (
           <View key={filter.key} style={styles.chip}>
             <Text style={styles.chipText}>{filter.label}</Text>
             <TouchableOpacity onPress={() => onRemove(filter.key)}>

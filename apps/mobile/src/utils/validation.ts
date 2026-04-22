@@ -77,5 +77,4 @@ export function validateForm(
 }
 
 /** Quick check if errors object has any */
-export const hasErrors = (errors: FieldErrors): boolean =>
-  Object.keys(errors).length > 0;
+export const hasErrors = (errors: FieldErrors): boolean => Object.keys(errors).length > 0;

@@ -6,16 +6,21 @@
 /**
  * Signup Step Titles - Short labels for step indicators
  */
-export const SIGNUP_STEP_LABELS = ['Emails', 'Verify', 'Details', 'Finish'] as const;
+export const SIGNUP_STEP_LABELS = [
+  "Emails",
+  "Verify",
+  "Details",
+  "Finish",
+] as const;
 
 /**
  * Signup Step Titles - Full descriptions for headers
  */
 export const SIGNUP_STEP_TITLES = [
-  'Email Verification',
-  'Verify OTP Codes',
-  'Organization Details',
-  'Administrator Setup',
+  "Email Verification",
+  "Verify OTP Codes",
+  "Organization Details",
+  "Administrator Setup",
 ] as const;
 
 /**

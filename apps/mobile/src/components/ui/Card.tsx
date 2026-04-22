@@ -36,12 +36,7 @@ export function Card({
 
   return (
     <View
-      className={`
-        rounded-2xl
-        ${variantStyles[variant]}
-        ${paddingStyles[padding]}
-        ${className || ''}
-      `}
+      className={`rounded-2xl ${variantStyles[variant]} ${paddingStyles[padding]} ${className || ''} `}
       {...props}
     >
       {children}
@@ -65,18 +60,16 @@ export function CardHeader({
   action,
 }: CardHeaderProps) {
   return (
-    <View className="flex-row items-center justify-between mb-4">
-      <View className="flex-row items-center flex-1">
+    <View className="mb-4 flex-row items-center justify-between">
+      <View className="flex-1 flex-row items-center">
         {Icon && (
-          <View className="w-10 h-10 rounded-xl bg-primary-50 items-center justify-center mr-3">
+          <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-primary-50">
             <Icon size={20} color={iconColor} />
           </View>
         )}
         <View className="flex-1">
           <Text className="text-lg font-semibold text-secondary-900">{title}</Text>
-          {subtitle && (
-            <Text className="text-sm text-secondary-500 mt-0.5">{subtitle}</Text>
-          )}
+          {subtitle && <Text className="mt-0.5 text-sm text-secondary-500">{subtitle}</Text>}
         </View>
       </View>
       {action}
@@ -107,23 +100,19 @@ export function ActionCard({
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.7}
-      className="flex-row items-center bg-white rounded-2xl p-4 mb-3 shadow-sm shadow-secondary-100"
+      className="mb-3 flex-row items-center rounded-2xl bg-white p-4 shadow-sm shadow-secondary-100"
     >
       <View
-        className="w-12 h-12 rounded-xl items-center justify-center mr-4"
+        className="mr-4 h-12 w-12 items-center justify-center rounded-xl"
         style={{ backgroundColor: iconBgColor }}
       >
         <Icon size={24} color={iconColor} />
       </View>
       <View className="flex-1">
         <Text className="text-base font-semibold text-secondary-900">{title}</Text>
-        {description && (
-          <Text className="text-sm text-secondary-500 mt-0.5">{description}</Text>
-        )}
+        {description && <Text className="mt-0.5 text-sm text-secondary-500">{description}</Text>}
       </View>
-      {showChevron && (
-        <ChevronRight size={20} color={Colors.secondary[400]} />
-      )}
+      {showChevron && <ChevronRight size={20} color={Colors.secondary[400]} />}
     </TouchableOpacity>
   );
 }
@@ -149,34 +138,29 @@ export function StatCard({
   trend,
 }: StatCardProps) {
   return (
-    <Card variant="elevated" className="flex-1 min-w-[140px]">
-      <View className="flex-row items-center justify-between mb-3">
+    <Card variant="elevated" className="min-w-[140px] flex-1">
+      <View className="mb-3 flex-row items-center justify-between">
         <View
-          className="w-10 h-10 rounded-xl items-center justify-center"
+          className="h-10 w-10 items-center justify-center rounded-xl"
           style={{ backgroundColor: iconBgColor }}
         >
           <Icon size={20} color={iconColor} />
         </View>
         {trend && (
           <View
-            className={`
-              px-2 py-1 rounded-full
-              ${trend.isPositive ? 'bg-success-50' : 'bg-danger-50'}
-            `}
+            className={`rounded-full px-2 py-1 ${trend.isPositive ? 'bg-success-50' : 'bg-danger-50'} `}
           >
             <Text
-              className={`
-                text-xs font-medium
-                ${trend.isPositive ? 'text-success-600' : 'text-danger-600'}
-              `}
+              className={`text-xs font-medium ${trend.isPositive ? 'text-success-600' : 'text-danger-600'} `}
             >
-              {trend.isPositive ? '+' : ''}{trend.value}%
+              {trend.isPositive ? '+' : ''}
+              {trend.value}%
             </Text>
           </View>
         )}
       </View>
       <Text className="text-2xl font-bold text-secondary-900">{value}</Text>
-      <Text className="text-sm text-secondary-500 mt-1">{title}</Text>
+      <Text className="mt-1 text-sm text-secondary-500">{title}</Text>
     </Card>
   );
 }

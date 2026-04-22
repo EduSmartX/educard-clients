@@ -3,10 +3,19 @@
  * Creates an axios instance that works in both web and mobile
  */
 
-import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
+import axios, {
+  AxiosInstance,
+  AxiosError,
+  InternalAxiosRequestConfig,
+} from "axios";
 
 // Re-export parseApiError from utils for convenience
-export { parseApiError, parseError, getErrorMessage, getFieldErrors } from '../utils/error-handler';
+export {
+  parseApiError,
+  parseError,
+  getErrorMessage,
+  getFieldErrors,
+} from "../utils/error-handler";
 
 export interface ApiClientConfig {
   baseURL: string;
@@ -28,7 +37,7 @@ export function createApiClient(config: ApiClientConfig): AxiosInstance {
     baseURL: config.baseURL,
     timeout: config.timeout || 30000,
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   });
 
@@ -41,14 +50,16 @@ export function createApiClient(config: ApiClientConfig): AxiosInstance {
       }
       return axiosConfig;
     },
-    (error) => Promise.reject(error)
+    (error) => Promise.reject(error),
   );
 
   // Response interceptor - Handle errors and token refresh
   client.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
-      const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+      const originalRequest = error.config as InternalAxiosRequestConfig & {
+        _retry?: boolean;
+      };
 
       // Handle 401 - Try to refresh token
       if (error.response?.status === 401 && !originalRequest._retry) {
@@ -57,9 +68,12 @@ export function createApiClient(config: ApiClientConfig): AxiosInstance {
         try {
           const refreshToken = await config.getRefreshToken();
           if (refreshToken) {
-            const response = await axios.post(`${config.baseURL}/auth/token/refresh/`, {
-              refresh: refreshToken,
-            });
+            const response = await axios.post(
+              `${config.baseURL}/auth/token/refresh/`,
+              {
+                refresh: refreshToken,
+              },
+            );
 
             const { access, refresh } = response.data;
             await config.setTokens(access, refresh || refreshToken);
@@ -77,7 +91,7 @@ export function createApiClient(config: ApiClientConfig): AxiosInstance {
       }
 
       return Promise.reject(error);
-    }
+    },
   );
 
   return client;

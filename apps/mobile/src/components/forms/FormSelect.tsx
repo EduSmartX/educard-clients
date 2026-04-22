@@ -46,7 +46,11 @@ export function FormSelect({
                 <TouchableOpacity
                   key={opt.value}
                   onPress={() => onChange(opt.value)}
-                  style={[styles.chip, active && styles.chipActive, hasError && !active && styles.chipError]}
+                  style={[
+                    styles.chip,
+                    active && styles.chipActive,
+                    hasError && !active && styles.chipError,
+                  ]}
                   activeOpacity={0.7}
                 >
                   <Text style={[styles.chipText, active && styles.chipTextActive]}>

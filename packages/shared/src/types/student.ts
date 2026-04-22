@@ -1,14 +1,14 @@
 /**
  * Student Types
- * 
+ *
  * Type definitions for student management module including student profiles,
  * guardian information, class assignments, and bulk operations.
  * Used across Web, iOS, and Android for consistent data handling.
- * 
+ *
  * @module types/student
  */
 
-import type { GenderValue, BloodGroupValue } from '../constants';
+import type { GenderValue, BloodGroupValue } from "../constants";
 import type {
   Address,
   AddressPayload,
@@ -18,7 +18,7 @@ import type {
   AuditFields,
   BulkUploadResult,
   BaseQueryParams,
-} from './common';
+} from "./common";
 
 // Related Entities
 
@@ -47,7 +47,7 @@ export interface StudentUserInfo {
   full_name: string;
   email: string;
   phone: string;
-  gender: GenderValue | '';
+  gender: GenderValue | "";
   blood_group?: BloodGroupValue;
   date_of_birth?: string;
   organization_role: OrganizationRole | string;
@@ -102,7 +102,7 @@ export interface StudentListItem {
   class_name: string;
   class_id: string;
   class_master_name: string;
-  gender: GenderValue | '';
+  gender: GenderValue | "";
   is_active: boolean;
   can_manage?: boolean;
   profile_photo_thumbnail?: string | null;
@@ -116,8 +116,8 @@ export interface StudentUserPayload {
   last_name: string;
   email: string;
   phone?: string;
-  role: 'student';
-  gender?: GenderValue | '';
+  role: "student";
+  gender?: GenderValue | "";
   blood_group?: BloodGroupValue;
   date_of_birth?: string;
   supervisor_email?: string;
@@ -143,7 +143,7 @@ export interface CreateStudentPayload {
 }
 
 export interface UpdateStudentPayload {
-  user?: Partial<Omit<StudentUserPayload, 'role'>>;
+  user?: Partial<Omit<StudentUserPayload, "role">>;
   roll_number?: string;
   admission_number?: string;
   admission_date?: string;

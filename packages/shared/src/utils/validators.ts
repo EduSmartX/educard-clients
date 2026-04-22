@@ -17,7 +17,7 @@ export function isValidEmail(email: string): boolean {
  */
 export function isValidPhone(phone: string): boolean {
   const phoneRegex = /^[6-9]\d{9}$/;
-  return phoneRegex.test(phone.replace(/\D/g, ''));
+  return phoneRegex.test(phone.replace(/\D/g, ""));
 }
 
 /**
@@ -44,7 +44,7 @@ export function isValidUrl(url: string): boolean {
  * Validate date is in the past
  */
 export function isDateInPast(date: Date | string): boolean {
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = typeof date === "string" ? new Date(date) : date;
   return d < new Date();
 }
 
@@ -52,7 +52,7 @@ export function isDateInPast(date: Date | string): boolean {
  * Validate date is in the future
  */
 export function isDateInFuture(date: Date | string): boolean {
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = typeof date === "string" ? new Date(date) : date;
   return d > new Date();
 }
 
@@ -66,7 +66,11 @@ export function isNotEmpty(value: string): boolean {
 /**
  * Validate string length is within range
  */
-export function isLengthInRange(value: string, min: number, max: number): boolean {
+export function isLengthInRange(
+  value: string,
+  min: number,
+  max: number,
+): boolean {
   const len = value.length;
   return len >= min && len <= max;
 }
@@ -84,7 +88,7 @@ export function isValidPinCode(pin: string): boolean {
  */
 export function isValidAadhaar(aadhaar: string): boolean {
   const aadhaarRegex = /^\d{12}$/;
-  return aadhaarRegex.test(aadhaar.replace(/\s/g, ''));
+  return aadhaarRegex.test(aadhaar.replace(/\s/g, ""));
 }
 
 /**
@@ -94,4 +98,3 @@ export function isValidPan(pan: string): boolean {
   const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
   return panRegex.test(pan.toUpperCase());
 }
-

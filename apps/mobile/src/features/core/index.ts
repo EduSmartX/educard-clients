@@ -13,7 +13,15 @@ export {
 } from './api/master-api';
 
 // Re-export shared master types
-export type { CoreClass, CoreSubject, RoleType, Department, Supervisor, LeaveType, MasterListResponse } from '@educard/shared';
+export type {
+  CoreClass,
+  CoreSubject,
+  RoleType,
+  Department,
+  Supervisor,
+  LeaveType,
+  MasterListResponse,
+} from '@educard/shared';
 
 export {
   useCoreClasses,

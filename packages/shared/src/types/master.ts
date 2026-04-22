@@ -1,10 +1,10 @@
 /**
  * Master / Core Data Types
- * 
+ *
  * Reference data types used across the application:
  * core classes (grade levels), core subjects, role types.
  * Used across Web, iOS, and Android.
- * 
+ *
  * @module types/master
  */
 
@@ -37,28 +37,7 @@ export interface Department {
   code?: string;
 }
 
-/** Supervisor / Organization user available for supervisor selection */
-export interface Supervisor {
-  public_id: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  full_name: string;
-  phone?: string;
-  role: string;
-  role_display: string;
-  organization_role?: string;
-  gender?: string;
-  employee_id?: string;
-  subjects?: string[];
-}
-
-/** Leave type (e.g. "Casual Leave", "Sick Leave") */
-export interface LeaveType {
-  id: number;
-  name: string;
-  code?: string;
-}
+// Supervisor is exported from ./common.ts — do not duplicate here
 
 /** Generic list response for master data endpoints */
 export interface MasterListResponse<T> {

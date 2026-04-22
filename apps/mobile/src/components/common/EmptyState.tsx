@@ -14,12 +14,7 @@ interface EmptyStateProps {
   iconSize?: number;
 }
 
-export function EmptyState({ 
-  icon: Icon, 
-  title, 
-  subtitle, 
-  iconSize = 48 
-}: EmptyStateProps) {
+export function EmptyState({ icon: Icon, title, subtitle, iconSize = 48 }: EmptyStateProps) {
   return (
     <View style={styles.container}>
       <Icon size={iconSize} color={Colors.gray[300]} />
@@ -30,7 +25,18 @@ export function EmptyState({
 }
 
 const styles = StyleSheet.create({
-  container: { alignItems: 'center', justifyContent: 'center', paddingTop: 60, paddingHorizontal: 32 },
-  title: { fontSize: 16, fontWeight: '600', color: Colors.gray[500], marginTop: 12, textAlign: 'center' },
+  container: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 60,
+    paddingHorizontal: 32,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.gray[500],
+    marginTop: 12,
+    textAlign: 'center',
+  },
   subtitle: { fontSize: 13, color: Colors.gray[400], marginTop: 4, textAlign: 'center' },
 });

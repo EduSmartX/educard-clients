@@ -19,7 +19,9 @@ export interface SubjectQueryParams {
 }
 
 export async function getSubjects(params?: SubjectQueryParams): Promise<SubjectListResponse> {
-  const response = await apiClient.get<SubjectListResponse>(API_ENDPOINTS.SUBJECTS.LIST, { params });
+  const response = await apiClient.get<SubjectListResponse>(API_ENDPOINTS.SUBJECTS.LIST, {
+    params,
+  });
   return response.data;
 }
 

@@ -4,23 +4,18 @@
  */
 
 import { useState, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  FlatList, 
-  TouchableOpacity, 
-  StyleSheet, 
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
   RefreshControl,
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInRight } from 'react-native-reanimated';
-import {
-  Plus,
-  School,
-  GraduationCap,
-  BookOpen,
-} from 'lucide-react-native';
+import { Plus, School, GraduationCap, BookOpen } from 'lucide-react-native';
 import { Colors, getRoleThemeColors, Class, useDebounce } from '@educard/shared';
 import { useClasses, useDeleteClass } from '@/features/classes';
 import { SearchBar, ListHeader } from '@/components/common';
@@ -43,31 +38,54 @@ export default function ClassesScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<Record<string, any>>({});
-  
+
   const debouncedSearch = useDebounce(searchQuery, 300);
-  
-  const { 
-    data, isLoading, isError, error, refetch, isRefetching,
-    fetchNextPage, hasNextPage, isFetchingNextPage,
+
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isRefetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useClasses({ search: debouncedSearch || undefined, ...filters });
-  
+
   const deleteMutation = useDeleteClass();
   const confirmDelete = useDeleteConfirm({ entityName: 'Class', deleteMutation });
-  
+
   const classes = data?.classes ?? [];
   const totalCount = data?.totalCount ?? 0;
 
   const { handleScroll, loadMore, onRefresh } = useListScroll({
-    hasNextPage, isFetchingNextPage, isRefetching, fetchNextPage, refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    isRefetching,
+    fetchNextPage,
+    refetch,
   });
 
-  const handleView = useCallback((classItem: Class) => {
-    router.push({ pathname: '/(admin-screens)/classes/[id]' as any, params: { id: classItem.public_id } });
-  }, [router]);
+  const handleView = useCallback(
+    (classItem: Class) => {
+      router.push({
+        pathname: '/(admin-screens)/classes/[id]' as any,
+        params: { id: classItem.public_id },
+      });
+    },
+    [router]
+  );
 
-  const handleEdit = useCallback((classItem: Class) => {
-    router.push({ pathname: '/(admin-screens)/classes/edit' as any, params: { id: classItem.public_id } });
-  }, [router]);
+  const handleEdit = useCallback(
+    (classItem: Class) => {
+      router.push({
+        pathname: '/(admin-screens)/classes/edit' as any,
+        params: { id: classItem.public_id },
+      });
+    },
+    [router]
+  );
 
   // Helper to get class display name (Master Class - Section)
   const getClassDisplayName = (classItem: Class): string => {
@@ -84,7 +102,7 @@ export default function ClassesScreen() {
   const handleViewStudents = (classItem: Class) => {
     router.push({
       pathname: '/(tabs)/(admin)/students',
-      params: { class_id: classItem.public_id, class_name: getClassDisplayName(classItem) }
+      params: { class_id: classItem.public_id, class_name: getClassDisplayName(classItem) },
     });
   };
 
@@ -92,13 +110,13 @@ export default function ClassesScreen() {
   const handleViewSubjects = (classItem: Class) => {
     router.push({
       pathname: '/(tabs)/(admin)/subjects',
-      params: { class_id: classItem.public_id, class_name: getClassDisplayName(classItem) }
+      params: { class_id: classItem.public_id, class_name: getClassDisplayName(classItem) },
     });
   };
 
   const renderClassCard = ({ item, index }: { item: Class; index: number }) => (
     <Animated.View entering={FadeInRight.delay(index * 50).duration(300)}>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.classCard}
         onPress={() => handleView(item)}
         activeOpacity={0.8}
@@ -122,7 +140,7 @@ export default function ClassesScreen() {
 
         {/* Middle Row - Quick Stats */}
         <View style={styles.quickActions}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.actionItem}
             onPress={() => handleViewStudents(item)}
             activeOpacity={0.7}
@@ -136,7 +154,7 @@ export default function ClassesScreen() {
 
           <View style={styles.actionDivider} />
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.actionItem}
             onPress={() => handleViewSubjects(item)}
             activeOpacity={0.7}
@@ -168,7 +186,11 @@ export default function ClassesScreen() {
         role="admin"
         onBack={() => router.navigate('/(tabs)/(admin)/management' as any)}
         actions={[
-          { icon: Plus, onPress: () => router.push('/(admin-screens)/classes/create' as any), variant: 'primary' },
+          {
+            icon: Plus,
+            onPress: () => router.push('/(admin-screens)/classes/create' as any),
+            variant: 'primary',
+          },
         ]}
       />
 
@@ -184,7 +206,7 @@ export default function ClassesScreen() {
       {/* Active Filters */}
       <ActiveFilters
         filters={getClassFilterLabels(filters)}
-        onRemove={(key) => setFilters(f => ({ ...f, [key]: undefined }))}
+        onRemove={(key) => setFilters((f) => ({ ...f, [key]: undefined }))}
         onClearAll={() => setFilters({})}
       />
 
@@ -193,7 +215,10 @@ export default function ClassesScreen() {
         visible={showFilters}
         onClose={() => setShowFilters(false)}
         currentFilters={filters}
-        onApply={(f: Record<string, any>) => { setFilters(f); setShowFilters(false); }}
+        onApply={(f: Record<string, any>) => {
+          setFilters(f);
+          setShowFilters(false);
+        }}
         fields={CLASS_FILTER_FIELDS}
         title="Filter Classes"
       />
@@ -202,7 +227,11 @@ export default function ClassesScreen() {
       {isLoading ? (
         <LoadingState color={adminTheme.accent} message="Loading classes..." />
       ) : isError ? (
-        <ErrorState message="Failed to load classes" detail={error?.message} onRetry={() => refetch()} />
+        <ErrorState
+          message="Failed to load classes"
+          detail={error?.message}
+          onRetry={() => refetch()}
+        />
       ) : (
         <FlatList
           data={classes}
@@ -222,7 +251,9 @@ export default function ClassesScreen() {
           onEndReachedThreshold={0.5}
           onScroll={handleScroll}
           scrollEventThrottle={16}
-          ListFooterComponent={<ListFooter isLoading={isFetchingNextPage} color={adminTheme.accent} />}
+          ListFooterComponent={
+            <ListFooter isLoading={isFetchingNextPage} color={adminTheme.accent} />
+          }
           ListEmptyComponent={
             <EmptyState
               icon={<School size={48} color={Colors.gray[300]} />}
@@ -238,7 +269,7 @@ export default function ClassesScreen() {
 
 // Screen-specific styles only
 const styles = StyleSheet.create({
-  classCard: { 
+  classCard: {
     backgroundColor: '#fff',
     borderRadius: 16,
     marginHorizontal: 16,
@@ -264,7 +295,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 12,
   },
-  classInfo: { 
+  classInfo: {
     flex: 1,
   },
   className: {

@@ -6,7 +6,7 @@
  */
 
 // Import ApiError type from types module
-import type { ApiError } from '../types/api';
+import type { ApiError } from "../types/api";
 
 // ============================================================================
 // Types
@@ -66,7 +66,7 @@ export interface NormalizedError {
  */
 function flattenErrors(
   errors: Record<string, ErrorValue>,
-  prefix = ''
+  prefix = "",
 ): { fieldErrors: Record<string, string>; nonFieldErrors: string[] } {
   const result = {
     fieldErrors: {} as Record<string, string>,
@@ -77,10 +77,10 @@ function flattenErrors(
     const fullKey = prefix ? `${prefix}.${key}` : key;
 
     // Check if this is a non-field error key
-    if (key === 'non_field_errors' || key === 'non_field_error') {
+    if (key === "non_field_errors" || key === "non_field_error") {
       if (Array.isArray(value)) {
         result.nonFieldErrors.push(...(value as string[]));
-      } else if (typeof value === 'string') {
+      } else if (typeof value === "string") {
         result.nonFieldErrors.push(value);
       }
       return;
@@ -88,21 +88,24 @@ function flattenErrors(
 
     // Handle array of strings (simple field error)
     if (Array.isArray(value)) {
-      if (value.length > 0 && typeof value[0] === 'string') {
+      if (value.length > 0 && typeof value[0] === "string") {
         result.fieldErrors[fullKey] = value[0];
       }
       return;
     }
 
     // Handle single string
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       result.fieldErrors[fullKey] = value;
       return;
     }
 
     // Handle nested object (recurse)
-    if (typeof value === 'object' && value !== null) {
-      const nested = flattenErrors(value as Record<string, ErrorValue>, fullKey);
+    if (typeof value === "object" && value !== null) {
+      const nested = flattenErrors(
+        value as Record<string, ErrorValue>,
+        fullKey,
+      );
       Object.assign(result.fieldErrors, nested.fieldErrors);
       result.nonFieldErrors.push(...nested.nonFieldErrors);
     }
@@ -118,7 +121,7 @@ function flattenErrors(
  */
 export function parseError(error: unknown): NormalizedError {
   const result: NormalizedError = {
-    message: 'An unexpected error occurred',
+    message: "An unexpected error occurred",
     fieldErrors: {},
     nonFieldErrors: [],
     isValidation: false,
@@ -128,7 +131,7 @@ export function parseError(error: unknown): NormalizedError {
   if (!error) return result;
 
   // Handle string errors
-  if (typeof error === 'string') {
+  if (typeof error === "string") {
     result.message = error;
     return result;
   }
@@ -136,7 +139,7 @@ export function parseError(error: unknown): NormalizedError {
   // Handle Error instances
   if (error instanceof Error) {
     // Check if it's an axios error with response data
-    if ('response' in error && typeof error === 'object') {
+    if ("response" in error && typeof error === "object") {
       const axiosError = error as AxiosErrorWrapper;
       if (axiosError.response?.data) {
         return parseError(axiosError.response.data);
@@ -147,7 +150,7 @@ export function parseError(error: unknown): NormalizedError {
   }
 
   // Handle object errors (axios response or backend error)
-  if (typeof error === 'object') {
+  if (typeof error === "object") {
     const possibleAxiosError = error as AxiosErrorWrapper;
     const possibleBackendError = error as BackendErrorResponse;
 
@@ -171,9 +174,9 @@ export function parseError(error: unknown): NormalizedError {
     }
 
     // Check if errors object contains a detail field
-    if (errorData.errors && typeof errorData.errors === 'object') {
+    if (errorData.errors && typeof errorData.errors === "object") {
       const errorsObj = errorData.errors as Record<string, ErrorValue>;
-      if ('detail' in errorsObj && typeof errorsObj.detail === 'string') {
+      if ("detail" in errorsObj && typeof errorsObj.detail === "string") {
         result.message = errorsObj.detail;
         if (Object.keys(errorsObj).length === 1) {
           return result;
@@ -182,7 +185,7 @@ export function parseError(error: unknown): NormalizedError {
     }
 
     // Parse errors object (supports nested structures)
-    if (errorData.errors && typeof errorData.errors === 'object') {
+    if (errorData.errors && typeof errorData.errors === "object") {
       result.isValidation = true;
       const flattened = flattenErrors(errorData.errors);
       result.fieldErrors = flattened.fieldErrors;
@@ -190,13 +193,19 @@ export function parseError(error: unknown): NormalizedError {
     }
 
     // If we have validation errors but no message, set a better default
-    if (result.isValidation && result.message === 'An unexpected error occurred') {
-      result.message = 'Validation error occurred';
+    if (
+      result.isValidation &&
+      result.message === "An unexpected error occurred"
+    ) {
+      result.message = "Validation error occurred";
     }
 
     // Special case: If success=false but no other message
-    if (errorData.success === false && result.message === 'An unexpected error occurred') {
-      result.message = 'Request failed';
+    if (
+      errorData.success === false &&
+      result.message === "An unexpected error occurred"
+    ) {
+      result.message = "Request failed";
     }
   }
 
@@ -224,7 +233,7 @@ export function getErrorMessage(error: unknown, fallback?: string): string {
     return normalized.fieldErrors[fieldErrorKeys[0]];
   }
 
-  return normalized.message || fallback || 'An unexpected error occurred';
+  return normalized.message || fallback || "An unexpected error occurred";
 }
 
 /**
@@ -259,7 +268,11 @@ export function isValidationError(error: unknown): boolean {
 export function isNetworkError(error: unknown): boolean {
   if (error instanceof Error) {
     const msg = error.message.toLowerCase();
-    return msg.includes('network') || msg.includes('fetch') || msg.includes('connection');
+    return (
+      msg.includes("network") ||
+      msg.includes("fetch") ||
+      msg.includes("connection")
+    );
   }
   return false;
 }
@@ -271,15 +284,15 @@ export function getErrorTitle(error: unknown): string {
   const normalized = parseError(error);
   const code = normalized.statusCode;
 
-  if (!code) return 'Error';
-  if (code >= 500) return 'Server Error';
-  if (code === 404) return 'Not Found';
-  if (code === 403) return 'Access Denied';
-  if (code === 401) return 'Authentication Required';
-  if (code === 400 && normalized.isValidation) return 'Validation Error';
-  if (code >= 400) return 'Request Error';
+  if (!code) return "Error";
+  if (code >= 500) return "Server Error";
+  if (code === 404) return "Not Found";
+  if (code === 403) return "Access Denied";
+  if (code === 401) return "Authentication Required";
+  if (code === 400 && normalized.isValidation) return "Validation Error";
+  if (code >= 400) return "Request Error";
 
-  return 'Error';
+  return "Error";
 }
 
 /**

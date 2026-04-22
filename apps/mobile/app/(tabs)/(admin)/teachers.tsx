@@ -4,13 +4,13 @@
  */
 
 import { useState, useCallback, useRef } from 'react';
-import { 
-  View, 
-  Text, 
-  FlatList, 
-  TouchableOpacity, 
-  StyleSheet, 
-  Image, 
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
   RefreshControl,
   Alert,
   Dimensions,
@@ -36,18 +36,13 @@ import { useTeachers, useDeleteTeacher } from '@/features/teachers';
 import { SearchBar } from '@/components/common';
 import { EntityActions } from '@/components/common/EntityActions';
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm';
-import { 
-  FilterModal, 
+import {
+  FilterModal,
   ActiveFilters,
-  TEACHER_FILTER_FIELDS, 
+  TEACHER_FILTER_FIELDS,
   getTeacherFilterLabels,
 } from '@/components/filters';
-import { 
-  layoutStyles, 
-  headerStyles, 
-  stateStyles, 
-  listStyles,
-} from '@/styles';
+import { layoutStyles, headerStyles, stateStyles, listStyles } from '@/styles';
 
 const { width } = Dimensions.get('window');
 const adminTheme = getRoleThemeColors('admin');
@@ -66,28 +61,28 @@ export default function TeachersScreen() {
     gender?: string;
     is_deleted?: boolean;
   }>({});
-  
+
   // Only fetch when search is submitted (not on every keystroke)
-  const { 
-    data, 
-    isLoading, 
-    isError, 
-    error, 
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
     refetch,
     isRefetching,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useTeachers({ 
+  } = useTeachers({
     search: appliedSearch || undefined,
     ordering: 'user__first_name,user__last_name',
     ...filters,
   });
-  
+
   // Delete mutation
   const deleteMutation = useDeleteTeacher();
   const confirmDelete = useDeleteConfirm({ entityName: 'Teacher', deleteMutation });
-  
+
   const teachers = data?.teachers ?? [];
   const totalCount = data?.totalCount ?? 0;
 
@@ -141,35 +136,36 @@ export default function TeachersScreen() {
   }, []);
 
   const handleView = (teacher: Teacher) => {
-    router.push({ pathname: '/(admin-screens)/teachers/[id]' as any, params: { id: teacher.public_id } });
+    router.push({
+      pathname: '/(admin-screens)/teachers/[id]' as any,
+      params: { id: teacher.public_id },
+    });
   };
 
   const handleEdit = (teacher: Teacher) => {
-    router.push({ pathname: '/(admin-screens)/teachers/edit' as any, params: { id: teacher.public_id } });
+    router.push({
+      pathname: '/(admin-screens)/teachers/edit' as any,
+      params: { id: teacher.public_id },
+    });
   };
 
   const renderTeacherCard = ({ item, index }: { item: Teacher; index: number }) => (
     <Animated.View entering={FadeInRight.delay(Math.min(index, 10) * 50).duration(300)}>
-      <TouchableOpacity 
-        style={styles.card}
-        onPress={() => handleView(item)}
-        activeOpacity={0.7}
-      >
+      <TouchableOpacity style={styles.card} onPress={() => handleView(item)} activeOpacity={0.7}>
         {/* Top row — Avatar + Info */}
         <View style={styles.topRow}>
           <View style={styles.avatarSection}>
             {item.profile_photo_thumbnail ? (
-              <Image 
-                source={{ uri: item.profile_photo_thumbnail }} 
-                style={styles.avatar}
-              />
+              <Image source={{ uri: item.profile_photo_thumbnail }} style={styles.avatar} />
             ) : (
-              <LinearGradient
-                colors={['#e0e7ff', '#c7d2fe']}
-                style={styles.avatarPlaceholder}
-              >
+              <LinearGradient colors={['#e0e7ff', '#c7d2fe']} style={styles.avatarPlaceholder}>
                 <Text style={styles.avatarInitials}>
-                  {item.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                  {item.full_name
+                    ?.split(' ')
+                    .map((n) => n[0])
+                    .join('')
+                    .slice(0, 2)
+                    .toUpperCase()}
                 </Text>
               </LinearGradient>
             )}
@@ -178,23 +174,27 @@ export default function TeachersScreen() {
 
           <View style={styles.infoSection}>
             <View style={styles.nameRow}>
-              <Text style={styles.name} numberOfLines={1}>{item.full_name}</Text>
+              <Text style={styles.name} numberOfLines={1}>
+                {item.full_name}
+              </Text>
               <View style={styles.idBadge}>
                 <Text style={styles.idText}>{item.employee_id}</Text>
               </View>
             </View>
-            
+
             {item.designation ? (
               <View style={styles.detailRow}>
                 <Briefcase size={13} color="#6366f1" />
                 <Text style={styles.designation}>{item.designation}</Text>
               </View>
             ) : null}
-            
+
             {item.email ? (
               <View style={styles.detailRow}>
                 <Mail size={13} color="#8b5cf6" />
-                <Text style={styles.detailText} numberOfLines={1}>{item.email}</Text>
+                <Text style={styles.detailText} numberOfLines={1}>
+                  {item.email}
+                </Text>
               </View>
             ) : null}
           </View>
@@ -216,10 +216,10 @@ export default function TeachersScreen() {
       <LinearGradient colors={adminGradient} style={headerStyles.header}>
         <Animated.View entering={FadeIn.delay(100)} style={headerStyles.circle1} />
         <Animated.View entering={FadeIn.delay(200)} style={headerStyles.circle2} />
-        
+
         <View style={headerStyles.content}>
           <View style={headerStyles.topRow}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={headerStyles.backBtn}
               onPress={() => router.navigate('/(tabs)/(admin)/management' as any)}
             >
@@ -233,7 +233,7 @@ export default function TeachersScreen() {
               <TouchableOpacity style={headerStyles.actionBtn}>
                 <Upload size={20} color="#fff" />
               </TouchableOpacity>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={headerStyles.primaryBtn}
                 onPress={() => router.push('/(admin-screens)/teachers/create' as any)}
               >
@@ -258,7 +258,7 @@ export default function TeachersScreen() {
       {/* Active Filters Display */}
       <ActiveFilters
         filters={getTeacherFilterLabels(filters)}
-        onRemove={(key) => setFilters(f => ({ ...f, [key]: undefined }))}
+        onRemove={(key) => setFilters((f) => ({ ...f, [key]: undefined }))}
         onClearAll={handleClearFilters}
       />
 
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  
+
   // Avatar section
   avatarSection: {
     position: 'relative',
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#ffffff',
   },
-  
+
   // Info section
   infoSection: {
     flex: 1,
@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#6366f1',
   },
-  
+
   // Detail rows
   detailRow: {
     flexDirection: 'row',
@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
     color: '#64748b',
     flex: 1,
   },
-  
+
   // Subjects
   subjectsContainer: {
     flexDirection: 'row',
@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#94a3b8',
   },
-  
+
   // Infinite scroll loading indicator
   loadingMore: {
     flexDirection: 'row',

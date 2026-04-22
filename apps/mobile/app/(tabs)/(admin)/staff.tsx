@@ -11,8 +11,8 @@ export default function AdminStaffScreen() {
     <Screen>
       <Header title="Staff" showBack={false} />
       <View className="flex-1 items-center justify-center px-6">
-        <Text className="text-gray-500 text-lg">Staff List</Text>
-        <Text className="text-gray-400 text-sm mt-2">Coming soon...</Text>
+        <Text className="text-lg text-gray-500">Staff List</Text>
+        <Text className="mt-2 text-sm text-gray-400">Coming soon...</Text>
       </View>
     </Screen>
   );

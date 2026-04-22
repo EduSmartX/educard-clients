@@ -28,4 +28,3 @@ export type {
   Section,
   Subject,
 } from '@educard/shared';
-

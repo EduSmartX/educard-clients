@@ -28,7 +28,7 @@ const queryClient = new QueryClient({
 function RootLayoutNav() {
   const router = useRouter();
   const segments = useSegments();
-  
+
   const { isAuthenticated, isInitialized, user, initialize } = useAuthStore();
 
   // Initialize auth on mount
@@ -77,12 +77,12 @@ function RootLayoutNav() {
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="(admin-screens)" options={{ animation: 'slide_from_right' }} />
-      <Stack.Screen 
-        name="(modals)" 
-        options={{ 
+      <Stack.Screen
+        name="(modals)"
+        options={{
           presentation: 'modal',
           animation: 'slide_from_bottom',
-        }} 
+        }}
       />
     </Stack>
   );

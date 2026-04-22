@@ -96,15 +96,7 @@ export function Button({
 
   return (
     <TouchableOpacity
-      className={`
-        flex-row items-center justify-center rounded-xl
-        ${styles.bg}
-        ${styles.border || ''}
-        ${sizes.container}
-        ${fullWidth ? 'w-full' : ''}
-        ${isDisabled ? 'opacity-50' : 'active:opacity-80'}
-        ${className || ''}
-      `}
+      className={`flex-row items-center justify-center rounded-xl ${styles.bg} ${styles.border || ''} ${sizes.container} ${fullWidth ? 'w-full' : ''} ${isDisabled ? 'opacity-50' : 'active:opacity-80'} ${className || ''} `}
       disabled={isDisabled}
       activeOpacity={0.8}
       {...props}
@@ -119,11 +111,7 @@ export function Button({
           {Icon && iconPosition === 'left' && (
             <Icon size={sizes.icon} color={iconColors[variant]} />
           )}
-          <Text
-            className={`font-semibold ${styles.text} ${sizes.text}`}
-          >
-            {title}
-          </Text>
+          <Text className={`font-semibold ${styles.text} ${sizes.text}`}>{title}</Text>
           {Icon && iconPosition === 'right' && (
             <Icon size={sizes.icon} color={iconColors[variant]} />
           )}

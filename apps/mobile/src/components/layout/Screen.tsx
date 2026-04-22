@@ -41,9 +41,7 @@ export function Screen({
       {children}
     </ScrollView>
   ) : (
-    <View className={`flex-1 ${contentContainerClassName}`}>
-      {children}
-    </View>
+    <View className={`flex-1 ${contentContainerClassName}`}>{children}</View>
   );
 
   const wrappedContent = keyboardAvoiding ? (
@@ -61,11 +59,7 @@ export function Screen({
   return (
     <>
       <StatusBar style={statusBarStyle} />
-      <Container
-        className="flex-1"
-        style={{ backgroundColor }}
-        edges={edges}
-      >
+      <Container className="flex-1" style={{ backgroundColor }} edges={edges}>
         {wrappedContent}
       </Container>
     </>

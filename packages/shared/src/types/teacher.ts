@@ -1,14 +1,22 @@
 /**
  * Teacher Types
- * 
+ *
  * Type definitions for teacher/employee management including profiles,
  * qualifications, subjects taught, and employment details.
  * Used across Web, iOS, and Android for consistent data handling.
- * 
+ *
  * @module types/teacher
  */
 
-import type { AddressPayload, Address, AuditFields, BulkUploadResult, BaseQueryParams, Supervisor, OrganizationRole } from './common';
+import type {
+  AddressPayload,
+  Address,
+  AuditFields,
+  BulkUploadResult,
+  BaseQueryParams,
+  Supervisor,
+  OrganizationRole,
+} from "./common";
 
 // Related Entities
 

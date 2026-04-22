@@ -108,4 +108,3 @@ export function calculatePercentage(value: number, total: number): number {
  * Truncate text with ellipsis (alias for shared truncate)
  */
 export { truncate as truncateText } from '@educard/shared';
-

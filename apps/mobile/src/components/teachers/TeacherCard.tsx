@@ -18,7 +18,7 @@ interface TeacherCardProps {
 
 export function TeacherCard({ teacher, onView, onEdit, onDelete }: TeacherCardProps) {
   return (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={[cardStyles.card, styles.row]}
       onPress={() => onView?.(teacher)}
       activeOpacity={0.7}
@@ -26,10 +26,7 @@ export function TeacherCard({ teacher, onView, onEdit, onDelete }: TeacherCardPr
       {/* Avatar */}
       <View style={avatarStyles.container}>
         {teacher.profile_photo_thumbnail ? (
-          <Image 
-            source={{ uri: teacher.profile_photo_thumbnail }} 
-            style={avatarStyles.medium}
-          />
+          <Image source={{ uri: teacher.profile_photo_thumbnail }} style={avatarStyles.medium} />
         ) : (
           <View style={[avatarStyles.medium, avatarStyles.placeholder]}>
             <UserCircle size={32} color={Colors.gray[400]} />
@@ -39,16 +36,20 @@ export function TeacherCard({ teacher, onView, onEdit, onDelete }: TeacherCardPr
 
       {/* Info */}
       <View style={styles.info}>
-        <Text style={textStyles.title} numberOfLines={1}>{teacher.full_name}</Text>
+        <Text style={textStyles.title} numberOfLines={1}>
+          {teacher.full_name}
+        </Text>
         <Text style={textStyles.subtitle}>{teacher.employee_id}</Text>
-        
+
         {teacher.designation ? (
           <View style={styles.infoRow}>
             <Briefcase size={12} color={Colors.gray[400]} />
-            <Text style={textStyles.caption} numberOfLines={1}>{teacher.designation}</Text>
+            <Text style={textStyles.caption} numberOfLines={1}>
+              {teacher.designation}
+            </Text>
           </View>
         ) : null}
-        
+
         {teacher.subjects && teacher.subjects.length > 0 ? (
           <View style={styles.subjectsRow}>
             {teacher.subjects.slice(0, 2).map((subject, idx) => (
@@ -66,7 +67,7 @@ export function TeacherCard({ teacher, onView, onEdit, onDelete }: TeacherCardPr
       {/* Actions */}
       <View style={actionBtnStyles.container}>
         {onView && (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[actionBtnStyles.btn, actionBtnStyles.view]}
             onPress={() => onView(teacher)}
           >
@@ -74,7 +75,7 @@ export function TeacherCard({ teacher, onView, onEdit, onDelete }: TeacherCardPr
           </TouchableOpacity>
         )}
         {onEdit && (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[actionBtnStyles.btn, actionBtnStyles.edit]}
             onPress={() => onEdit(teacher)}
           >
@@ -82,7 +83,7 @@ export function TeacherCard({ teacher, onView, onEdit, onDelete }: TeacherCardPr
           </TouchableOpacity>
         )}
         {onDelete && (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[actionBtnStyles.btn, actionBtnStyles.delete]}
             onPress={() => onDelete(teacher)}
           >
@@ -100,6 +101,11 @@ const styles = StyleSheet.create({
   info: { flex: 1 },
   infoRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
   subjectsRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  subjectTag: { backgroundColor: Colors.primary[50], paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
+  subjectTag: {
+    backgroundColor: Colors.primary[50],
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
   moreSubjects: { fontSize: 10, color: Colors.gray[400] },
 });

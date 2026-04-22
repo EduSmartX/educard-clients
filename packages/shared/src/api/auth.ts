@@ -2,8 +2,8 @@
  * Shared API - Auth Endpoints
  */
 
-import type { AxiosInstance } from 'axios';
-import type { AuthResponse, LoginCredentials, SignupData } from '../types';
+import type { AxiosInstance } from "axios";
+import type { AuthResponse, LoginCredentials, SignupData } from "../types";
 
 /**
  * Create auth API functions
@@ -15,7 +15,10 @@ export function createAuthApi(client: AxiosInstance) {
      * Login with email and password
      */
     async login(credentials: LoginCredentials): Promise<AuthResponse> {
-      const response = await client.post<AuthResponse>('/auth/login/', credentials);
+      const response = await client.post<AuthResponse>(
+        "/auth/login/",
+        credentials,
+      );
       return response.data;
     },
 
@@ -23,7 +26,7 @@ export function createAuthApi(client: AxiosInstance) {
      * Register new user
      */
     async signup(data: SignupData): Promise<AuthResponse> {
-      const response = await client.post<AuthResponse>('/auth/register/', data);
+      const response = await client.post<AuthResponse>("/auth/register/", data);
       return response.data;
     },
 
@@ -31,28 +34,30 @@ export function createAuthApi(client: AxiosInstance) {
      * Logout user
      */
     async logout(refreshToken: string): Promise<void> {
-      await client.post('/auth/logout/', { refresh: refreshToken });
+      await client.post("/auth/logout/", { refresh: refreshToken });
     },
 
     /**
      * Request password reset email
      */
     async forgotPassword(email: string): Promise<void> {
-      await client.post('/auth/password-reset/', { email });
+      await client.post("/auth/password-reset/", { email });
     },
 
     /**
      * Reset password with token
      */
     async resetPassword(token: string, password: string): Promise<void> {
-      await client.post('/auth/password-reset/confirm/', { token, password });
+      await client.post("/auth/password-reset/confirm/", { token, password });
     },
 
     /**
      * Refresh access token
      */
-    async refreshToken(refreshToken: string): Promise<{ access: string; refresh?: string }> {
-      const response = await client.post('/auth/token/refresh/', {
+    async refreshToken(
+      refreshToken: string,
+    ): Promise<{ access: string; refresh?: string }> {
+      const response = await client.post("/auth/token/refresh/", {
         refresh: refreshToken,
       });
       return response.data;
@@ -61,24 +66,29 @@ export function createAuthApi(client: AxiosInstance) {
     /**
      * Get current user profile
      */
-    async getProfile(): Promise<AuthResponse['user']> {
-      const response = await client.get('/auth/profile/');
+    async getProfile(): Promise<AuthResponse["user"]> {
+      const response = await client.get("/auth/profile/");
       return response.data;
     },
 
     /**
      * Update user profile
      */
-    async updateProfile(data: Partial<AuthResponse['user']>): Promise<AuthResponse['user']> {
-      const response = await client.patch('/auth/profile/', data);
+    async updateProfile(
+      data: Partial<AuthResponse["user"]>,
+    ): Promise<AuthResponse["user"]> {
+      const response = await client.patch("/auth/profile/", data);
       return response.data;
     },
 
     /**
      * Change password
      */
-    async changePassword(oldPassword: string, newPassword: string): Promise<void> {
-      await client.post('/auth/change-password/', {
+    async changePassword(
+      oldPassword: string,
+      newPassword: string,
+    ): Promise<void> {
+      await client.post("/auth/change-password/", {
         old_password: oldPassword,
         new_password: newPassword,
       });

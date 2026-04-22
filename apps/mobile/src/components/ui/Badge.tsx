@@ -74,25 +74,9 @@ export function Badge({
   const content = text || children;
 
   return (
-    <View
-      className={`
-        flex-row items-center rounded-full
-        ${styles.bg}
-        ${sizes.container}
-      `}
-    >
-      {dot && (
-        <View
-          className={`
-            rounded-full mr-1.5
-            ${styles.dot}
-            ${sizes.dot}
-          `}
-        />
-      )}
-      <Text className={`font-medium ${styles.text} ${sizes.text}`}>
-        {content}
-      </Text>
+    <View className={`flex-row items-center rounded-full ${styles.bg} ${sizes.container} `}>
+      {dot && <View className={`mr-1.5 rounded-full ${styles.dot} ${sizes.dot} `} />}
+      <Text className={`font-medium ${styles.text} ${sizes.text}`}>{content}</Text>
     </View>
   );
 }

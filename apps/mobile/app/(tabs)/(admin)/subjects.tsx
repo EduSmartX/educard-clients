@@ -4,21 +4,18 @@
  */
 
 import { useState, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  FlatList, 
-  TouchableOpacity, 
-  StyleSheet, 
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
   RefreshControl,
   Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Animated, { FadeInRight } from 'react-native-reanimated';
-import {
-  Plus,
-  BookOpen,
-} from 'lucide-react-native';
+import { Plus, BookOpen } from 'lucide-react-native';
 import { Colors, getRoleThemeColors, useDebounce } from '@educard/shared';
 import { useSubjects, useDeleteSubject } from '@/features/subjects';
 import { SearchBar, ListHeader } from '@/components/common';
@@ -38,44 +35,70 @@ const adminTheme = getRoleThemeColors('admin');
 
 export default function SubjectsScreen() {
   const router = useRouter();
-  const { class_id, class_name } = useLocalSearchParams<{ class_id?: string; class_name?: string }>();
+  const { class_id, class_name } = useLocalSearchParams<{
+    class_id?: string;
+    class_name?: string;
+  }>();
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<Record<string, any>>({});
-  
+
   const debouncedSearch = useDebounce(searchQuery, 300);
-  
-  const { 
-    data, isLoading, isError, error, refetch, isRefetching,
-    fetchNextPage, hasNextPage, isFetchingNextPage,
-  } = useSubjects({ 
+
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isRefetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useSubjects({
     search: debouncedSearch || undefined,
     class_assigned: class_id || undefined,
     ...filters,
   });
-  
+
   const deleteMutation = useDeleteSubject();
   const confirmDelete = useDeleteConfirm({ entityName: 'Subject', deleteMutation });
-  
+
   const subjects = data?.subjects ?? [];
   const totalCount = data?.totalCount ?? 0;
   const screenTitle = class_name ? `Subjects - ${class_name}` : 'Subjects';
 
   const { handleScroll, loadMore, onRefresh } = useListScroll({
-    hasNextPage, isFetchingNextPage, isRefetching, fetchNextPage, refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    isRefetching,
+    fetchNextPage,
+    refetch,
   });
 
-  const handleView = useCallback((subject: any) => {
-    router.push({ pathname: '/(admin-screens)/subjects/[id]' as any, params: { id: subject.public_id } });
-  }, [router]);
+  const handleView = useCallback(
+    (subject: any) => {
+      router.push({
+        pathname: '/(admin-screens)/subjects/[id]' as any,
+        params: { id: subject.public_id },
+      });
+    },
+    [router]
+  );
 
-  const handleEdit = useCallback((subject: any) => {
-    router.push({ pathname: '/(admin-screens)/subjects/edit' as any, params: { id: subject.public_id } });
-  }, [router]);
+  const handleEdit = useCallback(
+    (subject: any) => {
+      router.push({
+        pathname: '/(admin-screens)/subjects/edit' as any,
+        params: { id: subject.public_id },
+      });
+    },
+    [router]
+  );
 
   const renderSubjectCard = ({ item, index }: { item: any; index: number }) => (
     <Animated.View entering={FadeInRight.delay(index * 50).duration(300)}>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[cardStyles.card, styles.subjectCard]}
         onPress={() => handleView(item)}
         activeOpacity={0.7}
@@ -87,22 +110,25 @@ export default function SubjectsScreen() {
           </View>
 
           <View style={styles.subjectInfo}>
-            <Text style={textStyles.title} numberOfLines={1}>{item.subject_info?.name || item.name}</Text>
-            
+            <Text style={textStyles.title} numberOfLines={1}>
+              {item.subject_info?.name || item.name}
+            </Text>
+
             {(item.subject_info?.code || item.code) && (
               <Text style={textStyles.subtitle}>Code: {item.subject_info?.code || item.code}</Text>
             )}
-            
+
             {item.class_info && (
               <Text style={textStyles.caption}>
-                Class: {item.class_info.class_master?.name
+                Class:{' '}
+                {item.class_info.class_master?.name
                   ? `${item.class_info.class_master.name} - ${item.class_info.name}`
                   : item.class_info.class_master_name
                     ? `${item.class_info.class_master_name} - ${item.class_info.name}`
                     : item.class_info.name}
               </Text>
             )}
-            
+
             {item.teacher_info?.full_name && (
               <Text style={textStyles.caption}>Teacher: {item.teacher_info.full_name}</Text>
             )}
@@ -113,7 +139,9 @@ export default function SubjectsScreen() {
         <EntityActions
           onView={() => handleView(item)}
           onEdit={() => handleEdit(item)}
-          onDelete={() => confirmDelete(item.public_id, item.subject_info?.name || item.name || 'this subject')}
+          onDelete={() =>
+            confirmDelete(item.public_id, item.subject_info?.name || item.name || 'this subject')
+          }
         />
       </TouchableOpacity>
     </Animated.View>
@@ -128,7 +156,11 @@ export default function SubjectsScreen() {
         role="admin"
         onBack={() => router.navigate('/(tabs)/(admin)/management' as any)}
         actions={[
-          { icon: Plus, onPress: () => router.push('/(admin-screens)/subjects/create' as any), variant: 'primary' },
+          {
+            icon: Plus,
+            onPress: () => router.push('/(admin-screens)/subjects/create' as any),
+            variant: 'primary',
+          },
         ]}
       />
 
@@ -144,7 +176,7 @@ export default function SubjectsScreen() {
       {/* Active Filters */}
       <ActiveFilters
         filters={getSubjectFilterLabels(filters)}
-        onRemove={(key) => setFilters(f => ({ ...f, [key]: undefined }))}
+        onRemove={(key) => setFilters((f) => ({ ...f, [key]: undefined }))}
         onClearAll={() => setFilters({})}
       />
 
@@ -153,7 +185,10 @@ export default function SubjectsScreen() {
         visible={showFilters}
         onClose={() => setShowFilters(false)}
         currentFilters={filters}
-        onApply={(f: Record<string, any>) => { setFilters(f); setShowFilters(false); }}
+        onApply={(f: Record<string, any>) => {
+          setFilters(f);
+          setShowFilters(false);
+        }}
         fields={SUBJECT_FILTER_FIELDS}
         title="Filter Subjects"
       />
@@ -162,7 +197,11 @@ export default function SubjectsScreen() {
       {isLoading ? (
         <LoadingState color={adminTheme.accent} message="Loading subjects..." />
       ) : isError ? (
-        <ErrorState message="Failed to load subjects" detail={error?.message} onRetry={() => refetch()} />
+        <ErrorState
+          message="Failed to load subjects"
+          detail={error?.message}
+          onRetry={() => refetch()}
+        />
       ) : (
         <FlatList
           data={subjects}
@@ -182,7 +221,9 @@ export default function SubjectsScreen() {
           onEndReachedThreshold={0.5}
           onScroll={handleScroll}
           scrollEventThrottle={16}
-          ListFooterComponent={<ListFooter isLoading={isFetchingNextPage} color={adminTheme.accent} />}
+          ListFooterComponent={
+            <ListFooter isLoading={isFetchingNextPage} color={adminTheme.accent} />
+          }
           ListEmptyComponent={
             <EmptyState
               icon={<BookOpen size={48} color={Colors.gray[300]} />}

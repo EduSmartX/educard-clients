@@ -4,11 +4,7 @@
  */
 
 import { FilterField } from './FilterModal';
-import {
-  makeDeletedToggle,
-  getDeletedLabel,
-  type FilterLabel,
-} from './SharedFilterFields';
+import { makeDeletedToggle, getDeletedLabel, type FilterLabel } from './SharedFilterFields';
 
 export const SUBJECT_FILTER_FIELDS: FilterField[] = [
   {

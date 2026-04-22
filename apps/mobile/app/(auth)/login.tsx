@@ -51,8 +51,14 @@ export default function LoginScreen() {
         <Animated.View entering={FadeIn.delay(400)} style={styles.circle2} />
       </LinearGradient>
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.flex}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
             <View style={styles.logoContainer}>
               <Image
@@ -69,12 +75,25 @@ export default function LoginScreen() {
             {/* Email/Username Toggle */}
             <View style={styles.toggleCard}>
               <View style={styles.toggleLeft}>
-                <View style={[styles.toggleIconBox, useEmail ? styles.toggleIconActive : styles.toggleIconInactive]}>
-                  {useEmail ? <Mail size={18} color={Colors.primary[600]} /> : <User size={18} color={Colors.gray[500]} />}
+                <View
+                  style={[
+                    styles.toggleIconBox,
+                    useEmail ? styles.toggleIconActive : styles.toggleIconInactive,
+                  ]}
+                >
+                  {useEmail ? (
+                    <Mail size={18} color={Colors.primary[600]} />
+                  ) : (
+                    <User size={18} color={Colors.gray[500]} />
+                  )}
                 </View>
                 <View>
-                  <Text style={styles.toggleTitle}>{useEmail ? 'Using Email' : 'Using Username'}</Text>
-                  <Text style={styles.toggleSubtitle}>{useEmail ? 'Sign in with your email address' : 'Sign in with your username'}</Text>
+                  <Text style={styles.toggleTitle}>
+                    {useEmail ? 'Using Email' : 'Using Username'}
+                  </Text>
+                  <Text style={styles.toggleSubtitle}>
+                    {useEmail ? 'Sign in with your email address' : 'Sign in with your username'}
+                  </Text>
                 </View>
               </View>
               <Switch
@@ -91,11 +110,19 @@ export default function LoginScreen() {
             {/* Email/Username Input */}
             <View style={styles.inputWrapper}>
               <Text style={styles.inputLabel}>{useEmail ? 'Email Address' : 'Username'}</Text>
-              <View style={[styles.inputContainer, focusedInput === 'username' && styles.inputFocused]}>
+              <View
+                style={[styles.inputContainer, focusedInput === 'username' && styles.inputFocused]}
+              >
                 {useEmail ? (
-                  <Mail size={20} color={focusedInput === 'username' ? Colors.primary[500] : Colors.gray[400]} />
+                  <Mail
+                    size={20}
+                    color={focusedInput === 'username' ? Colors.primary[500] : Colors.gray[400]}
+                  />
                 ) : (
-                  <User size={20} color={focusedInput === 'username' ? Colors.primary[500] : Colors.gray[400]} />
+                  <User
+                    size={20}
+                    color={focusedInput === 'username' ? Colors.primary[500] : Colors.gray[400]}
+                  />
                 )}
                 <TextInput
                   style={styles.input}
@@ -113,8 +140,13 @@ export default function LoginScreen() {
 
             <View style={styles.inputWrapper}>
               <Text style={styles.inputLabel}>Password</Text>
-              <View style={[styles.inputContainer, focusedInput === 'password' && styles.inputFocused]}>
-                <Lock size={20} color={focusedInput === 'password' ? Colors.primary[500] : Colors.gray[400]} />
+              <View
+                style={[styles.inputContainer, focusedInput === 'password' && styles.inputFocused]}
+              >
+                <Lock
+                  size={20}
+                  color={focusedInput === 'password' ? Colors.primary[500] : Colors.gray[400]}
+                />
                 <TextInput
                   style={styles.input}
                   placeholder="Enter your password"
@@ -126,7 +158,11 @@ export default function LoginScreen() {
                   onBlur={() => setFocusedInput(null)}
                 />
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                  {showPassword ? <EyeOff size={20} color={Colors.gray[400]} /> : <Eye size={20} color={Colors.gray[400]} />}
+                  {showPassword ? (
+                    <EyeOff size={20} color={Colors.gray[400]} />
+                  ) : (
+                    <Eye size={20} color={Colors.gray[400]} />
+                  )}
                 </TouchableOpacity>
               </View>
             </View>
@@ -138,8 +174,15 @@ export default function LoginScreen() {
             </Link>
 
             <TouchableOpacity onPress={handleLogin} disabled={isLoading} style={styles.loginButton}>
-              <LinearGradient colors={['#6366f1', '#8b5cf6']} start={{x: 0, y: 0}} end={{x: 1, y: 0}} style={styles.loginGradient}>
-                <Text style={styles.loginButtonText}>{isLoading ? 'Signing in...' : 'Sign In'}</Text>
+              <LinearGradient
+                colors={['#6366f1', '#8b5cf6']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.loginGradient}
+              >
+                <Text style={styles.loginButtonText}>
+                  {isLoading ? 'Signing in...' : 'Sign In'}
+                </Text>
                 <ArrowRight size={20} color="#fff" />
               </LinearGradient>
             </TouchableOpacity>
@@ -163,34 +206,114 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
   flex: { flex: 1 },
   gradientBg: { position: 'absolute', top: 0, left: 0, right: 0, height: '50%' },
-  circle1: { position: 'absolute', top: -50, right: -50, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(255,255,255,0.1)' },
-  circle2: { position: 'absolute', top: 100, left: -80, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(255,255,255,0.08)' },
+  circle1: {
+    position: 'absolute',
+    top: -50,
+    right: -50,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  circle2: {
+    position: 'absolute',
+    top: 100,
+    left: -80,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
   scrollContent: { flexGrow: 1, paddingBottom: 40 },
   header: { paddingTop: 80, paddingHorizontal: 24, paddingBottom: 32, alignItems: 'center' },
-  logoContainer: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 8 },
+  logoContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
   logo: { width: 60, height: 60, borderRadius: 30 },
   welcomeText: { fontSize: 32, fontWeight: '800', color: '#ffffff', marginBottom: 8 },
   subtitleText: { fontSize: 16, color: 'rgba(255,255,255,0.9)' },
-  formCard: { backgroundColor: '#ffffff', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 28, flex: 1, shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.05, shadowRadius: 12, elevation: 8 },
-  
+  formCard: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    padding: 28,
+    flex: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+
   // Toggle styles
-  toggleCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.primary[50], borderRadius: 16, borderWidth: 2, borderColor: Colors.primary[100], padding: 14, marginBottom: 20 },
+  toggleCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.primary[50],
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: Colors.primary[100],
+    padding: 14,
+    marginBottom: 20,
+  },
   toggleLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  toggleIconBox: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  toggleIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   toggleIconActive: { backgroundColor: Colors.primary[100] },
   toggleIconInactive: { backgroundColor: Colors.gray[100] },
   toggleTitle: { fontSize: 14, fontWeight: '700', color: Colors.gray[800] },
   toggleSubtitle: { fontSize: 12, color: Colors.gray[500], marginTop: 2 },
-  
+
   inputWrapper: { marginBottom: 20 },
   inputLabel: { fontSize: 14, fontWeight: '600', color: Colors.gray[700], marginBottom: 8 },
-  inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.gray[50], borderRadius: 16, borderWidth: 2, borderColor: Colors.gray[100], paddingHorizontal: 16, height: 56, gap: 12 },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.gray[50],
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: Colors.gray[100],
+    paddingHorizontal: 16,
+    height: 56,
+    gap: 12,
+  },
   inputFocused: { borderColor: Colors.primary[500], backgroundColor: '#fff' },
   input: { flex: 1, fontSize: 16, color: Colors.gray[900] },
   forgotButton: { alignSelf: 'flex-end', marginBottom: 24 },
   forgotText: { fontSize: 14, color: Colors.primary[600], fontWeight: '600' },
-  loginButton: { borderRadius: 16, overflow: 'hidden', shadowColor: Colors.primary[500], shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 },
-  loginGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 18, gap: 10 },
+  loginButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: Colors.primary[500],
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  loginGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 18,
+    gap: 10,
+  },
   loginButtonText: { fontSize: 17, fontWeight: '700', color: '#ffffff' },
   signupContainer: { flexDirection: 'row', justifyContent: 'center', marginTop: 24 },
   signupText: { fontSize: 15, color: Colors.gray[600] },

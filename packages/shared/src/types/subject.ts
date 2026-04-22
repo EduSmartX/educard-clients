@@ -1,14 +1,14 @@
 /**
  * Subject Types
- * 
+ *
  * Type definitions for subject management including subject assignments,
  * class-subject mappings, and teacher-subject associations.
  * Used across Web, iOS, and Android for consistent data handling.
- * 
+ *
  * @module types/subject
  */
 
-import type { AuditFields, BaseQueryParams } from './common';
+import type { AuditFields, BaseQueryParams } from "./common";
 
 // Related Entities
 

@@ -18,25 +18,21 @@ interface UseDeleteConfirmOptions {
 export function useDeleteConfirm({ entityName, deleteMutation }: UseDeleteConfirmOptions) {
   const confirmDelete = useCallback(
     (id: string, displayName: string) => {
-      Alert.alert(
-        `Delete ${entityName}`,
-        `Are you sure you want to delete ${displayName}?`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete',
-            style: 'destructive',
-            onPress: () => {
-              deleteMutation.mutate(id, {
-                onSuccess: () => Alert.alert('Success', `${entityName} deleted successfully`),
-                onError: () => Alert.alert('Error', `Failed to delete ${entityName.toLowerCase()}`),
-              });
-            },
+      Alert.alert(`Delete ${entityName}`, `Are you sure you want to delete ${displayName}?`, [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            deleteMutation.mutate(id, {
+              onSuccess: () => Alert.alert('Success', `${entityName} deleted successfully`),
+              onError: () => Alert.alert('Error', `Failed to delete ${entityName.toLowerCase()}`),
+            });
           },
-        ],
-      );
+        },
+      ]);
     },
-    [entityName, deleteMutation],
+    [entityName, deleteMutation]
   );
 
   return confirmDelete;

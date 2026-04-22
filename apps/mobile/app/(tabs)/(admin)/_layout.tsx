@@ -6,12 +6,7 @@
 import { Tabs } from 'expo-router';
 import { View, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  LayoutDashboard,
-  Layers,
-  Calendar,
-  Settings,
-} from 'lucide-react-native';
+import { LayoutDashboard, Layers, Calendar, Settings } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { colors } from '@/constants/colors';
@@ -41,21 +36,21 @@ const iconColors = {
 };
 
 // Custom icon wrapper with gradient background (for light green footer)
-const GradientIcon = ({ 
-  Icon, 
-  gradient, 
-  size, 
-  focused 
-}: { 
-  Icon: React.ComponentType<any>; 
-  gradient: readonly [string, string]; 
-  size: number; 
+const GradientIcon = ({
+  Icon,
+  gradient,
+  size,
+  focused,
+}: {
+  Icon: React.ComponentType<any>;
+  gradient: readonly [string, string];
+  size: number;
   focused: boolean;
 }) => {
   if (!focused) {
     return <Icon size={size} color="#6b7280" strokeWidth={1.5} />;
   }
-  
+
   return (
     <View style={styles.iconContainer}>
       <View style={styles.activeIconBg}>
@@ -101,8 +96,8 @@ export default function AdminTabLayout() {
           title: 'Dashboard',
           tabBarActiveTintColor: '#10b981',
           tabBarIcon: ({ focused, size }) => (
-            <GradientIcon 
-              Icon={LayoutDashboard} 
+            <GradientIcon
+              Icon={LayoutDashboard}
               gradient={iconColors.dashboard.active}
               size={size}
               focused={focused}
@@ -116,8 +111,8 @@ export default function AdminTabLayout() {
           title: 'Management',
           tabBarActiveTintColor: '#10b981',
           tabBarIcon: ({ focused, size }) => (
-            <GradientIcon 
-              Icon={Layers} 
+            <GradientIcon
+              Icon={Layers}
               gradient={iconColors.management.active}
               size={size}
               focused={focused}
@@ -131,8 +126,8 @@ export default function AdminTabLayout() {
           title: 'Schedule',
           tabBarActiveTintColor: '#10b981',
           tabBarIcon: ({ focused, size }) => (
-            <GradientIcon 
-              Icon={Calendar} 
+            <GradientIcon
+              Icon={Calendar}
               gradient={iconColors.schedule.active}
               size={size}
               focused={focused}
@@ -146,8 +141,8 @@ export default function AdminTabLayout() {
           title: 'Settings',
           tabBarActiveTintColor: '#10b981',
           tabBarIcon: ({ focused, size }) => (
-            <GradientIcon 
-              Icon={Settings} 
+            <GradientIcon
+              Icon={Settings}
               gradient={iconColors.settings.active}
               size={size}
               focused={focused}

@@ -44,10 +44,7 @@ export function useStudentFilterFields(): FilterField[] {
       label: 'Class',
       type: 'select',
       icon: '🏫',
-      options: [
-        { value: '', label: 'All Classes' },
-        ...classOptions,
-      ],
+      options: [{ value: '', label: 'All Classes' }, ...classOptions],
     };
 
     return [classField, STUDENT_GENDER_FIELD, makeDeletedToggle('students')];
@@ -56,14 +53,15 @@ export function useStudentFilterFields(): FilterField[] {
 
 export function getStudentFilterLabels(
   filters: Record<string, any>,
-  classOptions?: { value: string; label: string }[],
+  classOptions?: { value: string; label: string }[]
 ): FilterLabel[] {
   const result: FilterLabel[] = [];
 
   // Class filter label
   if (filters.class_id && classOptions) {
     const cls = classOptions.find((c) => c.value === filters.class_id);
-    if (cls) result.push({ key: 'class_id', label: `Class: ${cls.label}`, value: filters.class_id });
+    if (cls)
+      result.push({ key: 'class_id', label: `Class: ${cls.label}`, value: filters.class_id });
   } else if (filters.class_id) {
     result.push({ key: 'class_id', label: 'Class filter', value: filters.class_id });
   }

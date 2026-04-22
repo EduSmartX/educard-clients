@@ -5,7 +5,11 @@
 
 import React from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet,
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -29,10 +33,20 @@ export function DetailRow({ label, value }: { label: string; value?: string | nu
 }
 
 // ─── Section ──────────────────────────────────────
-export function DetailSection({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
+export function DetailSection({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon: string;
+  children: React.ReactNode;
+}) {
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{icon} {title}</Text>
+      <Text style={styles.sectionTitle}>
+        {icon} {title}
+      </Text>
       {children}
     </View>
   );
@@ -63,7 +77,15 @@ interface DetailScreenShellProps {
   onBack?: () => void;
 }
 
-export function DetailScreenShell({ title, subtitle, isLoading, isError, errorMessage, children, onBack }: DetailScreenShellProps) {
+export function DetailScreenShell({
+  title,
+  subtitle,
+  isLoading,
+  isError,
+  errorMessage,
+  children,
+  onBack,
+}: DetailScreenShellProps) {
   const router = useRouter();
 
   const handleBack = () => {
@@ -94,9 +116,13 @@ export function DetailScreenShell({ title, subtitle, isLoading, isError, errorMe
       </LinearGradient>
 
       {isLoading ? (
-        <View style={styles.center}><ActivityIndicator size="large" color="#7c3aed" /></View>
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#7c3aed" />
+        </View>
       ) : isError ? (
-        <View style={styles.center}><Text style={styles.errorText}>{errorMessage || 'Failed to load details.'}</Text></View>
+        <View style={styles.center}>
+          <Text style={styles.errorText}>{errorMessage || 'Failed to load details.'}</Text>
+        </View>
       ) : (
         <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
           {children}
@@ -110,9 +136,22 @@ const styles = StyleSheet.create({
   container: { padding: 16, paddingBottom: 40 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   errorText: { color: '#ef4444', fontSize: 16 },
-  section: { backgroundColor: '#fff', borderRadius: 14, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: '#f0f0f0' },
+  section: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+  },
   sectionTitle: { fontSize: 16, fontWeight: '700', color: '#1e293b', marginBottom: 12 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#f5f5f5' },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f5f5f5',
+  },
   rowLabel: { fontSize: 14, color: '#64748b', flex: 1 },
   rowValue: { fontSize: 14, fontWeight: '600', color: '#1e293b', flex: 1.5, textAlign: 'right' },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

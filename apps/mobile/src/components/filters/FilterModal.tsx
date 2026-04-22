@@ -73,9 +73,8 @@ export function FilterModal({
   }, [visible, currentFilters]);
 
   const activeCount = useMemo(() => {
-    return Object.values(localFilters).filter(
-      (v) => v !== '' && v !== undefined && v !== false
-    ).length;
+    return Object.values(localFilters).filter((v) => v !== '' && v !== undefined && v !== false)
+      .length;
   }, [localFilters]);
 
   const handleSelectOption = (fieldName: string, value: string) => {
@@ -107,16 +106,10 @@ export function FilterModal({
     onClose();
   };
 
-  const getChipColor = (sectionIdx: number) =>
-    CHIP_COLORS[sectionIdx % CHIP_COLORS.length];
+  const getChipColor = (sectionIdx: number) => CHIP_COLORS[sectionIdx % CHIP_COLORS.length];
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} />
       <View style={styles.sheet}>
         {/* Drag handle */}
@@ -171,9 +164,7 @@ export function FilterModal({
             }
 
             // select type
-            const selectOptions = (field.options || []).filter(
-              (o) => o.value !== ''
-            );
+            const selectOptions = (field.options || []).filter((o) => o.value !== '');
 
             return (
               <Animated.View
@@ -192,24 +183,16 @@ export function FilterModal({
                       <TouchableOpacity
                         key={opt.value}
                         activeOpacity={0.7}
-                        onPress={() =>
-                          handleSelectOption(field.name, opt.value)
-                        }
+                        onPress={() => handleSelectOption(field.name, opt.value)}
                         style={[
                           styles.chip,
                           {
-                            backgroundColor: isActive
-                              ? colors.activeBg
-                              : colors.bg,
-                            borderColor: isActive
-                              ? colors.active
-                              : 'transparent',
+                            backgroundColor: isActive ? colors.activeBg : colors.bg,
+                            borderColor: isActive ? colors.active : 'transparent',
                           },
                         ]}
                       >
-                        {opt.icon && (
-                          <Text style={styles.chipIcon}>{opt.icon}</Text>
-                        )}
+                        {opt.icon && <Text style={styles.chipIcon}>{opt.icon}</Text>}
                         <Text
                           style={[
                             styles.chipText,

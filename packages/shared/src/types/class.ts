@@ -1,14 +1,14 @@
 /**
  * Class & Section Types
- * 
+ *
  * Type definitions for class/section management including class structure,
  * teacher assignments, student enrollment, and academic organization.
  * Used across Web, iOS, and Android for consistent data handling.
- * 
+ *
  * @module types/class
  */
 
-import type { AuditFields, BaseQueryParams, ClassMaster } from './common';
+import type { AuditFields, BaseQueryParams, ClassMaster } from "./common";
 
 // Related Entities
 
@@ -49,17 +49,17 @@ export interface Section {
 
 export interface Class extends AuditFields {
   public_id: string;
-  name: string;  // This is actually the section name
+  name: string; // This is actually the section name
   section: string;
   grade?: string;
   display_name?: string;
   academic_year?: string;
   room_number?: string;
   capacity?: number;
-  class_master?: ClassMaster | null;  // Master class (e.g., "Class 10", "Nehru")
+  class_master?: ClassMaster | null; // Master class (e.g., "Class 10", "Nehru")
   class_teacher?: ClassTeacher | null;
   students_count?: number;
-  student_count?: number;  // Backend returns this
+  student_count?: number; // Backend returns this
   subjects_count?: number; // Number of subjects assigned
   teachers?: ClassTeacher[];
   students?: ClassStudent[];

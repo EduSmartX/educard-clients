@@ -5,14 +5,28 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert,
-  ActivityIndicator, KeyboardAvoidingView, Platform,
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { ChevronLeft, Save } from 'lucide-react-native';
-import { getRoleGradient, subjectFormSchema, validateField, validateAllFields, buildSubjectPayload, parseApiErrors } from '@educard/shared';
+import {
+  getRoleGradient,
+  subjectFormSchema,
+  validateField,
+  validateAllFields,
+  buildSubjectPayload,
+  parseApiErrors,
+} from '@educard/shared';
 import { useCreateSubject, useRestoreSubject } from '@/features/subjects';
 import { useClasses } from '@/features/classes';
 import { useCoreSubjects } from '@/features/core';
@@ -20,7 +34,11 @@ import { useTeachers } from '@/features/teachers';
 import { FormInput, FormSection, FormError, FormDropdown } from '@/components/forms';
 import { DeletedDuplicateModal } from '@/components/common/DeletedDuplicateModal';
 import { useDeletedDuplicateHandler } from '@/hooks/useDeletedDuplicateHandler';
-import { isDeletedDuplicateError, getDeletedDuplicateMessage, getDeletedRecordId } from '@/utils/deleted-duplicate';
+import {
+  isDeletedDuplicateError,
+  getDeletedDuplicateMessage,
+  getDeletedRecordId,
+} from '@/utils/deleted-duplicate';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -34,7 +52,10 @@ export default function CreateSubjectScreen() {
   const { data: coreSubjects, isLoading: subjectsLoading } = useCoreSubjects();
   const { data: teachersData } = useTeachers({ page_size: 100 });
 
-  const duplicateHandler = useDeletedDuplicateHandler<{ payload: any; deletedRecordId: string | null }>();
+  const duplicateHandler = useDeletedDuplicateHandler<{
+    payload: any;
+    deletedRecordId: string | null;
+  }>();
 
   const classOpts = useMemo(() => {
     const items = classesData?.classes || [];
@@ -55,23 +76,39 @@ export default function CreateSubjectScreen() {
   }, [teachersData]);
 
   const [form, setForm] = useState({
-    class_id: '', subject_id: '', teacher_id: '', description: '',
+    class_id: '',
+    subject_id: '',
+    teacher_id: '',
+    description: '',
   });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [apiError, setApiError] = useState<string | null>(null);
 
-  const updateField = useCallback((field: string, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) setErrors((prev) => { const n = { ...prev }; delete n[field]; return n; });
-  }, [errors]);
+  const updateField = useCallback(
+    (field: string, value: string) => {
+      setForm((prev) => ({ ...prev, [field]: value }));
+      if (errors[field])
+        setErrors((prev) => {
+          const n = { ...prev };
+          delete n[field];
+          return n;
+        });
+    },
+    [errors]
+  );
 
-  const blurValidate = useCallback((field: string) => {
-    const err = validateField(subjectFormSchema, field, form[field as keyof typeof form]);
-    setErrors((prev) => {
-      if (err) return { ...prev, [field]: err };
-      const n = { ...prev }; delete n[field]; return n;
-    });
-  }, [form]);
+  const blurValidate = useCallback(
+    (field: string) => {
+      const err = validateField(subjectFormSchema, field, form[field as keyof typeof form]);
+      setErrors((prev) => {
+        if (err) return { ...prev, [field]: err };
+        const n = { ...prev };
+        delete n[field];
+        return n;
+      });
+    },
+    [form]
+  );
 
   const handleSubmit = useCallback(() => {
     setApiError(null);
@@ -83,41 +120,62 @@ export default function CreateSubjectScreen() {
     submitCreate(payload, false);
   }, [form, createMutation, router]);
 
-  const submitCreate = useCallback((payload: any, forceCreate: boolean) => {
-    createMutation.mutate({ data: payload, forceCreate }, {
-      onSuccess: () => {
-        duplicateHandler.closeDialog();
-        Alert.alert('Success', 'Subject created successfully', [{ text: 'OK', onPress: () => router.back() }]);
-      },
-      onError: (err: any) => {
-        if (isDeletedDuplicateError(err)) {
-          const msg = getDeletedDuplicateMessage(err);
-          const recordId = getDeletedRecordId(err);
-          duplicateHandler.openDialog(msg, { payload, deletedRecordId: recordId });
-          return;
+  const submitCreate = useCallback(
+    (payload: any, forceCreate: boolean) => {
+      createMutation.mutate(
+        { data: payload, forceCreate },
+        {
+          onSuccess: () => {
+            duplicateHandler.closeDialog();
+            Alert.alert('Success', 'Subject created successfully', [
+              { text: 'OK', onPress: () => router.back() },
+            ]);
+          },
+          onError: (err: any) => {
+            if (isDeletedDuplicateError(err)) {
+              const msg = getDeletedDuplicateMessage(err);
+              const recordId = getDeletedRecordId(err);
+              duplicateHandler.openDialog(msg, { payload, deletedRecordId: recordId });
+              return;
+            }
+            const { fieldErrors: fe, generalError } = parseApiErrors(err?.response?.data);
+            if (Object.keys(fe).length > 0) {
+              setErrors(fe);
+              return;
+            }
+            setApiError(generalError || 'Failed to create subject.');
+          },
         }
-        const { fieldErrors: fe, generalError } = parseApiErrors(err?.response?.data);
-        if (Object.keys(fe).length > 0) { setErrors(fe); return; }
-        setApiError(generalError || 'Failed to create subject.');
-      },
-    });
-  }, [createMutation, router, duplicateHandler]);
+      );
+    },
+    [createMutation, router, duplicateHandler]
+  );
 
   const handleReactivate = useCallback(() => {
     const recordId = duplicateHandler.pendingData?.deletedRecordId;
-    if (!recordId) { Alert.alert('Error', 'Could not find deleted record ID.'); return; }
+    if (!recordId) {
+      Alert.alert('Error', 'Could not find deleted record ID.');
+      return;
+    }
     restoreMutation.mutate(recordId, {
       onSuccess: () => {
         duplicateHandler.closeDialog();
-        Alert.alert('✅ Restored', 'The deleted subject has been reactivated.', [{ text: 'OK', onPress: () => router.back() }]);
+        Alert.alert('✅ Restored', 'The deleted subject has been reactivated.', [
+          { text: 'OK', onPress: () => router.back() },
+        ]);
       },
-      onError: () => { Alert.alert('Error', 'Failed to reactivate. Please try again.'); },
+      onError: () => {
+        Alert.alert('Error', 'Failed to reactivate. Please try again.');
+      },
     });
   }, [duplicateHandler, restoreMutation, router]);
 
   const handleForceCreate = useCallback(() => {
     const payload = duplicateHandler.pendingData?.payload;
-    if (payload) { duplicateHandler.closeDialog(); submitCreate(payload, true); }
+    if (payload) {
+      duplicateHandler.closeDialog();
+      submitCreate(payload, true);
+    }
   }, [duplicateHandler, submitCreate]);
 
   return (
@@ -139,23 +197,78 @@ export default function CreateSubjectScreen() {
         </View>
       </LinearGradient>
 
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={st.form} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={st.form}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
           <FormError message={apiError} onDismiss={() => setApiError(null)} />
 
           <Animated.View entering={FadeInDown.delay(100)}>
             <FormSection title="Subject Assignment" icon="📚">
-              <FormDropdown label="Class" required options={classOpts} value={form.class_id} onChange={(v) => updateField('class_id', v)} error={errors.class_id} placeholder="Select a class" searchable />
-              <FormDropdown label="Subject" required options={subjectOpts} value={form.subject_id} onChange={(v) => updateField('subject_id', v)} error={errors.subject_id} placeholder="Select a subject" searchable loading={subjectsLoading} />
-              <FormDropdown label="Teacher" options={teacherOpts} value={form.teacher_id} onChange={(v) => updateField('teacher_id', v)} placeholder="Select a teacher (optional)" searchable />
-              <FormInput label="Description" value={form.description} onChangeText={(v) => updateField('description', v)} placeholder="Optional description" multiline numberOfLines={3} />
+              <FormDropdown
+                label="Class"
+                required
+                options={classOpts}
+                value={form.class_id}
+                onChange={(v) => updateField('class_id', v)}
+                error={errors.class_id}
+                placeholder="Select a class"
+                searchable
+              />
+              <FormDropdown
+                label="Subject"
+                required
+                options={subjectOpts}
+                value={form.subject_id}
+                onChange={(v) => updateField('subject_id', v)}
+                error={errors.subject_id}
+                placeholder="Select a subject"
+                searchable
+                loading={subjectsLoading}
+              />
+              <FormDropdown
+                label="Teacher"
+                options={teacherOpts}
+                value={form.teacher_id}
+                onChange={(v) => updateField('teacher_id', v)}
+                placeholder="Select a teacher (optional)"
+                searchable
+              />
+              <FormInput
+                label="Description"
+                value={form.description}
+                onChangeText={(v) => updateField('description', v)}
+                placeholder="Optional description"
+                multiline
+                numberOfLines={3}
+              />
             </FormSection>
           </Animated.View>
 
-          <TouchableOpacity onPress={handleSubmit} disabled={createMutation.isPending} style={st.subBtn} activeOpacity={0.8}>
-            <LinearGradient colors={['#7c3aed', '#4f46e5']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={st.subGrad}>
-              {createMutation.isPending ? <ActivityIndicator color="#fff" /> : (
-                <><Save size={20} color="#fff" /><Text style={st.subText}>Create Subject</Text></>
+          <TouchableOpacity
+            onPress={handleSubmit}
+            disabled={createMutation.isPending}
+            style={st.subBtn}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={['#7c3aed', '#4f46e5']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={st.subGrad}
+            >
+              {createMutation.isPending ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <>
+                  <Save size={20} color="#fff" />
+                  <Text style={st.subText}>Create Subject</Text>
+                </>
               )}
             </LinearGradient>
           </TouchableOpacity>
@@ -177,6 +290,13 @@ export default function CreateSubjectScreen() {
 const st = StyleSheet.create({
   form: { padding: 16, paddingBottom: 40 },
   subBtn: { marginTop: 8 },
-  subGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 16, borderRadius: 14 },
+  subGrad: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    paddingVertical: 16,
+    borderRadius: 14,
+  },
   subText: { color: '#fff', fontSize: 17, fontWeight: '700' },
 });

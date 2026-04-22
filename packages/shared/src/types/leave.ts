@@ -1,14 +1,14 @@
 /**
  * Leave Management Types
- * 
+ *
  * Type definitions for employee leave management including leave types,
  * balances, requests, approvals, and leave policies/calendar.
  * Used across Web, iOS, and Android for consistent data handling.
- * 
+ *
  * @module types/leave
  */
 
-import type { AuditFields, BaseQueryParams } from './common';
+import type { AuditFields, BaseQueryParams } from "./common";
 
 // Leave Type Definitions
 
@@ -35,7 +35,11 @@ export interface LeaveBalance {
   year: number;
 }
 
-export type LeaveRequestStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
+export type LeaveRequestStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "cancelled";
 
 // Leave Request Types
 
@@ -68,7 +72,7 @@ export interface LeaveRequest extends AuditFields {
   cancellation_reason?: string | null;
   supporting_document?: string | null;
   is_half_day?: boolean;
-  half_day_type?: 'first_half' | 'second_half';
+  half_day_type?: "first_half" | "second_half";
 }
 
 export interface LeaveRequestDetail extends LeaveRequest {
@@ -78,7 +82,7 @@ export interface LeaveRequestDetail extends LeaveRequest {
 
 export interface LeaveApprovalHistory {
   public_id: string;
-  action: 'submitted' | 'approved' | 'rejected' | 'cancelled' | 'forwarded';
+  action: "submitted" | "approved" | "rejected" | "cancelled" | "forwarded";
   actor: {
     public_id: string;
     full_name: string;
@@ -105,7 +109,7 @@ export interface CreateLeaveRequestPayload {
   end_date: string;
   reason: string;
   is_half_day?: boolean;
-  half_day_type?: 'first_half' | 'second_half';
+  half_day_type?: "first_half" | "second_half";
   supporting_document?: File | null;
 }
 
@@ -114,7 +118,7 @@ export interface UpdateLeaveRequestPayload {
   end_date?: string;
   reason?: string;
   is_half_day?: boolean;
-  half_day_type?: 'first_half' | 'second_half';
+  half_day_type?: "first_half" | "second_half";
 }
 
 export interface ApproveLeavePayload {
@@ -171,7 +175,7 @@ export interface TeamLeaveCalendar {
     employee_name: string;
     leave_type: string;
     is_half_day: boolean;
-    half_day_type?: 'first_half' | 'second_half';
+    half_day_type?: "first_half" | "second_half";
   }[];
 }
 
@@ -182,7 +186,7 @@ export interface LeavePolicy {
   name: string;
   description?: string;
   leave_types: LeaveType[];
-  applicable_to: 'all' | 'teachers' | 'staff';
+  applicable_to: "all" | "teachers" | "staff";
   is_active: boolean;
   effective_from: string;
   effective_to?: string | null;

@@ -6,13 +6,17 @@
 import { useQuery } from '@tanstack/react-query';
 import { QueryKeys } from '@educard/shared';
 import {
-  getCoreClasses, getCoreSubjects, getRoleTypes,
-  getDepartments, getSupervisors, getLeaveTypes,
+  getCoreClasses,
+  getCoreSubjects,
+  getRoleTypes,
+  getDepartments,
+  getSupervisors,
+  getLeaveTypes,
 } from '../api/master-api';
 
 /** Long staleTime for reference data that rarely changes */
-const MASTER_STALE = 30 * 60 * 1000;  // 30 min
-const MASTER_GC = 60 * 60 * 1000;     // 60 min
+const MASTER_STALE = 30 * 60 * 1000; // 30 min
+const MASTER_GC = 60 * 60 * 1000; // 60 min
 
 export function useCoreClasses() {
   return useQuery({
@@ -54,7 +58,7 @@ export function useSupervisors() {
   return useQuery({
     queryKey: QueryKeys.CORE.SUPERVISORS,
     queryFn: getSupervisors,
-    staleTime: 5 * 60 * 1000,   // 5 min — people change more often
+    staleTime: 5 * 60 * 1000, // 5 min — people change more often
     gcTime: 15 * 60 * 1000,
   });
 }

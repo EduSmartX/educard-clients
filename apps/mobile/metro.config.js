@@ -38,10 +38,8 @@ config.resolver.extraNodeModules = new Proxy(
   },
   {
     // For any module not explicitly listed, try the app's node_modules first
-    get: (target, name) =>
-      target[name] ||
-      path.resolve(__dirname, 'node_modules', name),
-  },
+    get: (target, name) => target[name] || path.resolve(__dirname, 'node_modules', name),
+  }
 );
 
 // Intercept resolution for shimmed modules

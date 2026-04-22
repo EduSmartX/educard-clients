@@ -1,14 +1,19 @@
 /**
  * Common Types
- * 
+ *
  * Base types and interfaces shared across all feature modules.
  * These types define the standard API response structures, common
  * entities like Address, and reusable building blocks for other types.
- * 
+ *
  * @module types/common
  */
 
-import type { AddressTypeValue, GenderValue, BloodGroupValue, UserRoleValue } from '../constants';
+import type {
+  AddressTypeValue,
+  GenderValue,
+  BloodGroupValue,
+  UserRoleValue,
+} from "../constants";
 
 // API Response Types
 // Standard wrappers for backend responses
@@ -80,7 +85,16 @@ export interface OrganizationRole {
 export interface Supervisor {
   public_id: string;
   email: string;
+  first_name?: string;
+  last_name?: string;
   full_name: string;
+  phone?: string;
+  role?: string;
+  role_display?: string;
+  organization_role?: string;
+  gender?: string;
+  employee_id?: string;
+  subjects?: string[];
 }
 
 // Base User Types
@@ -93,7 +107,7 @@ export interface BaseUser {
   last_name: string;
   full_name: string;
   phone?: string;
-  gender?: GenderValue | '';
+  gender?: GenderValue | "";
   blood_group?: BloodGroupValue;
   date_of_birth?: string;
   is_active: boolean;
@@ -109,7 +123,7 @@ export interface BaseUserPayload {
   first_name: string;
   last_name: string;
   phone?: string;
-  gender?: GenderValue | '';
+  gender?: GenderValue | "";
   blood_group?: BloodGroupValue;
   date_of_birth?: string;
   organization_role?: number;

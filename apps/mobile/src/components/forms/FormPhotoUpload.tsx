@@ -37,7 +37,10 @@ export function FormPhotoUpload({
     const camera = await ImagePicker.requestCameraPermissionsAsync();
     const media = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!camera.granted || !media.granted) {
-      Alert.alert('Permission Required', 'Camera and photo library permissions are needed to upload a photo.');
+      Alert.alert(
+        'Permission Required',
+        'Camera and photo library permissions are needed to upload a photo.'
+      );
       return false;
     }
     return true;
@@ -78,7 +81,11 @@ export function FormPhotoUpload({
         ? ['Take Photo', 'Choose from Gallery', 'Remove Photo', 'Cancel']
         : ['Take Photo', 'Choose from Gallery', 'Cancel'];
       ActionSheetIOS.showActionSheetWithOptions(
-        { options: opts, cancelButtonIndex: opts.length - 1, destructiveButtonIndex: imageUri ? 2 : undefined },
+        {
+          options: opts,
+          cancelButtonIndex: opts.length - 1,
+          destructiveButtonIndex: imageUri ? 2 : undefined,
+        },
         (idx) => {
           if (idx === 0) pickFromCamera();
           else if (idx === 1) pickFromGallery();
@@ -89,7 +96,15 @@ export function FormPhotoUpload({
       Alert.alert('Upload Photo', 'Choose an option', [
         { text: 'Camera', onPress: pickFromCamera },
         { text: 'Gallery', onPress: pickFromGallery },
-        ...(imageUri ? [{ text: 'Remove', style: 'destructive' as const, onPress: () => onImageSelected(null, null) }] : []),
+        ...(imageUri
+          ? [
+              {
+                text: 'Remove',
+                style: 'destructive' as const,
+                onPress: () => onImageSelected(null, null),
+              },
+            ]
+          : []),
         { text: 'Cancel', style: 'cancel' as const },
       ]);
     }
@@ -97,7 +112,12 @@ export function FormPhotoUpload({
 
   // Initials fallback
   const initials = name
-    ? name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+    ? name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
     : '';
 
   return (
@@ -108,7 +128,10 @@ export function FormPhotoUpload({
           <View style={styles.photoWrapper}>
             <Image source={{ uri: imageUri }} style={styles.photo} />
             {!disabled && (
-              <TouchableOpacity style={styles.removeBtn} onPress={() => onImageSelected(null, null)}>
+              <TouchableOpacity
+                style={styles.removeBtn}
+                onPress={() => onImageSelected(null, null)}
+              >
                 <X size={14} color="#fff" />
               </TouchableOpacity>
             )}
@@ -141,14 +164,47 @@ export function FormPhotoUpload({
 const styles = StyleSheet.create({
   container: { marginBottom: 16 },
   label: { fontSize: 14, fontWeight: '600', color: '#334155', marginBottom: 8 },
-  photoArea: { alignItems: 'center', padding: 16, borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: 14, borderStyle: 'dashed', backgroundColor: '#f8fafc' },
+  photoArea: {
+    alignItems: 'center',
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    borderRadius: 14,
+    borderStyle: 'dashed',
+    backgroundColor: '#f8fafc',
+  },
   photoWrapper: { position: 'relative' },
   photo: { width: 90, height: 90, borderRadius: 45, borderWidth: 3, borderColor: '#7c3aed' },
-  removeBtn: { position: 'absolute', top: -4, right: -4, width: 24, height: 24, borderRadius: 12, backgroundColor: '#ef4444', alignItems: 'center', justifyContent: 'center' },
-  placeholder: { width: 90, height: 90, borderRadius: 45, backgroundColor: '#e2e8f0', alignItems: 'center', justifyContent: 'center' },
+  removeBtn: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#ef4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  placeholder: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   initials: { fontSize: 28, fontWeight: '700', color: '#7c3aed' },
   actions: { flexDirection: 'row', gap: 16, marginTop: 12 },
-  actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, backgroundColor: '#ede9fe' },
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: '#ede9fe',
+  },
   actionText: { fontSize: 12, fontWeight: '600', color: '#7c3aed' },
   hint: { fontSize: 12, color: '#94a3b8', marginTop: 6 },
 });

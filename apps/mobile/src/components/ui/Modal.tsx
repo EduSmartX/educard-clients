@@ -94,7 +94,12 @@ export function Modal({
             )}
 
             {/* Icon */}
-            <View style={[styles.iconContainer, { backgroundColor: config.bgColor, borderColor: config.borderColor }]}>
+            <View
+              style={[
+                styles.iconContainer,
+                { backgroundColor: config.bgColor, borderColor: config.borderColor },
+              ]}
+            >
               <IconComponent size={32} color={config.iconColor} />
             </View>
 
@@ -170,7 +175,7 @@ export function useModal() {
 
   const showModal = React.useCallback((options: AlertOptions) => {
     const actions: ModalAction[] = [];
-    
+
     if (options.cancelText) {
       actions.push({
         label: options.cancelText,
@@ -181,7 +186,7 @@ export function useModal() {
         },
       });
     }
-    
+
     actions.push({
       label: options.confirmText || 'OK',
       variant: 'primary',
@@ -204,38 +209,48 @@ export function useModal() {
     setModalState((prev) => ({ ...prev, visible: false }));
   }, []);
 
-  const success = React.useCallback((title: string, message?: string, onConfirm?: () => void) => {
-    showModal({ title, message, variant: 'success', onConfirm });
-  }, [showModal]);
+  const success = React.useCallback(
+    (title: string, message?: string, onConfirm?: () => void) => {
+      showModal({ title, message, variant: 'success', onConfirm });
+    },
+    [showModal]
+  );
 
-  const error = React.useCallback((title: string, message?: string, onConfirm?: () => void) => {
-    showModal({ title, message, variant: 'error', onConfirm });
-  }, [showModal]);
+  const error = React.useCallback(
+    (title: string, message?: string, onConfirm?: () => void) => {
+      showModal({ title, message, variant: 'error', onConfirm });
+    },
+    [showModal]
+  );
 
-  const warning = React.useCallback((title: string, message?: string, onConfirm?: () => void) => {
-    showModal({ title, message, variant: 'warning', onConfirm });
-  }, [showModal]);
+  const warning = React.useCallback(
+    (title: string, message?: string, onConfirm?: () => void) => {
+      showModal({ title, message, variant: 'warning', onConfirm });
+    },
+    [showModal]
+  );
 
-  const info = React.useCallback((title: string, message?: string, onConfirm?: () => void) => {
-    showModal({ title, message, variant: 'info', onConfirm });
-  }, [showModal]);
+  const info = React.useCallback(
+    (title: string, message?: string, onConfirm?: () => void) => {
+      showModal({ title, message, variant: 'info', onConfirm });
+    },
+    [showModal]
+  );
 
-  const confirm = React.useCallback((
-    title: string,
-    message?: string,
-    onConfirm?: () => void,
-    onCancel?: () => void
-  ) => {
-    showModal({
-      title,
-      message,
-      variant: 'warning',
-      confirmText: 'Confirm',
-      cancelText: 'Cancel',
-      onConfirm,
-      onCancel,
-    });
-  }, [showModal]);
+  const confirm = React.useCallback(
+    (title: string, message?: string, onConfirm?: () => void, onCancel?: () => void) => {
+      showModal({
+        title,
+        message,
+        variant: 'warning',
+        confirmText: 'Confirm',
+        cancelText: 'Cancel',
+        onConfirm,
+        onCancel,
+      });
+    },
+    [showModal]
+  );
 
   return {
     modalState,

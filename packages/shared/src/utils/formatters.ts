@@ -7,27 +7,27 @@
  */
 export function formatDate(
   date: Date | string,
-  format: 'short' | 'long' | 'relative' = 'short'
+  format: "short" | "long" | "relative" = "short",
 ): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = typeof date === "string" ? new Date(date) : date;
 
-  if (format === 'relative') {
+  if (format === "relative") {
     return getRelativeTime(d);
   }
 
-  if (format === 'long') {
-    return d.toLocaleDateString('en-IN', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+  if (format === "long") {
+    return d.toLocaleDateString("en-IN", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   }
 
-  return d.toLocaleDateString('en-IN', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
+  return d.toLocaleDateString("en-IN", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   });
 }
 
@@ -42,12 +42,12 @@ export function getRelativeTime(date: Date): string {
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
 
-  if (minutes < 1) return 'Just now';
-  if (minutes < 60) return `${minutes} min${minutes > 1 ? 's' : ''} ago`;
-  if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-  if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
+  if (minutes < 1) return "Just now";
+  if (minutes < 60) return `${minutes} min${minutes > 1 ? "s" : ""} ago`;
+  if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+  if (days < 7) return `${days} day${days > 1 ? "s" : ""} ago`;
 
-  return formatDate(date, 'short');
+  return formatDate(date, "short");
 }
 
 /**
@@ -55,10 +55,10 @@ export function getRelativeTime(date: Date): string {
  */
 export function formatCurrency(
   amount: number,
-  currency: string = 'INR'
+  currency: string = "INR",
 ): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
     currency,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
@@ -69,7 +69,7 @@ export function formatCurrency(
  * Format phone number
  */
 export function formatPhoneNumber(phone: string): string {
-  const cleaned = phone.replace(/\D/g, '');
+  const cleaned = phone.replace(/\D/g, "");
   if (cleaned.length === 10) {
     return `+91 ${cleaned.slice(0, 5)} ${cleaned.slice(5)}`;
   }
@@ -81,9 +81,9 @@ export function formatPhoneNumber(phone: string): string {
  */
 export function getInitials(name: string): string {
   return name
-    .split(' ')
+    .split(" ")
     .map((n) => n[0])
-    .join('')
+    .join("")
     .toUpperCase()
     .slice(0, 2);
 }
@@ -103,7 +103,7 @@ export const truncate = truncateText;
  * Capitalize first letter
  */
 export function capitalize(text: string): string {
-  if (!text) return '';
+  if (!text) return "";
   return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 }
 

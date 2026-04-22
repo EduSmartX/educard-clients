@@ -5,14 +5,7 @@
  */
 
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Modal,
-  StyleSheet,
-  Dimensions,
-} from 'react-native';
+import { View, Text, TouchableOpacity, Modal, StyleSheet, Dimensions } from 'react-native';
 import { AlertTriangle, RefreshCw, Plus, X } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
@@ -48,7 +41,9 @@ export function DeletedDuplicateModal({
       <Text style={styles.message}>
         {parts.map((part, i) =>
           part.startsWith("'") && part.endsWith("'") ? (
-            <Text key={i} style={styles.messageBold}>{part}</Text>
+            <Text key={i} style={styles.messageBold}>
+              {part}
+            </Text>
           ) : (
             <Text key={i}>{part}</Text>
           )
@@ -73,9 +68,7 @@ export function DeletedDuplicateModal({
           </View>
 
           {/* Body */}
-          <View style={styles.body}>
-            {renderMessage()}
-          </View>
+          <View style={styles.body}>{renderMessage()}</View>
 
           {/* Actions */}
           <View style={styles.actions}>

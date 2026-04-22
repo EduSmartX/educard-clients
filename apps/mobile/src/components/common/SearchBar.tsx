@@ -1,7 +1,7 @@
 /**
  * SearchBar Component
  * Reusable search bar with filter button
- * 
+ *
  * Features:
  * - Only triggers search on submit/blur (not every keystroke)
  * - Clear button when text is present
@@ -23,12 +23,12 @@ interface SearchBarProps {
   activeFilterCount?: number;
 }
 
-export function SearchBar({ 
-  value, 
+export function SearchBar({
+  value,
   onChangeText,
   onSubmit,
   onClear,
-  placeholder = 'Search...', 
+  placeholder = 'Search...',
   onFilterPress,
   showFilter = true,
   activeFilterCount = 0,
@@ -61,11 +61,8 @@ export function SearchBar({
         )}
       </View>
       {showFilter && onFilterPress && (
-        <TouchableOpacity 
-          style={[
-            styles.filterBtn,
-            activeFilterCount > 0 && styles.filterBtnActive,
-          ]} 
+        <TouchableOpacity
+          style={[styles.filterBtn, activeFilterCount > 0 && styles.filterBtnActive]}
           onPress={onFilterPress}
         >
           <Filter size={18} color={activeFilterCount > 0 ? '#fff' : Colors.gray[600]} />
@@ -81,41 +78,41 @@ export function SearchBar({
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flexDirection: 'row', 
-    paddingHorizontal: 16, 
-    paddingVertical: 12, 
+  container: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     gap: 10,
   },
-  searchBar: { 
-    flex: 1, 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    backgroundColor: '#fff', 
-    borderRadius: 12, 
+  searchBar: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
     gap: 10,
-    borderWidth: 1, 
+    borderWidth: 1,
     borderColor: '#e2e8f0',
   },
-  input: { 
-    flex: 1, 
-    fontSize: 15, 
+  input: {
+    flex: 1,
+    fontSize: 15,
     color: '#1e293b',
     padding: 0,
   },
   clearBtn: {
     padding: 4,
   },
-  filterBtn: { 
-    width: 46, 
-    height: 46, 
-    borderRadius: 12, 
-    backgroundColor: '#fff', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    borderWidth: 1, 
+  filterBtn: {
+    width: 46,
+    height: 46,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
     borderColor: '#e2e8f0',
   },
   filterBtnActive: {

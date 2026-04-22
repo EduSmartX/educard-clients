@@ -97,7 +97,7 @@ export default function EmployeeDashboard() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     setRefreshing(false);
   }, []);
 
@@ -138,35 +138,29 @@ export default function EmployeeDashboard() {
     <Screen scrollable={false}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         {/* Header */}
         <LinearGradient
           colors={[colors.secondary[600], colors.secondary[700]]}
-          className="pt-12 pb-8 px-6 rounded-b-[30px]"
+          className="rounded-b-[30px] px-6 pb-8 pt-12"
         >
-          <View className="flex-row justify-between items-start mb-6">
+          <View className="mb-6 flex-row items-start justify-between">
             <View className="flex-1">
-              <Text className="text-secondary-100 text-sm">
-                {formatGreeting()},
-              </Text>
+              <Text className="text-sm text-secondary-100">{formatGreeting()},</Text>
               <Text className="text-2xl font-bold text-white" numberOfLines={1}>
                 {user?.full_name || user?.first_name || 'Teacher'}
               </Text>
-              <Text className="text-secondary-200 text-sm mt-1">
-                Mathematics Teacher
-              </Text>
+              <Text className="mt-1 text-sm text-secondary-200">Mathematics Teacher</Text>
             </View>
             <View className="flex-row items-center">
               <TouchableOpacity
-                className="w-10 h-10 bg-white/20 rounded-full items-center justify-center mr-3"
+                className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-white/20"
                 onPress={() => router.push('/(tabs)/(parent)/notifications' as any)}
               >
                 <Bell size={20} color="#ffffff" />
-                <View className="absolute -top-1 -right-1 w-5 h-5 bg-danger-500 rounded-full items-center justify-center">
-                  <Text className="text-white text-xs font-bold">2</Text>
+                <View className="absolute -right-1 -top-1 h-5 w-5 items-center justify-center rounded-full bg-danger-500">
+                  <Text className="text-xs font-bold text-white">2</Text>
                 </View>
               </TouchableOpacity>
               <Avatar name={user?.full_name || user?.first_name || 'T'} size="md" />
@@ -174,49 +168,49 @@ export default function EmployeeDashboard() {
           </View>
 
           {/* Stats Row */}
-          <View className="flex-row flex-wrap -mx-1.5">
-            <View className="w-1/2 px-1.5 mb-3">
-              <View className="bg-white/20 rounded-xl p-3">
+          <View className="-mx-1.5 flex-row flex-wrap">
+            <View className="mb-3 w-1/2 px-1.5">
+              <View className="rounded-xl bg-white/20 p-3">
                 <View className="flex-row items-center">
                   <BookOpen size={18} color="#ffffff" />
-                  <Text className="text-white font-bold text-lg ml-2">
+                  <Text className="ml-2 text-lg font-bold text-white">
                     {mockStats.classesToday}
                   </Text>
                 </View>
-                <Text className="text-secondary-100 text-xs mt-1">Classes Today</Text>
+                <Text className="mt-1 text-xs text-secondary-100">Classes Today</Text>
               </View>
             </View>
-            <View className="w-1/2 px-1.5 mb-3">
-              <View className="bg-white/20 rounded-xl p-3">
+            <View className="mb-3 w-1/2 px-1.5">
+              <View className="rounded-xl bg-white/20 p-3">
                 <View className="flex-row items-center">
                   <Users size={18} color="#ffffff" />
-                  <Text className="text-white font-bold text-lg ml-2">
+                  <Text className="ml-2 text-lg font-bold text-white">
                     {mockStats.studentsTotal}
                   </Text>
                 </View>
-                <Text className="text-secondary-100 text-xs mt-1">My Students</Text>
+                <Text className="mt-1 text-xs text-secondary-100">My Students</Text>
               </View>
             </View>
             <View className="w-1/2 px-1.5">
-              <View className="bg-white/20 rounded-xl p-3">
+              <View className="rounded-xl bg-white/20 p-3">
                 <View className="flex-row items-center">
                   <FileText size={18} color="#ffffff" />
-                  <Text className="text-white font-bold text-lg ml-2">
+                  <Text className="ml-2 text-lg font-bold text-white">
                     {mockStats.pendingTasks}
                   </Text>
                 </View>
-                <Text className="text-secondary-100 text-xs mt-1">Pending Tasks</Text>
+                <Text className="mt-1 text-xs text-secondary-100">Pending Tasks</Text>
               </View>
             </View>
             <View className="w-1/2 px-1.5">
-              <View className="bg-white/20 rounded-xl p-3">
+              <View className="rounded-xl bg-white/20 p-3">
                 <View className="flex-row items-center">
                   <ClipboardCheck size={18} color="#ffffff" />
-                  <Text className="text-white font-bold text-lg ml-2">
+                  <Text className="ml-2 text-lg font-bold text-white">
                     {mockStats.attendanceRate}%
                   </Text>
                 </View>
-                <Text className="text-secondary-100 text-xs mt-1">Attendance Rate</Text>
+                <Text className="mt-1 text-xs text-secondary-100">Attendance Rate</Text>
               </View>
             </View>
           </View>
@@ -226,14 +220,10 @@ export default function EmployeeDashboard() {
         <View className="px-4 pt-6">
           {/* Today's Classes */}
           <View className="mb-6">
-            <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-lg font-semibold text-gray-900">
-                Today's Classes
-              </Text>
+            <View className="mb-4 flex-row items-center justify-between">
+              <Text className="text-lg font-semibold text-gray-900">Today's Classes</Text>
               <TouchableOpacity>
-                <Text className="text-primary-600 text-sm font-medium">
-                  View All
-                </Text>
+                <Text className="text-sm font-medium text-primary-600">View All</Text>
               </TouchableOpacity>
             </View>
 
@@ -242,40 +232,30 @@ export default function EmployeeDashboard() {
                 <TouchableOpacity
                   key={classItem.id}
                   className={`flex-row items-center py-3 ${
-                    index !== mockTodayClasses.length - 1
-                      ? 'border-b border-gray-100'
-                      : ''
+                    index !== mockTodayClasses.length - 1 ? 'border-b border-gray-100' : ''
                   }`}
                 >
                   <View
-                    className="w-1 h-12 rounded-full mr-3"
+                    className="mr-3 h-12 w-1 rounded-full"
                     style={{ backgroundColor: getStatusColor(classItem.status) }}
                   />
                   <View className="flex-1">
                     <View className="flex-row items-center">
-                      <Text className="text-gray-900 font-medium">
-                        {classItem.subject}
-                      </Text>
-                      <Text className="text-gray-500 text-sm ml-2">
-                        ({classItem.class})
-                      </Text>
+                      <Text className="font-medium text-gray-900">{classItem.subject}</Text>
+                      <Text className="ml-2 text-sm text-gray-500">({classItem.class})</Text>
                     </View>
-                    <Text className="text-gray-500 text-sm">
-                      {classItem.time}
-                    </Text>
-                    <Text className="text-gray-400 text-xs">
-                      {classItem.room}
-                    </Text>
+                    <Text className="text-sm text-gray-500">{classItem.time}</Text>
+                    <Text className="text-xs text-gray-400">{classItem.room}</Text>
                   </View>
                   {classItem.status === 'completed' && (
                     <CheckCircle size={20} color={colors.success[500]} />
                   )}
                   {classItem.status === 'ongoing' && (
-                    <Badge variant="primary" size="sm">Live</Badge>
+                    <Badge variant="primary" size="sm">
+                      Live
+                    </Badge>
                   )}
-                  {classItem.status === 'upcoming' && (
-                    <Clock size={20} color={colors.gray[400]} />
-                  )}
+                  {classItem.status === 'upcoming' && <Clock size={20} color={colors.gray[400]} />}
                 </TouchableOpacity>
               ))}
             </Card>
@@ -283,14 +263,10 @@ export default function EmployeeDashboard() {
 
           {/* Pending Tasks */}
           <View className="mb-6">
-            <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-lg font-semibold text-gray-900">
-                Pending Tasks
-              </Text>
+            <View className="mb-4 flex-row items-center justify-between">
+              <Text className="text-lg font-semibold text-gray-900">Pending Tasks</Text>
               <TouchableOpacity>
-                <Text className="text-primary-600 text-sm font-medium">
-                  View All
-                </Text>
+                <Text className="text-sm font-medium text-primary-600">View All</Text>
               </TouchableOpacity>
             </View>
 
@@ -299,26 +275,17 @@ export default function EmployeeDashboard() {
                 <TouchableOpacity
                   key={task.id}
                   className={`flex-row items-center py-3 ${
-                    index !== mockPendingTasks.length - 1
-                      ? 'border-b border-gray-100'
-                      : ''
+                    index !== mockPendingTasks.length - 1 ? 'border-b border-gray-100' : ''
                   }`}
                 >
-                  <View className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center mr-3">
+                  <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-gray-100">
                     <FileText size={18} color={colors.gray[600]} />
                   </View>
                   <View className="flex-1">
-                    <Text className="text-gray-900 font-medium">
-                      {task.title}
-                    </Text>
-                    <Text className="text-gray-500 text-sm">
-                      Due: {task.dueDate}
-                    </Text>
+                    <Text className="font-medium text-gray-900">{task.title}</Text>
+                    <Text className="text-sm text-gray-500">Due: {task.dueDate}</Text>
                   </View>
-                  <Badge 
-                    variant={getPriorityColor(task.priority) as any} 
-                    size="sm"
-                  >
+                  <Badge variant={getPriorityColor(task.priority) as any} size="sm">
                     {task.priority}
                   </Badge>
                 </TouchableOpacity>
@@ -328,30 +295,28 @@ export default function EmployeeDashboard() {
 
           {/* Quick Actions */}
           <View className="mb-8">
-            <Text className="text-lg font-semibold text-gray-900 mb-4">
-              Quick Actions
-            </Text>
-            <View className="flex-row flex-wrap -mx-1.5">
-              <TouchableOpacity className="w-1/3 px-1.5 mb-3">
-                <View className="bg-primary-50 rounded-2xl p-4 items-center">
+            <Text className="mb-4 text-lg font-semibold text-gray-900">Quick Actions</Text>
+            <View className="-mx-1.5 flex-row flex-wrap">
+              <TouchableOpacity className="mb-3 w-1/3 px-1.5">
+                <View className="items-center rounded-2xl bg-primary-50 p-4">
                   <ClipboardCheck size={28} color={colors.primary[600]} strokeWidth={1.5} />
-                  <Text className="text-primary-700 text-sm font-medium mt-2 text-center">
+                  <Text className="mt-2 text-center text-sm font-medium text-primary-700">
                     Mark{'\n'}Attendance
                   </Text>
                 </View>
               </TouchableOpacity>
-              <TouchableOpacity className="w-1/3 px-1.5 mb-3">
-                <View className="bg-success-50 rounded-2xl p-4 items-center">
+              <TouchableOpacity className="mb-3 w-1/3 px-1.5">
+                <View className="items-center rounded-2xl bg-success-50 p-4">
                   <GraduationCap size={28} color={colors.success[600]} strokeWidth={1.5} />
-                  <Text className="text-success-700 text-sm font-medium mt-2 text-center">
+                  <Text className="mt-2 text-center text-sm font-medium text-success-700">
                     Enter{'\n'}Marks
                   </Text>
                 </View>
               </TouchableOpacity>
-              <TouchableOpacity className="w-1/3 px-1.5 mb-3">
-                <View className="bg-warning-50 rounded-2xl p-4 items-center">
+              <TouchableOpacity className="mb-3 w-1/3 px-1.5">
+                <View className="items-center rounded-2xl bg-warning-50 p-4">
                   <Calendar size={28} color={colors.warning[600]} strokeWidth={1.5} />
-                  <Text className="text-warning-700 text-sm font-medium mt-2 text-center">
+                  <Text className="mt-2 text-center text-sm font-medium text-warning-700">
                     Apply{'\n'}Leave
                   </Text>
                 </View>

@@ -2,11 +2,11 @@
 export { default as apiClient, clearAuthTokens } from './client';
 
 // Error handling (from shared)
-export { 
-  parseApiError, 
-  parseError, 
-  getErrorMessage, 
-  getFieldErrors, 
+export {
+  parseApiError,
+  parseError,
+  getErrorMessage,
+  getFieldErrors,
   isValidationError,
   isNetworkError,
   getErrorTitle,

@@ -37,31 +37,91 @@ export const avatarStyles = StyleSheet.create({
   small: { width: 36, height: 36, borderRadius: 18 },
   medium: { width: 50, height: 50, borderRadius: 25 },
   large: { width: 80, height: 80, borderRadius: 40 },
-  placeholder: { backgroundColor: Colors.gray[100], alignItems: 'center', justifyContent: 'center' },
+  placeholder: {
+    backgroundColor: Colors.gray[100],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
 
 // Header Styles (Gradient Headers)
 export const headerStyles = StyleSheet.create({
   header: { paddingTop: 44, paddingBottom: 16, paddingHorizontal: 16, overflow: 'hidden' },
-  circle1: { position: 'absolute', top: -40, right: -40, width: 140, height: 140, borderRadius: 70, backgroundColor: 'rgba(255,255,255,0.1)' },
-  circle2: { position: 'absolute', bottom: -50, left: -30, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(255,255,255,0.08)' },
+  circle1: {
+    position: 'absolute',
+    top: -40,
+    right: -40,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  circle2: {
+    position: 'absolute',
+    bottom: -50,
+    left: -30,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
   content: { zIndex: 1 },
   topRow: { flexDirection: 'row', alignItems: 'center' },
-  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   titleContainer: { flex: 1, marginLeft: 12 },
   title: { fontSize: 20, fontWeight: '700', color: '#fff' },
   subtitle: { fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
   actions: { flexDirection: 'row', gap: 8 },
-  actionBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
-  primaryBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
+  actionBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  primaryBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
 
 // Search Styles
 export const searchStyles = StyleSheet.create({
   container: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 12, gap: 10 },
-  bar: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 12, height: 44, borderWidth: 1, borderColor: Colors.gray[200] },
+  bar: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    height: 44,
+    borderWidth: 1,
+    borderColor: Colors.gray[200],
+  },
   input: { flex: 1, marginLeft: 8, fontSize: 14, color: Colors.gray[900] },
-  filterBtn: { width: 44, height: 44, borderRadius: 10, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: Colors.gray[200] },
+  filterBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.gray[200],
+  },
 });
 
 // Action Button Styles
@@ -77,15 +137,21 @@ export const actionBtnStyles = StyleSheet.create({
 export const stateStyles = StyleSheet.create({
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 100 },
   loadingText: { fontSize: 14, color: Colors.gray[500], marginTop: 12 },
-  
+
   empty: { alignItems: 'center', justifyContent: 'center', paddingTop: 60 },
   emptyText: { fontSize: 16, fontWeight: '600', color: Colors.gray[500], marginTop: 12 },
   emptySubtext: { fontSize: 13, color: Colors.gray[400], marginTop: 4 },
-  
+
   error: { alignItems: 'center', justifyContent: 'center', paddingTop: 60 },
   errorText: { fontSize: 16, fontWeight: '600', color: Colors.error[500], marginTop: 12 },
   errorSubtext: { fontSize: 13, color: Colors.gray[400], marginTop: 4 },
-  retryBtn: { marginTop: 16, paddingHorizontal: 20, paddingVertical: 10, backgroundColor: adminTheme.accent, borderRadius: 8 },
+  retryBtn: {
+    marginTop: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: adminTheme.accent,
+    borderRadius: 8,
+  },
   retryText: { fontSize: 14, fontWeight: '600', color: '#fff' },
 });
 

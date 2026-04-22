@@ -20,6 +20,9 @@ importers:
       lint-staged:
         specifier: ^16.4.0
         version: 16.4.0
+      prettier:
+        specifier: ^3.8.3
+        version: 3.8.3
       typescript:
         specifier: ^5.3.3
         version: 5.9.3
@@ -192,6 +195,9 @@ importers:
       prettier:
         specifier: ^3.3.3
         version: 3.8.2
+      prettier-plugin-tailwindcss:
+        specifier: ^0.6.14
+        version: 0.6.14(prettier@3.8.2)
       react-test-renderer:
         specifier: 18.3.1
         version: 18.3.1(react@19.2.0)
@@ -6134,6 +6140,11 @@ packages:
 
   prettier@3.8.2:
     resolution: {integrity: sha512-8c3mgTe0ASwWAJK+78dpviD+A8EqhndQPUBpNUIPt6+xWlIigCwfN01lWr9MAede4uqXGTEKeQWTvzb3vjia0Q==}
+    engines: {node: '>=14'}
+    hasBin: true
+
+  prettier@3.8.3:
+    resolution: {integrity: sha512-7igPTM53cGHMW8xWuVTydi2KO233VFiTNyF5hLJqpilHfmn8C8gPf+PS7dUT64YcXFbiMGZxS9pCSxL/Dxm/Jw==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -14491,6 +14502,8 @@ snapshots:
       prettier: 3.8.2
 
   prettier@3.8.2: {}
+
+  prettier@3.8.3: {}
 
   pretty-format@29.7.0:
     dependencies:

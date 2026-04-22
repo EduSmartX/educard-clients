@@ -1,15 +1,15 @@
 /**
  * Attendance Types
- * 
+ *
  * Type definitions for attendance tracking including student attendance,
  * employee timesheets, holidays, and attendance reporting/analytics.
  * Used across Web, iOS, and Android for consistent data handling.
- * 
+ *
  * @module types/attendance
  */
 
-import type { AuditFields, BaseQueryParams } from './common';
-import type { AttendanceStatusType } from '../constants/attendance';
+import type { AuditFields, BaseQueryParams } from "./common";
+import type { AttendanceStatusType } from "../constants/attendance";
 
 // Re-export from constants for convenience
 export type { AttendanceStatusType };
@@ -132,7 +132,7 @@ export interface Holiday {
   public_id: string;
   name: string;
   date: string;
-  type: 'public' | 'school' | 'optional';
+  type: "public" | "school" | "optional";
   description?: string;
   is_recurring?: boolean;
 }
@@ -145,7 +145,7 @@ export interface TimesheetEntry extends AuditFields {
   date: string;
   check_in_time: string | null;
   check_out_time: string | null;
-  status: 'present' | 'absent' | 'half_day' | 'leave' | 'holiday';
+  status: "present" | "absent" | "half_day" | "leave" | "holiday";
   working_hours?: number;
   overtime_hours?: number;
   remarks?: string;

@@ -42,11 +42,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   initialize: async () => {
     try {
       set({ isLoading: true, error: null });
-      
+
       const user = await checkAuth();
       const accessToken = await SecureStore.getItemAsync(STORAGE_KEYS.ACCESS_TOKEN);
       const refreshToken = await SecureStore.getItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
-      
+
       if (user && accessToken && refreshToken) {
         set({
           user,
@@ -80,9 +80,9 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   login: async (credentials: LoginCredentials) => {
     try {
       set({ isLoading: true, error: null });
-      
+
       const { user, tokens } = await apiLogin(credentials);
-      
+
       set({
         user,
         tokens,
@@ -103,9 +103,9 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   signup: async (data: SignupData) => {
     try {
       set({ isLoading: true, error: null });
-      
+
       const { user, tokens } = await apiSignup(data);
-      
+
       set({
         user,
         tokens,
@@ -126,9 +126,9 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   logout: async () => {
     try {
       set({ isLoading: true });
-      
+
       await apiLogout();
-      
+
       set({
         user: null,
         tokens: null,

@@ -18,7 +18,9 @@ export interface StudentQueryParams {
 }
 
 export async function getStudents(params?: StudentQueryParams): Promise<StudentListResponse> {
-  const response = await apiClient.get<StudentListResponse>(API_ENDPOINTS.STUDENTS.LIST, { params });
+  const response = await apiClient.get<StudentListResponse>(API_ENDPOINTS.STUDENTS.LIST, {
+    params,
+  });
   return response.data;
 }
 

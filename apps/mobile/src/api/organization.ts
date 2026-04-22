@@ -22,7 +22,7 @@ export interface AdminInfo {
   last_name: string;
   email: string;
   password: string;
-  password2: string;  // Confirm password
+  password2: string; // Confirm password
   notification_opt_in: boolean;
   phone?: string;
   gender?: string;

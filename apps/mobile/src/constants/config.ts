@@ -10,18 +10,18 @@ const getDefaultApiUrl = () => {
   // If running in Expo Go on a physical device, we need the host machine's IP
   // Expo provides this in the manifest
   const debuggerHost = Constants.expoConfig?.hostUri || Constants.manifest?.debuggerHost;
-  
+
   if (debuggerHost) {
     // Extract IP from debuggerHost (format: "192.168.1.x:8081")
     const hostIp = debuggerHost.split(':')[0];
     return `http://${hostIp}:8000/api`;
   }
-  
+
   // Fallback for Android emulator (10.0.2.2 maps to host localhost)
   if (Platform.OS === 'android') {
     return 'http://10.0.2.2:8000/api';
   }
-  
+
   // iOS simulator can use localhost
   return 'http://localhost:8000/api';
 };
@@ -75,20 +75,20 @@ export const ROUTES = {
   LOGIN: '/(auth)/login',
   SIGNUP: '/(auth)/signup',
   FORGOT_PASSWORD: '/(auth)/forgot-password',
-  
+
   // Admin routes
   ADMIN_DASHBOARD: '/(tabs)/(admin)/dashboard',
   ADMIN_TEACHERS: '/(tabs)/(admin)/teachers',
   ADMIN_STUDENTS: '/(tabs)/(admin)/students',
   ADMIN_CLASSES: '/(tabs)/(admin)/classes',
   ADMIN_SETTINGS: '/(tabs)/(admin)/settings',
-  
+
   // Employee routes
   EMPLOYEE_DASHBOARD: '/(tabs)/(employee)/dashboard',
   EMPLOYEE_ATTENDANCE: '/(tabs)/(employee)/attendance',
   EMPLOYEE_TIMETABLE: '/(tabs)/(employee)/timetable',
   EMPLOYEE_PROFILE: '/(tabs)/(employee)/profile',
-  
+
   // Parent routes
   PARENT_DASHBOARD: '/(tabs)/(parent)/dashboard',
   PARENT_CHILDREN: '/(tabs)/(parent)/children',

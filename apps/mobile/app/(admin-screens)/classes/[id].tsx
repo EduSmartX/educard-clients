@@ -34,7 +34,10 @@ export default function ClassDetailScreen() {
           <DetailRow label="Students" value={c?.student_count} />
           <DetailRow label="Subjects" value={c?.subjects_count} />
           <DetailRow label="Available Seats" value={c?.available_seats} />
-          <DetailRow label="Full" value={c?.is_full ? 'Yes' : c?.is_full === false ? 'No' : undefined} />
+          <DetailRow
+            label="Full"
+            value={c?.is_full ? 'Yes' : c?.is_full === false ? 'No' : undefined}
+          />
           <DetailRow label="Info" value={c?.info} />
         </DetailSection>
       </Animated.View>
@@ -52,7 +55,12 @@ export default function ClassDetailScreen() {
       {c?.subjects?.length ? (
         <Animated.View entering={FadeInDown.delay(300)}>
           <DetailSection title="Subjects" icon="📚">
-            <ChipRow items={c.subjects.map((s: any) => ({ key: s.public_id, label: `${s.subject_info?.name || s.name}${s.subject_info?.code || s.code ? ` (${s.subject_info?.code || s.code})` : ''}` }))} />
+            <ChipRow
+              items={c.subjects.map((s: any) => ({
+                key: s.public_id,
+                label: `${s.subject_info?.name || s.name}${s.subject_info?.code || s.code ? ` (${s.subject_info?.code || s.code})` : ''}`,
+              }))}
+            />
           </DetailSection>
         </Animated.View>
       ) : null}
@@ -74,7 +82,13 @@ export default function ClassDetailScreen() {
 }
 
 const extraStyles = StyleSheet.create({
-  studentRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#f5f5f5' },
+  studentRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f5f5f5',
+  },
   studentName: { fontSize: 14, fontWeight: '600', color: '#1e293b' },
   studentAdm: { fontSize: 13, color: '#64748b' },
 });

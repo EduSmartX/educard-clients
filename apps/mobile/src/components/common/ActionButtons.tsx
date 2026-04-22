@@ -83,19 +83,18 @@ export function ActionButtons({
   ];
 
   return (
-    <View style={[
-      styles.container, 
-      direction === 'row' ? styles.row : styles.column,
-      { gap: sizeConfig.gap }
-    ]}>
-      {actions.filter(a => a.show).map(({ key, button }) => (
-        <ActionButton
-          key={key}
-          {...button}
-          size={sizeConfig.button}
-          iconSize={sizeConfig.icon}
-        />
-      ))}
+    <View
+      style={[
+        styles.container,
+        direction === 'row' ? styles.row : styles.column,
+        { gap: sizeConfig.gap },
+      ]}
+    >
+      {actions
+        .filter((a) => a.show)
+        .map(({ key, button }) => (
+          <ActionButton key={key} {...button} size={sizeConfig.button} iconSize={sizeConfig.icon} />
+        ))}
     </View>
   );
 }

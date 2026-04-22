@@ -2,8 +2,14 @@
  * Shared API - Classes
  */
 
-import type { AxiosInstance } from 'axios';
-import type { ApiResponse, PaginatedResponse, PaginationParams, Class, Section } from '../types';
+import type { AxiosInstance } from "axios";
+import type {
+  ApiResponse,
+  PaginatedResponse,
+  PaginationParams,
+  Class,
+  Section,
+} from "../types";
 
 export interface CreateClassData {
   name: string;
@@ -30,10 +36,14 @@ export function createClassesApi(client: AxiosInstance) {
     /**
      * Get all classes
      */
-    getAll: async (params?: PaginationParams & {
-      academic_year?: string;
-    }): Promise<PaginatedResponse<Class>> => {
-      const response = await client.get<PaginatedResponse<Class>>('/classes/', { params });
+    getAll: async (
+      params?: PaginationParams & {
+        academic_year?: string;
+      },
+    ): Promise<PaginatedResponse<Class>> => {
+      const response = await client.get<PaginatedResponse<Class>>("/classes/", {
+        params,
+      });
       return response.data;
     },
 
@@ -49,7 +59,7 @@ export function createClassesApi(client: AxiosInstance) {
      * Create a new class
      */
     create: async (data: CreateClassData): Promise<Class> => {
-      const response = await client.post<ApiResponse<Class>>('/classes/', data);
+      const response = await client.post<ApiResponse<Class>>("/classes/", data);
       return response.data.data;
     },
 
@@ -57,7 +67,10 @@ export function createClassesApi(client: AxiosInstance) {
      * Update a class
      */
     update: async (id: string, data: UpdateClassData): Promise<Class> => {
-      const response = await client.patch<ApiResponse<Class>>(`/classes/${id}/`, data);
+      const response = await client.patch<ApiResponse<Class>>(
+        `/classes/${id}/`,
+        data,
+      );
       return response.data.data;
     },
 
@@ -72,7 +85,9 @@ export function createClassesApi(client: AxiosInstance) {
      * Get sections for a class
      */
     getSections: async (classId: string): Promise<Section[]> => {
-      const response = await client.get<ApiResponse<Section[]>>(`/classes/${classId}/sections/`);
+      const response = await client.get<ApiResponse<Section[]>>(
+        `/classes/${classId}/sections/`,
+      );
       return response.data.data;
     },
 
@@ -80,15 +95,24 @@ export function createClassesApi(client: AxiosInstance) {
      * Create a section
      */
     createSection: async (data: CreateSectionData): Promise<Section> => {
-      const response = await client.post<ApiResponse<Section>>('/sections/', data);
+      const response = await client.post<ApiResponse<Section>>(
+        "/sections/",
+        data,
+      );
       return response.data.data;
     },
 
     /**
      * Update a section
      */
-    updateSection: async (id: string, data: Partial<CreateSectionData>): Promise<Section> => {
-      const response = await client.patch<ApiResponse<Section>>(`/sections/${id}/`, data);
+    updateSection: async (
+      id: string,
+      data: Partial<CreateSectionData>,
+    ): Promise<Section> => {
+      const response = await client.patch<ApiResponse<Section>>(
+        `/sections/${id}/`,
+        data,
+      );
       return response.data.data;
     },
 
@@ -102,18 +126,22 @@ export function createClassesApi(client: AxiosInstance) {
     /**
      * Get class statistics
      */
-    getStats: async (id: string): Promise<{
+    getStats: async (
+      id: string,
+    ): Promise<{
       total_students: number;
       total_subjects: number;
       attendance_rate: number;
       average_performance: number;
     }> => {
-      const response = await client.get<ApiResponse<{
-        total_students: number;
-        total_subjects: number;
-        attendance_rate: number;
-        average_performance: number;
-      }>>(`/classes/${id}/stats/`);
+      const response = await client.get<
+        ApiResponse<{
+          total_students: number;
+          total_subjects: number;
+          attendance_rate: number;
+          average_performance: number;
+        }>
+      >(`/classes/${id}/stats/`);
       return response.data.data;
     },
   };

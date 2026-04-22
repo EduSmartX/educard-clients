@@ -1,6 +1,6 @@
 /**
  * AddressForm - Reusable Address Form Component
- * 
+ *
  * A modern, field-level address form component for React Native.
  * Supports:
  * - Individual address fields (Street, City, State, ZIP, Country)
@@ -9,7 +9,7 @@
  * - Compact and full modes
  * - Customizable field names for API compatibility
  * - Validation error display
- * 
+ *
  * Usage:
  * <AddressForm
  *   values={addressValues}
@@ -28,15 +28,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import {
-  MapPin,
-  Navigation,
-  Home,
-  Building2,
-  MapPinned,
-  Hash,
-  Globe,
-} from 'lucide-react-native';
+import { MapPin, Navigation, Home, Building2, MapPinned, Hash, Globe } from 'lucide-react-native';
 import * as Location from 'expo-location';
 import { Colors } from '@educard/shared';
 
@@ -160,9 +152,7 @@ export function AddressForm({
             disabled && styles.inputDisabled,
           ]}
         >
-          <View style={[styles.iconContainer, isFocused && styles.iconFocused]}>
-            {icon}
-          </View>
+          <View style={[styles.iconContainer, isFocused && styles.iconFocused]}>{icon}</View>
           <TextInput
             style={styles.input}
             placeholder={placeholder}
@@ -197,7 +187,7 @@ export function AddressForm({
               </Text>
             </View>
           </View>
-          
+
           {showLocationButton && (
             <TouchableOpacity
               style={[styles.locationButton, isLoadingLocation && styles.locationButtonLoading]}
@@ -224,7 +214,10 @@ export function AddressForm({
           'streetAddress',
           'Street Address',
           '123 Main Street',
-          <Home size={18} color={focusedField === 'streetAddress' ? Colors.primary[500] : Colors.gray[400]} />,
+          <Home
+            size={18}
+            color={focusedField === 'streetAddress' ? Colors.primary[500] : Colors.gray[400]}
+          />,
           { autoCapitalize: 'words' }
         )}
 
@@ -233,7 +226,10 @@ export function AddressForm({
           'addressLine2',
           'Address Line 2',
           'Apartment, Suite, Building',
-          <Building2 size={18} color={focusedField === 'addressLine2' ? Colors.primary[500] : Colors.gray[400]} />,
+          <Building2
+            size={18}
+            color={focusedField === 'addressLine2' ? Colors.primary[500] : Colors.gray[400]}
+          />,
           { optional: true, autoCapitalize: 'words' }
         )}
 
@@ -243,14 +239,20 @@ export function AddressForm({
             'city',
             'City',
             'City',
-            <MapPinned size={18} color={focusedField === 'city' ? Colors.primary[500] : Colors.gray[400]} />,
+            <MapPinned
+              size={18}
+              color={focusedField === 'city' ? Colors.primary[500] : Colors.gray[400]}
+            />,
             { halfWidth: true, autoCapitalize: 'words' }
           )}
           {renderField(
             'state',
             'State',
             'State',
-            <MapPin size={18} color={focusedField === 'state' ? Colors.primary[500] : Colors.gray[400]} />,
+            <MapPin
+              size={18}
+              color={focusedField === 'state' ? Colors.primary[500] : Colors.gray[400]}
+            />,
             { halfWidth: true, autoCapitalize: 'words' }
           )}
         </View>
@@ -261,14 +263,20 @@ export function AddressForm({
             'zipCode',
             'PIN Code',
             '123456',
-            <Hash size={18} color={focusedField === 'zipCode' ? Colors.primary[500] : Colors.gray[400]} />,
+            <Hash
+              size={18}
+              color={focusedField === 'zipCode' ? Colors.primary[500] : Colors.gray[400]}
+            />,
             { halfWidth: true, keyboardType: 'numeric' }
           )}
           {renderField(
             'country',
             'Country',
             'India',
-            <Globe size={18} color={focusedField === 'country' ? Colors.primary[500] : Colors.gray[400]} />,
+            <Globe
+              size={18}
+              color={focusedField === 'country' ? Colors.primary[500] : Colors.gray[400]}
+            />,
             { halfWidth: true, autoCapitalize: 'words' }
           )}
         </View>
@@ -281,7 +289,7 @@ const styles = StyleSheet.create({
   container: {
     gap: 16,
   },
-  
+
   // Header styles
   header: {
     flexDirection: 'row',

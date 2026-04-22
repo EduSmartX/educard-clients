@@ -48,28 +48,26 @@ export function Header({
   const content = (
     <View className="flex-row items-center justify-between px-4 py-3">
       {/* Left Section */}
-      <View className="flex-row items-center flex-1">
+      <View className="flex-1 flex-row items-center">
         {showBack && (
           <TouchableOpacity
             onPress={handleBack}
-            className="w-10 h-10 rounded-full items-center justify-center -ml-2 mr-2"
+            className="-ml-2 mr-2 h-10 w-10 items-center justify-center rounded-full"
             activeOpacity={0.7}
           >
             <ChevronLeft size={24} color={iconColor} />
           </TouchableOpacity>
         )}
         <View className="flex-1">
-          <Text
-            className="text-xl font-bold"
-            style={{ color: textColor }}
-            numberOfLines={1}
-          >
+          <Text className="text-xl font-bold" style={{ color: textColor }} numberOfLines={1}>
             {title}
           </Text>
           {subtitle && (
             <Text
-              className="text-sm mt-0.5"
-              style={{ color: light || transparent ? 'rgba(255,255,255,0.8)' : Colors.text.secondary }}
+              className="mt-0.5 text-sm"
+              style={{
+                color: light || transparent ? 'rgba(255,255,255,0.8)' : Colors.text.secondary,
+              }}
               numberOfLines={1}
             >
               {subtitle}
@@ -83,7 +81,7 @@ export function Header({
         {showNotifications && (
           <TouchableOpacity
             onPress={() => router.push('/(tabs)/(parent)/notifications' as any)}
-            className="w-10 h-10 rounded-full items-center justify-center bg-white/10"
+            className="h-10 w-10 items-center justify-center rounded-full bg-white/10"
             activeOpacity={0.7}
           >
             <Bell size={20} color={iconColor} />
@@ -92,7 +90,7 @@ export function Header({
         {showSettings && (
           <TouchableOpacity
             onPress={() => router.push('/(tabs)/(admin)/settings' as any)}
-            className="w-10 h-10 rounded-full items-center justify-center bg-white/10"
+            className="h-10 w-10 items-center justify-center rounded-full bg-white/10"
             activeOpacity={0.7}
           >
             <Settings size={20} color={iconColor} />
@@ -101,7 +99,7 @@ export function Header({
         {RightIcon && (
           <TouchableOpacity
             onPress={onRightIconPress}
-            className="w-10 h-10 rounded-full items-center justify-center bg-white/10"
+            className="h-10 w-10 items-center justify-center rounded-full bg-white/10"
             activeOpacity={0.7}
           >
             <RightIcon size={20} color={iconColor} />
@@ -127,11 +125,7 @@ export function Header({
     );
   }
 
-  return (
-    <View className="bg-white border-b border-secondary-100">
-      {content}
-    </View>
-  );
+  return <View className="border-b border-secondary-100 bg-white">{content}</View>;
 }
 
 export default Header;

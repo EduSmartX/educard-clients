@@ -1,7 +1,7 @@
 /**
  * Admin Screens Stack Layout
  * Stack navigator for create/view/edit screens organized by module
- * 
+ *
  * Structure:
  *   teachers/create, teachers/[id]
  *   students/create, students/[id]

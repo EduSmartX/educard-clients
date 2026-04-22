@@ -3,8 +3,8 @@
  * Zod schemas for form validation across Web and Mobile
  */
 
-import { z } from 'zod';
-import { GENDER_ENUM, BLOOD_GROUP_ENUM } from '../constants/user-constants';
+import { z } from "zod";
+import { GENDER_ENUM, BLOOD_GROUP_ENUM } from "../constants/user-constants";
 
 // ============================================================================
 // Common Validation Patterns
@@ -34,36 +34,36 @@ export const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
  */
 export const emailSchema = z
   .string()
-  .min(1, 'Email is required')
-  .email('Please enter a valid email');
+  .min(1, "Email is required")
+  .email("Please enter a valid email");
 
 /**
  * Optional email schema
  */
 export const optionalEmailSchema = z
   .string()
-  .email('Please enter a valid email')
+  .email("Please enter a valid email")
   .optional()
-  .or(z.literal(''));
+  .or(z.literal(""));
 
 /**
  * Password field schema
  */
 export const passwordSchema = z
   .string()
-  .min(1, 'Password is required')
-  .min(8, 'Password must be at least 8 characters');
+  .min(1, "Password is required")
+  .min(8, "Password must be at least 8 characters");
 
 /**
  * Strong password field schema (with regex)
  */
 export const strongPasswordSchema = z
   .string()
-  .min(1, 'Password is required')
-  .min(8, 'Password must be at least 8 characters')
+  .min(1, "Password is required")
+  .min(8, "Password must be at least 8 characters")
   .regex(
     PASSWORD_REGEX,
-    'Password must contain uppercase, lowercase, and number'
+    "Password must contain uppercase, lowercase, and number",
   );
 
 /**
@@ -71,57 +71,57 @@ export const strongPasswordSchema = z
  */
 export const phoneSchema = z
   .string()
-  .min(1, 'Phone number is required')
-  .regex(/^[0-9]{10}$/, 'Please enter a valid 10-digit phone number');
+  .min(1, "Phone number is required")
+  .regex(/^[0-9]{10}$/, "Please enter a valid 10-digit phone number");
 
 /**
  * Optional phone schema
  */
 export const optionalPhoneSchema = z
   .string()
-  .regex(/^[0-9]{10}$/, 'Please enter a valid 10-digit phone number')
+  .regex(/^[0-9]{10}$/, "Please enter a valid 10-digit phone number")
   .optional()
-  .or(z.literal(''));
+  .or(z.literal(""));
 
 /**
  * Name field schema
  */
 export const nameSchema = z
   .string()
-  .min(1, 'Name is required')
-  .min(2, 'Name must be at least 2 characters')
-  .max(100, 'Name must be less than 100 characters');
+  .min(1, "Name is required")
+  .min(2, "Name must be at least 2 characters")
+  .max(100, "Name must be less than 100 characters");
 
 /**
  * First name schema
  */
 export const firstNameSchema = z
   .string()
-  .min(1, 'First name is required')
-  .min(2, 'First name must be at least 2 characters')
-  .max(50, 'First name must be less than 50 characters');
+  .min(1, "First name is required")
+  .min(2, "First name must be at least 2 characters")
+  .max(50, "First name must be less than 50 characters");
 
 /**
  * Last name schema
  */
 export const lastNameSchema = z
   .string()
-  .min(1, 'Last name is required')
-  .min(1, 'Last name is required')
-  .max(50, 'Last name must be less than 50 characters');
+  .min(1, "Last name is required")
+  .min(1, "Last name is required")
+  .max(50, "Last name must be less than 50 characters");
 
 /**
  * Gender schema
  */
 export const genderSchema = z.enum(GENDER_ENUM, {
-  errorMap: () => ({ message: 'Please select a gender' }),
+  errorMap: () => ({ message: "Please select a gender" }),
 });
 
 /**
  * Blood group schema
  */
 export const bloodGroupSchema = z.enum(BLOOD_GROUP_ENUM, {
-  errorMap: () => ({ message: 'Please select a blood group' }),
+  errorMap: () => ({ message: "Please select a blood group" }),
 });
 
 /**
@@ -130,30 +130,27 @@ export const bloodGroupSchema = z.enum(BLOOD_GROUP_ENUM, {
 export const optionalBloodGroupSchema = z
   .enum(BLOOD_GROUP_ENUM)
   .optional()
-  .or(z.literal(''));
+  .or(z.literal(""));
 
 /**
  * Date of birth schema
  */
 export const dateOfBirthSchema = z
   .string()
-  .min(1, 'Date of birth is required')
+  .min(1, "Date of birth is required")
   .refine(
     (val) => {
       const date = new Date(val);
       const now = new Date();
       return date < now;
     },
-    { message: 'Date of birth must be in the past' }
+    { message: "Date of birth must be in the past" },
   );
 
 /**
  * Optional date schema
  */
-export const optionalDateSchema = z
-  .string()
-  .optional()
-  .or(z.literal(''));
+export const optionalDateSchema = z.string().optional().or(z.literal(""));
 
 // ============================================================================
 // Address Schema
@@ -163,24 +160,24 @@ export const optionalDateSchema = z
  * Address schema for organization/user addresses
  */
 export const addressSchema = z.object({
-  street_address: z.string().min(1, 'Street address is required'),
+  street_address: z.string().min(1, "Street address is required"),
   address_line_2: z.string().optional(),
-  city: z.string().min(1, 'City is required'),
-  state: z.string().min(1, 'State is required'),
-  zip_code: z.string().min(1, 'ZIP/Postal code is required'),
-  country: z.string().default('India'),
+  city: z.string().min(1, "City is required"),
+  state: z.string().min(1, "State is required"),
+  zip_code: z.string().min(1, "ZIP/Postal code is required"),
+  country: z.string().default("India"),
 });
 
 /**
  * Optional address schema
  */
 export const optionalAddressSchema = z.object({
-  street_address: z.string().optional().or(z.literal('')),
-  address_line_2: z.string().optional().or(z.literal('')),
-  city: z.string().optional().or(z.literal('')),
-  state: z.string().optional().or(z.literal('')),
-  zip_code: z.string().optional().or(z.literal('')),
-  country: z.string().default('India'),
+  street_address: z.string().optional().or(z.literal("")),
+  address_line_2: z.string().optional().or(z.literal("")),
+  city: z.string().optional().or(z.literal("")),
+  state: z.string().optional().or(z.literal("")),
+  zip_code: z.string().optional().or(z.literal("")),
+  country: z.string().default("India"),
 });
 
 // ============================================================================
@@ -191,8 +188,8 @@ export const optionalAddressSchema = z.object({
  * Login form schema
  */
 export const loginSchema = z.object({
-  username: z.string().min(1, 'Username or email is required'),
-  password: z.string().min(1, 'Password is required'),
+  username: z.string().min(1, "Username or email is required"),
+  password: z.string().min(1, "Password is required"),
 });
 
 /**
@@ -206,14 +203,14 @@ export const signupSchema = z
     phone: optionalPhoneSchema,
     organization_code: z
       .string()
-      .min(1, 'Organization code is required')
-      .min(4, 'Code must be at least 4 characters'),
+      .min(1, "Organization code is required")
+      .min(4, "Code must be at least 4 characters"),
     password: strongPasswordSchema,
-    confirm_password: z.string().min(1, 'Please confirm your password'),
+    confirm_password: z.string().min(1, "Please confirm your password"),
   })
   .refine((data) => data.password === data.confirm_password, {
     message: "Passwords don't match",
-    path: ['confirm_password'],
+    path: ["confirm_password"],
   });
 
 /**
@@ -228,13 +225,13 @@ export const forgotPasswordSchema = z.object({
  */
 export const resetPasswordSchema = z
   .object({
-    otp: z.string().length(6, 'OTP must be 6 digits'),
+    otp: z.string().length(6, "OTP must be 6 digits"),
     password: strongPasswordSchema,
-    confirm_password: z.string().min(1, 'Please confirm your password'),
+    confirm_password: z.string().min(1, "Please confirm your password"),
   })
   .refine((data) => data.password === data.confirm_password, {
     message: "Passwords don't match",
-    path: ['confirm_password'],
+    path: ["confirm_password"],
   });
 
 /**
@@ -242,13 +239,13 @@ export const resetPasswordSchema = z
  */
 export const changePasswordSchema = z
   .object({
-    current_password: z.string().min(1, 'Current password is required'),
+    current_password: z.string().min(1, "Current password is required"),
     new_password: strongPasswordSchema,
-    confirm_password: z.string().min(1, 'Please confirm your password'),
+    confirm_password: z.string().min(1, "Please confirm your password"),
   })
   .refine((data) => data.new_password === data.confirm_password, {
     message: "Passwords don't match",
-    path: ['confirm_password'],
+    path: ["confirm_password"],
   });
 
 // ============================================================================
@@ -259,12 +256,19 @@ export const changePasswordSchema = z
  * Organization info schema for registration
  */
 export const organizationInfoSchema = z.object({
-  name: z.string().min(1, 'Organization name is required').min(2, 'Name must be at least 2 characters'),
-  type: z.string().min(1, 'Organization type is required'),
+  name: z
+    .string()
+    .min(1, "Organization name is required")
+    .min(2, "Name must be at least 2 characters"),
+  type: z.string().min(1, "Organization type is required"),
   email: emailSchema,
   phone_number: optionalPhoneSchema,
   board_affiliation: z.string().optional(),
-  website: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+  website: z
+    .string()
+    .url("Please enter a valid URL")
+    .optional()
+    .or(z.literal("")),
 });
 
 /**
@@ -277,12 +281,12 @@ export const adminInfoSchema = z
     email: emailSchema,
     phone: optionalPhoneSchema,
     password: strongPasswordSchema,
-    password2: z.string().min(1, 'Please confirm your password'),
+    password2: z.string().min(1, "Please confirm your password"),
     notification_opt_in: z.boolean().default(true),
   })
   .refine((data) => data.password === data.password2, {
     message: "Passwords don't match",
-    path: ['password2'],
+    path: ["password2"],
   });
 
 /**
@@ -306,4 +310,6 @@ export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 export type AddressFormData = z.infer<typeof addressSchema>;
 export type OrganizationInfoFormData = z.infer<typeof organizationInfoSchema>;
 export type AdminInfoFormData = z.infer<typeof adminInfoSchema>;
-export type OrganizationRegistrationFormData = z.infer<typeof organizationRegistrationSchema>;
+export type OrganizationRegistrationFormData = z.infer<
+  typeof organizationRegistrationSchema
+>;

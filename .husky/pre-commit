@@ -1,0 +1,19 @@
+# ============================================
+# Pre-commit checks (like Python's pre-commit)
+# ============================================
+
+# 1. Lint-staged: ESLint + Prettier + secret detection on staged files
+echo "🔍 Running lint-staged (ESLint + Prettier + secrets)..."
+pnpm exec lint-staged || exit 1
+
+# 2. TypeScript type-check (like mypy for Python)
+#    Checks the ENTIRE project, not just staged files — type errors propagate
+echo "🔎 Running TypeScript type-check (shared package)..."
+cd packages/shared && pnpm run typecheck || { echo "❌ TypeScript errors in packages/shared"; exit 1; }
+cd ../..
+
+echo "🔎 Running TypeScript type-check (mobile app)..."
+cd apps/mobile && pnpm run typecheck || { echo "❌ TypeScript errors in apps/mobile"; exit 1; }
+cd ../..
+
+echo "✅ All pre-commit checks passed!"

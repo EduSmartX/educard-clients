@@ -20,12 +20,7 @@ export {
 } from '@educard/shared';
 
 // API
-export {
-  API_ENDPOINTS,
-  buildUrl,
-  QueryKeys,
-  StatusCodes,
-} from '@educard/shared';
+export { API_ENDPOINTS, buildUrl, QueryKeys, StatusCodes } from '@educard/shared';
 
 // User & Auth
 export {
@@ -56,11 +51,7 @@ export {
 } from '@educard/shared';
 
 // Signup Flow
-export {
-  SIGNUP_STEP_LABELS,
-  SIGNUP_STEP_TITLES,
-  SIGNUP_TOTAL_STEPS,
-} from '@educard/shared';
+export { SIGNUP_STEP_LABELS, SIGNUP_STEP_TITLES, SIGNUP_TOTAL_STEPS } from '@educard/shared';
 
 // Attendance
 export {
