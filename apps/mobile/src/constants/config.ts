@@ -1,0 +1,97 @@
+/**
+ * Application configuration constants
+ */
+
+import { Platform } from 'react-native';
+import Constants from 'expo-constants';
+
+// Get the correct API URL based on platform and device type
+const getDefaultApiUrl = () => {
+  // If running in Expo Go on a physical device, we need the host machine's IP
+  // Expo provides this in the manifest
+  const debuggerHost = Constants.expoConfig?.hostUri || Constants.manifest?.debuggerHost;
+  
+  if (debuggerHost) {
+    // Extract IP from debuggerHost (format: "192.168.1.x:8081")
+    const hostIp = debuggerHost.split(':')[0];
+    return `http://${hostIp}:8000/api`;
+  }
+  
+  // Fallback for Android emulator (10.0.2.2 maps to host localhost)
+  if (Platform.OS === 'android') {
+    return 'http://10.0.2.2:8000/api';
+  }
+  
+  // iOS simulator can use localhost
+  return 'http://localhost:8000/api';
+};
+
+// API Configuration
+export const API_CONFIG = {
+  BASE_URL: process.env.EXPO_PUBLIC_API_URL?.trim() || getDefaultApiUrl(),
+  TIMEOUT: 30000,
+  DEFAULT_PAGE_SIZE: 15,
+} as const;
+
+// App Info
+export const APP_INFO = {
+  NAME: 'EduCard',
+  VERSION: '1.0.0',
+  DESCRIPTION: 'Smart School Management',
+} as const;
+
+// Storage Keys
+export const STORAGE_KEYS = {
+  ACCESS_TOKEN: 'accessToken',
+  REFRESH_TOKEN: 'refreshToken',
+  USER_DATA: 'userData',
+  ONBOARDING_COMPLETE: 'onboardingComplete',
+} as const;
+
+// Query Keys for React Query
+export const QUERY_KEYS = {
+  AUTH: ['auth'] as const,
+  USER: ['user'] as const,
+  STUDENTS: ['students'] as const,
+  TEACHERS: ['teachers'] as const,
+  CLASSES: ['classes'] as const,
+  ATTENDANCE: ['attendance'] as const,
+  EXAMS: ['exams'] as const,
+  NOTIFICATIONS: ['notifications'] as const,
+} as const;
+
+// User Roles
+export const USER_ROLES = {
+  ADMIN: 'admin',
+  EMPLOYEE: 'employee',
+  PARENT: 'parent',
+} as const;
+
+export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
+
+// Routes
+export const ROUTES = {
+  // Auth routes
+  LOGIN: '/(auth)/login',
+  SIGNUP: '/(auth)/signup',
+  FORGOT_PASSWORD: '/(auth)/forgot-password',
+  
+  // Admin routes
+  ADMIN_DASHBOARD: '/(tabs)/(admin)/dashboard',
+  ADMIN_TEACHERS: '/(tabs)/(admin)/teachers',
+  ADMIN_STUDENTS: '/(tabs)/(admin)/students',
+  ADMIN_CLASSES: '/(tabs)/(admin)/classes',
+  ADMIN_SETTINGS: '/(tabs)/(admin)/settings',
+  
+  // Employee routes
+  EMPLOYEE_DASHBOARD: '/(tabs)/(employee)/dashboard',
+  EMPLOYEE_ATTENDANCE: '/(tabs)/(employee)/attendance',
+  EMPLOYEE_TIMETABLE: '/(tabs)/(employee)/timetable',
+  EMPLOYEE_PROFILE: '/(tabs)/(employee)/profile',
+  
+  // Parent routes
+  PARENT_DASHBOARD: '/(tabs)/(parent)/dashboard',
+  PARENT_CHILDREN: '/(tabs)/(parent)/children',
+  PARENT_ATTENDANCE: '/(tabs)/(parent)/attendance',
+  PARENT_NOTIFICATIONS: '/(tabs)/(parent)/notifications',
+} as const;

@@ -1,0 +1,164 @@
+/**
+ * Input Component with floating label and icons
+ */
+
+import React, { useState } from 'react';
+import {
+  View,
+  TextInput,
+  Text,
+  TouchableOpacity,
+  type TextInputProps,
+} from 'react-native';
+import { Eye, EyeOff, LucideIcon } from 'lucide-react-native';
+
+import { Colors } from '@/constants/colors';
+
+export interface InputProps extends TextInputProps {
+  label: string;
+  error?: string;
+  icon?: LucideIcon;
+  leftIcon?: React.ReactNode;
+  rightIcon?: LucideIcon;
+  onRightIconPress?: () => void;
+  containerClassName?: string;
+}
+
+export function Input({
+  label,
+  error,
+  icon: LeftIconComponent,
+  leftIcon,
+  rightIcon: RightIcon,
+  onRightIconPress,
+  containerClassName,
+  secureTextEntry,
+  value,
+  onFocus,
+  onBlur,
+  ...props
+}: InputProps) {
+  const [isFocused, setIsFocused] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  
+  const hasValue = value && value.length > 0;
+  const isFloating = isFocused || hasValue;
+  const isPassword = secureTextEntry !== undefined;
+
+  const handleFocus = (e: any) => {
+    setIsFocused(true);
+    onFocus?.(e);
+  };
+
+  const handleBlur = (e: any) => {
+    setIsFocused(false);
+    onBlur?.(e);
+  };
+
+  const togglePasswordVisibility = () => {
+    setIsPasswordVisible(!isPasswordVisible);
+  };
+
+  const getBorderColor = () => {
+    if (error) return 'border-danger-500';
+    if (isFocused) return 'border-primary-500';
+    return 'border-secondary-300';
+  };
+
+  // Support both icon (LucideIcon component) and leftIcon (rendered React element)
+  const LeftIcon = LeftIconComponent;
+
+  return (
+    <View className={`mb-4 ${containerClassName || ''}`}>
+      <View
+        className={`
+          relative flex-row items-center
+          bg-white rounded-xl border-2
+          ${getBorderColor()}
+          px-4 py-3
+        `}
+      >
+        {/* Left Icon - either as component or rendered element */}
+        {leftIcon}
+        {LeftIcon && (
+          <LeftIcon
+            size={20}
+            color={isFocused ? Colors.primary[500] : Colors.secondary[400]}
+            style={{ marginRight: 12 }}
+          />
+        )}
+
+        {/* Input Container */}
+        <View className="flex-1">
+          {/* Floating Label */}
+          <Text
+            className={`
+              absolute left-0
+              ${isFloating 
+                ? '-top-2 text-xs' 
+                : 'top-1/2 -translate-y-1/2 text-base'
+              }
+              ${isFocused 
+                ? 'text-primary-500' 
+                : error 
+                  ? 'text-danger-500' 
+                  : 'text-secondary-400'
+              }
+              transition-all duration-200
+            `}
+          >
+            {label}
+          </Text>
+
+          {/* Text Input */}
+          <TextInput
+            className={`
+              text-base text-secondary-900
+              ${isFloating ? 'pt-2' : ''}
+            `}
+            placeholderTextColor={Colors.secondary[400]}
+            value={value}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            secureTextEntry={isPassword && !isPasswordVisible}
+            {...props}
+          />
+        </View>
+
+        {/* Password Toggle */}
+        {isPassword && (
+          <TouchableOpacity
+            onPress={togglePasswordVisibility}
+            className="p-1"
+          >
+            {isPasswordVisible ? (
+              <EyeOff size={20} color={Colors.secondary[400]} />
+            ) : (
+              <Eye size={20} color={Colors.secondary[400]} />
+            )}
+          </TouchableOpacity>
+        )}
+
+        {/* Right Icon */}
+        {RightIcon && !isPassword && (
+          <TouchableOpacity
+            onPress={onRightIconPress}
+            className="p-1"
+            disabled={!onRightIconPress}
+          >
+            <RightIcon size={20} color={Colors.secondary[400]} />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Error Message */}
+      {error && (
+        <Text className="text-danger-500 text-sm mt-1 ml-1">
+          {error}
+        </Text>
+      )}
+    </View>
+  );
+}
+
+export default Input;
