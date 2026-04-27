@@ -4,13 +4,15 @@
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { useStudentDetail } from '@/features/students';
+
 import { DetailScreenShell, DetailSection, DetailRow } from '@/components/detail';
+import { useStudentDetail } from '@/features/students';
 
 export default function StudentDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, is_deleted } = useLocalSearchParams<{ id: string; is_deleted?: string }>();
   const router = useRouter();
-  const { data: student, isLoading, isError } = useStudentDetail(id || '');
+  const isDeleted = is_deleted === 'true';
+  const { data: student, isLoading, isError } = useStudentDetail(id || '', isDeleted);
 
   return (
     <DetailScreenShell
@@ -18,7 +20,9 @@ export default function StudentDetailScreen() {
       subtitle={student?.full_name || '...'}
       isLoading={isLoading}
       isError={isError || !student}
-      onBack={() => router.navigate('/(tabs)/(admin)/students' as any)}
+      onBack={() => router.back()}
+      avatarName={student?.full_name}
+      avatarImageUri={student?.profile_photo_thumbnail}
     >
       <Animated.View entering={FadeInDown.delay(100)}>
         <DetailSection title="Personal Info" icon="👤">
@@ -36,8 +40,8 @@ export default function StudentDetailScreen() {
           <DetailRow label="Roll Number" value={student?.roll_number} />
           <DetailRow label="Admission No." value={student?.admission_number} />
           <DetailRow label="Admission Date" value={student?.admission_date} />
-          <DetailRow label="Class" value={(student as any)?.class_info?.class_master?.name} />
-          <DetailRow label="Section" value={(student as any)?.class_info?.name} />
+          <DetailRow label="Class" value={student?.class_info?.class_master?.name} />
+          <DetailRow label="Section" value={student?.class_info?.name} />
         </DetailSection>
       </Animated.View>
 

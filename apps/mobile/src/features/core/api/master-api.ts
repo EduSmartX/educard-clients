@@ -3,7 +3,6 @@
  * Master/reference data: core classes, subjects, role types, uploads
  */
 
-import { apiClient } from '@/api/client';
 import { API_ENDPOINTS } from '@educard/shared';
 import type {
   CoreClass,
@@ -15,6 +14,8 @@ import type {
   MasterListResponse,
   ApiListResponse,
 } from '@educard/shared';
+
+import { apiClient } from '@/api/client';
 
 // Re-export types for consumers
 export type { CoreClass, CoreSubject, RoleType, Department, Supervisor, LeaveType };

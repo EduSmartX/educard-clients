@@ -1,3 +1,17 @@
+import { Colors } from '@educard/shared';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import {
+  Mail,
+  ArrowLeft,
+  Send,
+  CheckCircle,
+  RefreshCw,
+  KeyRound,
+  Lock,
+  Eye,
+  EyeOff,
+} from 'lucide-react-native';
 import { useState, useCallback, useRef } from 'react';
 import {
   View,
@@ -10,23 +24,10 @@ import {
   Alert,
   StyleSheet,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated';
-import {
-  Mail,
-  ArrowLeft,
-  Send,
-  CheckCircle,
-  RefreshCw,
-  KeyRound,
-  Lock,
-  Eye,
-  EyeOff,
-} from 'lucide-react-native';
+
 import { authApi } from '@/api/auth';
 import { otpApi } from '@/api/otp';
-import { Colors } from '@educard/shared';
 
 type Step = 'email' | 'otp' | 'newPassword';
 

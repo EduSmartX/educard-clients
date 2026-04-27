@@ -3,6 +3,25 @@
  * Mobile-first teacher management with search, add, edit, delete
  */
 
+import {
+  Colors,
+  getRoleGradient,
+  getRoleThemeColors,
+  Teacher,
+  getErrorMessage,
+} from '@educard/shared';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import {
+  Plus,
+  ChevronLeft,
+  Upload,
+  UserCircle,
+  Briefcase,
+  AlertCircle,
+  Mail,
+  ChevronRight,
+} from 'lucide-react-native';
 import { useState, useCallback, useRef } from 'react';
 import {
   View,
@@ -18,30 +37,19 @@ import {
   type NativeSyntheticEvent,
   type NativeScrollEvent,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeIn, FadeInDown, FadeInRight } from 'react-native-reanimated';
-import {
-  Plus,
-  ChevronLeft,
-  Upload,
-  UserCircle,
-  Briefcase,
-  AlertCircle,
-  Mail,
-  ChevronRight,
-} from 'lucide-react-native';
-import { Colors, getRoleGradient, getRoleThemeColors, Teacher } from '@educard/shared';
-import { useTeachers, useDeleteTeacher } from '@/features/teachers';
+import Animated, { FadeIn } from 'react-native-reanimated';
+
 import { SearchBar } from '@/components/common';
 import { EntityActions } from '@/components/common/EntityActions';
-import { useDeleteConfirm } from '@/hooks/useDeleteConfirm';
 import {
   FilterModal,
   ActiveFilters,
   TEACHER_FILTER_FIELDS,
   getTeacherFilterLabels,
 } from '@/components/filters';
+import { getMediaUrl } from '@/constants/config';
+import { useTeachers, useDeleteTeacher, useRestoreTeacher } from '@/features/teachers';
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm';
 import { layoutStyles, headerStyles, stateStyles, listStyles } from '@/styles';
 
 const { width } = Dimensions.get('window');
@@ -81,7 +89,36 @@ export default function TeachersScreen() {
 
   // Delete mutation
   const deleteMutation = useDeleteTeacher();
-  const confirmDelete = useDeleteConfirm({ entityName: 'Teacher', deleteMutation });
+  const confirmDelete = useDeleteConfirm({
+    entityName: 'Teacher',
+    deleteMutation,
+    onSuccess: () => refetch(),
+  });
+
+  // Restore mutation for reactivating deleted teachers
+  const restoreMutation = useRestoreTeacher();
+  const handleReactivate = useCallback(
+    (id: string, name: string) => {
+      Alert.alert('Reactivate Teacher', `Are you sure you want to reactivate ${name}?`, [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reactivate',
+          onPress: async () => {
+            try {
+              await restoreMutation.mutateAsync(id);
+              refetch();
+              Alert.alert('Success', `${name} reactivated successfully`);
+            } catch (error) {
+              Alert.alert('Error', getErrorMessage(error, 'Failed to reactivate teacher'));
+            }
+          },
+        },
+      ]);
+    },
+    [restoreMutation, refetch]
+  );
+
+  const isDeletedView = filters.is_deleted === true;
 
   const teachers = data?.teachers ?? [];
   const totalCount = data?.totalCount ?? 0;
@@ -138,7 +175,7 @@ export default function TeachersScreen() {
   const handleView = (teacher: Teacher) => {
     router.push({
       pathname: '/(admin-screens)/teachers/[id]' as any,
-      params: { id: teacher.public_id },
+      params: { id: teacher.public_id, ...(isDeletedView ? { is_deleted: 'true' } : {}) },
     });
   };
 
@@ -150,13 +187,16 @@ export default function TeachersScreen() {
   };
 
   const renderTeacherCard = ({ item, index }: { item: Teacher; index: number }) => (
-    <Animated.View entering={FadeInRight.delay(Math.min(index, 10) * 50).duration(300)}>
+    <View>
       <TouchableOpacity style={styles.card} onPress={() => handleView(item)} activeOpacity={0.7}>
         {/* Top row — Avatar + Info */}
         <View style={styles.topRow}>
           <View style={styles.avatarSection}>
             {item.profile_photo_thumbnail ? (
-              <Image source={{ uri: item.profile_photo_thumbnail }} style={styles.avatar} />
+              <Image
+                source={{ uri: getMediaUrl(item.profile_photo_thumbnail) }}
+                style={styles.avatar}
+              />
             ) : (
               <LinearGradient colors={['#e0e7ff', '#c7d2fe']} style={styles.avatarPlaceholder}>
                 <Text style={styles.avatarInitials}>
@@ -203,11 +243,20 @@ export default function TeachersScreen() {
         {/* Bottom — Actions */}
         <EntityActions
           onView={() => handleView(item)}
-          onEdit={() => handleEdit(item)}
-          onDelete={() => confirmDelete(item.public_id, item.full_name || 'this teacher')}
+          onEdit={isDeletedView ? undefined : () => handleEdit(item)}
+          onDelete={
+            isDeletedView
+              ? undefined
+              : () => confirmDelete(item.public_id, item.full_name || 'this teacher')
+          }
+          onReactivate={
+            isDeletedView
+              ? () => handleReactivate(item.public_id, item.full_name || 'this teacher')
+              : undefined
+          }
         />
       </TouchableOpacity>
-    </Animated.View>
+    </View>
   );
 
   return (

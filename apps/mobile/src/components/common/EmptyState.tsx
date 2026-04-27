@@ -3,9 +3,9 @@
  * Reusable empty state display
  */
 
-import { View, Text, StyleSheet } from 'react-native';
-import { LucideIcon } from 'lucide-react-native';
 import { Colors } from '@educard/shared';
+import { LucideIcon } from 'lucide-react-native';
+import { View, Text, StyleSheet } from 'react-native';
 
 interface EmptyStateProps {
   icon: LucideIcon;

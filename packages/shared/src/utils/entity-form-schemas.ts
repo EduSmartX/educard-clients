@@ -6,9 +6,7 @@
 
 import { z } from "zod";
 
-// ============================================================================
 // Reusable Field Validators
-// ============================================================================
 
 const requiredString = (label: string) =>
   z
@@ -55,9 +53,7 @@ const requiredGender = () =>
     .min(1, "Gender is required")
     .refine((v) => ["M", "F", "O"].includes(v), "Please select a valid gender");
 
-// ============================================================================
 // TEACHER Form Schemas
-// ============================================================================
 
 /** Quick-add teacher: only required fields */
 export const teacherQuickSchema = z.object({
@@ -100,9 +96,7 @@ export const teacherFullSchema = teacherQuickSchema.extend({
   country: optionalString(),
 });
 
-// ============================================================================
 // STUDENT Form Schemas
-// ============================================================================
 
 /** Quick-add student: only required fields */
 export const studentQuickSchema = z.object({
@@ -142,9 +136,7 @@ export const studentFullSchema = studentQuickSchema.extend({
   country: optionalString(),
 });
 
-// ============================================================================
 // CLASS Form Schema
-// ============================================================================
 
 export const classFormSchema = z.object({
   class_master: requiredString("Class"),
@@ -163,9 +155,7 @@ export const classFormSchema = z.object({
   info: optionalString(),
 });
 
-// ============================================================================
 // SUBJECT Form Schema
-// ============================================================================
 
 export const subjectFormSchema = z.object({
   class_id: requiredString("Class"),
@@ -174,9 +164,7 @@ export const subjectFormSchema = z.object({
   description: optionalString(),
 });
 
-// ============================================================================
 // Validation Helper — Validate a single field against a Zod schema
-// ============================================================================
 
 /**
  * Validate a single field from a Zod object schema.
@@ -221,9 +209,7 @@ export function validateAllFields<T extends z.ZodObject<any>>(
   return errors;
 }
 
-// ============================================================================
 // Type Exports
-// ============================================================================
 
 export type TeacherQuickFormData = z.infer<typeof teacherQuickSchema>;
 export type TeacherFullFormData = z.infer<typeof teacherFullSchema>;

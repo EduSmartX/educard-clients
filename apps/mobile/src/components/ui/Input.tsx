@@ -2,9 +2,9 @@
  * Input Component with floating label and icons
  */
 
+import { Eye, EyeOff, LucideIcon } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { View, TextInput, Text, TouchableOpacity, type TextInputProps } from 'react-native';
-import { Eye, EyeOff, LucideIcon } from 'lucide-react-native';
 
 import { Colors } from '@/constants/colors';
 

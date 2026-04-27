@@ -73,6 +73,7 @@ export interface TeacherDetail extends AuditFields {
   subjects: Subject[];
   emergency_contact_name: string;
   emergency_contact_number: string;
+  profile_photo_thumbnail?: string | null;
   is_first_login: boolean;
   is_deleted: boolean;
 }

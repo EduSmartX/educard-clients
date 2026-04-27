@@ -3,6 +3,21 @@
  * Validates on blur (per-field) and on submit (full form)
  */
 
+import {
+  getRoleGradient,
+  GENDER_OPTIONS,
+  BLOOD_GROUP_OPTIONS,
+  teacherQuickSchema,
+  teacherFullSchema,
+  validateField,
+  validateAllFields,
+  buildTeacherPayload,
+  parseApiErrors,
+  getErrorMessage,
+} from '@educard/shared';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import { ChevronLeft, Save, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { useState, useCallback, useMemo, useRef } from 'react';
 import {
   View,
@@ -16,23 +31,9 @@ import {
   Platform,
   Switch,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { ChevronLeft, Save, ChevronDown, ChevronUp } from 'lucide-react-native';
-import {
-  getRoleGradient,
-  GENDER_OPTIONS,
-  BLOOD_GROUP_OPTIONS,
-  teacherQuickSchema,
-  teacherFullSchema,
-  validateField,
-  validateAllFields,
-  buildTeacherPayload,
-  parseApiErrors,
-} from '@educard/shared';
-import { useCreateTeacher, useRestoreTeacher } from '@/features/teachers';
-import { useRoleTypes, useSupervisors, uploadProfilePhoto } from '@/features/core';
+
+import { DeletedDuplicateModal } from '@/components/common/DeletedDuplicateModal';
 import {
   FormInput,
   FormSelect,
@@ -42,14 +43,16 @@ import {
   FormDatePicker,
   FormPhotoUpload,
 } from '@/components/forms';
-import { DeletedDuplicateModal } from '@/components/common/DeletedDuplicateModal';
+import { FormMultiSelect } from '@/components/forms/FormMultiSelect';
+import { useRoleTypes, useSupervisors, useCoreSubjects, uploadProfilePhoto } from '@/features/core';
+import { useCreateTeacher, useRestoreTeacher } from '@/features/teachers';
 import { useDeletedDuplicateHandler } from '@/hooks/useDeletedDuplicateHandler';
+import { headerStyles, layoutStyles } from '@/styles';
 import {
   isDeletedDuplicateError,
   getDeletedDuplicateMessage,
   getDeletedRecordId,
 } from '@/utils/deleted-duplicate';
-import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
 type FieldErrors = Record<string, string>;
@@ -61,6 +64,7 @@ export default function CreateTeacherScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const { data: roleTypes, isLoading: rolesLoading } = useRoleTypes();
   const { data: supervisors, isLoading: supervisorsLoading } = useSupervisors();
+  const { data: coreSubjects } = useCoreSubjects();
 
   const duplicateHandler = useDeletedDuplicateHandler<{
     payload: any;
@@ -88,6 +92,7 @@ export default function CreateTeacherScreen() {
     experience_years: '',
     joining_date: '',
     supervisor_email: '',
+    subjects: [] as string[],
     emergency_contact_name: '',
     emergency_contact_number: '',
     street_address: '',
@@ -111,9 +116,13 @@ export default function CreateTeacherScreen() {
     [supervisors]
   );
   const bloodGroupOpts = BLOOD_GROUP_OPTIONS.map((b) => ({ value: b.value, label: b.label }));
+  const subjectOptions = useMemo(
+    () => (coreSubjects || []).map((s: any) => ({ value: s.id.toString(), label: s.name })),
+    [coreSubjects]
+  );
 
   const updateField = useCallback(
-    (field: string, value: string) => {
+    (field: string, value: any) => {
       setForm((prev) => ({ ...prev, [field]: value }));
       if (errors[field])
         setErrors((prev) => {
@@ -127,7 +136,8 @@ export default function CreateTeacherScreen() {
 
   const blurValidate = useCallback(
     (field: string) => {
-      const err = validateField(schema, field, form[field as keyof typeof form]);
+      const val = form[field as keyof typeof form];
+      const err = validateField(schema, field, typeof val === 'string' ? val : '');
       setErrors((prev) => {
         if (err) return { ...prev, [field]: err };
         const n = { ...prev };
@@ -148,6 +158,9 @@ export default function CreateTeacherScreen() {
     }
 
     const payload = buildTeacherPayload(form, quickAdd);
+    if (!quickAdd && form.subjects.length > 0) {
+      payload.subjects = form.subjects.map(Number);
+    }
     submitCreate(payload, false);
   }, [form, quickAdd, schema]);
 
@@ -206,8 +219,11 @@ export default function CreateTeacherScreen() {
           { text: 'OK', onPress: () => router.back() },
         ]);
       },
-      onError: () => {
-        Alert.alert('Error', 'Failed to reactivate the teacher. Please try again.');
+      onError: (error: unknown) => {
+        Alert.alert(
+          'Error',
+          getErrorMessage(error, 'Failed to reactivate the teacher. Please try again.')
+        );
       },
     });
   }, [duplicateHandler, restoreMutation, router]);
@@ -404,6 +420,17 @@ export default function CreateTeacherScreen() {
                   searchable
                   loading={supervisorsLoading}
                 />
+
+                {/* Subjects Multi-Select */}
+                <FormMultiSelect
+                  label="Subjects to Teach"
+                  options={subjectOptions}
+                  value={form.subjects}
+                  onChange={(v) => updateField('subjects', v)}
+                  placeholder="Select subjects..."
+                  searchable
+                />
+
                 <FormDatePicker
                   label="Date of Joining"
                   value={form.joining_date}

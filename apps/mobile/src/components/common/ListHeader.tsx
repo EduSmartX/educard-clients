@@ -3,12 +3,12 @@
  * Reusable header for list screens with back button and actions
  */
 
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeIn } from 'react-native-reanimated';
-import { ChevronLeft, LucideIcon } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
 import { getRoleGradient, getRoleThemeColors } from '@educard/shared';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import { ChevronLeft, LucideIcon } from 'lucide-react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 
 interface HeaderAction {
   icon: LucideIcon;

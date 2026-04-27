@@ -2,8 +2,11 @@
  * Subjects Feature — Hooks
  */
 
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { QueryKeys } from '@educard/shared';
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+import { DEFAULT_PAGE_SIZE } from '@/api/client';
+
 import {
   getSubjects,
   getSubjectById,
@@ -14,7 +17,6 @@ import {
   getSubjectsByClass,
   type SubjectQueryParams,
 } from '../api/subjects-api';
-import { DEFAULT_PAGE_SIZE } from '@/api/client';
 
 export const subjectKeys = {
   all: QueryKeys.SUBJECTS.ALL,
@@ -66,10 +68,10 @@ export function useSubjectsByClass(classId: string) {
   });
 }
 
-export function useSubjectDetail(publicId: string) {
+export function useSubjectDetail(publicId: string, isDeleted?: boolean) {
   return useQuery({
-    queryKey: subjectKeys.detail(publicId),
-    queryFn: () => getSubjectById(publicId),
+    queryKey: [...subjectKeys.detail(publicId), isDeleted],
+    queryFn: () => getSubjectById(publicId, isDeleted),
     select: (data) => data.data,
     enabled: !!publicId,
   });

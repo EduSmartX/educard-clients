@@ -89,7 +89,7 @@ export interface CreateClassPayload {
   academic_year?: string;
   room_number?: string;
   capacity?: number;
-  class_teacher_id?: string;
+  class_teacher?: string;
   is_active?: boolean;
 }
 
@@ -100,7 +100,7 @@ export interface UpdateClassPayload {
   academic_year?: string;
   room_number?: string;
   capacity?: number;
-  class_teacher_id?: string | null;
+  class_teacher?: string | null;
   is_active?: boolean;
 }
 

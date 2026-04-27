@@ -3,6 +3,7 @@
  * Supports backdated years (1950+) for DOB fields
  */
 
+import { Calendar, X, ChevronLeft, ChevronRight, Check } from 'lucide-react-native';
 import { useState, useRef, useCallback, useMemo } from 'react';
 import {
   View,
@@ -14,7 +15,6 @@ import {
   Dimensions,
   Platform,
 } from 'react-native';
-import { Calendar, X, ChevronLeft, ChevronRight, Check } from 'lucide-react-native';
 
 const MONTHS = [
   'January',
@@ -262,23 +262,18 @@ export function FormDatePicker({
 
                 {/* Days grid */}
                 <View style={styles.daysGrid}>
-                  {calendarDays.map((day, idx) => (
-                    <TouchableOpacity
-                      key={idx}
-                      style={[
-                        styles.dayCell,
-                        day ? (isSelected(day) ? styles.dayCellSelected : undefined) : undefined,
-                        day
-                          ? isToday(day) && !isSelected(day)
-                            ? styles.dayCellToday
-                            : undefined
-                          : undefined,
-                      ]}
-                      onPress={() => day && selectDay(day)}
-                      disabled={!day}
-                      activeOpacity={0.6}
-                    >
-                      {day ? (
+                  {calendarDays.map((day, idx) =>
+                    day ? (
+                      <TouchableOpacity
+                        key={idx}
+                        style={[
+                          styles.dayCell,
+                          isSelected(day) ? styles.dayCellSelected : undefined,
+                          isToday(day) && !isSelected(day) ? styles.dayCellToday : undefined,
+                        ]}
+                        onPress={() => selectDay(day)}
+                        activeOpacity={0.6}
+                      >
                         <Text
                           style={[
                             styles.dayText,
@@ -288,9 +283,11 @@ export function FormDatePicker({
                         >
                           {day}
                         </Text>
-                      ) : null}
-                    </TouchableOpacity>
-                  ))}
+                      </TouchableOpacity>
+                    ) : (
+                      <View key={idx} style={styles.dayCell} />
+                    )
+                  )}
                 </View>
               </>
             )}
@@ -350,7 +347,7 @@ export function FormDatePicker({
 }
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const DAY_SIZE = Math.floor((SCREEN_WIDTH - 80) / 7);
+const DAY_SIZE = Math.floor((SCREEN_WIDTH - 40) / 7);
 
 const styles = StyleSheet.create({
   container: { marginBottom: 16 },
@@ -385,8 +382,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 16,
-    maxHeight: '80%',
+    paddingBottom: Platform.OS === 'ios' ? 34 : 24,
+    maxHeight: '75%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -483,7 +480,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   monthItem: {
-    width: (SCREEN_WIDTH - 80) / 3,
+    width: (SCREEN_WIDTH - 60) / 3,
     paddingVertical: 14,
     alignItems: 'center',
     borderRadius: 10,
@@ -498,24 +495,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 12,
+    paddingTop: 14,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 28,
     gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+    backgroundColor: '#f8fafc',
   },
   clearBtn: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
+    paddingVertical: 14,
+    borderRadius: 12,
     borderWidth: 1.5,
     borderColor: '#e2e8f0',
     alignItems: 'center',
+    backgroundColor: '#fff',
   },
   clearBtnText: { fontSize: 15, fontWeight: '600', color: '#64748b' },
   confirmBtn: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
+    paddingVertical: 14,
+    borderRadius: 12,
     backgroundColor: '#0d9488',
     alignItems: 'center',
   },
-  confirmBtnText: { fontSize: 15, fontWeight: '600', color: '#fff' },
+  confirmBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
 });

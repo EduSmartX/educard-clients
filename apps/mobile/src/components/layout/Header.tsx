@@ -2,11 +2,11 @@
  * Header Component with gradient background
  */
 
-import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, usePathname } from 'expo-router';
 import { ChevronLeft, Bell, Settings, LucideIcon } from 'lucide-react-native';
+import React from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
 
 import { Colors } from '@/constants/colors';
 

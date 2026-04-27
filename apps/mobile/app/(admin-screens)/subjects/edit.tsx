@@ -3,6 +3,17 @@
  * Fetches existing subject data, pre-populates form, PATCHes on save.
  */
 
+import {
+  getRoleGradient,
+  subjectFormSchema,
+  validateField,
+  validateAllFields,
+  buildSubjectPayload,
+  parseApiErrors,
+} from '@educard/shared';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { ChevronLeft, Save } from 'lucide-react-native';
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
@@ -15,23 +26,13 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { ChevronLeft, Save } from 'lucide-react-native';
-import {
-  getRoleGradient,
-  subjectFormSchema,
-  validateField,
-  validateAllFields,
-  buildSubjectPayload,
-  parseApiErrors,
-} from '@educard/shared';
-import { useSubjectDetail, useUpdateSubject } from '@/features/subjects';
+
+import { FormInput, FormSection, FormError, FormDropdown } from '@/components/forms';
 import { useClasses } from '@/features/classes';
 import { useCoreSubjects } from '@/features/core';
+import { useSubjectDetail, useUpdateSubject } from '@/features/subjects';
 import { useTeachers } from '@/features/teachers';
-import { FormInput, FormSection, FormError, FormDropdown } from '@/components/forms';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -126,7 +127,7 @@ export default function EditSubjectScreen() {
 
     const payload = buildSubjectPayload(form);
     updateMutation.mutate(
-      { publicId: id!, data: payload },
+      { publicId: id, data: payload },
       {
         onSuccess: () => {
           Alert.alert('✅ Success', 'Subject updated successfully!', [

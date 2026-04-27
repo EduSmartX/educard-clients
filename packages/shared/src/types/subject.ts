@@ -10,6 +10,9 @@
 
 import type { AuditFields, BaseQueryParams } from "./common";
 
+// Subject Type Options
+export type SubjectTypeValue = "core" | "elective" | "language" | "";
+
 // Related Entities
 
 export interface SubjectTeacher {
@@ -25,6 +28,7 @@ export interface SubjectItem extends AuditFields {
   name: string;
   code?: string;
   description?: string;
+  subject_type?: SubjectTypeValue;
   class_assigned?: {
     public_id: string;
     name: string;
@@ -49,11 +53,13 @@ export interface CreateSubjectPayload {
   subject_id: number;
   teacher_id?: string;
   description?: string;
+  subject_type?: SubjectTypeValue;
 }
 
 export interface UpdateSubjectPayload {
   teacher_id?: string | null;
   description?: string;
+  subject_type?: SubjectTypeValue;
   is_active?: boolean;
 }
 
@@ -62,5 +68,6 @@ export interface UpdateSubjectPayload {
 export interface SubjectQueryParams extends BaseQueryParams {
   class_id?: string;
   class_assigned?: string;
+  subject_type?: SubjectTypeValue;
   is_active?: boolean;
 }

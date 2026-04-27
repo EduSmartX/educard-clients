@@ -5,12 +5,7 @@
  * Shared across Web, iOS, and Android
  */
 
-// Import ApiError type from types module
 import type { ApiError } from "../types/api";
-
-// ============================================================================
-// Types
-// ============================================================================
 
 /**
  * Backend error response structure (what Django sends in response.data)
@@ -54,10 +49,6 @@ export interface NormalizedError {
   statusCode?: number;
   isValidation: boolean;
 }
-
-// ============================================================================
-// Core Parser - Parse Once, Use Everywhere
-// ============================================================================
 
 /**
  * Recursively flatten nested error objects
@@ -212,10 +203,6 @@ export function parseError(error: unknown): NormalizedError {
   return result;
 }
 
-// ============================================================================
-// Public API - All functions consume NormalizedError
-// ============================================================================
-
 /**
  * Get user-friendly error message for display
  * Use this for toast messages
@@ -306,4 +293,99 @@ export function parseApiError(error: unknown): ApiError {
     message: getErrorMessage(error),
     errors: normalized.fieldErrors,
   };
+}
+
+/**
+ * Quick one-liner error extraction for Alert/toast messages.
+ * Handles Django custom exception handler format: { status, message, errors, code }
+ */
+export function extractApiError(
+  err: unknown,
+  fallback = "Something went wrong",
+): string {
+  const data = (err as AxiosErrorWrapper)?.response?.data;
+  if (!data) return (err as Error)?.message || fallback;
+
+  if (data.errors && typeof data.errors === "object") {
+    const msgs = Object.entries(data.errors)
+      .map(([, v]) =>
+        Array.isArray(v) ? v.join(", ") : typeof v === "string" ? v : "",
+      )
+      .filter(Boolean);
+    if (msgs.length > 0) return msgs.join("\n");
+  }
+
+  if (data.detail && typeof data.detail === "string") return data.detail;
+  if (data.message && data.message !== "Validation error occurred")
+    return data.message;
+
+  return fallback;
+}
+
+/**
+ * Check if error indicates a deleted duplicate record exists
+ */
+export function isDeletedDuplicateError(error: unknown): boolean {
+  const axiosError = error as AxiosErrorWrapper;
+  const data = axiosError?.response?.data;
+  if (!data?.errors) return false;
+
+  const hasDuplicate = data.errors.has_deleted_duplicate;
+  if (
+    hasDuplicate === "true" ||
+    hasDuplicate === "True" ||
+    (Array.isArray(hasDuplicate) &&
+      hasDuplicate.length > 0 &&
+      (hasDuplicate[0] === "True" || hasDuplicate[0] === "true"))
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Extract user-friendly message from deleted duplicate error
+ */
+export function getDeletedDuplicateMessage(error: unknown): string {
+  const data = (error as AxiosErrorWrapper)?.response?.data;
+  const fallback =
+    "A deleted record with the same details already exists. You can modify here, or go to 'View Deleted' to restore it.";
+
+  const normalize = (msg: string) =>
+    msg
+      .replace(
+        /Please navigate to 'View Deleted' to restore it, or do you need to create a new ([^?]+)\?/i,
+        "You can modify here, or go to 'View Deleted' to restore it. Do you want to create a new $1?",
+      )
+      .replace(
+        /Please navigate to 'View Deleted' to restore it\.?/i,
+        "You can modify here, or go to 'View Deleted' to restore it.",
+      );
+
+  if (!data?.errors) return fallback;
+  const errors = data.errors;
+
+  if (Array.isArray(errors.non_field_errors) && errors.non_field_errors.length > 0)
+    return normalize(errors.non_field_errors[0] as string);
+  if (typeof errors.non_field_errors === "string")
+    return normalize(errors.non_field_errors);
+  if (typeof errors.detail === "string") return normalize(errors.detail);
+  if (Array.isArray(errors.detail) && errors.detail.length > 0)
+    return normalize(errors.detail[0] as string);
+
+  return fallback;
+}
+
+/**
+ * Extract deleted record ID from deleted duplicate error
+ */
+export function getDeletedRecordId(error: unknown): string | null {
+  const errors = (error as AxiosErrorWrapper)?.response?.data?.errors;
+  if (!errors) return null;
+
+  if (typeof errors.deleted_record_id === "string") return errors.deleted_record_id;
+  if (Array.isArray(errors.deleted_record_id) && errors.deleted_record_id.length > 0)
+    return errors.deleted_record_id[0] as string;
+
+  return null;
 }

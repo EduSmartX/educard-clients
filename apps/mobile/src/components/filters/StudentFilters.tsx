@@ -4,6 +4,9 @@
  */
 
 import { useMemo } from 'react';
+
+import { useClasses } from '@/features/classes';
+
 import { FilterField } from './FilterModal';
 import {
   GENDER_FILTER_FIELD,
@@ -12,7 +15,6 @@ import {
   getDeletedLabel,
   type FilterLabel,
 } from './SharedFilterFields';
-import { useClasses } from '@/features/classes';
 
 /** Students backend uses `user__gender` instead of `gender` */
 const STUDENT_GENDER_FIELD: FilterField = {

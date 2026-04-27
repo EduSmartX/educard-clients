@@ -2,8 +2,8 @@
  * FormSection - Groups form fields with a title and optional icon
  */
 
-import { View, Text, StyleSheet } from 'react-native';
 import type { ReactNode } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 
 interface FormSectionProps {
   title: string;

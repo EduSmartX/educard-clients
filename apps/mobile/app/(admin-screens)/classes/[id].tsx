@@ -2,18 +2,20 @@
  * Class Detail Screen — /(admin-screens)/classes/[id]
  */
 
-import { View, Text, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { View, Text, StyleSheet } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { useClassDetail } from '@/features/classes';
+
 import { DetailScreenShell, DetailSection, DetailRow, ChipRow } from '@/components/detail';
+import { useClassDetail } from '@/features/classes';
 
 export default function ClassDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, is_deleted } = useLocalSearchParams<{ id: string; is_deleted?: string }>();
   const router = useRouter();
-  const { data: cls, isLoading, isError } = useClassDetail(id || '');
+  const isDeleted = is_deleted === 'true';
+  const { data: cls, isLoading, isError } = useClassDetail(id || '', isDeleted);
 
-  const c = cls as any;
+  const c = cls;
   const displayName = c?.class_master?.name
     ? `${c.class_master.name} - ${c.name}`
     : c?.name || '...';
@@ -24,7 +26,7 @@ export default function ClassDetailScreen() {
       subtitle={displayName}
       isLoading={isLoading}
       isError={isError || !cls}
-      onBack={() => router.navigate('/(tabs)/(admin)/classes' as any)}
+      onBack={() => router.back()}
     >
       <Animated.View entering={FadeInDown.delay(100)}>
         <DetailSection title="Class Info" icon="🏫">

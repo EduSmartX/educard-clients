@@ -3,6 +3,17 @@
  * Fetches existing class data, pre-populates form, PATCHes on save.
  */
 
+import {
+  getRoleGradient,
+  classFormSchema,
+  validateField,
+  validateAllFields,
+  buildClassPayload,
+  parseApiErrors,
+} from '@educard/shared';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { ChevronLeft, Save } from 'lucide-react-native';
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
@@ -15,22 +26,12 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { ChevronLeft, Save } from 'lucide-react-native';
-import {
-  getRoleGradient,
-  classFormSchema,
-  validateField,
-  validateAllFields,
-  buildClassPayload,
-  parseApiErrors,
-} from '@educard/shared';
+
+import { FormInput, FormSection, FormError, FormDropdown } from '@/components/forms';
 import { useClassDetail, useUpdateClass } from '@/features/classes';
 import { useCoreClasses } from '@/features/core';
 import { useTeachers } from '@/features/teachers';
-import { FormInput, FormSection, FormError, FormDropdown } from '@/components/forms';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -115,7 +116,7 @@ export default function EditClassScreen() {
 
     const payload = buildClassPayload(form);
     updateMutation.mutate(
-      { publicId: id!, data: payload },
+      { publicId: id, data: payload },
       {
         onSuccess: () => {
           Alert.alert('✅ Success', 'Class updated successfully!', [
@@ -180,11 +181,12 @@ export default function EditClassScreen() {
                 required
                 options={coreClassOpts}
                 value={form.class_master}
-                onChange={(v) => updateField('class_master', v)}
+                onChange={() => {}}
                 error={errors.class_master}
                 placeholder="Select class"
                 searchable
                 loading={coreLoading}
+                disabled
               />
               <FormInput
                 label="Section Name"

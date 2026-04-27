@@ -8,9 +8,9 @@
  * - Optional filter button with badge
  */
 
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { Search, Filter, X } from 'lucide-react-native';
 import { Colors } from '@educard/shared';
+import { Search, Filter, X } from 'lucide-react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 
 interface SearchBarProps {
   value: string;

@@ -3,6 +3,20 @@
  * Fetches existing student data, pre-populates form, PATCHes on save.
  */
 
+import {
+  getRoleGradient,
+  GENDER_OPTIONS,
+  BLOOD_GROUP_OPTIONS,
+  RELATIONSHIP_OPTIONS,
+  studentFullSchema,
+  validateField,
+  validateAllFields,
+  buildStudentPayload,
+  parseApiErrors,
+} from '@educard/shared';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { ChevronLeft, Save, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
@@ -15,23 +29,9 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { ChevronLeft, Save, ChevronDown, ChevronUp } from 'lucide-react-native';
-import {
-  getRoleGradient,
-  GENDER_OPTIONS,
-  BLOOD_GROUP_OPTIONS,
-  RELATIONSHIP_OPTIONS,
-  studentFullSchema,
-  validateField,
-  validateAllFields,
-  buildStudentPayload,
-  parseApiErrors,
-} from '@educard/shared';
-import { useStudentDetail, useUpdateStudent } from '@/features/students';
-import { useClasses } from '@/features/classes';
+
+import { ProfileAvatar } from '@/components/common/ProfileAvatar';
 import {
   FormInput,
   FormSelect,
@@ -40,6 +40,9 @@ import {
   FormDropdown,
   FormDatePicker,
 } from '@/components/forms';
+import { useClasses } from '@/features/classes';
+import { useStudentDetail, useUpdateStudent } from '@/features/students';
+import { useProfileImage } from '@/hooks/useProfileImage';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -55,6 +58,15 @@ export default function EditStudentScreen() {
   const [addressExpanded, setAddressExpanded] = useState(false);
   const [prevSchoolExpanded, setPrevSchoolExpanded] = useState(false);
   const [formLoaded, setFormLoaded] = useState(false);
+
+  const {
+    pickAndUpload,
+    isUploading: isPhotoUploading,
+    localUri: localPhotoUri,
+  } = useProfileImage({
+    userPublicId: student?.user_info?.public_id,
+    onSuccess: () => {},
+  });
 
   const classOptions = useMemo(() => {
     const items = classesData?.classes || [];
@@ -106,7 +118,7 @@ export default function EditStudentScreen() {
       const guardian = student.guardian || {};
       const prevSchool = student.previous_school || {};
       setForm({
-        class_id: student.class_assigned?.public_id || student.class_id || '',
+        class_id: student.class_info?.public_id || student.class_id || '',
         first_name: u.first_name || student.first_name || '',
         last_name: u.last_name || student.last_name || '',
         roll_number: student.roll_number?.toString() || '',
@@ -172,7 +184,7 @@ export default function EditStudentScreen() {
 
     const payload = buildStudentPayload(form, false);
     updateMutation.mutate(
-      { publicId: id!, data: payload },
+      { publicId: id, data: payload },
       {
         onSuccess: () => {
           Alert.alert('✅ Success', 'Student updated successfully!', [
@@ -203,8 +215,16 @@ export default function EditStudentScreen() {
   return (
     <View style={layoutStyles.container}>
       <LinearGradient colors={adminGradient} style={headerStyles.header}>
-        <Animated.View entering={FadeIn.delay(100)} style={headerStyles.circle1} />
-        <Animated.View entering={FadeIn.delay(200)} style={headerStyles.circle2} />
+        <Animated.View
+          entering={FadeIn.delay(100)}
+          style={headerStyles.circle1}
+          pointerEvents="none"
+        />
+        <Animated.View
+          entering={FadeIn.delay(200)}
+          style={headerStyles.circle2}
+          pointerEvents="none"
+        />
         <View style={headerStyles.content}>
           <View style={headerStyles.topRow}>
             <TouchableOpacity style={headerStyles.backBtn} onPress={() => router.back()}>
@@ -230,6 +250,23 @@ export default function EditStudentScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Profile Avatar */}
+          <Animated.View
+            entering={FadeIn.delay(150)}
+            style={{ alignItems: 'center', marginBottom: 16 }}
+          >
+            <ProfileAvatar
+              name={`${form.first_name} ${form.last_name}`.trim()}
+              imageUri={localPhotoUri || student?.profile_photo_thumbnail}
+              size={90}
+              onPress={pickAndUpload}
+              isUploading={isPhotoUploading}
+            />
+            <Text style={{ marginTop: 8, fontSize: 18, fontWeight: '700', color: '#1e293b' }}>
+              {form.first_name} {form.last_name}
+            </Text>
+          </Animated.View>
+
           <FormError message={apiError} onDismiss={() => setApiError(null)} />
 
           <Animated.View entering={FadeInDown.delay(80)}>
@@ -239,10 +276,11 @@ export default function EditStudentScreen() {
                 required
                 options={classOptions}
                 value={form.class_id}
-                onChange={(v) => updateField('class_id', v)}
+                onChange={() => {}}
                 error={errors.class_id}
                 placeholder="Select a class"
                 searchable
+                disabled
               />
             </FormSection>
           </Animated.View>

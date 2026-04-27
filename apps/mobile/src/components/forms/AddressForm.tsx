@@ -19,6 +19,9 @@
  * />
  */
 
+import { Colors } from '@educard/shared';
+import * as Location from 'expo-location';
+import { MapPin, Navigation, Home, Building2, MapPinned, Hash, Globe } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
   View,
@@ -28,9 +31,6 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { MapPin, Navigation, Home, Building2, MapPinned, Hash, Globe } from 'lucide-react-native';
-import * as Location from 'expo-location';
-import { Colors } from '@educard/shared';
 
 // Address data structure
 export interface AddressData {

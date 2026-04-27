@@ -3,20 +3,23 @@
  * Reusable Row, Section, Chip, and ScreenShell for all view/detail screens
  */
 
+import { getRoleGradient } from '@educard/shared';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import { ChevronLeft } from 'lucide-react-native';
 import React from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
+  Pressable,
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { ChevronLeft } from 'lucide-react-native';
-import { getRoleGradient } from '@educard/shared';
+
+import { ProfileAvatar } from '@/components/common/ProfileAvatar';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -75,6 +78,10 @@ interface DetailScreenShellProps {
   children: React.ReactNode;
   /** Explicit back navigation. Falls back to router.back(). */
   onBack?: () => void;
+  /** Name for profile avatar initials */
+  avatarName?: string;
+  /** Image URI for profile avatar */
+  avatarImageUri?: string | null;
 }
 
 export function DetailScreenShell({
@@ -85,6 +92,8 @@ export function DetailScreenShell({
   errorMessage,
   children,
   onBack,
+  avatarName,
+  avatarImageUri,
 }: DetailScreenShellProps) {
   const router = useRouter();
 
@@ -92,20 +101,32 @@ export function DetailScreenShell({
     if (onBack) {
       onBack();
     } else {
-      router.navigate('/(tabs)/(admin)/management' as any);
+      router.back();
     }
   };
 
   return (
     <View style={layoutStyles.container}>
       <LinearGradient colors={adminGradient} style={headerStyles.header}>
-        <Animated.View entering={FadeIn.delay(100)} style={headerStyles.circle1} />
-        <Animated.View entering={FadeIn.delay(200)} style={headerStyles.circle2} />
+        <Animated.View
+          entering={FadeIn.delay(100)}
+          style={headerStyles.circle1}
+          pointerEvents="none"
+        />
+        <Animated.View
+          entering={FadeIn.delay(200)}
+          style={headerStyles.circle2}
+          pointerEvents="none"
+        />
         <View style={headerStyles.content}>
           <View style={headerStyles.topRow}>
-            <TouchableOpacity style={headerStyles.backBtn} onPress={handleBack}>
+            <Pressable
+              style={headerStyles.backBtn}
+              onPress={handleBack}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
               <ChevronLeft size={24} color="#fff" />
-            </TouchableOpacity>
+            </Pressable>
             <View style={headerStyles.titleContainer}>
               <Text style={headerStyles.title}>{title}</Text>
               {subtitle ? <Text style={headerStyles.subtitle}>{subtitle}</Text> : null}
@@ -125,6 +146,12 @@ export function DetailScreenShell({
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+          {avatarName ? (
+            <Animated.View entering={FadeIn.delay(150)} style={styles.avatarWrapper}>
+              <ProfileAvatar name={avatarName} imageUri={avatarImageUri} size={80} />
+              <Text style={styles.avatarName}>{avatarName}</Text>
+            </Animated.View>
+          ) : null}
           {children}
         </ScrollView>
       )}
@@ -134,6 +161,17 @@ export function DetailScreenShell({
 
 const styles = StyleSheet.create({
   container: { padding: 16, paddingBottom: 40 },
+  avatarWrapper: {
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingTop: 8,
+  },
+  avatarName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1e293b',
+    marginTop: 10,
+  },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   errorText: { color: '#ef4444', fontSize: 16 },
   section: {

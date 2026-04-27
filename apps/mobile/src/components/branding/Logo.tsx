@@ -2,9 +2,9 @@
  * Logo Component for EduCard Mobile App
  * Displays the EduCard logo with various size options
  */
+import { Colors } from '@educard/shared';
 import React from 'react';
 import { View, Image, Text, StyleSheet, ViewStyle } from 'react-native';
-import { Colors } from '@educard/shared';
 
 interface LogoProps {
   /** Logo size variant */

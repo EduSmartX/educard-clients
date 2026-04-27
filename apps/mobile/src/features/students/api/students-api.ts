@@ -2,9 +2,10 @@
  * Students Feature — API Layer
  */
 
-import { apiClient } from '@/api/client';
 import { API_ENDPOINTS } from '@educard/shared';
 import type { Student, ApiListResponse, ApiDetailResponse } from '@educard/shared';
+
+import { apiClient } from '@/api/client';
 
 export type StudentListResponse = ApiListResponse<Student>;
 
@@ -24,8 +25,11 @@ export async function getStudents(params?: StudentQueryParams): Promise<StudentL
   return response.data;
 }
 
-export async function getStudentById(publicId: string) {
-  const response = await apiClient.get(API_ENDPOINTS.STUDENTS.DETAIL(publicId));
+export async function getStudentById(publicId: string, isDeleted?: boolean) {
+  const response = await apiClient.get(
+    API_ENDPOINTS.STUDENTS.DETAIL(publicId),
+    isDeleted ? { params: { is_deleted: true } } : undefined
+  );
   return response.data;
 }
 
@@ -39,8 +43,15 @@ export async function updateStudent(publicId: string, data: Partial<Student>) {
   return apiClient.patch(API_ENDPOINTS.STUDENTS.PATCH(publicId), data);
 }
 
-export async function deleteStudent(publicId: string) {
-  return apiClient.delete(API_ENDPOINTS.STUDENTS.DELETE(publicId));
+export async function deleteStudent(publicId: string): Promise<void> {
+  try {
+    await apiClient.delete(API_ENDPOINTS.STUDENTS.DELETE(publicId));
+  } catch (error: any) {
+    const status = error?.response?.status;
+    if (status && status >= 200 && status < 300) return;
+    if (error?.message === 'Network Error' && !error?.response) return;
+    throw error;
+  }
 }
 
 export async function restoreStudent(publicId: string) {

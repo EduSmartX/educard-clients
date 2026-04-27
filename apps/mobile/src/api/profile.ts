@@ -3,8 +3,9 @@
  * Handles profile photo fetching from attachments API
  */
 
-import { apiClient } from './client';
 import { API_ENDPOINTS } from '@/constants';
+
+import { apiClient } from './client';
 
 export interface ProfileImage {
   public_id: string;

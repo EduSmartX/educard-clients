@@ -3,6 +3,16 @@
  * Mobile-first student management with search, class filtering, and real API integration
  */
 
+import {
+  Colors,
+  getRoleGradient,
+  getRoleThemeColors,
+  Student,
+  useDebounce,
+  getErrorMessage,
+} from '@educard/shared';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { GraduationCap, Upload, Plus } from 'lucide-react-native';
 import { useState, useCallback, useMemo } from 'react';
 import {
   View,
@@ -12,25 +22,24 @@ import {
   StyleSheet,
   RefreshControl,
   Alert,
+  Image,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import Animated, { FadeInRight } from 'react-native-reanimated';
-import { GraduationCap, Upload, Plus } from 'lucide-react-native';
-import { Colors, getRoleGradient, getRoleThemeColors, Student, useDebounce } from '@educard/shared';
-import { useStudents, useDeleteStudent } from '@/features/students';
-import { useClasses } from '@/features/classes';
+
 import { SearchBar, ListHeader } from '@/components/common';
-import { LoadingState, ErrorState, EmptyState, ListFooter } from '@/components/common/ListStates';
 import { EntityActions } from '@/components/common/EntityActions';
+import { LoadingState, ErrorState, EmptyState, ListFooter } from '@/components/common/ListStates';
 import {
   FilterModal,
   ActiveFilters,
   useStudentFilterFields,
   getStudentFilterLabels,
 } from '@/components/filters';
-import { layoutStyles, cardStyles, avatarStyles, listStyles, textStyles } from '@/styles';
-import { useListScroll } from '@/hooks/useListScroll';
+import { getMediaUrl } from '@/constants/config';
+import { useClasses } from '@/features/classes';
+import { useStudents, useDeleteStudent, useRestoreStudent } from '@/features/students';
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm';
+import { useListScroll } from '@/hooks/useListScroll';
+import { layoutStyles, cardStyles, avatarStyles, listStyles, textStyles } from '@/styles';
 
 const adminTheme = getRoleThemeColors('admin');
 const adminGradient = getRoleGradient('admin');
@@ -76,7 +85,35 @@ export default function StudentsScreen() {
   });
 
   const deleteMutation = useDeleteStudent();
-  const confirmDelete = useDeleteConfirm({ entityName: 'Student', deleteMutation });
+  const confirmDelete = useDeleteConfirm({
+    entityName: 'Student',
+    deleteMutation,
+    onSuccess: () => refetch(),
+  });
+
+  const restoreMutation = useRestoreStudent();
+  const handleReactivate = useCallback(
+    (id: string, name: string) => {
+      Alert.alert('Reactivate Student', `Are you sure you want to reactivate ${name}?`, [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reactivate',
+          onPress: async () => {
+            try {
+              await restoreMutation.mutateAsync(id);
+              refetch();
+              Alert.alert('Success', `${name} reactivated successfully`);
+            } catch (error) {
+              Alert.alert('Error', getErrorMessage(error, 'Failed to reactivate student'));
+            }
+          },
+        },
+      ]);
+    },
+    [restoreMutation, refetch]
+  );
+
+  const isDeletedView = !!filters.is_deleted;
 
   const students = data?.students ?? [];
   const totalCount = data?.totalCount ?? 0;
@@ -94,10 +131,10 @@ export default function StudentsScreen() {
     (s: Student) => {
       router.push({
         pathname: '/(admin-screens)/students/[id]' as any,
-        params: { id: s.public_id },
+        params: { id: s.public_id, ...(isDeletedView ? { is_deleted: 'true' } : {}) },
       });
     },
-    [router]
+    [router, isDeletedView]
   );
 
   const handleEdit = useCallback(
@@ -138,7 +175,7 @@ export default function StudentsScreen() {
         : '?';
 
       return (
-        <Animated.View entering={FadeInRight.delay(Math.min(index, 10) * 50).duration(300)}>
+        <View>
           <TouchableOpacity
             style={[cardStyles.card, styles.studentCard]}
             onPress={() => handleView(item)}
@@ -147,9 +184,16 @@ export default function StudentsScreen() {
             {/* Top row — Avatar + Info */}
             <View style={styles.topRow}>
               <View style={avatarStyles.container}>
-                <View style={[avatarStyles.medium, styles.avatarGrad]}>
-                  <Text style={styles.avatarText}>{initials}</Text>
-                </View>
+                {item.profile_photo_thumbnail ? (
+                  <Image
+                    source={{ uri: getMediaUrl(item.profile_photo_thumbnail) }}
+                    style={[avatarStyles.medium, styles.avatarGrad]}
+                  />
+                ) : (
+                  <View style={[avatarStyles.medium, styles.avatarGrad]}>
+                    <Text style={styles.avatarText}>{initials}</Text>
+                  </View>
+                )}
               </View>
 
               <View style={styles.studentInfo}>
@@ -173,11 +217,20 @@ export default function StudentsScreen() {
             {/* Bottom — Actions */}
             <EntityActions
               onView={() => handleView(item)}
-              onEdit={() => handleEdit(item)}
-              onDelete={() => confirmDelete(item.public_id, fullName || 'this student')}
+              onEdit={isDeletedView ? undefined : () => handleEdit(item)}
+              onDelete={
+                isDeletedView
+                  ? undefined
+                  : () => confirmDelete(item.public_id, fullName || 'this student')
+              }
+              onReactivate={
+                isDeletedView
+                  ? () => handleReactivate(item.public_id, fullName || 'this student')
+                  : undefined
+              }
             />
           </TouchableOpacity>
-        </Animated.View>
+        </View>
       );
     },
     [handleView, handleEdit, confirmDelete]

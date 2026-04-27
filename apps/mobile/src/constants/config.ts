@@ -2,8 +2,8 @@
  * Application configuration constants
  */
 
-import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
 // Get the correct API URL based on platform and device type
 const getDefaultApiUrl = () => {
@@ -32,6 +32,21 @@ export const API_CONFIG = {
   TIMEOUT: 30000,
   DEFAULT_PAGE_SIZE: 15,
 } as const;
+
+/**
+ * Resolve a media/attachment path from the backend to a full URL.
+ * Backend returns paths like "/media/attachments/..." — on mobile we need the full host.
+ */
+export function getMediaUrl(path?: string | null): string | undefined {
+  if (!path) return undefined;
+  // Already a full URL or local file URI
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('file://'))
+    return path;
+  // Relative path — prepend the server host
+  const baseUrl = API_CONFIG.BASE_URL; // e.g. "http://192.168.x.x:8000/api"
+  const serverOrigin = baseUrl.replace(/\/api\/?$/, ''); // "http://192.168.x.x:8000"
+  return `${serverOrigin}${path.startsWith('/') ? '' : '/'}${path}`;
+}
 
 // App Info
 export const APP_INFO = {

@@ -2,8 +2,8 @@
  * FormSelect - Chip-based selector with label, error highlighting
  */
 
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { AlertCircle } from 'lucide-react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 
 interface Option {
   value: string;

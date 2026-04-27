@@ -2,8 +2,11 @@
  * Classes Feature — Hooks
  */
 
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { QueryKeys } from '@educard/shared';
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+import { DEFAULT_PAGE_SIZE } from '@/api/client';
+
 import {
   getClasses,
   getClassById,
@@ -13,7 +16,6 @@ import {
   restoreClass,
   type ClassQueryParams,
 } from '../api/classes-api';
-import { DEFAULT_PAGE_SIZE } from '@/api/client';
 
 export const classKeys = {
   all: QueryKeys.CLASSES.ALL,
@@ -54,10 +56,10 @@ export function useClasses(params?: Omit<ClassQueryParams, 'page'>) {
   });
 }
 
-export function useClassDetail(publicId: string) {
+export function useClassDetail(publicId: string, isDeleted?: boolean) {
   return useQuery({
-    queryKey: classKeys.detail(publicId),
-    queryFn: () => getClassById(publicId),
+    queryKey: [...classKeys.detail(publicId), isDeleted],
+    queryFn: () => getClassById(publicId, isDeleted),
     select: (data) => data.data,
     enabled: !!publicId,
   });

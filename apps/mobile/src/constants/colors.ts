@@ -4,10 +4,10 @@
  */
 
 // Re-export colors from shared
-export { Colors, colors } from '@educard/shared';
-
 // Import for local use
 import { Colors } from '@educard/shared';
+
+export { Colors, colors } from '@educard/shared';
 
 // Light theme
 export const LightTheme = {

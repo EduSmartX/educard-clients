@@ -4,8 +4,8 @@
  * to avoid TurboModule crash in Expo Go
  */
 
-import React from 'react';
 import { Ionicons, MaterialIcons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
+import React from 'react';
 
 // Map lucide icon names to @expo/vector-icons equivalents
 const iconMap: Record<string, { lib: any; name: string }> = {

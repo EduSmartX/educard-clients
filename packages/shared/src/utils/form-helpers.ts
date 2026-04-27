@@ -4,10 +4,6 @@
  * Used by both Web and Mobile create/edit forms
  */
 
-// ============================================================================
-// API Error Parser — Maps nested backend errors to flat field errors
-// ============================================================================
-
 /** Backend field → form field mapping for nested user errors */
 const DEFAULT_FIELD_MAP: Record<string, string> = {
   "user.email": "email",
@@ -80,10 +76,6 @@ export function parseApiErrors(
     generalError: data.message || data.detail || "Operation failed.",
   };
 }
-
-// ============================================================================
-// Payload Builder — Remove empty/null values from payload
-// ============================================================================
 
 /**
  * Strip empty strings, null, undefined from an object (shallow).
@@ -232,7 +224,7 @@ export function buildClassPayload(form: Record<string, any>) {
     name: form.name?.trim(),
     ...stripEmpty({
       capacity: form.capacity ? Number(form.capacity) : undefined,
-      class_teacher_id: form.class_teacher_id || undefined,
+      class_teacher: form.class_teacher_id || form.class_teacher || undefined,
       room_number: form.room_number?.trim() || undefined,
       info: form.info?.trim() || undefined,
     }),

@@ -3,10 +3,8 @@
  * Main dashboard for parents to view their children's information
  */
 
-import { useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Image } from 'react-native';
-import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import {
   Bell,
   BookOpen,
@@ -21,11 +19,13 @@ import {
   Star,
   Award,
 } from 'lucide-react-native';
+import { useState, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Image } from 'react-native';
 
 import { Screen } from '@/components/layout';
 import { Card, Avatar, Badge } from '@/components/ui';
-import { useAuthStore } from '@/lib/auth-store';
 import { colors } from '@/constants/colors';
+import { useAuthStore } from '@/lib/auth-store';
 
 // Mock data
 const mockChildren = [

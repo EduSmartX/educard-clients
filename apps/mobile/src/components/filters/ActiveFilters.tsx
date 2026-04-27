@@ -3,9 +3,9 @@
  * Shows active filters as dismissible chips
  */
 
+import { X } from 'lucide-react-native';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { X } from 'lucide-react-native';
 
 interface ActiveFilter {
   key: string;

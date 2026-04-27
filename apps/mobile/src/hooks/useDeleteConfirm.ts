@@ -3,19 +3,26 @@
  * Wraps Alert.alert + mutation so every list screen doesn't rewrite it.
  */
 
+import { getErrorMessage } from '@educard/shared';
 import { useCallback } from 'react';
 import { Alert } from 'react-native';
 
 interface UseDeleteConfirmOptions {
   /** e.g. "Teacher", "Student" */
   entityName: string;
-  /** React-Query mutation object – must have `.mutate(id, { onSuccess, onError })` */
+  /** React-Query mutation object – must have `.mutateAsync(id)` */
   deleteMutation: {
-    mutate: (id: string, cbs: { onSuccess: () => void; onError: () => void }) => void;
+    mutateAsync: (id: string) => Promise<unknown>;
   };
+  /** Called after successful delete — use to refetch list */
+  onSuccess?: () => void;
 }
 
-export function useDeleteConfirm({ entityName, deleteMutation }: UseDeleteConfirmOptions) {
+export function useDeleteConfirm({
+  entityName,
+  deleteMutation,
+  onSuccess,
+}: UseDeleteConfirmOptions) {
   const confirmDelete = useCallback(
     (id: string, displayName: string) => {
       Alert.alert(`Delete ${entityName}`, `Are you sure you want to delete ${displayName}?`, [
@@ -23,16 +30,22 @@ export function useDeleteConfirm({ entityName, deleteMutation }: UseDeleteConfir
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => {
-            deleteMutation.mutate(id, {
-              onSuccess: () => Alert.alert('Success', `${entityName} deleted successfully`),
-              onError: () => Alert.alert('Error', `Failed to delete ${entityName.toLowerCase()}`),
-            });
+          onPress: async () => {
+            try {
+              await deleteMutation.mutateAsync(id);
+              onSuccess?.();
+              Alert.alert('Success', `${entityName} deleted successfully`);
+            } catch (error) {
+              Alert.alert(
+                'Error',
+                getErrorMessage(error, `Failed to delete ${entityName.toLowerCase()}`)
+              );
+            }
           },
         },
       ]);
     },
-    [entityName, deleteMutation]
+    [entityName, deleteMutation, onSuccess]
   );
 
   return confirmDelete;

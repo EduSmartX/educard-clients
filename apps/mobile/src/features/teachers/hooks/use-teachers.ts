@@ -3,8 +3,11 @@
  * React Query hooks for teacher data management
  */
 
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { QueryKeys } from '@educard/shared';
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+import { DEFAULT_PAGE_SIZE } from '@/api/client';
+
 import {
   getTeachers,
   getTeacherById,
@@ -14,7 +17,6 @@ import {
   restoreTeacher,
   type TeacherQueryParams,
 } from '../api/teachers-api';
-import { DEFAULT_PAGE_SIZE } from '@/api/client';
 
 // Query Keys — thin wrappers over shared QueryKeys for backward compat
 export const teacherKeys = {
@@ -63,10 +65,10 @@ export function useTeachers(params?: Omit<TeacherQueryParams, 'page'>) {
 /**
  * Hook to fetch teacher details
  */
-export function useTeacherDetail(publicId: string) {
+export function useTeacherDetail(publicId: string, isDeleted?: boolean) {
   return useQuery({
-    queryKey: teacherKeys.detail(publicId),
-    queryFn: () => getTeacherById(publicId),
+    queryKey: [...teacherKeys.detail(publicId), isDeleted],
+    queryFn: () => getTeacherById(publicId, isDeleted),
     select: (data) => data.data,
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,

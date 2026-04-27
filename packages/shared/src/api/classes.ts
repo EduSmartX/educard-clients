@@ -14,7 +14,7 @@ import type {
 export interface CreateClassData {
   name: string;
   academic_year: string;
-  class_teacher_id?: string;
+  class_teacher?: string;
   room_number?: string;
   capacity?: number;
 }
@@ -24,7 +24,7 @@ export interface UpdateClassData extends Partial<CreateClassData> {}
 export interface CreateSectionData {
   name: string;
   class_id: string;
-  class_teacher_id?: string;
+  class_teacher?: string;
   max_students?: number;
 }
 

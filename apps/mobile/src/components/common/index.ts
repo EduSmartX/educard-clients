@@ -10,3 +10,4 @@ export { LoadingState, ErrorState, ListFooter } from './ListStates';
 export { EmptyState as ListEmptyState } from './ListStates';
 export { EntityActions } from './EntityActions';
 export { DeletedDuplicateModal } from './DeletedDuplicateModal';
+export { ProfileAvatar } from './ProfileAvatar';

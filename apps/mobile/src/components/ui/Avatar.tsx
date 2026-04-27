@@ -2,10 +2,10 @@
  * Avatar Component
  */
 
-import React from 'react';
-import { View, Text } from 'react-native';
 import { Image } from 'expo-image';
 import { User } from 'lucide-react-native';
+import React from 'react';
+import { View, Text } from 'react-native';
 
 import { Colors } from '@/constants/colors';
 

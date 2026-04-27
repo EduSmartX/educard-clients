@@ -3,8 +3,9 @@
  * Hooks for fetching master/reference data
  */
 
-import { useQuery } from '@tanstack/react-query';
 import { QueryKeys } from '@educard/shared';
+import { useQuery } from '@tanstack/react-query';
+
 import {
   getCoreClasses,
   getCoreSubjects,

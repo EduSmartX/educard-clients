@@ -4,7 +4,6 @@
 
 import * as SecureStore from 'expo-secure-store';
 
-import apiClient from './client';
 import { STORAGE_KEYS } from '@/constants/config';
 import type {
   AuthTokens,
@@ -13,6 +12,8 @@ import type {
   SignupData,
   ForgotPasswordData,
 } from '@/types/user';
+
+import apiClient from './client';
 
 // Auth response structure from backend (matches web frontend)
 interface AuthResponse {

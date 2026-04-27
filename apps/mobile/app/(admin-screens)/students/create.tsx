@@ -3,6 +3,22 @@
  * Validates on blur (per-field) and on submit (full form)
  */
 
+import {
+  getRoleGradient,
+  GENDER_OPTIONS,
+  BLOOD_GROUP_OPTIONS,
+  RELATIONSHIP_OPTIONS,
+  studentQuickSchema,
+  studentFullSchema,
+  validateField,
+  validateAllFields,
+  buildStudentPayload,
+  parseApiErrors,
+  getErrorMessage,
+} from '@educard/shared';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import { ChevronLeft, Save, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { useState, useCallback, useMemo } from 'react';
 import {
   View,
@@ -16,25 +32,9 @@ import {
   Platform,
   Switch,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { ChevronLeft, Save, ChevronDown, ChevronUp } from 'lucide-react-native';
-import {
-  getRoleGradient,
-  GENDER_OPTIONS,
-  BLOOD_GROUP_OPTIONS,
-  RELATIONSHIP_OPTIONS,
-  studentQuickSchema,
-  studentFullSchema,
-  validateField,
-  validateAllFields,
-  buildStudentPayload,
-  parseApiErrors,
-} from '@educard/shared';
-import { useCreateStudent, useRestoreStudent } from '@/features/students';
-import { useClasses } from '@/features/classes';
-import { uploadProfilePhoto } from '@/features/core';
+
+import { DeletedDuplicateModal } from '@/components/common/DeletedDuplicateModal';
 import {
   FormInput,
   FormSelect,
@@ -44,14 +44,16 @@ import {
   FormDatePicker,
   FormPhotoUpload,
 } from '@/components/forms';
-import { DeletedDuplicateModal } from '@/components/common/DeletedDuplicateModal';
+import { useClasses } from '@/features/classes';
+import { uploadProfilePhoto } from '@/features/core';
+import { useCreateStudent, useRestoreStudent } from '@/features/students';
 import { useDeletedDuplicateHandler } from '@/hooks/useDeletedDuplicateHandler';
+import { headerStyles, layoutStyles } from '@/styles';
 import {
   isDeletedDuplicateError,
   getDeletedDuplicateMessage,
   getDeletedRecordId,
 } from '@/utils/deleted-duplicate';
-import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
 type FieldErrors = Record<string, string>;
@@ -200,8 +202,8 @@ export default function CreateStudentScreen() {
           { text: 'OK', onPress: () => router.back() },
         ]);
       },
-      onError: () => {
-        Alert.alert('Error', 'Failed to reactivate. Please try again.');
+      onError: (error: unknown) => {
+        Alert.alert('Error', getErrorMessage(error, 'Failed to reactivate. Please try again.'));
       },
     });
   }, [duplicateHandler, restoreMutation, router]);

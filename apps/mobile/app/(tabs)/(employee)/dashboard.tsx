@@ -3,10 +3,8 @@
  * Main dashboard for teachers and staff
  */
 
-import { useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
-import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import {
   BookOpen,
   Users,
@@ -18,13 +16,14 @@ import {
   CheckCircle,
   AlertCircle,
   ChevronRight,
-  GraduationCap,
 } from 'lucide-react-native';
+import { useState, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 
 import { Screen } from '@/components/layout';
 import { Card, Avatar, Badge } from '@/components/ui';
-import { useAuthStore } from '@/lib/auth-store';
 import { colors } from '@/constants/colors';
+import { useAuthStore } from '@/lib/auth-store';
 
 // Mock data
 const mockStats = {
@@ -297,27 +296,36 @@ export default function EmployeeDashboard() {
           <View className="mb-8">
             <Text className="mb-4 text-lg font-semibold text-gray-900">Quick Actions</Text>
             <View className="-mx-1.5 flex-row flex-wrap">
-              <TouchableOpacity className="mb-3 w-1/3 px-1.5">
-                <View className="items-center rounded-2xl bg-primary-50 p-4">
-                  <ClipboardCheck size={28} color={colors.primary[600]} strokeWidth={1.5} />
-                  <Text className="mt-2 text-center text-sm font-medium text-primary-700">
-                    Mark{'\n'}Attendance
-                  </Text>
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity className="mb-3 w-1/3 px-1.5">
-                <View className="items-center rounded-2xl bg-success-50 p-4">
-                  <GraduationCap size={28} color={colors.success[600]} strokeWidth={1.5} />
-                  <Text className="mt-2 text-center text-sm font-medium text-success-700">
-                    Enter{'\n'}Marks
-                  </Text>
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity className="mb-3 w-1/3 px-1.5">
+              <TouchableOpacity
+                className="mb-3 w-1/3 px-1.5"
+                onPress={() => router.push('/(admin-screens)/leave/apply' as any)}
+              >
                 <View className="items-center rounded-2xl bg-warning-50 p-4">
                   <Calendar size={28} color={colors.warning[600]} strokeWidth={1.5} />
                   <Text className="mt-2 text-center text-sm font-medium text-warning-700">
                     Apply{'\n'}Leave
+                  </Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="mb-3 w-1/3 px-1.5"
+                onPress={() => router.push('/(admin-screens)/leave/my-requests' as any)}
+              >
+                <View className="items-center rounded-2xl bg-primary-50 p-4">
+                  <FileText size={28} color={colors.primary[600]} strokeWidth={1.5} />
+                  <Text className="mt-2 text-center text-sm font-medium text-primary-700">
+                    My{'\n'}Leave
+                  </Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="mb-3 w-1/3 px-1.5"
+                onPress={() => router.push('/(admin-screens)/timesheets/my-submissions' as any)}
+              >
+                <View className="items-center rounded-2xl bg-success-50 p-4">
+                  <ClipboardCheck size={28} color={colors.success[600]} strokeWidth={1.5} />
+                  <Text className="mt-2 text-center text-sm font-medium text-success-700">
+                    My{'\n'}Timesheets
                   </Text>
                 </View>
               </TouchableOpacity>

@@ -2,6 +2,8 @@
  * FormPhotoUpload - Profile photo picker (camera + gallery)
  */
 
+import * as ImagePicker from 'expo-image-picker';
+import { Camera, ImageIcon, X, User } from 'lucide-react-native';
 import { useState } from 'react';
 import {
   View,
@@ -13,8 +15,6 @@ import {
   ActionSheetIOS,
   Platform,
 } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { Camera, ImageIcon, X, User } from 'lucide-react-native';
 
 interface FormPhotoUploadProps {
   label?: string;

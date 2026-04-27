@@ -1,0 +1,105 @@
+PROMPT 2 — Code Reusability, Cleanup & New Modules
+====================================================
+Date: April 25, 2026
+
+WHAT WAS DONE
+-------------
+
+1. MOVED extractApiError TO SHARED PACKAGE
+   - Before: extractApiError() was defined only in mobile (src/utils/api-error.ts)
+   - After: Moved to packages/shared/src/utils/error-handler.ts
+   - Mobile's api-error.ts now re-exports from @educard/shared
+   - Both web and mobile can use it: import { extractApiError } from '@educard/shared'
+   - Use case: Quick one-liner error extraction for Alert.alert() or toast messages
+
+2. WEB ERROR HANDLER — REMOVED DUPLICATE CODE (515 → ~110 lines)
+   - Before: apps/web/src/lib/utils/error-handler.ts had 515 lines, duplicating
+     all parsing logic from packages/shared/src/utils/error-handler.ts
+   - After: Web file re-exports everything from @educard/shared, only keeps
+     web-specific functions (applyFieldErrors, setFormFieldErrors) that need
+     react-hook-form types
+   - All existing imports across web features still work — no breaking changes
+
+3. DELETED DUPLICATE HELPERS — MOVED TO SHARED
+   - isDeletedDuplicateError(), getDeletedDuplicateMessage(), getDeletedRecordId()
+   - Before: Only in web error-handler.ts
+   - After: Added to shared package, web re-exports from shared
+   - Mobile can now use these too if needed
+
+4. APPLIED extractApiError TO MORE SCREENS
+   - preferences/index.tsx — replaced 3-line inline error extraction with 1-line extractApiError()
+   - leave/allocations.tsx — replaced 4-line inline error extraction with 1-line extractApiError()
+
+5. CLEANED UP SEPARATOR COMMENTS
+   - Removed all // ============= separator lines from:
+     * packages/shared/src/utils/error-handler.ts
+     * packages/shared/src/utils/form-helpers.ts
+     * packages/shared/src/utils/form-schemas.ts
+     * packages/shared/src/utils/entity-form-schemas.ts
+     * apps/mobile/app/(admin-screens)/holidays/index.tsx
+   - Kept meaningful section title comments (// Teacher Form Schemas, etc.)
+   - Replaced noisy separators with clean JSDoc comments where needed
+
+FILES CHANGED
+-------------
+packages/shared/src/utils/error-handler.ts    — Added extractApiError, deleted-duplicate helpers, removed separators
+packages/shared/src/utils/form-helpers.ts      — Removed separators
+packages/shared/src/utils/form-schemas.ts      — Removed separators
+packages/shared/src/utils/entity-form-schemas.ts — Removed separators
+apps/web/src/lib/utils/error-handler.ts        — Replaced 515 lines with ~110 lines (re-exports from shared)
+apps/mobile/src/utils/api-error.ts             — Now re-exports from @educard/shared
+apps/mobile/app/(admin-screens)/preferences/index.tsx  — Uses extractApiError
+apps/mobile/app/(admin-screens)/leave/allocations.tsx  — Uses extractApiError
+apps/mobile/app/(admin-screens)/holidays/index.tsx     — Removed separator comments
+
+ERROR HANDLING GUIDE (for future reference)
+-------------------------------------------
+The shared package provides these error utilities:
+
+  parseError(err)          → Full NormalizedError object with fieldErrors, nonFieldErrors, etc.
+  getErrorMessage(err)     → Single string for toast/alert messages
+  extractApiError(err)     → Quick one-liner for Alert.alert() — checks errors, detail, message
+  getFieldErrors(err)      → Record<string, string> for setting form field errors
+  parseApiErrors(data)     → From form-helpers, maps nested backend errors to flat field errors
+                             (used in create/edit screens that need to set per-field errors)
+  isDeletedDuplicateError(err) → Check if a duplicate-deleted record exists
+  getDeletedDuplicateMessage(err) → User-friendly message for duplicate-deleted
+  getDeletedRecordId(err)  → Extract the deleted record's public_id
+
+When to use what:
+  - Alert.alert('Error', extractApiError(err))        → Simple error alerts
+  - const { fieldErrors } = parseApiErrors(data)      → Form screens with per-field validation
+  - toast.error(getErrorMessage(err))                  → Web toast messages
+  - applyFieldErrors(err, setError)                    → Web react-hook-form integration
+
+ARCHITECTURE NOTE
+-----------------
+  packages/shared/     → All error parsing logic lives here (single source of truth)
+  apps/web/            → Re-exports from shared + adds react-hook-form helpers
+  apps/mobile/         → Imports directly from @educard/shared
+
+
+PART 2 — TIMETABLE, EXAMS & SETTINGS MODULES (April 25, 2026)
+================================================================
+
+7. TIMETABLE MODULE — NEW
+   - src/features/timetable/ — types, api, hooks, index
+   - app/(admin-screens)/timetable/index.tsx — Class timetable viewer
+     * Class dropdown, day tabs, color-coded slot cards
+     * Shows subject, teacher, room per period
+     * Break slots, empty states
+
+8. EXAMS & MARKS MODULE — NEW
+   - src/features/exams/ — types, api, hooks, index
+   - app/(admin-screens)/exams/sessions.tsx — Exam sessions list
+   - app/(admin-screens)/exams/exams-list.tsx — Exams per session
+   - app/(admin-screens)/exams/marks.tsx — Marks overview with stats
+
+9. SETTINGS SCREEN — FULL REWRITE
+   - Sections: Organization, Academics, Leave & Attendance, App
+   - Links to all modules: Preferences, Holidays, Timetable, Exams, Leave, Timesheets
+   - Profile in gradient header, color-coded icons, animated sections
+
+10. MANAGEMENT + LAYOUT UPDATED
+    - Added Timetable and Exams cards
+    - Added new Stack.Screen routes

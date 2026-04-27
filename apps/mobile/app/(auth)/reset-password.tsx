@@ -3,6 +3,8 @@
  * Screen for setting a new password after OTP verification
  */
 
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import {
   View,
@@ -14,9 +16,8 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+
 import { verifyPasswordResetOtp, parseApiError } from '@/api';
 
 export default function ResetPasswordScreen() {

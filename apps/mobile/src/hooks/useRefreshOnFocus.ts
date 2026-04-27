@@ -3,8 +3,8 @@
  * Refetches data when screen comes into focus
  */
 
-import { useCallback, useRef } from 'react';
 import { useFocusEffect } from 'expo-router';
+import { useCallback, useRef } from 'react';
 
 export function useRefreshOnFocus<T>(refetch: () => Promise<T>) {
   const firstTimeRef = useRef(true);

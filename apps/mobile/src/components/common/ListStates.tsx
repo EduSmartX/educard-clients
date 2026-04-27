@@ -3,10 +3,11 @@
  * Eliminates ~40 lines of duplicated JSX per screen.
  */
 
+import { Colors } from '@educard/shared';
+import { AlertCircle } from 'lucide-react-native';
 import React from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { AlertCircle } from 'lucide-react-native';
-import { Colors } from '@educard/shared';
+
 import { stateStyles } from '@/styles';
 
 // ── Loading ──────────────────────────────────────────────────────

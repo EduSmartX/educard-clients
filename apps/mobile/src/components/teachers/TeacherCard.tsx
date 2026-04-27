@@ -3,10 +3,11 @@
  * Reusable card for displaying teacher info in lists
  */
 
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
-import { Eye, Edit3, Trash2, UserCircle, Briefcase } from 'lucide-react-native';
 import { Colors } from '@educard/shared';
 import type { Teacher } from '@educard/shared';
+import { Eye, Edit3, Trash2, UserCircle, Briefcase } from 'lucide-react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
+
 import { cardStyles, avatarStyles, actionBtnStyles, textStyles } from '@/styles';
 
 interface TeacherCardProps {

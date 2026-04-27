@@ -4,15 +4,17 @@
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { useSubjectDetail } from '@/features/subjects';
+
 import { DetailScreenShell, DetailSection, DetailRow } from '@/components/detail';
+import { useSubjectDetail } from '@/features/subjects';
 
 export default function SubjectDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, is_deleted } = useLocalSearchParams<{ id: string; is_deleted?: string }>();
   const router = useRouter();
-  const { data: subject, isLoading, isError } = useSubjectDetail(id || '');
+  const isDeleted = is_deleted === 'true';
+  const { data: subject, isLoading, isError } = useSubjectDetail(id || '', isDeleted);
 
-  const s = subject as any;
+  const s = subject;
 
   return (
     <DetailScreenShell
@@ -20,7 +22,7 @@ export default function SubjectDetailScreen() {
       subtitle={s?.subject_info?.name || s?.name || '...'}
       isLoading={isLoading}
       isError={isError || !subject}
-      onBack={() => router.navigate('/(tabs)/(admin)/subjects' as any)}
+      onBack={() => router.back()}
     >
       <Animated.View entering={FadeInDown.delay(100)}>
         <DetailSection title="Subject Info" icon="📚">

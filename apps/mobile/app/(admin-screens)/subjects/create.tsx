@@ -3,6 +3,18 @@
  * Validates on blur (per-field) and on submit (full form)
  */
 
+import {
+  getRoleGradient,
+  subjectFormSchema,
+  validateField,
+  validateAllFields,
+  buildSubjectPayload,
+  parseApiErrors,
+  getErrorMessage,
+} from '@educard/shared';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import { ChevronLeft, Save } from 'lucide-react-native';
 import { useState, useCallback, useMemo } from 'react';
 import {
   View,
@@ -15,31 +27,21 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { ChevronLeft, Save } from 'lucide-react-native';
-import {
-  getRoleGradient,
-  subjectFormSchema,
-  validateField,
-  validateAllFields,
-  buildSubjectPayload,
-  parseApiErrors,
-} from '@educard/shared';
-import { useCreateSubject, useRestoreSubject } from '@/features/subjects';
+
+import { DeletedDuplicateModal } from '@/components/common/DeletedDuplicateModal';
+import { FormInput, FormSection, FormError, FormDropdown } from '@/components/forms';
 import { useClasses } from '@/features/classes';
 import { useCoreSubjects } from '@/features/core';
+import { useCreateSubject, useRestoreSubject } from '@/features/subjects';
 import { useTeachers } from '@/features/teachers';
-import { FormInput, FormSection, FormError, FormDropdown } from '@/components/forms';
-import { DeletedDuplicateModal } from '@/components/common/DeletedDuplicateModal';
 import { useDeletedDuplicateHandler } from '@/hooks/useDeletedDuplicateHandler';
+import { headerStyles, layoutStyles } from '@/styles';
 import {
   isDeletedDuplicateError,
   getDeletedDuplicateMessage,
   getDeletedRecordId,
 } from '@/utils/deleted-duplicate';
-import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
 type FieldErrors = Record<string, string>;
@@ -164,8 +166,8 @@ export default function CreateSubjectScreen() {
           { text: 'OK', onPress: () => router.back() },
         ]);
       },
-      onError: () => {
-        Alert.alert('Error', 'Failed to reactivate. Please try again.');
+      onError: (error: unknown) => {
+        Alert.alert('Error', getErrorMessage(error, 'Failed to reactivate. Please try again.'));
       },
     });
   }, [duplicateHandler, restoreMutation, router]);

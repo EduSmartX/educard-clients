@@ -12,11 +12,11 @@ export interface OtpEmailConfig {
 
 export interface SendOtpResponse {
   all_success: boolean;
-  results: Array<{
+  results: {
     email: string;
     success: boolean;
     message: string;
-  }>;
+  }[];
 }
 
 export interface VerifyOtpResponse {

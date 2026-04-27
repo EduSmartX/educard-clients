@@ -4,8 +4,8 @@
  */
 
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import * as SecureStore from 'expo-secure-store';
 import { router } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
 
 import { API_CONFIG, STORAGE_KEYS } from '@/constants/config';
 // Use shared error handler

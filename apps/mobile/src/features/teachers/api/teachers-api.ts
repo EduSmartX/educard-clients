@@ -3,8 +3,6 @@
  * All API calls for teacher CRUD operations
  */
 
-import { apiClient } from '@/api/client';
-import { API_ENDPOINTS } from '@/constants';
 import type {
   Teacher,
   TeacherDetail,
@@ -12,6 +10,9 @@ import type {
   ApiListResponse,
   ApiDetailResponse,
 } from '@educard/shared';
+
+import { apiClient } from '@/api/client';
+import { API_ENDPOINTS } from '@/constants';
 
 export type TeacherListResponse = ApiListResponse<Teacher>;
 
@@ -32,9 +33,13 @@ export async function getTeachers(params?: TeacherQueryParams): Promise<TeacherL
   return response.data;
 }
 
-export async function getTeacherById(publicId: string): Promise<ApiDetailResponse<TeacherDetail>> {
+export async function getTeacherById(
+  publicId: string,
+  isDeleted?: boolean
+): Promise<ApiDetailResponse<TeacherDetail>> {
   const response = await apiClient.get<ApiDetailResponse<TeacherDetail>>(
-    API_ENDPOINTS.TEACHERS.DETAIL(publicId)
+    API_ENDPOINTS.TEACHERS.DETAIL(publicId),
+    isDeleted ? { params: { is_deleted: true } } : undefined
   );
   return response.data;
 }
@@ -63,11 +68,15 @@ export async function updateTeacher(
   return response.data;
 }
 
-export async function deleteTeacher(publicId: string): Promise<ApiDetailResponse<null>> {
-  const response = await apiClient.delete<ApiDetailResponse<null>>(
-    API_ENDPOINTS.TEACHERS.DELETE(publicId)
-  );
-  return response.data;
+export async function deleteTeacher(publicId: string): Promise<void> {
+  try {
+    await apiClient.delete(API_ENDPOINTS.TEACHERS.DELETE(publicId));
+  } catch (error: any) {
+    const status = error?.response?.status;
+    if (status && status >= 200 && status < 300) return;
+    if (error?.message === 'Network Error' && !error?.response) return;
+    throw error;
+  }
 }
 
 export async function restoreTeacher(publicId: string): Promise<ApiDetailResponse<Teacher>> {

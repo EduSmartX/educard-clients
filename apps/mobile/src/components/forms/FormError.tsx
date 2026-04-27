@@ -2,8 +2,8 @@
  * FormError - Displays API / submission errors as a banner
  */
 
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { AlertCircle, X } from 'lucide-react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 interface FormErrorProps {
   message: string | null | undefined;

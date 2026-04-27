@@ -1,3 +1,7 @@
+import { Colors } from '@educard/shared';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter, Link } from 'expo-router';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, User } from 'lucide-react-native';
 import { useState, useCallback } from 'react';
 import {
   View,
@@ -12,13 +16,10 @@ import {
   Image,
   Switch,
 } from 'react-native';
-import { useRouter, Link } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated';
-import { Mail, Lock, Eye, EyeOff, ArrowRight, User } from 'lucide-react-native';
-import { useAuthStore } from '@/lib/auth-store';
-import { Colors } from '@educard/shared';
+
 import { getErrorMessage } from '@/api';
+import { useAuthStore } from '@/lib/auth-store';
 
 export default function LoginScreen() {
   const router = useRouter();

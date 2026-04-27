@@ -8,3 +8,6 @@ export * from './students';
 export * from './classes';
 export * from './subjects';
 export * from './core';
+export * from './leave';
+export * from './holidays';
+export * from './preferences';

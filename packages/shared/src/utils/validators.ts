@@ -98,3 +98,24 @@ export function isValidPan(pan: string): boolean {
   const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
   return panRegex.test(pan.toUpperCase());
 }
+
+/**
+ * Validate that a start date is before or equal to an end date.
+ * Returns an error message string if invalid, or null if valid.
+ */
+export function validateDateRange(
+  startDate: string | Date | null | undefined,
+  endDate: string | Date | null | undefined,
+  startLabel: string = "Start date",
+  endLabel: string = "End date"
+): string | null {
+  if (!startDate || !endDate) return null;
+  const start = typeof startDate === "string" ? new Date(startDate) : startDate;
+  const end = typeof endDate === "string" ? new Date(endDate) : endDate;
+  start.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+  if (end < start) {
+    return `${endLabel} must be on or after ${startLabel.toLowerCase()}`;
+  }
+  return null;
+}

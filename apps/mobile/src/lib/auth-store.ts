@@ -2,8 +2,8 @@
  * Authentication store using Zustand
  */
 
-import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
+import { create } from 'zustand';
 
 import { login as apiLogin, logout as apiLogout, signup as apiSignup, checkAuth } from '@/api/auth';
 import { STORAGE_KEYS } from '@/constants/config';

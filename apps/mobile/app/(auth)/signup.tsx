@@ -1,19 +1,14 @@
-import { useState, useCallback } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Image,
-  ActivityIndicator,
-} from 'react-native';
-import { useRouter } from 'expo-router';
+  Colors,
+  APP_INFO,
+  ORGANIZATION_TYPES,
+  BOARD_AFFILIATIONS,
+  SIGNUP_STEP_LABELS,
+  SIGNUP_STEP_TITLES,
+} from '@educard/shared';
+import type { SignupStep } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import { useRouter } from 'expo-router';
 import {
   Mail,
   Building2,
@@ -27,19 +22,25 @@ import {
   EyeOff,
   Phone,
 } from 'lucide-react-native';
+import { useState, useCallback } from 'react';
 import {
-  Colors,
-  APP_INFO,
-  ORGANIZATION_TYPES,
-  BOARD_AFFILIATIONS,
-  SIGNUP_STEP_LABELS,
-  SIGNUP_STEP_TITLES,
-} from '@educard/shared';
-import type { SignupStep } from '@educard/shared';
-import { useModal } from '@/components/ui';
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Image,
+  ActivityIndicator,
+} from 'react-native';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+
 import { sendOtps, verifyOtp, parseApiError, registerOrganization } from '@/api';
 import type { OrganizationRegistrationData } from '@/api';
 import { AddressForm, type AddressData } from '@/components/forms';
+import { useModal } from '@/components/ui';
 
 export default function SignupScreen() {
   const router = useRouter();

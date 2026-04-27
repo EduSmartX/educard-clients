@@ -3,6 +3,8 @@
  * Supports select chips, toggle switches with vibrant colors
  */
 
+import { LinearGradient } from 'expo-linear-gradient';
+import { X, RotateCcw, SlidersHorizontal } from 'lucide-react-native';
 import { useState, useEffect, useMemo } from 'react';
 import {
   View,
@@ -16,8 +18,6 @@ import {
   Dimensions,
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
-import { X, RotateCcw, SlidersHorizontal } from 'lucide-react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 

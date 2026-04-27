@@ -6,9 +6,7 @@
 import { z } from "zod";
 import { GENDER_ENUM, BLOOD_GROUP_ENUM } from "../constants/user-constants";
 
-// ============================================================================
 // Common Validation Patterns
-// ============================================================================
 
 /**
  * Email validation regex
@@ -25,9 +23,7 @@ export const INDIAN_PHONE_REGEX = /^[6-9]\d{9}$/;
  */
 export const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
-// ============================================================================
 // Reusable Field Schemas
-// ============================================================================
 
 /**
  * Email field schema
@@ -152,9 +148,7 @@ export const dateOfBirthSchema = z
  */
 export const optionalDateSchema = z.string().optional().or(z.literal(""));
 
-// ============================================================================
 // Address Schema
-// ============================================================================
 
 /**
  * Address schema for organization/user addresses
@@ -180,9 +174,7 @@ export const optionalAddressSchema = z.object({
   country: z.string().default("India"),
 });
 
-// ============================================================================
 // Auth Schemas
-// ============================================================================
 
 /**
  * Login form schema
@@ -248,9 +240,7 @@ export const changePasswordSchema = z
     path: ["confirm_password"],
   });
 
-// ============================================================================
 // Organization Registration Schema
-// ============================================================================
 
 /**
  * Organization info schema for registration
@@ -298,9 +288,7 @@ export const organizationRegistrationSchema = z.object({
   address_info: optionalAddressSchema.optional(),
 });
 
-// ============================================================================
 // Type Exports
-// ============================================================================
 
 export type LoginFormData = z.infer<typeof loginSchema>;
 export type SignupFormData = z.infer<typeof signupSchema>;

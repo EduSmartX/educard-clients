@@ -4,6 +4,19 @@
  * Receives ?id=<publicId> via query param.
  */
 
+import {
+  getRoleGradient,
+  GENDER_OPTIONS,
+  BLOOD_GROUP_OPTIONS,
+  teacherFullSchema,
+  validateField,
+  validateAllFields,
+  buildTeacherPayload,
+  parseApiErrors,
+} from '@educard/shared';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { ChevronLeft, Save, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import {
   View,
@@ -16,22 +29,9 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { ChevronLeft, Save, ChevronDown, ChevronUp } from 'lucide-react-native';
-import {
-  getRoleGradient,
-  GENDER_OPTIONS,
-  BLOOD_GROUP_OPTIONS,
-  teacherFullSchema,
-  validateField,
-  validateAllFields,
-  buildTeacherPayload,
-  parseApiErrors,
-} from '@educard/shared';
-import { useTeacherDetail, useUpdateTeacher } from '@/features/teachers';
-import { useRoleTypes, useSupervisors } from '@/features/core';
+
+import { ProfileAvatar } from '@/components/common/ProfileAvatar';
 import {
   FormInput,
   FormSelect,
@@ -40,6 +40,10 @@ import {
   FormDropdown,
   FormDatePicker,
 } from '@/components/forms';
+import { FormMultiSelect } from '@/components/forms/FormMultiSelect';
+import { useRoleTypes, useSupervisors, useCoreSubjects } from '@/features/core';
+import { useTeacherDetail, useUpdateTeacher } from '@/features/teachers';
+import { useProfileImage } from '@/hooks/useProfileImage';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -53,9 +57,21 @@ export default function EditTeacherScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const { data: roleTypes, isLoading: rolesLoading } = useRoleTypes();
   const { data: supervisors, isLoading: supervisorsLoading } = useSupervisors();
+  const { data: coreSubjects } = useCoreSubjects();
 
   const [addressExpanded, setAddressExpanded] = useState(false);
   const [formLoaded, setFormLoaded] = useState(false);
+
+  const {
+    pickAndUpload,
+    isUploading: isPhotoUploading,
+    localUri: localPhotoUri,
+  } = useProfileImage({
+    userPublicId: teacher?.user?.public_id,
+    onSuccess: () => {
+      // photo updated — detail query will refetch on next focus
+    },
+  });
 
   const [form, setForm] = useState({
     employee_id: '',
@@ -73,6 +89,7 @@ export default function EditTeacherScreen() {
     experience_years: '',
     joining_date: '',
     supervisor_email: '',
+    subjects: [] as string[],
     emergency_contact_name: '',
     emergency_contact_number: '',
     street_address: '',
@@ -95,7 +112,10 @@ export default function EditTeacherScreen() {
         first_name: u?.first_name || '',
         last_name: u?.last_name || '',
         gender: u?.gender || '',
-        organization_role: u?.organization_role?.toString() || '',
+        organization_role:
+          typeof u?.organization_role === 'object' && u?.organization_role
+            ? u.organization_role.id.toString()
+            : u?.organization_role?.toString() || '',
         phone: u?.phone || '',
         blood_group: u?.blood_group || '',
         date_of_birth: u?.date_of_birth || '',
@@ -105,6 +125,7 @@ export default function EditTeacherScreen() {
         experience_years: teacher.experience_years?.toString() || '',
         joining_date: teacher.joining_date || '',
         supervisor_email: u?.supervisor?.email || '',
+        subjects: (teacher.subjects || []).map((s: any) => s.id?.toString() || s.public_id),
         emergency_contact_name: teacher.emergency_contact_name || '',
         emergency_contact_number: teacher.emergency_contact_number || '',
         street_address: addr?.street_address || '',
@@ -127,9 +148,13 @@ export default function EditTeacherScreen() {
     [supervisors]
   );
   const bloodGroupOpts = BLOOD_GROUP_OPTIONS.map((b) => ({ value: b.value, label: b.label }));
+  const subjectOptions = useMemo(
+    () => (coreSubjects || []).map((s: any) => ({ value: s.id.toString(), label: s.name })),
+    [coreSubjects]
+  );
 
   const updateField = useCallback(
-    (field: string, value: string) => {
+    (field: string, value: any) => {
       setForm((prev) => ({ ...prev, [field]: value }));
       if (errors[field])
         setErrors((prev) => {
@@ -143,7 +168,8 @@ export default function EditTeacherScreen() {
 
   const blurValidate = useCallback(
     (field: string) => {
-      const err = validateField(teacherFullSchema, field, form[field as keyof typeof form]);
+      const val = form[field as keyof typeof form];
+      const err = validateField(teacherFullSchema, field, typeof val === 'string' ? val : '');
       setErrors((prev) => {
         if (err) return { ...prev, [field]: err };
         const n = { ...prev };
@@ -164,8 +190,11 @@ export default function EditTeacherScreen() {
     }
 
     const payload = buildTeacherPayload(form, false);
+    if (form.subjects.length > 0) {
+      payload.subjects = form.subjects.map(Number);
+    }
     updateMutation.mutate(
-      { publicId: id!, data: payload },
+      { publicId: id, data: payload },
       {
         onSuccess: () => {
           Alert.alert('✅ Success', 'Teacher updated successfully!', [
@@ -201,8 +230,16 @@ export default function EditTeacherScreen() {
   return (
     <View style={layoutStyles.container}>
       <LinearGradient colors={adminGradient} style={headerStyles.header}>
-        <Animated.View entering={FadeIn.delay(100)} style={headerStyles.circle1} />
-        <Animated.View entering={FadeIn.delay(200)} style={headerStyles.circle2} />
+        <Animated.View
+          entering={FadeIn.delay(100)}
+          style={headerStyles.circle1}
+          pointerEvents="none"
+        />
+        <Animated.View
+          entering={FadeIn.delay(200)}
+          style={headerStyles.circle2}
+          pointerEvents="none"
+        />
         <View style={headerStyles.content}>
           <View style={headerStyles.topRow}>
             <TouchableOpacity style={headerStyles.backBtn} onPress={() => router.back()}>
@@ -229,6 +266,23 @@ export default function EditTeacherScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Profile Avatar */}
+          <Animated.View
+            entering={FadeIn.delay(150)}
+            style={{ alignItems: 'center', marginBottom: 16 }}
+          >
+            <ProfileAvatar
+              name={`${form.first_name} ${form.last_name}`.trim()}
+              imageUri={localPhotoUri || teacher?.profile_photo_thumbnail}
+              size={90}
+              onPress={pickAndUpload}
+              isUploading={isPhotoUploading}
+            />
+            <Text style={{ marginTop: 8, fontSize: 18, fontWeight: '700', color: '#1e293b' }}>
+              {form.first_name} {form.last_name}
+            </Text>
+          </Animated.View>
+
           <FormError message={apiError} onDismiss={() => setApiError(null)} />
 
           <Animated.View entering={FadeInDown.delay(100)}>
@@ -356,6 +410,17 @@ export default function EditTeacherScreen() {
                 searchable
                 loading={supervisorsLoading}
               />
+
+              {/* Subjects Multi-Select */}
+              <FormMultiSelect
+                label="Subjects to Teach"
+                options={subjectOptions}
+                value={form.subjects}
+                onChange={(v) => updateField('subjects', v)}
+                placeholder="Select subjects..."
+                searchable
+              />
+
               <FormDatePicker
                 label="Date of Joining"
                 value={form.joining_date}

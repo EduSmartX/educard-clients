@@ -4,9 +4,9 @@
  */
 
 import { Tabs } from 'expo-router';
+import { LayoutDashboard, BookOpen, ClipboardList, Calendar, Settings } from 'lucide-react-native';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LayoutDashboard, BookOpen, ClipboardList, Calendar, Settings } from 'lucide-react-native';
 
 import { colors } from '@/constants/colors';
 

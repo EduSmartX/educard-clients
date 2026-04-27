@@ -3,18 +3,9 @@
  * Used for class master, blood group, class teacher, etc.
  */
 
-import { useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Modal,
-  FlatList,
-  StyleSheet,
-  TextInput,
-  SafeAreaView,
-} from 'react-native';
 import { ChevronDown, Search, X, Check, AlertCircle } from 'lucide-react-native';
+import { useState } from 'react';
+import { View, Text, TouchableOpacity, Modal, FlatList, StyleSheet, TextInput } from 'react-native';
 
 interface Option {
   value: string;
@@ -84,70 +75,72 @@ export function FormDropdown({
         </View>
       )}
 
-      <Modal visible={visible} animationType="slide" transparent>
-        <SafeAreaView style={styles.modalOverlay}>
-          <View style={styles.modal}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{label}</Text>
-              <TouchableOpacity
-                onPress={() => {
-                  setVisible(false);
-                  setSearch('');
-                }}
-              >
-                <X size={24} color="#64748b" />
-              </TouchableOpacity>
-            </View>
-
-            {searchable && (
-              <View style={styles.searchBox}>
-                <Search size={18} color="#94a3b8" />
-                <TextInput
-                  style={styles.searchInput}
-                  value={search}
-                  onChangeText={setSearch}
-                  placeholder="Search..."
-                  placeholderTextColor="#94a3b8"
-                  autoFocus
-                />
+      {visible && (
+        <Modal visible={visible} animationType="slide" transparent>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modal}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>{label}</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setVisible(false);
+                    setSearch('');
+                  }}
+                >
+                  <X size={24} color="#64748b" />
+                </TouchableOpacity>
               </View>
-            )}
 
-            <FlatList
-              data={filtered}
-              keyExtractor={(item) => item.value}
-              renderItem={({ item }) => {
-                const selected = item.value === value;
-                return (
-                  <TouchableOpacity
-                    style={[styles.option, selected && styles.optionSelected]}
-                    onPress={() => handleSelect(item.value)}
-                  >
-                    <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
-                      {item.label}
-                    </Text>
-                    {selected && <Check size={18} color="#7c3aed" />}
-                  </TouchableOpacity>
-                );
-              }}
-              ListEmptyComponent={<Text style={styles.empty}>No options found</Text>}
-            />
+              {searchable && (
+                <View style={styles.searchBox}>
+                  <Search size={18} color="#94a3b8" />
+                  <TextInput
+                    style={styles.searchInput}
+                    value={search}
+                    onChangeText={setSearch}
+                    placeholder="Search..."
+                    placeholderTextColor="#94a3b8"
+                    autoFocus
+                  />
+                </View>
+              )}
 
-            {value ? (
-              <TouchableOpacity
-                style={styles.clearBtn}
-                onPress={() => {
-                  onChange('');
-                  setVisible(false);
-                  setSearch('');
+              <FlatList
+                data={filtered}
+                keyExtractor={(item) => item.value}
+                renderItem={({ item }) => {
+                  const selected = item.value === value;
+                  return (
+                    <TouchableOpacity
+                      style={[styles.option, selected && styles.optionSelected]}
+                      onPress={() => handleSelect(item.value)}
+                    >
+                      <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
+                        {item.label}
+                      </Text>
+                      {selected && <Check size={18} color="#7c3aed" />}
+                    </TouchableOpacity>
+                  );
                 }}
-              >
-                <Text style={styles.clearText}>Clear Selection</Text>
-              </TouchableOpacity>
-            ) : null}
+                ListEmptyComponent={<Text style={styles.empty}>No options found</Text>}
+              />
+
+              {value ? (
+                <TouchableOpacity
+                  style={styles.clearBtn}
+                  onPress={() => {
+                    onChange('');
+                    setVisible(false);
+                    setSearch('');
+                  }}
+                >
+                  <Text style={styles.clearText}>Clear Selection</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
           </View>
-        </SafeAreaView>
-      </Modal>
+        </Modal>
+      )}
     </View>
   );
 }

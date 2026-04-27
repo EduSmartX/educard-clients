@@ -3,7 +3,6 @@
  * App and account settings for parents
  */
 
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   User,
@@ -15,11 +14,12 @@ import {
   Moon,
   Globe,
 } from 'lucide-react-native';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
 
 import { Screen, Header } from '@/components/layout';
 import { Card, Avatar } from '@/components/ui';
-import { useAuthStore } from '@/lib/auth-store';
 import { colors } from '@/constants/colors';
+import { useAuthStore } from '@/lib/auth-store';
 
 const settingsOptions = [
   { id: 'profile', title: 'Edit Profile', icon: User, route: '/profile' },

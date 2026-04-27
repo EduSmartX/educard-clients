@@ -544,6 +544,8 @@ export const AttendanceUiText = {
   MARK_ATTENDANCE: "Mark Attendance",
   VIEW_ATTENDANCE: "View Attendance",
   ATTENDANCE_REPORT: "Attendance Report",
+  SUMMARY_PAGE_TITLE: "Attendance Summary",
+  SUMMARY_PAGE_DESC: "Today's attendance overview across all classes",
   MY_ATTENDANCE: "My Attendance",
   TIMESHEET: "Timesheet",
 

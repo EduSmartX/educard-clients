@@ -2,9 +2,10 @@
  * Subjects Feature — API Layer
  */
 
-import { apiClient } from '@/api/client';
 import { API_ENDPOINTS } from '@educard/shared';
 import type { Subject, ApiListResponse } from '@educard/shared';
+
+import { apiClient } from '@/api/client';
 
 export type SubjectListResponse = ApiListResponse<Subject>;
 
@@ -25,8 +26,11 @@ export async function getSubjects(params?: SubjectQueryParams): Promise<SubjectL
   return response.data;
 }
 
-export async function getSubjectById(publicId: string) {
-  const response = await apiClient.get(API_ENDPOINTS.SUBJECTS.DETAIL(publicId));
+export async function getSubjectById(publicId: string, isDeleted?: boolean) {
+  const response = await apiClient.get(
+    API_ENDPOINTS.SUBJECTS.DETAIL(publicId),
+    isDeleted ? { params: { is_deleted: true } } : undefined
+  );
   return response.data;
 }
 
@@ -40,8 +44,15 @@ export async function updateSubject(publicId: string, data: Partial<Subject>) {
   return apiClient.patch(API_ENDPOINTS.SUBJECTS.PATCH(publicId), data);
 }
 
-export async function deleteSubject(publicId: string) {
-  return apiClient.delete(API_ENDPOINTS.SUBJECTS.DELETE(publicId));
+export async function deleteSubject(publicId: string): Promise<void> {
+  try {
+    await apiClient.delete(API_ENDPOINTS.SUBJECTS.DELETE(publicId));
+  } catch (error: any) {
+    const status = error?.response?.status;
+    if (status && status >= 200 && status < 300) return;
+    if (error?.message === 'Network Error' && !error?.response) return;
+    throw error;
+  }
 }
 
 export async function restoreSubject(publicId: string) {

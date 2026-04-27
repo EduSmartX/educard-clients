@@ -3,10 +3,10 @@
  * Handles safe area and common screen layout
  */
 
+import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import { View, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 
 interface ScreenProps {
   children: React.ReactNode;

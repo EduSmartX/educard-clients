@@ -4,8 +4,6 @@
  */
 
 import { Tabs } from 'expo-router';
-import { Platform } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   LayoutDashboard,
   GraduationCap,
@@ -13,6 +11,8 @@ import {
   CreditCard,
   Settings,
 } from 'lucide-react-native';
+import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors } from '@/constants/colors';
 

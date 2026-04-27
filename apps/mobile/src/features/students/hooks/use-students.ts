@@ -2,8 +2,11 @@
  * Students Feature — Hooks
  */
 
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { QueryKeys } from '@educard/shared';
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+import { DEFAULT_PAGE_SIZE } from '@/api/client';
+
 import {
   getStudents,
   getStudentById,
@@ -13,7 +16,6 @@ import {
   restoreStudent,
   type StudentQueryParams,
 } from '../api/students-api';
-import { DEFAULT_PAGE_SIZE } from '@/api/client';
 
 export const studentKeys = {
   all: QueryKeys.STUDENTS.ALL,
@@ -55,10 +57,10 @@ export function useStudents(params?: Omit<StudentQueryParams, 'page'>) {
   });
 }
 
-export function useStudentDetail(publicId: string) {
+export function useStudentDetail(publicId: string, isDeleted?: boolean) {
   return useQuery({
-    queryKey: studentKeys.detail(publicId),
-    queryFn: () => getStudentById(publicId),
+    queryKey: [...studentKeys.detail(publicId), isDeleted],
+    queryFn: () => getStudentById(publicId, isDeleted),
     select: (data) => data.data,
     enabled: !!publicId,
   });

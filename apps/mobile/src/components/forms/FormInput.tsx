@@ -3,9 +3,9 @@
  * Highlights with red border + background whenever `error` is set (submit or blur).
  */
 
+import { AlertCircle } from 'lucide-react-native';
 import { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, type TextInputProps } from 'react-native';
-import { AlertCircle } from 'lucide-react-native';
 
 interface FormInputProps extends TextInputProps {
   label: string;

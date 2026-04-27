@@ -1,7 +1,7 @@
-/**
- * Utility Functions
- * Re-exports from shared + mobile-specific utilities
- */
+// Utility Functions
+
+// API error extraction
+export { extractApiError } from './api-error';
 
 // Re-export shared utilities
 export {

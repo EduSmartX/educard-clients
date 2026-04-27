@@ -3,6 +3,8 @@
  * Screen for verifying OTP during password reset
  */
 
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import React, { useState, useRef } from 'react';
 import {
   View,
@@ -15,9 +17,8 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+
 import { requestPasswordResetOtp, parseApiError } from '@/api';
 
 export default function VerifyOTPScreen() {

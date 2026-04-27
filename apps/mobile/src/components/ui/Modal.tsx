@@ -1,3 +1,5 @@
+import { Colors } from '@educard/shared';
+import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react-native';
 import React from 'react';
 import {
   View,
@@ -8,8 +10,6 @@ import {
   Pressable,
 } from 'react-native';
 import Animated, { FadeIn, FadeOut, ZoomIn, ZoomOut } from 'react-native-reanimated';
-import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react-native';
-import { Colors } from '@educard/shared';
 
 export type ModalVariant = 'success' | 'error' | 'warning' | 'info';
 

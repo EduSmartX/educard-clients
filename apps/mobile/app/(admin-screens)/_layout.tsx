@@ -1,12 +1,6 @@
 /**
  * Admin Screens Stack Layout
  * Stack navigator for create/view/edit screens organized by module
- *
- * Structure:
- *   teachers/create, teachers/[id]
- *   students/create, students/[id]
- *   classes/create,  classes/[id]
- *   subjects/create, subjects/[id]
  */
 
 import { Stack } from 'expo-router';
@@ -30,6 +24,30 @@ export default function AdminScreensLayout() {
       <Stack.Screen name="subjects/create" />
       <Stack.Screen name="subjects/[id]" />
       <Stack.Screen name="subjects/edit" />
+      {/* Leave Management */}
+      <Stack.Screen name="leave/allocations" />
+      <Stack.Screen name="leave/approvals" />
+      <Stack.Screen name="leave/create" />
+      <Stack.Screen name="leave/edit" />
+      {/* Holidays */}
+      <Stack.Screen name="holidays/index" />
+      {/* Organization Preferences */}
+      <Stack.Screen name="preferences/index" />
+      {/* Timesheets */}
+      <Stack.Screen name="timesheets/approvals" />
+      {/* Timetable */}
+      <Stack.Screen name="timetable/index" />
+      <Stack.Screen name="timetable/setup" />
+      <Stack.Screen name="timetable/assign-entry" />
+      {/* Exams */}
+      <Stack.Screen name="exams/sessions" />
+      <Stack.Screen name="exams/create-session" />
+      <Stack.Screen name="exams/dashboard" />
+      <Stack.Screen name="exams/create-exam" />
+      <Stack.Screen name="exams/student-detail" />
+      <Stack.Screen name="exams/enter-marks" />
+      {/* Profile */}
+      <Stack.Screen name="profile/index" />
     </Stack>
   );
 }

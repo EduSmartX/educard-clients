@@ -4,6 +4,7 @@
  */
 
 import { View, Text } from 'react-native';
+
 import { Screen, Header } from '@/components/layout';
 
 export default function ParentFeesScreen() {

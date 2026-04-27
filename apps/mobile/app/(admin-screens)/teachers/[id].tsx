@@ -4,13 +4,15 @@
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { useTeacherDetail } from '@/features/teachers';
+
 import { DetailScreenShell, DetailSection, DetailRow, ChipRow } from '@/components/detail';
+import { useTeacherDetail } from '@/features/teachers';
 
 export default function TeacherDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, is_deleted } = useLocalSearchParams<{ id: string; is_deleted?: string }>();
   const router = useRouter();
-  const { data: teacher, isLoading, isError } = useTeacherDetail(id || '');
+  const isDeleted = is_deleted === 'true';
+  const { data: teacher, isLoading, isError } = useTeacherDetail(id || '', isDeleted);
 
   return (
     <DetailScreenShell
@@ -18,7 +20,9 @@ export default function TeacherDetailScreen() {
       subtitle={teacher?.user?.full_name || '...'}
       isLoading={isLoading}
       isError={isError || !teacher}
-      onBack={() => router.navigate('/(tabs)/(admin)/teachers' as any)}
+      onBack={() => router.back()}
+      avatarName={teacher?.user?.full_name}
+      avatarImageUri={teacher?.profile_photo_thumbnail}
     >
       <Animated.View entering={FadeInDown.delay(100)}>
         <DetailSection title="Personal Info" icon="👤">

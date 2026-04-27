@@ -3,6 +3,9 @@
  * Mobile-first class management with search and real API integration
  */
 
+import { Colors, getRoleThemeColors, Class, useDebounce, getErrorMessage } from '@educard/shared';
+import { useRouter } from 'expo-router';
+import { Plus, School, GraduationCap, BookOpen } from 'lucide-react-native';
 import { useState, useCallback } from 'react';
 import {
   View,
@@ -13,23 +16,20 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import Animated, { FadeInRight } from 'react-native-reanimated';
-import { Plus, School, GraduationCap, BookOpen } from 'lucide-react-native';
-import { Colors, getRoleThemeColors, Class, useDebounce } from '@educard/shared';
-import { useClasses, useDeleteClass } from '@/features/classes';
+
 import { SearchBar, ListHeader } from '@/components/common';
-import { LoadingState, ErrorState, EmptyState, ListFooter } from '@/components/common/ListStates';
 import { EntityActions } from '@/components/common/EntityActions';
+import { LoadingState, ErrorState, EmptyState, ListFooter } from '@/components/common/ListStates';
 import {
   FilterModal,
   ActiveFilters,
   CLASS_FILTER_FIELDS,
   getClassFilterLabels,
 } from '@/components/filters';
-import { layoutStyles, listStyles } from '@/styles';
-import { useListScroll } from '@/hooks/useListScroll';
+import { useClasses, useDeleteClass, useRestoreClass } from '@/features/classes';
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm';
+import { useListScroll } from '@/hooks/useListScroll';
+import { layoutStyles, listStyles } from '@/styles';
 
 const adminTheme = getRoleThemeColors('admin');
 
@@ -54,7 +54,35 @@ export default function ClassesScreen() {
   } = useClasses({ search: debouncedSearch || undefined, ...filters });
 
   const deleteMutation = useDeleteClass();
-  const confirmDelete = useDeleteConfirm({ entityName: 'Class', deleteMutation });
+  const confirmDelete = useDeleteConfirm({
+    entityName: 'Class',
+    deleteMutation,
+    onSuccess: () => refetch(),
+  });
+
+  const restoreMutation = useRestoreClass();
+  const handleReactivate = useCallback(
+    (id: string, name: string) => {
+      Alert.alert('Reactivate Class', `Are you sure you want to reactivate ${name}?`, [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reactivate',
+          onPress: async () => {
+            try {
+              await restoreMutation.mutateAsync(id);
+              refetch();
+              Alert.alert('Success', `${name} reactivated successfully`);
+            } catch (error) {
+              Alert.alert('Error', getErrorMessage(error, 'Failed to reactivate class'));
+            }
+          },
+        },
+      ]);
+    },
+    [restoreMutation, refetch]
+  );
+
+  const isDeletedView = !!filters.is_deleted;
 
   const classes = data?.classes ?? [];
   const totalCount = data?.totalCount ?? 0;
@@ -71,10 +99,10 @@ export default function ClassesScreen() {
     (classItem: Class) => {
       router.push({
         pathname: '/(admin-screens)/classes/[id]' as any,
-        params: { id: classItem.public_id },
+        params: { id: classItem.public_id, ...(isDeletedView ? { is_deleted: 'true' } : {}) },
       });
     },
-    [router]
+    [router, isDeletedView]
   );
 
   const handleEdit = useCallback(
@@ -115,7 +143,7 @@ export default function ClassesScreen() {
   };
 
   const renderClassCard = ({ item, index }: { item: Class; index: number }) => (
-    <Animated.View entering={FadeInRight.delay(index * 50).duration(300)}>
+    <View>
       <TouchableOpacity
         style={styles.classCard}
         onPress={() => handleView(item)}
@@ -170,11 +198,20 @@ export default function ClassesScreen() {
         {/* Bottom — Actions */}
         <EntityActions
           onView={() => handleView(item)}
-          onEdit={() => handleEdit(item)}
-          onDelete={() => confirmDelete(item.public_id, getClassDisplayName(item))}
+          onEdit={isDeletedView ? undefined : () => handleEdit(item)}
+          onDelete={
+            isDeletedView
+              ? undefined
+              : () => confirmDelete(item.public_id, getClassDisplayName(item))
+          }
+          onReactivate={
+            isDeletedView
+              ? () => handleReactivate(item.public_id, getClassDisplayName(item))
+              : undefined
+          }
         />
       </TouchableOpacity>
-    </Animated.View>
+    </View>
   );
 
   return (

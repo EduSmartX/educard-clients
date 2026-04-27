@@ -3,6 +3,9 @@
  * Mobile-first subject management with search and real API integration
  */
 
+import { Colors, getRoleThemeColors, useDebounce, getErrorMessage } from '@educard/shared';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Plus, BookOpen } from 'lucide-react-native';
 import { useState, useCallback } from 'react';
 import {
   View,
@@ -13,23 +16,22 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import Animated, { FadeInRight } from 'react-native-reanimated';
-import { Plus, BookOpen } from 'lucide-react-native';
-import { Colors, getRoleThemeColors, useDebounce } from '@educard/shared';
-import { useSubjects, useDeleteSubject } from '@/features/subjects';
+
 import { SearchBar, ListHeader } from '@/components/common';
-import { LoadingState, ErrorState, EmptyState, ListFooter } from '@/components/common/ListStates';
 import { EntityActions } from '@/components/common/EntityActions';
+import { LoadingState, ErrorState, EmptyState, ListFooter } from '@/components/common/ListStates';
 import {
   FilterModal,
   ActiveFilters,
   SUBJECT_FILTER_FIELDS,
   getSubjectFilterLabels,
 } from '@/components/filters';
-import { layoutStyles, cardStyles, listStyles, textStyles } from '@/styles';
-import { useListScroll } from '@/hooks/useListScroll';
+import { FormDropdown } from '@/components/forms';
+import { useClasses } from '@/features/classes';
+import { useSubjects, useDeleteSubject, useRestoreSubject } from '@/features/subjects';
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm';
+import { useListScroll } from '@/hooks/useListScroll';
+import { layoutStyles, cardStyles, listStyles, textStyles } from '@/styles';
 
 const adminTheme = getRoleThemeColors('admin');
 
@@ -42,8 +44,16 @@ export default function SubjectsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<Record<string, any>>({});
+  const [selectedClassId, setSelectedClassId] = useState<string>(class_id || '');
 
   const debouncedSearch = useDebounce(searchQuery, 300);
+
+  const classesQuery = useClasses({ page_size: 100 });
+  const classes = classesQuery.data?.classes || [];
+  const classOptions = classes.map((c) => ({
+    value: c.public_id,
+    label: c.class_master?.name ? `${c.class_master.name} - ${c.name}` : c.display_name || c.name,
+  }));
 
   const {
     data,
@@ -57,12 +67,40 @@ export default function SubjectsScreen() {
     isFetchingNextPage,
   } = useSubjects({
     search: debouncedSearch || undefined,
-    class_assigned: class_id || undefined,
+    class_assigned: selectedClassId || undefined,
     ...filters,
   });
 
   const deleteMutation = useDeleteSubject();
-  const confirmDelete = useDeleteConfirm({ entityName: 'Subject', deleteMutation });
+  const confirmDelete = useDeleteConfirm({
+    entityName: 'Subject',
+    deleteMutation,
+    onSuccess: () => refetch(),
+  });
+
+  const restoreMutation = useRestoreSubject();
+  const handleReactivate = useCallback(
+    (id: string, name: string) => {
+      Alert.alert('Reactivate Subject', `Are you sure you want to reactivate ${name}?`, [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reactivate',
+          onPress: async () => {
+            try {
+              await restoreMutation.mutateAsync(id);
+              refetch();
+              Alert.alert('Success', `${name} reactivated successfully`);
+            } catch (error) {
+              Alert.alert('Error', getErrorMessage(error, 'Failed to reactivate subject'));
+            }
+          },
+        },
+      ]);
+    },
+    [restoreMutation, refetch]
+  );
+
+  const isDeletedView = !!filters.is_deleted;
 
   const subjects = data?.subjects ?? [];
   const totalCount = data?.totalCount ?? 0;
@@ -80,10 +118,10 @@ export default function SubjectsScreen() {
     (subject: any) => {
       router.push({
         pathname: '/(admin-screens)/subjects/[id]' as any,
-        params: { id: subject.public_id },
+        params: { id: subject.public_id, ...(isDeletedView ? { is_deleted: 'true' } : {}) },
       });
     },
-    [router]
+    [router, isDeletedView]
   );
 
   const handleEdit = useCallback(
@@ -97,7 +135,7 @@ export default function SubjectsScreen() {
   );
 
   const renderSubjectCard = ({ item, index }: { item: any; index: number }) => (
-    <Animated.View entering={FadeInRight.delay(index * 50).duration(300)}>
+    <View>
       <TouchableOpacity
         style={[cardStyles.card, styles.subjectCard]}
         onPress={() => handleView(item)}
@@ -138,13 +176,28 @@ export default function SubjectsScreen() {
         {/* Bottom — Actions */}
         <EntityActions
           onView={() => handleView(item)}
-          onEdit={() => handleEdit(item)}
-          onDelete={() =>
-            confirmDelete(item.public_id, item.subject_info?.name || item.name || 'this subject')
+          onEdit={isDeletedView ? undefined : () => handleEdit(item)}
+          onDelete={
+            isDeletedView
+              ? undefined
+              : () =>
+                  confirmDelete(
+                    item.public_id,
+                    item.subject_info?.name || item.name || 'this subject'
+                  )
+          }
+          onReactivate={
+            isDeletedView
+              ? () =>
+                  handleReactivate(
+                    item.public_id,
+                    item.subject_info?.name || item.name || 'this subject'
+                  )
+              : undefined
           }
         />
       </TouchableOpacity>
-    </Animated.View>
+    </View>
   );
 
   return (
@@ -179,6 +232,18 @@ export default function SubjectsScreen() {
         onRemove={(key) => setFilters((f) => ({ ...f, [key]: undefined }))}
         onClearAll={() => setFilters({})}
       />
+
+      {/* Class Filter Dropdown */}
+      <View style={styles.classFilterSection}>
+        <FormDropdown
+          label="Filter by Class"
+          placeholder="All Classes"
+          searchable
+          options={classOptions}
+          value={selectedClassId}
+          onChange={(val) => setSelectedClassId(val)}
+        />
+      </View>
 
       {/* Filter Modal */}
       <FilterModal
@@ -251,4 +316,5 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   subjectInfo: { flex: 1 },
+  classFilterSection: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
 });

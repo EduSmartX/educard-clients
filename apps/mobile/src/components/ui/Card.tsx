@@ -2,9 +2,9 @@
  * Card Component with variants
  */
 
+import { LucideIcon, ChevronRight } from 'lucide-react-native';
 import React from 'react';
 import { View, Text, TouchableOpacity, type ViewProps } from 'react-native';
-import { LucideIcon, ChevronRight } from 'lucide-react-native';
 
 import { Colors } from '@/constants/colors';
 
