@@ -42,7 +42,7 @@ apiClient.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error: Error) => Promise.reject(error)
 );
 
 // Response interceptor - Handle token refresh
@@ -53,10 +53,10 @@ apiClient.interceptors.response.use(
 
     // Skip token refresh for auth endpoints (login, register, etc.)
     const isAuthEndpoint =
-      originalRequest.url?.includes('/auth/login') ||
-      originalRequest.url?.includes('/auth/register') ||
-      originalRequest.url?.includes('/auth/token') ||
-      originalRequest.url?.includes('/organizations/register') ||
+      originalRequest.url?.includes('/auth/login') ??
+      originalRequest.url?.includes('/auth/register') ??
+      originalRequest.url?.includes('/auth/token') ??
+      originalRequest.url?.includes('/organizations/register') ??
       originalRequest.url?.includes('/organizations/otp');
 
     // Handle 401 - Token expired (but not for auth endpoints)
@@ -74,9 +74,12 @@ apiClient.interceptors.response.use(
         }
 
         // Try to refresh the token
-        const response = await axios.post(`${API_CONFIG.BASE_URL}/auth/token/refresh/`, {
-          refresh: refreshToken,
-        });
+        const response = await axios.post<{ access: string }>(
+          `${API_CONFIG.BASE_URL}/auth/token/refresh/`,
+          {
+            refresh: refreshToken,
+          }
+        );
 
         const { access } = response.data;
 
@@ -89,7 +92,7 @@ apiClient.interceptors.response.use(
         }
 
         return apiClient(originalRequest);
-      } catch (refreshError) {
+      } catch {
         // Clear tokens and redirect to login
         await clearAuthTokens();
         router.replace('/(auth)/login');

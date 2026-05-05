@@ -154,10 +154,11 @@ export async function updateLeaveAllocation(
 export async function deleteLeaveAllocation(publicId: string): Promise<void> {
   try {
     await apiClient.delete(`/leave/admin/allocations/${publicId}/`);
-  } catch (error: any) {
-    const status = error?.response?.status;
+  } catch (error: unknown) {
+    const axiosError = error as { response?: { status?: number }; message?: string };
+    const status = axiosError?.response?.status;
     if (status && status >= 200 && status < 300) return;
-    if (error?.message === 'Network Error' && !error?.response) return;
+    if (axiosError?.message === 'Network Error' && !axiosError?.response) return;
     throw error;
   }
 }
@@ -188,7 +189,7 @@ export async function approveLeaveRequest(
 ): Promise<ApiDetailResponse<LeaveRequest>> {
   const response = await apiClient.post<ApiDetailResponse<LeaveRequest>>(
     `/leave/employee/reviews/${publicId}/approve/`,
-    data || {}
+    data ?? {}
   );
   return response.data;
 }
@@ -199,7 +200,7 @@ export async function rejectLeaveRequest(
 ): Promise<ApiDetailResponse<LeaveRequest>> {
   const response = await apiClient.post<ApiDetailResponse<LeaveRequest>>(
     `/leave/employee/reviews/${publicId}/reject/`,
-    data || {}
+    data ?? {}
   );
   return response.data;
 }

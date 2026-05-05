@@ -1,5 +1,12 @@
 import { apiClient } from '@/api/client';
 
+// API Response wrapper type
+interface ApiResponse<T> {
+  data: T;
+  message?: string;
+  success?: boolean;
+}
+
 /**
  * Dashboard Attendance Stats Types
  */
@@ -26,7 +33,9 @@ export interface DashboardAttendanceStats {
  * Get dashboard attendance stats for admin
  */
 export const getDashboardAttendanceStats = async (): Promise<DashboardAttendanceStats> => {
-  const response = await apiClient.get('/attendance/admin/dashboard-stats/');
+  const response = await apiClient.get<ApiResponse<DashboardAttendanceStats>>(
+    '/attendance/admin/dashboard-stats/'
+  );
   return response.data.data;
 };
 
@@ -111,10 +120,12 @@ export interface BulkAttendancePayload {
  * Get eligible classes for attendance marking
  */
 export const getEligibleClasses = async (purpose = 'attendance'): Promise<EligibleClass[]> => {
-  const response = await apiClient.get('/classes/employee/eligible/', {
-    params: { purpose },
-  });
-  return response.data.data || response.data;
+  const response = await apiClient.get<ApiResponse<EligibleClass[]> | EligibleClass[]>(
+    '/classes/employee/eligible/',
+    { params: { purpose } }
+  );
+  const data = response.data;
+  return 'data' in data ? data.data : data;
 };
 
 /**
@@ -124,11 +135,12 @@ export const validateAttendanceDate = async (
   classId: string,
   date: string
 ): Promise<DateValidation> => {
-  const response = await apiClient.get(
+  const response = await apiClient.get<ApiResponse<DateValidation> | DateValidation>(
     `/attendance/class/${classId}/student-attendance/validate-date/`,
     { params: { date } }
   );
-  return response.data.data || response.data;
+  const data = response.data;
+  return 'data' in data ? data.data : data;
 };
 
 /**
@@ -138,11 +150,11 @@ export const getComprehensiveAttendance = async (
   classId: string,
   date: string
 ): Promise<ComprehensiveAttendanceRecord[]> => {
-  const response = await apiClient.get(
-    `/attendance/class/${classId}/student-attendance/comprehensive/`,
-    { params: { date } }
-  );
-  return response.data.data || response.data;
+  const response = await apiClient.get<
+    ApiResponse<ComprehensiveAttendanceRecord[]> | ComprehensiveAttendanceRecord[]
+  >(`/attendance/class/${classId}/student-attendance/comprehensive/`, { params: { date } });
+  const data = response.data;
+  return 'data' in data ? data.data : data;
 };
 
 /**
@@ -228,30 +240,36 @@ export const getMyAttendance = async (
   // Try the employee-attendance endpoint first (same as web)
   // Fall back to my-attendance if needed
   try {
-    const response = await apiClient.get('/attendance/employee-attendance/', {
+    const response = await apiClient.get<
+      ApiResponse<EmployeeAttendanceResponse> | EmployeeAttendanceResponse
+    >('/attendance/employee-attendance/', {
       params: { from_date: fromDate, to_date: toDate },
     });
-    const data = response.data.data || response.data;
+    const rawData = response.data;
+    const data: EmployeeAttendanceResponse = 'data' in rawData ? rawData.data : rawData;
     return {
-      records: data.records || [],
-      stats: data.stats || {
+      records: data.records ?? [],
+      stats: data.stats ?? {
         total_working_days: 0,
         present_days: 0,
         absent_days: 0,
         half_days: 0,
         leave_days: 0,
       },
-      employee_id: data.employee_id || null,
-      user_info: data.user_info || null,
-      date_range: data.date_range || { from_date: fromDate, to_date: toDate },
-      working_day_policy: data.working_day_policy || null,
+      employee_id: data.employee_id ?? null,
+      user_info: data.user_info ?? null,
+      date_range: data.date_range ?? { from_date: fromDate, to_date: toDate },
+      working_day_policy: data.working_day_policy ?? null,
     };
-  } catch (error) {
+  } catch {
     // Fallback to my-attendance endpoint
-    const response = await apiClient.get('/attendance/employee/my-attendance/', {
+    const response = await apiClient.get<
+      ApiResponse<EmployeeAttendanceResponse> | EmployeeAttendanceResponse
+    >('/attendance/employee/my-attendance/', {
       params: { from_date: fromDate, to_date: toDate },
     });
-    return response.data.data || response.data;
+    const rawData = response.data;
+    return 'data' in rawData ? rawData.data : rawData;
   }
 };
 
@@ -262,10 +280,12 @@ export const checkTimesheetStatus = async (
   fromDate: string,
   toDate: string
 ): Promise<TimesheetStatus> => {
-  const response = await apiClient.get('/attendance/employee/timesheets/status/', {
-    params: { from_date: fromDate, to_date: toDate },
-  });
-  return response.data.data || response.data;
+  const response = await apiClient.get<ApiResponse<TimesheetStatus> | TimesheetStatus>(
+    '/attendance/employee/timesheets/status/',
+    { params: { from_date: fromDate, to_date: toDate } }
+  );
+  const data = response.data;
+  return 'data' in data ? data.data : data;
 };
 
 /**

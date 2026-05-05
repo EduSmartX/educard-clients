@@ -82,10 +82,10 @@ export function useBulkMarkAttendance() {
       bulkMarkAttendance(classId, payload),
     onSuccess: (_data, variables) => {
       // Invalidate comprehensive attendance query
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: attendanceKeys.comprehensiveAttendance(variables.classId, variables.payload.date),
       });
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: attendanceKeys.dashboard(),
       });
 
@@ -126,11 +126,11 @@ export function useSubmitTimesheet() {
 
   return useMutation({
     mutationFn: (payload: SubmitTimesheetPayload) => submitTimesheet(payload),
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
+    onSuccess: (_data, _variables) => {
+      void queryClient.invalidateQueries({
         queryKey: [...attendanceKeys.all, 'my-attendance'],
       });
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: [...attendanceKeys.all, 'timesheet-status'],
       });
       Alert.alert('Success', 'Timesheet submitted for approval');
@@ -150,10 +150,10 @@ export function useReturnTimesheetToDraft() {
     mutationFn: ({ fromDate, toDate }: { fromDate: string; toDate: string }) =>
       returnTimesheetToDraft(fromDate, toDate),
     onSuccess: () => {
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: [...attendanceKeys.all, 'my-attendance'],
       });
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: [...attendanceKeys.all, 'timesheet-status'],
       });
       Alert.alert('Success', 'Timesheet returned to draft');

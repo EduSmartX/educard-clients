@@ -65,7 +65,7 @@ export function useCreateLeaveAllocation() {
   return useMutation({
     mutationFn: createLeaveAllocation,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: leaveKeys.allocations() });
+      void qc.invalidateQueries({ queryKey: leaveKeys.allocations() });
     },
   });
 }
@@ -73,10 +73,15 @@ export function useCreateLeaveAllocation() {
 export function useUpdateLeaveAllocation() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ publicId, data }: { publicId: string; data: any }) =>
-      updateLeaveAllocation(publicId, data),
+    mutationFn: ({
+      publicId,
+      data,
+    }: {
+      publicId: string;
+      data: Partial<LeaveAllocationCreatePayload>;
+    }) => updateLeaveAllocation(publicId, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: leaveKeys.allocations() });
+      void qc.invalidateQueries({ queryKey: leaveKeys.allocations() });
     },
   });
 }
@@ -86,7 +91,7 @@ export function useDeleteLeaveAllocation() {
   return useMutation({
     mutationFn: deleteLeaveAllocation,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: leaveKeys.allocations() });
+      void qc.invalidateQueries({ queryKey: leaveKeys.allocations() });
     },
   });
 }
@@ -115,7 +120,7 @@ export function useApproveLeave() {
     mutationFn: ({ publicId, data }: { publicId: string; data?: { review_comments?: string } }) =>
       approveLeaveRequest(publicId, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: leaveKeys.reviews() });
+      void qc.invalidateQueries({ queryKey: leaveKeys.reviews() });
     },
   });
 }
@@ -126,7 +131,7 @@ export function useRejectLeave() {
     mutationFn: ({ publicId, data }: { publicId: string; data?: { review_comments?: string } }) =>
       rejectLeaveRequest(publicId, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: leaveKeys.reviews() });
+      void qc.invalidateQueries({ queryKey: leaveKeys.reviews() });
     },
   });
 }
@@ -158,8 +163,8 @@ export function useCreateLeaveRequest() {
   return useMutation({
     mutationFn: (data: CreateLeaveRequestPayload) => createLeaveRequest(data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [...leaveKeys.all, 'my-requests'] });
-      qc.invalidateQueries({ queryKey: [...leaveKeys.all, 'my-balances'] });
+      void qc.invalidateQueries({ queryKey: [...leaveKeys.all, 'my-requests'] });
+      void qc.invalidateQueries({ queryKey: [...leaveKeys.all, 'my-balances'] });
       Alert.alert('Success', 'Leave request submitted successfully');
     },
     onError: (error: unknown) => {
@@ -174,8 +179,8 @@ export function useCancelLeaveRequest() {
   return useMutation({
     mutationFn: (publicId: string) => cancelMyLeaveRequest(publicId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [...leaveKeys.all, 'my-requests'] });
-      qc.invalidateQueries({ queryKey: [...leaveKeys.all, 'my-balances'] });
+      void qc.invalidateQueries({ queryKey: [...leaveKeys.all, 'my-requests'] });
+      void qc.invalidateQueries({ queryKey: [...leaveKeys.all, 'my-balances'] });
       Alert.alert('Success', 'Leave request cancelled');
     },
     onError: (error: unknown) => {
