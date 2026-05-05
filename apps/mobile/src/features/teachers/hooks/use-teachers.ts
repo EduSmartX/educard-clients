@@ -22,9 +22,8 @@ import {
 export const teacherKeys = {
   all: QueryKeys.TEACHERS.ALL,
   lists: () => QueryKeys.TEACHERS.LISTS(),
-  list: (params?: Omit<TeacherQueryParams, 'page'>) => QueryKeys.TEACHERS.LIST(params as any),
-  infinite: (params?: Omit<TeacherQueryParams, 'page'>) =>
-    QueryKeys.TEACHERS.INFINITE(params as any),
+  list: (params?: Omit<TeacherQueryParams, 'page'>) => QueryKeys.TEACHERS.LIST(params),
+  infinite: (params?: Omit<TeacherQueryParams, 'page'>) => QueryKeys.TEACHERS.INFINITE(params),
   details: () => QueryKeys.TEACHERS.DETAILS(),
   detail: (id: string) => QueryKeys.TEACHERS.DETAIL(id),
 };

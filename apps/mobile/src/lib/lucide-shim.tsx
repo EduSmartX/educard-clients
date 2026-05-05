@@ -153,6 +153,20 @@ const iconMap: Record<string, { lib: any; name: string }> = {
   ImageIcon: { lib: Ionicons, name: 'image-outline' },
   Edit3: { lib: Feather, name: 'edit-3' },
   Trash2: { lib: Ionicons, name: 'trash-outline' },
+
+  // Additional icons for management screen
+  CheckSquare: { lib: Ionicons, name: 'checkbox-outline' },
+  PartyPopper: { lib: Ionicons, name: 'happy-outline' },
+
+  // Additional icons for attendance screens
+  TriangleAlert: { lib: Ionicons, name: 'warning-outline' },
+
+  // Additional icons for insights
+  TrendingDown: { lib: Ionicons, name: 'trending-down' },
+  Lightbulb: { lib: Ionicons, name: 'bulb-outline' },
+  ThumbsUp: { lib: Ionicons, name: 'thumbs-up-outline' },
+  ArrowUpRight: { lib: Ionicons, name: 'arrow-up' },
+  ArrowDownRight: { lib: Ionicons, name: 'arrow-down' },
 };
 
 interface IconProps {
@@ -322,6 +336,14 @@ export const MapPinned = createIconComponent('MapPinned');
 export const ImageIcon = createIconComponent('ImageIcon');
 export const Edit3 = createIconComponent('Edit3');
 export const Trash2 = createIconComponent('Trash2');
+export const CheckSquare = createIconComponent('CheckSquare');
+export const PartyPopper = createIconComponent('PartyPopper');
+export const TrendingDown = createIconComponent('TrendingDown');
+export const Lightbulb = createIconComponent('Lightbulb');
+export const ThumbsUp = createIconComponent('ThumbsUp');
+export const ArrowUpRight = createIconComponent('ArrowUpRight');
+export const ArrowDownRight = createIconComponent('ArrowDownRight');
+export const TriangleAlert = createIconComponent('TriangleAlert');
 
 // Type alias for LucideIcon used in typed icon props
 export type LucideIcon = React.FC<IconProps>;

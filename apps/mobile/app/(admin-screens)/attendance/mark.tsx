@@ -1,539 +1,749 @@
 /**
- * Mark Student Attendance Screen
- * Admin/Teacher selects a class + date, then marks morning/afternoon for each student.
- * Mirrors the web's MarkAttendanceForm.
+ * Mark Attendance Screen
+ * Select class, date, and mark student attendance with toggle buttons
  */
 
-import { Colors, getRoleGradient } from '@educard/shared';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { format } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import {
   ChevronLeft,
+  ChevronDown,
+  Calendar,
   Users,
-  Check,
-  X,
-  Sun,
-  Moon,
+  CircleCheck,
+  CircleX,
   UserCheck,
   UserX,
-  AlertCircle,
+  Save,
+  RotateCcw,
+  TriangleAlert,
 } from 'lucide-react-native';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
-  ScrollView,
-  TouchableOpacity,
   StyleSheet,
+  TouchableOpacity,
+  ScrollView,
   ActivityIndicator,
   RefreshControl,
-  Alert,
   Image,
+  Switch,
+  Alert,
 } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { FormDropdown, FormDatePicker } from '@/components/forms';
-import { getMediaUrl } from '@/constants/config';
 import {
   useEligibleClasses,
-  useValidateAttendanceDate,
+  useValidateDate,
   useComprehensiveAttendance,
   useBulkMarkAttendance,
 } from '@/features/attendance';
-import type { ComprehensiveStudentRecord } from '@/features/attendance';
-import { headerStyles, layoutStyles, emptyStyles } from '@/styles';
+import type { ComprehensiveAttendanceRecord } from '@/features/attendance';
 
-const adminGradient = getRoleGradient('admin');
-
-type Period = 'morning' | 'afternoon' | 'full_day';
-
-interface StudentRow extends ComprehensiveStudentRecord {
+interface StudentRow extends ComprehensiveAttendanceRecord {
   canEdit: boolean;
-}
-
-function fmtDate(d: Date): string {
-  return d.toISOString().split('T')[0];
-}
-
-function fmtDisplay(d: string): string {
-  return new Date(d + 'T00:00:00').toLocaleDateString('en-IN', {
-    weekday: 'short',
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
 }
 
 export default function MarkAttendanceScreen() {
   const router = useRouter();
-  const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string>(fmtDate(new Date()));
-  const [period, setPeriod] = useState<Period>('full_day');
+
+  // Form state
+  const [selectedClassId, setSelectedClassId] = useState<string>('');
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showClassPicker, setShowClassPicker] = useState(false);
+  const [period, setPeriod] = useState<'morning' | 'afternoon' | 'full_day'>('full_day');
+
+  // Student state
   const [students, setStudents] = useState<StudentRow[]>([]);
   const [isViewMode, setIsViewMode] = useState(false);
+  const [initialStudents, setInitialStudents] = useState<StudentRow[] | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const dateStr = selectedDate;
+  const dateString = format(selectedDate, 'yyyy-MM-dd');
 
   // Queries
   const { data: eligibleClasses, isLoading: loadingClasses } = useEligibleClasses();
-  const { data: dateValidation } = useValidateAttendanceDate(selectedClassId || '', dateStr);
+
+  const { data: dateValidation } = useValidateDate(
+    selectedClassId,
+    dateString,
+    !!selectedClassId && !!dateString
+  );
+
   const isWorkingDay = dateValidation?.is_working_day ?? true;
 
   const {
     data: comprehensiveData,
     isLoading: loadingStudents,
-    refetch: refetchStudents,
-  } = useComprehensiveAttendance(selectedClassId || '', dateStr, !!selectedClassId && isWorkingDay);
+    refetch,
+  } = useComprehensiveAttendance(
+    selectedClassId,
+    dateString,
+    !!selectedClassId && !!dateString && isWorkingDay
+  );
 
   const bulkMarkMutation = useBulkMarkAttendance();
 
-  // Process students from comprehensive data
-  useEffect(() => {
-    if (!comprehensiveData) {
-      setStudents([]);
-      setIsViewMode(false);
-      return;
-    }
-    const hasExisting = comprehensiveData.some((s) => s.attendance_public_id);
-    const rows: StudentRow[] = comprehensiveData.map((s) => ({
-      ...s,
-      canEdit: s.leave_status !== 'approved',
-      morning_present: s.morning_present ?? false,
-      afternoon_present: s.afternoon_present ?? false,
-    }));
-    setStudents(rows);
-    setIsViewMode(hasExisting);
-  }, [comprehensiveData]);
+  // Selected class name
+  const selectedClassName = useMemo(() => {
+    if (!selectedClassId || !eligibleClasses) return 'Select Class';
+    const cls = eligibleClasses.find((c) => c.public_id === selectedClassId);
+    return cls?.display_name || 'Select Class';
+  }, [selectedClassId, eligibleClasses]);
 
-  // Class options for dropdown
-  const classOptions = useMemo(
-    () => (eligibleClasses || []).map((c) => ({ label: c.display_name, value: c.public_id })),
-    [eligibleClasses]
-  );
+  // Process comprehensive data
+  useEffect(() => {
+    if (comprehensiveData) {
+      const hasExisting = comprehensiveData.some((s) => s.attendance_public_id);
+
+      const studentRows: StudentRow[] = comprehensiveData.map((student) => ({
+        ...student,
+        canEdit: student.leave_status !== 'approved',
+        morning_present: student.morning_present ?? false,
+        afternoon_present: student.afternoon_present ?? false,
+      }));
+
+      setStudents(studentRows);
+      setIsViewMode(hasExisting);
+      setInitialStudents(studentRows.map((s) => ({ ...s })));
+    }
+  }, [comprehensiveData]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await refetchStudents();
+    await refetch();
     setRefreshing(false);
-  }, [refetchStudents]);
+  }, [refetch]);
 
-  // Toggle individual student
-  const toggleField = (publicId: string, field: 'morning_present' | 'afternoon_present') => {
-    setStudents((prev) =>
-      prev.map((s) => (s.public_id === publicId && s.canEdit ? { ...s, [field]: !s[field] } : s))
-    );
+  const handleReset = () => {
+    if (initialStudents) {
+      setStudents(initialStudents.map((s) => ({ ...s })));
+      const hadExisting = initialStudents.some((s) => !!s.attendance_public_id);
+      setIsViewMode(hadExisting);
+    }
   };
 
-  // Mark all present/absent
-  const markAll = (present: boolean) => {
-    const showMorning = period === 'morning' || period === 'full_day';
-    const showAfternoon = period === 'afternoon' || period === 'full_day';
+  const handleToggleAttendance = (
+    studentId: string,
+    field: 'morning_present' | 'afternoon_present',
+    value: boolean
+  ) => {
     setStudents((prev) =>
-      prev.map((s) =>
-        s.canEdit
-          ? {
-              ...s,
-              ...(showMorning && { morning_present: present }),
-              ...(showAfternoon && { afternoon_present: present }),
-            }
-          : s
+      prev.map((student) =>
+        student.public_id === studentId ? { ...student, [field]: value } : student
       )
     );
   };
 
-  const handleSave = () => {
-    if (!selectedClassId) return;
-    const records = students
-      .filter((s) => s.canEdit)
-      .map((s) => ({
-        user: s.public_id,
-        morning_present: s.morning_present ?? false,
-        afternoon_present: s.afternoon_present ?? false,
-        remarks: s.attendance_remarks || '',
-      }));
-
-    bulkMarkMutation.mutate(
-      { classId: selectedClassId, payload: { date: dateStr, period, attendance_records: records } },
-      {
-        onSuccess: () => {
-          Alert.alert('Success', 'Attendance saved successfully.');
-          setIsViewMode(true);
-          refetchStudents();
-        },
-        onError: (err: any) => {
-          const msg = err?.response?.data?.message || err?.message || 'Failed to save attendance.';
-          Alert.alert('Error', msg);
-        },
-      }
+  const handleMarkAllPresent = () => {
+    setStudents((prev) =>
+      prev.map((student) => ({
+        ...student,
+        morning_present: student.canEdit ? true : student.morning_present,
+        afternoon_present: student.canEdit ? true : student.afternoon_present,
+      }))
     );
   };
 
-  const handleEdit = () => setIsViewMode(false);
+  const handleMarkAllAbsent = () => {
+    setStudents((prev) =>
+      prev.map((student) => ({
+        ...student,
+        morning_present: student.canEdit ? false : student.morning_present,
+        afternoon_present: student.canEdit ? false : student.afternoon_present,
+      }))
+    );
+  };
 
-  const showMorning = period === 'morning' || period === 'full_day';
-  const showAfternoon = period === 'afternoon' || period === 'full_day';
+  const handleSubmit = async () => {
+    if (!selectedClassId) {
+      Alert.alert('Error', 'Please select a class');
+      return;
+    }
 
-  const presentCount = students.filter(
-    (s) => s.canEdit && s.morning_present && s.afternoon_present
-  ).length;
-  const absentCount = students.filter(
-    (s) => s.canEdit && !s.morning_present && !s.afternoon_present
-  ).length;
-  const leaveCount = students.filter((s) => !s.canEdit).length;
-  const editableCount = students.filter((s) => s.canEdit).length;
+    const attendanceRecords = students
+      .filter((s) => s.canEdit)
+      .map((student) => ({
+        user: student.public_id,
+        morning_present: student.morning_present ?? false,
+        afternoon_present: student.afternoon_present ?? false,
+        remarks: student.attendance_remarks || '',
+      }));
+
+    if (attendanceRecords.length === 0) {
+      Alert.alert('Error', 'No students to mark attendance for');
+      return;
+    }
+
+    try {
+      await bulkMarkMutation.mutateAsync({
+        classId: selectedClassId,
+        payload: {
+          date: dateString,
+          period,
+          attendance_records: attendanceRecords,
+        },
+      });
+      setIsViewMode(true);
+    } catch (error) {
+      // Error handled in mutation
+    }
+  };
+
+  // Stats
+  const stats = useMemo(() => {
+    const total = students.length;
+    const present = students.filter(
+      (s) => (s.morning_present || false) && (s.afternoon_present || false)
+    ).length;
+    const absent = students.filter(
+      (s) => !(s.morning_present || false) && !(s.afternoon_present || false)
+    ).length;
+    const onLeave = students.filter((s) => s.leave_status === 'approved').length;
+    return { total, present, absent, onLeave };
+  }, [students]);
+
+  const canSubmit = students.length > 0 && !isViewMode && isWorkingDay;
+  const isSubmitting = bulkMarkMutation.isPending;
 
   return (
-    <View style={layoutStyles.container}>
-      <LinearGradient colors={adminGradient} style={headerStyles.header}>
-        <View style={headerStyles.content}>
-          <View style={headerStyles.topRow}>
-            <TouchableOpacity style={headerStyles.backBtn} onPress={() => router.back()}>
-              <ChevronLeft size={24} color="#fff" />
-            </TouchableOpacity>
-            <View style={headerStyles.titleContainer}>
-              <Text style={headerStyles.title}>Mark Attendance</Text>
-              <Text style={headerStyles.subtitle}>Student class attendance</Text>
-            </View>
-            <View style={{ width: 40 }} />
+    <View style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
+
+      {/* Header */}
+      <LinearGradient
+        colors={['#059669', '#10b981', '#34d399']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
+        <View style={styles.headerContent}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <ChevronLeft size={24} color="#fff" />
+          </TouchableOpacity>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.headerTitle}>Mark Attendance</Text>
+            <Text style={styles.headerSubtitle}>{format(selectedDate, 'EEEE, MMM d, yyyy')}</Text>
           </View>
         </View>
       </LinearGradient>
 
       <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#059669']} />
+        }
       >
         {/* Selection Card */}
-        <View style={st.selectionCard}>
-          {/* Class dropdown */}
-          <Text style={st.fieldLabel}>Class</Text>
-          <FormDropdown
-            label=""
-            placeholder="Select Class"
-            value={selectedClassId || ''}
-            options={classOptions}
-            onChange={(v) => {
-              setSelectedClassId(v);
-              setStudents([]);
-              setIsViewMode(false);
-            }}
-          />
-
-          {/* Date picker */}
-          <Text style={[st.fieldLabel, { marginTop: 12 }]}>Date</Text>
-          <FormDatePicker
-            label=""
-            value={selectedDate}
-            onChange={(v) => {
-              setSelectedDate(v);
-              setStudents([]);
-              setIsViewMode(false);
-            }}
-            maxYear={new Date().getFullYear()}
-          />
-
-          {/* Period selector */}
-          <Text style={[st.fieldLabel, { marginTop: 12 }]}>Period</Text>
-          <View style={st.periodRow}>
-            {(
-              [
-                { key: 'morning' as Period, label: 'Morning' },
-                { key: 'afternoon' as Period, label: 'Afternoon' },
-                { key: 'full_day' as Period, label: 'Full Day' },
-              ] as const
-            ).map((p) => (
-              <TouchableOpacity
-                key={p.key}
-                style={[st.periodChip, period === p.key && st.periodChipActive]}
-                onPress={() => setPeriod(p.key)}
-              >
-                <Text style={[st.periodText, period === p.key && st.periodTextActive]}>
-                  {p.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Non working day alert */}
-        {selectedClassId && dateValidation && !dateValidation.is_working_day && (
-          <View style={st.alertCard}>
-            <AlertCircle size={20} color="#dc2626" />
-            <View style={{ flex: 1 }}>
-              <Text style={st.alertTitle}>Cannot Mark Attendance</Text>
-              <Text style={st.alertText}>
-                {dateValidation.reason || 'This is not a working day.'}
+        <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.selectionCard}>
+          {/* Class Dropdown */}
+          <View style={styles.fieldContainer}>
+            <Text style={styles.fieldLabel}>Class</Text>
+            <TouchableOpacity
+              style={styles.dropdown}
+              onPress={() => setShowClassPicker(!showClassPicker)}
+              disabled={loadingClasses}
+            >
+              <Users size={18} color="#64748b" />
+              <Text style={styles.dropdownText} numberOfLines={1}>
+                {loadingClasses ? 'Loading...' : selectedClassName}
               </Text>
-            </View>
-          </View>
-        )}
+              <ChevronDown size={18} color="#64748b" />
+            </TouchableOpacity>
 
-        {/* Loading */}
-        {selectedClassId && isWorkingDay && loadingStudents && (
-          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
-            <ActivityIndicator size="large" color="#10b981" />
-            <Text style={{ marginTop: 8, color: '#94a3b8', fontSize: 13 }}>
-              Loading students...
-            </Text>
-          </View>
-        )}
-
-        {/* Student list */}
-        {selectedClassId && isWorkingDay && !loadingStudents && students.length > 0 && (
-          <>
-            {/* Stats bar */}
-            <View style={st.statsBar}>
-              <View style={st.statItem}>
-                <Users size={14} color="#6366f1" />
-                <Text style={st.statText}>{students.length} students</Text>
-              </View>
-              <View style={st.statItem}>
-                <UserCheck size={14} color="#059669" />
-                <Text style={[st.statText, { color: '#059669' }]}>{presentCount}</Text>
-              </View>
-              <View style={st.statItem}>
-                <UserX size={14} color="#dc2626" />
-                <Text style={[st.statText, { color: '#dc2626' }]}>{absentCount}</Text>
-              </View>
-              {leaveCount > 0 && (
-                <View style={st.statItem}>
-                  <Text style={[st.statText, { color: '#8b5cf6' }]}>{leaveCount} leave</Text>
-                </View>
-              )}
-            </View>
-
-            {/* Mark all buttons */}
-            {!isViewMode && (
-              <View style={st.bulkRow}>
-                <TouchableOpacity
-                  style={[st.bulkBtn, { backgroundColor: '#ecfdf5' }]}
-                  onPress={() => markAll(true)}
-                >
-                  <Check size={16} color="#059669" />
-                  <Text style={[st.bulkBtnText, { color: '#059669' }]}>All Present</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[st.bulkBtn, { backgroundColor: '#fef2f2' }]}
-                  onPress={() => markAll(false)}
-                >
-                  <X size={16} color="#dc2626" />
-                  <Text style={[st.bulkBtnText, { color: '#dc2626' }]}>All Absent</Text>
-                </TouchableOpacity>
+            {showClassPicker && eligibleClasses && (
+              <View style={styles.dropdownList}>
+                <ScrollView style={styles.dropdownScroll} nestedScrollEnabled>
+                  {eligibleClasses.map((cls) => (
+                    <TouchableOpacity
+                      key={cls.public_id}
+                      style={[
+                        styles.dropdownItem,
+                        selectedClassId === cls.public_id && styles.dropdownItemSelected,
+                      ]}
+                      onPress={() => {
+                        setSelectedClassId(cls.public_id);
+                        setShowClassPicker(false);
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.dropdownItemText,
+                          selectedClassId === cls.public_id && styles.dropdownItemTextSelected,
+                        ]}
+                      >
+                        {cls.display_name}
+                      </Text>
+                      <Text style={styles.dropdownItemInfo}>{cls.student_count} students</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
               </View>
             )}
+          </View>
 
-            {/* Student cards */}
-            {students.map((student, idx) => (
+          {/* Date Picker */}
+          <View style={styles.fieldContainer}>
+            <Text style={styles.fieldLabel}>Date</Text>
+            <TouchableOpacity style={styles.dropdown} onPress={() => setShowDatePicker(true)}>
+              <Calendar size={18} color="#64748b" />
+              <Text style={styles.dropdownText}>{format(selectedDate, 'MMM d, yyyy')}</Text>
+              <ChevronDown size={18} color="#64748b" />
+            </TouchableOpacity>
+          </View>
+
+          {showDatePicker && (
+            <DateTimePicker
+              value={selectedDate}
+              mode="date"
+              display="default"
+              maximumDate={new Date()}
+              onChange={(event, date) => {
+                setShowDatePicker(false);
+                if (date) setSelectedDate(date);
+              }}
+            />
+          )}
+
+          {/* Period Selection */}
+          <View style={styles.fieldContainer}>
+            <Text style={styles.fieldLabel}>Period</Text>
+            <View style={styles.periodRow}>
+              {(['morning', 'afternoon', 'full_day'] as const).map((p) => (
+                <TouchableOpacity
+                  key={p}
+                  style={[styles.periodBtn, period === p && styles.periodBtnActive]}
+                  onPress={() => setPeriod(p)}
+                >
+                  <Text style={[styles.periodBtnText, period === p && styles.periodBtnTextActive]}>
+                    {p === 'full_day' ? 'Full Day' : p.charAt(0).toUpperCase() + p.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </Animated.View>
+
+        {/* Not Working Day Alert */}
+        {dateValidation && !dateValidation.is_working_day && (
+          <Animated.View entering={FadeInDown.delay(150).springify()} style={styles.alertCard}>
+            <TriangleAlert size={24} color="#dc2626" />
+            <View style={styles.alertTextContainer}>
+              <Text style={styles.alertTitle}>Cannot Mark Attendance</Text>
+              <Text style={styles.alertDesc}>
+                {dateValidation.reason || 'This is not a working day'}
+              </Text>
+            </View>
+          </Animated.View>
+        )}
+
+        {/* Stats Row */}
+        {students.length > 0 && isWorkingDay && (
+          <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.statsRow}>
+            <View style={[styles.statCard, { backgroundColor: '#eff6ff' }]}>
+              <Users size={16} color="#2563eb" />
+              <Text style={[styles.statValue, { color: '#2563eb' }]}>{stats.total}</Text>
+              <Text style={styles.statLabel}>Total</Text>
+            </View>
+            <View style={[styles.statCard, { backgroundColor: '#dcfce7' }]}>
+              <CircleCheck size={16} color="#16a34a" />
+              <Text style={[styles.statValue, { color: '#16a34a' }]}>{stats.present}</Text>
+              <Text style={styles.statLabel}>Present</Text>
+            </View>
+            <View style={[styles.statCard, { backgroundColor: '#fee2e2' }]}>
+              <CircleX size={16} color="#dc2626" />
+              <Text style={[styles.statValue, { color: '#dc2626' }]}>{stats.absent}</Text>
+              <Text style={styles.statLabel}>Absent</Text>
+            </View>
+            <View style={[styles.statCard, { backgroundColor: '#fef3c7' }]}>
+              <TriangleAlert size={16} color="#d97706" />
+              <Text style={[styles.statValue, { color: '#d97706' }]}>{stats.onLeave}</Text>
+              <Text style={styles.statLabel}>Leave</Text>
+            </View>
+          </Animated.View>
+        )}
+
+        {/* Loading State */}
+        {loadingStudents && selectedClassId && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#059669" />
+            <Text style={styles.loadingText}>Loading students...</Text>
+          </View>
+        )}
+
+        {/* Quick Actions */}
+        {students.length > 0 && isWorkingDay && !isViewMode && (
+          <Animated.View entering={FadeInDown.delay(250).springify()} style={styles.quickActions}>
+            <TouchableOpacity style={styles.quickActionBtn} onPress={handleMarkAllPresent}>
+              <UserCheck size={18} color="#16a34a" />
+              <Text style={[styles.quickActionText, { color: '#16a34a' }]}>All Present</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.quickActionBtn} onPress={handleMarkAllAbsent}>
+              <UserX size={18} color="#dc2626" />
+              <Text style={[styles.quickActionText, { color: '#dc2626' }]}>All Absent</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
+
+        {/* Student List */}
+        {students.length > 0 && isWorkingDay && (
+          <Animated.View entering={FadeInDown.delay(300).springify()}>
+            <Text style={styles.sectionTitle}>Students</Text>
+            {students.map((student, index) => (
               <View
                 key={student.public_id}
-                style={[st.studentCard, !student.canEdit && st.studentCardLocked]}
+                style={[styles.studentCard, !student.canEdit && styles.studentCardDisabled]}
               >
-                <View style={st.studentLeft}>
+                <View style={styles.studentInfo}>
                   {student.profile_photo_thumbnail ? (
                     <Image
-                      source={{ uri: getMediaUrl(student.profile_photo_thumbnail) }}
-                      style={st.avatarImg}
+                      source={{ uri: student.profile_photo_thumbnail }}
+                      style={styles.studentAvatar}
                     />
                   ) : (
-                    <View style={st.avatar}>
-                      <Text style={st.avatarText}>
-                        {student.first_name?.[0]}
-                        {student.last_name?.[0]}
+                    <View style={styles.studentAvatarPlaceholder}>
+                      <Text style={styles.studentAvatarText}>
+                        {student.first_name.charAt(0)}
+                        {student.last_name.charAt(0)}
                       </Text>
                     </View>
                   )}
-                  <View style={{ flex: 1 }}>
-                    <Text style={st.studentName}>
-                      {idx + 1}. {student.first_name} {student.last_name}
+                  <View style={styles.studentDetails}>
+                    <Text style={styles.studentName}>
+                      {student.first_name} {student.last_name}
                     </Text>
-                    {student.roll_number && (
-                      <Text style={st.rollNo}>Roll: {student.roll_number}</Text>
-                    )}
-                    {!student.canEdit && (
-                      <View style={st.leaveBadge}>
-                        <Text style={st.leaveText}>
-                          {student.leave_type || 'On Leave'} ({student.leave_status})
-                        </Text>
+                    <Text style={styles.studentMeta}>
+                      {student.roll_number
+                        ? `Roll: ${student.roll_number}`
+                        : student.admission_number}
+                    </Text>
+                    {student.leave_status === 'approved' && (
+                      <View style={styles.leaveTag}>
+                        <Text style={styles.leaveTagText}>On Leave - {student.leave_type}</Text>
                       </View>
                     )}
                   </View>
                 </View>
 
-                {student.canEdit ? (
-                  <View style={st.toggleRow}>
-                    {showMorning && (
-                      <TouchableOpacity
-                        style={[st.toggleBtn, student.morning_present ? st.toggleOn : st.toggleOff]}
-                        onPress={() =>
-                          !isViewMode && toggleField(student.public_id, 'morning_present')
-                        }
-                        disabled={isViewMode}
-                        activeOpacity={isViewMode ? 1 : 0.7}
-                      >
-                        <Sun size={13} color={student.morning_present ? '#fff' : '#f59e0b'} />
-                        <Text
-                          style={[st.toggleLabel, student.morning_present && { color: '#fff' }]}
-                        >
-                          AM
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                    {showAfternoon && (
-                      <TouchableOpacity
-                        style={[
-                          st.toggleBtn,
-                          student.afternoon_present ? st.toggleOn : st.toggleOff,
-                        ]}
-                        onPress={() =>
-                          !isViewMode && toggleField(student.public_id, 'afternoon_present')
-                        }
-                        disabled={isViewMode}
-                        activeOpacity={isViewMode ? 1 : 0.7}
-                      >
-                        <Moon size={13} color={student.afternoon_present ? '#fff' : '#6366f1'} />
-                        <Text
-                          style={[st.toggleLabel, student.afternoon_present && { color: '#fff' }]}
-                        >
-                          PM
-                        </Text>
-                      </TouchableOpacity>
-                    )}
+                {/* Attendance Toggles */}
+                <View style={styles.toggleContainer}>
+                  <View style={styles.toggleItem}>
+                    <Text style={styles.toggleLabel}>AM</Text>
+                    <Switch
+                      value={student.morning_present || false}
+                      onValueChange={(val) =>
+                        handleToggleAttendance(student.public_id, 'morning_present', val)
+                      }
+                      disabled={!student.canEdit || isViewMode}
+                      trackColor={{ false: '#fee2e2', true: '#bbf7d0' }}
+                      thumbColor={student.morning_present ? '#16a34a' : '#ef4444'}
+                    />
                   </View>
-                ) : (
-                  <View style={st.lockedBadge}>
-                    <Text style={st.lockedText}>Leave</Text>
+                  <View style={styles.toggleItem}>
+                    <Text style={styles.toggleLabel}>PM</Text>
+                    <Switch
+                      value={student.afternoon_present || false}
+                      onValueChange={(val) =>
+                        handleToggleAttendance(student.public_id, 'afternoon_present', val)
+                      }
+                      disabled={!student.canEdit || isViewMode}
+                      trackColor={{ false: '#fee2e2', true: '#bbf7d0' }}
+                      thumbColor={student.afternoon_present ? '#16a34a' : '#ef4444'}
+                    />
                   </View>
-                )}
+                </View>
               </View>
             ))}
-
-            {/* Action buttons */}
-            <View style={st.actionRow}>
-              {isViewMode ? (
-                <TouchableOpacity style={st.editBtn} onPress={handleEdit} activeOpacity={0.8}>
-                  <Text style={st.editBtnText}>Edit Attendance</Text>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  style={[st.saveBtn, bulkMarkMutation.isPending && { opacity: 0.6 }]}
-                  onPress={handleSave}
-                  disabled={bulkMarkMutation.isPending}
-                  activeOpacity={0.8}
-                >
-                  {bulkMarkMutation.isPending ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <Check size={20} color="#fff" />
-                  )}
-                  <Text style={st.saveBtnText}>Save Attendance ({editableCount} students)</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </>
+          </Animated.View>
         )}
 
-        {/* Empty: no students */}
-        {selectedClassId &&
-          isWorkingDay &&
-          !loadingStudents &&
-          students.length === 0 &&
-          comprehensiveData && (
-            <View style={emptyStyles.container}>
-              <Users size={48} color="#94a3b8" />
-              <Text style={emptyStyles.title}>No Students</Text>
-              <Text style={emptyStyles.subtitle}>
-                No students found in this class for the selected date.
-              </Text>
-            </View>
-          )}
-
-        {/* Prompt to select class */}
-        {!selectedClassId && (
-          <View style={[emptyStyles.container, { paddingVertical: 60 }]}>
+        {/* No Students */}
+        {selectedClassId && !loadingStudents && students.length === 0 && isWorkingDay && (
+          <View style={styles.emptyContainer}>
             <Users size={48} color="#94a3b8" />
-            <Text style={emptyStyles.title}>Select a Class</Text>
-            <Text style={emptyStyles.subtitle}>Choose a class above to mark attendance.</Text>
+            <Text style={styles.emptyTitle}>No Students Found</Text>
+            <Text style={styles.emptyDesc}>There are no students in this class</Text>
           </View>
         )}
+
+        {/* No Class Selected */}
+        {!selectedClassId && !loadingClasses && (
+          <View style={styles.emptyContainer}>
+            <Users size={48} color="#94a3b8" />
+            <Text style={styles.emptyTitle}>Select a Class</Text>
+            <Text style={styles.emptyDesc}>Choose a class to mark attendance</Text>
+          </View>
+        )}
+
+        <View style={{ height: 100 }} />
       </ScrollView>
+
+      {/* Bottom Action Bar */}
+      {students.length > 0 && isWorkingDay && (
+        <View style={styles.bottomBar}>
+          {isViewMode ? (
+            <TouchableOpacity
+              style={[styles.actionBtn, styles.editBtn]}
+              onPress={() => setIsViewMode(false)}
+            >
+              <Text style={styles.actionBtnText}>Edit Attendance</Text>
+            </TouchableOpacity>
+          ) : (
+            <>
+              <TouchableOpacity style={[styles.actionBtn, styles.resetBtn]} onPress={handleReset}>
+                <RotateCcw size={18} color="#64748b" />
+                <Text style={[styles.actionBtnText, { color: '#64748b' }]}>Reset</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionBtn, styles.saveBtn, !canSubmit && styles.saveBtnDisabled]}
+                onPress={handleSubmit}
+                disabled={!canSubmit || isSubmitting}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <Save size={18} color="#fff" />
+                    <Text style={[styles.actionBtnText, { color: '#fff' }]}>Save</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      )}
     </View>
   );
 }
 
-// ============================================================================
-// Styles
-// ============================================================================
-
-const st = StyleSheet.create({
-  selectionCard: {
-    backgroundColor: '#ecfdf5',
-    borderRadius: 14,
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  header: {
+    paddingTop: 60,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTextContainer: {
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 2,
+  },
+  content: {
+    flex: 1,
+  },
+  scrollContent: {
     padding: 16,
-    marginBottom: 14,
+  },
+  selectionCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    marginBottom: 16,
+  },
+  fieldContainer: {
+    marginBottom: 16,
   },
   fieldLabel: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#1e293b',
-    marginBottom: 6,
+    fontWeight: '600',
+    color: '#64748b',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-  periodRow: { flexDirection: 'row', gap: 8 },
-  periodChip: {
+  dropdown: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f1f5f9',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 10,
+  },
+  dropdownText: {
+    flex: 1,
+    fontSize: 15,
+    color: '#1e293b',
+    fontWeight: '500',
+  },
+  dropdownList: {
+    position: 'absolute',
+    top: 80,
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    zIndex: 1000,
+    maxHeight: 200,
+  },
+  dropdownScroll: {
+    maxHeight: 200,
+  },
+  dropdownItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  dropdownItemSelected: {
+    backgroundColor: '#f0fdf4',
+  },
+  dropdownItemText: {
+    fontSize: 15,
+    color: '#1e293b',
+    fontWeight: '500',
+  },
+  dropdownItemTextSelected: {
+    color: '#059669',
+  },
+  dropdownItemInfo: {
+    fontSize: 12,
+    color: '#94a3b8',
+    marginTop: 2,
+  },
+  periodRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  periodBtn: {
     flex: 1,
     paddingVertical: 10,
+    paddingHorizontal: 12,
     borderRadius: 10,
-    backgroundColor: '#fff',
+    backgroundColor: '#f1f5f9',
     alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: '#e2e8f0',
   },
-  periodChipActive: { backgroundColor: '#10b981', borderColor: '#10b981' },
-  periodText: { fontSize: 12, fontWeight: '700', color: '#64748b' },
-  periodTextActive: { color: '#fff' },
-
+  periodBtnActive: {
+    backgroundColor: '#059669',
+  },
+  periodBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#64748b',
+  },
+  periodBtnTextActive: {
+    color: '#fff',
+  },
   alertCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
     backgroundColor: '#fef2f2',
     borderRadius: 12,
-    padding: 14,
-    marginBottom: 14,
+    padding: 16,
+    gap: 12,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: '#fecaca',
   },
-  alertTitle: { fontSize: 14, fontWeight: '700', color: '#991b1b' },
-  alertText: { fontSize: 12, color: '#b91c1c', marginTop: 2 },
-
-  statsBar: {
+  alertTextContainer: {
+    flex: 1,
+  },
+  alertTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#dc2626',
+  },
+  alertDesc: {
+    fontSize: 13,
+    color: '#ef4444',
+    marginTop: 2,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+  },
+  statCard: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 4,
+  },
+  statValue: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  statLabel: {
+    fontSize: 11,
+    color: '#64748b',
+    fontWeight: '500',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: '#64748b',
+  },
+  quickActions: {
     flexDirection: 'row',
     gap: 12,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 4,
-    elevation: 1,
+    marginBottom: 16,
   },
-  statItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  statText: { fontSize: 12, fontWeight: '700', color: '#6366f1' },
-
-  bulkRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
-  bulkBtn: {
+  quickActionBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    borderRadius: 10,
+    gap: 8,
+    backgroundColor: '#fff',
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
-  bulkBtnText: { fontSize: 13, fontWeight: '700' },
-
+  quickActionText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1e293b',
+    marginBottom: 12,
+  },
   studentCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -541,80 +751,132 @@ const st = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 12,
-    marginBottom: 6,
+    marginBottom: 8,
     shadowColor: '#000',
-    shadowOpacity: 0.03,
     shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
     shadowRadius: 4,
     elevation: 1,
   },
-  studentCardLocked: { opacity: 0.6, borderLeftWidth: 3, borderLeftColor: '#8b5cf6' },
-  studentLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#e0e7ff',
+  studentCardDisabled: {
+    opacity: 0.6,
+    backgroundColor: '#fef3c7',
+  },
+  studentInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 12,
+  },
+  studentAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+  },
+  studentAvatarPlaceholder: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#e2e8f0',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarImg: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  studentAvatarText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#64748b',
   },
-  avatarText: { fontSize: 13, fontWeight: '700', color: '#6366f1' },
-  studentName: { fontSize: 13, fontWeight: '600', color: '#1e293b' },
-  rollNo: { fontSize: 11, color: '#94a3b8', marginTop: 1 },
-  leaveBadge: {
-    marginTop: 3,
-    paddingHorizontal: 6,
+  studentDetails: {
+    flex: 1,
+  },
+  studentName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1e293b',
+  },
+  studentMeta: {
+    fontSize: 12,
+    color: '#94a3b8',
+    marginTop: 2,
+  },
+  leaveTag: {
+    backgroundColor: '#fef3c7',
+    paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 4,
-    backgroundColor: '#ede9fe',
+    marginTop: 4,
     alignSelf: 'flex-start',
   },
-  leaveText: { fontSize: 10, fontWeight: '600', color: '#7c3aed' },
-
-  toggleRow: { flexDirection: 'row', gap: 6 },
-  toggleBtn: {
+  leaveTagText: {
+    fontSize: 10,
+    color: '#d97706',
+    fontWeight: '600',
+  },
+  toggleContainer: {
     flexDirection: 'row',
+    gap: 16,
+  },
+  toggleItem: {
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1.5,
   },
-  toggleOn: { backgroundColor: '#059669', borderColor: '#059669' },
-  toggleOff: { backgroundColor: '#fff', borderColor: '#e2e8f0' },
-  toggleLabel: { fontSize: 11, fontWeight: '700', color: '#64748b' },
-
-  lockedBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: '#ede9fe',
+  toggleLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#64748b',
   },
-  lockedText: { fontSize: 11, fontWeight: '700', color: '#7c3aed' },
-
-  actionRow: { marginTop: 16 },
-  saveBtn: {
+  emptyContainer: {
+    alignItems: 'center',
+    paddingVertical: 60,
+    gap: 12,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#64748b',
+  },
+  emptyDesc: {
+    fontSize: 14,
+    color: '#94a3b8',
+  },
+  bottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    gap: 12,
+    padding: 16,
+    paddingBottom: 32,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+  },
+  actionBtn: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#10b981',
-    paddingVertical: 16,
-    borderRadius: 14,
-  },
-  saveBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
-  editBtn: {
-    alignItems: 'center',
     paddingVertical: 14,
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: '#6366f1',
+    borderRadius: 12,
   },
-  editBtnText: { color: '#6366f1', fontSize: 15, fontWeight: '700' },
+  resetBtn: {
+    backgroundColor: '#f1f5f9',
+  },
+  saveBtn: {
+    backgroundColor: '#059669',
+    flex: 2,
+  },
+  saveBtnDisabled: {
+    backgroundColor: '#94a3b8',
+  },
+  editBtn: {
+    backgroundColor: '#059669',
+  },
+  actionBtnText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#fff',
+  },
 });

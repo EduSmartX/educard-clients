@@ -24,6 +24,7 @@ import {
   Alert,
   Image,
 } from 'react-native';
+import Animated, { FadeInRight } from 'react-native-reanimated';
 
 import { SearchBar, ListHeader } from '@/components/common';
 import { EntityActions } from '@/components/common/EntityActions';
@@ -85,7 +86,7 @@ export default function StudentsScreen() {
   });
 
   const deleteMutation = useDeleteStudent();
-  const confirmDelete = useDeleteConfirm({
+  const confirmDelete = useDeleteConfirm<{ publicId: string; classId: string }>({
     entityName: 'Student',
     deleteMutation,
     onSuccess: () => refetch(),
@@ -93,14 +94,14 @@ export default function StudentsScreen() {
 
   const restoreMutation = useRestoreStudent();
   const handleReactivate = useCallback(
-    (id: string, name: string) => {
+    (publicId: string, classId: string | undefined, name: string) => {
       Alert.alert('Reactivate Student', `Are you sure you want to reactivate ${name}?`, [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Reactivate',
           onPress: async () => {
             try {
-              await restoreMutation.mutateAsync(id);
+              await restoreMutation.mutateAsync({ publicId, classId });
               refetch();
               Alert.alert('Success', `${name} reactivated successfully`);
             } catch (error) {
@@ -130,7 +131,7 @@ export default function StudentsScreen() {
   const handleView = useCallback(
     (s: Student) => {
       router.push({
-        pathname: '/(admin-screens)/students/[id]' as any,
+        pathname: '/(admin-screens)/students/[id]',
         params: { id: s.public_id, ...(isDeletedView ? { is_deleted: 'true' } : {}) },
       });
     },
@@ -140,7 +141,7 @@ export default function StudentsScreen() {
   const handleEdit = useCallback(
     (s: Student) => {
       router.push({
-        pathname: '/(admin-screens)/students/edit' as any,
+        pathname: '/(admin-screens)/students/edit',
         params: { id: s.public_id },
       });
     },
@@ -175,7 +176,7 @@ export default function StudentsScreen() {
         : '?';
 
       return (
-        <View>
+        <Animated.View entering={FadeInRight.delay(Math.min(index, 10) * 50).duration(300)}>
           <TouchableOpacity
             style={[cardStyles.card, styles.studentCard]}
             onPress={() => handleView(item)}
@@ -221,16 +222,25 @@ export default function StudentsScreen() {
               onDelete={
                 isDeletedView
                   ? undefined
-                  : () => confirmDelete(item.public_id, fullName || 'this student')
+                  : () =>
+                      confirmDelete(
+                        { publicId: item.public_id, classId: item.class_info?.public_id },
+                        fullName || 'this student'
+                      )
               }
               onReactivate={
                 isDeletedView
-                  ? () => handleReactivate(item.public_id, fullName || 'this student')
+                  ? () =>
+                      handleReactivate(
+                        item.public_id,
+                        item.class_info?.public_id,
+                        fullName || 'this student'
+                      )
                   : undefined
               }
             />
           </TouchableOpacity>
-        </View>
+        </Animated.View>
       );
     },
     [handleView, handleEdit, confirmDelete]
@@ -243,12 +253,12 @@ export default function StudentsScreen() {
         title={screenTitle}
         subtitle={`${totalCount} total`}
         role="admin"
-        onBack={() => router.navigate('/(tabs)/(admin)/management' as any)}
+        onBack={() => router.navigate('/(tabs)/(admin)/management')}
         actions={[
           { icon: Upload, onPress: () => Alert.alert('Bulk Upload', 'Coming soon') },
           {
             icon: Plus,
-            onPress: () => router.push('/(admin-screens)/students/create' as any),
+            onPress: () => router.push('/(admin-screens)/students/create'),
             variant: 'primary',
           },
         ]}

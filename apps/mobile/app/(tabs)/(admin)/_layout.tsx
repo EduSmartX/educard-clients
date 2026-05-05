@@ -1,12 +1,11 @@
 /**
- * Admin Tab Layout — Premium
- * Elevated tab bar with gradient active indicators and spring animations
+ * Admin Tab Layout
  */
 
 import { getRoleThemeColors } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Tabs } from 'expo-router';
-import { LayoutDashboard, Layers, Calendar, Settings } from 'lucide-react-native';
+import { LayoutDashboard, Building2, User, Shield, Settings } from 'lucide-react-native';
 import { View, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -83,18 +82,27 @@ export default function AdminTabLayout() {
       <Tabs.Screen
         name="management"
         options={{
-          title: 'Management',
+          title: 'Manage',
           tabBarIcon: ({ focused, size }) => (
-            <GradientIcon Icon={Layers} size={size} focused={focused} />
+            <GradientIcon Icon={Building2} size={size} focused={focused} />
           ),
         }}
       />
       <Tabs.Screen
-        name="schedule"
+        name="my-work"
         options={{
-          title: 'Schedule',
+          title: 'My Work',
           tabBarIcon: ({ focused, size }) => (
-            <GradientIcon Icon={Calendar} size={size} focused={focused} />
+            <GradientIcon Icon={User} size={size} focused={focused} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="admin"
+        options={{
+          title: 'Admin',
+          tabBarIcon: ({ focused, size }) => (
+            <GradientIcon Icon={Shield} size={size} focused={focused} />
           ),
         }}
       />
@@ -107,6 +115,8 @@ export default function AdminTabLayout() {
           ),
         }}
       />
+      {/* Hidden screens accessible via navigation */}
+      <Tabs.Screen name="schedule" options={{ href: null }} />
       <Tabs.Screen name="students" options={{ href: null }} />
       <Tabs.Screen name="staff" options={{ href: null }} />
       <Tabs.Screen name="teachers" options={{ href: null }} />

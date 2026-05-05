@@ -37,8 +37,9 @@ import {
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { apiClient } from '@/api/client';
+import { ConfirmDialog } from '@/components/common';
 import { FormDatePicker } from '@/components/forms/FormDatePicker';
-import { headerStyles, layoutStyles, emptyStyles } from '@/styles';
+import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -73,15 +74,14 @@ interface ApiListResponse<T> {
 const STATUS_FILTERS = [
   { label: 'Submitted', value: 'SUBMITTED', color: '#f59e0b' },
   { label: 'Approved', value: 'APPROVED', color: '#059669' },
-  { label: 'Returned', value: 'RETURNED', color: '#dc2626' },
+  { label: 'Rejected', value: 'REJECTED', color: '#dc2626' },
   { label: 'All', value: '', color: '#6366f1' },
 ];
 
 const STATUS_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
   SUBMITTED: { bg: '#fef3c7', text: '#92400e', dot: '#f59e0b' },
   APPROVED: { bg: '#d1fae5', text: '#065f46', dot: '#059669' },
-  RETURNED: { bg: '#fee2e2', text: '#991b1b', dot: '#dc2626' },
-  REJECTED: { bg: '#fce7f3', text: '#9d174d', dot: '#ec4899' },
+  REJECTED: { bg: '#fee2e2', text: '#991b1b', dot: '#dc2626' },
   DRAFT: { bg: '#f3f4f6', text: '#374151', dot: '#9ca3af' },
 };
 
@@ -94,6 +94,9 @@ export default function TimesheetApprovalsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [weekDate, setWeekDate] = useState('');
+
+  // Approve confirmation
+  const [approveTarget, setApproveTarget] = useState<TimesheetSubmission | null>(null);
 
   // Return comments modal
   const [returnModal, setReturnModal] = useState<{
@@ -175,21 +178,22 @@ export default function TimesheetApprovalsScreen() {
   const hasActiveFilters = !!searchQuery || !!weekDate;
 
   const handleApprove = (item: TimesheetSubmission) => {
-    Alert.alert(
-      'Approve Timesheet',
-      `Approve ${item.employee_info.full_name}'s timesheet for ${formatDate(item.week_start_date)} - ${formatDate(item.week_end_date)}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
+    setApproveTarget(item);
+  };
+
+  const confirmApprove = () => {
+    if (approveTarget) {
+      reviewMutation.mutate(
         {
-          text: 'Approve',
-          onPress: () =>
-            reviewMutation.mutate({
-              publicId: item.public_id,
-              submissionStatus: 'APPROVED',
-            }),
+          publicId: approveTarget.public_id,
+          submissionStatus: 'APPROVED',
         },
-      ]
-    );
+        {
+          onSuccess: () => setApproveTarget(null),
+          onError: () => setApproveTarget(null),
+        }
+      );
+    }
   };
 
   const handleReturn = (item: TimesheetSubmission) => {
@@ -200,13 +204,13 @@ export default function TimesheetApprovalsScreen() {
   const submitReturn = () => {
     if (!returnModal.item) return;
     if (!returnComment.trim()) {
-      Alert.alert('Comment Required', 'Please provide a reason for returning.');
+      Alert.alert('Comment Required', 'Please provide a reason for rejecting.');
       return;
     }
     reviewMutation.mutate(
       {
         publicId: returnModal.item.public_id,
-        submissionStatus: 'RETURNED',
+        submissionStatus: 'REJECTED',
         reviewComments: returnComment.trim(),
       },
       {
@@ -281,8 +285,8 @@ export default function TimesheetApprovalsScreen() {
                 onPress={() => handleReturn(item)}
                 disabled={reviewMutation.isPending}
               >
-                <RotateCcw size={16} color="#fff" />
-                <Text style={styles.actionBtnText}>Return</Text>
+                <X size={16} color="#fff" />
+                <Text style={styles.actionBtnText}>Reject</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -314,7 +318,7 @@ export default function TimesheetApprovalsScreen() {
           <View style={headerStyles.topRow}>
             <TouchableOpacity
               style={headerStyles.backBtn}
-              onPress={() => router.navigate('/(tabs)/(admin)/management' as any)}
+              onPress={() => router.navigate('/(tabs)/(admin)/management')}
             >
               <ChevronLeft size={24} color="#fff" />
             </TouchableOpacity>
@@ -388,7 +392,7 @@ export default function TimesheetApprovalsScreen() {
       )}
 
       {isLoading && !refreshing ? (
-        <View style={emptyStyles.container}>
+        <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary[500]} />
         </View>
       ) : (
@@ -426,7 +430,7 @@ export default function TimesheetApprovalsScreen() {
         >
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Return Timesheet</Text>
+              <Text style={styles.modalTitle}>Reject Timesheet</Text>
               <TouchableOpacity
                 onPress={() => setReturnModal({ visible: false, item: null })}
                 style={styles.modalClose}
@@ -436,7 +440,7 @@ export default function TimesheetApprovalsScreen() {
             </View>
             {returnModal.item && (
               <Text style={styles.modalSubtitle}>
-                Returning {returnModal.item.employee_info.full_name}'s timesheet for corrections
+                Rejecting {returnModal.item.employee_info.full_name}'s timesheet
               </Text>
             )}
             <Text style={styles.modalLabel}>Comments *</Text>
@@ -445,7 +449,7 @@ export default function TimesheetApprovalsScreen() {
               multiline
               numberOfLines={4}
               textAlignVertical="top"
-              placeholder="Enter reason for returning..."
+              placeholder="Enter reason for rejection..."
               placeholderTextColor={Colors.gray[400]}
               value={returnComment}
               onChangeText={setReturnComment}
@@ -467,8 +471,8 @@ export default function TimesheetApprovalsScreen() {
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
                   <>
-                    <RotateCcw size={16} color="#fff" />
-                    <Text style={styles.modalReturnText}>Return</Text>
+                    <X size={16} color="#fff" />
+                    <Text style={styles.modalReturnText}>Reject</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -476,6 +480,22 @@ export default function TimesheetApprovalsScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* Approve Confirmation Dialog */}
+      <ConfirmDialog
+        visible={!!approveTarget}
+        title="Approve Timesheet"
+        message={
+          approveTarget
+            ? `Approve ${approveTarget.employee_info.full_name}'s timesheet for ${formatDate(approveTarget.week_start_date)} - ${formatDate(approveTarget.week_end_date)}?`
+            : ''
+        }
+        confirmText="Approve"
+        onConfirm={confirmApprove}
+        onCancel={() => setApproveTarget(null)}
+        confirmVariant="success"
+        isLoading={reviewMutation.isPending}
+      />
     </View>
   );
 }
@@ -537,6 +557,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   clearBtnText: { fontSize: 12, color: '#dc2626', fontWeight: '600' },
+  loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   listContent: { padding: 16, paddingBottom: 100 },
   card: {
     backgroundColor: '#fff',

@@ -11,3 +11,4 @@ export * from './core';
 export * from './leave';
 export * from './holidays';
 export * from './preferences';
+export * from './attendance';

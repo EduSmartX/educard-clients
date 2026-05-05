@@ -1,13 +1,36 @@
-/**
- * Attendance API functions
- * Handles student attendance marking and employee timesheet operations
- */
-
 import { apiClient } from '@/api/client';
 
-// ============================================================================
-// Types
-// ============================================================================
+/**
+ * Dashboard Attendance Stats Types
+ */
+export interface AttendanceCategorySummary {
+  total_registered: number;
+  marked: number;
+  present: number;
+  absent: number;
+  halfday?: number;
+  attendance_percentage: number | null;
+}
+
+export interface DashboardAttendanceStats {
+  date: string;
+  is_working_day: boolean;
+  is_holiday: boolean;
+  holiday_name: string | null;
+  overall_attendance_percentage: number | null;
+  students: AttendanceCategorySummary;
+  employees: AttendanceCategorySummary;
+}
+
+/**
+ * Get dashboard attendance stats for admin
+ */
+export const getDashboardAttendanceStats = async (): Promise<DashboardAttendanceStats> => {
+  const response = await apiClient.get('/attendance/admin/dashboard-stats/');
+  return response.data.data;
+};
+
+// ============== MARK ATTENDANCE TYPES ==============
 
 export interface EligibleClass {
   public_id: string;
@@ -37,7 +60,16 @@ export interface DateValidation {
   reason: string | null;
 }
 
-export interface ComprehensiveStudentRecord {
+export type AttendanceStatus =
+  | 'PRESENT'
+  | 'ABSENT'
+  | 'HALF_DAY_FIRST'
+  | 'HALF_DAY_SECOND'
+  | 'LEAVE'
+  | 'HOLIDAY';
+
+export interface ComprehensiveAttendanceRecord {
+  // Student information
   public_id: string;
   first_name: string;
   last_name: string;
@@ -46,166 +78,216 @@ export interface ComprehensiveStudentRecord {
   admission_number: string | null;
   gender: string;
   profile_photo_thumbnail: string | null;
+
+  // Attendance information
   attendance_public_id: string | null;
   morning_present: boolean | null;
   afternoon_present: boolean | null;
-  attendance_status: string | null;
+  attendance_status: AttendanceStatus | null;
   attendance_remarks: string | null;
+
+  // Leave information
   leave_status: 'approved' | 'pending' | null;
   leave_type: string | null;
   leave_reason: string | null;
+  leave_start_date: string | null;
+  leave_end_date: string | null;
 }
 
-export interface EmployeeAttendanceRecord {
+export interface BulkAttendancePayload {
   date: string;
-  morning_present: boolean;
-  afternoon_present: boolean;
-  approval_status: string;
-  remarks?: string;
-  is_leave?: boolean;
-  leave_type_name?: string | null;
-  leave_status?: string | null;
+  period: 'morning' | 'afternoon' | 'full_day';
+  attendance_records: {
+    user: string;
+    morning_present: boolean;
+    afternoon_present: boolean;
+    remarks?: string;
+  }[];
 }
 
-export interface TimesheetSubmission {
-  public_id: string;
-  week_start_date: string;
-  week_end_date: string;
-  submission_status: string;
-  submitted_at: string;
-  reviewed_at: string | null;
-  reviewed_by_name: string | null;
-  review_comments: string;
-  total_working_days: number;
-  total_present: number;
-  total_absent: number;
-  total_holidays: number;
-  total_leaves: number;
-}
+// ============== MARK ATTENDANCE API ==============
 
-// ============================================================================
-// Student Attendance APIs (Admin / Teacher)
-// ============================================================================
+/**
+ * Get eligible classes for attendance marking
+ */
+export const getEligibleClasses = async (purpose = 'attendance'): Promise<EligibleClass[]> => {
+  const response = await apiClient.get('/classes/employee/eligible/', {
+    params: { purpose },
+  });
+  return response.data.data || response.data;
+};
 
-/** Get classes the current user can mark attendance for */
-export async function getEligibleClasses(purpose = 'attendance'): Promise<EligibleClass[]> {
-  const res = await apiClient.get('/classes/employee/eligible/', { params: { purpose } });
-  return res.data.data || res.data;
-}
-
-/** Validate if attendance can be marked for a specific class + date */
-export async function validateAttendanceDate(
+/**
+ * Validate if attendance can be marked for a date
+ */
+export const validateAttendanceDate = async (
   classId: string,
   date: string
-): Promise<DateValidation> {
-  const res = await apiClient.get(
+): Promise<DateValidation> => {
+  const response = await apiClient.get(
     `/attendance/class/${classId}/student-attendance/validate-date/`,
     { params: { date } }
   );
-  return res.data.data || res.data;
-}
+  return response.data.data || response.data;
+};
 
-/** Get comprehensive attendance + leave data for a class on a date */
-export async function getComprehensiveAttendance(
+/**
+ * Get comprehensive attendance data with student + attendance + leave info
+ */
+export const getComprehensiveAttendance = async (
   classId: string,
   date: string
-): Promise<ComprehensiveStudentRecord[]> {
-  const res = await apiClient.get(
+): Promise<ComprehensiveAttendanceRecord[]> => {
+  const response = await apiClient.get(
     `/attendance/class/${classId}/student-attendance/comprehensive/`,
     { params: { date } }
   );
-  return res.data.data || res.data;
-}
+  return response.data.data || response.data;
+};
 
-/** Bulk mark student attendance */
-export async function bulkMarkAttendance(
+/**
+ * Bulk mark student attendance
+ */
+export const bulkMarkAttendance = async (
   classId: string,
-  payload: {
-    date: string;
-    period: 'morning' | 'afternoon' | 'full_day';
-    attendance_records: {
-      user: string;
-      morning_present: boolean;
-      afternoon_present: boolean;
-      remarks?: string;
-    }[];
-  }
-) {
-  const res = await apiClient.post(
+  payload: BulkAttendancePayload
+): Promise<{ message: string }> => {
+  const response = await apiClient.post(
     `/attendance/class/${classId}/student-attendance/bulk-mark/`,
     payload
   );
-  return res.data;
+  return response.data;
+};
+
+// ============== EMPLOYEE TIMESHEET TYPES & API ==============
+
+export interface EmployeeAttendanceRecord {
+  date: string;
+  morning_present: boolean | null;
+  afternoon_present: boolean | null;
+  is_holiday: boolean;
+  holiday_name: string | null;
+  is_leave: boolean;
+  leave_type: string | null;
+  leave_status: string | null;
+  is_working_day: boolean;
+  submission_status: 'draft' | 'pending' | 'approved' | 'rejected' | null;
 }
 
-// ============================================================================
-// Employee Attendance / Timesheet APIs
-// ============================================================================
+export interface EmployeeAttendanceResponse {
+  records: EmployeeAttendanceRecord[];
+  stats: {
+    total_working_days: number;
+    present_days: number;
+    absent_days: number;
+    half_days: number;
+    leave_days: number;
+  };
+  employee_id: string | null;
+  user_info: {
+    first_name: string;
+    last_name: string;
+    email: string;
+  } | null;
+  date_range: { from_date: string; to_date: string };
+  working_day_policy: {
+    sunday_off: boolean;
+    saturday_off_pattern: string;
+  } | null;
+}
 
-/** Get employee attendance records for a date range */
-export async function getEmployeeAttendance(params: {
+export interface TimesheetStatus {
+  status: 'draft' | 'pending' | 'approved' | 'rejected' | null;
+  submission_date: string | null;
+  reviewer_name: string | null;
+  review_date: string | null;
+  comments: string | null;
+  can_edit: boolean;
+  can_submit: boolean;
+}
+
+export interface SubmitTimesheetPayload {
   from_date: string;
   to_date: string;
-}): Promise<{
-  records: EmployeeAttendanceRecord[];
-  stats: Record<string, number>;
-  working_day_policy: { sunday_off: boolean; saturday_off_pattern: string } | null;
-  submission_config?: Record<string, any>;
-}> {
-  const res = await apiClient.get('/attendance/employee-attendance/', { params });
-  const payload = res.data?.data || res.data || {};
-  return {
-    records: payload.records || [],
-    stats: payload.stats || {},
-    working_day_policy: payload.working_day_policy || null,
-    submission_config: payload.submission_config || {},
-  };
-}
-
-/** Bulk submit employee attendance with timesheet */
-export async function bulkSubmitEmployeeAttendance(payload: {
-  attendance_records: {
+  records: {
     date: string;
     morning_present: boolean;
     afternoon_present: boolean;
     remarks?: string;
   }[];
-  week_start_date: string;
-  week_end_date: string;
-  submit_timesheet: boolean;
-}) {
-  const res = await apiClient.post('/attendance/employee-attendance/bulk_submit/', payload);
-  return res.data;
 }
 
-/** Get timesheet submissions list */
-export async function getTimesheetSubmissions(params?: Record<string, string>) {
-  const res = await apiClient.get<{ success: boolean; data: TimesheetSubmission[] }>(
-    '/attendance/timesheet-submission/',
-    { params: { view_type: 'self', ...params } }
-  );
-  return res.data;
-}
+/**
+ * Get employee's own attendance records for a date range
+ * Uses the same endpoint as web for consistency
+ */
+export const getMyAttendance = async (
+  fromDate: string,
+  toDate: string
+): Promise<EmployeeAttendanceResponse> => {
+  // Try the employee-attendance endpoint first (same as web)
+  // Fall back to my-attendance if needed
+  try {
+    const response = await apiClient.get('/attendance/employee-attendance/', {
+      params: { from_date: fromDate, to_date: toDate },
+    });
+    const data = response.data.data || response.data;
+    return {
+      records: data.records || [],
+      stats: data.stats || {
+        total_working_days: 0,
+        present_days: 0,
+        absent_days: 0,
+        half_days: 0,
+        leave_days: 0,
+      },
+      employee_id: data.employee_id || null,
+      user_info: data.user_info || null,
+      date_range: data.date_range || { from_date: fromDate, to_date: toDate },
+      working_day_policy: data.working_day_policy || null,
+    };
+  } catch (error) {
+    // Fallback to my-attendance endpoint
+    const response = await apiClient.get('/attendance/employee/my-attendance/', {
+      params: { from_date: fromDate, to_date: toDate },
+    });
+    return response.data.data || response.data;
+  }
+};
 
-/** Check timesheet submission status for a specific week */
-export async function checkTimesheetStatus(params: {
-  week_start_date: string;
-  week_end_date: string;
-}) {
-  const res = await apiClient.get('/attendance/timesheet-submission/check_status/', { params });
-  return res.data?.data || res.data;
-}
+/**
+ * Check timesheet status for a period
+ */
+export const checkTimesheetStatus = async (
+  fromDate: string,
+  toDate: string
+): Promise<TimesheetStatus> => {
+  const response = await apiClient.get('/attendance/employee/timesheets/status/', {
+    params: { from_date: fromDate, to_date: toDate },
+  });
+  return response.data.data || response.data;
+};
 
-/** Get organization holidays for a date range */
-export async function getOrganizationHolidays(params: {
-  from_date: string;
-  to_date: string;
-}): Promise<{ start_date: string; end_date: string; description: string; holiday_type: string }[]> {
-  const res = await apiClient.get('/attendance/holiday-calendar/', { params });
-  const payload = res.data || {};
-  return Array.isArray(payload.results)
-    ? payload.results
-    : Array.isArray(payload.data)
-      ? payload.data
-      : [];
-}
+/**
+ * Submit timesheet for approval
+ */
+export const submitTimesheet = async (
+  payload: SubmitTimesheetPayload
+): Promise<{ message: string }> => {
+  const response = await apiClient.post('/attendance/employee/timesheets/submit/', payload);
+  return response.data;
+};
+
+/**
+ * Return timesheet to draft
+ */
+export const returnTimesheetToDraft = async (
+  fromDate: string,
+  toDate: string
+): Promise<{ message: string }> => {
+  const response = await apiClient.post('/attendance/employee/timesheets/return-to-draft/', {
+    from_date: fromDate,
+    to_date: toDate,
+  });
+  return response.data;
+};

@@ -1,174 +1,187 @@
 /**
- * Employee Schedule / My Timetable Screen
- * Shows the logged-in teacher's weekly timetable
+ * Employee Schedule Screen
+ * Teacher's weekly timetable showing all assigned classes
  */
 
-import { Colors, getRoleGradient } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Clock, BookOpen, User, Calendar } from 'lucide-react-native';
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import {
+  Calendar,
+  Clock,
+  BookOpen,
+  Building2,
+  Users,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react-native';
+import { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
+  RefreshControl,
   StyleSheet,
   ActivityIndicator,
-  RefreshControl,
+  Dimensions,
 } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import { Screen } from '@/components/layout';
+import { colors } from '@/constants/colors';
 import { useMyTimetable } from '@/features/timetable';
-import {
-  DAY_SHORT_LABELS,
-  DAY_LABELS,
-  SLOT_TYPE_LABELS,
-  BREAK_TYPES,
-  type TimetableEntry,
-} from '@/features/timetable/types';
-import { headerStyles, layoutStyles, emptyStyles } from '@/styles';
 
-const empGradient = getRoleGradient('employee');
+const { width: screenWidth } = Dimensions.get('window');
 
-const SLOT_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  period: { bg: '#eff6ff', border: '#93c5fd', text: '#1e40af' },
-  lunch_break: { bg: '#fef3c7', border: '#fcd34d', text: '#92400e' },
-  short_break: { bg: '#f0fdf4', border: '#86efac', text: '#166534' },
-  assembly: { bg: '#fae8ff', border: '#e879f9', text: '#86198f' },
-  free_period: { bg: '#f1f5f9', border: '#cbd5e1', text: '#475569' },
-  special: { bg: '#fef2f2', border: '#fca5a5', text: '#991b1b' },
-};
+const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const SHORT_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-function formatTime(t: string) {
-  const [h, m] = t.split(':');
-  const hour = parseInt(h, 10);
+interface TimetableEntry {
+  public_id: string;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  slot_label: string;
+  slot_type: string;
+  class_name: string;
+  subject_name: string | null;
+  room: string;
+  notes: string;
+}
+
+function formatTime(time: string): string {
+  const [hours, minutes] = time.split(':');
+  const hour = parseInt(hours);
   const ampm = hour >= 12 ? 'PM' : 'AM';
-  const h12 = hour % 12 || 12;
-  return `${h12}:${m} ${ampm}`;
+  const hour12 = hour % 12 || 12;
+  return `${hour12}:${minutes} ${ampm}`;
+}
+
+function TimeSlotCard({ entry }: { entry: TimetableEntry }) {
+  const isBreak = entry.slot_type === 'break' || entry.slot_type === 'lunch';
+
+  if (isBreak) {
+    return (
+      <View style={styles.breakCard}>
+        <Text style={styles.breakLabel}>{entry.slot_label}</Text>
+        <Text style={styles.breakTime}>
+          {formatTime(entry.start_time)} - {formatTime(entry.end_time)}
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.slotCard}>
+      <View style={styles.slotTimeContainer}>
+        <Clock size={14} color="#6b7280" />
+        <Text style={styles.slotTime}>
+          {formatTime(entry.start_time)} - {formatTime(entry.end_time)}
+        </Text>
+      </View>
+
+      <View style={styles.slotContent}>
+        <View style={styles.slotHeader}>
+          <View style={styles.subjectBadge}>
+            <BookOpen size={14} color="#3b82f6" />
+            <Text style={styles.subjectName}>{entry.subject_name || 'Free Period'}</Text>
+          </View>
+        </View>
+
+        <View style={styles.slotDetails}>
+          <View style={styles.detailItem}>
+            <Building2 size={12} color="#6b7280" />
+            <Text style={styles.detailText}>{entry.class_name}</Text>
+          </View>
+          {entry.room && (
+            <View style={styles.detailItem}>
+              <Users size={12} color="#6b7280" />
+              <Text style={styles.detailText}>{entry.room}</Text>
+            </View>
+          )}
+        </View>
+      </View>
+    </View>
+  );
 }
 
 export default function EmployeeScheduleScreen() {
-  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [selectedDayIndex, setSelectedDayIndex] = useState(() => {
+    const today = new Date().getDay();
+    // Convert Sunday (0) to index, Mon-Sat (1-6) to 0-5
+    return today === 0 ? 0 : today - 1;
+  });
   const [refreshing, setRefreshing] = useState(false);
-  const dayScrollRef = useRef<ScrollView>(null);
 
-  const todayIndex = useMemo(() => {
-    const jsDay = new Date().getDay();
-    return jsDay === 0 ? 6 : jsDay - 1;
-  }, []);
+  const { data: timetableData, isLoading, refetch } = useMyTimetable();
 
-  const { data: timetable, isLoading, refetch } = useMyTimetable();
-
-  const availableDays = useMemo(() => {
-    if (!timetable?.days) return [];
-    return Object.keys(timetable.days)
-      .map(Number)
-      .sort((a, b) => a - b);
-  }, [timetable]);
-
-  useEffect(() => {
-    if (availableDays.length > 0 && selectedDay === null) {
-      const day = availableDays.includes(todayIndex) ? todayIndex : availableDays[0];
-      setSelectedDay(day);
-      const tabIndex = availableDays.indexOf(day);
-      setTimeout(() => {
-        dayScrollRef.current?.scrollTo({ x: Math.max(0, tabIndex * 78 - 40), animated: true });
-      }, 100);
-    }
-  }, [availableDays, selectedDay, todayIndex]);
-
-  const activeDay = selectedDay ?? availableDays[0] ?? 0;
-
-  const daySlots: TimetableEntry[] = useMemo(() => {
-    if (!timetable?.days) return [];
-    return timetable.days[activeDay.toString()] || [];
-  }, [timetable, activeDay]);
-
-  const onRefresh = useCallback(async () => {
+  const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     await refetch();
     setRefreshing(false);
   }, [refetch]);
 
-  const renderSlotCard = (slot: TimetableEntry, index: number) => {
-    const isBreak = BREAK_TYPES.has(slot.slot_type);
-    const c = SLOT_COLORS[slot.slot_type] || SLOT_COLORS.period;
+  const selectedDayName = DAYS_OF_WEEK[selectedDayIndex];
 
-    return (
-      <View
-        key={slot.public_id || index}
-        style={[styles.slotCard, { backgroundColor: c.bg, borderLeftColor: c.border }]}
-      >
-        <View style={styles.slotTime}>
-          <Clock size={12} color={c.text} />
-          <Text style={[styles.slotTimeText, { color: c.text }]}>
-            {formatTime(slot.start_time)} – {formatTime(slot.end_time)}
-          </Text>
-          <View style={[styles.slotTypeBadge, { backgroundColor: c.border + '40' }]}>
-            <Text style={[styles.slotTypeText, { color: c.text }]}>
-              {SLOT_TYPE_LABELS[slot.slot_type] || slot.slot_label}
-            </Text>
-          </View>
-        </View>
+  const dayEntries = useMemo(() => {
+    if (!timetableData?.days) return [];
+    // The API returns days keyed by day name (e.g., "Monday", "Tuesday")
+    const entries = timetableData.days[selectedDayName] || [];
+    // Sort by start_time
+    return [...entries].sort((a, b) => a.start_time.localeCompare(b.start_time));
+  }, [timetableData, selectedDayName]);
 
-        {isBreak ? (
-          <Text style={[styles.breakLabel, { color: c.text }]}>{slot.slot_label}</Text>
-        ) : (
-          <View style={styles.slotContent}>
-            <View style={styles.slotRow}>
-              <BookOpen size={14} color={c.text} />
-              <Text style={[styles.slotSubject, { color: c.text }]}>
-                {slot.subject_name || 'No subject assigned'}
-              </Text>
-            </View>
-            <View style={styles.slotRow}>
-              <User size={14} color="#64748b" />
-              <Text style={styles.slotClass}>{slot.class_name}</Text>
-            </View>
-            {slot.room ? <Text style={styles.slotRoom}>Room: {slot.room}</Text> : null}
-          </View>
-        )}
-      </View>
-    );
-  };
+  const totalClasses = useMemo(() => {
+    if (!timetableData?.days) return 0;
+    let count = 0;
+    Object.values(timetableData.days).forEach((dayEntries: TimetableEntry[]) => {
+      count += dayEntries.filter((e) => e.slot_type !== 'break' && e.slot_type !== 'lunch').length;
+    });
+    return count;
+  }, [timetableData]);
 
   return (
-    <View style={layoutStyles.container}>
-      {/* Header */}
-      <LinearGradient colors={empGradient} style={headerStyles.header}>
-        <View style={headerStyles.content}>
-          <View style={headerStyles.topRow}>
-            <View style={{ width: 40 }} />
-            <View style={headerStyles.titleContainer}>
-              <Text style={headerStyles.title}>My Schedule</Text>
-              <Text style={headerStyles.subtitle}>
-                {timetable?.teacher_name || 'Weekly timetable'}
-              </Text>
+    <Screen scrollable={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Header */}
+        <LinearGradient
+          colors={['#6366f1', '#8b5cf6', '#a78bfa']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
+        >
+          <View style={styles.headerContent}>
+            <View style={styles.headerIcon}>
+              <Calendar size={24} color="white" />
             </View>
-            <View style={{ width: 40 }} />
+            <Text style={styles.headerTitle}>My Schedule</Text>
+            <Text style={styles.headerSubtitle}>{totalClasses} classes this week</Text>
           </View>
-        </View>
-      </LinearGradient>
+        </LinearGradient>
 
-      {/* Day tabs */}
-      {availableDays.length > 0 && (
-        <View style={styles.dayTabContainer}>
+        {/* Day Selector */}
+        <View style={styles.daySelector}>
           <ScrollView
-            ref={dayScrollRef}
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.dayTabScroll}
+            contentContainerStyle={styles.daySelectorContent}
           >
-            {availableDays.map((day) => {
-              const isActive = day === activeDay;
-              const isToday = day === todayIndex;
+            {SHORT_DAYS.map((day, index) => {
+              const isSelected = index === selectedDayIndex;
+              const today = new Date().getDay();
+              const isToday = (today === 0 ? 6 : today - 1) === index;
+
               return (
                 <TouchableOpacity
                   key={day}
-                  style={[styles.dayTab, isActive && styles.dayTabActive]}
-                  onPress={() => setSelectedDay(day)}
+                  style={[styles.dayButton, isSelected && styles.dayButtonSelected]}
+                  onPress={() => setSelectedDayIndex(index)}
                 >
-                  <Text style={[styles.dayTabText, isActive && styles.dayTabTextActive]}>
-                    {DAY_SHORT_LABELS[day]}
+                  <Text style={[styles.dayButtonText, isSelected && styles.dayButtonTextSelected]}>
+                    {day}
                   </Text>
                   {isToday && <View style={styles.todayDot} />}
                 </TouchableOpacity>
@@ -176,78 +189,149 @@ export default function EmployeeScheduleScreen() {
             })}
           </ScrollView>
         </View>
-      )}
 
-      {/* Content */}
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      >
-        {isLoading ? (
-          <View style={emptyStyles.container}>
-            <ActivityIndicator size="large" color="#6366f1" />
-            <Text style={emptyStyles.subtitle}>Loading timetable…</Text>
-          </View>
-        ) : daySlots.length === 0 ? (
-          <View style={emptyStyles.container}>
-            <Calendar size={48} color="#94a3b8" />
-            <Text style={emptyStyles.title}>No Classes</Text>
-            <Text style={emptyStyles.subtitle}>
-              {availableDays.length === 0
-                ? 'No timetable has been assigned yet.'
-                : `No slots for ${DAY_LABELS[activeDay]}.`}
-            </Text>
-          </View>
-        ) : (
-          <>
-            <Text style={styles.dayTitle}>
-              {DAY_LABELS[activeDay]} — {daySlots.length} slot{daySlots.length !== 1 ? 's' : ''}
-            </Text>
-            {daySlots.map(renderSlotCard)}
-          </>
-        )}
+        <View style={styles.content}>
+          <Text style={styles.dayTitle}>{selectedDayName}</Text>
+
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#6366f1" />
+              <Text style={styles.loadingText}>Loading schedule...</Text>
+            </View>
+          ) : dayEntries.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Calendar size={48} color="#d1d5db" />
+              <Text style={styles.emptyTitle}>No Classes</Text>
+              <Text style={styles.emptyText}>
+                You don't have any classes scheduled for {selectedDayName}.
+              </Text>
+            </View>
+          ) : (
+            dayEntries.map((entry, index) => (
+              <Animated.View
+                key={entry.public_id || index}
+                entering={FadeInDown.delay(index * 80).springify()}
+              >
+                <TimeSlotCard entry={entry} />
+              </Animated.View>
+            ))
+          )}
+        </View>
       </ScrollView>
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  dayTabContainer: { backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  dayTabScroll: { paddingHorizontal: 16, paddingVertical: 12, gap: 8 },
-  dayTab: {
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: '#f1f5f9',
-    alignItems: 'center',
-    minWidth: 64,
+  scrollContent: { paddingBottom: 100 },
+  header: {
+    paddingTop: 50,
+    paddingBottom: 24,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
-  dayTabActive: { backgroundColor: '#6366f1' },
-  dayTabText: { fontSize: 13, fontWeight: '600', color: '#64748b' },
-  dayTabTextActive: { color: '#fff' },
+  headerContent: { alignItems: 'center' },
+  headerIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  headerTitle: { color: 'white', fontSize: 22, fontWeight: '700' },
+  headerSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 14, marginTop: 4 },
+  daySelector: {
+    backgroundColor: 'white',
+    marginHorizontal: 16,
+    marginTop: -16,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  daySelectorContent: {
+    paddingHorizontal: 8,
+    paddingVertical: 12,
+    gap: 4,
+  },
+  dayButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignItems: 'center',
+    minWidth: 52,
+  },
+  dayButtonSelected: {
+    backgroundColor: '#6366f1',
+  },
+  dayButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#6b7280',
+  },
+  dayButtonTextSelected: {
+    color: 'white',
+  },
   todayDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: '#f59e0b',
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#f97316',
     marginTop: 4,
   },
-  dayTitle: { fontSize: 16, fontWeight: '700', color: '#1e293b', marginBottom: 12 },
+  content: { padding: 16 },
+  dayTitle: { fontSize: 18, fontWeight: '700', color: '#1f2937', marginBottom: 16 },
+  loadingContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60 },
+  loadingText: { color: '#6b7280', marginTop: 12, fontSize: 14 },
+  emptyState: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60 },
+  emptyTitle: { fontSize: 18, fontWeight: '600', color: '#374151', marginTop: 16 },
+  emptyText: { fontSize: 14, color: '#6b7280', textAlign: 'center', marginTop: 8 },
   slotCard: {
-    borderLeftWidth: 4,
-    borderRadius: 12,
+    backgroundColor: 'white',
+    borderRadius: 14,
     padding: 14,
     marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  slotTime: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
-  slotTimeText: { fontSize: 12, fontWeight: '600' },
-  slotTypeBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginLeft: 'auto' },
-  slotTypeText: { fontSize: 10, fontWeight: '700' },
-  breakLabel: { fontSize: 14, fontWeight: '600', textAlign: 'center', paddingVertical: 4 },
-  slotContent: { gap: 4 },
-  slotRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  slotSubject: { fontSize: 15, fontWeight: '700', flex: 1 },
-  slotClass: { fontSize: 13, color: '#64748b' },
-  slotRoom: { fontSize: 12, color: '#94a3b8', marginTop: 2, marginLeft: 22 },
+  slotTimeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 10,
+  },
+  slotTime: { fontSize: 12, color: '#6b7280', fontWeight: '500' },
+  slotContent: {},
+  slotHeader: { marginBottom: 8 },
+  subjectBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#eff6ff',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  subjectName: { fontSize: 14, fontWeight: '600', color: '#3b82f6' },
+  slotDetails: { flexDirection: 'row', gap: 16 },
+  detailItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  detailText: { fontSize: 13, color: '#6b7280' },
+  breakCard: {
+    backgroundColor: '#fef3c7',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 10,
+    alignItems: 'center',
+  },
+  breakLabel: { fontSize: 13, fontWeight: '600', color: '#d97706' },
+  breakTime: { fontSize: 11, color: '#92400e', marginTop: 2 },
 });

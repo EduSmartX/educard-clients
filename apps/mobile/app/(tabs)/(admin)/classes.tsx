@@ -98,7 +98,7 @@ export default function ClassesScreen() {
   const handleView = useCallback(
     (classItem: Class) => {
       router.push({
-        pathname: '/(admin-screens)/classes/[id]' as any,
+        pathname: '/(admin-screens)/classes/[id]',
         params: { id: classItem.public_id, ...(isDeletedView ? { is_deleted: 'true' } : {}) },
       });
     },
@@ -108,7 +108,7 @@ export default function ClassesScreen() {
   const handleEdit = useCallback(
     (classItem: Class) => {
       router.push({
-        pathname: '/(admin-screens)/classes/edit' as any,
+        pathname: '/(admin-screens)/classes/edit',
         params: { id: classItem.public_id },
       });
     },
@@ -221,11 +221,11 @@ export default function ClassesScreen() {
         title="Classes"
         subtitle={`${totalCount} total`}
         role="admin"
-        onBack={() => router.navigate('/(tabs)/(admin)/management' as any)}
+        onBack={() => router.navigate('/(tabs)/(admin)/management')}
         actions={[
           {
             icon: Plus,
-            onPress: () => router.push('/(admin-screens)/classes/create' as any),
+            onPress: () => router.push('/(admin-screens)/classes/create'),
             variant: 'primary',
           },
         ]}

@@ -22,6 +22,7 @@ import {
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
+import { SubmitButton } from '@/components/common';
 import {
   FormInput,
   FormSection,
@@ -31,8 +32,7 @@ import {
 } from '@/components/forms';
 import { useLeaveTypes, useRoleTypes } from '@/features/core';
 import { useLeaveAllocationDetail, useUpdateLeaveAllocation } from '@/features/leave';
-import { headerStyles, layoutStyles, buttonStyles } from '@/styles';
-import { addDateRangeError } from '@/utils/validation';
+import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
 type FieldErrors = Record<string, string>;
@@ -116,14 +116,6 @@ export default function EditLeaveAllocationScreen() {
     if (!form.total_days || Number(form.total_days) <= 0)
       errs.total_days = 'Total days must be greater than 0';
     if (!form.effective_from) errs.effective_from = 'Effective from date is required';
-    addDateRangeError(
-      errs,
-      form.effective_from,
-      form.effective_to,
-      'effective_to',
-      'Effective from',
-      'Effective to'
-    );
     if (!form.applies_to_all_roles && form.roles.length === 0)
       errs.roles = 'Select at least one role';
     setErrors(errs);
@@ -330,21 +322,12 @@ export default function EditLeaveAllocationScreen() {
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(240)}>
-            <TouchableOpacity
-              style={[buttonStyles.primary, isSaving && { opacity: 0.5 }]}
+            <SubmitButton
+              label="Update Allocation"
               onPress={handleSubmit}
-              disabled={isSaving}
-              activeOpacity={0.8}
-            >
-              {isSaving ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <>
-                  <Save size={18} color="#fff" />
-                  <Text style={buttonStyles.primaryText}>Update Allocation</Text>
-                </>
-              )}
-            </TouchableOpacity>
+              isLoading={isSaving}
+              icon={Save}
+            />
           </Animated.View>
 
           <View style={{ height: 40 }} />

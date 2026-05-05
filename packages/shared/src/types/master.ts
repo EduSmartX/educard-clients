@@ -37,7 +37,6 @@ export interface Department {
   code?: string;
 }
 
-// Supervisor is exported from ./common.ts — do not duplicate here
 
 /** Generic list response for master data endpoints */
 export interface MasterListResponse<T> {

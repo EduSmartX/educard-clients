@@ -1,731 +1,1701 @@
-/**
- * My Timesheet Submissions Screen
- * Two modes:
- *  1. Weekly view — fill in daily attendance (morning/afternoon) for a week, then submit
- *  2. History — list of past timesheet submissions with status filters
- */
-
-import { getRoleGradient } from '@educard/shared';
-import { LinearGradient } from 'expo-linear-gradient';
+import { extractApiError } from '@educard/shared';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  subMonths,
+  addMonths,
+  eachDayOfInterval,
+  startOfWeek,
+  endOfWeek,
+  isSameMonth,
+  getDay,
+  parseISO,
+  isToday,
+  isBefore,
+  isSameDay,
+} from 'date-fns';
 import { useRouter } from 'expo-router';
 import {
   ChevronLeft,
   ChevronRight,
-  CheckCircle,
+  Check,
+  X,
   Send,
-  FileText,
+  CalendarDays,
+  ChevronDown,
+  ChevronUp,
+  RotateCcw,
   Sun,
   Moon,
+  Lock,
 } from 'lucide-react-native';
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
-  StyleSheet,
   ActivityIndicator,
   RefreshControl,
   Alert,
+  Dimensions,
+  Modal,
+  Pressable,
 } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 
-import {
-  useEmployeeAttendance,
-  useSubmitTimesheet,
-  useTimesheetSubmissions,
-  useCheckTimesheetStatus,
-  useOrganizationHolidays,
-} from '@/features/attendance';
-import type { EmployeeAttendanceRecord } from '@/features/attendance';
-import { headerStyles, layoutStyles, emptyStyles } from '@/styles';
+import { apiClient } from '@/api/client';
 
-const empGradient = getRoleGradient('employee');
+const { width: screenWidth } = Dimensions.get('window');
+const CELL_SIZE = Math.floor((screenWidth - 40) / 7);
+const WEEKDAYS_SHORT = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function getMonday(date: Date): Date {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  d.setDate(d.getDate() + diff);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function addDaysUtil(date: Date, n: number): Date {
-  const d = new Date(date);
-  d.setDate(d.getDate() + n);
-  return d;
-}
-
-function fmtISO(d: Date): string {
-  return d.toISOString().split('T')[0];
-}
-
-function fmtShort(d: string): string {
-  return new Date(d + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
-}
-
-function fmtDay(d: string): string {
-  return new Date(d + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short' });
-}
-
-function fmtFull(d: string): string {
-  return new Date(d + 'T00:00:00').toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-}
-
-interface DayRow {
+interface AttendanceRecord {
   date: string;
+  morning_present: boolean | null;
+  afternoon_present: boolean | null;
+  is_leave?: boolean;
+  leave_type_name?: string | null;
+  leave_status?: string | null;
+}
+
+interface HolidayDescription {
+  type: 'weekend' | 'official_holiday' | 'force_holiday';
+  name: string;
+}
+
+interface EmployeeAttendanceResponse {
+  records: AttendanceRecord[];
+  stats: {
+    total_working_days?: number;
+    total_present?: number;
+    total_absent?: number;
+    total_half_days?: number;
+    total_leaves?: number;
+    total_holidays?: number;
+  };
+  working_day_policy: { sunday_off: boolean; saturday_off_pattern: string } | null;
+  holiday_descriptions?: Record<string, HolidayDescription>;
+  calendar_exceptions?: { date: string; type: string; reason: string }[];
+  submission_config?: { default_present?: boolean };
+}
+
+interface TimesheetStatusResponse {
+  submission: {
+    submission_status: string;
+    review_comments?: string;
+  } | null;
+}
+
+interface AttendanceRecordExtended extends AttendanceRecord {
+  approval_status?: string;
+}
+
+type DayState =
+  | 'present'
+  | 'absent'
+  | 'half_day'
+  | 'leave-approved'
+  | 'leave-pending'
+  | 'holiday'
+  | 'none'
+  | 'future';
+
+type WeekRow = {
+  date: string;
+  dayName: string;
   morning_present: boolean;
   afternoon_present: boolean;
-  locked: boolean;
-  lockReason: string;
-  isHoliday: boolean;
-  isLeave: boolean;
-  leaveType?: string | null;
-  isFuture: boolean;
-}
-
-const TABS = [
-  { key: 'weekly' as const, label: 'Weekly Submit' },
-  { key: 'history' as const, label: 'History' },
-];
-type Tab = 'weekly' | 'history';
-
-const STATUS_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
-  SUBMITTED: { bg: '#fef3c7', text: '#92400e', dot: '#f59e0b' },
-  APPROVED: { bg: '#d1fae5', text: '#065f46', dot: '#059669' },
-  RETURNED: { bg: '#fee2e2', text: '#991b1b', dot: '#dc2626' },
-  DRAFT: { bg: '#f3f4f6', text: '#374151', dot: '#9ca3af' },
+  locked_reason?: 'holiday' | 'leave' | 'non_working_day';
+  holiday_name?: string;
+  leave_name?: string;
+  is_working_day: boolean;
 };
 
-const HISTORY_FILTERS = [
-  { label: 'All', value: '' },
-  { label: 'Submitted', value: 'SUBMITTED' },
-  { label: 'Approved', value: 'APPROVED' },
-  { label: 'Returned', value: 'RETURNED' },
-];
+type WeekBlock = {
+  id: string;
+  start: string;
+  end: string;
+  rows: WeekRow[];
+  collapsed: boolean;
+  submissionStatus?: string | null;
+  reviewComments?: string | null;
+};
 
-// ============================================================================
-// Main Component
-// ============================================================================
+const getEmployeeAttendance = async (
+  fromDate: string,
+  toDate: string
+): Promise<EmployeeAttendanceResponse> => {
+  const response = await apiClient.get('/attendance/employee-attendance/', {
+    params: { from_date: fromDate, to_date: toDate },
+  });
+  return response.data.data || response.data;
+};
 
-export default function MyTimesheetSubmissionsScreen() {
+// Correct endpoint: /attendance/timesheet-submission/check_status/
+const checkTimesheetStatus = async (
+  weekStart: string,
+  weekEnd: string
+): Promise<TimesheetStatusResponse> => {
+  const response = await apiClient.get('/attendance/timesheet-submission/check_status/', {
+    params: { week_start_date: weekStart, week_end_date: weekEnd },
+  });
+  return response.data.data || response.data;
+};
+
+// Correct endpoint: /attendance/employee-attendance/bulk_submit/ with submit_timesheet=true
+const submitTimesheetApi = async (payload: {
+  attendance_records: { date: string; morning_present: boolean; afternoon_present: boolean }[];
+  submit_timesheet: boolean;
+  week_start_date: string;
+  week_end_date: string;
+}) => {
+  const response = await apiClient.post('/attendance/employee-attendance/bulk_submit/', payload);
+  return response.data;
+};
+
+// Correct endpoint: DELETE /attendance/timesheet-submission/return_to_draft/
+const returnTimesheetToDraft = async (payload: {
+  week_start_date: string;
+  week_end_date: string;
+}) => {
+  const response = await apiClient.delete('/attendance/timesheet-submission/return_to_draft/', {
+    params: payload,
+  });
+  return response.data;
+};
+
+// Submit single day attendance (without submitting timesheet)
+const submitDailyAttendance = async (payload: {
+  attendance_records: {
+    date: string;
+    morning_present: boolean;
+    afternoon_present: boolean;
+    attendance_status: string;
+  }[];
+}) => {
+  const response = await apiClient.post('/attendance/employee-attendance/bulk_submit/', payload);
+  return response.data;
+};
+
+const toDateKey = (d: Date) => format(d, 'yyyy-MM-dd');
+
+const isWorkingDay = (
+  date: Date,
+  workingDayPolicy: { sunday_off: boolean; saturday_off_pattern: string } | null,
+  holidaySet: Set<string>,
+  exceptionsMap: Map<string, { type: string }>
+): boolean => {
+  const dateKey = toDateKey(date);
+  const exception = exceptionsMap.get(dateKey);
+  if (exception) return exception.type === 'FORCE_WORKING';
+  if (holidaySet.has(dateKey)) return false;
+
+  const dayOfWeek = getDay(date);
+  if (!workingDayPolicy) return dayOfWeek >= 1 && dayOfWeek <= 5;
+  if (dayOfWeek === 0) return !workingDayPolicy.sunday_off;
+  if (dayOfWeek === 6) {
+    const pattern = workingDayPolicy.saturday_off_pattern;
+    if (pattern === 'NONE') return true;
+    if (pattern === 'ALL') return false;
+    const saturdayOfMonth = Math.ceil(date.getDate() / 7);
+    if (pattern === 'FIRST_AND_THIRD') return saturdayOfMonth !== 1 && saturdayOfMonth !== 3;
+    if (pattern === 'SECOND_AND_FOURTH') return saturdayOfMonth !== 2 && saturdayOfMonth !== 4;
+    return true;
+  }
+  return true;
+};
+
+const getDayState = (
+  date: Date,
+  attendanceByDate: Map<string, AttendanceRecord>,
+  holidaySet: Set<string>,
+  workingDayPolicy: { sunday_off: boolean; saturday_off_pattern: string } | null,
+  exceptionsMap: Map<string, { type: string }>
+): DayState => {
+  const dateKey = toDateKey(date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const checkDate = new Date(date);
+  checkDate.setHours(0, 0, 0, 0);
+
+  if (checkDate > today) return 'future';
+
+  const holidayInfo = holidaySet.has(dateKey);
+  if (holidayInfo || !isWorkingDay(date, workingDayPolicy, holidaySet, exceptionsMap))
+    return 'holiday';
+
+  const record = attendanceByDate.get(dateKey);
+  if (record?.is_leave) {
+    const status = record.leave_status;
+    if (status === 'pending') return 'leave-pending';
+    return 'leave-approved';
+  }
+
+  if (record) {
+    if (record.morning_present && record.afternoon_present) return 'present';
+    if (record.morning_present || record.afternoon_present) return 'half_day';
+    if (record.morning_present === false && record.afternoon_present === false) return 'absent';
+  }
+
+  if (isBefore(checkDate, today) && !isSameDay(checkDate, today)) return 'absent';
+  return 'none';
+};
+
+const stateColors: Record<DayState, { bg: string; border: string; text: string }> = {
+  present: { bg: '#dcfce7', border: '#86efac', text: '#166534' },
+  absent: { bg: '#fee2e2', border: '#fca5a5', text: '#991b1b' },
+  half_day: { bg: '#fef3c7', border: '#fcd34d', text: '#92400e' },
+  'leave-approved': { bg: '#ffedd5', border: '#fdba74', text: '#9a3412' },
+  'leave-pending': { bg: '#fef9c3', border: '#fde047', text: '#854d0e' },
+  holiday: { bg: '#f3e8ff', border: '#d8b4fe', text: '#7c3aed' },
+  none: { bg: '#ffffff', border: '#e5e7eb', text: '#374151' },
+  future: { bg: '#fafafa', border: '#f3f4f6', text: '#d1d5db' },
+};
+
+const StatusBadge = ({ status }: { status: string | null | undefined }) => {
+  if (!status) return null;
+  const config: Record<string, { bg: string; text: string; label: string }> = {
+    DRAFT: { bg: '#f3f4f6', text: '#6b7280', label: 'Draft' },
+    SUBMITTED: { bg: '#dbeafe', text: '#1d4ed8', label: 'Submitted' },
+    APPROVED: { bg: '#dcfce7', text: '#16a34a', label: 'Approved' },
+    REJECTED: { bg: '#fee2e2', text: '#dc2626', label: 'Rejected' },
+  };
+  const c = config[status] || config.DRAFT;
+  return (
+    <View
+      style={{ backgroundColor: c.bg, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}
+    >
+      <Text style={{ fontSize: 10, fontWeight: '600', color: c.text }}>{c.label}</Text>
+    </View>
+  );
+};
+
+const AttendanceToggle = ({
+  label,
+  isPresent,
+  disabled,
+  onToggle,
+}: {
+  label: string;
+  isPresent: boolean;
+  disabled?: boolean;
+  onToggle: () => void;
+}) => (
+  <TouchableOpacity
+    onPress={disabled ? undefined : onToggle}
+    disabled={disabled}
+    activeOpacity={disabled ? 1 : 0.7}
+    style={{
+      flex: 1,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderRadius: 8,
+      borderWidth: 2,
+      backgroundColor: isPresent ? '#dcfce7' : '#fee2e2',
+      borderColor: isPresent ? '#22c55e' : '#ef4444',
+      alignItems: 'center',
+      opacity: disabled ? 0.5 : 1,
+    }}
+  >
+    <Text style={{ fontSize: 10, color: '#6b7280', marginBottom: 2 }}>{label}</Text>
+    {isPresent ? (
+      <Check size={16} color="#16a34a" strokeWidth={3} />
+    ) : (
+      <X size={16} color="#dc2626" strokeWidth={3} />
+    )}
+  </TouchableOpacity>
+);
+
+export default function MyTimesheetScreen() {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>('weekly');
+  const queryClient = useQueryClient();
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [refreshing, setRefreshing] = useState(false);
+  const [weeks, setWeeks] = useState<WeekBlock[]>([]);
+  const [loadingWeeks, setLoadingWeeks] = useState(false);
+  const [activeTab, setActiveTab] = useState<'calendar' | 'weeks'>('calendar');
 
-  // ----- Weekly tab -----
-  const [weekMonday, setWeekMonday] = useState<Date>(() => addDaysUtil(getMonday(new Date()), -7));
+  // Day attendance modal state
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [dayModalVisible, setDayModalVisible] = useState(false);
+  const [dayMorningPresent, setDayMorningPresent] = useState(true);
+  const [dayAfternoonPresent, setDayAfternoonPresent] = useState(true);
+  const [weekTimesheetStatus, setWeekTimesheetStatus] = useState<string | null>(null);
+  const [checkingWeekStatus, setCheckingWeekStatus] = useState(false);
 
-  const weekStart = fmtISO(weekMonday);
-  const weekEnd = fmtISO(addDaysUtil(weekMonday, 6));
-
-  const todayDate = useMemo(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }, []);
+  const monthStart = useMemo(() => startOfMonth(currentDate), [currentDate]);
+  const monthEnd = useMemo(() => endOfMonth(currentDate), [currentDate]);
+  const fromDate = format(monthStart, 'yyyy-MM-dd');
+  const toDate = format(monthEnd, 'yyyy-MM-dd');
 
   const {
     data: attendanceData,
-    isLoading: loadingAttendance,
-    refetch: refetchAtt,
-  } = useEmployeeAttendance(weekStart, weekEnd);
-  const { data: holidayData } = useOrganizationHolidays(weekStart, weekEnd);
-  const { data: statusData, refetch: refetchStatus } = useCheckTimesheetStatus(weekStart, weekEnd);
+    isLoading,
+    refetch,
+    error,
+  } = useQuery({
+    queryKey: ['timesheet', 'attendance', fromDate, toDate],
+    queryFn: () => getEmployeeAttendance(fromDate, toDate),
+    staleTime: 30 * 1000,
+  });
 
-  const submissionStatus =
-    statusData?.submission?.submission_status || statusData?.submission_status || null;
-  const isAlreadySubmitted = submissionStatus === 'SUBMITTED' || submissionStatus === 'APPROVED';
+  const defaultPresent = attendanceData?.submission_config?.default_present ?? true;
 
-  const submitMutation = useSubmitTimesheet();
+  const attendanceByDate = useMemo(() => {
+    const map = new Map<string, AttendanceRecord>();
+    (attendanceData?.records || []).forEach((r) => map.set(r.date, r));
+    return map;
+  }, [attendanceData]);
 
-  const [dayRows, setDayRows] = useState<DayRow[]>([]);
-
-  useEffect(() => {
-    const records = attendanceData?.records || [];
-    const recordMap = new Map<string, EmployeeAttendanceRecord>();
-    records.forEach((r) => recordMap.set(r.date, r));
-
-    const holidaySet = new Set<string>();
-    (holidayData || []).forEach((h) => {
-      const start = new Date(h.start_date + 'T00:00:00');
-      const end = new Date(h.end_date + 'T00:00:00');
-      for (let d = new Date(start); d <= end; d = addDaysUtil(d, 1)) {
-        holidaySet.add(fmtISO(d));
-      }
+  const holidaySet = useMemo(() => {
+    const set = new Set<string>();
+    Object.entries(attendanceData?.holiday_descriptions || {}).forEach(([k, v]) => {
+      if (v?.type === 'official_holiday') set.add(k);
     });
+    return set;
+  }, [attendanceData]);
 
-    const policy = attendanceData?.working_day_policy;
-    const rows: DayRow[] = [];
+  const exceptionsMap = useMemo(() => {
+    const map = new Map<string, { type: string; reason: string }>();
+    (attendanceData?.calendar_exceptions || []).forEach((e) =>
+      map.set(e.date, { type: e.type, reason: e.reason })
+    );
+    return map;
+  }, [attendanceData]);
 
-    for (let i = 0; i < 7; i++) {
-      const d = addDaysUtil(weekMonday, i);
-      const dateStr = fmtISO(d);
-      const dayOfWeek = d.getDay();
-      const rec = recordMap.get(dateStr);
-      const isFuture = d > todayDate;
+  const holidayDescriptions = attendanceData?.holiday_descriptions || {};
+  const workingDayPolicy = attendanceData?.working_day_policy || null;
+  const monthDays = useMemo(
+    () => eachDayOfInterval({ start: monthStart, end: monthEnd }),
+    [monthStart, monthEnd]
+  );
+  const leadingEmptyDays = useMemo(() => Array.from({ length: monthStart.getDay() }), [monthStart]);
 
-      let isHoliday = holidaySet.has(dateStr);
-      let lockReason = '';
-
-      if (dayOfWeek === 0 && policy?.sunday_off !== false) {
-        isHoliday = true;
-        lockReason = 'Sunday';
+  const monthWeeks = useMemo(() => {
+    const weeksArr: { start: Date; end: Date; id: string }[] = [];
+    let current = startOfWeek(monthStart, { weekStartsOn: 0 });
+    const lastDay = endOfWeek(monthEnd, { weekStartsOn: 0 });
+    while (current <= lastDay) {
+      const weekEnd = endOfWeek(current, { weekStartsOn: 0 });
+      const daysInWeek = eachDayOfInterval({ start: current, end: weekEnd });
+      if (daysInWeek.some((d) => isSameMonth(d, currentDate))) {
+        weeksArr.push({ start: current, end: weekEnd, id: format(current, 'yyyy-MM-dd') });
       }
-      if (dayOfWeek === 6) {
-        const pattern = policy?.saturday_off_pattern || 'ALL';
-        if (pattern === 'ALL') {
-          isHoliday = true;
-          lockReason = 'Saturday';
-        }
-      }
-      if (isHoliday && !lockReason) lockReason = 'Holiday';
-
-      const isLeave = rec?.is_leave === true || rec?.leave_status === 'approved';
-      if (isLeave) lockReason = rec?.leave_type_name || 'Leave';
-      if (isFuture) lockReason = 'Future';
-
-      const locked = isHoliday || isLeave || isFuture;
-
-      rows.push({
-        date: dateStr,
-        morning_present: rec ? rec.morning_present : !locked,
-        afternoon_present: rec ? rec.afternoon_present : !locked,
-        locked,
-        lockReason,
-        isHoliday,
-        isLeave,
-        leaveType: rec?.leave_type_name,
-        isFuture,
-      });
+      current = new Date(weekEnd);
+      current.setDate(current.getDate() + 1);
     }
-    setDayRows(rows);
-  }, [attendanceData, holidayData, weekMonday, todayDate]);
+    return weeksArr;
+  }, [monthStart, monthEnd, currentDate]);
 
-  const toggleField = (date: string, field: 'morning_present' | 'afternoon_present') => {
-    setDayRows((prev) =>
-      prev.map((r) => (r.date === date && !r.locked ? { ...r, [field]: !r[field] } : r))
+  const report = useMemo(() => {
+    const s = attendanceData?.stats || {};
+    return {
+      totalWorkingDays: s.total_working_days || 0,
+      present: s.total_present || 0,
+      absent: s.total_absent || 0,
+      halfDays: s.total_half_days || 0,
+      leave: s.total_leaves || 0,
+      holiday: s.total_holidays || 0,
+    };
+  }, [attendanceData]);
+
+  const attendancePercentage =
+    report.totalWorkingDays > 0 ? Math.round((report.present / report.totalWorkingDays) * 100) : 0;
+
+  const loadWeek = async (weekStart: Date, weekEnd: Date) => {
+    const weekId = format(weekStart, 'yyyy-MM-dd');
+    if (weeks.some((w) => w.id === weekId)) {
+      setWeeks((prev) =>
+        prev.map((w) => (w.id === weekId ? { ...w, collapsed: !w.collapsed } : w))
+      );
+      return;
+    }
+
+    setLoadingWeeks(true);
+    try {
+      const fromDate = format(weekStart, 'yyyy-MM-dd');
+      const toDate = format(weekEnd, 'yyyy-MM-dd');
+      const statusResponse = await checkTimesheetStatus(fromDate, toDate).catch(() => ({
+        submission: null,
+      }));
+
+      const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
+      const rows: WeekRow[] = days.map((day) => {
+        const dateKey = toDateKey(day);
+        const record = attendanceByDate.get(dateKey);
+        const holidayInfo = holidayDescriptions[dateKey];
+        const isHoliday =
+          holidaySet.has(dateKey) ||
+          holidayInfo?.type === 'official_holiday' ||
+          holidayInfo?.type === 'weekend';
+        const isLeave =
+          record?.is_leave &&
+          (record?.leave_status === 'approved' || record?.leave_status === 'pending');
+        const dayIsWorkingDay = isWorkingDay(day, workingDayPolicy, holidaySet, exceptionsMap);
+
+        let locked_reason: WeekRow['locked_reason'] = undefined;
+        if (isHoliday) locked_reason = 'holiday';
+        else if (isLeave) locked_reason = 'leave';
+        else if (!dayIsWorkingDay) locked_reason = 'non_working_day';
+
+        let morning_present = defaultPresent;
+        let afternoon_present = defaultPresent;
+        if (record) {
+          morning_present = record.morning_present ?? defaultPresent;
+          afternoon_present = record.afternoon_present ?? defaultPresent;
+        }
+
+        return {
+          date: dateKey,
+          dayName: format(day, 'EEE'),
+          morning_present,
+          afternoon_present,
+          locked_reason,
+          holiday_name: isHoliday ? holidayInfo?.name || 'Holiday' : undefined,
+          leave_name: isLeave ? record?.leave_type_name || 'Leave' : undefined,
+          is_working_day: dayIsWorkingDay && !isHoliday && !isLeave,
+        };
+      });
+
+      const newWeek: WeekBlock = {
+        id: weekId,
+        start: fromDate,
+        end: toDate,
+        rows,
+        collapsed: false,
+        submissionStatus: statusResponse.submission?.submission_status || null,
+        reviewComments: statusResponse.submission?.review_comments || null,
+      };
+      setWeeks((prev) =>
+        [...prev.filter((w) => w.id !== weekId), newWeek].sort((a, b) => a.id.localeCompare(b.id))
+      );
+    } catch {
+      // Still show the week even if status check fails
+      const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
+      const rows: WeekRow[] = days.map((day) => {
+        const dateKey = toDateKey(day);
+        const record = attendanceByDate.get(dateKey);
+        const holidayInfo = holidayDescriptions[dateKey];
+        const isHoliday =
+          holidaySet.has(dateKey) ||
+          holidayInfo?.type === 'official_holiday' ||
+          holidayInfo?.type === 'weekend';
+        const isLeave = record?.is_leave;
+        const dayIsWorkingDay = isWorkingDay(day, workingDayPolicy, holidaySet, exceptionsMap);
+
+        let locked_reason: WeekRow['locked_reason'] = undefined;
+        if (isHoliday) locked_reason = 'holiday';
+        else if (isLeave) locked_reason = 'leave';
+        else if (!dayIsWorkingDay) locked_reason = 'non_working_day';
+
+        return {
+          date: dateKey,
+          dayName: format(day, 'EEE'),
+          morning_present: record?.morning_present ?? defaultPresent,
+          afternoon_present: record?.afternoon_present ?? defaultPresent,
+          locked_reason,
+          holiday_name: isHoliday ? holidayInfo?.name || 'Holiday' : undefined,
+          leave_name: isLeave ? record?.leave_type_name || 'Leave' : undefined,
+          is_working_day: dayIsWorkingDay && !isHoliday && !isLeave,
+        };
+      });
+      setWeeks((prev) =>
+        [
+          ...prev.filter((w) => w.id !== format(weekStart, 'yyyy-MM-dd')),
+          {
+            id: format(weekStart, 'yyyy-MM-dd'),
+            start: format(weekStart, 'yyyy-MM-dd'),
+            end: format(weekEnd, 'yyyy-MM-dd'),
+            rows,
+            collapsed: false,
+            submissionStatus: null,
+            reviewComments: null,
+          },
+        ].sort((a, b) => a.id.localeCompare(b.id))
+      );
+    } finally {
+      setLoadingWeeks(false);
+    }
+  };
+
+  const toggleAttendance = (
+    weekId: string,
+    date: string,
+    field: 'morning_present' | 'afternoon_present'
+  ) => {
+    setWeeks((prev) =>
+      prev.map((week) => {
+        if (week.id !== weekId) return week;
+        return {
+          ...week,
+          rows: week.rows.map((row) =>
+            row.date === date ? { ...row, [field]: !row[field] } : row
+          ),
+        };
+      })
     );
   };
 
-  const editableRows = dayRows.filter((r) => !r.locked);
+  const submitMutation = useMutation({
+    mutationFn: submitTimesheetApi,
+    onSuccess: () => {
+      Alert.alert('Success', 'Timesheet submitted for approval');
+      queryClient.invalidateQueries({ queryKey: ['timesheet'] });
+      setWeeks([]);
+    },
+    onError: (error: unknown) =>
+      Alert.alert('Error', extractApiError(error, 'Failed to submit timesheet')),
+  });
 
-  const handleSubmitWeek = () => {
-    if (editableRows.length === 0) {
-      Alert.alert('No Records', 'No editable attendance records for this week.');
+  const returnToDraftMutation = useMutation({
+    mutationFn: returnTimesheetToDraft,
+    onSuccess: (_, variables) => {
+      Alert.alert('Success', 'Timesheet returned to draft');
+      queryClient.invalidateQueries({ queryKey: ['timesheet'] });
+      setWeeks((prev) => prev.filter((w) => w.start !== variables.week_start_date));
+    },
+    onError: (error: unknown) =>
+      Alert.alert('Error', extractApiError(error, 'Failed to return to draft')),
+  });
+
+  // Daily attendance submission mutation
+  const dailyAttendanceMutation = useMutation({
+    mutationFn: submitDailyAttendance,
+    onSuccess: () => {
+      Alert.alert('Success', 'Attendance saved successfully');
+      queryClient.invalidateQueries({ queryKey: ['timesheet'] });
+      setDayModalVisible(false);
+      setSelectedDay(null);
+    },
+    onError: (error: unknown) => {
+      const errorMessage = extractApiError(error, 'Failed to save attendance');
+      Alert.alert('Error', errorMessage);
+    },
+  });
+
+  // Handle clicking on a calendar day
+  const handleDayClick = async (date: Date, state: DayState) => {
+    const dateKey = toDateKey(date);
+    const record = attendanceByDate.get(dateKey);
+
+    // Don't allow clicking on future dates or holidays
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const clickedDate = new Date(date);
+    clickedDate.setHours(0, 0, 0, 0);
+
+    if (clickedDate > today) {
+      Alert.alert('Cannot Edit', 'Cannot submit attendance for future dates.');
+      return;
+    }
+
+    if (state === 'holiday') {
+      Alert.alert('Holiday', 'This is a holiday. No attendance required.');
+      return;
+    }
+
+    if (state === 'leave-approved' || state === 'leave-pending') {
+      Alert.alert('On Leave', 'You are on leave for this date.');
+      return;
+    }
+
+    // Check if attendance is already submitted/approved
+    if (record) {
+      const status = record.approval_status?.toLowerCase();
+      if (status === 'approved') {
+        Alert.alert('Cannot Edit', 'This date has been approved and cannot be modified.');
+        return;
+      }
+      if (status === 'submitted' || status === 'pending') {
+        Alert.alert(
+          'Cannot Edit',
+          'This date has been submitted for approval. Wait for approval or return to draft.'
+        );
+        return;
+      }
+    }
+
+    // Check if timesheet for this week is already submitted/approved
+    setCheckingWeekStatus(true);
+    const weekStart = startOfWeek(date, { weekStartsOn: 0 });
+    const weekEnd = endOfWeek(date, { weekStartsOn: 0 });
+
+    try {
+      const statusResponse = await checkTimesheetStatus(
+        format(weekStart, 'yyyy-MM-dd'),
+        format(weekEnd, 'yyyy-MM-dd')
+      );
+      const timesheetStatus = statusResponse.submission?.submission_status || null;
+      setWeekTimesheetStatus(timesheetStatus);
+
+      if (timesheetStatus === 'APPROVED') {
+        Alert.alert(
+          'Cannot Edit',
+          'The timesheet for this week has been approved. You cannot modify attendance.'
+        );
+        setCheckingWeekStatus(false);
+        return;
+      }
+
+      if (timesheetStatus === 'SUBMITTED') {
+        Alert.alert(
+          'Cannot Edit',
+          'The timesheet for this week is pending approval. Return to draft to modify.'
+        );
+        setCheckingWeekStatus(false);
+        return;
+      }
+    } catch (err) {
+      // No submission exists - that's fine, allow editing
+      setWeekTimesheetStatus(null);
+    }
+    setCheckingWeekStatus(false);
+
+    // Set the selected day and pre-fill attendance values
+    setSelectedDay(date);
+    if (record) {
+      setDayMorningPresent(record.morning_present ?? defaultPresent);
+      setDayAfternoonPresent(record.afternoon_present ?? defaultPresent);
+    } else {
+      setDayMorningPresent(defaultPresent);
+      setDayAfternoonPresent(defaultPresent);
+    }
+    setDayModalVisible(true);
+  };
+
+  // Submit daily attendance
+  const handleSubmitDayAttendance = () => {
+    if (!selectedDay) return;
+
+    const dateStr = format(selectedDay, 'yyyy-MM-dd');
+    let status: 'P' | 'HP' | 'A';
+
+    if (dayMorningPresent && dayAfternoonPresent) {
+      status = 'P';
+    } else if (dayMorningPresent || dayAfternoonPresent) {
+      status = 'HP';
+    } else {
+      status = 'A';
+    }
+
+    dailyAttendanceMutation.mutate({
+      attendance_records: [
+        {
+          date: dateStr,
+          morning_present: dayMorningPresent,
+          afternoon_present: dayAfternoonPresent,
+          attendance_status: status,
+        },
+      ],
+    });
+  };
+
+  const submitWeek = (week: WeekBlock) => {
+    const editableRows = week.rows.filter((r) => r.is_working_day && !r.locked_reason);
+    if (!editableRows.length) {
+      Alert.alert('Error', 'No editable records in this week.');
       return;
     }
     Alert.alert(
       'Submit Timesheet',
-      `Submit for ${fmtShort(weekStart)} – ${fmtShort(weekEnd)}?\nThis will send your timesheet for approval.`,
+      `Submit for week ${format(parseISO(week.start), 'MMM d')} - ${format(parseISO(week.end), 'MMM d')}?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Submit',
           onPress: () =>
-            submitMutation.mutate(
-              {
-                attendance_records: editableRows.map((r) => ({
-                  date: r.date,
-                  morning_present: r.morning_present,
-                  afternoon_present: r.afternoon_present,
-                })),
-                week_start_date: weekStart,
-                week_end_date: weekEnd,
-                submit_timesheet: true,
-              },
-              {
-                onSuccess: () => {
-                  refetchAtt();
-                  refetchStatus();
-                },
-              }
-            ),
+            submitMutation.mutate({
+              attendance_records: editableRows.map((r) => ({
+                date: r.date,
+                morning_present: r.morning_present,
+                afternoon_present: r.afternoon_present,
+              })),
+              submit_timesheet: true,
+              week_start_date: week.start,
+              week_end_date: week.end,
+            }),
         },
       ]
     );
   };
 
-  const goWeek = (dir: -1 | 1) => setWeekMonday((p) => addDaysUtil(p, dir * 7));
-  const canGoForward = addDaysUtil(weekMonday, 7) <= getMonday(new Date());
+  const handleReturnToDraft = (week: WeekBlock) => {
+    Alert.alert('Return to Draft', 'This will delete the submission. Continue?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Return',
+        style: 'destructive',
+        onPress: () =>
+          returnToDraftMutation.mutate({ week_start_date: week.start, week_end_date: week.end }),
+      },
+    ]);
+  };
 
-  // Stats
-  const presentCount = dayRows.filter(
-    (r) => !r.locked && r.morning_present && r.afternoon_present
-  ).length;
-  const halfDayCount = dayRows.filter(
-    (r) => !r.locked && r.morning_present !== r.afternoon_present
-  ).length;
-  const absentCount = dayRows.filter(
-    (r) => !r.locked && !r.morning_present && !r.afternoon_present
-  ).length;
-  const offCount = dayRows.filter((r) => r.isHoliday || r.isFuture).length;
-  const leaveCount = dayRows.filter((r) => r.isLeave).length;
-
-  // ----- History tab -----
-  const [histFilter, setHistFilter] = useState('');
-  const histParams = useMemo(() => {
-    const p: Record<string, string> = {};
-    if (histFilter) p.submission_status = histFilter;
-    return p;
-  }, [histFilter]);
-  const {
-    data: histData,
-    isLoading: loadingHist,
-    refetch: refetchHist,
-  } = useTimesheetSubmissions(histParams);
-  const submissions = histData?.data || [];
-
-  const onRefresh = useCallback(async () => {
+  const handleRefresh = async () => {
     setRefreshing(true);
-    if (tab === 'weekly') await Promise.all([refetchAtt(), refetchStatus()]);
-    else await refetchHist();
+    setWeeks([]);
+    await refetch();
     setRefreshing(false);
-  }, [tab, refetchAtt, refetchStatus, refetchHist]);
+  };
+  const handlePreviousMonth = () => {
+    setWeeks([]);
+    setCurrentDate(subMonths(currentDate, 1));
+  };
+  const handleNextMonth = () => {
+    const n = addMonths(currentDate, 1);
+    if (n <= new Date()) {
+      setWeeks([]);
+      setCurrentDate(n);
+    }
+  };
 
-  return (
-    <View style={layoutStyles.container}>
-      <LinearGradient colors={empGradient} style={headerStyles.header}>
-        <View style={headerStyles.content}>
-          <View style={headerStyles.topRow}>
-            <TouchableOpacity style={headerStyles.backBtn} onPress={() => router.back()}>
-              <ChevronLeft size={24} color="#fff" />
-            </TouchableOpacity>
-            <View style={headerStyles.titleContainer}>
-              <Text style={headerStyles.title}>My Timesheets</Text>
-              <Text style={headerStyles.subtitle}>Submit & track attendance</Text>
-            </View>
-            <View style={{ width: 40 }} />
-          </View>
-        </View>
-      </LinearGradient>
+  // Calendar Day Cell Renderer
+  const renderDayCell = useCallback(
+    (date: Date) => {
+      const dateKey = toDateKey(date);
+      const state = getDayState(
+        date,
+        attendanceByDate,
+        holidaySet,
+        workingDayPolicy,
+        exceptionsMap
+      );
+      const colors = stateColors[state];
+      const record = attendanceByDate.get(dateKey);
+      const holidayInfo = holidayDescriptions[dateKey];
+      const isTodayDate = isToday(date);
+      const dayNum = format(date, 'd');
 
-      {/* Tab toggle */}
-      <View style={st.tabRow}>
-        {TABS.map((t) => (
-          <TouchableOpacity
-            key={t.key}
-            style={[st.tabBtn, tab === t.key && st.tabBtnActive]}
-            onPress={() => setTab(t.key)}
-          >
-            <Text style={[st.tabText, tab === t.key && st.tabTextActive]}>{t.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      // Check if day is clickable (not future, not holiday unless editable)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const clickedDate = new Date(date);
+      clickedDate.setHours(0, 0, 0, 0);
+      const isClickable = clickedDate <= today && state !== 'future';
 
-      {tab === 'weekly' ? (
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        >
-          {/* Week navigator */}
-          <View style={st.weekNav}>
-            <TouchableOpacity onPress={() => goWeek(-1)} style={st.navBtn}>
-              <ChevronLeft size={20} color="#6366f1" />
-            </TouchableOpacity>
-            <View style={{ flex: 1, alignItems: 'center' }}>
-              <Text style={st.weekLabel}>
-                {fmtFull(weekStart)} — {fmtFull(weekEnd)}
-              </Text>
-              {isAlreadySubmitted && (
-                <View
-                  style={[
-                    st.miniBadge,
-                    { backgroundColor: submissionStatus === 'APPROVED' ? '#d1fae5' : '#fef3c7' },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      st.miniBadgeText,
-                      { color: submissionStatus === 'APPROVED' ? '#065f46' : '#92400e' },
-                    ]}
-                  >
-                    {submissionStatus}
-                  </Text>
-                </View>
-              )}
-            </View>
-            <TouchableOpacity
-              onPress={() => goWeek(1)}
-              style={[st.navBtn, !canGoForward && { opacity: 0.3 }]}
-              disabled={!canGoForward}
+      let shortLabel = '';
+      if (state === 'holiday' && holidayInfo) {
+        shortLabel =
+          holidayInfo.type === 'weekend'
+            ? 'Weekend'
+            : holidayInfo.name.length > 8
+              ? holidayInfo.name.substring(0, 6) + '..'
+              : holidayInfo.name;
+      }
+
+      const renderIcon = () => {
+        if (state === 'leave-approved' || state === 'leave-pending') {
+          return (
+            <View
+              style={{
+                width: 20,
+                height: 20,
+                borderRadius: 10,
+                backgroundColor: state === 'leave-approved' ? '#f97316' : '#eab308',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
             >
-              <ChevronRight size={20} color="#6366f1" />
-            </TouchableOpacity>
-          </View>
-
-          {loadingAttendance ? (
-            <View style={{ paddingVertical: 60, alignItems: 'center' }}>
-              <ActivityIndicator size="large" color="#6366f1" />
+              <X size={12} color="white" strokeWidth={3} />
             </View>
-          ) : (
-            <>
-              {/* Stats */}
-              <View style={st.statsRow}>
-                <StatPill label="Present" value={presentCount} color="#059669" />
-                <StatPill label="Half" value={halfDayCount} color="#f59e0b" />
-                <StatPill label="Absent" value={absentCount} color="#dc2626" />
-                <StatPill label="Off" value={offCount} color="#94a3b8" />
-                {leaveCount > 0 && <StatPill label="Leave" value={leaveCount} color="#8b5cf6" />}
-              </View>
+          );
+        }
+        if (state === 'half_day' && record) {
+          return (
+            <Svg width={20} height={20} viewBox="0 0 24 24">
+              <Path
+                d="M 2 12 A 10 10 0 0 0 22 12 Z"
+                fill={record.afternoon_present ? '#22c55e' : '#ef4444'}
+                stroke="white"
+                strokeWidth={0.5}
+              />
+              <Path
+                d="M 2 12 A 10 10 0 0 1 22 12 Z"
+                fill={record.morning_present ? '#22c55e' : '#ef4444'}
+                stroke="white"
+                strokeWidth={0.5}
+              />
+            </Svg>
+          );
+        }
+        if (state === 'present')
+          return (
+            <View
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: 9,
+                backgroundColor: '#22c55e',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Check size={10} color="white" strokeWidth={3} />
+            </View>
+          );
+        if (state === 'absent')
+          return (
+            <View
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: 9,
+                backgroundColor: '#ef4444',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <X size={10} color="white" strokeWidth={3} />
+            </View>
+          );
+        if (state === 'holiday')
+          return (
+            <View
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: 9,
+                backgroundColor: '#a855f7',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 9, fontWeight: 'bold', color: 'white' }}>H</Text>
+            </View>
+          );
+        return null;
+      };
 
-              {/* Day cards */}
-              {dayRows.map((row) => (
+      return (
+        <TouchableOpacity
+          key={dateKey}
+          style={{ width: CELL_SIZE, height: CELL_SIZE + 4, padding: 1 }}
+          onPress={() => isClickable && handleDayClick(date, state)}
+          activeOpacity={isClickable ? 0.7 : 1}
+          disabled={!isClickable}
+        >
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: colors.bg,
+              borderWidth: isTodayDate ? 2 : 1,
+              borderColor: isTodayDate ? '#3b82f6' : colors.border,
+              borderRadius: 6,
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingVertical: 2,
+            }}
+          >
+            <Text style={{ fontSize: 11, fontWeight: '600', color: colors.text }}>{dayNum}</Text>
+            <View style={{ minHeight: 20, justifyContent: 'center' }}>{renderIcon()}</View>
+          </View>
+        </TouchableOpacity>
+      );
+    },
+    [
+      attendanceByDate,
+      holidaySet,
+      workingDayPolicy,
+      exceptionsMap,
+      holidayDescriptions,
+      handleDayClick,
+    ]
+  );
+
+  // Week Card Renderer
+  const renderWeekCard = (weekInfo: { start: Date; end: Date; id: string }) => {
+    const week = weeks.find((w) => w.id === weekInfo.id);
+    const isExpanded = week && !week.collapsed;
+
+    return (
+      <View
+        key={weekInfo.id}
+        style={{
+          backgroundColor: 'white',
+          borderRadius: 12,
+          marginBottom: 12,
+          shadowColor: '#000',
+          shadowOpacity: 0.05,
+          shadowRadius: 8,
+          elevation: 3,
+          overflow: 'hidden',
+        }}
+      >
+        <TouchableOpacity
+          onPress={() => loadWeek(weekInfo.start, weekInfo.end)}
+          activeOpacity={0.7}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: 14,
+            backgroundColor: isExpanded ? '#f0fdfa' : 'white',
+            borderBottomWidth: isExpanded ? 1 : 0,
+            borderBottomColor: '#e5e7eb',
+          }}
+        >
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <CalendarDays size={16} color="#0d9488" />
+              <Text style={{ fontSize: 14, fontWeight: '600', color: '#1f2937' }}>
+                {format(weekInfo.start, 'MMM d')} - {format(weekInfo.end, 'MMM d, yyyy')}
+              </Text>
+            </View>
+            {week?.submissionStatus && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6, gap: 8 }}>
+                <StatusBadge status={week.submissionStatus} />
+                {week.submissionStatus === 'REJECTED' && week.reviewComments && (
+                  <Text style={{ fontSize: 11, color: '#dc2626', flex: 1 }} numberOfLines={1}>
+                    {week.reviewComments}
+                  </Text>
+                )}
+              </View>
+            )}
+          </View>
+          {isExpanded ? (
+            <ChevronUp size={20} color="#6b7280" />
+          ) : (
+            <ChevronDown size={20} color="#6b7280" />
+          )}
+        </TouchableOpacity>
+
+        {isExpanded && week && (
+          <View style={{ padding: 12 }}>
+            {week.rows.map((row, idx) => {
+              const isLocked = !!row.locked_reason;
+              const isDisabled =
+                isLocked ||
+                week.submissionStatus === 'SUBMITTED' ||
+                week.submissionStatus === 'APPROVED';
+              return (
                 <View
                   key={row.date}
-                  style={[
-                    st.dayCard,
-                    row.locked && st.dayCardLocked,
-                    row.isLeave && st.dayCardLeave,
-                  ]}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingVertical: 10,
+                    borderBottomWidth: idx < week.rows.length - 1 ? 1 : 0,
+                    borderBottomColor: '#f3f4f6',
+                    opacity: isLocked ? 0.6 : 1,
+                  }}
                 >
-                  <View style={st.dayHeader}>
-                    <View>
-                      <Text style={st.dayName}>{fmtDay(row.date)}</Text>
-                      <Text style={st.dayDate}>{fmtShort(row.date)}</Text>
-                    </View>
-                    {row.locked ? (
-                      <View style={st.lockBadge}>
-                        <Text style={st.lockText}>{row.lockReason}</Text>
-                      </View>
-                    ) : (
-                      <View style={st.sessionRow}>
-                        <SessBtn
-                          label="AM"
-                          icon={<Sun size={14} color={row.morning_present ? '#fff' : '#f59e0b'} />}
-                          active={row.morning_present}
-                          disabled={isAlreadySubmitted}
-                          onPress={() => toggleField(row.date, 'morning_present')}
-                        />
-                        <SessBtn
-                          label="PM"
-                          icon={
-                            <Moon size={14} color={row.afternoon_present ? '#fff' : '#6366f1'} />
-                          }
-                          active={row.afternoon_present}
-                          disabled={isAlreadySubmitted}
-                          onPress={() => toggleField(row.date, 'afternoon_present')}
-                        />
-                      </View>
-                    )}
+                  <View style={{ width: 70 }}>
+                    <Text style={{ fontSize: 12, fontWeight: '600', color: '#374151' }}>
+                      {row.dayName}
+                    </Text>
+                    <Text style={{ fontSize: 11, color: '#9ca3af' }}>
+                      {format(parseISO(row.date), 'MMM d')}
+                    </Text>
                   </View>
-                </View>
-              ))}
-
-              {/* Submit button */}
-              {!isAlreadySubmitted && editableRows.length > 0 && (
-                <TouchableOpacity
-                  style={[st.submitBtn, submitMutation.isPending && { opacity: 0.6 }]}
-                  onPress={handleSubmitWeek}
-                  disabled={submitMutation.isPending}
-                  activeOpacity={0.8}
-                >
-                  {submitMutation.isPending ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <Send size={18} color="#fff" />
-                  )}
-                  <Text style={st.submitBtnText}>Submit Timesheet for Approval</Text>
-                </TouchableOpacity>
-              )}
-
-              {isAlreadySubmitted && (
-                <View style={st.infoBox}>
-                  <CheckCircle size={18} color="#059669" />
-                  <Text style={st.infoText}>
-                    This week has been {submissionStatus?.toLowerCase()}.
-                    {submissionStatus === 'SUBMITTED' ? ' Awaiting review.' : ''}
-                  </Text>
-                </View>
-              )}
-            </>
-          )}
-        </ScrollView>
-      ) : (
-        /* ---- History ---- */
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ paddingBottom: 32 }}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        >
-          <View style={st.filterRow}>
-            {HISTORY_FILTERS.map((f) => {
-              const active = f.value === histFilter;
-              return (
-                <TouchableOpacity
-                  key={f.value}
-                  style={[st.chip, active && st.chipActive]}
-                  onPress={() => setHistFilter(f.value)}
-                >
-                  <Text style={[st.chipText, active && st.chipTextActive]}>{f.label}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          {loadingHist ? (
-            <View style={emptyStyles.container}>
-              <ActivityIndicator size="large" color="#6366f1" />
-            </View>
-          ) : submissions.length === 0 ? (
-            <View style={emptyStyles.container}>
-              <FileText size={48} color="#94a3b8" />
-              <Text style={emptyStyles.title}>No Submissions</Text>
-              <Text style={emptyStyles.subtitle}>No timesheets found.</Text>
-            </View>
-          ) : (
-            <View style={{ padding: 16, gap: 10 }}>
-              {submissions.map((item: any) => {
-                const c = STATUS_COLORS[item.submission_status] || STATUS_COLORS.DRAFT;
-                return (
-                  <View key={item.public_id} style={st.histCard}>
-                    <View style={st.histHeader}>
-                      <Text style={st.histWeek}>
-                        {fmtShort(item.week_start_date)} – {fmtShort(item.week_end_date)}
-                      </Text>
-                      <View style={[st.histBadge, { backgroundColor: c.bg }]}>
-                        <View style={[st.histDot, { backgroundColor: c.dot }]} />
-                        <Text style={[st.histBadgeText, { color: c.text }]}>
-                          {item.submission_status}
+                  {isLocked ? (
+                    <View style={{ flex: 1, paddingHorizontal: 8 }}>
+                      <View
+                        style={{
+                          backgroundColor:
+                            row.locked_reason === 'holiday'
+                              ? '#f3e8ff'
+                              : row.locked_reason === 'leave'
+                                ? '#ffedd5'
+                                : '#f3f4f6',
+                          paddingVertical: 8,
+                          paddingHorizontal: 12,
+                          borderRadius: 8,
+                          alignItems: 'center',
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            fontWeight: '500',
+                            color:
+                              row.locked_reason === 'holiday'
+                                ? '#7c3aed'
+                                : row.locked_reason === 'leave'
+                                  ? '#ea580c'
+                                  : '#6b7280',
+                          }}
+                        >
+                          {row.holiday_name || row.leave_name || 'Non-working day'}
                         </Text>
                       </View>
                     </View>
-                    <View style={st.histStats}>
-                      <MiniStat label="Working" val={item.total_working_days} color="#6366f1" />
-                      <MiniStat label="Present" val={item.total_present} color="#059669" />
-                      <MiniStat label="Absent" val={item.total_absent} color="#dc2626" />
-                      <MiniStat label="Holiday" val={item.total_holidays} color="#f59e0b" />
-                      <MiniStat label="Leave" val={item.total_leaves} color="#8b5cf6" />
+                  ) : (
+                    <View style={{ flex: 1, flexDirection: 'row', gap: 8, paddingHorizontal: 8 }}>
+                      <AttendanceToggle
+                        label="AM"
+                        isPresent={row.morning_present}
+                        disabled={isDisabled}
+                        onToggle={() => toggleAttendance(week.id, row.date, 'morning_present')}
+                      />
+                      <AttendanceToggle
+                        label="PM"
+                        isPresent={row.afternoon_present}
+                        disabled={isDisabled}
+                        onToggle={() => toggleAttendance(week.id, row.date, 'afternoon_present')}
+                      />
                     </View>
-                    {item.review_comments ? (
-                      <Text style={st.reviewComment} numberOfLines={2}>
-                        💬 {item.review_comments}
+                  )}
+                </View>
+              );
+            })}
+
+            <View style={{ marginTop: 12, gap: 8 }}>
+              {(!week.submissionStatus ||
+                week.submissionStatus === 'DRAFT' ||
+                week.submissionStatus === 'REJECTED') && (
+                <TouchableOpacity
+                  onPress={() => submitWeek(week)}
+                  disabled={submitMutation.isPending}
+                  style={{
+                    backgroundColor: '#4f46e5',
+                    paddingVertical: 12,
+                    borderRadius: 8,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                  }}
+                >
+                  {submitMutation.isPending ? (
+                    <ActivityIndicator size="small" color="white" />
+                  ) : (
+                    <>
+                      <Send size={16} color="white" />
+                      <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
+                        Submit Week
                       </Text>
-                    ) : null}
-                  </View>
-                );
-              })}
+                    </>
+                  )}
+                </TouchableOpacity>
+              )}
+              {(week.submissionStatus === 'SUBMITTED' || week.submissionStatus === 'REJECTED') && (
+                <TouchableOpacity
+                  onPress={() => handleReturnToDraft(week)}
+                  disabled={returnToDraftMutation.isPending}
+                  style={{
+                    backgroundColor: '#f3f4f6',
+                    paddingVertical: 12,
+                    borderRadius: 8,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                  }}
+                >
+                  {returnToDraftMutation.isPending ? (
+                    <ActivityIndicator size="small" color="#6b7280" />
+                  ) : (
+                    <>
+                      <RotateCcw size={16} color="#6b7280" />
+                      <Text style={{ color: '#6b7280', fontWeight: '600', fontSize: 14 }}>
+                        Return to Draft
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              )}
+              {week.submissionStatus === 'APPROVED' && (
+                <View
+                  style={{
+                    backgroundColor: '#dcfce7',
+                    paddingVertical: 12,
+                    borderRadius: 8,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ color: '#16a34a', fontWeight: '600', fontSize: 14 }}>
+                    ✓ Approved
+                  </Text>
+                </View>
+              )}
             </View>
-          )}
-        </ScrollView>
-      )}
+          </View>
+        )}
+      </View>
+    );
+  };
+
+  return (
+    <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+      {/* Header */}
+      <View
+        style={{
+          backgroundColor: '#0d9488',
+          paddingHorizontal: 16,
+          paddingBottom: 16,
+          paddingTop: 48,
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+          <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 12, padding: 4 }}>
+            <ChevronLeft size={24} color="white" />
+          </TouchableOpacity>
+          <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', flex: 1 }}>
+            Timesheet
+          </Text>
+        </View>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            backgroundColor: 'rgba(255,255,255,0.15)',
+            borderRadius: 10,
+            paddingHorizontal: 4,
+            paddingVertical: 2,
+          }}
+        >
+          <TouchableOpacity onPress={handlePreviousMonth} style={{ padding: 8 }}>
+            <ChevronLeft size={20} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              setWeeks([]);
+              setCurrentDate(new Date());
+            }}
+            style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12 }}
+          >
+            <CalendarDays size={16} color="white" style={{ marginRight: 6 }} />
+            <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>
+              {format(currentDate, 'MMMM yyyy')}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleNextMonth}
+            disabled={addMonths(currentDate, 1) > new Date()}
+            style={{ padding: 8 }}
+          >
+            <ChevronRight
+              size={20}
+              color={addMonths(currentDate, 1) > new Date() ? 'rgba(255,255,255,0.4)' : 'white'}
+            />
+          </TouchableOpacity>
+        </View>
+
+        {/* Tab Switcher */}
+        <View
+          style={{
+            flexDirection: 'row',
+            marginTop: 12,
+            backgroundColor: 'rgba(255,255,255,0.2)',
+            borderRadius: 8,
+            padding: 3,
+          }}
+        >
+          <TouchableOpacity
+            onPress={() => setActiveTab('calendar')}
+            style={{
+              flex: 1,
+              paddingVertical: 8,
+              borderRadius: 6,
+              backgroundColor: activeTab === 'calendar' ? 'white' : 'transparent',
+              alignItems: 'center',
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 13,
+                fontWeight: '600',
+                color: activeTab === 'calendar' ? '#0d9488' : 'rgba(255,255,255,0.8)',
+              }}
+            >
+              Calendar
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setActiveTab('weeks')}
+            style={{
+              flex: 1,
+              paddingVertical: 8,
+              borderRadius: 6,
+              backgroundColor: activeTab === 'weeks' ? 'white' : 'transparent',
+              alignItems: 'center',
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 13,
+                fontWeight: '600',
+                color: activeTab === 'weeks' ? '#0d9488' : 'rgba(255,255,255,0.8)',
+              }}
+            >
+              Submit Weekly
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ padding: 12, paddingBottom: 40 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+      >
+        {isLoading ? (
+          <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 80 }}>
+            <ActivityIndicator size="large" color="#0d9488" />
+            <Text style={{ color: '#6b7280', marginTop: 12 }}>Loading timesheet...</Text>
+          </View>
+        ) : error ? (
+          <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 80 }}>
+            <Text style={{ color: '#dc2626', fontSize: 16, fontWeight: '600', marginBottom: 8 }}>
+              Failed to load data
+            </Text>
+            <TouchableOpacity
+              onPress={handleRefresh}
+              style={{
+                backgroundColor: '#0d9488',
+                paddingHorizontal: 20,
+                paddingVertical: 10,
+                borderRadius: 8,
+              }}
+            >
+              <Text style={{ color: 'white', fontWeight: '600' }}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <>
+            {/* Summary Card */}
+            <View
+              style={{
+                backgroundColor: 'white',
+                borderRadius: 12,
+                padding: 14,
+                marginBottom: 12,
+                shadowColor: '#000',
+                shadowOpacity: 0.05,
+                shadowRadius: 4,
+                elevation: 2,
+              }}
+            >
+              <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
+                Attendance Summary
+              </Text>
+              <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#1f2937', marginBottom: 8 }}>
+                {attendancePercentage}% present
+              </Text>
+              <View
+                style={{
+                  height: 8,
+                  backgroundColor: '#e5e7eb',
+                  borderRadius: 4,
+                  overflow: 'hidden',
+                  flexDirection: 'row',
+                }}
+              >
+                {report.present > 0 && (
+                  <View style={{ flex: report.present, backgroundColor: '#22c55e' }} />
+                )}
+                {report.absent > 0 && (
+                  <View style={{ flex: report.absent, backgroundColor: '#ef4444' }} />
+                )}
+                {report.leave > 0 && (
+                  <View style={{ flex: report.leave, backgroundColor: '#f97316' }} />
+                )}
+                {report.holiday > 0 && (
+                  <View style={{ flex: report.holiday, backgroundColor: '#a855f7' }} />
+                )}
+              </View>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 10, gap: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <View
+                    style={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: 2,
+                      backgroundColor: '#22c55e',
+                      marginRight: 4,
+                    }}
+                  />
+                  <Text style={{ fontSize: 11, color: '#6b7280' }}>Present {report.present}</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <View
+                    style={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: 2,
+                      backgroundColor: '#ef4444',
+                      marginRight: 4,
+                    }}
+                  />
+                  <Text style={{ fontSize: 11, color: '#6b7280' }}>Absent {report.absent}</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <View
+                    style={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: 2,
+                      backgroundColor: '#f97316',
+                      marginRight: 4,
+                    }}
+                  />
+                  <Text style={{ fontSize: 11, color: '#6b7280' }}>Leave {report.leave}</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <View
+                    style={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: 2,
+                      backgroundColor: '#a855f7',
+                      marginRight: 4,
+                    }}
+                  />
+                  <Text style={{ fontSize: 11, color: '#6b7280' }}>Holiday {report.holiday}</Text>
+                </View>
+              </View>
+            </View>
+
+            {activeTab === 'calendar' ? (
+              /* Calendar View */
+              <>
+                <View
+                  style={{
+                    backgroundColor: '#f0fdf4',
+                    borderRadius: 8,
+                    padding: 12,
+                    marginBottom: 12,
+                    borderLeftWidth: 4,
+                    borderLeftColor: '#22c55e',
+                  }}
+                >
+                  <Text style={{ fontSize: 12, color: '#166534', fontWeight: '500' }}>
+                    💡 Tap on a day to submit or edit your attendance. Submit weekly from the
+                    "Submit Weekly" tab.
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    backgroundColor: 'white',
+                    borderRadius: 12,
+                    padding: 8,
+                    marginBottom: 12,
+                    shadowColor: '#000',
+                    shadowOpacity: 0.05,
+                    shadowRadius: 8,
+                    elevation: 3,
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', marginBottom: 4 }}>
+                    {WEEKDAYS_SHORT.map((day, idx) => (
+                      <View key={day + idx} style={{ width: CELL_SIZE, alignItems: 'center' }}>
+                        <Text
+                          style={{
+                            fontSize: 10,
+                            fontWeight: '600',
+                            color: idx === 0 ? '#ef4444' : '#6b7280',
+                          }}
+                        >
+                          {day}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                    {leadingEmptyDays.map((_, i) => (
+                      <View key={'e' + i} style={{ width: CELL_SIZE, height: CELL_SIZE + 4 }} />
+                    ))}
+                    {monthDays.map((d) => renderDayCell(d))}
+                  </View>
+                </View>
+              </>
+            ) : (
+              /* Weekly Submit View */
+              <>
+                <View
+                  style={{
+                    backgroundColor: '#eff6ff',
+                    borderRadius: 8,
+                    padding: 12,
+                    marginBottom: 12,
+                    borderLeftWidth: 4,
+                    borderLeftColor: '#3b82f6',
+                  }}
+                >
+                  <Text style={{ fontSize: 12, color: '#1e40af', fontWeight: '500' }}>
+                    💡 Tap on a week to view and submit your timesheet. Timesheets are submitted
+                    weekly.
+                  </Text>
+                </View>
+                <Text
+                  style={{ fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 12 }}
+                >
+                  Weeks in {format(currentDate, 'MMMM yyyy')}
+                </Text>
+                {loadingWeeks && (
+                  <View style={{ alignItems: 'center', paddingVertical: 20 }}>
+                    <ActivityIndicator size="small" color="#0d9488" />
+                  </View>
+                )}
+                {monthWeeks.map((weekInfo) => renderWeekCard(weekInfo))}
+              </>
+            )}
+
+            {/* Monthly Details */}
+            <View
+              style={{
+                backgroundColor: 'white',
+                borderRadius: 12,
+                padding: 14,
+                marginBottom: 12,
+                shadowColor: '#000',
+                shadowOpacity: 0.05,
+                shadowRadius: 8,
+                elevation: 3,
+              }}
+            >
+              <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 12 }}>
+                Monthly Details
+              </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', margin: -4 }}>
+                {[
+                  {
+                    label: 'Working Days',
+                    value: report.totalWorkingDays,
+                    bg: '#f3f4f6',
+                    text: '#1f2937',
+                  },
+                  { label: 'Present', value: report.present, bg: '#dcfce7', text: '#166534' },
+                  { label: 'Absent', value: report.absent, bg: '#fee2e2', text: '#991b1b' },
+                  { label: 'Half Days', value: report.halfDays, bg: '#fef3c7', text: '#92400e' },
+                  { label: 'Leave', value: report.leave, bg: '#ffedd5', text: '#9a3412' },
+                  { label: 'Holidays', value: report.holiday, bg: '#f3e8ff', text: '#7c3aed' },
+                ].map((item) => (
+                  <View key={item.label} style={{ width: '33.33%', padding: 4 }}>
+                    <View
+                      style={{
+                        backgroundColor: item.bg,
+                        borderRadius: 8,
+                        padding: 10,
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Text style={{ fontSize: 9, color: '#6b7280', marginBottom: 2 }}>
+                        {item.label}
+                      </Text>
+                      <Text style={{ fontSize: 18, fontWeight: 'bold', color: item.text }}>
+                        {item.value}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </>
+        )}
+      </ScrollView>
+
+      {/* Day Attendance Modal */}
+      <Modal
+        visible={dayModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setDayModalVisible(false)}
+      >
+        <Pressable
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
+          onPress={() => setDayModalVisible(false)}
+        >
+          <Pressable
+            style={{
+              backgroundColor: 'white',
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              padding: 20,
+              paddingBottom: 40,
+            }}
+            onPress={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <View style={{ alignItems: 'center', marginBottom: 20 }}>
+              <View
+                style={{
+                  width: 40,
+                  height: 4,
+                  backgroundColor: '#e5e7eb',
+                  borderRadius: 2,
+                  marginBottom: 16,
+                }}
+              />
+              <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#1f2937' }}>
+                Submit Attendance
+              </Text>
+              {selectedDay && (
+                <Text style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>
+                  {format(selectedDay, 'EEEE, MMMM d, yyyy')}
+                </Text>
+              )}
+            </View>
+
+            {/* Timesheet Status Warning */}
+            {weekTimesheetStatus &&
+              (weekTimesheetStatus === 'SUBMITTED' || weekTimesheetStatus === 'APPROVED') && (
+                <View
+                  style={{
+                    backgroundColor: '#fef3c7',
+                    borderRadius: 8,
+                    padding: 12,
+                    marginBottom: 16,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Lock size={16} color="#d97706" style={{ marginRight: 8 }} />
+                  <Text style={{ fontSize: 12, color: '#92400e', flex: 1 }}>
+                    {weekTimesheetStatus === 'APPROVED'
+                      ? 'Timesheet Approved: You cannot modify this date.'
+                      : 'Timesheet Submitted: Return to draft to modify.'}
+                  </Text>
+                </View>
+              )}
+
+            {/* Instruction */}
+            <Text style={{ fontSize: 13, color: '#6b7280', marginBottom: 16, textAlign: 'center' }}>
+              Select the sessions you were present, or mark as absent:
+            </Text>
+
+            {/* Session Toggles */}
+            <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  padding: 16,
+                  borderRadius: 12,
+                  borderWidth: 2,
+                  backgroundColor: dayMorningPresent ? '#dcfce7' : '#fee2e2',
+                  borderColor: dayMorningPresent ? '#22c55e' : '#ef4444',
+                  alignItems: 'center',
+                }}
+                onPress={() => setDayMorningPresent(!dayMorningPresent)}
+                activeOpacity={0.7}
+              >
+                <Sun size={24} color={dayMorningPresent ? '#16a34a' : '#dc2626'} />
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: '600',
+                    color: dayMorningPresent ? '#166534' : '#991b1b',
+                    marginTop: 8,
+                  }}
+                >
+                  Morning
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: dayMorningPresent ? '#16a34a' : '#dc2626',
+                    marginTop: 4,
+                  }}
+                >
+                  {dayMorningPresent ? 'Present' : 'Absent'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  padding: 16,
+                  borderRadius: 12,
+                  borderWidth: 2,
+                  backgroundColor: dayAfternoonPresent ? '#dcfce7' : '#fee2e2',
+                  borderColor: dayAfternoonPresent ? '#22c55e' : '#ef4444',
+                  alignItems: 'center',
+                }}
+                onPress={() => setDayAfternoonPresent(!dayAfternoonPresent)}
+                activeOpacity={0.7}
+              >
+                <Moon size={24} color={dayAfternoonPresent ? '#16a34a' : '#dc2626'} />
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: '600',
+                    color: dayAfternoonPresent ? '#166534' : '#991b1b',
+                    marginTop: 8,
+                  }}
+                >
+                  Afternoon
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: dayAfternoonPresent ? '#16a34a' : '#dc2626',
+                    marginTop: 4,
+                  }}
+                >
+                  {dayAfternoonPresent ? 'Present' : 'Absent'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Mark as Absent Button */}
+            <TouchableOpacity
+              style={{
+                backgroundColor: !dayMorningPresent && !dayAfternoonPresent ? '#ef4444' : '#f3f4f6',
+                paddingVertical: 12,
+                borderRadius: 8,
+                alignItems: 'center',
+                marginBottom: 16,
+              }}
+              onPress={() => {
+                setDayMorningPresent(false);
+                setDayAfternoonPresent(false);
+              }}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: '600',
+                  color: !dayMorningPresent && !dayAfternoonPresent ? 'white' : '#6b7280',
+                }}
+              >
+                Mark as Absent (Full Day)
+              </Text>
+            </TouchableOpacity>
+
+            {/* Submit Button */}
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#4f46e5',
+                paddingVertical: 14,
+                borderRadius: 10,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                opacity: dailyAttendanceMutation.isPending || checkingWeekStatus ? 0.7 : 1,
+              }}
+              onPress={handleSubmitDayAttendance}
+              disabled={dailyAttendanceMutation.isPending || checkingWeekStatus}
+              activeOpacity={0.8}
+            >
+              {dailyAttendanceMutation.isPending || checkingWeekStatus ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <>
+                  <Send size={18} color="white" />
+                  <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
+                    Save Attendance
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            {/* Cancel Button */}
+            <TouchableOpacity
+              style={{ marginTop: 12, paddingVertical: 12, alignItems: 'center' }}
+              onPress={() => setDayModalVisible(false)}
+              activeOpacity={0.7}
+            >
+              <Text style={{ fontSize: 14, color: '#6b7280' }}>Cancel</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
-
-// ============================================================================
-// Sub-components
-// ============================================================================
-
-function SessBtn({
-  label,
-  icon,
-  active,
-  disabled,
-  onPress,
-}: {
-  label: string;
-  icon: React.ReactNode;
-  active: boolean;
-  disabled: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <TouchableOpacity
-      style={[st.sessBtn, active ? st.sessBtnOn : st.sessBtnOff, disabled && { opacity: 0.6 }]}
-      onPress={onPress}
-      disabled={disabled}
-      activeOpacity={0.7}
-    >
-      {icon}
-      <Text style={[st.sessBtnLabel, active && { color: '#fff' }]}>{label}</Text>
-    </TouchableOpacity>
-  );
-}
-
-function StatPill({ label, value, color }: { label: string; value: number; color: string }) {
-  return (
-    <View style={st.statPill}>
-      <Text style={[st.statPillVal, { color }]}>{value}</Text>
-      <Text style={st.statPillLabel}>{label}</Text>
-    </View>
-  );
-}
-
-function MiniStat({ label, val, color }: { label: string; val: number; color: string }) {
-  return (
-    <View style={{ alignItems: 'center', flex: 1 }}>
-      <Text style={{ fontSize: 15, fontWeight: '700', color }}>{val}</Text>
-      <Text style={{ fontSize: 10, color: '#94a3b8' }}>{label}</Text>
-    </View>
-  );
-}
-
-// ============================================================================
-// Styles
-// ============================================================================
-
-const st = StyleSheet.create({
-  tabRow: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    gap: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-  },
-  tabBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: '#f1f5f9',
-    alignItems: 'center',
-  },
-  tabBtnActive: { backgroundColor: '#6366f1' },
-  tabText: { fontSize: 13, fontWeight: '600', color: '#64748b' },
-  tabTextActive: { color: '#fff' },
-
-  weekNav: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  navBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#eef2ff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  weekLabel: { fontSize: 14, fontWeight: '700', color: '#1e293b' },
-  miniBadge: { marginTop: 4, paddingHorizontal: 10, paddingVertical: 2, borderRadius: 6 },
-  miniBadgeText: { fontSize: 10, fontWeight: '700' },
-
-  statsRow: { flexDirection: 'row', gap: 6, marginBottom: 14 },
-  statPill: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    paddingVertical: 8,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  statPillVal: { fontSize: 16, fontWeight: '800' },
-  statPillLabel: { fontSize: 10, color: '#94a3b8', marginTop: 2 },
-
-  dayCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
-    elevation: 1,
-  },
-  dayCardLocked: { backgroundColor: '#f8fafc', opacity: 0.7 },
-  dayCardLeave: { borderLeftWidth: 3, borderLeftColor: '#8b5cf6' },
-  dayHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  dayName: { fontSize: 14, fontWeight: '700', color: '#1e293b' },
-  dayDate: { fontSize: 12, color: '#94a3b8', marginTop: 1 },
-  lockBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-    backgroundColor: '#f1f5f9',
-  },
-  lockText: { fontSize: 11, fontWeight: '600', color: '#94a3b8' },
-  sessionRow: { flexDirection: 'row', gap: 8 },
-
-  sessBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 10,
-    borderWidth: 1.5,
-  },
-  sessBtnOn: { backgroundColor: '#059669', borderColor: '#059669' },
-  sessBtnOff: { backgroundColor: '#fff', borderColor: '#e2e8f0' },
-  sessBtnLabel: { fontSize: 12, fontWeight: '700', color: '#64748b' },
-
-  submitBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    backgroundColor: '#6366f1',
-    paddingVertical: 16,
-    borderRadius: 14,
-    marginTop: 16,
-  },
-  submitBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
-
-  infoBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: '#ecfdf5',
-    padding: 14,
-    borderRadius: 12,
-    marginTop: 12,
-  },
-  infoText: { flex: 1, fontSize: 13, color: '#065f46', lineHeight: 18 },
-
-  filterRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    gap: 8,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-  },
-  chip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 10, backgroundColor: '#f1f5f9' },
-  chipActive: { backgroundColor: '#6366f1' },
-  chipText: { fontSize: 12, fontWeight: '600', color: '#64748b' },
-  chipTextActive: { color: '#fff' },
-
-  histCard: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  histHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  histWeek: { fontSize: 15, fontWeight: '700', color: '#1e293b' },
-  histBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  histDot: { width: 6, height: 6, borderRadius: 3 },
-  histBadgeText: { fontSize: 11, fontWeight: '700' },
-  histStats: { flexDirection: 'row', gap: 4 },
-  reviewComment: { marginTop: 8, fontSize: 12, color: '#64748b', fontStyle: 'italic' },
-});

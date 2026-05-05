@@ -1,2 +1,5 @@
+// API
 export * from './api/attendance-api';
-export * from './hooks/use-attendance';
+
+// Hooks
+export * from './hooks';

@@ -117,7 +117,7 @@ export default function SubjectsScreen() {
   const handleView = useCallback(
     (subject: any) => {
       router.push({
-        pathname: '/(admin-screens)/subjects/[id]' as any,
+        pathname: '/(admin-screens)/subjects/[id]',
         params: { id: subject.public_id, ...(isDeletedView ? { is_deleted: 'true' } : {}) },
       });
     },
@@ -127,7 +127,7 @@ export default function SubjectsScreen() {
   const handleEdit = useCallback(
     (subject: any) => {
       router.push({
-        pathname: '/(admin-screens)/subjects/edit' as any,
+        pathname: '/(admin-screens)/subjects/edit',
         params: { id: subject.public_id },
       });
     },
@@ -207,11 +207,11 @@ export default function SubjectsScreen() {
         title={screenTitle}
         subtitle={`${totalCount} total`}
         role="admin"
-        onBack={() => router.navigate('/(tabs)/(admin)/management' as any)}
+        onBack={() => router.navigate('/(tabs)/(admin)/management')}
         actions={[
           {
             icon: Plus,
-            onPress: () => router.push('/(admin-screens)/subjects/create' as any),
+            onPress: () => router.push('/(admin-screens)/subjects/create'),
             variant: 'primary',
           },
         ]}

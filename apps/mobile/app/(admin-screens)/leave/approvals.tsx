@@ -34,6 +34,7 @@ import {
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
+import { ConfirmDialog } from '@/components/common';
 import { FormDatePicker } from '@/components/forms/FormDatePicker';
 import {
   useLeaveReviews,
@@ -41,7 +42,7 @@ import {
   useRejectLeave,
   type LeaveRequest,
 } from '@/features/leave';
-import { headerStyles, layoutStyles, emptyStyles } from '@/styles';
+import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -69,6 +70,9 @@ export default function LeaveApprovalsScreen() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
+  // Approve confirmation
+  const [approveTarget, setApproveTarget] = useState<LeaveRequest | null>(null);
+
   // Reject modal
   const [rejectModal, setRejectModal] = useState<{ visible: boolean; item: LeaveRequest | null }>({
     visible: false,
@@ -78,7 +82,7 @@ export default function LeaveApprovalsScreen() {
 
   const queryParams = useMemo(() => {
     const p: Record<string, any> = {
-      page_size: 20,
+      page_size: 50,
       ordering: '-applied_at',
     };
     if (statusFilter) p.status = statusFilter;
@@ -88,14 +92,11 @@ export default function LeaveApprovalsScreen() {
     return p;
   }, [statusFilter, searchQuery, dateFrom, dateTo]);
 
-  const { data, isLoading, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useLeaveReviews(queryParams);
+  const { data, isLoading, refetch } = useLeaveReviews(queryParams);
   const approveMutation = useApproveLeave();
   const rejectMutation = useRejectLeave();
 
-  const reviews = useMemo(() => {
-    return data?.pages?.flatMap((page) => page.data) || [];
-  }, [data]);
+  const reviews = data?.data || [];
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -116,13 +117,19 @@ export default function LeaveApprovalsScreen() {
   const hasActiveFilters = !!searchQuery || !!dateFrom || !!dateTo;
 
   const handleApprove = (item: LeaveRequest) => {
-    Alert.alert('Approve Leave', `Approve ${item.user_name}'s leave request?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Approve',
-        onPress: () => approveMutation.mutate({ publicId: item.public_id }),
-      },
-    ]);
+    setApproveTarget(item);
+  };
+
+  const confirmApprove = () => {
+    if (approveTarget) {
+      approveMutation.mutate(
+        { publicId: approveTarget.public_id },
+        {
+          onSuccess: () => setApproveTarget(null),
+          onError: () => setApproveTarget(null),
+        }
+      );
+    }
   };
 
   const handleReject = (item: LeaveRequest) => {
@@ -242,7 +249,7 @@ export default function LeaveApprovalsScreen() {
           <View style={headerStyles.topRow}>
             <TouchableOpacity
               style={headerStyles.backBtn}
-              onPress={() => router.navigate('/(tabs)/(admin)/management' as any)}
+              onPress={() => router.navigate('/(tabs)/(admin)/management')}
             >
               <ChevronLeft size={24} color="#fff" />
             </TouchableOpacity>
@@ -323,7 +330,7 @@ export default function LeaveApprovalsScreen() {
       )}
 
       {isLoading && !refreshing ? (
-        <View style={emptyStyles.container}>
+        <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary[500]} />
         </View>
       ) : (
@@ -334,17 +341,6 @@ export default function LeaveApprovalsScreen() {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-          onEndReached={() => {
-            if (hasNextPage && !isFetchingNextPage) fetchNextPage();
-          }}
-          onEndReachedThreshold={0.3}
-          ListFooterComponent={
-            isFetchingNextPage ? (
-              <View style={{ paddingVertical: 20, alignItems: 'center' }}>
-                <ActivityIndicator size="small" color="#7c3aed" />
-              </View>
-            ) : null
-          }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Clock size={48} color={Colors.gray[300]} />
@@ -422,6 +418,18 @@ export default function LeaveApprovalsScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* Approve Confirmation Dialog */}
+      <ConfirmDialog
+        visible={!!approveTarget}
+        title="Approve Leave"
+        message={approveTarget ? `Approve ${approveTarget.user_name}'s leave request?` : ''}
+        confirmText="Approve"
+        onConfirm={confirmApprove}
+        onCancel={() => setApproveTarget(null)}
+        confirmVariant="success"
+        isLoading={approveMutation.isPending}
+      />
     </View>
   );
 }
@@ -484,6 +492,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   clearBtnText: { fontSize: 12, color: '#dc2626', fontWeight: '600' },
+  loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   listContent: { padding: 16, paddingBottom: 100 },
   card: {
     backgroundColor: '#fff',

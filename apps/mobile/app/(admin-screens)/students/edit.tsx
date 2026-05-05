@@ -180,7 +180,17 @@ export default function EditStudentScreen() {
     setApiError(null);
     const fe = validateAllFields(studentFullSchema, form);
     setErrors(fe);
-    if (Object.keys(fe).length > 0) return;
+    if (Object.keys(fe).length > 0) {
+      // Show user what fields have validation errors
+      const errorFields = Object.keys(fe).join(', ');
+      Alert.alert('Validation Error', `Please fix the following fields: ${errorFields}`);
+      return;
+    }
+
+    if (!id) {
+      Alert.alert('Error', 'Student ID is missing');
+      return;
+    }
 
     const payload = buildStudentPayload(form, false);
     updateMutation.mutate(

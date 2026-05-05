@@ -21,7 +21,7 @@ export const classKeys = {
   all: QueryKeys.CLASSES.ALL,
   lists: () => QueryKeys.CLASSES.LISTS(),
   list: (params?: ClassQueryParams) => QueryKeys.CLASSES.LIST(params as any),
-  infinite: (params?: Omit<ClassQueryParams, 'page'>) => QueryKeys.CLASSES.INFINITE(params as any),
+  infinite: (params?: Omit<ClassQueryParams, 'page'>) => QueryKeys.CLASSES.INFINITE(params),
   details: () => QueryKeys.CLASSES.DETAILS(),
   detail: (id: string) => QueryKeys.CLASSES.DETAIL(id),
 };

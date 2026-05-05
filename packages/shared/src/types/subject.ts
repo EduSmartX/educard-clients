@@ -29,20 +29,38 @@ export interface SubjectItem extends AuditFields {
   code?: string;
   description?: string;
   subject_type?: SubjectTypeValue;
+  // Backend returns class_info (serializer field name) from class_assigned (model field)
+  class_info?: {
+    public_id: string;
+    name: string;
+    class_master_name?: string;
+  };
+  // Legacy field name (some endpoints may still use this)
   class_assigned?: {
     public_id: string;
     name: string;
   };
+  subject_info?: {
+    id: number;
+    name: string;
+    code?: string;
+  };
+  teacher_info?: SubjectTeacher | null;
   teacher?: SubjectTeacher | null;
   is_active?: boolean;
 }
 
 export interface SubjectDetail extends SubjectItem {
-  class_assigned: {
+  class_info: {
     public_id: string;
     name: string;
     section?: string;
     class_master_name?: string;
+  };
+  subject_info: {
+    id: number;
+    name: string;
+    code?: string;
   };
 }
 

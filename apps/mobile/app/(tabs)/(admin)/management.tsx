@@ -1,9 +1,8 @@
 /**
- * Management Screen — Premium UI
- * Floating gradient cards, spring bounce animations, glass effects
+ * Management Screen - Organization data management
  */
 
-import { Colors, getRoleGradient, getRoleThemeColors } from '@educard/shared';
+import { getRoleThemeColors } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
@@ -12,12 +11,8 @@ import {
   UserCheck,
   BookMarked,
   Building2,
-  CalendarCheck,
   Calendar,
   ClipboardList,
-  Settings,
-  SlidersHorizontal,
-  FileText,
   LucideIcon,
   Layers,
 } from 'lucide-react-native';
@@ -69,20 +64,20 @@ const managementItemsConfig: ManagementItem[] = [
     route: '/(tabs)/(admin)/classes',
   },
   {
-    id: 'subjects',
-    title: 'Subjects',
-    subtitle: 'Subjects & curriculum',
-    icon: BookMarked,
-    gradient: ['#059669', '#34d399'],
-    route: '/(tabs)/(admin)/subjects',
-  },
-  {
     id: 'students',
     title: 'Students',
     subtitle: 'Student records',
     icon: GraduationCap,
     gradient: ['#ea580c', '#fb923c'],
     route: '/(tabs)/(admin)/students',
+  },
+  {
+    id: 'subjects',
+    title: 'Subjects',
+    subtitle: 'Subjects & curriculum',
+    icon: BookMarked,
+    gradient: ['#059669', '#34d399'],
+    route: '/(tabs)/(admin)/subjects',
   },
   {
     id: 'timetable',
@@ -99,62 +94,6 @@ const managementItemsConfig: ManagementItem[] = [
     icon: ClipboardList,
     gradient: ['#e11d48', '#fb7185'],
     route: '/(admin-screens)/exams/sessions',
-  },
-  {
-    id: 'attendance',
-    title: 'Attendance',
-    subtitle: 'Mark class attendance',
-    icon: CalendarCheck,
-    gradient: ['#0d9488', '#2dd4bf'],
-    route: '/(admin-screens)/attendance/mark',
-  },
-  {
-    id: 'leave-allocations',
-    title: 'Leave Alloc.',
-    subtitle: 'Leave policies',
-    icon: FileText,
-    gradient: ['#8b5cf6', '#c084fc'],
-    route: '/(admin-screens)/leave/allocations',
-  },
-  {
-    id: 'org-preferences',
-    title: 'Org Prefs',
-    subtitle: 'Organization settings',
-    icon: SlidersHorizontal,
-    gradient: ['#0284c7', '#38bdf8'],
-    route: '/(admin-screens)/preferences',
-  },
-  {
-    id: 'holiday-calendar',
-    title: 'Holidays',
-    subtitle: 'Holiday calendar',
-    icon: CalendarCheck,
-    gradient: ['#dc2626', '#f87171'],
-    route: '/(admin-screens)/holidays',
-  },
-  {
-    id: 'leave-approvals',
-    title: 'Leave Appr.',
-    subtitle: 'Approve requests',
-    icon: CalendarCheck,
-    gradient: ['#16a34a', '#4ade80'],
-    route: '/(admin-screens)/leave/approvals',
-  },
-  {
-    id: 'timesheet-approvals',
-    title: 'Timesheets',
-    subtitle: 'Approve timesheets',
-    icon: ClipboardList,
-    gradient: ['#d97706', '#fbbf24'],
-    route: '/(admin-screens)/timesheets/approvals',
-  },
-  {
-    id: 'settings',
-    title: 'Settings',
-    subtitle: 'App settings',
-    icon: Settings,
-    gradient: ['#475569', '#94a3b8'],
-    route: '/(tabs)/(admin)/settings',
   },
 ];
 
@@ -196,9 +135,9 @@ export default function ManagementScreen() {
           <View style={styles.headerLeft}>
             <View style={styles.headerTitleRow}>
               <Layers size={20} color="rgba(255,255,255,0.8)" />
-              <Text style={styles.headerTitle}>Management</Text>
+              <Text style={styles.headerTitle}>Manage</Text>
             </View>
-            <Text style={styles.headerSubtitle}>Manage your organization</Text>
+            <Text style={styles.headerSubtitle}>Organization data</Text>
           </View>
           <TouchableOpacity
             style={styles.profileButton}
@@ -325,30 +264,20 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.2)',
   },
   content: { flex: 1 },
-  scrollContent: { paddingBottom: 100 },
-  gridContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 14,
-    paddingTop: 20,
-    gap: 12,
-    justifyContent: 'flex-start',
-  },
-  gridItem: { width: '30%', alignItems: 'center' },
+  scrollContent: { padding: 16, paddingBottom: 100 },
+  gridContainer: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -6 },
+  gridItem: { width: '50%', padding: 6 },
   iconCard: {
     alignItems: 'center',
-    paddingVertical: 18,
-    paddingHorizontal: 8,
+    padding: 20,
     backgroundColor: '#fff',
     borderRadius: 20,
     width: '100%',
-    shadowColor: '#059669',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1,
-    shadowRadius: 14,
-    elevation: 5,
-    borderWidth: 1,
-    borderColor: '#ecfdf5',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
   },
   iconCircle: {
     width: 56,
@@ -356,27 +285,15 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
+    marginBottom: 12,
   },
-  iconLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#1e293b',
-    textAlign: 'center',
-    marginBottom: 4,
-  },
+  iconLabel: { fontSize: 14, fontWeight: '600', color: '#1f2937', textAlign: 'center' },
   countBadge: {
     backgroundColor: '#f0fdf4',
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#d1fae5',
+    marginTop: 8,
   },
-  iconCount: { fontSize: 11, fontWeight: '800' },
+  iconCount: { fontSize: 12, fontWeight: '700' },
 });

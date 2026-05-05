@@ -1,7 +1,7 @@
 /**
- * Exam Sessions Screen — List all exam sessions
+ * Exam Sessions Screen
  */
-/* eslint-disable @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any, @typescript-eslint/no-misused-promises, @typescript-eslint/prefer-nullish-coalescing, @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any, @typescript-eslint/no-misused-promises */
 
 import { getRoleGradient } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -138,7 +138,7 @@ export default function ExamSessionsScreen() {
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
-              onPress={() => router.push('/(admin-screens)/exams/create-session' as any)}
+              onPress={() => router.push('/(admin-screens)/exams/create-session')}
             >
               <Plus size={20} color="#fff" />
             </TouchableOpacity>

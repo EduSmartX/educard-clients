@@ -38,7 +38,10 @@ const phoneField = (label = "Phone") =>
 const optionalDate = () =>
   z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format")
+    .refine(
+      (v) => !v || v === "" || /^\d{4}-\d{2}-\d{2}$/.test(v),
+      "Date must be in YYYY-MM-DD format"
+    )
     .optional()
     .or(z.literal(""));
 

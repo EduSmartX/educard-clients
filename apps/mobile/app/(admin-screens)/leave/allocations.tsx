@@ -4,7 +4,7 @@
  * Includes filters (leave type, role), add/edit/delete support.
  */
 
-import { Colors, getRoleGradient, extractApiError } from '@educard/shared';
+import { Colors, getRoleGradient } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
@@ -29,19 +29,19 @@ import {
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
-  Alert,
   ScrollView,
   Modal,
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
+import { ConfirmDialog } from '@/components/common';
 import { getLeaveTypeColor, getLeaveTypeBg } from '@/constants/leave-colors';
 import {
   useLeaveAllocations,
   useDeleteLeaveAllocation,
   type LeaveAllocation,
 } from '@/features/leave';
-import { headerStyles, layoutStyles, emptyStyles } from '@/styles';
+import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -57,6 +57,7 @@ export default function LeaveAllocationsScreen() {
   const [showFilters, setShowFilters] = useState(false);
   const [filterLeaveType, setFilterLeaveType] = useState<string>('');
   const [filterRole, setFilterRole] = useState<string>('');
+  const [deleteTarget, setDeleteTarget] = useState<LeaveAllocation | null>(null);
   const [rolesModal, setRolesModal] = useState<{ visible: boolean; roles: string; title: string }>({
     visible: false,
     roles: '',
@@ -127,27 +128,21 @@ export default function LeaveAllocationsScreen() {
   };
 
   const handleDelete = (item: LeaveAllocation) => {
-    Alert.alert(
-      'Delete Allocation',
-      `Are you sure you want to delete "${item.name || item.leave_type_name}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () =>
-            deleteMutation.mutate(item.public_id, {
-              onSuccess: () => {
-                Alert.alert('Deleted', 'Leave allocation deleted successfully.');
-                refetch();
-              },
-              onError: (err: any) => {
-                Alert.alert('Error', extractApiError(err, 'Failed to delete leave allocation'));
-              },
-            }),
+    setDeleteTarget(item);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget) {
+      deleteMutation.mutate(deleteTarget.public_id, {
+        onSuccess: () => {
+          setDeleteTarget(null);
+          refetch();
         },
-      ]
-    );
+        onError: () => {
+          setDeleteTarget(null);
+        },
+      });
+    }
   };
 
   const handleEdit = (item: LeaveAllocation) => {
@@ -155,7 +150,7 @@ export default function LeaveAllocationsScreen() {
   };
 
   const handleAdd = () => {
-    router.push('/(admin-screens)/leave/create' as any);
+    router.push('/(admin-screens)/leave/create');
   };
 
   const renderSectionHeader = ({ section }: { section: GroupedSection }) => {
@@ -316,7 +311,7 @@ export default function LeaveAllocationsScreen() {
           <View style={headerStyles.topRow}>
             <TouchableOpacity
               style={headerStyles.backBtn}
-              onPress={() => router.navigate('/(tabs)/(admin)/management' as any)}
+              onPress={() => router.navigate('/(tabs)/(admin)/management')}
             >
               <ChevronLeft size={24} color="#fff" />
             </TouchableOpacity>
@@ -374,7 +369,7 @@ export default function LeaveAllocationsScreen() {
       )}
 
       {isLoading && !refreshing ? (
-        <View style={emptyStyles.container}>
+        <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary[500]} />
         </View>
       ) : (
@@ -440,11 +435,28 @@ export default function LeaveAllocationsScreen() {
           </View>
         </TouchableOpacity>
       </Modal>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        visible={!!deleteTarget}
+        title="Delete Allocation"
+        message={
+          deleteTarget
+            ? `Are you sure you want to delete "${deleteTarget.name || deleteTarget.leave_type_name}"?`
+            : ''
+        }
+        confirmText="Delete"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+        confirmVariant="danger"
+        isLoading={deleteMutation.isPending}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   listContent: { padding: 16, paddingBottom: 100 },
 
   // Filter Styles

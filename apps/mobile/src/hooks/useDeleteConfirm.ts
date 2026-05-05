@@ -7,24 +7,24 @@ import { getErrorMessage } from '@educard/shared';
 import { useCallback } from 'react';
 import { Alert } from 'react-native';
 
-interface UseDeleteConfirmOptions {
+interface UseDeleteConfirmOptions<T = string> {
   /** e.g. "Teacher", "Student" */
   entityName: string;
-  /** React-Query mutation object – must have `.mutateAsync(id)` */
+  /** React-Query mutation object – must have `.mutateAsync(data)` */
   deleteMutation: {
-    mutateAsync: (id: string) => Promise<unknown>;
+    mutateAsync: (data: T) => Promise<unknown>;
   };
   /** Called after successful delete — use to refetch list */
   onSuccess?: () => void;
 }
 
-export function useDeleteConfirm({
+export function useDeleteConfirm<T = string>({
   entityName,
   deleteMutation,
   onSuccess,
-}: UseDeleteConfirmOptions) {
+}: UseDeleteConfirmOptions<T>) {
   const confirmDelete = useCallback(
-    (id: string, displayName: string) => {
+    (data: T, displayName: string) => {
       Alert.alert(`Delete ${entityName}`, `Are you sure you want to delete ${displayName}?`, [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -32,7 +32,7 @@ export function useDeleteConfirm({
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteMutation.mutateAsync(id);
+              await deleteMutation.mutateAsync(data);
               onSuccess?.();
               Alert.alert('Success', `${entityName} deleted successfully`);
             } catch (error) {

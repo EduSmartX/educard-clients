@@ -1,13 +1,10 @@
 /**
- * Leave Management — API Layer
- * Leave Allocations, Approvals, Balances
+ * Leave Management API
  */
 
 import { apiClient } from '@/api/client';
 
-// ============================================================================
-// Types (leave-specific only; LeaveType & OrganizationRole come from core)
-// ============================================================================
+// Types
 
 export interface LeaveAllocation {
   public_id: string;
@@ -95,9 +92,7 @@ export interface LeaveReviewQueryParams {
   user__name?: string;
 }
 
-// ============================================================================
-// Leave Allocations API (Admin)
-// ============================================================================
+// Leave Allocations API
 
 export async function getLeaveAllocations(
   params?: LeaveAllocationQueryParams
@@ -167,9 +162,7 @@ export async function deleteLeaveAllocation(publicId: string): Promise<void> {
   }
 }
 
-// ============================================================================
-// Leave Approvals API (Employee reviews)
-// ============================================================================
+// Leave Approvals API
 
 export async function getLeaveReviews(
   params?: LeaveReviewQueryParams
@@ -211,35 +204,46 @@ export async function rejectLeaveRequest(
   return response.data;
 }
 
-// ============================================================================
-// Employee Leave Balances & User Leave Requests
-// ============================================================================
+// Leave Balance & Request API
 
-export interface LeaveBalance {
+export interface LeaveAllocationSimple {
   public_id: string;
+  leave_type_name: string;
+  leave_type_code: string;
+  display_name: string;
+  total_days: string;
+  max_carry_forward_days: string;
+  effective_from: string | null;
+  effective_to: string | null;
+}
+
+export interface LeaveBalanceSummary {
+  public_id: string;
+  leave_allocation: LeaveAllocationSimple;
   leave_name: string;
-  leave_allocation: {
-    public_id: string;
-    leave_type_name: string;
-    leave_type_code: string;
-  };
   total_allocated: number;
-  available: number;
   used: number;
   pending: number;
+  available: number;
   carried_forward: number;
 }
 
-export interface LeaveRequestCreatePayload {
-  leave_balance: string; // public_id of the leave balance
+export interface CreateLeaveRequestPayload {
+  leave_balance: string;
   start_date: string;
   end_date: string;
   number_of_days: number;
   reason: string;
 }
 
-export async function getMyLeaveBalances(): Promise<ApiListResponse<LeaveBalance>> {
-  const response = await apiClient.get<ApiListResponse<LeaveBalance>>('/leave/employee/balances/');
+export interface MyLeaveRequest extends LeaveRequest {
+  can_be_cancelled: boolean;
+}
+
+export async function getMyLeaveBalances(): Promise<ApiDetailResponse<LeaveBalanceSummary[]>> {
+  const response = await apiClient.get<ApiDetailResponse<LeaveBalanceSummary[]>>(
+    '/leave/employee/balances/my-balance/'
+  );
   return response.data;
 }
 
@@ -247,15 +251,15 @@ export async function getMyLeaveRequests(params?: {
   page?: number;
   page_size?: number;
   status?: string;
-}): Promise<ApiListResponse<LeaveRequest>> {
-  const response = await apiClient.get<ApiListResponse<LeaveRequest>>('/leave/user/requests/', {
+}): Promise<ApiListResponse<MyLeaveRequest>> {
+  const response = await apiClient.get<ApiListResponse<MyLeaveRequest>>('/leave/user/requests/', {
     params,
   });
   return response.data;
 }
 
 export async function createLeaveRequest(
-  data: LeaveRequestCreatePayload
+  data: CreateLeaveRequestPayload
 ): Promise<ApiDetailResponse<LeaveRequest>> {
   const response = await apiClient.post<ApiDetailResponse<LeaveRequest>>(
     '/leave/user/requests/',
@@ -264,7 +268,7 @@ export async function createLeaveRequest(
   return response.data;
 }
 
-export async function cancelLeaveRequest(
+export async function cancelMyLeaveRequest(
   publicId: string
 ): Promise<ApiDetailResponse<LeaveRequest>> {
   const response = await apiClient.post<ApiDetailResponse<LeaveRequest>>(
@@ -276,10 +280,9 @@ export async function cancelLeaveRequest(
 export async function calculateWorkingDays(
   startDate: string,
   endDate: string
-): Promise<{ working_days: number }> {
-  const response = await apiClient.post<{ success: boolean; data: { working_days: number } }>(
-    '/leave/user/requests/calculate-working-days/',
-    { start_date: startDate, end_date: endDate }
-  );
-  return response.data.data;
+): Promise<ApiDetailResponse<{ working_days: number; holidays: string[] }>> {
+  const response = await apiClient.post<
+    ApiDetailResponse<{ working_days: number; holidays: string[] }>
+  >('/leave/employee/calculate-working-days/', { start_date: startDate, end_date: endDate });
+  return response.data;
 }

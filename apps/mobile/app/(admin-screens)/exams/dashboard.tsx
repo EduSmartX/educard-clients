@@ -1,7 +1,7 @@
 /**
- * Exam Dashboard - Select class, view exams/students with tabs
+ * Exam Dashboard
  */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any, @typescript-eslint/no-misused-promises, @typescript-eslint/prefer-nullish-coalescing */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any, @typescript-eslint/no-misused-promises */
 
 import { getRoleGradient } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';

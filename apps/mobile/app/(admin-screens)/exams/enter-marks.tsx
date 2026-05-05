@@ -1,8 +1,7 @@
 /**
  * Enter Marks Screen
- * Enter marks for students in a specific exam
  */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/no-misused-promises, @typescript-eslint/prefer-nullish-coalescing, react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/no-misused-promises, react-hooks/exhaustive-deps */
 
 import { getRoleGradient, extractApiError } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';

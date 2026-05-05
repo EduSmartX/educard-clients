@@ -6,7 +6,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -15,12 +15,13 @@ import { useAuthStore } from '@/lib/auth-store';
 // Keep splash screen visible while loading
 SplashScreen.preventAutoHideAsync();
 
-// Create React Query client
+// Create React Query client outside component to avoid recreation
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
       retry: 2,
+      refetchOnWindowFocus: false, // Disable auto-refetch to avoid state update issues
     },
   },
 });
@@ -28,24 +29,33 @@ const queryClient = new QueryClient({
 function RootLayoutNav() {
   const router = useRouter();
   const segments = useSegments();
+  const [isMounted, setIsMounted] = useState(false);
 
   const { isAuthenticated, isInitialized, user, initialize } = useAuthStore();
 
+  // Track mount state
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
+
   // Initialize auth on mount
   useEffect(() => {
-    initialize();
-  }, [initialize]);
+    if (isMounted) {
+      initialize();
+    }
+  }, [initialize, isMounted]);
 
   // Hide splash screen when initialized
   useEffect(() => {
-    if (isInitialized) {
+    if (isInitialized && isMounted) {
       SplashScreen.hideAsync();
     }
-  }, [isInitialized]);
+  }, [isInitialized, isMounted]);
 
   // Handle navigation based on auth state
   useEffect(() => {
-    if (!isInitialized) return;
+    if (!isInitialized || !isMounted) return;
 
     const inAuthGroup = segments[0] === '(auth)';
     const inTabsGroup = segments[0] === '(tabs)';
@@ -70,7 +80,7 @@ function RootLayoutNav() {
           router.replace('/(tabs)/(admin)/dashboard');
       }
     }
-  }, [isAuthenticated, isInitialized, segments, user, router]);
+  }, [isAuthenticated, isInitialized, segments, user, router, isMounted]);
 
   return (
     <Stack screenOptions={{ headerShown: false }}>

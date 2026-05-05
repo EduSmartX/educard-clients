@@ -58,7 +58,6 @@ import {
   type OrganizationPreference,
   type GroupedPreference,
 } from '@/features/preferences';
-import { headerStyles, layoutStyles, emptyStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -467,8 +466,8 @@ export default function OrgPreferencesScreen() {
           effective_from: field === 'effective_from' ? value : today,
         });
       }
-    } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.message || 'Failed to update working day policy');
+    } catch (e: unknown) {
+      Alert.alert('Error', extractApiError(e, 'Failed to update working day policy'));
     }
   };
 
@@ -723,28 +722,28 @@ export default function OrgPreferencesScreen() {
   };
 
   return (
-    <View style={layoutStyles.container}>
-      <LinearGradient colors={adminGradient} style={headerStyles.header}>
-        <Animated.View entering={FadeIn.delay(100)} style={headerStyles.circle1} />
-        <Animated.View entering={FadeIn.delay(200)} style={headerStyles.circle2} />
-        <View style={headerStyles.content}>
-          <View style={headerStyles.topRow}>
+    <View style={styles.container}>
+      <LinearGradient colors={adminGradient} style={styles.header}>
+        <Animated.View entering={FadeIn.delay(100)} style={styles.circle1} />
+        <Animated.View entering={FadeIn.delay(200)} style={styles.circle2} />
+        <View style={styles.headerContent}>
+          <View style={styles.topRow}>
             <TouchableOpacity
-              style={headerStyles.backBtn}
-              onPress={() => router.navigate('/(tabs)/(admin)/management' as any)}
+              style={styles.backBtn}
+              onPress={() => router.navigate('/(tabs)/(admin)/management')}
             >
               <ChevronLeft size={24} color="#fff" />
             </TouchableOpacity>
-            <View style={headerStyles.titleContainer}>
-              <Text style={headerStyles.title}>Settings</Text>
-              <Text style={headerStyles.subtitle}>{groups.length + 1} categories</Text>
+            <View style={styles.titleContainer}>
+              <Text style={styles.title}>Settings</Text>
+              <Text style={styles.subtitle}>{groups.length + 1} categories</Text>
             </View>
           </View>
         </View>
       </LinearGradient>
 
       {isLoading && !refreshing ? (
-        <View style={emptyStyles.container}>
+        <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary[500]} />
         </View>
       ) : (
@@ -829,6 +828,41 @@ export default function OrgPreferencesScreen() {
 }
 
 const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#f1f5f9' },
+  header: { paddingTop: 44, paddingBottom: 16, paddingHorizontal: 16, overflow: 'hidden' },
+  circle1: {
+    position: 'absolute',
+    top: -40,
+    right: -40,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  circle2: {
+    position: 'absolute',
+    bottom: -50,
+    left: -30,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  headerContent: { zIndex: 1 },
+  topRow: { flexDirection: 'row', alignItems: 'center' },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  titleContainer: { flex: 1 },
+  title: { fontSize: 22, fontWeight: '800', color: '#fff' },
+  subtitle: { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+  loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   scrollView: { flex: 1 },
   scrollContent: { padding: 16, paddingBottom: 20 },
 

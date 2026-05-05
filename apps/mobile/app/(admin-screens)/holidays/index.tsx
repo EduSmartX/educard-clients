@@ -5,7 +5,7 @@
  */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any, @typescript-eslint/no-floating-promises, @typescript-eslint/no-unused-vars, @typescript-eslint/no-non-null-assertion */
 
-import { Colors, getRoleGradient } from '@educard/shared';
+import { Colors, getRoleGradient, extractApiError } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
@@ -37,6 +37,7 @@ import {
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
+import { ConfirmDialog } from '@/components/common';
 import { FormInput, FormDropdown, FormDatePicker } from '@/components/forms';
 import {
   useHolidays,
@@ -131,10 +132,13 @@ export default function HolidayCalendarScreen() {
   });
   const [formData, setFormData] = useState({
     description: '',
-    holiday_type: '' as string,
+    holiday_type: '',
     start_date: '',
     end_date: '',
   });
+
+  // Delete confirmation state
+  const [deleteTarget, setDeleteTarget] = useState<Holiday | null>(null);
 
   // Detail popup state
   const [detailPopup, setDetailPopup] = useState<{
@@ -161,10 +165,18 @@ export default function HolidayCalendarScreen() {
     const endDate = new Date(year, month + 1, 0);
     const holidays: Holiday[] = [];
 
+    // Helper to format date as YYYY-MM-DD without timezone shift
+    const formatLocalDate = (date: Date): string => {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    };
+
     const currentDate = new Date(startDate);
     while (currentDate <= endDate) {
       const dayOfWeek = currentDate.getDay();
-      const dateStr = currentDate.toISOString().split('T')[0];
+      const dateStr = formatLocalDate(currentDate);
 
       // Check for Sunday
       if (dayOfWeek === 0 && workingDayPolicy.sunday_off) {
@@ -174,7 +186,7 @@ export default function HolidayCalendarScreen() {
           end_date: dateStr,
           holiday_type: 'SUNDAY',
           description: 'Sunday',
-        } as Holiday);
+        });
       }
 
       // Check for Saturday based on policy
@@ -204,7 +216,7 @@ export default function HolidayCalendarScreen() {
             end_date: dateStr,
             holiday_type: nthSaturday === 2 ? 'SECOND_SATURDAY' : 'SATURDAY',
             description: nthSaturday === 2 ? '2nd Saturday' : 'Saturday',
-          } as Holiday);
+          });
         }
       }
 
@@ -226,9 +238,6 @@ export default function HolidayCalendarScreen() {
     void refetch().finally(() => setRefreshing(false));
   }, [refetch]);
 
-  // ============================================================================
-  // Calendar Logic
-  // ============================================================================
   const calendarDays = useMemo(() => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
@@ -300,9 +309,6 @@ export default function HolidayCalendarScreen() {
     return Math.ceil((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1;
   };
 
-  // ============================================================================
-  // Handlers
-  // ============================================================================
   const openAddModal = () => {
     setFormData({ description: '', holiday_type: '', start_date: '', end_date: '' });
     setFormModal({ visible: true, editing: null });
@@ -319,21 +325,22 @@ export default function HolidayCalendarScreen() {
   };
 
   const handleDelete = (h: Holiday) => {
-    Alert.alert('Delete Holiday', `Delete "${h.description}"?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () =>
-          deleteMutation.mutate(h.public_id, {
-            onSuccess: () => {
-              Alert.alert('Deleted', 'Holiday deleted successfully.');
-              refetch();
-            },
-            onError: () => Alert.alert('Error', 'Failed to delete holiday.'),
-          }),
-      },
-    ]);
+    setDeleteTarget(h);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget) {
+      deleteMutation.mutate(deleteTarget.public_id, {
+        onSuccess: () => {
+          setDeleteTarget(null);
+          refetch();
+        },
+        onError: (error: unknown) => {
+          setDeleteTarget(null);
+          Alert.alert('Error', extractApiError(error, 'Failed to delete holiday'));
+        },
+      });
+    }
   };
 
   const handleFormSubmit = () => {
@@ -356,7 +363,8 @@ export default function HolidayCalendarScreen() {
             setFormModal({ visible: false, editing: null });
             refetch();
           },
-          onError: () => Alert.alert('Error', 'Failed to update holiday.'),
+          onError: (error: unknown) =>
+            Alert.alert('Error', extractApiError(error, 'Failed to update holiday')),
         }
       );
     } else {
@@ -365,7 +373,8 @@ export default function HolidayCalendarScreen() {
           setFormModal({ visible: false, editing: null });
           refetch();
         },
-        onError: () => Alert.alert('Error', 'Failed to create holiday.'),
+        onError: (error: unknown) =>
+          Alert.alert('Error', extractApiError(error, 'Failed to create holiday')),
       });
     }
   };
@@ -379,9 +388,6 @@ export default function HolidayCalendarScreen() {
     }
   };
 
-  // ============================================================================
-  // Derived Data
-  // ============================================================================
   const tableHolidays = useMemo(() => {
     return holidays.filter((h) => h.holiday_type !== 'SUNDAY' && h.holiday_type !== 'SATURDAY');
   }, [holidays]);
@@ -400,15 +406,13 @@ export default function HolidayCalendarScreen() {
   }, [tableHolidays, currentMonth]);
 
   const upcomingHolidays = useMemo(() => {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     return tableHolidays.filter((h) => h.start_date >= todayStr).slice(0, 6);
   }, [tableHolidays]);
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
-  // ============================================================================
-  // Render Calendar View
-  // ============================================================================
   const renderCalendar = () => (
     <ScrollView
       showsVerticalScrollIndicator={false}
@@ -602,9 +606,6 @@ export default function HolidayCalendarScreen() {
     </ScrollView>
   );
 
-  // ============================================================================
-  // Render Table View
-  // ============================================================================
   const renderTableItem = ({ item, index }: { item: Holiday; index: number }) => {
     const config = HOLIDAY_TYPE_CONFIG[item.holiday_type] || HOLIDAY_TYPE_CONFIG.OTHER;
     const duration = getDaysBetween(item.start_date, item.end_date);
@@ -646,9 +647,6 @@ export default function HolidayCalendarScreen() {
     );
   };
 
-  // ============================================================================
-  // Main Render
-  // ============================================================================
   return (
     <View style={layoutStyles.container}>
       {/* Header */}
@@ -667,7 +665,7 @@ export default function HolidayCalendarScreen() {
           <View style={headerStyles.topRow}>
             <TouchableOpacity
               style={headerStyles.backBtn}
-              onPress={() => router.navigate('/(tabs)/(admin)/management' as any)}
+              onPress={() => router.navigate('/(tabs)/(admin)/management')}
             >
               <ChevronLeft size={24} color="#fff" />
             </TouchableOpacity>
@@ -900,6 +898,18 @@ export default function HolidayCalendarScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        visible={!!deleteTarget}
+        title="Delete Holiday"
+        message={deleteTarget ? `Delete "${deleteTarget.description}"?` : ''}
+        confirmText="Delete"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+        confirmVariant="danger"
+        isLoading={deleteMutation.isPending}
+      />
     </View>
   );
 }

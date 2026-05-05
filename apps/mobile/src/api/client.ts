@@ -37,8 +37,8 @@ apiClient.interceptors.request.use(
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
       }
-    } catch (error) {
-      console.error('Error getting token:', error);
+    } catch {
+      // Token retrieval failed - continue without auth header
     }
     return config;
   },
@@ -107,8 +107,8 @@ export async function clearAuthTokens(): Promise<void> {
     await SecureStore.deleteItemAsync(STORAGE_KEYS.ACCESS_TOKEN);
     await SecureStore.deleteItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
     await SecureStore.deleteItemAsync(STORAGE_KEYS.USER_DATA);
-  } catch (error) {
-    console.error('Error clearing tokens:', error);
+  } catch {
+    // Silent fail - best effort cleanup
   }
 }
 

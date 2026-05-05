@@ -1,5 +1,5 @@
 /**
- * Students Feature — API Layer
+ * Students API
  */
 
 import { API_ENDPOINTS } from '@educard/shared';
@@ -43,9 +43,12 @@ export async function updateStudent(publicId: string, data: Partial<Student>) {
   return apiClient.patch(API_ENDPOINTS.STUDENTS.PATCH(publicId), data);
 }
 
-export async function deleteStudent(publicId: string): Promise<void> {
+export async function deleteStudent(publicId: string, classId?: string): Promise<void> {
   try {
-    await apiClient.delete(API_ENDPOINTS.STUDENTS.DELETE(publicId));
+    const url = classId
+      ? API_ENDPOINTS.STUDENTS.CLASS_LEVEL.DELETE(classId, publicId)
+      : API_ENDPOINTS.STUDENTS.DELETE(publicId);
+    await apiClient.delete(url);
   } catch (error: any) {
     const status = error?.response?.status;
     if (status && status >= 200 && status < 300) return;
@@ -54,7 +57,10 @@ export async function deleteStudent(publicId: string): Promise<void> {
   }
 }
 
-export async function restoreStudent(publicId: string) {
-  const response = await apiClient.post(`${API_ENDPOINTS.STUDENTS.DETAIL(publicId)}activate/`);
+export async function restoreStudent(publicId: string, classId?: string) {
+  const url = classId
+    ? API_ENDPOINTS.STUDENTS.CLASS_LEVEL.ACTIVATE(classId, publicId)
+    : `${API_ENDPOINTS.STUDENTS.DETAIL(publicId)}activate/`;
+  const response = await apiClient.post(url);
   return response.data;
 }

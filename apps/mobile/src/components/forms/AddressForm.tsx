@@ -111,8 +111,8 @@ export function AddressForm({
 
         onLocationFetched?.(addressData);
       }
-    } catch (error) {
-      console.error('Location error:', error);
+    } catch {
+      // Location fetch failed silently
     } finally {
       setIsLoadingLocation(false);
     }

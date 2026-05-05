@@ -21,10 +21,8 @@ import {
   ClipboardList,
   SlidersHorizontal,
   Star,
-  Send,
-  CalendarDays,
 } from 'lucide-react-native';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -46,6 +44,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { getMediaUrl } from '@/constants/config';
+import { useDashboardAttendanceStats } from '@/features/attendance/hooks/use-attendance';
 import { useClasses } from '@/features/classes';
 import { useStudents } from '@/features/students';
 import { useTeachers } from '@/features/teachers';
@@ -214,27 +213,6 @@ const adminLinks: AdminLinkItem[] = [
     route: '/(admin-screens)/timesheets/approvals',
   },
   {
-    id: 'apply-leave',
-    title: 'Apply Leave',
-    icon: CalendarDays,
-    gradient: ['#ec4899', '#f472b6'],
-    route: '/(admin-screens)/leave/apply',
-  },
-  {
-    id: 'my-leave',
-    title: 'My Leave',
-    icon: FileText,
-    gradient: ['#14b8a6', '#2dd4bf'],
-    route: '/(admin-screens)/leave/my-requests',
-  },
-  {
-    id: 'my-timesheets',
-    title: 'My Timesheets',
-    icon: Send,
-    gradient: ['#6366f1', '#818cf8'],
-    route: '/(admin-screens)/timesheets/my-submissions',
-  },
-  {
     id: 'settings',
     title: 'Settings',
     icon: Settings,
@@ -262,24 +240,56 @@ export default function AdminDashboard() {
   const { data: profilePhoto } = useMyProfilePhoto();
   const [refreshing, setRefreshing] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const isMountedRef = useRef(true);
+
+  // Track mount state to avoid state updates on unmounted component
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const { data: teachersData, refetch: refetchTeachers } = useTeachers({ page_size: 1 });
   const { data: studentsData, refetch: refetchStudents } = useStudents({ page_size: 1 });
   const { data: classesData, refetch: refetchClasses } = useClasses({ page_size: 1 });
+  const { data: attendanceStats, refetch: refetchAttendance } = useDashboardAttendanceStats();
+
+  // Format attendance display
+  const getAttendanceDisplay = () => {
+    if (!attendanceStats) return '...';
+    if (attendanceStats.is_holiday) {
+      return attendanceStats.holiday_name || 'Holiday';
+    }
+    if (!attendanceStats.is_working_day) {
+      return 'Off Day';
+    }
+    if (attendanceStats.overall_attendance_percentage === null) {
+      return 'N/A';
+    }
+    return `${attendanceStats.overall_attendance_percentage}%`;
+  };
 
   const statsValues: Record<string, string> = {
     students: studentsData?.totalCount?.toLocaleString() || '0',
     teachers: teachersData?.totalCount?.toLocaleString() || '0',
     classes: classesData?.totalCount?.toLocaleString() || '0',
-    attendance: '94%',
+    attendance: getAttendanceDisplay(),
   };
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    Promise.all([refetchTeachers(), refetchStudents(), refetchClasses()]).finally(() =>
-      setRefreshing(false)
-    );
-  }, [refetchTeachers, refetchStudents, refetchClasses]);
+    Promise.all([
+      refetchTeachers(),
+      refetchStudents(),
+      refetchClasses(),
+      refetchAttendance(),
+    ]).finally(() => {
+      if (isMountedRef.current) {
+        setRefreshing(false);
+      }
+    });
+  }, [refetchTeachers, refetchStudents, refetchClasses, refetchAttendance]);
 
   const profileImageUrl =
     getMediaUrl(profilePhoto?.thumbnail_url) || getMediaUrl(profilePhoto?.url);

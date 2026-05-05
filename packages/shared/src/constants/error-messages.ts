@@ -522,6 +522,8 @@ export const FormPlaceholders = {
   REASON: "Enter reason",
   COMMENTS: "Enter comments",
   REMARKS: "Enter remarks (optional)",
+  SELECT_LEAVE_TYPE: "Select leave type",
+  ENTER_LEAVE_REASON: "Enter reason for leave...",
 
   // Organization fields
   ORGANIZATION_NAME: "Enter organization name",
@@ -544,10 +546,10 @@ export const AttendanceUiText = {
   MARK_ATTENDANCE: "Mark Attendance",
   VIEW_ATTENDANCE: "View Attendance",
   ATTENDANCE_REPORT: "Attendance Report",
-  SUMMARY_PAGE_TITLE: "Attendance Summary",
-  SUMMARY_PAGE_DESC: "Today's attendance overview across all classes",
   MY_ATTENDANCE: "My Attendance",
   TIMESHEET: "Timesheet",
+  SUMMARY_PAGE_TITLE: "Attendance Summary",
+  SUMMARY_PAGE_DESC: "Today's attendance overview across all classes",
 
   // Status labels
   PRESENT: "Present",

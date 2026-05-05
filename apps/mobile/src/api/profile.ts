@@ -36,8 +36,7 @@ export async function getMyProfilePhoto(): Promise<ProfileImage | null> {
       API_ENDPOINTS.ATTACHMENTS.MY_PHOTO
     );
     return response.data.data;
-  } catch (error) {
-    console.log('Failed to fetch profile photo:', error);
+  } catch {
     return null;
   }
 }

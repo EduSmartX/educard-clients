@@ -43,7 +43,7 @@ export function ListHeader({
       onBack();
     } else {
       // Use navigate to properly switch tabs within the Tabs navigator
-      router.navigate('/(tabs)/(admin)/management' as any);
+      router.navigate('/(tabs)/(admin)/management');
     }
   };
 

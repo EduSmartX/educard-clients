@@ -32,6 +32,7 @@ export default function ClassDetailScreen() {
         <DetailSection title="Class Info" icon="🏫">
           <DetailRow label="Grade / Class" value={c?.class_master?.name} />
           <DetailRow label="Section" value={c?.name} />
+          <DetailRow label="Room Number" value={c?.room_number} />
           <DetailRow label="Capacity" value={c?.capacity} />
           <DetailRow label="Students" value={c?.student_count} />
           <DetailRow label="Subjects" value={c?.subjects_count} />

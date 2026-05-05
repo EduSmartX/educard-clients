@@ -76,6 +76,14 @@ export const API_ENDPOINTS = {
     UPDATE: (id: string) => `/students/${id}/`,
     PATCH: (id: string) => `/students/${id}/`,
     DELETE: (id: string) => `/students/${id}/`,
+    // Class-level endpoints (for delete/activate which requires class context)
+    CLASS_LEVEL: {
+      LIST: (classId: string) => `/students/classes/${classId}/students/`,
+      CREATE: (classId: string) => `/students/classes/${classId}/students/`,
+      DETAIL: (classId: string, studentId: string) => `/students/classes/${classId}/students/${studentId}/`,
+      DELETE: (classId: string, studentId: string) => `/students/classes/${classId}/students/${studentId}/`,
+      ACTIVATE: (classId: string, studentId: string) => `/students/classes/${classId}/students/${studentId}/activate/`,
+    },
 
     BULK_TEMPLATE: "/students/bulk/template/",
     BULK_IMPORT: "/students/bulk/import/",

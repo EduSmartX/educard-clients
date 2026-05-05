@@ -1,13 +1,12 @@
 {
   "expo": {
     "name": "EduCard",
-    "slug": "educard-mobile",
+    "slug": "educard",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "educard",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -19,7 +18,10 @@
       "infoPlist": {
         "NSCameraUsageDescription": "EduCard uses the camera to scan documents and capture photos.",
         "NSPhotoLibraryUsageDescription": "EduCard needs access to your photos to upload profile pictures.",
-        "UIBackgroundModes": ["remote-notification"]
+        "UIBackgroundModes": [
+          "remote-notification",
+          "remote-notification"
+        ]
       }
     },
     "android": {
@@ -29,6 +31,10 @@
       },
       "package": "com.educard.app",
       "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE",
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.RECEIVE_BOOT_COMPLETED",
@@ -55,8 +61,15 @@
         "origin": false
       },
       "eas": {
-        "projectId": "your-project-id"
+        "projectId": "d9c6670e-79ff-407d-a750-2775e4ff067d"
       }
+    },
+    "owner": "vinodreddem",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/d9c6670e-79ff-407d-a750-2775e4ff067d"
     }
   }
 }

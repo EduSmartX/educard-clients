@@ -79,19 +79,10 @@ export function validateForm(
 /** Quick check if errors object has any */
 export const hasErrors = (errors: FieldErrors): boolean => Object.keys(errors).length > 0;
 
-// ============================================================================
-// Date Validation Utilities
-// ============================================================================
-
 /**
  * Validate that a start date is not after an end date.
  * Both values should be YYYY-MM-DD strings.
  * Returns an error message string if invalid, or null if valid.
- *
- * @param startDate  - start / from date (YYYY-MM-DD)
- * @param endDate    - end / to date (YYYY-MM-DD)
- * @param startLabel - label for the start field (default "Start date")
- * @param endLabel   - label for the end field (default "End date")
  */
 export function validateDateRange(
   startDate: string | null | undefined,
@@ -109,14 +100,6 @@ export function validateDateRange(
 /**
  * Add date-range error into a FieldErrors map (mutates in-place).
  * Handy inside validate() callbacks.
- *
- * @param errors     - the errors object to mutate
- * @param startDate  - start date value
- * @param endDate    - end date value
- * @param endField   - field key to attach the error to (default "end_date")
- * @param startLabel - human label for start
- * @param endLabel   - human label for end
- * @returns true if an error was added
  */
 export function addDateRangeError(
   errors: FieldErrors,

@@ -1,5 +1,5 @@
 /**
- * Students Feature — Hooks
+ * Students Hooks
  */
 
 import { QueryKeys } from '@educard/shared';
@@ -21,8 +21,7 @@ export const studentKeys = {
   all: QueryKeys.STUDENTS.ALL,
   lists: () => QueryKeys.STUDENTS.LISTS(),
   list: (params?: StudentQueryParams) => QueryKeys.STUDENTS.LIST(params as any),
-  infinite: (params?: Omit<StudentQueryParams, 'page'>) =>
-    QueryKeys.STUDENTS.INFINITE(params as any),
+  infinite: (params?: Omit<StudentQueryParams, 'page'>) => QueryKeys.STUDENTS.INFINITE(params),
   details: () => QueryKeys.STUDENTS.DETAILS(),
   detail: (id: string) => QueryKeys.STUDENTS.DETAIL(id),
 };
@@ -91,7 +90,8 @@ export function useUpdateStudent() {
 export function useDeleteStudent() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (publicId: string) => deleteStudent(publicId),
+    mutationFn: ({ publicId, classId }: { publicId: string; classId: string }) =>
+      deleteStudent(publicId, classId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: studentKeys.lists() });
     },
@@ -101,7 +101,8 @@ export function useDeleteStudent() {
 export function useRestoreStudent() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (publicId: string) => restoreStudent(publicId),
+    mutationFn: ({ publicId, classId }: { publicId: string; classId?: string }) =>
+      restoreStudent(publicId, classId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: studentKeys.all });
     },

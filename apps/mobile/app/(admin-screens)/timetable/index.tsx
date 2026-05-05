@@ -217,7 +217,7 @@ export default function TimetableScreen() {
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
-              onPress={() => router.push('/(admin-screens)/timetable/setup' as any)}
+              onPress={() => router.push('/(admin-screens)/timetable/setup')}
             >
               <Settings size={20} color="#fff" />
             </TouchableOpacity>
@@ -272,7 +272,7 @@ export default function TimetableScreen() {
                 borderRadius: 12,
                 marginTop: 16,
               }}
-              onPress={() => router.push('/(admin-screens)/timetable/setup' as any)}
+              onPress={() => router.push('/(admin-screens)/timetable/setup')}
             >
               <Settings size={16} color="#fff" />
               <Text style={{ fontSize: 14, fontWeight: '600', color: '#fff' }}>

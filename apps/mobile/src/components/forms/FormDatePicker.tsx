@@ -253,8 +253,8 @@ export function FormDatePicker({
 
                 {/* Weekday headers */}
                 <View style={styles.weekRow}>
-                  {WEEKDAYS.map((d) => (
-                    <Text key={d} style={styles.weekDay}>
+                  {WEEKDAYS.map((d, i) => (
+                    <Text key={`weekday-${i}`} style={styles.weekDay}>
                       {d}
                     </Text>
                   ))}
@@ -265,7 +265,7 @@ export function FormDatePicker({
                   {calendarDays.map((day, idx) =>
                     day ? (
                       <TouchableOpacity
-                        key={idx}
+                        key={`day-${viewYear}-${viewMonth}-${day}`}
                         style={[
                           styles.dayCell,
                           isSelected(day) ? styles.dayCellSelected : undefined,
@@ -285,7 +285,7 @@ export function FormDatePicker({
                         </Text>
                       </TouchableOpacity>
                     ) : (
-                      <View key={idx} style={styles.dayCell} />
+                      <View key={`empty-${viewYear}-${viewMonth}-${idx}`} style={styles.dayCell} />
                     )
                   )}
                 </View>
@@ -384,6 +384,13 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     paddingBottom: Platform.OS === 'ios' ? 34 : 24,
     maxHeight: '75%',
+    // Shadow for iOS
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    // Elevation for Android
+    elevation: 16,
   },
   modalHeader: {
     flexDirection: 'row',

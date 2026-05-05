@@ -79,7 +79,11 @@ export default function EditSubjectScreen() {
   useEffect(() => {
     if (subject && !formLoaded) {
       setForm({
-        class_id: subject.class_assigned?.public_id || subject.class_id || '',
+        class_id:
+          subject.class_info?.public_id ||
+          subject.class_assigned?.public_id ||
+          subject.class_id ||
+          '',
         subject_id:
           subject.subject_info?.id?.toString() ||
           subject.subject_master?.id?.toString() ||

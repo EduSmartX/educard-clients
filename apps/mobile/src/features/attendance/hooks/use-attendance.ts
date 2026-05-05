@@ -1,137 +1,166 @@
-/**
- * Attendance Hooks
- */
-
+import { extractApiError } from '@educard/shared';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Alert } from 'react-native';
 
 import {
+  getDashboardAttendanceStats,
   getEligibleClasses,
   validateAttendanceDate,
   getComprehensiveAttendance,
   bulkMarkAttendance,
-  getEmployeeAttendance,
-  bulkSubmitEmployeeAttendance,
-  getTimesheetSubmissions,
+  getMyAttendance,
   checkTimesheetStatus,
-  getOrganizationHolidays,
+  submitTimesheet,
+  returnTimesheetToDraft,
+} from '../api/attendance-api';
+import type {
+  DashboardAttendanceStats,
+  EligibleClass,
+  DateValidation,
+  ComprehensiveAttendanceRecord,
+  BulkAttendancePayload,
+  EmployeeAttendanceResponse,
+  TimesheetStatus,
+  SubmitTimesheetPayload,
 } from '../api/attendance-api';
 
-// ============================================================================
-// Student Attendance Hooks
-// ============================================================================
+// Query keys
+export const attendanceKeys = {
+  all: ['attendance'] as const,
+  dashboard: () => [...attendanceKeys.all, 'dashboard-stats'] as const,
+  eligibleClasses: () => [...attendanceKeys.all, 'eligible-classes'] as const,
+  comprehensiveAttendance: (classId: string, date: string) =>
+    [...attendanceKeys.all, 'comprehensive', classId, date] as const,
+  dateValidation: (classId: string, date: string) =>
+    [...attendanceKeys.all, 'validate', classId, date] as const,
+};
 
+export function useDashboardAttendanceStats() {
+  return useQuery<DashboardAttendanceStats>({
+    queryKey: attendanceKeys.dashboard(),
+    queryFn: getDashboardAttendanceStats,
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: true,
+  });
+}
+
+// Hook to get eligible classes for marking attendance
 export function useEligibleClasses() {
-  return useQuery({
-    queryKey: ['attendance', 'eligible-classes'],
+  return useQuery<EligibleClass[]>({
+    queryKey: attendanceKeys.eligibleClasses(),
     queryFn: () => getEligibleClasses('attendance'),
-    staleTime: 5 * 60_000,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
 
-export function useValidateAttendanceDate(classId: string, date: string) {
-  return useQuery({
-    queryKey: ['attendance', 'validate', classId, date],
+// Hook to validate attendance date
+export function useValidateDate(classId: string, date: string, enabled = true) {
+  return useQuery<DateValidation>({
+    queryKey: attendanceKeys.dateValidation(classId, date),
     queryFn: () => validateAttendanceDate(classId, date),
-    enabled: !!classId && !!date,
-    staleTime: 60_000,
+    enabled: enabled && !!classId && !!date,
+    staleTime: 1 * 60 * 1000, // 1 minute
   });
 }
 
+// Hook to get comprehensive attendance data
 export function useComprehensiveAttendance(classId: string, date: string, enabled = true) {
-  return useQuery({
-    queryKey: ['attendance', 'comprehensive', classId, date],
+  return useQuery<ComprehensiveAttendanceRecord[]>({
+    queryKey: attendanceKeys.comprehensiveAttendance(classId, date),
     queryFn: () => getComprehensiveAttendance(classId, date),
     enabled: enabled && !!classId && !!date,
-    staleTime: 30_000,
+    staleTime: 30 * 1000, // 30 seconds
   });
 }
 
+// Hook to bulk mark attendance
 export function useBulkMarkAttendance() {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: ({
-      classId,
-      payload,
-    }: {
-      classId: string;
-      payload: Parameters<typeof bulkMarkAttendance>[1];
-    }) => bulkMarkAttendance(classId, payload),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['attendance'] });
+    mutationFn: ({ classId, payload }: { classId: string; payload: BulkAttendancePayload }) =>
+      bulkMarkAttendance(classId, payload),
+    onSuccess: (_data, variables) => {
+      // Invalidate comprehensive attendance query
+      queryClient.invalidateQueries({
+        queryKey: attendanceKeys.comprehensiveAttendance(variables.classId, variables.payload.date),
+      });
+      queryClient.invalidateQueries({
+        queryKey: attendanceKeys.dashboard(),
+      });
+
+      Alert.alert('Success', `Attendance saved for ${variables.payload.date}`);
+    },
+    onError: (error: unknown) => {
+      const errorMessage = extractApiError(error, 'Failed to save attendance');
+      Alert.alert('Error', errorMessage);
     },
   });
 }
 
-// ============================================================================
-// Employee Timesheet Hooks
-// ============================================================================
+// ============== EMPLOYEE TIMESHEET HOOKS ==============
 
-export function useEmployeeAttendance(fromDate: string, toDate: string, enabled = true) {
-  return useQuery({
-    queryKey: ['employee-attendance', fromDate, toDate],
-    queryFn: () => getEmployeeAttendance({ from_date: fromDate, to_date: toDate }),
+// Hook to get employee's own attendance for timesheet
+export function useMyAttendance(fromDate: string, toDate: string, enabled = true) {
+  return useQuery<EmployeeAttendanceResponse>({
+    queryKey: [...attendanceKeys.all, 'my-attendance', fromDate, toDate],
+    queryFn: () => getMyAttendance(fromDate, toDate),
     enabled: enabled && !!fromDate && !!toDate,
-    staleTime: 30_000,
+    staleTime: 30 * 1000,
   });
 }
 
+// Hook to check timesheet status
+export function useTimesheetStatus(fromDate: string, toDate: string, enabled = true) {
+  return useQuery<TimesheetStatus>({
+    queryKey: [...attendanceKeys.all, 'timesheet-status', fromDate, toDate],
+    queryFn: () => checkTimesheetStatus(fromDate, toDate),
+    enabled: enabled && !!fromDate && !!toDate,
+    staleTime: 30 * 1000,
+  });
+}
+
+// Hook to submit timesheet
 export function useSubmitTimesheet() {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: bulkSubmitEmployeeAttendance,
+    mutationFn: (payload: SubmitTimesheetPayload) => submitTimesheet(payload),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [...attendanceKeys.all, 'my-attendance'],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [...attendanceKeys.all, 'timesheet-status'],
+      });
+      Alert.alert('Success', 'Timesheet submitted for approval');
+    },
+    onError: (error: unknown) => {
+      const errorMessage = extractApiError(error, 'Failed to submit timesheet');
+      Alert.alert('Error', errorMessage);
+    },
+  });
+}
+
+// Hook to return timesheet to draft
+export function useReturnTimesheetToDraft() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ fromDate, toDate }: { fromDate: string; toDate: string }) =>
+      returnTimesheetToDraft(fromDate, toDate),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['employee-attendance'] });
-      qc.invalidateQueries({ queryKey: ['timesheets'] });
-      Alert.alert('Success', 'Timesheet submitted for review.');
+      queryClient.invalidateQueries({
+        queryKey: [...attendanceKeys.all, 'my-attendance'],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [...attendanceKeys.all, 'timesheet-status'],
+      });
+      Alert.alert('Success', 'Timesheet returned to draft');
     },
-    onError: (err: any) => {
-      const data = err?.response?.data;
-      let msg = 'Failed to submit timesheet.';
-      if (data?.errors?.timesheet_submission) {
-        msg = data.errors.timesheet_submission.flat().join('\n');
-      } else if (data?.errors?.attendance_records) {
-        const recs = data.errors.attendance_records;
-        msg = Array.isArray(recs)
-          ? recs
-              .flat()
-              .map((r: any) => (typeof r === 'string' ? r : JSON.stringify(r)))
-              .join('\n')
-          : String(recs);
-      } else if (data?.message) {
-        msg = data.message;
-      } else if (data?.error) {
-        msg = data.error;
-      } else if (data?.detail) {
-        msg = data.detail;
-      }
-      Alert.alert('Error', msg);
+    onError: (error: unknown) => {
+      const errorMessage = extractApiError(error, 'Failed to return timesheet to draft');
+      Alert.alert('Error', errorMessage);
     },
-  });
-}
-
-export function useTimesheetSubmissions(params?: Record<string, string>) {
-  return useQuery({
-    queryKey: ['timesheets', 'self', params],
-    queryFn: () => getTimesheetSubmissions(params),
-    staleTime: 30_000,
-  });
-}
-
-export function useCheckTimesheetStatus(weekStart: string, weekEnd: string) {
-  return useQuery({
-    queryKey: ['timesheets', 'check-status', weekStart, weekEnd],
-    queryFn: () => checkTimesheetStatus({ week_start_date: weekStart, week_end_date: weekEnd }),
-    enabled: !!weekStart && !!weekEnd,
-    staleTime: 60_000,
-  });
-}
-
-export function useOrganizationHolidays(fromDate: string, toDate: string, enabled = true) {
-  return useQuery({
-    queryKey: ['holidays', fromDate, toDate],
-    queryFn: () => getOrganizationHolidays({ from_date: fromDate, to_date: toDate }),
-    enabled: enabled && !!fromDate && !!toDate,
-    staleTime: 5 * 60_000,
   });
 }

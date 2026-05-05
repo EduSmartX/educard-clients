@@ -1,8 +1,10 @@
 /**
- * Leave Management — React Query Hooks
+ * Leave Management Hooks
  */
 
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { extractApiError } from '@educard/shared';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Alert } from 'react-native';
 
 import {
   getLeaveAllocations,
@@ -17,16 +19,14 @@ import {
   getMyLeaveBalances,
   getMyLeaveRequests,
   createLeaveRequest,
-  cancelLeaveRequest,
+  cancelMyLeaveRequest,
   calculateWorkingDays,
   type LeaveAllocationQueryParams,
   type LeaveReviewQueryParams,
-  type LeaveRequestCreatePayload,
+  type CreateLeaveRequestPayload,
 } from '../api/leave-api';
 
-// ============================================================================
 // Query Keys
-// ============================================================================
 
 export const leaveKeys = {
   all: ['leave'] as const,
@@ -42,9 +42,7 @@ export const leaveKeys = {
   reviewDetail: (id: string) => [...leaveKeys.reviews(), 'detail', id] as const,
 };
 
-// ============================================================================
 // Leave Allocations Hooks
-// ============================================================================
 
 export function useLeaveAllocations(params?: LeaveAllocationQueryParams) {
   return useQuery({
@@ -93,24 +91,12 @@ export function useDeleteLeaveAllocation() {
   });
 }
 
-// ============================================================================
 // Leave Approvals Hooks
-// ============================================================================
 
 export function useLeaveReviews(params?: LeaveReviewQueryParams) {
-  const pageSize = params?.page_size || 20;
-  return useInfiniteQuery({
+  return useQuery({
     queryKey: leaveKeys.reviewsList(params),
-    queryFn: ({ pageParam = 1 }) =>
-      getLeaveReviews({ ...params, page: pageParam, page_size: pageSize }),
-    initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
-      const pagination = lastPage.pagination;
-      if (pagination?.next) {
-        return (pagination.page || 1) + 1;
-      }
-      return undefined;
-    },
+    queryFn: () => getLeaveReviews(params),
     staleTime: 30_000,
   });
 }
@@ -145,15 +131,13 @@ export function useRejectLeave() {
   });
 }
 
-// ============================================================================
-// Employee Leave Balances & User Leave Requests
-// ============================================================================
+// My Leave Balances & Requests Hooks
 
 export function useMyLeaveBalances() {
   return useQuery({
     queryKey: [...leaveKeys.all, 'my-balances'],
     queryFn: getMyLeaveBalances,
-    staleTime: 30_000,
+    staleTime: 60_000,
   });
 }
 
@@ -172,9 +156,15 @@ export function useMyLeaveRequests(params?: {
 export function useCreateLeaveRequest() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: LeaveRequestCreatePayload) => createLeaveRequest(data),
+    mutationFn: (data: CreateLeaveRequestPayload) => createLeaveRequest(data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: leaveKeys.all });
+      qc.invalidateQueries({ queryKey: [...leaveKeys.all, 'my-requests'] });
+      qc.invalidateQueries({ queryKey: [...leaveKeys.all, 'my-balances'] });
+      Alert.alert('Success', 'Leave request submitted successfully');
+    },
+    onError: (error: unknown) => {
+      const message = extractApiError(error, 'Failed to submit leave request');
+      Alert.alert('Error', message);
     },
   });
 }
@@ -182,9 +172,15 @@ export function useCreateLeaveRequest() {
 export function useCancelLeaveRequest() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (publicId: string) => cancelLeaveRequest(publicId),
+    mutationFn: (publicId: string) => cancelMyLeaveRequest(publicId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: leaveKeys.all });
+      qc.invalidateQueries({ queryKey: [...leaveKeys.all, 'my-requests'] });
+      qc.invalidateQueries({ queryKey: [...leaveKeys.all, 'my-balances'] });
+      Alert.alert('Success', 'Leave request cancelled');
+    },
+    onError: (error: unknown) => {
+      const message = extractApiError(error, 'Failed to cancel leave request');
+      Alert.alert('Error', message);
     },
   });
 }

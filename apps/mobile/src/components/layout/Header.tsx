@@ -89,7 +89,7 @@ export function Header({
         )}
         {showSettings && (
           <TouchableOpacity
-            onPress={() => router.push('/(tabs)/(admin)/settings' as any)}
+            onPress={() => router.push('/(tabs)/(admin)/settings')}
             className="h-10 w-10 items-center justify-center rounded-full bg-white/10"
             activeOpacity={0.7}
           >

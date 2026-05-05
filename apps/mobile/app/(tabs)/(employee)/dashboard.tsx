@@ -16,6 +16,10 @@ import {
   CheckCircle,
   AlertCircle,
   ChevronRight,
+  GraduationCap,
+  Send,
+  CalendarDays,
+  Plus,
 } from 'lucide-react-native';
 import { useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
@@ -298,34 +302,55 @@ export default function EmployeeDashboard() {
             <View className="-mx-1.5 flex-row flex-wrap">
               <TouchableOpacity
                 className="mb-3 w-1/3 px-1.5"
-                onPress={() => router.push('/(admin-screens)/leave/apply' as any)}
-              >
-                <View className="items-center rounded-2xl bg-warning-50 p-4">
-                  <Calendar size={28} color={colors.warning[600]} strokeWidth={1.5} />
-                  <Text className="mt-2 text-center text-sm font-medium text-warning-700">
-                    Apply{'\n'}Leave
-                  </Text>
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity
-                className="mb-3 w-1/3 px-1.5"
-                onPress={() => router.push('/(admin-screens)/leave/my-requests' as any)}
+                onPress={() => router.push('/(admin-screens)/attendance/mark')}
               >
                 <View className="items-center rounded-2xl bg-primary-50 p-4">
-                  <FileText size={28} color={colors.primary[600]} strokeWidth={1.5} />
+                  <ClipboardCheck size={28} color={colors.primary[600]} strokeWidth={1.5} />
                   <Text className="mt-2 text-center text-sm font-medium text-primary-700">
-                    My{'\n'}Leave
+                    Mark{'\n'}Attendance
                   </Text>
                 </View>
               </TouchableOpacity>
               <TouchableOpacity
                 className="mb-3 w-1/3 px-1.5"
-                onPress={() => router.push('/(admin-screens)/timesheets/my-submissions' as any)}
+                onPress={() => router.push('/(admin-screens)/exams/marks')}
               >
                 <View className="items-center rounded-2xl bg-success-50 p-4">
-                  <ClipboardCheck size={28} color={colors.success[600]} strokeWidth={1.5} />
+                  <GraduationCap size={28} color={colors.success[600]} strokeWidth={1.5} />
                   <Text className="mt-2 text-center text-sm font-medium text-success-700">
-                    My{'\n'}Timesheets
+                    Enter{'\n'}Marks
+                  </Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="mb-3 w-1/3 px-1.5"
+                onPress={() => router.push('/(admin-screens)/leave/my-requests')}
+              >
+                <View className="relative items-center rounded-2xl bg-warning-50 p-4">
+                  <CalendarDays size={28} color={colors.warning[600]} strokeWidth={1.5} />
+                  <Text className="mt-2 text-center text-sm font-medium text-warning-700">
+                    My{'\n'}Leaves
+                  </Text>
+                  {/* Plus button overlay */}
+                  <TouchableOpacity
+                    className="absolute -right-1 -top-1 h-6 w-6 items-center justify-center rounded-full bg-warning-500"
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      router.push('/(admin-screens)/leave/apply');
+                    }}
+                  >
+                    <Plus size={14} color="#fff" strokeWidth={2.5} />
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="mb-3 w-1/3 px-1.5"
+                onPress={() => router.push('/(admin-screens)/timesheets/my-submissions')}
+              >
+                <View className="items-center rounded-2xl bg-secondary-50 p-4">
+                  <Clock size={28} color={colors.secondary[600]} strokeWidth={1.5} />
+                  <Text className="mt-2 text-center text-sm font-medium text-secondary-700">
+                    My{'\n'}Timesheet
                   </Text>
                 </View>
               </TouchableOpacity>

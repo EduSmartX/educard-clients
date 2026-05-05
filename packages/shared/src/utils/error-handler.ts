@@ -1,15 +1,11 @@
 /**
  * Error Handling Utilities
- * Single-pass parsing with normalized error model
  * Handles Django REST Framework error responses with nested structures
- * Shared across Web, iOS, and Android
  */
 
 import type { ApiError } from "../types/api";
 
-/**
- * Backend error response structure (what Django sends in response.data)
- */
+/** Backend error response structure */
 export interface BackendErrorResponse {
   success?: boolean;
   status?: string;
@@ -20,9 +16,7 @@ export interface BackendErrorResponse {
   detail?: string;
 }
 
-/**
- * Axios error wrapper (what we receive in catch block)
- */
+/** Axios error wrapper */
 export interface AxiosErrorWrapper {
   response?: {
     data?: BackendErrorResponse;
@@ -31,17 +25,9 @@ export interface AxiosErrorWrapper {
   message?: string;
 }
 
-/**
- * Error values in the errors object can be:
- * - string[] (field error array)
- * - string (single error)
- * - nested object (for nested structures like student_data.email)
- */
 export type ErrorValue = string | string[] | Record<string, string | string[]>;
 
-/**
- * Normalized error model - single source of truth
- */
+/** Normalized error model */
 export interface NormalizedError {
   message: string;
   fieldErrors: Record<string, string>;
@@ -50,11 +36,7 @@ export interface NormalizedError {
   isValidation: boolean;
 }
 
-/**
- * Recursively flatten nested error objects
- * Handles cases like: { student_data: { email: ["error"] } }
- * Returns: { "student_data.email": "error" }
- */
+/** Recursively flatten nested error objects */
 function flattenErrors(
   errors: Record<string, ErrorValue>,
   prefix = "",
@@ -105,11 +87,7 @@ function flattenErrors(
   return result;
 }
 
-/**
- * Parse any error into normalized structure
- * This is the ONLY function that touches raw errors
- * All other functions consume NormalizedError
- */
+/** Parse any error into normalized structure */
 export function parseError(error: unknown): NormalizedError {
   const result: NormalizedError = {
     message: "An unexpected error occurred",
@@ -203,55 +181,67 @@ export function parseError(error: unknown): NormalizedError {
   return result;
 }
 
-/**
- * Get user-friendly error message for display
- * Use this for toast messages
- */
+/** Get user-friendly error message for display */
 export function getErrorMessage(error: unknown, fallback?: string): string {
   const normalized = parseError(error);
 
-  // Priority: non-field errors > single field error > message > fallback
+  // Priority 1: non-field errors (general validation messages)
   if (normalized.nonFieldErrors.length > 0) {
-    return normalized.nonFieldErrors[0];
+    return normalized.nonFieldErrors.join('\n');
   }
 
+  // Priority 2: field errors - combine them for user display
   const fieldErrorKeys = Object.keys(normalized.fieldErrors);
-  if (fieldErrorKeys.length === 1) {
-    return normalized.fieldErrors[fieldErrorKeys[0]];
+  if (fieldErrorKeys.length > 0) {
+    // If single field error with descriptive message, return it directly
+    if (fieldErrorKeys.length === 1) {
+      const msg = normalized.fieldErrors[fieldErrorKeys[0]];
+      // If message is long/descriptive, use it directly
+      if (msg.length > 50 || msg.includes('.') || msg.includes('!')) {
+        return msg;
+      }
+      // Otherwise include field name
+      const fieldLabel = fieldErrorKeys[0].replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      return `${fieldLabel}: ${msg}`;
+    }
+    
+    // Multiple field errors - combine them
+    return fieldErrorKeys.map(key => {
+      const msg = normalized.fieldErrors[key];
+      if (msg.length > 50 || msg.includes('.') || msg.includes('!')) {
+        return msg;
+      }
+      const fieldLabel = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      return `${fieldLabel}: ${msg}`;
+    }).join('\n');
   }
 
-  return normalized.message || fallback || "An unexpected error occurred";
+  // Priority 3: message from response (but not generic "Validation error occurred")
+  if (normalized.message && 
+      normalized.message !== "Validation error occurred" && 
+      normalized.message !== "An unexpected error occurred") {
+    return normalized.message;
+  }
+
+  return fallback || "An unexpected error occurred";
 }
 
-/**
- * Get field errors without form library
- * Use for vanilla state management (React Native)
- */
+/** Get field errors for form validation */
 export function getFieldErrors(error: unknown): Record<string, string> {
-  const normalized = parseError(error);
-  return normalized.fieldErrors;
+  return parseError(error).fieldErrors;
 }
 
-/**
- * Get non-field errors
- * Use when you need just the general validation errors
- */
+/** Get non-field errors */
 export function getNonFieldErrors(error: unknown): string[] {
-  const normalized = parseError(error);
-  return normalized.nonFieldErrors;
+  return parseError(error).nonFieldErrors;
 }
 
-/**
- * Check if error is a validation error
- */
+/** Check if error is a validation error */
 export function isValidationError(error: unknown): boolean {
-  const normalized = parseError(error);
-  return normalized.isValidation;
+  return parseError(error).isValidation;
 }
 
-/**
- * Check if error is a network error
- */
+/** Check if error is a network error */
 export function isNetworkError(error: unknown): boolean {
   if (error instanceof Error) {
     const msg = error.message.toLowerCase();
@@ -264,9 +254,7 @@ export function isNetworkError(error: unknown): boolean {
   return false;
 }
 
-/**
- * Get error title based on status code
- */
+/** Get error title based on status code */
 export function getErrorTitle(error: unknown): string {
   const normalized = parseError(error);
   const code = normalized.statusCode;
@@ -282,10 +270,7 @@ export function getErrorTitle(error: unknown): string {
   return "Error";
 }
 
-/**
- * Convert error to ApiError format (backward compatibility)
- * @deprecated Use parseError() for full error details
- */
+/** @deprecated Use parseError() instead */
 export function parseApiError(error: unknown): ApiError {
   const normalized = parseError(error);
   return {
@@ -295,10 +280,7 @@ export function parseApiError(error: unknown): ApiError {
   };
 }
 
-/**
- * Quick one-liner error extraction for Alert/toast messages.
- * Handles Django custom exception handler format: { status, message, errors, code }
- */
+/** Extract error message for display */
 export function extractApiError(
   err: unknown,
   fallback = "Something went wrong",
@@ -306,25 +288,75 @@ export function extractApiError(
   const data = (err as AxiosErrorWrapper)?.response?.data;
   if (!data) return (err as Error)?.message || fallback;
 
+  // First check for errors object (Django validation errors)
   if (data.errors && typeof data.errors === "object") {
-    const msgs = Object.entries(data.errors)
-      .map(([, v]) =>
-        Array.isArray(v) ? v.join(", ") : typeof v === "string" ? v : "",
-      )
-      .filter(Boolean);
-    if (msgs.length > 0) return msgs.join("\n");
+    const errorMessages: string[] = [];
+    
+    Object.entries(data.errors).forEach(([fieldName, value]) => {
+      // Skip internal flags
+      if (fieldName === 'has_deleted_duplicate' || fieldName === 'deleted_record_id') {
+        return;
+      }
+      
+      // Handle array of error messages
+      if (Array.isArray(value) && value.length > 0) {
+        // For non_field_errors, add directly
+        if (fieldName === 'non_field_errors' || fieldName === 'non_field_error') {
+          errorMessages.push(...value.filter(v => typeof v === 'string'));
+        } else {
+          // For field errors, check if message is already descriptive
+          const msg = value[0];
+          if (typeof msg === 'string') {
+            // If message is already descriptive (long sentence), use it directly
+            if (msg.length > 50 || msg.includes('.') || msg.includes('!')) {
+              errorMessages.push(msg);
+            } else {
+              // Convert snake_case to Title Case for short messages
+              const fieldLabel = fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+              errorMessages.push(`${fieldLabel}: ${msg}`);
+            }
+          }
+        }
+      } else if (typeof value === 'string') {
+        if (fieldName === 'non_field_errors' || fieldName === 'non_field_error' || fieldName === 'detail') {
+          errorMessages.push(value);
+        } else {
+          const fieldLabel = fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+          errorMessages.push(`${fieldLabel}: ${value}`);
+        }
+      } else if (typeof value === 'object' && value !== null) {
+        // Handle nested errors (e.g., student_data.email)
+        Object.entries(value as Record<string, unknown>).forEach(([nestedField, nestedValue]) => {
+          if (Array.isArray(nestedValue) && nestedValue.length > 0 && typeof nestedValue[0] === 'string') {
+            const fieldLabel = `${fieldName}.${nestedField}`.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            errorMessages.push(`${fieldLabel}: ${nestedValue[0]}`);
+          }
+        });
+      }
+    });
+    
+    if (errorMessages.length > 0) {
+      return errorMessages.join('\n');
+    }
   }
 
-  if (data.detail && typeof data.detail === "string") return data.detail;
-  if (data.message && data.message !== "Validation error occurred")
-    return data.message;
+  // Check for detail field (common in DRF errors)
+  if (data.detail && typeof data.detail === 'string') {
+    return data.detail;
+  }
+
+  // Check for message field (our custom response format)
+  if (data.message && typeof data.message === 'string') {
+    // Don't return generic validation message if we couldn't extract specific errors
+    if (data.message !== 'Validation error occurred' && data.message !== 'Validation error occurred.') {
+      return data.message;
+    }
+  }
 
   return fallback;
 }
 
-/**
- * Check if error indicates a deleted duplicate record exists
- */
+/** Check if error indicates a deleted duplicate record exists */
 export function isDeletedDuplicateError(error: unknown): boolean {
   const axiosError = error as AxiosErrorWrapper;
   const data = axiosError?.response?.data;
@@ -343,9 +375,7 @@ export function isDeletedDuplicateError(error: unknown): boolean {
   return false;
 }
 
-/**
- * Extract user-friendly message from deleted duplicate error
- */
+/** Extract user-friendly message from deleted duplicate error */
 export function getDeletedDuplicateMessage(error: unknown): string {
   const data = (error as AxiosErrorWrapper)?.response?.data;
   const fallback =
@@ -376,9 +406,7 @@ export function getDeletedDuplicateMessage(error: unknown): string {
   return fallback;
 }
 
-/**
- * Extract deleted record ID from deleted duplicate error
- */
+/** Extract deleted record ID from error */
 export function getDeletedRecordId(error: unknown): string | null {
   const errors = (error as AxiosErrorWrapper)?.response?.data?.errors;
   if (!errors) return null;

@@ -37,7 +37,7 @@ import {
   type NativeSyntheticEvent,
   type NativeScrollEvent,
 } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown, FadeInRight } from 'react-native-reanimated';
 
 import { SearchBar } from '@/components/common';
 import { EntityActions } from '@/components/common/EntityActions';
@@ -160,7 +160,6 @@ export default function TeachersScreen() {
   // Load more when scrolling to the end - only when scrolling DOWN
   const loadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage && !isRefetching && isScrollingDownRef.current) {
-      console.log('[Teachers] Loading more...');
       fetchNextPage();
     }
   }, [hasNextPage, isFetchingNextPage, isRefetching, fetchNextPage]);
@@ -174,20 +173,20 @@ export default function TeachersScreen() {
 
   const handleView = (teacher: Teacher) => {
     router.push({
-      pathname: '/(admin-screens)/teachers/[id]' as any,
+      pathname: '/(admin-screens)/teachers/[id]',
       params: { id: teacher.public_id, ...(isDeletedView ? { is_deleted: 'true' } : {}) },
     });
   };
 
   const handleEdit = (teacher: Teacher) => {
     router.push({
-      pathname: '/(admin-screens)/teachers/edit' as any,
+      pathname: '/(admin-screens)/teachers/edit',
       params: { id: teacher.public_id },
     });
   };
 
   const renderTeacherCard = ({ item, index }: { item: Teacher; index: number }) => (
-    <View>
+    <Animated.View entering={FadeInRight.delay(Math.min(index, 10) * 50).duration(300)}>
       <TouchableOpacity style={styles.card} onPress={() => handleView(item)} activeOpacity={0.7}>
         {/* Top row — Avatar + Info */}
         <View style={styles.topRow}>
@@ -256,7 +255,7 @@ export default function TeachersScreen() {
           }
         />
       </TouchableOpacity>
-    </View>
+    </Animated.View>
   );
 
   return (
@@ -270,7 +269,7 @@ export default function TeachersScreen() {
           <View style={headerStyles.topRow}>
             <TouchableOpacity
               style={headerStyles.backBtn}
-              onPress={() => router.navigate('/(tabs)/(admin)/management' as any)}
+              onPress={() => router.navigate('/(tabs)/(admin)/management')}
             >
               <ChevronLeft size={24} color="#fff" />
             </TouchableOpacity>
@@ -284,7 +283,7 @@ export default function TeachersScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={headerStyles.primaryBtn}
-                onPress={() => router.push('/(admin-screens)/teachers/create' as any)}
+                onPress={() => router.push('/(admin-screens)/teachers/create')}
               >
                 <Plus size={20} color={adminTheme.accent} />
               </TouchableOpacity>
