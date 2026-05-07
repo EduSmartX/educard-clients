@@ -4,7 +4,6 @@
 
 import * as ImagePicker from 'expo-image-picker';
 import { Camera, ImageIcon, X, User } from 'lucide-react-native';
-import { useState } from 'react';
 import {
   View,
   Text,
@@ -31,7 +30,7 @@ export function FormPhotoUpload({
   onImageSelected,
   disabled,
   name,
-  gender,
+  gender: _gender,
 }: FormPhotoUploadProps) {
   const requestPermissions = async () => {
     const camera = await ImagePicker.requestCameraPermissionsAsync();
@@ -87,15 +86,15 @@ export function FormPhotoUpload({
           destructiveButtonIndex: imageUri ? 2 : undefined,
         },
         (idx) => {
-          if (idx === 0) pickFromCamera();
-          else if (idx === 1) pickFromGallery();
+          if (idx === 0) void pickFromCamera();
+          else if (idx === 1) void pickFromGallery();
           else if (idx === 2 && imageUri) onImageSelected(null, null);
         }
       );
     } else {
       Alert.alert('Upload Photo', 'Choose an option', [
-        { text: 'Camera', onPress: pickFromCamera },
-        { text: 'Gallery', onPress: pickFromGallery },
+        { text: 'Camera', onPress: () => void pickFromCamera() },
+        { text: 'Gallery', onPress: () => void pickFromGallery() },
         ...(imageUri
           ? [
               {

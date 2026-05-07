@@ -8,6 +8,7 @@ import type { Student, ApiListResponse, ApiDetailResponse } from '@educard/share
 import { apiClient } from '@/api/client';
 
 export type StudentListResponse = ApiListResponse<Student>;
+export type StudentDetailResponse = ApiDetailResponse<Student>;
 
 export interface StudentQueryParams {
   search?: string;
@@ -25,22 +26,32 @@ export async function getStudents(params?: StudentQueryParams): Promise<StudentL
   return response.data;
 }
 
-export async function getStudentById(publicId: string, isDeleted?: boolean) {
-  const response = await apiClient.get(
+export async function getStudentById(
+  publicId: string,
+  isDeleted?: boolean
+): Promise<StudentDetailResponse> {
+  const response = await apiClient.get<StudentDetailResponse>(
     API_ENDPOINTS.STUDENTS.DETAIL(publicId),
     isDeleted ? { params: { is_deleted: true } } : undefined
   );
   return response.data;
 }
 
-export async function createStudent(data: Partial<Student>, forceCreate?: boolean) {
+export async function createStudent(
+  data: Partial<Student>,
+  forceCreate?: boolean
+): Promise<StudentDetailResponse> {
   const params = forceCreate ? { force_create: 'true' } : {};
-  const response = await apiClient.post(API_ENDPOINTS.STUDENTS.CREATE, data, { params });
+  const response = await apiClient.post<StudentDetailResponse>(
+    API_ENDPOINTS.STUDENTS.CREATE,
+    data,
+    { params }
+  );
   return response.data;
 }
 
-export async function updateStudent(publicId: string, data: Partial<Student>) {
-  return apiClient.patch(API_ENDPOINTS.STUDENTS.PATCH(publicId), data);
+export async function updateStudent(publicId: string, data: Partial<Student>): Promise<void> {
+  await apiClient.patch(API_ENDPOINTS.STUDENTS.PATCH(publicId), data);
 }
 
 export async function deleteStudent(publicId: string, classId?: string): Promise<void> {
@@ -49,18 +60,22 @@ export async function deleteStudent(publicId: string, classId?: string): Promise
       ? API_ENDPOINTS.STUDENTS.CLASS_LEVEL.DELETE(classId, publicId)
       : API_ENDPOINTS.STUDENTS.DELETE(publicId);
     await apiClient.delete(url);
-  } catch (error: any) {
-    const status = error?.response?.status;
+  } catch (error: unknown) {
+    const axiosError = error as { response?: { status?: number }; message?: string };
+    const status = axiosError?.response?.status;
     if (status && status >= 200 && status < 300) return;
-    if (error?.message === 'Network Error' && !error?.response) return;
+    if (axiosError?.message === 'Network Error' && !axiosError?.response) return;
     throw error;
   }
 }
 
-export async function restoreStudent(publicId: string, classId?: string) {
+export async function restoreStudent(
+  publicId: string,
+  classId?: string
+): Promise<StudentDetailResponse> {
   const url = classId
     ? API_ENDPOINTS.STUDENTS.CLASS_LEVEL.ACTIVATE(classId, publicId)
     : `${API_ENDPOINTS.STUDENTS.DETAIL(publicId)}activate/`;
-  const response = await apiClient.post(url);
+  const response = await apiClient.post<StudentDetailResponse>(url);
   return response.data;
 }

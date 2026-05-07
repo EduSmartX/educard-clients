@@ -3,7 +3,7 @@
  * Glassmorphism cards, spring animations, vibrant gradients, floating feel
  */
 
-import { Colors, getRoleGradient, getRoleThemeColors } from '@educard/shared';
+import { getRoleThemeColors } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
@@ -14,7 +14,6 @@ import {
   Bell,
   Calendar,
   ChevronRight,
-  User,
   CalendarCheck,
   Settings,
   FileText,
@@ -32,8 +31,6 @@ import {
   Dimensions,
   Image,
   RefreshControl,
-  ImageErrorEventData,
-  NativeSyntheticEvent,
 } from 'react-native';
 import Animated, {
   FadeIn,
@@ -68,7 +65,9 @@ const getGreetingEmoji = () => {
   return '🌙';
 };
 
-const adminTheme = getRoleThemeColors('admin');
+// Theme colors for admin - can be used for future theming
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _adminTheme = getRoleThemeColors('admin');
 
 type ActivityType = 'success' | 'info' | 'warning';
 
@@ -259,7 +258,7 @@ export default function AdminDashboard() {
   const getAttendanceDisplay = () => {
     if (!attendanceStats) return '...';
     if (attendanceStats.is_holiday) {
-      return attendanceStats.holiday_name || 'Holiday';
+      return attendanceStats.holiday_name ?? 'Holiday';
     }
     if (!attendanceStats.is_working_day) {
       return 'Off Day';
@@ -271,15 +270,15 @@ export default function AdminDashboard() {
   };
 
   const statsValues: Record<string, string> = {
-    students: studentsData?.totalCount?.toLocaleString() || '0',
-    teachers: teachersData?.totalCount?.toLocaleString() || '0',
-    classes: classesData?.totalCount?.toLocaleString() || '0',
+    students: studentsData?.totalCount?.toLocaleString() ?? '0',
+    teachers: teachersData?.totalCount?.toLocaleString() ?? '0',
+    classes: classesData?.totalCount?.toLocaleString() ?? '0',
     attendance: getAttendanceDisplay(),
   };
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    Promise.all([
+    void Promise.all([
       refetchTeachers(),
       refetchStudents(),
       refetchClasses(),
@@ -292,7 +291,7 @@ export default function AdminDashboard() {
   }, [refetchTeachers, refetchStudents, refetchClasses, refetchAttendance]);
 
   const profileImageUrl =
-    getMediaUrl(profilePhoto?.thumbnail_url) || getMediaUrl(profilePhoto?.url);
+    getMediaUrl(profilePhoto?.thumbnail_url) ?? getMediaUrl(profilePhoto?.url);
 
   return (
     <View style={styles.container}>
@@ -315,7 +314,7 @@ export default function AdminDashboard() {
               <Text style={styles.greeting}>
                 {getGreeting()} {getGreetingEmoji()}
               </Text>
-              <Text style={styles.userName}>{user?.full_name || 'Principal Admin'}</Text>
+              <Text style={styles.userName}>{user?.full_name ?? 'Principal Admin'}</Text>
               <Text style={styles.roleTag}>Administrator</Text>
             </View>
             <View style={styles.headerRight}>
@@ -337,7 +336,7 @@ export default function AdminDashboard() {
                 ) : (
                   <View style={styles.profileFallback}>
                     <Text style={{ color: '#fff', fontSize: 16, fontWeight: '800' }}>
-                      {(user?.full_name || 'A').charAt(0).toUpperCase()}
+                      {(user?.full_name ?? 'A').charAt(0).toUpperCase()}
                     </Text>
                   </View>
                 )}
@@ -404,7 +403,11 @@ export default function AdminDashboard() {
               >
                 <TouchableOpacity
                   style={styles.adminLinkCard}
-                  onPress={() => (link.route ? router.push(link.route as any) : null)}
+                  onPress={() => {
+                    if (link.route) {
+                      router.push(link.route as `/${string}`);
+                    }
+                  }}
                   activeOpacity={0.75}
                 >
                   <LinearGradient

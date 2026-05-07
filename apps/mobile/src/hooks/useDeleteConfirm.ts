@@ -30,17 +30,19 @@ export function useDeleteConfirm<T = string>({
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteMutation.mutateAsync(data);
-              onSuccess?.();
-              Alert.alert('Success', `${entityName} deleted successfully`);
-            } catch (error) {
-              Alert.alert(
-                'Error',
-                getErrorMessage(error, `Failed to delete ${entityName.toLowerCase()}`)
-              );
-            }
+          onPress: () => {
+            void (async () => {
+              try {
+                await deleteMutation.mutateAsync(data);
+                onSuccess?.();
+                Alert.alert('Success', `${entityName} deleted successfully`);
+              } catch (error) {
+                Alert.alert(
+                  'Error',
+                  getErrorMessage(error, `Failed to delete ${entityName.toLowerCase()}`)
+                );
+              }
+            })();
           },
         },
       ]);

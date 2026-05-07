@@ -44,7 +44,7 @@ export function FormMultiSelect({
   placeholder = 'Select items...',
   searchable = true,
   disabled,
-  loading,
+  loading: _loading,
 }: FormMultiSelectProps) {
   const [visible, setVisible] = useState(false);
   const [search, setSearch] = useState('');

@@ -29,7 +29,7 @@ interface AuthActions {
 
 type AuthStore = AuthState & AuthActions;
 
-export const useAuthStore = create<AuthStore>((set, get) => ({
+export const useAuthStore = create<AuthStore>((set, _get) => ({
   // Initial state
   user: null,
   tokens: null,
@@ -136,7 +136,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         isLoading: false,
         error: null,
       });
-    } catch (error) {
+    } catch (_error) {
       // Still clear local state even if API call fails
       set({
         user: null,

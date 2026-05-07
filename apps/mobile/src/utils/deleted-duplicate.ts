@@ -5,18 +5,28 @@
  */
 
 interface ApiErrorData {
-  errors?: Record<string, any>;
+  errors?: Record<string, unknown>;
   non_field_errors?: string[];
   has_deleted_duplicate?: string | string[];
   deleted_record_id?: string | string[];
   detail?: string;
 }
 
+interface AxiosLikeError {
+  response?: {
+    data?: {
+      errors?: ApiErrorData;
+    } & ApiErrorData;
+  };
+}
+
 /**
  * Check if an API error is a "deleted duplicate" error
  */
-export function isDeletedDuplicateError(error: any): boolean {
-  const data: ApiErrorData | undefined = error?.response?.data?.errors || error?.response?.data;
+export function isDeletedDuplicateError(error: unknown): boolean {
+  const axiosError = error as AxiosLikeError;
+  const data: ApiErrorData | undefined =
+    axiosError?.response?.data?.errors ?? axiosError?.response?.data;
 
   if (!data) return false;
 
@@ -31,8 +41,10 @@ export function isDeletedDuplicateError(error: any): boolean {
 /**
  * Extract user-friendly message from deleted duplicate error
  */
-export function getDeletedDuplicateMessage(error: any): string {
-  const data: ApiErrorData | undefined = error?.response?.data?.errors || error?.response?.data;
+export function getDeletedDuplicateMessage(error: unknown): string {
+  const axiosError = error as AxiosLikeError;
+  const data: ApiErrorData | undefined =
+    axiosError?.response?.data?.errors ?? axiosError?.response?.data;
 
   const fallback =
     'A deleted record with the same details already exists. Would you like to restore it or create a new one?';
@@ -56,8 +68,10 @@ export function getDeletedDuplicateMessage(error: any): string {
 /**
  * Extract the deleted record's public_id
  */
-export function getDeletedRecordId(error: any): string | null {
-  const data: ApiErrorData | undefined = error?.response?.data?.errors || error?.response?.data;
+export function getDeletedRecordId(error: unknown): string | null {
+  const axiosError = error as AxiosLikeError;
+  const data: ApiErrorData | undefined =
+    axiosError?.response?.data?.errors ?? axiosError?.response?.data;
 
   if (!data) return null;
 

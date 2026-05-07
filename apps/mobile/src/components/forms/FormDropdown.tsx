@@ -64,7 +64,7 @@ export function FormDropdown({
         activeOpacity={0.7}
       >
         <Text style={[styles.triggerText, !selectedLabel && styles.placeholder]}>
-          {loading ? 'Loading...' : selectedLabel || placeholder}
+          {loading ? 'Loading...' : selectedLabel ?? placeholder}
         </Text>
         <ChevronDown size={18} color={error ? '#ef4444' : '#94a3b8'} />
       </TouchableOpacity>

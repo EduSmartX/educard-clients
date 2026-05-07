@@ -78,7 +78,7 @@ export function useUpdateLeaveAllocation() {
       data,
     }: {
       publicId: string;
-      data: Partial<LeaveAllocationCreatePayload>;
+      data: Parameters<typeof updateLeaveAllocation>[1];
     }) => updateLeaveAllocation(publicId, data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: leaveKeys.allocations() });

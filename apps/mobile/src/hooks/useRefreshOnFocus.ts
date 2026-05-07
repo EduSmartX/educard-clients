@@ -16,7 +16,7 @@ export function useRefreshOnFocus<T>(refetch: () => Promise<T>) {
         return;
       }
 
-      refetch();
+      void refetch();
     }, [refetch])
   );
 }

@@ -3,6 +3,7 @@
  */
 
 import { QueryKeys } from '@educard/shared';
+import type { Subject } from '@educard/shared';
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { DEFAULT_PAGE_SIZE } from '@/api/client';
@@ -21,7 +22,8 @@ import {
 export const subjectKeys = {
   all: QueryKeys.SUBJECTS.ALL,
   lists: () => QueryKeys.SUBJECTS.LISTS(),
-  list: (params?: SubjectQueryParams) => QueryKeys.SUBJECTS.LIST(params as any),
+  list: (params?: SubjectQueryParams) =>
+    QueryKeys.SUBJECTS.LIST(params as Record<string, unknown> | undefined),
   infinite: (params?: Omit<SubjectQueryParams, 'page'>) => QueryKeys.SUBJECTS.INFINITE(params),
   byClass: (classId: string) => QueryKeys.SUBJECTS.BY_CLASS(classId),
   details: () => QueryKeys.SUBJECTS.DETAILS(),
@@ -29,7 +31,7 @@ export const subjectKeys = {
 };
 
 export function useSubjects(params?: Omit<SubjectQueryParams, 'page'>) {
-  const pageSize = params?.page_size || DEFAULT_PAGE_SIZE;
+  const pageSize = params?.page_size ?? DEFAULT_PAGE_SIZE;
 
   return useInfiniteQuery({
     queryKey: subjectKeys.infinite(params),
@@ -62,7 +64,6 @@ export function useSubjectsByClass(classId: string) {
   return useQuery({
     queryKey: subjectKeys.byClass(classId),
     queryFn: () => getSubjectsByClass(classId),
-    select: (data) => data.data,
     enabled: !!classId,
   });
 }
@@ -71,7 +72,6 @@ export function useSubjectDetail(publicId: string, isDeleted?: boolean) {
   return useQuery({
     queryKey: [...subjectKeys.detail(publicId), isDeleted],
     queryFn: () => getSubjectById(publicId, isDeleted),
-    select: (data) => data.data,
     enabled: !!publicId,
   });
 }
@@ -79,10 +79,10 @@ export function useSubjectDetail(publicId: string, isDeleted?: boolean) {
 export function useCreateSubject() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ data, forceCreate }: { data: any; forceCreate?: boolean }) =>
+    mutationFn: ({ data, forceCreate }: { data: Partial<Subject>; forceCreate?: boolean }) =>
       createSubject(data, forceCreate),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: subjectKeys.all });
+      void queryClient.invalidateQueries({ queryKey: subjectKeys.all });
     },
   });
 }
@@ -90,10 +90,10 @@ export function useCreateSubject() {
 export function useUpdateSubject() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ publicId, data }: { publicId: string; data: any }) =>
+    mutationFn: ({ publicId, data }: { publicId: string; data: Partial<Subject> }) =>
       updateSubject(publicId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: subjectKeys.all });
+      void queryClient.invalidateQueries({ queryKey: subjectKeys.all });
     },
   });
 }
@@ -103,7 +103,7 @@ export function useDeleteSubject() {
   return useMutation({
     mutationFn: (publicId: string) => deleteSubject(publicId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: subjectKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: subjectKeys.lists() });
     },
   });
 }
@@ -113,7 +113,7 @@ export function useRestoreSubject() {
   return useMutation({
     mutationFn: (publicId: string) => restoreSubject(publicId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: subjectKeys.all });
+      void queryClient.invalidateQueries({ queryKey: subjectKeys.all });
     },
   });
 }

@@ -3,6 +3,7 @@
  */
 
 import { QueryKeys } from '@educard/shared';
+import type { Class } from '@educard/shared';
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { DEFAULT_PAGE_SIZE } from '@/api/client';
@@ -20,14 +21,15 @@ import {
 export const classKeys = {
   all: QueryKeys.CLASSES.ALL,
   lists: () => QueryKeys.CLASSES.LISTS(),
-  list: (params?: ClassQueryParams) => QueryKeys.CLASSES.LIST(params as any),
+  list: (params?: ClassQueryParams) =>
+    QueryKeys.CLASSES.LIST(params as Record<string, unknown> | undefined),
   infinite: (params?: Omit<ClassQueryParams, 'page'>) => QueryKeys.CLASSES.INFINITE(params),
   details: () => QueryKeys.CLASSES.DETAILS(),
   detail: (id: string) => QueryKeys.CLASSES.DETAIL(id),
 };
 
 export function useClasses(params?: Omit<ClassQueryParams, 'page'>) {
-  const pageSize = params?.page_size || DEFAULT_PAGE_SIZE;
+  const pageSize = params?.page_size ?? DEFAULT_PAGE_SIZE;
 
   return useInfiniteQuery({
     queryKey: classKeys.infinite(params),
@@ -60,7 +62,6 @@ export function useClassDetail(publicId: string, isDeleted?: boolean) {
   return useQuery({
     queryKey: [...classKeys.detail(publicId), isDeleted],
     queryFn: () => getClassById(publicId, isDeleted),
-    select: (data) => data.data,
     enabled: !!publicId,
   });
 }
@@ -68,10 +69,10 @@ export function useClassDetail(publicId: string, isDeleted?: boolean) {
 export function useCreateClass() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ data, forceCreate }: { data: any; forceCreate?: boolean }) =>
+    mutationFn: ({ data, forceCreate }: { data: Partial<Class>; forceCreate?: boolean }) =>
       createClass(data, forceCreate),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: classKeys.all });
+      void queryClient.invalidateQueries({ queryKey: classKeys.all });
     },
   });
 }
@@ -79,10 +80,10 @@ export function useCreateClass() {
 export function useUpdateClass() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ publicId, data }: { publicId: string; data: any }) =>
+    mutationFn: ({ publicId, data }: { publicId: string; data: Partial<Class> }) =>
       updateClass(publicId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: classKeys.all });
+      void queryClient.invalidateQueries({ queryKey: classKeys.all });
     },
   });
 }
@@ -92,7 +93,7 @@ export function useDeleteClass() {
   return useMutation({
     mutationFn: (publicId: string) => deleteClass(publicId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: classKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: classKeys.lists() });
     },
   });
 }
@@ -102,7 +103,7 @@ export function useRestoreClass() {
   return useMutation({
     mutationFn: (publicId: string) => restoreClass(publicId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: classKeys.all });
+      void queryClient.invalidateQueries({ queryKey: classKeys.all });
     },
   });
 }

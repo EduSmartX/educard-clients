@@ -14,6 +14,8 @@ import {
   createWorkingDayPolicy,
   updateWorkingDayPolicy,
   type FetchHolidaysParams,
+  type Holiday,
+  type WorkingDayPolicy,
 } from '../api/holidays-api';
 
 export const holidayKeys = {
@@ -44,7 +46,7 @@ export function useCreateHoliday() {
   return useMutation({
     mutationFn: createHoliday,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: holidayKeys.all });
+      void qc.invalidateQueries({ queryKey: holidayKeys.all });
     },
   });
 }
@@ -52,9 +54,9 @@ export function useCreateHoliday() {
 export function useUpdateHoliday() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => updateHoliday(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<Holiday> }) => updateHoliday(id, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: holidayKeys.all });
+      void qc.invalidateQueries({ queryKey: holidayKeys.all });
     },
   });
 }
@@ -64,7 +66,7 @@ export function useDeleteHoliday() {
   return useMutation({
     mutationFn: deleteHoliday,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: holidayKeys.all });
+      void qc.invalidateQueries({ queryKey: holidayKeys.all });
     },
   });
 }
@@ -82,7 +84,7 @@ export function useCreateWorkingDayPolicy() {
   return useMutation({
     mutationFn: createWorkingDayPolicy,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: holidayKeys.workingDayPolicy() });
+      void qc.invalidateQueries({ queryKey: holidayKeys.workingDayPolicy() });
     },
   });
 }
@@ -90,9 +92,10 @@ export function useCreateWorkingDayPolicy() {
 export function useUpdateWorkingDayPolicy() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => updateWorkingDayPolicy(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<WorkingDayPolicy> }) =>
+      updateWorkingDayPolicy(id, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: holidayKeys.workingDayPolicy() });
+      void qc.invalidateQueries({ queryKey: holidayKeys.workingDayPolicy() });
     },
   });
 }

@@ -16,11 +16,24 @@ interface UseProfileImageOptions {
   onSuccess?: (imageUrl: string) => void;
 }
 
+interface FormDataFile {
+  uri: string;
+  name: string;
+  type: string;
+}
+
+interface UploadResponse {
+  data?: {
+    thumbnail_url?: string;
+    original_url?: string;
+  };
+}
+
 export function useProfileImage({ userPublicId, onSuccess }: UseProfileImageOptions) {
   const [isUploading, setIsUploading] = useState(false);
   const [localUri, setLocalUri] = useState<string | null>(null);
 
-  const pickAndUpload = useCallback(async () => {
+  const pickAndUpload = useCallback(() => {
     if (!userPublicId) {
       Alert.alert('Error', 'User data not loaded yet.');
       return;
@@ -30,11 +43,15 @@ export function useProfileImage({ userPublicId, onSuccess }: UseProfileImageOpti
     Alert.alert('Profile Photo', 'Choose an option', [
       {
         text: 'Take Photo',
-        onPress: () => launchPicker('camera'),
+        onPress: () => {
+          void launchPicker('camera');
+        },
       },
       {
         text: 'Choose from Gallery',
-        onPress: () => launchPicker('gallery'),
+        onPress: () => {
+          void launchPicker('gallery');
+        },
       },
       { text: 'Cancel', style: 'cancel' },
     ]);
@@ -44,13 +61,13 @@ export function useProfileImage({ userPublicId, onSuccess }: UseProfileImageOpti
         // Request permissions
         if (source === 'camera') {
           const { status } = await ImagePicker.requestCameraPermissionsAsync();
-          if (status !== 'granted') {
+          if (status !== ImagePicker.PermissionStatus.GRANTED) {
             Alert.alert('Permission Required', 'Camera permission is needed to take photos.');
             return;
           }
         } else {
           const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-          if (status !== 'granted') {
+          if (status !== ImagePicker.PermissionStatus.GRANTED) {
             Alert.alert('Permission Required', 'Gallery permission is needed to select photos.');
             return;
           }
@@ -79,18 +96,19 @@ export function useProfileImage({ userPublicId, onSuccess }: UseProfileImageOpti
 
         // Build multipart form data
         const formData = new FormData();
-        const fileName = asset.uri.split('/').pop() || 'photo.jpg';
-        const fileType = asset.mimeType || 'image/jpeg';
+        const fileName = asset.uri.split('/').pop() ?? 'photo.jpg';
+        const fileType = asset.mimeType ?? 'image/jpeg';
 
-        formData.append('file', {
+        const fileData: FormDataFile = {
           uri: Platform.OS === 'android' ? asset.uri : asset.uri.replace('file://', ''),
           name: fileName,
           type: fileType,
-        } as any);
+        };
+        formData.append('file', fileData as unknown as Blob);
         formData.append('image_type', 'profile_photo');
 
-        const response = await apiClient.post(
-          API_ENDPOINTS.ATTACHMENTS.USER_PHOTO_UPLOAD(userPublicId!),
+        const response = await apiClient.post<UploadResponse>(
+          API_ENDPOINTS.ATTACHMENTS.USER_PHOTO_UPLOAD(userPublicId),
           formData,
           {
             headers: { 'Content-Type': 'multipart/form-data' },
@@ -99,7 +117,7 @@ export function useProfileImage({ userPublicId, onSuccess }: UseProfileImageOpti
         );
 
         const imageUrl =
-          response.data?.data?.thumbnail_url || response.data?.data?.original_url || asset.uri;
+          response.data?.data?.thumbnail_url ?? response.data?.data?.original_url ?? asset.uri;
 
         onSuccess?.(imageUrl);
         Alert.alert('Success', 'Profile photo updated!');

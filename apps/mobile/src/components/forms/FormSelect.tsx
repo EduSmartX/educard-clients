@@ -27,7 +27,7 @@ export function FormSelect({
   onChange,
   error,
   required,
-  placeholder,
+  placeholder: _placeholder,
 }: FormSelectProps) {
   const hasError = !!error;
 

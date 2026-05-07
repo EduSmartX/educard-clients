@@ -49,7 +49,7 @@ export function useUpdatePreference() {
     mutationFn: ({ publicId, value }: { publicId: string; value: string | string[] }) =>
       updatePreference(publicId, value),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: preferenceKeys.all });
+      void qc.invalidateQueries({ queryKey: preferenceKeys.all });
     },
   });
 }
@@ -59,7 +59,7 @@ export function useResetPreference() {
   return useMutation({
     mutationFn: resetPreference,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: preferenceKeys.all });
+      void qc.invalidateQueries({ queryKey: preferenceKeys.all });
     },
   });
 }

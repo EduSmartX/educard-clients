@@ -22,15 +22,12 @@ import {
   RefreshControl,
   StyleSheet,
   ActivityIndicator,
-  Dimensions,
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { Screen } from '@/components/layout';
 import { colors } from '@/constants/colors';
 import { useMyTimetable } from '@/features/timetable';
-
-const { width: screenWidth } = Dimensions.get('window');
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const SHORT_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];

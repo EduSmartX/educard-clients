@@ -4,7 +4,7 @@
  */
 
 import { Calendar, X, ChevronLeft, ChevronRight, Check } from 'lucide-react-native';
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -296,10 +296,10 @@ export function FormDatePicker({
               <FlatList
                 ref={yearListRef}
                 data={years}
-                keyExtractor={(item) => item.toString()}
+                keyExtractor={(item) => String(item)}
                 style={styles.yearList}
                 initialScrollIndex={Math.max(0, years.indexOf(viewYear) - 2)}
-                getItemLayout={(_, index) => ({ length: 48, offset: 48 * index, index })}
+                getItemLayout={(_, index: number) => ({ length: 48, offset: 48 * index, index })}
                 renderItem={({ item }) => (
                   <TouchableOpacity
                     style={[styles.yearItem, item === viewYear && styles.yearItemActive]}

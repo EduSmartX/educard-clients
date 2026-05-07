@@ -164,7 +164,7 @@ export const bulkMarkAttendance = async (
   classId: string,
   payload: BulkAttendancePayload
 ): Promise<{ message: string }> => {
-  const response = await apiClient.post(
+  const response = await apiClient.post<{ message: string }>(
     `/attendance/class/${classId}/student-attendance/bulk-mark/`,
     payload
   );
@@ -294,7 +294,10 @@ export const checkTimesheetStatus = async (
 export const submitTimesheet = async (
   payload: SubmitTimesheetPayload
 ): Promise<{ message: string }> => {
-  const response = await apiClient.post('/attendance/employee/timesheets/submit/', payload);
+  const response = await apiClient.post<{ message: string }>(
+    '/attendance/employee/timesheets/submit/',
+    payload
+  );
   return response.data;
 };
 
@@ -305,9 +308,12 @@ export const returnTimesheetToDraft = async (
   fromDate: string,
   toDate: string
 ): Promise<{ message: string }> => {
-  const response = await apiClient.post('/attendance/employee/timesheets/return-to-draft/', {
-    from_date: fromDate,
-    to_date: toDate,
-  });
+  const response = await apiClient.post<{ message: string }>(
+    '/attendance/employee/timesheets/return-to-draft/',
+    {
+      from_date: fromDate,
+      to_date: toDate,
+    }
+  );
   return response.data;
 };

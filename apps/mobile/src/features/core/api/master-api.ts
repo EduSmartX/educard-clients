@@ -20,51 +20,66 @@ import { apiClient } from '@/api/client';
 // Re-export types for consumers
 export type { CoreClass, CoreSubject, RoleType, Department, Supervisor, LeaveType };
 
+// Helper to extract data array from response
+function extractData<T>(response: MasterListResponse<T> | T[]): T[] {
+  if ('data' in response && Array.isArray(response.data)) {
+    return response.data;
+  }
+  return response as T[];
+}
+
 export async function getCoreClasses(): Promise<CoreClass[]> {
   const res = await apiClient.get<MasterListResponse<CoreClass>>(API_ENDPOINTS.MASTER.CLASSES.LIST);
-  return res.data.data || (res.data as any);
+  return extractData(res.data);
 }
 
 export async function getCoreSubjects(): Promise<CoreSubject[]> {
   const res = await apiClient.get<MasterListResponse<CoreSubject>>(
     API_ENDPOINTS.MASTER.SUBJECTS.LIST
   );
-  return res.data.data || (res.data as any);
+  return extractData(res.data);
 }
 
 export async function getRoleTypes(): Promise<RoleType[]> {
   const res = await apiClient.get<MasterListResponse<RoleType>>(
     API_ENDPOINTS.MASTER.ROLE_TYPES.LIST
   );
-  return res.data.data || (res.data as any);
+  return extractData(res.data);
 }
 
 export async function getDepartments(): Promise<Department[]> {
   const res = await apiClient.get<MasterListResponse<Department>>(
     API_ENDPOINTS.MASTER.DEPARTMENTS.LIST
   );
-  return res.data.data || (res.data as any);
+  return extractData(res.data);
 }
 
 export async function getSupervisors(): Promise<Supervisor[]> {
   const res = await apiClient.get<ApiListResponse<Supervisor>>(API_ENDPOINTS.USERS.SUPERVISORS);
-  return res.data?.data || (res.data as any);
+  return res.data?.data ?? [];
 }
 
 export async function getLeaveTypes(): Promise<LeaveType[]> {
   const res = await apiClient.get<MasterListResponse<LeaveType>>(
     API_ENDPOINTS.MASTER.LEAVE_TYPES.LIST
   );
-  return res.data.data || (res.data as any);
+  return extractData(res.data);
+}
+
+interface FormDataFile {
+  uri: string;
+  name: string;
+  type: string;
 }
 
 export async function uploadProfilePhoto(userPublicId: string, uri: string, fileName: string) {
   const formData = new FormData();
-  formData.append('file', {
+  const fileData: FormDataFile = {
     uri,
     name: fileName || 'photo.jpg',
     type: 'image/jpeg',
-  } as any);
+  };
+  formData.append('file', fileData as unknown as Blob);
   formData.append('image_type', 'profile_photo');
 
   return apiClient.post(API_ENDPOINTS.ATTACHMENTS.USER_PHOTO_UPLOAD(userPublicId), formData, {

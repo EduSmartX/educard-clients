@@ -4,7 +4,7 @@
  */
 
 export interface ValidationRule {
-  validate: (value: any) => boolean;
+  validate: (value: unknown) => boolean;
   message: string;
 }
 
@@ -38,7 +38,7 @@ export const email = (label = 'Email'): ValidationRule => ({
 export const phone = (label = 'Phone'): ValidationRule => ({
   validate: (v) => {
     if (!v) return true; // optional by default
-    const digits = String(v).replace(/[\s\-\(\)\+]/g, '');
+    const digits = String(v).replace(/[\s\-()+"]/g, '');
     return /^\d{10,15}$/.test(digits);
   },
   message: `${label} must be a valid phone number (10-15 digits)`,
@@ -59,7 +59,7 @@ export const numberRange = (label: string, min: number, max: number): Validation
  * Returns an errors object (empty = valid).
  */
 export function validateForm(
-  values: Record<string, any>,
+  values: Record<string, unknown>,
   rulesMap: Record<string, ValidationRule[]>
 ): FieldErrors {
   const errors: FieldErrors = {};

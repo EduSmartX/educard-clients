@@ -3,6 +3,7 @@
  */
 
 import { QueryKeys } from '@educard/shared';
+import type { Student } from '@educard/shared';
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { DEFAULT_PAGE_SIZE } from '@/api/client';
@@ -20,14 +21,15 @@ import {
 export const studentKeys = {
   all: QueryKeys.STUDENTS.ALL,
   lists: () => QueryKeys.STUDENTS.LISTS(),
-  list: (params?: StudentQueryParams) => QueryKeys.STUDENTS.LIST(params as any),
+  list: (params?: StudentQueryParams) =>
+    QueryKeys.STUDENTS.LIST(params as Record<string, unknown> | undefined),
   infinite: (params?: Omit<StudentQueryParams, 'page'>) => QueryKeys.STUDENTS.INFINITE(params),
   details: () => QueryKeys.STUDENTS.DETAILS(),
   detail: (id: string) => QueryKeys.STUDENTS.DETAIL(id),
 };
 
 export function useStudents(params?: Omit<StudentQueryParams, 'page'>) {
-  const pageSize = params?.page_size || DEFAULT_PAGE_SIZE;
+  const pageSize = params?.page_size ?? DEFAULT_PAGE_SIZE;
 
   return useInfiniteQuery({
     queryKey: studentKeys.infinite(params),
@@ -60,7 +62,6 @@ export function useStudentDetail(publicId: string, isDeleted?: boolean) {
   return useQuery({
     queryKey: [...studentKeys.detail(publicId), isDeleted],
     queryFn: () => getStudentById(publicId, isDeleted),
-    select: (data) => data.data,
     enabled: !!publicId,
   });
 }
@@ -68,10 +69,10 @@ export function useStudentDetail(publicId: string, isDeleted?: boolean) {
 export function useCreateStudent() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ data, forceCreate }: { data: any; forceCreate?: boolean }) =>
+    mutationFn: ({ data, forceCreate }: { data: Partial<Student>; forceCreate?: boolean }) =>
       createStudent(data, forceCreate),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: studentKeys.all });
+      void queryClient.invalidateQueries({ queryKey: studentKeys.all });
     },
   });
 }
@@ -79,10 +80,10 @@ export function useCreateStudent() {
 export function useUpdateStudent() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ publicId, data }: { publicId: string; data: any }) =>
+    mutationFn: ({ publicId, data }: { publicId: string; data: Partial<Student> }) =>
       updateStudent(publicId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: studentKeys.all });
+      void queryClient.invalidateQueries({ queryKey: studentKeys.all });
     },
   });
 }
@@ -93,7 +94,7 @@ export function useDeleteStudent() {
     mutationFn: ({ publicId, classId }: { publicId: string; classId: string }) =>
       deleteStudent(publicId, classId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: studentKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: studentKeys.lists() });
     },
   });
 }
@@ -104,7 +105,7 @@ export function useRestoreStudent() {
     mutationFn: ({ publicId, classId }: { publicId: string; classId?: string }) =>
       restoreStudent(publicId, classId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: studentKeys.all });
+      void queryClient.invalidateQueries({ queryKey: studentKeys.all });
     },
   });
 }

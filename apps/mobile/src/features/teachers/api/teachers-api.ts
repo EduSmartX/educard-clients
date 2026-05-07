@@ -71,10 +71,11 @@ export async function updateTeacher(
 export async function deleteTeacher(publicId: string): Promise<void> {
   try {
     await apiClient.delete(API_ENDPOINTS.TEACHERS.DELETE(publicId));
-  } catch (error: any) {
-    const status = error?.response?.status;
+  } catch (error: unknown) {
+    const axiosError = error as { response?: { status?: number }; message?: string };
+    const status = axiosError?.response?.status;
     if (status && status >= 200 && status < 300) return;
-    if (error?.message === 'Network Error' && !error?.response) return;
+    if (axiosError?.message === 'Network Error' && !axiosError?.response) return;
     throw error;
   }
 }

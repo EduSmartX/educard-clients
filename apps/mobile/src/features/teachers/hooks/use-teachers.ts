@@ -32,7 +32,7 @@ export const teacherKeys = {
  * Hook to fetch teachers with infinite scroll
  */
 export function useTeachers(params?: Omit<TeacherQueryParams, 'page'>) {
-  const pageSize = params?.page_size || DEFAULT_PAGE_SIZE;
+  const pageSize = params?.page_size ?? DEFAULT_PAGE_SIZE;
 
   return useInfiniteQuery({
     queryKey: teacherKeys.infinite(params),
@@ -68,7 +68,6 @@ export function useTeacherDetail(publicId: string, isDeleted?: boolean) {
   return useQuery({
     queryKey: [...teacherKeys.detail(publicId), isDeleted],
     queryFn: () => getTeacherById(publicId, isDeleted),
-    select: (data) => data.data,
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     enabled: !!publicId,
@@ -89,7 +88,7 @@ export function useCreateTeacher() {
       forceCreate?: boolean;
     }) => createTeacher(data, forceCreate),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: teacherKeys.all });
+      void queryClient.invalidateQueries({ queryKey: teacherKeys.all });
     },
   });
 }
@@ -100,10 +99,15 @@ export function useCreateTeacher() {
 export function useUpdateTeacher() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ publicId, data }: { publicId: string; data: any }) =>
-      updateTeacher(publicId, data),
+    mutationFn: ({
+      publicId,
+      data,
+    }: {
+      publicId: string;
+      data: Parameters<typeof updateTeacher>[1];
+    }) => updateTeacher(publicId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: teacherKeys.all });
+      void queryClient.invalidateQueries({ queryKey: teacherKeys.all });
     },
   });
 }
@@ -116,7 +120,7 @@ export function useDeleteTeacher() {
   return useMutation({
     mutationFn: (publicId: string) => deleteTeacher(publicId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: teacherKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: teacherKeys.lists() });
     },
   });
 }
@@ -129,7 +133,7 @@ export function useRestoreTeacher() {
   return useMutation({
     mutationFn: (publicId: string) => restoreTeacher(publicId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: teacherKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: teacherKeys.lists() });
     },
   });
 }

@@ -71,7 +71,7 @@ export function AddressForm({
   required = false,
   showHeader = true,
   showLocationButton = true,
-  compact = false,
+  compact: _compact = false,
   disabled = false,
   onLocationFetched,
 }: AddressFormProps) {
@@ -83,7 +83,7 @@ export function AddressForm({
     setIsLoadingLocation(true);
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
+      if (status !== Location.PermissionStatus.GRANTED) {
         throw new Error('Location permission denied');
       }
 
@@ -95,11 +95,11 @@ export function AddressForm({
 
       if (result) {
         const addressData: Partial<AddressData> = {
-          streetAddress: [result.streetNumber, result.street].filter(Boolean).join(' ') || '',
-          city: result.city || result.subregion || '',
-          state: result.region || '',
-          zipCode: result.postalCode || '',
-          country: result.country || 'India',
+          streetAddress: [result.streetNumber, result.street].filter(Boolean).join(' ') ?? '',
+          city: result.city ?? result.subregion ?? '',
+          state: result.region ?? '',
+          zipCode: result.postalCode ?? '',
+          country: result.country ?? 'India',
         };
 
         // Update all fields
@@ -157,13 +157,13 @@ export function AddressForm({
             style={styles.input}
             placeholder={placeholder}
             placeholderTextColor={Colors.gray[400]}
-            value={values[field] || ''}
+            value={values[field] ?? ''}
             onChangeText={(text) => onChange(field, text)}
             onFocus={() => setFocusedField(field)}
             onBlur={() => setFocusedField(null)}
             editable={!disabled}
-            keyboardType={options?.keyboardType || 'default'}
-            autoCapitalize={options?.autoCapitalize || 'words'}
+            keyboardType={options?.keyboardType ?? 'default'}
+            autoCapitalize={options?.autoCapitalize ?? 'words'}
           />
         </View>
         {hasError && <Text style={styles.errorText}>{errors[field]}</Text>}
@@ -191,7 +191,7 @@ export function AddressForm({
           {showLocationButton && (
             <TouchableOpacity
               style={[styles.locationButton, isLoadingLocation && styles.locationButtonLoading]}
-              onPress={handleUseLocation}
+              onPress={() => void handleUseLocation()}
               disabled={isLoadingLocation || disabled}
             >
               {isLoadingLocation ? (
