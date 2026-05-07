@@ -184,6 +184,19 @@ export async function verifyPasswordResetOtp(data: {
   return response.data;
 }
 
+/**
+ * Change password for authenticated user
+ * After successful password change, the user should be logged out
+ */
+export async function changePassword(data: {
+  old_password: string;
+  new_password: string;
+  confirm_password: string;
+}): Promise<{ message: string }> {
+  const response = await apiClient.post<{ message: string }>('/auth/change-password/', data);
+  return response.data;
+}
+
 // Export all auth functions as authApi object for convenience
 export const authApi = {
   login,
@@ -194,4 +207,5 @@ export const authApi = {
   checkAuth,
   requestPasswordResetOtp,
   verifyPasswordResetOtp,
+  changePassword,
 };

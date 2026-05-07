@@ -1,12 +1,13 @@
 /**
  * Classes List Screen
  * Mobile-first class management with search and real API integration
+ * 
+ * Permission Model:
+ * - Admin: Full CRUD access (Add, Edit, Delete buttons visible)
+ * - Teacher: View-only access (No Add, Edit, Delete buttons)
  */
 
-import { Colors, getRoleThemeColors, Class, useDebounce, getErrorMessage } from '@educard/shared';
-import { useRouter } from 'expo-router';
-import { Plus, School, GraduationCap, BookOpen } from 'lucide-react-native';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -16,28 +17,37 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
-
+import { useRouter } from 'expo-router';
+import Animated, { FadeInRight } from 'react-native-reanimated';
+import { Plus, School, GraduationCap, BookOpen } from 'lucide-react-native';
+import { Colors, getRoleThemeColors, Class, useDebounce, getErrorMessage } from '@educard/shared';
+import { useClasses, useDeleteClass, useRestoreClass } from '@/features/classes';
 import { SearchBar, ListHeader } from '@/components/common';
-import { EntityActions } from '@/components/common/EntityActions';
 import { LoadingState, ErrorState, EmptyState, ListFooter } from '@/components/common/ListStates';
+import { EntityActions } from '@/components/common/EntityActions';
 import {
   FilterModal,
   ActiveFilters,
   CLASS_FILTER_FIELDS,
   getClassFilterLabels,
 } from '@/components/filters';
-import { useClasses, useDeleteClass, useRestoreClass } from '@/features/classes';
-import { useDeleteConfirm } from '@/hooks/useDeleteConfirm';
-import { useListScroll } from '@/hooks/useListScroll';
 import { layoutStyles, listStyles } from '@/styles';
+import { useListScroll } from '@/hooks/useListScroll';
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm';
+import { useAuthStore } from '@/lib/auth-store';
+import { isAdminRole } from '@/utils/role-utils';
 
 const adminTheme = getRoleThemeColors('admin');
 
 export default function ClassesScreen() {
   const router = useRouter();
+  const { user } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<Record<string, any>>({});
+
+  // Check if current user is admin (has full CRUD access)
+  const canManage = useMemo(() => isAdminRole(user?.role), [user?.role]);
 
   const debouncedSearch = useDebounce(searchQuery, 300);
 
@@ -54,11 +64,7 @@ export default function ClassesScreen() {
   } = useClasses({ search: debouncedSearch || undefined, ...filters });
 
   const deleteMutation = useDeleteClass();
-  const confirmDelete = useDeleteConfirm({
-    entityName: 'Class',
-    deleteMutation,
-    onSuccess: () => refetch(),
-  });
+  const confirmDelete = useDeleteConfirm({ entityName: 'Class', deleteMutation, onSuccess: () => refetch() });
 
   const restoreMutation = useRestoreClass();
   const handleReactivate = useCallback(
@@ -98,7 +104,7 @@ export default function ClassesScreen() {
   const handleView = useCallback(
     (classItem: Class) => {
       router.push({
-        pathname: '/(admin-screens)/classes/[id]',
+        pathname: '/(admin-screens)/classes/[id]' as any,
         params: { id: classItem.public_id, ...(isDeletedView ? { is_deleted: 'true' } : {}) },
       });
     },
@@ -108,7 +114,7 @@ export default function ClassesScreen() {
   const handleEdit = useCallback(
     (classItem: Class) => {
       router.push({
-        pathname: '/(admin-screens)/classes/edit',
+        pathname: '/(admin-screens)/classes/edit' as any,
         params: { id: classItem.public_id },
       });
     },
@@ -143,7 +149,7 @@ export default function ClassesScreen() {
   };
 
   const renderClassCard = ({ item, index }: { item: Class; index: number }) => (
-    <View>
+    <Animated.View entering={FadeInRight.delay(index * 50).duration(300)}>
       <TouchableOpacity
         style={styles.classCard}
         onPress={() => handleView(item)}
@@ -195,23 +201,16 @@ export default function ClassesScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Bottom — Actions */}
+        {/* Bottom — Actions (Edit/Delete only for admin) */}
         <EntityActions
           onView={() => handleView(item)}
-          onEdit={isDeletedView ? undefined : () => handleEdit(item)}
-          onDelete={
-            isDeletedView
-              ? undefined
-              : () => confirmDelete(item.public_id, getClassDisplayName(item))
-          }
-          onReactivate={
-            isDeletedView
-              ? () => handleReactivate(item.public_id, getClassDisplayName(item))
-              : undefined
-          }
+          onEdit={isDeletedView || !canManage ? undefined : () => handleEdit(item)}
+          onDelete={isDeletedView || !canManage ? undefined : () => confirmDelete(item.public_id, getClassDisplayName(item))}
+          onReactivate={isDeletedView && canManage ? () => handleReactivate(item.public_id, getClassDisplayName(item)) : undefined}
+          canManage={canManage}
         />
       </TouchableOpacity>
-    </View>
+    </Animated.View>
   );
 
   return (
@@ -221,14 +220,14 @@ export default function ClassesScreen() {
         title="Classes"
         subtitle={`${totalCount} total`}
         role="admin"
-        onBack={() => router.navigate('/(tabs)/(admin)/management')}
-        actions={[
+        onBack={() => router.navigate('/(tabs)/(admin)/management' as any)}
+        actions={canManage ? [
           {
             icon: Plus,
-            onPress: () => router.push('/(admin-screens)/classes/create'),
+            onPress: () => router.push('/(admin-screens)/classes/create' as any),
             variant: 'primary',
           },
-        ]}
+        ] : []}
       />
 
       {/* Search Bar */}

@@ -13,6 +13,7 @@ import {
   validateAllFields,
   buildTeacherPayload,
   parseApiErrors,
+  type CreateTeacherPayload,
 } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -107,54 +108,51 @@ export default function EditTeacherScreen() {
       const u = teacher.user;
       const addr = u?.address;
       setForm({
-        employee_id: teacher.employee_id || '',
-        email: u?.email || '',
-        first_name: u?.first_name || '',
-        last_name: u?.last_name || '',
-        gender: u?.gender || '',
-        organization_role:
-          typeof u?.organization_role === 'object' && u?.organization_role
-            ? u.organization_role.id.toString()
-            : u?.organization_role?.toString() || '',
-        phone: u?.phone || '',
-        blood_group: u?.blood_group || '',
-        date_of_birth: u?.date_of_birth || '',
-        designation: teacher.designation || '',
-        highest_qualification: teacher.highest_qualification || '',
-        specialization: teacher.specialization || '',
-        experience_years: teacher.experience_years?.toString() || '',
-        joining_date: teacher.joining_date || '',
-        supervisor_email: u?.supervisor?.email || '',
-        subjects: (teacher.subjects || []).map((s: any) => s.id?.toString() || s.public_id),
-        emergency_contact_name: teacher.emergency_contact_name || '',
-        emergency_contact_number: teacher.emergency_contact_number || '',
-        street_address: addr?.street_address || '',
-        city: addr?.city || '',
-        state: addr?.state || '',
-        postal_code: addr?.zip_code || '',
-        country: addr?.country || '',
+        employee_id: teacher.employee_id ?? '',
+        email: u?.email ?? '',
+        first_name: u?.first_name ?? '',
+        last_name: u?.last_name ?? '',
+        gender: u?.gender ?? '',
+        organization_role: u?.organization_role?.id?.toString() ?? '',
+        phone: u?.phone ?? '',
+        blood_group: u?.blood_group ?? '',
+        date_of_birth: u?.date_of_birth ?? '',
+        designation: teacher.designation ?? '',
+        highest_qualification: teacher.highest_qualification ?? '',
+        specialization: teacher.specialization ?? '',
+        experience_years: teacher.experience_years?.toString() ?? '',
+        joining_date: teacher.joining_date ?? '',
+        supervisor_email: u?.supervisor?.email ?? '',
+        subjects: (teacher.subjects ?? []).map((s) => s.id?.toString() ?? s.public_id),
+        emergency_contact_name: teacher.emergency_contact_name ?? '',
+        emergency_contact_number: teacher.emergency_contact_number ?? '',
+        street_address: addr?.street_address ?? '',
+        city: addr?.city ?? '',
+        state: addr?.state ?? '',
+        postal_code: addr?.zip_code ?? '',
+        country: addr?.country ?? '',
       });
       setFormLoaded(true);
     }
   }, [teacher, formLoaded]);
 
   const roleOptions = useMemo(
-    () => (roleTypes || []).map((r) => ({ value: r.id.toString(), label: r.name })),
+    () => (roleTypes ?? []).map((r) => ({ value: r.id.toString(), label: r.name })),
     [roleTypes]
   );
   const supervisorOptions = useMemo(
     () =>
-      (supervisors || []).map((s) => ({ value: s.email, label: `${s.full_name} (${s.email})` })),
+      (supervisors ?? []).map((s) => ({ value: s.email, label: `${s.full_name} (${s.email})` })),
     [supervisors]
   );
   const bloodGroupOpts = BLOOD_GROUP_OPTIONS.map((b) => ({ value: b.value, label: b.label }));
   const subjectOptions = useMemo(
-    () => (coreSubjects || []).map((s: any) => ({ value: s.id.toString(), label: s.name })),
+    () => (coreSubjects ?? []).map((s) => ({ value: s.id.toString(), label: s.name })),
     [coreSubjects]
   );
 
   const updateField = useCallback(
-    (field: string, value: any) => {
+    (field: string, value: string | string[]) => {
       setForm((prev) => ({ ...prev, [field]: value }));
       if (errors[field])
         setErrors((prev) => {
@@ -189,29 +187,31 @@ export default function EditTeacherScreen() {
       return;
     }
 
-    const payload = buildTeacherPayload(form, false);
+    const payload = buildTeacherPayload(form, false) as Partial<CreateTeacherPayload> & {
+      subjects?: number[];
+    };
     if (form.subjects.length > 0) {
       payload.subjects = form.subjects.map(Number);
     }
-    updateMutation.mutate(
-      { publicId: id, data: payload },
+    void updateMutation.mutate(
+      { publicId: id ?? '', data: payload },
       {
         onSuccess: () => {
           Alert.alert('✅ Success', 'Teacher updated successfully!', [
             { text: 'OK', onPress: () => router.back() },
           ]);
         },
-        onError: (err: any) => {
-          if (err?.response?.data) {
+        onError: (err: Error & { response?: { data?: unknown } }) => {
+          if (err.response?.data) {
             const { fieldErrors: fe, generalError } = parseApiErrors(err.response.data);
             if (Object.keys(fe).length > 0) {
               setErrors(fe);
               scrollRef.current?.scrollTo({ y: 0, animated: true });
               return;
             }
-            setApiError(generalError || 'Failed to update teacher.');
+            setApiError(generalError ?? 'Failed to update teacher.');
           } else {
-            setApiError(err?.message || 'Network error.');
+            setApiError(err.message ?? 'Network error.');
           }
         },
       }
@@ -273,7 +273,7 @@ export default function EditTeacherScreen() {
           >
             <ProfileAvatar
               name={`${form.first_name} ${form.last_name}`.trim()}
-              imageUri={localPhotoUri || teacher?.profile_photo_thumbnail}
+              imageUri={localPhotoUri ?? teacher?.profile_photo_thumbnail}
               size={90}
               onPress={pickAndUpload}
               isUploading={isPhotoUploading}

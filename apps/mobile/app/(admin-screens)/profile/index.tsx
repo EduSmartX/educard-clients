@@ -1,23 +1,14 @@
 /**
  * Edit Profile Screen
- * Full profile editing matching web app: Photo, Personal Info, Password, Contact
- * Tabs: Profile | Password
+ * Edit personal information, profile photo, and address
+ * 
+ * Features:
+ * - Profile photo with upload
+ * - Personal info form with dropdowns for Gender & Blood Group
+ * - Collapsible address section
+ * - Email/Phone shown as read-only (OTP update not implemented in mobile)
  */
 
-import { Colors, getRoleGradient, getErrorMessage } from '@educard/shared';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
-import {
-  ChevronLeft,
-  Save,
-  Camera,
-  User,
-  Lock,
-  CheckCircle,
-  Eye,
-  EyeOff,
-} from 'lucide-react-native';
 import { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -27,219 +18,197 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-  TextInput,
+  KeyboardAvoidingView,
+  Platform,
   Image,
-  RefreshControl,
 } from 'react-native';
+import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-
-import { apiClient } from '@/api/client';
-import { useMyProfilePhoto } from '@/hooks';
-import { useProfileImage } from '@/hooks/useProfileImage';
-import { useAuthStore } from '@/lib/auth-store';
 import {
-  headerStyles,
-  layoutStyles,
-  bodyStyles,
-  cardStyles,
-  formFieldStyles,
-  chipStyles,
-  buttonStyles,
-  tabStyles,
-  sectionTitleStyles,
-  emptyStyles,
-  reqStyles,
-} from '@/styles';
+  ChevronLeft,
+  Save,
+  Mail,
+  Phone,
+  Camera,
+  ChevronDown,
+  ChevronUp,
+  MapPin,
+  Info,
+  User,
+} from 'lucide-react-native';
+import {
+  getRoleGradient,
+  GENDER_OPTIONS,
+  BLOOD_GROUP_OPTIONS,
+} from '@educard/shared';
+import { useAuthStore } from '@/lib/auth-store';
+import { useMyProfilePhoto, useUserProfile, useUpdateProfile } from '@/hooks';
+import { useProfileImage } from '@/hooks/useProfileImage';
+import { headerStyles, layoutStyles } from '@/styles';
+import { FormInput, FormDropdown, FormDatePicker } from '@/components/forms';
+import { getMediaUrl } from '@/constants/config';
 
 const adminGradient = getRoleGradient('admin');
 
-interface UserProfile {
-  public_id: string;
-  username: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  full_name: string;
-  phone: string;
-  role: string;
-  gender: string;
-  blood_group?: string;
-  date_of_birth?: string;
-  is_email_verified: boolean;
-  notification_opt_in: boolean;
-  address?: {
-    street_address?: string;
-    address_line_2?: string;
-    city?: string;
-    state?: string;
-    zip_code?: string;
-    country?: string;
-  };
-}
-
-function useUserProfile() {
-  return useQuery({
-    queryKey: ['user-profile', 'me'],
-    queryFn: async () => {
-      const res = await apiClient.get('/users/profile/me/');
-      return res.data.data as UserProfile;
-    },
-    staleTime: 2 * 60 * 1000,
-  });
-}
-
-function useUpdateProfile() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (payload: Record<string, any>) => {
-      const res = await apiClient.patch('/users/profile/me/', payload);
-      return res.data.data as UserProfile;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['user-profile'] });
-    },
-  });
-}
-
-const GENDER_OPTIONS = [
-  { label: 'Male', value: 'male' },
-  { label: 'Female', value: 'female' },
-  { label: 'Other', value: 'other' },
-];
-
-const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
-
-type Tab = 'profile' | 'password';
+type FieldErrors = Record<string, string>;
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const { data: profilePhoto, refetch: refetchPhoto } = useMyProfilePhoto();
-  const { data: profile, isLoading, refetch } = useUserProfile();
-  const updateProfile = useUpdateProfile();
-  const { pickAndUpload, isUploading, localUri } = useProfileImage({
-    userPublicId: user?.id,
-    onSuccess: () => refetchPhoto(),
+  const { data: profilePhoto, isLoading: photoLoading } = useMyProfilePhoto();
+  const { data: profile, isLoading: profileLoading } = useUserProfile();
+  const updateMutation = useUpdateProfile();
+  const [addressExpanded, setAddressExpanded] = useState(false);
+  const [formLoaded, setFormLoaded] = useState(false);
+
+  const {
+    pickAndUpload,
+    isUploading: isPhotoUploading,
+    localUri: localPhotoUri,
+  } = useProfileImage({
+    userPublicId: user?.public_id,
+    onSuccess: () => {
+      // Photo updated
+    },
   });
 
-  const [activeTab, setActiveTab] = useState<Tab>('profile');
-  const [refreshing, setRefreshing] = useState(false);
+  // Form state
+  const [form, setForm] = useState({
+    first_name: '',
+    last_name: '',
+    gender: '',
+    blood_group: '',
+    date_of_birth: '',
+    street_address: '',
+    address_line_2: '',
+    city: '',
+    state: '',
+    postal_code: '',
+    country: '',
+  });
+  const [errors, setErrors] = useState<FieldErrors>({});
 
-  // Profile form state
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [gender, setGender] = useState('');
-  const [bloodGroup, setBloodGroup] = useState('');
-  const [dob, setDob] = useState('');
-
-  // Address state
-  const [street, setStreet] = useState('');
-  const [addressLine2, setAddressLine2] = useState('');
-  const [city, setCity] = useState('');
-  const [addrState, setAddrState] = useState('');
-  const [zipCode, setZipCode] = useState('');
-  const [country, setCountry] = useState('');
-
-  // Password state
-  const [oldPassword, setOldPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showOld, setShowOld] = useState(false);
-  const [showNew, setShowNew] = useState(false);
-  const [isChangingPw, setIsChangingPw] = useState(false);
-
+  // Pre-populate form when profile loads
   useEffect(() => {
-    if (profile) {
-      setFirstName(profile.first_name || '');
-      setLastName(profile.last_name || '');
-      setPhone(profile.phone || '');
-      setGender(profile.gender || '');
-      setBloodGroup(profile.blood_group || '');
-      setDob(profile.date_of_birth || '');
-      setStreet(profile.address?.street_address || '');
-      setAddressLine2(profile.address?.address_line_2 || '');
-      setCity(profile.address?.city || '');
-      setAddrState(profile.address?.state || '');
-      setZipCode(profile.address?.zip_code || '');
-      setCountry(profile.address?.country || '');
-    }
-  }, [profile]);
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
-  }, [refetch]);
-
-  const handleSaveProfile = () => {
-    const payload: Record<string, any> = {
-      first_name: firstName.trim(),
-      last_name: lastName.trim(),
-      phone: phone.trim(),
-      gender: gender || undefined,
-      blood_group: bloodGroup || undefined,
-      date_of_birth: dob || undefined,
-    };
-    if (street || city || addrState || zipCode || country) {
-      payload.address = {
-        street_address: street.trim(),
-        address_line_2: addressLine2.trim(),
-        city: city.trim(),
-        state: addrState.trim(),
-        zip_code: zipCode.trim(),
-        country: country.trim(),
-      };
-    }
-    updateProfile.mutate(payload, {
-      onSuccess: () => Alert.alert('Success', 'Profile updated successfully!'),
-      onError: (err) => Alert.alert('Error', getErrorMessage(err, 'Failed to update profile.')),
-    });
-  };
-
-  const handleChangePassword = async () => {
-    if (newPassword.length < 8) {
-      Alert.alert('Error', 'Password must be at least 8 characters.');
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match.');
-      return;
-    }
-    setIsChangingPw(true);
-    try {
-      await apiClient.post('/auth/change-password/', {
-        old_password: oldPassword,
-        new_password: newPassword,
-        confirm_password: confirmPassword,
+    if (profile && !formLoaded) {
+      const addr = profile.address;
+      setForm({
+        first_name: profile.first_name || '',
+        last_name: profile.last_name || '',
+        gender: profile.gender || '',
+        blood_group: profile.blood_group || '',
+        date_of_birth: profile.date_of_birth || '',
+        street_address: addr?.street_address || '',
+        address_line_2: addr?.address_line_2 || '',
+        city: addr?.city || '',
+        state: addr?.state || '',
+        postal_code: addr?.zip_code || '',
+        country: addr?.country || '',
       });
-      Alert.alert('Success', 'Password changed successfully!');
-      setOldPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-    } catch (err) {
-      Alert.alert('Error', getErrorMessage(err, 'Failed to change password.'));
-    } finally {
-      setIsChangingPw(false);
+      setFormLoaded(true);
     }
-  };
+  }, [profile, formLoaded]);
 
-  const photoUrl = localUri || profilePhoto?.thumbnail_url || (profilePhoto as any)?.url;
-  const initials = (profile?.full_name || user?.full_name || 'U').charAt(0).toUpperCase();
+  const genderOptions = GENDER_OPTIONS.map((g) => ({ value: g.value, label: g.label }));
+  const bloodGroupOptions = BLOOD_GROUP_OPTIONS.map((b) => ({ value: b.value, label: b.label }));
+
+  const updateField = useCallback(
+    (field: string, value: string) => {
+      setForm((prev) => ({ ...prev, [field]: value }));
+      if (errors[field]) {
+        setErrors((prev) => {
+          const n = { ...prev };
+          delete n[field];
+          return n;
+        });
+      }
+    },
+    [errors]
+  );
+
+  const validateForm = useCallback(() => {
+    const fieldErrors: FieldErrors = {};
+
+    if (!form.first_name.trim()) {
+      fieldErrors.first_name = 'First name is required';
+    }
+    if (!form.last_name.trim()) {
+      fieldErrors.last_name = 'Last name is required';
+    }
+
+    setErrors(fieldErrors);
+    return Object.keys(fieldErrors).length === 0;
+  }, [form]);
+
+  const handleSubmit = useCallback(() => {
+    if (!validateForm()) {
+      Alert.alert('Validation Error', 'Please fix the errors before saving.');
+      return;
+    }
+
+    const payload = {
+      first_name: form.first_name,
+      last_name: form.last_name,
+      gender: form.gender || undefined,
+      blood_group: form.blood_group || undefined,
+      date_of_birth: form.date_of_birth || undefined,
+      address: {
+        street_address: form.street_address || undefined,
+        address_line_2: form.address_line_2 || undefined,
+        city: form.city || undefined,
+        state: form.state || undefined,
+        zip_code: form.postal_code || undefined,
+        country: form.country || undefined,
+        address_type: 'user_current',
+      },
+    };
+
+    updateMutation.mutate(payload, {
+      onSuccess: () => {
+        Alert.alert('Success', 'Profile updated successfully!', [
+          { text: 'OK', onPress: () => router.back() },
+        ]);
+      },
+    });
+  }, [form, validateForm, updateMutation, router]);
+
+  const isLoading = profileLoading || photoLoading;
+  const isSaving = updateMutation.isPending;
+
+  // Profile image
+  const photoUrl = localPhotoUri || getMediaUrl(profilePhoto?.thumbnail_url) || getMediaUrl(profilePhoto?.url);
+  const initials = (profile?.full_name || profile?.first_name || user?.full_name || 'U').charAt(0).toUpperCase();
+
+  if (isLoading) {
+    return (
+      <View style={layoutStyles.container}>
+        <LinearGradient colors={adminGradient} style={headerStyles.header}>
+          <View style={headerStyles.content}>
+            <View style={headerStyles.topRow}>
+              <TouchableOpacity style={headerStyles.backBtn} onPress={() => router.back()}>
+                <ChevronLeft size={24} color="#fff" />
+              </TouchableOpacity>
+              <View style={headerStyles.titleContainer}>
+                <Text style={headerStyles.title}>Edit Profile</Text>
+              </View>
+              <View style={{ width: 40 }} />
+            </View>
+          </View>
+        </LinearGradient>
+        <View style={s.loadingContainer}>
+          <ActivityIndicator size="large" color="#7c3aed" />
+          <Text style={s.loadingText}>Loading profile...</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={layoutStyles.container}>
       <LinearGradient colors={adminGradient} style={headerStyles.header}>
-        <Animated.View
-          entering={FadeIn.delay(100)}
-          style={headerStyles.circle1}
-          pointerEvents="none"
-        />
-        <Animated.View
-          entering={FadeIn.delay(200)}
-          style={headerStyles.circle2}
-          pointerEvents="none"
-        />
+        <Animated.View entering={FadeIn.delay(100)} style={headerStyles.circle1} pointerEvents="none" />
+        <Animated.View entering={FadeIn.delay(200)} style={headerStyles.circle2} pointerEvents="none" />
         <View style={headerStyles.content}>
           <View style={headerStyles.topRow}>
             <TouchableOpacity style={headerStyles.backBtn} onPress={() => router.back()}>
@@ -249,365 +218,401 @@ export default function ProfileScreen() {
               <Text style={headerStyles.title}>Edit Profile</Text>
               <Text style={headerStyles.subtitle}>Update your information</Text>
             </View>
-            <View style={{ width: 40 }} />
+            <TouchableOpacity
+              style={[s.saveBtn, isSaving && s.saveBtnDisabled]}
+              onPress={handleSubmit}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Save size={20} color="#fff" />
+              )}
+            </TouchableOpacity>
           </View>
         </View>
       </LinearGradient>
 
-      {/* Tabs */}
-      <View style={tabStyles.row}>
-        <TouchableOpacity
-          style={[tabStyles.tab, activeTab === 'profile' && tabStyles.tabActive]}
-          onPress={() => setActiveTab('profile')}
-        >
-          <User size={16} color={activeTab === 'profile' ? '#7c3aed' : '#94a3b8'} />
-          <Text style={[tabStyles.tabText, activeTab === 'profile' && tabStyles.tabTextActive]}>
-            Profile
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[tabStyles.tab, activeTab === 'password' && tabStyles.tabActive]}
-          onPress={() => setActiveTab('password')}
-        >
-          <Lock size={16} color={activeTab === 'password' ? '#7c3aed' : '#94a3b8'} />
-          <Text style={[tabStyles.tabText, activeTab === 'password' && tabStyles.tabTextActive]}>
-            Password
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {isLoading ? (
-        <View style={emptyStyles.container}>
-          <ActivityIndicator size="large" color="#7c3aed" />
-        </View>
-      ) : activeTab === 'profile' ? (
-        <ScrollView
-          style={bodyStyles.scroll}
-          contentContainerStyle={bodyStyles.contentLarge}
-          keyboardShouldPersistTaps="handled"
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#7c3aed']} />
-          }
-        >
-          {/* Photo */}
-          <Animated.View entering={FadeInDown.delay(100).springify()} style={s.photoSection}>
-            <TouchableOpacity onPress={pickAndUpload} disabled={isUploading} activeOpacity={0.7}>
-              <View style={s.avatarWrap}>
-                {photoUrl ? (
-                  <Image source={{ uri: photoUrl }} style={s.avatar} />
-                ) : (
-                  <View style={s.avatarPlaceholder}>
-                    <Text style={s.avatarText}>{initials}</Text>
-                  </View>
-                )}
-                <View style={s.cameraBtn}>
-                  {isUploading ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <Camera size={14} color="#fff" />
-                  )}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView style={s.body} contentContainerStyle={s.bodyContent}>
+          {/* Avatar Section */}
+          <Animated.View entering={FadeInDown.delay(100).springify()} style={s.avatarSection}>
+            <TouchableOpacity style={s.avatarWrapper} onPress={pickAndUpload} disabled={isPhotoUploading}>
+              {photoUrl ? (
+                <Image source={{ uri: photoUrl }} style={s.avatarImage} />
+              ) : (
+                <View style={s.avatarCircle}>
+                  <Text style={s.avatarText}>{initials}</Text>
                 </View>
-              </View>
-            </TouchableOpacity>
-            <Text style={s.photoName}>{profile?.full_name || user?.full_name || 'User'}</Text>
-            <Text style={s.photoEmail}>{profile?.email || user?.email || ''}</Text>
-          </Animated.View>
-
-          {/* Personal Info */}
-          <Animated.View entering={FadeInDown.delay(200).springify()}>
-            <Text style={sectionTitleStyles.labelCompact}>PERSONAL INFORMATION</Text>
-            <View style={cardStyles.cardSection}>
-              <View style={formFieldStyles.fieldRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={formFieldStyles.label}>First Name</Text>
-                  <TextInput
-                    style={formFieldStyles.input}
-                    value={firstName}
-                    onChangeText={setFirstName}
-                    placeholder="First name"
-                    placeholderTextColor="#94a3b8"
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={formFieldStyles.label}>Last Name</Text>
-                  <TextInput
-                    style={formFieldStyles.input}
-                    value={lastName}
-                    onChangeText={setLastName}
-                    placeholder="Last name"
-                    placeholderTextColor="#94a3b8"
-                  />
-                </View>
-              </View>
-              <Text style={formFieldStyles.label}>Phone</Text>
-              <TextInput
-                style={formFieldStyles.input}
-                value={phone}
-                onChangeText={setPhone}
-                placeholder="Phone number"
-                placeholderTextColor="#94a3b8"
-                keyboardType="phone-pad"
-              />
-              <Text style={formFieldStyles.label}>Gender</Text>
-              <View style={chipStyles.row}>
-                {GENDER_OPTIONS.map((g) => (
-                  <TouchableOpacity
-                    key={g.value}
-                    style={[chipStyles.chip, gender === g.value && chipStyles.chipActive]}
-                    onPress={() => setGender(g.value)}
-                  >
-                    <Text
-                      style={[chipStyles.chipText, gender === g.value && chipStyles.chipTextActive]}
-                    >
-                      {g.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-              <Text style={formFieldStyles.label}>Blood Group</Text>
-              <View style={chipStyles.row}>
-                {BLOOD_GROUPS.map((bg) => (
-                  <TouchableOpacity
-                    key={bg}
-                    style={[chipStyles.chipSmall, bloodGroup === bg && chipStyles.chipActive]}
-                    onPress={() => setBloodGroup(bg)}
-                  >
-                    <Text
-                      style={[chipStyles.chipText, bloodGroup === bg && chipStyles.chipTextActive]}
-                    >
-                      {bg}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-              <Text style={formFieldStyles.label}>Date of Birth</Text>
-              <TextInput
-                style={formFieldStyles.input}
-                value={dob}
-                onChangeText={setDob}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor="#94a3b8"
-              />
-            </View>
-          </Animated.View>
-
-          {/* Address */}
-          <Animated.View entering={FadeInDown.delay(300).springify()}>
-            <Text style={sectionTitleStyles.labelCompact}>ADDRESS</Text>
-            <View style={cardStyles.cardSection}>
-              <Text style={formFieldStyles.label}>Street Address</Text>
-              <TextInput
-                style={formFieldStyles.input}
-                value={street}
-                onChangeText={setStreet}
-                placeholder="Street address"
-                placeholderTextColor="#94a3b8"
-              />
-              <Text style={formFieldStyles.label}>Address Line 2</Text>
-              <TextInput
-                style={formFieldStyles.input}
-                value={addressLine2}
-                onChangeText={setAddressLine2}
-                placeholder="Apt, suite, etc."
-                placeholderTextColor="#94a3b8"
-              />
-              <View style={formFieldStyles.fieldRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={formFieldStyles.label}>City</Text>
-                  <TextInput
-                    style={formFieldStyles.input}
-                    value={city}
-                    onChangeText={setCity}
-                    placeholder="City"
-                    placeholderTextColor="#94a3b8"
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={formFieldStyles.label}>State</Text>
-                  <TextInput
-                    style={formFieldStyles.input}
-                    value={addrState}
-                    onChangeText={setAddrState}
-                    placeholder="State"
-                    placeholderTextColor="#94a3b8"
-                  />
-                </View>
-              </View>
-              <View style={formFieldStyles.fieldRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={formFieldStyles.label}>ZIP Code</Text>
-                  <TextInput
-                    style={formFieldStyles.input}
-                    value={zipCode}
-                    onChangeText={setZipCode}
-                    placeholder="ZIP"
-                    placeholderTextColor="#94a3b8"
-                    keyboardType="number-pad"
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={formFieldStyles.label}>Country</Text>
-                  <TextInput
-                    style={formFieldStyles.input}
-                    value={country}
-                    onChangeText={setCountry}
-                    placeholder="Country"
-                    placeholderTextColor="#94a3b8"
-                  />
-                </View>
-              </View>
-            </View>
-          </Animated.View>
-
-          <TouchableOpacity
-            style={[buttonStyles.primary, updateProfile.isPending && buttonStyles.disabled]}
-            onPress={handleSaveProfile}
-            disabled={updateProfile.isPending}
-          >
-            {updateProfile.isPending ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <>
-                <Save size={16} color="#fff" />
-                <Text style={buttonStyles.primaryText}>Save Changes</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </ScrollView>
-      ) : (
-        <ScrollView
-          style={bodyStyles.scroll}
-          contentContainerStyle={bodyStyles.contentLarge}
-          keyboardShouldPersistTaps="handled"
-        >
-          <Animated.View entering={FadeInDown.delay(100).springify()}>
-            <View style={cardStyles.cardSection}>
-              <Text style={formFieldStyles.label}>Current Password</Text>
-              <View style={formFieldStyles.passwordRow}>
-                <TextInput
-                  style={formFieldStyles.passwordInput}
-                  value={oldPassword}
-                  onChangeText={setOldPassword}
-                  placeholder="Current password"
-                  placeholderTextColor="#94a3b8"
-                  secureTextEntry={!showOld}
-                  autoCapitalize="none"
-                />
-                <TouchableOpacity
-                  onPress={() => setShowOld(!showOld)}
-                  style={formFieldStyles.eyeBtn}
-                >
-                  {showOld ? (
-                    <EyeOff size={18} color="#94a3b8" />
-                  ) : (
-                    <Eye size={18} color="#94a3b8" />
-                  )}
-                </TouchableOpacity>
-              </View>
-              <Text style={formFieldStyles.label}>New Password</Text>
-              <View style={formFieldStyles.passwordRow}>
-                <TextInput
-                  style={formFieldStyles.passwordInput}
-                  value={newPassword}
-                  onChangeText={setNewPassword}
-                  placeholder="New password (min 8 chars)"
-                  placeholderTextColor="#94a3b8"
-                  secureTextEntry={!showNew}
-                  autoCapitalize="none"
-                />
-                <TouchableOpacity
-                  onPress={() => setShowNew(!showNew)}
-                  style={formFieldStyles.eyeBtn}
-                >
-                  {showNew ? (
-                    <EyeOff size={18} color="#94a3b8" />
-                  ) : (
-                    <Eye size={18} color="#94a3b8" />
-                  )}
-                </TouchableOpacity>
-              </View>
-              <Text style={formFieldStyles.label}>Confirm New Password</Text>
-              <TextInput
-                style={formFieldStyles.input}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                placeholder="Confirm new password"
-                placeholderTextColor="#94a3b8"
-                secureTextEntry
-                autoCapitalize="none"
-              />
-              <View style={reqStyles.container}>
-                <ReqItem met={newPassword.length >= 8} text="At least 8 characters" />
-                <ReqItem met={/[A-Z]/.test(newPassword)} text="One uppercase letter" />
-                <ReqItem met={/[0-9]/.test(newPassword)} text="One number" />
-                <ReqItem
-                  met={newPassword === confirmPassword && confirmPassword.length > 0}
-                  text="Passwords match"
-                />
-              </View>
-              <TouchableOpacity
-                style={[
-                  buttonStyles.primary,
-                  { marginTop: 20 },
-                  (isChangingPw || newPassword.length < 8 || newPassword !== confirmPassword) &&
-                    buttonStyles.disabled,
-                ]}
-                onPress={handleChangePassword}
-                disabled={isChangingPw || newPassword.length < 8 || newPassword !== confirmPassword}
-              >
-                {isChangingPw ? (
+              )}
+              <View style={s.cameraIcon}>
+                {isPhotoUploading ? (
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
-                  <>
-                    <Lock size={16} color="#fff" />
-                    <Text style={buttonStyles.primaryText}>Change Password</Text>
-                  </>
+                  <Camera size={16} color="#fff" />
                 )}
-              </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+            <Text style={s.userName}>{profile?.full_name || user?.full_name || 'User'}</Text>
+            <Text style={s.userRole}>{profile?.role || user?.role || 'Staff'}</Text>
+          </Animated.View>
+
+          {/* Personal Information */}
+          <Animated.View entering={FadeInDown.delay(200).springify()}>
+            <View style={s.card}>
+              <Text style={s.cardTitle}>Personal Information</Text>
+              <View style={s.formFields}>
+                <View style={s.row}>
+                  <View style={s.halfField}>
+                    <FormInput
+                      label="First Name"
+                      value={form.first_name}
+                      onChangeText={(v) => updateField('first_name', v)}
+                      placeholder="First name"
+                      error={errors.first_name}
+                      required
+                    />
+                  </View>
+                  <View style={s.halfField}>
+                    <FormInput
+                      label="Last Name"
+                      value={form.last_name}
+                      onChangeText={(v) => updateField('last_name', v)}
+                      placeholder="Last name"
+                      error={errors.last_name}
+                      required
+                    />
+                  </View>
+                </View>
+
+                <View style={s.row}>
+                  <View style={s.halfField}>
+                    <FormDropdown
+                      label="Gender"
+                      options={genderOptions}
+                      value={form.gender}
+                      onChange={(v) => updateField('gender', v)}
+                      placeholder="Select gender"
+                    />
+                  </View>
+                  <View style={s.halfField}>
+                    <FormDropdown
+                      label="Blood Group"
+                      options={bloodGroupOptions}
+                      value={form.blood_group}
+                      onChange={(v) => updateField('blood_group', v)}
+                      placeholder="Select blood group"
+                    />
+                  </View>
+                </View>
+
+                <FormDatePicker
+                  label="Date of Birth"
+                  value={form.date_of_birth}
+                  onChange={(v) => updateField('date_of_birth', v)}
+                  maxYear={new Date().getFullYear()}
+                />
+              </View>
             </View>
           </Animated.View>
+
+          {/* Contact Information (Read-only) */}
+          <Animated.View entering={FadeInDown.delay(300).springify()}>
+            <View style={s.card}>
+              <Text style={s.cardTitle}>Contact Information</Text>
+              <View style={s.infoNote}>
+                <Info size={14} color="#f59e0b" />
+                <Text style={s.infoNoteText}>
+                  Email and phone can only be updated via OTP verification on the web dashboard.
+                </Text>
+              </View>
+              {/* Username */}
+              <View style={s.readOnlyField}>
+                <View style={s.readOnlyIcon}>
+                  <User size={16} color="#64748b" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.readOnlyLabel}>Username</Text>
+                  <Text style={s.readOnlyValue}>{profile?.username || '—'}</Text>
+                </View>
+              </View>
+              <View style={s.divider} />
+              {/* Email */}
+              <View style={s.readOnlyField}>
+                <View style={s.readOnlyIcon}>
+                  <Mail size={16} color="#64748b" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.readOnlyLabel}>Email</Text>
+                  <Text style={s.readOnlyValue}>{profile?.email || user?.email || '—'}</Text>
+                </View>
+              </View>
+              <View style={s.divider} />
+              {/* Phone */}
+              <View style={s.readOnlyField}>
+                <View style={s.readOnlyIcon}>
+                  <Phone size={16} color="#64748b" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.readOnlyLabel}>Phone</Text>
+                  <Text style={s.readOnlyValue}>{profile?.phone || user?.phone || '—'}</Text>
+                </View>
+              </View>
+            </View>
+          </Animated.View>
+
+          {/* Address Section */}
+          <Animated.View entering={FadeInDown.delay(400).springify()}>
+            <View style={s.card}>
+              <TouchableOpacity
+                style={s.addressHeader}
+                onPress={() => setAddressExpanded(!addressExpanded)}
+                activeOpacity={0.7}
+              >
+                <View style={s.addressHeaderLeft}>
+                  <MapPin size={18} color="#6366f1" />
+                  <Text style={s.addressHeaderTitle}>Address Information</Text>
+                </View>
+                {addressExpanded ? (
+                  <ChevronUp size={20} color="#6b7280" />
+                ) : (
+                  <ChevronDown size={20} color="#6b7280" />
+                )}
+              </TouchableOpacity>
+              
+              {addressExpanded && (
+                <View style={s.addressFields}>
+                  <FormInput
+                    label="Street Address"
+                    value={form.street_address}
+                    onChangeText={(v) => updateField('street_address', v)}
+                    placeholder="Enter street address"
+                  />
+                  <FormInput
+                    label="Address Line 2"
+                    value={form.address_line_2}
+                    onChangeText={(v) => updateField('address_line_2', v)}
+                    placeholder="Apartment, suite, etc. (optional)"
+                  />
+                  <View style={s.row}>
+                    <View style={s.halfField}>
+                      <FormInput
+                        label="City"
+                        value={form.city}
+                        onChangeText={(v) => updateField('city', v)}
+                        placeholder="City"
+                      />
+                    </View>
+                    <View style={s.halfField}>
+                      <FormInput
+                        label="State"
+                        value={form.state}
+                        onChangeText={(v) => updateField('state', v)}
+                        placeholder="State"
+                      />
+                    </View>
+                  </View>
+                  <View style={s.row}>
+                    <View style={s.halfField}>
+                      <FormInput
+                        label="Zip Code"
+                        value={form.postal_code}
+                        onChangeText={(v) => updateField('postal_code', v)}
+                        placeholder="Zip Code"
+                        keyboardType="number-pad"
+                      />
+                    </View>
+                    <View style={s.halfField}>
+                      <FormInput
+                        label="Country"
+                        value={form.country}
+                        onChangeText={(v) => updateField('country', v)}
+                        placeholder="Country"
+                      />
+                    </View>
+                  </View>
+                </View>
+              )}
+            </View>
+          </Animated.View>
+
+          {/* Spacer for bottom */}
+          <View style={{ height: 40 }} />
         </ScrollView>
-      )}
+      </KeyboardAvoidingView>
     </View>
   );
 }
 
-function ReqItem({ met, text }: { met: boolean; text: string }) {
-  return (
-    <View style={reqStyles.row}>
-      <CheckCircle size={14} color={met ? '#16a34a' : '#cbd5e1'} />
-      <Text style={[reqStyles.text, met && reqStyles.textMet]}>{text}</Text>
-    </View>
-  );
-}
-
-// Screen-specific styles only — shared styles imported from @/styles
 const s = StyleSheet.create({
-  photoSection: { alignItems: 'center', marginBottom: 20, marginTop: 8 },
-  avatarWrap: { position: 'relative' },
-  avatar: { width: 88, height: 88, borderRadius: 44, backgroundColor: '#e2e8f0' },
-  avatarPlaceholder: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+  body: { flex: 1, backgroundColor: '#f8fafc' },
+  bodyContent: { padding: 16 },
+
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: '#64748b',
+  },
+
+  saveBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveBtnDisabled: {
+    opacity: 0.5,
+  },
+
+  avatarSection: { alignItems: 'center', marginBottom: 24, marginTop: 8 },
+  avatarWrapper: {
+    position: 'relative',
+    marginBottom: 12,
+  },
+  avatarCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: '#7c3aed',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { fontSize: 36, fontWeight: '700', color: '#fff' },
-  cameraBtn: {
+  avatarImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  avatarText: { fontSize: 40, fontWeight: '700', color: '#fff' },
+  cameraIcon: {
     position: 'absolute',
     bottom: 0,
     right: 0,
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#7c3aed',
+    backgroundColor: '#6366f1',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
-    borderColor: '#f8fafc',
+    borderColor: '#fff',
   },
-  photoName: { fontSize: 18, fontWeight: '700', color: '#1e293b', marginTop: 10 },
-  photoEmail: { fontSize: 13, color: '#94a3b8', marginTop: 2 },
+  userName: { fontSize: 20, fontWeight: '700', color: '#1e293b' },
+  userRole: { fontSize: 14, color: '#64748b', textTransform: 'capitalize', marginTop: 4 },
+
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    overflow: 'hidden',
+  },
+  cardTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#94a3b8',
+    padding: 16,
+    paddingBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  formFields: {
+    padding: 16,
+    paddingTop: 8,
+    gap: 12,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  halfField: {
+    flex: 1,
+  },
+
+  infoNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#fffbeb',
+    padding: 12,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    borderRadius: 8,
+  },
+  infoNoteText: {
+    flex: 1,
+    fontSize: 12,
+    color: '#92400e',
+    lineHeight: 18,
+  },
+
+  readOnlyField: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+  },
+  readOnlyIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  readOnlyLabel: {
+    fontSize: 12,
+    color: '#94a3b8',
+    marginBottom: 2,
+  },
+  readOnlyValue: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#1e293b',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#f1f5f9',
+    marginHorizontal: 16,
+  },
+
+  addressHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+  },
+  addressHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  addressHeaderTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#94a3b8',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  addressFields: {
+    padding: 16,
+    paddingTop: 0,
+    gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
 });

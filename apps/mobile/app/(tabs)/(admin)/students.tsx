@@ -1,16 +1,14 @@
 /**
  * Students List Screen
  * Mobile-first student management with search, class filtering, and real API integration
+ * 
+ * Permission Model:
+ * - Admin: Full CRUD access
+ * - Teacher (Class Teacher): Full CRUD for their assigned classes
+ * - Teacher (Other): View-only access
  */
 
-import {
-  Colors,
-  getRoleGradient,
-  getRoleThemeColors,
-  Student,
-  useDebounce,
-  getErrorMessage,
-} from '@educard/shared';
+import { Colors, getRoleThemeColors, Student, useDebounce, getErrorMessage } from '@educard/shared';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { GraduationCap, Upload, Plus } from 'lucide-react-native';
 import { useState, useCallback, useMemo } from 'react';
@@ -40,34 +38,49 @@ import { useClasses } from '@/features/classes';
 import { useStudents, useDeleteStudent, useRestoreStudent } from '@/features/students';
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm';
 import { useListScroll } from '@/hooks/useListScroll';
+import { useAuthStore } from '@/lib/auth-store';
 import { layoutStyles, cardStyles, avatarStyles, listStyles, textStyles } from '@/styles';
+import { isAdminRole, isTeacherRole } from '@/utils/role-utils';
 
 const adminTheme = getRoleThemeColors('admin');
-const adminGradient = getRoleGradient('admin');
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _adminTheme = adminTheme;
 
 export default function StudentsScreen() {
   const router = useRouter();
+  const { user } = useAuthStore();
   const { class_id, class_name } = useLocalSearchParams<{
     class_id?: string;
     class_name?: string;
   }>();
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState<Record<string, any>>({});
+  const [filters, setFilters] = useState<Record<string, unknown>>({});
+
+  // Check user role for permissions
+  const isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
+  const isTeacher = useMemo(() => isTeacherRole(user?.role), [user?.role]);
 
   const debouncedSearch = useDebounce(searchQuery, 300);
 
   // Dynamic filter fields (includes class dropdown)
   const studentFilterFields = useStudentFilterFields();
 
-  // Classes for label resolution
+  // Classes for label resolution and permission checks
+  // Backend returns only managed classes for teachers (where they are class teacher)
   const { data: classesData } = useClasses({ page_size: 100 });
+  const managedClasses = classesData?.classes ?? [];
+  
+  // Teachers who manage at least one class can create students
+  const isClassTeacher = isTeacher && managedClasses.length > 0;
+  const canCreateStudents = isAdmin || isClassTeacher;
+  
   const classOptions = useMemo(() => {
-    return (classesData?.classes || []).map((c: any) => ({
+    return managedClasses.map((c) => ({
       value: c.public_id,
-      label: `${c.class_master?.name || ''} - ${c.name}`.trim(),
+      label: `${c.class_master?.name ?? ''} - ${c.name}`.trim(),
     }));
-  }, [classesData]);
+  }, [managedClasses]);
 
   const {
     data,
@@ -81,15 +94,17 @@ export default function StudentsScreen() {
     isFetchingNextPage,
   } = useStudents({
     search: debouncedSearch || undefined,
-    class_id: filters.class_id || class_id || undefined,
-    ...filters,
+    class_id: (filters.class_id as string) ?? class_id ?? undefined,
+    ...(filters as Record<string, string | boolean | undefined>),
   });
 
   const deleteMutation = useDeleteStudent();
   const confirmDelete = useDeleteConfirm<{ publicId: string; classId: string }>({
     entityName: 'Student',
     deleteMutation,
-    onSuccess: () => refetch(),
+    onSuccess: () => {
+      void refetch();
+    },
   });
 
   const restoreMutation = useRestoreStudent();
@@ -99,14 +114,16 @@ export default function StudentsScreen() {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Reactivate',
-          onPress: async () => {
-            try {
-              await restoreMutation.mutateAsync({ publicId, classId });
-              refetch();
-              Alert.alert('Success', `${name} reactivated successfully`);
-            } catch (error) {
-              Alert.alert('Error', getErrorMessage(error, 'Failed to reactivate student'));
-            }
+          onPress: () => {
+            void (async () => {
+              try {
+                await restoreMutation.mutateAsync({ publicId, classId });
+                void refetch();
+                Alert.alert('Success', `${name} reactivated successfully`);
+              } catch (err) {
+                Alert.alert('Error', getErrorMessage(err, 'Failed to reactivate student'));
+              }
+            })();
           },
         },
       ]);
@@ -149,12 +166,13 @@ export default function StudentsScreen() {
   );
 
   const renderStudentCard = useCallback(
-    ({ item, index }: { item: any; index: number }) => {
+    ({ item, index }: { item: Student; index: number }) => {
       // Resolve fields — backend may nest under user_info
+      const userInfo = item.user_info;
       const fullName =
-        item.full_name ||
-        item.user_info?.full_name ||
-        `${item.user_info?.first_name || item.first_name || ''} ${item.user_info?.last_name || item.last_name || ''}`.trim();
+        item.full_name ??
+        userInfo?.full_name ??
+        `${userInfo?.first_name ?? item.first_name ?? ''} ${userInfo?.last_name ?? item.last_name ?? ''}`.trim();
       const rollNumber = item.roll_number;
       const admissionNumber = item.admission_number;
       const classInfo = item.class_info;
@@ -215,7 +233,7 @@ export default function StudentsScreen() {
               </View>
             </View>
 
-            {/* Bottom — Actions */}
+            {/* Bottom — Actions (respect can_manage from backend for students) */}
             <EntityActions
               onView={() => handleView(item)}
               onEdit={isDeletedView ? undefined : () => handleEdit(item)}
@@ -238,12 +256,13 @@ export default function StudentsScreen() {
                       )
                   : undefined
               }
+              canManage={(item as any).can_manage ?? isAdmin}
             />
           </TouchableOpacity>
         </Animated.View>
       );
     },
-    [handleView, handleEdit, confirmDelete]
+    [handleView, handleEdit, confirmDelete, handleReactivate, isDeletedView]
   );
 
   return (
@@ -254,14 +273,14 @@ export default function StudentsScreen() {
         subtitle={`${totalCount} total`}
         role="admin"
         onBack={() => router.navigate('/(tabs)/(admin)/management')}
-        actions={[
-          { icon: Upload, onPress: () => Alert.alert('Bulk Upload', 'Coming soon') },
+        actions={canCreateStudents ? [
+          ...(isAdmin ? [{ icon: Upload, onPress: () => Alert.alert('Bulk Upload', 'Coming soon') }] : []),
           {
             icon: Plus,
             onPress: () => router.push('/(admin-screens)/students/create'),
-            variant: 'primary',
+            variant: 'primary' as const,
           },
-        ]}
+        ] : []}
       />
 
       {/* Search Bar */}
@@ -285,7 +304,7 @@ export default function StudentsScreen() {
         visible={showFilters}
         onClose={() => setShowFilters(false)}
         currentFilters={filters}
-        onApply={(f: Record<string, any>) => {
+        onApply={(f: Record<string, unknown>) => {
           setFilters(f);
           setShowFilters(false);
         }}
@@ -300,7 +319,9 @@ export default function StudentsScreen() {
         <ErrorState
           message="Failed to load students"
           detail={error?.message}
-          onRetry={() => refetch()}
+          onRetry={() => {
+            void refetch();
+          }}
         />
       ) : (
         <FlatList

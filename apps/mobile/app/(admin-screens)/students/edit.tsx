@@ -13,6 +13,7 @@ import {
   validateAllFields,
   buildStudentPayload,
   parseApiErrors,
+  type Student,
 } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -40,7 +41,7 @@ import {
   FormDropdown,
   FormDatePicker,
 } from '@/components/forms';
-import { useClasses } from '@/features/classes';
+import { useManagedClasses } from '@/features/classes';
 import { useStudentDetail, useUpdateStudent } from '@/features/students';
 import { useProfileImage } from '@/hooks/useProfileImage';
 import { headerStyles, layoutStyles } from '@/styles';
@@ -53,7 +54,8 @@ export default function EditStudentScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: student, isLoading: detailLoading } = useStudentDetail(id || '');
   const updateMutation = useUpdateStudent();
-  const { data: classesData } = useClasses({ page_size: 100 });
+  // Fetch managed classes - for teachers, only classes where they are class teacher
+  const { data: classesData } = useManagedClasses('student');
 
   const [addressExpanded, setAddressExpanded] = useState(false);
   const [prevSchoolExpanded, setPrevSchoolExpanded] = useState(false);
@@ -69,10 +71,10 @@ export default function EditStudentScreen() {
   });
 
   const classOptions = useMemo(() => {
-    const items = classesData?.classes || [];
-    return items.map((c: any) => ({
+    const items = classesData?.classes ?? [];
+    return items.map((c) => ({
       value: c.public_id,
-      label: `${c.class_master?.name || ''} - ${c.name}`.trim(),
+      label: `${c.class_master?.name ?? ''} - ${c.name}`.trim(),
     }));
   }, [classesData]);
 
@@ -113,38 +115,36 @@ export default function EditStudentScreen() {
 
   useEffect(() => {
     if (student && !formLoaded) {
-      const u = student.user_info || student.user || {};
-      const addr = student.address || u.address || {};
-      const guardian = student.guardian || {};
-      const prevSchool = student.previous_school || {};
+      const userInfo = student.user_info;
+      const addr = userInfo?.address;
       setForm({
-        class_id: student.class_info?.public_id || student.class_id || '',
-        first_name: u.first_name || student.first_name || '',
-        last_name: u.last_name || student.last_name || '',
-        roll_number: student.roll_number?.toString() || '',
-        email: u.email || student.email || '',
-        phone: u.phone || student.phone || '',
-        gender: u.gender || student.gender || '',
-        blood_group: u.blood_group || student.blood_group || '',
-        date_of_birth: u.date_of_birth || student.date_of_birth || '',
-        admission_number: student.admission_number || '',
-        admission_date: student.admission_date || '',
-        guardian_name: guardian.name || student.guardian_name || '',
-        guardian_phone: guardian.phone || student.guardian_phone || '',
-        guardian_email: guardian.email || student.guardian_email || '',
-        guardian_relationship: guardian.relationship || student.guardian_relationship || '',
-        medical_conditions: student.medical_conditions || '',
-        description: student.description || '',
-        emergency_contact_name: student.emergency_contact_name || '',
-        emergency_contact_phone: student.emergency_contact_phone || '',
-        previous_school_name: prevSchool.name || student.previous_school_name || '',
-        previous_school_class: prevSchool.class_name || student.previous_school_class || '',
-        previous_school_address: prevSchool.address || student.previous_school_address || '',
-        street_address: addr.street_address || '',
-        city: addr.city || '',
-        state: addr.state || '',
-        postal_code: addr.postal_code || '',
-        country: addr.country || '',
+        class_id: student.class_info?.public_id ?? '',
+        first_name: userInfo?.first_name ?? '',
+        last_name: userInfo?.last_name ?? '',
+        roll_number: student.roll_number ?? '',
+        email: userInfo?.email ?? '',
+        phone: userInfo?.phone ?? '',
+        gender: userInfo?.gender ?? '',
+        blood_group: userInfo?.blood_group ?? '',
+        date_of_birth: userInfo?.date_of_birth ?? '',
+        admission_number: student.admission_number ?? '',
+        admission_date: student.admission_date ?? '',
+        guardian_name: student.guardian_name ?? '',
+        guardian_phone: student.guardian_phone ?? '',
+        guardian_email: student.guardian_email ?? '',
+        guardian_relationship: student.guardian_relationship ?? '',
+        medical_conditions: student.medical_conditions ?? '',
+        description: student.description ?? '',
+        emergency_contact_name: student.emergency_contact_name ?? '',
+        emergency_contact_phone: student.emergency_contact_phone ?? '',
+        previous_school_name: student.previous_school_name ?? '',
+        previous_school_class: student.previous_school_class ?? '',
+        previous_school_address: student.previous_school_address ?? '',
+        street_address: addr?.street_address ?? '',
+        city: addr?.city ?? '',
+        state: addr?.state ?? '',
+        postal_code: addr?.zip_code ?? '',
+        country: addr?.country ?? '',
       });
       setFormLoaded(true);
     }
@@ -192,7 +192,7 @@ export default function EditStudentScreen() {
       return;
     }
 
-    const payload = buildStudentPayload(form, false);
+    const payload = buildStudentPayload(form, false) as Partial<Student>;
     updateMutation.mutate(
       { publicId: id, data: payload },
       {
@@ -201,13 +201,13 @@ export default function EditStudentScreen() {
             { text: 'OK', onPress: () => router.back() },
           ]);
         },
-        onError: (err: any) => {
+        onError: (err: Error & { response?: { data?: unknown } }) => {
           const { fieldErrors: fe, generalError } = parseApiErrors(err?.response?.data);
           if (Object.keys(fe).length > 0) {
             setErrors(fe);
             return;
           }
-          setApiError(generalError || 'Failed to update student.');
+          setApiError(generalError ?? 'Failed to update student.');
         },
       }
     );
@@ -267,7 +267,7 @@ export default function EditStudentScreen() {
           >
             <ProfileAvatar
               name={`${form.first_name} ${form.last_name}`.trim()}
-              imageUri={localPhotoUri || student?.profile_photo_thumbnail}
+              imageUri={localPhotoUri ?? undefined}
               size={90}
               onPress={pickAndUpload}
               isUploading={isPhotoUploading}

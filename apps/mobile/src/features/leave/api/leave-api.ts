@@ -94,11 +94,27 @@ export interface LeaveReviewQueryParams {
 
 // Leave Allocations API
 
+/**
+ * Get leave allocations (Admin view - full list with CRUD)
+ */
 export async function getLeaveAllocations(
   params?: LeaveAllocationQueryParams
 ): Promise<ApiListResponse<LeaveAllocation>> {
   const response = await apiClient.get<ApiListResponse<LeaveAllocation>>(
     '/leave/admin/allocations/',
+    { params }
+  );
+  return response.data;
+}
+
+/**
+ * Get leave allocations for employee (read-only view)
+ */
+export async function getEmployeeLeaveAllocations(
+  params?: LeaveAllocationQueryParams
+): Promise<ApiListResponse<LeaveAllocation>> {
+  const response = await apiClient.get<ApiListResponse<LeaveAllocation>>(
+    '/leave/employee/allocations/',
     { params }
   );
   return response.data;

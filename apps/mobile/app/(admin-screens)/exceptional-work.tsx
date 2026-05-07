@@ -1,4 +1,4 @@
-/**
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-misused-promises, @typescript-eslint/no-floating-promises, @typescript-eslint/prefer-nullish-coalescing *//**
  * Exceptional Work Policy Screen - Manage calendar exceptions
  */
 
@@ -30,6 +30,7 @@ import {
   PartyPopper,
   X,
   Check,
+  Eye,
 } from 'lucide-react-native';
 import { useState, useMemo } from 'react';
 import {
@@ -51,6 +52,8 @@ import {
 import { apiClient } from '@/api/client';
 import { FAB, ConfirmDialog } from '@/components/common';
 import { useClasses } from '@/features/classes';
+import { useAuthStore } from '@/lib/auth-store';
+import { isAdminRole } from '@/utils/role-utils';
 
 const { width: screenWidth } = Dimensions.get('window');
 const CALENDAR_CELL_SIZE = Math.floor((screenWidth - 80) / 7);
@@ -466,9 +469,11 @@ function CreateExceptionModal({
 function ExceptionCard({
   exception,
   onDelete,
+  canManage = true,
 }: {
   exception: CalendarException;
   onDelete: () => void;
+  canManage?: boolean;
 }) {
   const isForceWorking = exception.override_type === 'FORCE_WORKING';
   const formattedDate = format(parseISO(exception.date), 'EEEE, dd MMMM yyyy');
@@ -511,9 +516,11 @@ function ExceptionCard({
             </Text>
           </View>
         </View>
-        <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
-          <Trash2 size={18} color="#dc2626" />
-        </TouchableOpacity>
+        {canManage && (
+          <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
+            <Trash2 size={18} color="#dc2626" />
+          </TouchableOpacity>
+        )}
       </View>
 
       {exception.reason && (
@@ -543,6 +550,10 @@ export default function ExceptionalWorkScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<CalendarException | null>(null);
+
+  // Role-based access check
+  const { user } = useAuthStore();
+  const canManage = useMemo(() => isAdminRole(user?.role), [user?.role]);
 
   const {
     data: exceptions,
@@ -603,11 +614,21 @@ export default function ExceptionalWorkScreen() {
             </TouchableOpacity>
             <View>
               <Text style={styles.headerTitle}>Exceptional Work Policy</Text>
-              <Text style={styles.headerSubtitle}>Manage calendar exceptions</Text>
+              <Text style={styles.headerSubtitle}>
+                {canManage ? 'Manage calendar exceptions' : 'View calendar exceptions'}
+              </Text>
             </View>
           </View>
         </View>
       </LinearGradient>
+
+      {/* Read-only banner for teachers */}
+      {!canManage && (
+        <View style={styles.readOnlyBanner}>
+          <Eye size={16} color="#7c3aed" />
+          <Text style={styles.readOnlyText}>View only — Contact admin to modify exceptions</Text>
+        </View>
+      )}
 
       <ScrollView
         style={styles.content}
@@ -653,6 +674,7 @@ export default function ExceptionalWorkScreen() {
                     key={exception.public_id}
                     exception={exception}
                     onDelete={() => handleDelete(exception)}
+                    canManage={canManage}
                   />
                 ))
               )}
@@ -680,6 +702,7 @@ export default function ExceptionalWorkScreen() {
                     key={exception.public_id}
                     exception={exception}
                     onDelete={() => handleDelete(exception)}
+                    canManage={canManage}
                   />
                 ))
               )}
@@ -688,8 +711,10 @@ export default function ExceptionalWorkScreen() {
         )}
       </ScrollView>
 
-      {/* FAB for adding new exception - Using reusable FAB component */}
-      <FAB onPress={() => setShowCreateModal(true)} icon={Plus} color={adminTheme.accent} />
+      {/* FAB for adding new exception - Only for admin */}
+      {canManage && (
+        <FAB onPress={() => setShowCreateModal(true)} icon={Plus} color={adminTheme.accent} />
+      )}
 
       {/* Create Exception Modal */}
       <CreateExceptionModal
@@ -725,6 +750,20 @@ const styles = StyleSheet.create({
   backButton: { padding: 4 },
   headerTitle: { color: 'white', fontSize: 20, fontWeight: '700' },
   headerSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 13 },
+  // Read-only banner
+  readOnlyBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ede9fe',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  readOnlyText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#7c3aed',
+  },
   content: { flex: 1 },
   scrollContent: { padding: 16, paddingBottom: 100 },
   infoCard: {

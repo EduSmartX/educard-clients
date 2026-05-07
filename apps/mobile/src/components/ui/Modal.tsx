@@ -9,7 +9,7 @@ import {
   StyleSheet,
   Pressable,
 } from 'react-native';
-import Animated, { FadeIn, FadeOut, ZoomIn, ZoomOut } from 'react-native-reanimated';
+import Animated, { ZoomIn, ZoomOut } from 'react-native-reanimated';
 
 export type ModalVariant = 'success' | 'error' | 'warning' | 'info';
 
@@ -188,7 +188,7 @@ export function useModal() {
     }
 
     actions.push({
-      label: options.confirmText || 'OK',
+      label: options.confirmText ?? 'OK',
       variant: 'primary',
       onPress: () => {
         setModalState((prev) => ({ ...prev, visible: false }));
@@ -200,7 +200,7 @@ export function useModal() {
       visible: true,
       title: options.title,
       message: options.message,
-      variant: options.variant || 'info',
+      variant: options.variant ?? 'info',
       actions,
     });
   }, []);

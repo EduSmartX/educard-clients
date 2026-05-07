@@ -4,7 +4,15 @@
 
 import { Eye, EyeOff, LucideIcon } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { View, TextInput, Text, TouchableOpacity, type TextInputProps } from 'react-native';
+import {
+  View,
+  TextInput,
+  Text,
+  TouchableOpacity,
+  type TextInputProps,
+  type NativeSyntheticEvent,
+  type TextInputFocusEventData,
+} from 'react-native';
 
 import { Colors } from '@/constants/colors';
 
@@ -39,12 +47,12 @@ export function Input({
   const isFloating = isFocused || hasValue;
   const isPassword = secureTextEntry !== undefined;
 
-  const handleFocus = (e: any) => {
+  const handleFocus = (e: NativeSyntheticEvent<TextInputFocusEventData>) => {
     setIsFocused(true);
     onFocus?.(e);
   };
 
-  const handleBlur = (e: any) => {
+  const handleBlur = (e: NativeSyntheticEvent<TextInputFocusEventData>) => {
     setIsFocused(false);
     onBlur?.(e);
   };
@@ -63,7 +71,7 @@ export function Input({
   const LeftIcon = LeftIconComponent;
 
   return (
-    <View className={`mb-4 ${containerClassName || ''}`}>
+    <View className={`mb-4 ${containerClassName ?? ''}`}>
       <View
         className={`relative flex-row items-center rounded-xl border-2 bg-white ${getBorderColor()} px-4 py-3`}
       >

@@ -1,11 +1,16 @@
 /**
  * Admin Settings Screen
  * Simplified: Organization Settings (admin) + App Settings
+ * 
+ * Permission Model:
+ * - Admin: Access to Organization Preferences, Holidays (CRUD)
+ * - Teacher: App settings only (no Organization section)
  */
 
-import { Colors, getRoleGradient } from '@educard/shared';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, TouchableOpacity, Alert, ScrollView, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import {
   User,
   Bell,
@@ -13,17 +18,18 @@ import {
   HelpCircle,
   LogOut,
   ChevronRight,
-  Building2,
   SlidersHorizontal,
+  Calendar,
   Info,
   type LucideIcon,
 } from 'lucide-react-native';
-import { View, Text, TouchableOpacity, Alert, ScrollView, StyleSheet } from 'react-native';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-
-import { useMyProfilePhoto } from '@/hooks';
+import { useMemo } from 'react';
+import { Colors, getRoleGradient } from '@educard/shared';
 import { useAuthStore } from '@/lib/auth-store';
+import { useMyProfilePhoto } from '@/hooks';
 import { headerStyles, layoutStyles } from '@/styles';
+import { isAdminRole } from '@/utils/role-utils';
+import { getMediaUrl } from '@/constants/config';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -48,6 +54,9 @@ export default function AdminSettingsScreen() {
   const { user, logout } = useAuthStore();
   const { data: profilePhoto } = useMyProfilePhoto();
 
+  // Check if current user is admin
+  const isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
+
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
       { text: 'Cancel', style: 'cancel' },
@@ -55,94 +64,94 @@ export default function AdminSettingsScreen() {
     ]);
   };
 
-  const sections: SettingSection[] = [
-    {
-      title: 'ORGANIZATION',
-      items: [
-        {
-          id: 'organization',
-          title: 'Organization Info',
-          subtitle: 'View organization details',
-          icon: Building2,
-          iconColor: '#0284c7',
-          iconBg: '#e0f2fe',
-          route: '/(admin-screens)/organization',
-        },
-        {
-          id: 'preferences',
-          title: 'Preferences',
-          subtitle: 'School settings & policies',
-          icon: SlidersHorizontal,
-          iconColor: '#7c3aed',
-          iconBg: '#f5f3ff',
-          route: '/(admin-screens)/preferences',
-        },
-      ],
-    },
-    {
-      title: 'APP',
-      items: [
-        {
-          id: 'profile',
-          title: 'Edit Profile',
-          subtitle: 'Update your information',
-          icon: User,
-          iconColor: '#2563eb',
-          iconBg: '#eff6ff',
-          route: '/(admin-screens)/profile',
-        },
-        {
-          id: 'notifications',
-          title: 'Notifications',
-          subtitle: 'Manage notification preferences',
-          icon: Bell,
-          iconColor: '#f59e0b',
-          iconBg: '#fef3c7',
-          route: '/(admin-screens)/notifications',
-        },
-        {
-          id: 'security',
-          title: 'Security',
-          subtitle: 'Password & authentication',
-          icon: Shield,
-          iconColor: '#059669',
-          iconBg: '#dcfce7',
-          route: '/(admin-screens)/security',
-        },
-        {
-          id: 'help',
-          title: 'Help & Support',
-          subtitle: 'FAQs, contact support',
-          icon: HelpCircle,
-          iconColor: '#64748b',
-          iconBg: '#f1f5f9',
-          route: '/(admin-screens)/help',
-        },
-      ],
-    },
-  ];
+  // Organization section - only for admins
+  const organizationSection: SettingSection = {
+    title: 'ORGANIZATION',
+    items: [
+      {
+        id: 'preferences',
+        title: 'Organization Preferences',
+        subtitle: 'School settings & policies',
+        icon: SlidersHorizontal,
+        iconColor: '#0284c7',
+        iconBg: '#e0f2fe',
+        route: '/(admin-screens)/preferences',
+      },
+      {
+        id: 'holidays',
+        title: 'Holiday Calendar',
+        subtitle: 'Manage holidays & events',
+        icon: Calendar,
+        iconColor: '#dc2626',
+        iconBg: '#fee2e2',
+        route: '/(admin-screens)/holidays',
+      },
+    ],
+  };
 
-  const profileImageUrl = profilePhoto?.thumbnail_url || user?.profile_image;
+  // App section - for all users
+  const appSection: SettingSection = {
+    title: 'APP',
+    items: [
+      {
+        id: 'profile',
+        title: 'Edit Profile',
+        subtitle: 'Update your information',
+        icon: User,
+        iconColor: '#2563eb',
+        iconBg: '#eff6ff',
+        route: '/(admin-screens)/profile',
+      },
+      {
+        id: 'notifications',
+        title: 'Notifications',
+        subtitle: 'Manage notification preferences',
+        icon: Bell,
+        iconColor: '#f59e0b',
+        iconBg: '#fef3c7',
+      },
+      {
+        id: 'security',
+        title: 'Change Password',
+        subtitle: 'Update your password',
+        icon: Shield,
+        iconColor: '#059669',
+        iconBg: '#dcfce7',
+        route: '/(admin-screens)/change-password',
+      },
+      {
+        id: 'help',
+        title: 'Help & Support',
+        subtitle: 'FAQs, contact support',
+        icon: HelpCircle,
+        iconColor: '#64748b',
+        iconBg: '#f1f5f9',
+      },
+    ],
+  };
+
+  // Build sections based on role
+  const sections: SettingSection[] = isAdmin 
+    ? [organizationSection, appSection]
+    : [appSection];
+
+  const profileImageUrl = getMediaUrl(profilePhoto?.thumbnail_url) || getMediaUrl(profilePhoto?.url) || getMediaUrl(user?.profile_image);
   const initials = (user?.full_name || user?.first_name || 'A').charAt(0).toUpperCase();
 
   return (
     <View style={layoutStyles.container}>
       <LinearGradient colors={adminGradient} style={headerStyles.header}>
-        <Animated.View
-          entering={FadeIn.delay(100)}
-          style={headerStyles.circle1}
-          pointerEvents="none"
-        />
-        <Animated.View
-          entering={FadeIn.delay(200)}
-          style={headerStyles.circle2}
-          pointerEvents="none"
-        />
+        <Animated.View entering={FadeIn.delay(100)} style={headerStyles.circle1} pointerEvents="none" />
+        <Animated.View entering={FadeIn.delay(200)} style={headerStyles.circle2} pointerEvents="none" />
         <View style={headerStyles.content}>
           <Animated.View entering={FadeInDown.delay(100).springify()} style={st.headerProfile}>
-            <View style={st.avatarCircle}>
-              <Text style={st.avatarText}>{initials}</Text>
-            </View>
+            {profileImageUrl ? (
+              <Image source={{ uri: profileImageUrl }} style={st.avatarImage} />
+            ) : (
+              <View style={st.avatarCircle}>
+                <Text style={st.avatarText}>{initials}</Text>
+              </View>
+            )}
             <View style={{ flex: 1 }}>
               <Text style={st.headerName}>{user?.full_name || user?.first_name || 'Admin'}</Text>
               <Text style={st.headerEmail}>{user?.email || ''}</Text>
@@ -158,10 +167,7 @@ export default function AdminSettingsScreen() {
 
       <ScrollView style={st.body} contentContainerStyle={st.bodyContent}>
         {sections.map((section, sIdx) => (
-          <Animated.View
-            key={section.title}
-            entering={FadeInDown.delay(100 + sIdx * 80).springify()}
-          >
+          <Animated.View key={section.title} entering={FadeInDown.delay(100 + sIdx * 80).springify()}>
             <Text style={st.sectionTitle}>{section.title}</Text>
             <View style={st.sectionCard}>
               {section.items.map((item, iIdx) => (
@@ -222,6 +228,13 @@ const st = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.25)',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.4)',
+  },
+  avatarImage: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.4)',
   },

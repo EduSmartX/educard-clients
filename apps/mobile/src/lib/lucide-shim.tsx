@@ -74,6 +74,7 @@ const iconMap: Record<string, { lib: any; name: string }> = {
   Settings: { lib: Ionicons, name: 'settings-outline' },
   Menu: { lib: Ionicons, name: 'menu' },
   Grid: { lib: Ionicons, name: 'grid-outline' },
+  Grid3x3: { lib: Ionicons, name: 'grid-outline' },
   List: { lib: Ionicons, name: 'list-outline' },
   LayoutDashboard: { lib: Ionicons, name: 'grid-outline' },
   Layers: { lib: Ionicons, name: 'layers-outline' },
@@ -275,6 +276,7 @@ export const Download = createIconComponent('Download');
 export const Upload = createIconComponent('Upload');
 export const Copy = createIconComponent('Copy');
 export const List = createIconComponent('List');
+export const Grid3x3 = createIconComponent('Grid3x3');
 export const Folder = createIconComponent('Folder');
 export const Globe = createIconComponent('Globe');
 export const Wifi = createIconComponent('Wifi');

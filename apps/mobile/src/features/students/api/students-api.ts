@@ -38,12 +38,17 @@ export async function getStudentById(
 }
 
 export async function createStudent(
-  data: Partial<Student>,
+  data: Partial<Student> & { class_id: string },
   forceCreate?: boolean
 ): Promise<StudentDetailResponse> {
+  // Students must be created via class-level endpoint
+  const classId = data.class_id;
+  if (!classId) {
+    throw new Error('class_id is required to create a student');
+  }
   const params = forceCreate ? { force_create: 'true' } : {};
   const response = await apiClient.post<StudentDetailResponse>(
-    API_ENDPOINTS.STUDENTS.CREATE,
+    API_ENDPOINTS.STUDENTS.CLASS_LEVEL.CREATE(classId),
     data,
     { params }
   );

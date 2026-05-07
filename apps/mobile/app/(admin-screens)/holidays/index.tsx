@@ -1,7 +1,10 @@
 /**
  * Holiday Calendar Screen
  * Premium calendar view with colored cells + Table list view
- * Admin: Add, Edit, Delete holidays
+ * 
+ * Permission Model:
+ * - Admin: Add, Edit, Delete holidays
+ * - Teacher: View-only access (no CRUD buttons)
  */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any, @typescript-eslint/no-floating-promises, @typescript-eslint/no-unused-vars, @typescript-eslint/no-non-null-assertion */
 
@@ -48,7 +51,9 @@ import {
   type Holiday,
   type CreateHolidayPayload,
 } from '@/features/holidays';
+import { useAuthStore } from '@/lib/auth-store';
 import { headerStyles, layoutStyles } from '@/styles';
+import { isAdminRole } from '@/utils/role-utils';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -121,9 +126,13 @@ const MONTHS = [
 
 export default function HolidayCalendarScreen() {
   const router = useRouter();
+  const { user } = useAuthStore();
   const [refreshing, setRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState<'calendar' | 'table'>('calendar');
   const [currentMonth, setCurrentMonth] = useState(new Date());
+
+  // Check if current user is admin (has CRUD access)
+  const canManage = useMemo(() => isAdminRole(user?.role), [user?.role]);
 
   // Form modal state
   const [formModal, setFormModal] = useState<{ visible: boolean; editing: Holiday | null }>({
@@ -635,12 +644,17 @@ export default function HolidayCalendarScreen() {
               </Text>
             </View>
             <View style={{ flex: 1 }} />
-            <TouchableOpacity onPress={() => openEditModal(item)} style={styles.tinyBtn}>
-              <Pencil size={14} color="#7c3aed" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleDelete(item)} style={styles.tinyBtn}>
-              <Trash2 size={14} color={Colors.danger[400]} />
-            </TouchableOpacity>
+            {/* Edit/Delete buttons - only for admin */}
+            {canManage && (
+              <>
+                <TouchableOpacity onPress={() => openEditModal(item)} style={styles.tinyBtn}>
+                  <Pencil size={14} color="#7c3aed" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDelete(item)} style={styles.tinyBtn}>
+                  <Trash2 size={14} color={Colors.danger[400]} />
+                </TouchableOpacity>
+              </>
+            )}
           </View>
         </View>
       </Animated.View>
@@ -665,7 +679,7 @@ export default function HolidayCalendarScreen() {
           <View style={headerStyles.topRow}>
             <TouchableOpacity
               style={headerStyles.backBtn}
-              onPress={() => router.navigate('/(tabs)/(admin)/management')}
+              onPress={() => router.back()}
             >
               <ChevronLeft size={24} color="#fff" />
             </TouchableOpacity>
@@ -689,9 +703,12 @@ export default function HolidayCalendarScreen() {
                   <Grid3x3 size={18} color="#fff" />
                 )}
               </TouchableOpacity>
-              <TouchableOpacity style={headerStyles.primaryBtn} onPress={openAddModal}>
-                <Plus size={20} color="#7c3aed" />
-              </TouchableOpacity>
+              {/* Add button - only for admin */}
+              {canManage && (
+                <TouchableOpacity style={headerStyles.primaryBtn} onPress={openAddModal}>
+                  <Plus size={20} color="#7c3aed" />
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         </View>
@@ -791,7 +808,7 @@ export default function HolidayCalendarScreen() {
 
             {/* Actions */}
             <View style={styles.popupActions}>
-              {detailPopup.holidays.length === 1 && (
+              {canManage && detailPopup.holidays.length === 1 && (
                 <TouchableOpacity
                   style={styles.popupEditBtn}
                   onPress={() => {

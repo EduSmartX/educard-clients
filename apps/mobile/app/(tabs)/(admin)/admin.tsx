@@ -47,7 +47,7 @@ const adminItems: AdminItem[] = [
   {
     id: 'leave-allocations',
     title: 'Leave Policies',
-    subtitle: 'Manage leave allocations',
+    subtitle: 'Manage leave policies',
     icon: FileText,
     gradient: ['#8b5cf6', '#c084fc'],
     route: '/(admin-screens)/leave/allocations',

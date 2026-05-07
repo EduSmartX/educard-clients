@@ -38,7 +38,9 @@ import {
   BREAK_TYPES,
   type ClassTimetableSlot,
 } from '@/features/timetable/types';
+import { useAuthStore } from '@/lib/auth-store';
 import { headerStyles, layoutStyles } from '@/styles';
+import { isAdminRole } from '@/utils/role-utils';
 
 const adminGradient = getRoleGradient('admin');
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -67,6 +69,10 @@ export default function TimetableScreen() {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const dayScrollRef = useRef<ScrollView>(null);
+
+  // Role-based access check
+  const { user } = useAuthStore();
+  const canManage = useMemo(() => isAdminRole(user?.role), [user?.role]);
 
   // Today in 0=Mon format
   const jsDay = new Date().getDay();
@@ -129,7 +135,7 @@ export default function TimetableScreen() {
     const colors = SLOT_COLORS[slot.slot_type] || SLOT_COLORS.period;
 
     const handleSlotPress = () => {
-      if (isBreak) return;
+      if (isBreak || !canManage) return;
       router.push(
         `/(admin-screens)/timetable/assign-entry?slotId=${slot.public_id}&dayOfWeek=${activeDay}&classId=${selectedClassId}&entryId=${slot.entry_public_id || ''}&subjectId=${slot.subject_public_id || ''}&slotLabel=${encodeURIComponent(slot.label)}&className=${encodeURIComponent(classOptions.find((c: any) => c.value === selectedClassId)?.label || '')}` as any
       );
@@ -144,9 +150,9 @@ export default function TimetableScreen() {
       >
         <TouchableOpacity
           style={[styles.slotCard, { backgroundColor: colors.bg, borderLeftColor: colors.border }]}
-          activeOpacity={isBreak ? 1 : 0.7}
+          activeOpacity={isBreak || !canManage ? 1 : 0.7}
           onPress={handleSlotPress}
-          disabled={isBreak}
+          disabled={isBreak || !canManage}
         >
           <View style={styles.slotTime}>
             <Clock size={12} color={colors.text} />
@@ -208,19 +214,21 @@ export default function TimetableScreen() {
               <Text style={headerStyles.title}>Timetable</Text>
               <Text style={headerStyles.subtitle}>Weekly class schedule</Text>
             </View>
-            <TouchableOpacity
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 12,
-                backgroundColor: 'rgba(255,255,255,0.2)',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-              onPress={() => router.push('/(admin-screens)/timetable/setup')}
-            >
-              <Settings size={20} color="#fff" />
-            </TouchableOpacity>
+            {canManage && (
+              <TouchableOpacity
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  backgroundColor: 'rgba(255,255,255,0.2)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                onPress={() => router.push('/(admin-screens)/timetable/setup')}
+              >
+                <Settings size={20} color="#fff" />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </LinearGradient>
@@ -261,24 +269,26 @@ export default function TimetableScreen() {
             <Text style={styles.emptySubtitle}>
               No timetable has been set up for this class yet.
             </Text>
-            <TouchableOpacity
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 6,
-                backgroundColor: '#7c3aed',
-                paddingHorizontal: 20,
-                paddingVertical: 12,
-                borderRadius: 12,
-                marginTop: 16,
-              }}
-              onPress={() => router.push('/(admin-screens)/timetable/setup')}
-            >
-              <Settings size={16} color="#fff" />
-              <Text style={{ fontSize: 14, fontWeight: '600', color: '#fff' }}>
-                Set Up Timetable
-              </Text>
-            </TouchableOpacity>
+            {canManage && (
+              <TouchableOpacity
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 6,
+                  backgroundColor: '#7c3aed',
+                  paddingHorizontal: 20,
+                  paddingVertical: 12,
+                  borderRadius: 12,
+                  marginTop: 16,
+                }}
+                onPress={() => router.push('/(admin-screens)/timetable/setup')}
+              >
+                <Settings size={16} color="#fff" />
+                <Text style={{ fontSize: 14, fontWeight: '600', color: '#fff' }}>
+                  Set Up Timetable
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         ) : (
           <>

@@ -1,114 +1,128 @@
 /**
  * Employee Dashboard
- * Main dashboard for teachers and staff
+ * Main dashboard for teachers and staff with real timetable data
  */
 
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
   BookOpen,
-  Users,
   ClipboardCheck,
   Clock,
   Bell,
   Calendar,
-  FileText,
   CheckCircle,
-  AlertCircle,
-  ChevronRight,
   GraduationCap,
-  Send,
   CalendarDays,
   Plus,
+  AlertCircle,
 } from 'lucide-react-native';
-import { useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  RefreshControl,
+  ActivityIndicator,
+} from 'react-native';
 
 import { Screen } from '@/components/layout';
 import { Card, Avatar, Badge } from '@/components/ui';
 import { colors } from '@/constants/colors';
+import { useMyTimetable } from '@/features/timetable';
+import type { TimetableEntry } from '@/features/timetable';
 import { useAuthStore } from '@/lib/auth-store';
+import { getSubjectColor } from '@educard/shared';
 
-// Mock data
-const mockStats = {
-  classesToday: 6,
-  studentsTotal: 180,
-  pendingTasks: 3,
-  attendanceRate: 96.2,
-};
-
-const mockTodayClasses = [
-  {
-    id: 1,
-    subject: 'Mathematics',
-    class: '10A',
-    time: '9:00 AM - 9:45 AM',
-    room: 'Room 201',
-    status: 'completed',
-  },
-  {
-    id: 2,
-    subject: 'Mathematics',
-    class: '9B',
-    time: '10:00 AM - 10:45 AM',
-    room: 'Room 203',
-    status: 'completed',
-  },
-  {
-    id: 3,
-    subject: 'Science',
-    class: '8A',
-    time: '11:00 AM - 11:45 AM',
-    room: 'Lab 1',
-    status: 'ongoing',
-  },
-  {
-    id: 4,
-    subject: 'Mathematics',
-    class: '7A',
-    time: '2:00 PM - 2:45 PM',
-    room: 'Room 105',
-    status: 'upcoming',
-  },
-];
-
-const mockPendingTasks = [
-  {
-    id: 1,
-    title: 'Submit Class 10 Progress Report',
-    dueDate: 'Today',
-    priority: 'high',
-  },
-  {
-    id: 2,
-    title: 'Review Class 9 Assignments',
-    dueDate: 'Tomorrow',
-    priority: 'medium',
-  },
-  {
-    id: 3,
-    title: 'Prepare Unit Test Papers',
-    dueDate: 'In 3 days',
-    priority: 'low',
-  },
-];
+// Day labels (0=Monday, 6=Sunday)
+const DAY_LABELS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 export default function EmployeeDashboard() {
   const router = useRouter();
   const { user } = useAuthStore();
   const [refreshing, setRefreshing] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [currentEntryLayout, setCurrentEntryLayout] = useState<{ y: number; height: number } | null>(null);
+
+  // Fetch real timetable data
+  const { data: timetableData, isLoading, refetch } = useMyTimetable();
+
+  // Get today's day index (0=Monday, 6=Sunday)
+  const todayDayNum = useMemo(() => {
+    const jsDay = new Date().getDay();
+    return jsDay === 0 ? 6 : jsDay - 1;
+  }, []);
+
+  // Get today's classes sorted by time
+  const todayClasses = useMemo((): TimetableEntry[] => {
+    if (!timetableData?.days) return [];
+    const entries = timetableData.days[todayDayNum] || timetableData.days[String(todayDayNum)] || [];
+    return [...entries].sort((a, b) => {
+      const timeA = a.start_time || '';
+      const timeB = b.start_time || '';
+      return timeA.localeCompare(timeB);
+    });
+  }, [timetableData, todayDayNum]);
+
+  // Determine class status: completed, ongoing, or upcoming
+  const getClassStatus = useCallback((entry: TimetableEntry) => {
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    
+    const [startH, startM] = (entry.start_time || '00:00').split(':').map(Number);
+    const [endH, endM] = (entry.end_time || '00:00').split(':').map(Number);
+    const startMinutes = startH * 60 + startM;
+    const endMinutes = endH * 60 + endM;
+
+    if (currentMinutes >= endMinutes) return 'completed';
+    if (currentMinutes >= startMinutes && currentMinutes < endMinutes) return 'ongoing';
+    return 'upcoming';
+  }, []);
+
+  // Find current or next upcoming class
+  const currentOrNextEntry = useMemo(() => {
+    for (const entry of todayClasses) {
+      const status = getClassStatus(entry);
+      if (status === 'ongoing' || status === 'upcoming') {
+        return { entry, status };
+      }
+    }
+    return null;
+  }, [todayClasses, getClassStatus]);
+
+  // Auto-scroll to current/next class on mount and when data changes
+  useEffect(() => {
+    if (currentEntryLayout && scrollViewRef.current) {
+      const timer = setTimeout(() => {
+        scrollViewRef.current?.scrollTo({
+          y: currentEntryLayout.y - 100,
+          animated: true,
+        });
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [currentEntryLayout]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await refetch();
     setRefreshing(false);
-  }, []);
+  }, [refetch]);
 
   const formatGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good Morning';
     if (hour < 17) return 'Good Afternoon';
     return 'Good Evening';
+  };
+
+  const formatTime = (timeStr: string): string => {
+    if (!timeStr) return '';
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12;
+    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
   const getStatusColor = (status: string) => {
@@ -124,22 +138,17 @@ export default function EmployeeDashboard() {
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return 'danger';
-      case 'medium':
-        return 'warning';
-      case 'low':
-        return 'success';
-      default:
-        return 'default';
-    }
-  };
+  // Count stats from timetable
+  const stats = useMemo(() => ({
+    classesToday: todayClasses.length,
+    completedToday: todayClasses.filter(e => getClassStatus(e) === 'completed').length,
+    remainingToday: todayClasses.filter(e => getClassStatus(e) !== 'completed').length,
+  }), [todayClasses, getClassStatus]);
 
   return (
     <Screen scrollable={false}>
       <ScrollView
+        ref={scrollViewRef}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
@@ -154,7 +163,9 @@ export default function EmployeeDashboard() {
               <Text className="text-2xl font-bold text-white" numberOfLines={1}>
                 {user?.full_name || user?.first_name || 'Teacher'}
               </Text>
-              <Text className="mt-1 text-sm text-secondary-200">Mathematics Teacher</Text>
+              <Text className="mt-1 text-sm text-secondary-200">
+                {timetableData?.teacher_name || 'Teacher'}
+              </Text>
             </View>
             <View className="flex-row items-center">
               <TouchableOpacity
@@ -162,9 +173,6 @@ export default function EmployeeDashboard() {
                 onPress={() => router.push('/(tabs)/(parent)/notifications' as any)}
               >
                 <Bell size={20} color="#ffffff" />
-                <View className="absolute -right-1 -top-1 h-5 w-5 items-center justify-center rounded-full bg-danger-500">
-                  <Text className="text-xs font-bold text-white">2</Text>
-                </View>
               </TouchableOpacity>
               <Avatar name={user?.full_name || user?.first_name || 'T'} size="md" />
             </View>
@@ -176,9 +184,7 @@ export default function EmployeeDashboard() {
               <View className="rounded-xl bg-white/20 p-3">
                 <View className="flex-row items-center">
                   <BookOpen size={18} color="#ffffff" />
-                  <Text className="ml-2 text-lg font-bold text-white">
-                    {mockStats.classesToday}
-                  </Text>
+                  <Text className="ml-2 text-lg font-bold text-white">{stats.classesToday}</Text>
                 </View>
                 <Text className="mt-1 text-xs text-secondary-100">Classes Today</Text>
               </View>
@@ -186,37 +192,62 @@ export default function EmployeeDashboard() {
             <View className="mb-3 w-1/2 px-1.5">
               <View className="rounded-xl bg-white/20 p-3">
                 <View className="flex-row items-center">
-                  <Users size={18} color="#ffffff" />
-                  <Text className="ml-2 text-lg font-bold text-white">
-                    {mockStats.studentsTotal}
-                  </Text>
+                  <CheckCircle size={18} color="#ffffff" />
+                  <Text className="ml-2 text-lg font-bold text-white">{stats.completedToday}</Text>
                 </View>
-                <Text className="mt-1 text-xs text-secondary-100">My Students</Text>
+                <Text className="mt-1 text-xs text-secondary-100">Completed</Text>
               </View>
             </View>
             <View className="w-1/2 px-1.5">
               <View className="rounded-xl bg-white/20 p-3">
                 <View className="flex-row items-center">
-                  <FileText size={18} color="#ffffff" />
-                  <Text className="ml-2 text-lg font-bold text-white">
-                    {mockStats.pendingTasks}
-                  </Text>
+                  <Clock size={18} color="#ffffff" />
+                  <Text className="ml-2 text-lg font-bold text-white">{stats.remainingToday}</Text>
                 </View>
-                <Text className="mt-1 text-xs text-secondary-100">Pending Tasks</Text>
+                <Text className="mt-1 text-xs text-secondary-100">Remaining</Text>
               </View>
             </View>
             <View className="w-1/2 px-1.5">
               <View className="rounded-xl bg-white/20 p-3">
                 <View className="flex-row items-center">
-                  <ClipboardCheck size={18} color="#ffffff" />
-                  <Text className="ml-2 text-lg font-bold text-white">
-                    {mockStats.attendanceRate}%
-                  </Text>
+                  <Calendar size={18} color="#ffffff" />
+                  <Text className="ml-2 text-sm font-bold text-white">{DAY_LABELS[todayDayNum]}</Text>
                 </View>
-                <Text className="mt-1 text-xs text-secondary-100">Attendance Rate</Text>
+                <Text className="mt-1 text-xs text-secondary-100">Today</Text>
               </View>
             </View>
           </View>
+
+          {/* Next Class Banner */}
+          {currentOrNextEntry && (
+            <View className="mt-4 rounded-xl bg-white/25 p-3">
+              <View className="flex-row items-center">
+                <View className="h-10 w-10 items-center justify-center rounded-full bg-white/30">
+                  {currentOrNextEntry.status === 'ongoing' ? (
+                    <AlertCircle size={20} color="#fff" />
+                  ) : (
+                    <Clock size={20} color="#fff" />
+                  )}
+                </View>
+                <View className="ml-3 flex-1">
+                  <Text className="text-xs text-white/80">
+                    {currentOrNextEntry.status === 'ongoing' ? 'Currently Teaching' : 'Next Class'}
+                  </Text>
+                  <Text className="font-semibold text-white">
+                    {currentOrNextEntry.entry.subject_name || currentOrNextEntry.entry.slot_label}
+                  </Text>
+                  <Text className="text-xs text-white/80">
+                    {currentOrNextEntry.entry.class_name} • {formatTime(currentOrNextEntry.entry.start_time)} - {formatTime(currentOrNextEntry.entry.end_time)}
+                  </Text>
+                </View>
+                <View className={`px-2 py-1 rounded ${currentOrNextEntry.status === 'ongoing' ? 'bg-white' : 'bg-white/30'}`}>
+                  <Text className={currentOrNextEntry.status === 'ongoing' ? 'text-primary-600 text-xs font-medium' : 'text-white text-xs'}>
+                    {currentOrNextEntry.status === 'ongoing' ? 'Live' : 'Up Next'}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          )}
         </LinearGradient>
 
         {/* Content */}
@@ -224,76 +255,72 @@ export default function EmployeeDashboard() {
           {/* Today's Classes */}
           <View className="mb-6">
             <View className="mb-4 flex-row items-center justify-between">
-              <Text className="text-lg font-semibold text-gray-900">Today's Classes</Text>
-              <TouchableOpacity>
-                <Text className="text-sm font-medium text-primary-600">View All</Text>
-              </TouchableOpacity>
+              <Text className="text-lg font-semibold text-gray-900">
+                Today's Schedule — {DAY_LABELS[todayDayNum]}
+              </Text>
             </View>
 
-            <Card>
-              {mockTodayClasses.map((classItem, index) => (
-                <TouchableOpacity
-                  key={classItem.id}
-                  className={`flex-row items-center py-3 ${
-                    index !== mockTodayClasses.length - 1 ? 'border-b border-gray-100' : ''
-                  }`}
-                >
-                  <View
-                    className="mr-3 h-12 w-1 rounded-full"
-                    style={{ backgroundColor: getStatusColor(classItem.status) }}
-                  />
-                  <View className="flex-1">
-                    <View className="flex-row items-center">
-                      <Text className="font-medium text-gray-900">{classItem.subject}</Text>
-                      <Text className="ml-2 text-sm text-gray-500">({classItem.class})</Text>
-                    </View>
-                    <Text className="text-sm text-gray-500">{classItem.time}</Text>
-                    <Text className="text-xs text-gray-400">{classItem.room}</Text>
-                  </View>
-                  {classItem.status === 'completed' && (
-                    <CheckCircle size={20} color={colors.success[500]} />
-                  )}
-                  {classItem.status === 'ongoing' && (
-                    <Badge variant="primary" size="sm">
-                      Live
-                    </Badge>
-                  )}
-                  {classItem.status === 'upcoming' && <Clock size={20} color={colors.gray[400]} />}
-                </TouchableOpacity>
-              ))}
-            </Card>
-          </View>
+            {isLoading ? (
+              <Card className="items-center justify-center py-8">
+                <ActivityIndicator size="large" color={colors.primary[500]} />
+                <Text className="mt-2 text-sm text-gray-500">Loading schedule...</Text>
+              </Card>
+            ) : todayClasses.length === 0 ? (
+              <Card className="items-center justify-center py-8">
+                <Calendar size={48} color={colors.gray[300]} />
+                <Text className="mt-2 text-sm text-gray-500">No classes scheduled for today</Text>
+              </Card>
+            ) : (
+              <Card>
+                {todayClasses.map((entry, index) => {
+                  const status = getClassStatus(entry);
+                  const isCurrentOrNext = currentOrNextEntry?.entry.public_id === entry.public_id;
+                  const subjectColor = getSubjectColor(entry.subject_name || entry.slot_label || 'default');
 
-          {/* Pending Tasks */}
-          <View className="mb-6">
-            <View className="mb-4 flex-row items-center justify-between">
-              <Text className="text-lg font-semibold text-gray-900">Pending Tasks</Text>
-              <TouchableOpacity>
-                <Text className="text-sm font-medium text-primary-600">View All</Text>
-              </TouchableOpacity>
-            </View>
-
-            <Card>
-              {mockPendingTasks.map((task, index) => (
-                <TouchableOpacity
-                  key={task.id}
-                  className={`flex-row items-center py-3 ${
-                    index !== mockPendingTasks.length - 1 ? 'border-b border-gray-100' : ''
-                  }`}
-                >
-                  <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-gray-100">
-                    <FileText size={18} color={colors.gray[600]} />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="font-medium text-gray-900">{task.title}</Text>
-                    <Text className="text-sm text-gray-500">Due: {task.dueDate}</Text>
-                  </View>
-                  <Badge variant={getPriorityColor(task.priority) as any} size="sm">
-                    {task.priority}
-                  </Badge>
-                </TouchableOpacity>
-              ))}
-            </Card>
+                  return (
+                    <TouchableOpacity
+                      key={entry.public_id || index}
+                      onLayout={(e) => {
+                        if (isCurrentOrNext) {
+                          setCurrentEntryLayout({
+                            y: e.nativeEvent.layout.y,
+                            height: e.nativeEvent.layout.height,
+                          });
+                        }
+                      }}
+                      className={`flex-row items-center py-3 ${
+                        index !== todayClasses.length - 1 ? 'border-b border-gray-100' : ''
+                      } ${isCurrentOrNext ? 'bg-primary-50 -mx-4 px-4 rounded-lg' : ''}`}
+                    >
+                      <View
+                        className="mr-3 h-12 w-1 rounded-full"
+                        style={{ backgroundColor: subjectColor.hex }}
+                      />
+                      <View className="mr-3 w-16 items-center">
+                        <Text className={`text-sm font-semibold ${isCurrentOrNext ? 'text-primary-700' : 'text-gray-700'}`}>
+                          {formatTime(entry.start_time)}
+                        </Text>
+                        <Text className="text-xs text-gray-400">{formatTime(entry.end_time)}</Text>
+                      </View>
+                      <View className="flex-1">
+                        <Text className={`font-medium ${isCurrentOrNext ? 'text-primary-900' : 'text-gray-900'}`}>
+                          {entry.subject_name || entry.slot_label}
+                        </Text>
+                        <Text className="text-sm text-gray-500">
+                          {entry.class_name}
+                          {entry.room && ` • ${entry.room}`}
+                        </Text>
+                      </View>
+                      {status === 'completed' && <CheckCircle size={20} color={colors.success[500]} />}
+                      {status === 'ongoing' && (
+                        <Badge variant="primary" size="sm">Live</Badge>
+                      )}
+                      {status === 'upcoming' && <Clock size={20} color={colors.gray[400]} />}
+                    </TouchableOpacity>
+                  );
+                })}
+              </Card>
+            )}
           </View>
 
           {/* Quick Actions */}
@@ -331,7 +358,6 @@ export default function EmployeeDashboard() {
                   <Text className="mt-2 text-center text-sm font-medium text-warning-700">
                     My{'\n'}Leaves
                   </Text>
-                  {/* Plus button overlay */}
                   <TouchableOpacity
                     className="absolute -right-1 -top-1 h-6 w-6 items-center justify-center rounded-full bg-warning-500"
                     onPress={(e) => {

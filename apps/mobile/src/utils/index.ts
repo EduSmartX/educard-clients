@@ -3,6 +3,19 @@
 // API error extraction
 export { extractApiError } from './api-error';
 
+// Role-based utilities
+export {
+  isAdminRole,
+  isTeacherRole,
+  canManageEntity,
+  maskPhoneNumber,
+  getApiBaseUrl,
+  getCurrentUser,
+  getUserRole,
+  isAdminUser,
+  isTeacherUser,
+} from './role-utils';
+
 // Re-export shared utilities
 export {
   formatDate,

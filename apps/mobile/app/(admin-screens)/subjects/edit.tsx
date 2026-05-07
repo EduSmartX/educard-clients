@@ -1,4 +1,4 @@
-/**
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-misused-promises, @typescript-eslint/no-floating-promises, @typescript-eslint/prefer-nullish-coalescing *//**
  * Edit Subject Screen
  * Fetches existing subject data, pre-populates form, PATCHes on save.
  */
@@ -29,7 +29,7 @@ import {
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { FormInput, FormSection, FormError, FormDropdown } from '@/components/forms';
-import { useClasses } from '@/features/classes';
+import { useManagedClasses } from '@/features/classes';
 import { useCoreSubjects } from '@/features/core';
 import { useSubjectDetail, useUpdateSubject } from '@/features/subjects';
 import { useTeachers } from '@/features/teachers';
@@ -43,7 +43,8 @@ export default function EditSubjectScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: subject, isLoading: detailLoading } = useSubjectDetail(id || '');
   const updateMutation = useUpdateSubject();
-  const { data: classesData } = useClasses({ page_size: 100 });
+  // Fetch managed classes - for teachers, only classes where they are class teacher
+  const { data: classesData } = useManagedClasses('subject');
   const { data: coreSubjects, isLoading: subjectsLoading } = useCoreSubjects();
   const { data: teachersData } = useTeachers({ page_size: 100 });
 

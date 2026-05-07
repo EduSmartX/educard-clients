@@ -3,7 +3,7 @@
  */
 
 import { Colors, getRoleGradient, getRoleThemeColors, extractApiError } from '@educard/shared';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isAfter, startOfToday } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
@@ -17,6 +17,7 @@ import {
   CalendarDays,
   MoreVertical,
   X,
+  CalendarCheck,
 } from 'lucide-react-native';
 import { useState, useCallback, useMemo } from 'react';
 import {
@@ -28,10 +29,12 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  SectionList,
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { FAB } from '@/components/common';
+import { useHolidays } from '@/features/holidays';
 import { useMyLeaveRequests, useCancelLeaveRequest } from '@/features/leave';
 import { headerStyles, layoutStyles } from '@/styles';
 
@@ -89,10 +92,21 @@ export default function MyLeaveRequestsScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const { data: requestsData, isLoading, refetch } = useMyLeaveRequests();
+  const { data: holidaysData } = useHolidays();
   const cancelMutation = useCancelLeaveRequest();
 
+  // Filter upcoming holidays (only future dates)
+  const upcomingHolidays = useMemo(() => {
+    const today = startOfToday();
+    const holidays = holidaysData?.data ?? [];
+    return holidays
+      .filter((h) => isAfter(parseISO(h.date), today) || format(parseISO(h.date), 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd'))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .slice(0, 5); // Show only next 5 holidays
+  }, [holidaysData]);
+
   const requests = useMemo(() => {
-    const data = requestsData?.data || [];
+    const data = requestsData?.data ?? [];
     if (filter === 'all') return data;
     return data.filter((r) => r.status === filter);
   }, [requestsData, filter]);
@@ -253,6 +267,28 @@ export default function MyLeaveRequestsScreen() {
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          ListHeaderComponent={
+            upcomingHolidays.length > 0 ? (
+              <Animated.View entering={FadeInDown.delay(100).duration(300)} style={styles.holidaysSection}>
+                <View style={styles.holidaysSectionHeader}>
+                  <CalendarCheck size={18} color="#dc2626" />
+                  <Text style={styles.holidaysSectionTitle}>Upcoming Holidays</Text>
+                </View>
+                {upcomingHolidays.map((holiday, index) => (
+                  <View key={holiday.public_id ?? index} style={styles.holidayItem}>
+                    <View style={styles.holidayDate}>
+                      <Text style={styles.holidayDay}>{format(parseISO(holiday.date), 'dd')}</Text>
+                      <Text style={styles.holidayMonth}>{format(parseISO(holiday.date), 'MMM')}</Text>
+                    </View>
+                    <View style={styles.holidayInfo}>
+                      <Text style={styles.holidayName}>{holiday.name}</Text>
+                      <Text style={styles.holidayDayName}>{format(parseISO(holiday.date), 'EEEE')}</Text>
+                    </View>
+                  </View>
+                ))}
+              </Animated.View>
+            ) : null
+          }
           ListEmptyComponent={renderEmptyState}
           refreshControl={
             <RefreshControl
@@ -456,5 +492,71 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: '#fff',
+  },
+  // Upcoming Holidays Section
+  holidaysSection: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  holidaysSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 14,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  holidaysSectionTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1e293b',
+  },
+  holidayItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f8fafc',
+  },
+  holidayDate: {
+    width: 50,
+    height: 50,
+    backgroundColor: '#fef2f2',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  holidayDay: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#dc2626',
+  },
+  holidayMonth: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#dc2626',
+    textTransform: 'uppercase',
+  },
+  holidayInfo: {
+    flex: 1,
+  },
+  holidayName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1e293b',
+  },
+  holidayDayName: {
+    fontSize: 12,
+    color: '#64748b',
+    marginTop: 2,
   },
 });

@@ -5,19 +5,18 @@
  */
 
 import React from 'react';
-import { View, ViewStyle } from 'react-native';
+import { View, type ViewStyle, type ViewProps } from 'react-native';
 
-interface LinearGradientProps {
-  colors: string[];
-  start?: { x: number; y: number } | [number, number];
-  end?: { x: number; y: number } | [number, number];
-  locations?: number[];
+interface LinearGradientProps extends ViewProps {
+  colors: readonly string[];
+  start?: { x: number; y: number } | readonly [number, number];
+  end?: { x: number; y: number } | readonly [number, number];
+  locations?: readonly number[];
   style?: ViewStyle | ViewStyle[];
   children?: React.ReactNode;
-  [key: string]: any;
 }
 
-export function LinearGradient({
+export const LinearGradient: React.FC<LinearGradientProps> = ({
   colors,
   style,
   children,
@@ -25,7 +24,7 @@ export function LinearGradient({
   end,
   locations,
   ...rest
-}: LinearGradientProps) {
+}) => {
   // Use the first color as a solid background fallback
   const backgroundColor = colors?.[0] || 'transparent';
   return (
@@ -33,6 +32,6 @@ export function LinearGradient({
       {children}
     </View>
   );
-}
+};
 
 export default LinearGradient;

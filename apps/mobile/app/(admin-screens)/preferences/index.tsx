@@ -22,8 +22,9 @@ import {
   Users,
   HelpCircle,
   Calendar,
+  Eye,
 } from 'lucide-react-native';
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -58,6 +59,8 @@ import {
   type OrganizationPreference,
   type GroupedPreference,
 } from '@/features/preferences';
+import { useAuthStore } from '@/lib/auth-store';
+import { isAdminRole } from '@/utils/role-utils';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -127,6 +130,10 @@ export default function OrgPreferencesScreen() {
   const [multiSelectValues, setMultiSelectValues] = useState<string[]>([]);
   const [editingTextPref, setEditingTextPref] = useState<string | null>(null);
   const [editTextValue, setEditTextValue] = useState('');
+
+  // Role-based access check
+  const { user } = useAuthStore();
+  const canManage = useMemo(() => isAdminRole(user?.role), [user?.role]);
 
   const { data, isLoading, refetch } = useGroupedPreferences();
   const updateMutation = useUpdatePreference();
@@ -216,30 +223,32 @@ export default function OrgPreferencesScreen() {
         </View>
         <View style={styles.pillRow}>
           <TouchableOpacity
-            style={[styles.pill, isPositive && styles.pillActiveGreen]}
-            onPress={() => handleUpdate(pref.public_id, labels.trueVal)}
-            disabled={updateMutation.isPending}
-            activeOpacity={0.7}
+            style={[styles.pill, isPositive && styles.pillActiveGreen, !canManage && styles.pillDisabled]}
+            onPress={() => canManage && handleUpdate(pref.public_id, labels.trueVal)}
+            disabled={updateMutation.isPending || !canManage}
+            activeOpacity={canManage ? 0.7 : 1}
           >
             <Text style={[styles.pillText, isPositive && styles.pillTextActive]}>
               {labels.trueLabel}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.pill, !isPositive && styles.pillActiveRed]}
-            onPress={() => handleUpdate(pref.public_id, labels.falseVal)}
-            disabled={updateMutation.isPending}
-            activeOpacity={0.7}
+            style={[styles.pill, !isPositive && styles.pillActiveRed, !canManage && styles.pillDisabled]}
+            onPress={() => canManage && handleUpdate(pref.public_id, labels.falseVal)}
+            disabled={updateMutation.isPending || !canManage}
+            activeOpacity={canManage ? 0.7 : 1}
           >
             <Text style={[styles.pillText, !isPositive && styles.pillTextActive]}>
               {labels.falseLabel}
             </Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={() => handleReset(pref)} style={styles.resetLink}>
-          <RotateCcw size={11} color={Colors.gray[400]} />
-          <Text style={styles.resetLinkText}>Reset</Text>
-        </TouchableOpacity>
+        {canManage && (
+          <TouchableOpacity onPress={() => handleReset(pref)} style={styles.resetLink}>
+            <RotateCcw size={11} color={Colors.gray[400]} />
+            <Text style={styles.resetLinkText}>Reset</Text>
+          </TouchableOpacity>
+        )}
       </View>
     );
   };
@@ -254,17 +263,20 @@ export default function OrgPreferencesScreen() {
           <Text style={styles.prefName}>{pref.display_name}</Text>
         </View>
         <TouchableOpacity
-          style={styles.dropdown}
-          onPress={() => setDropdownPref(pref)}
-          activeOpacity={0.7}
+          style={[styles.dropdown, !canManage && { opacity: 0.6 }]}
+          onPress={() => canManage && setDropdownPref(pref)}
+          activeOpacity={canManage ? 0.7 : 1}
+          disabled={!canManage}
         >
           <Text style={styles.dropdownText}>{currentVal || 'Select...'}</Text>
           <ChevronDown size={16} color={Colors.gray[500]} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => handleReset(pref)} style={styles.resetLink}>
-          <RotateCcw size={11} color={Colors.gray[400]} />
-          <Text style={styles.resetLinkText}>Reset</Text>
-        </TouchableOpacity>
+        {canManage && (
+          <TouchableOpacity onPress={() => handleReset(pref)} style={styles.resetLink}>
+            <RotateCcw size={11} color={Colors.gray[400]} />
+            <Text style={styles.resetLinkText}>Reset</Text>
+          </TouchableOpacity>
+        )}
       </View>
     );
   };
@@ -279,12 +291,14 @@ export default function OrgPreferencesScreen() {
           <Text style={styles.prefName}>{pref.display_name}</Text>
         </View>
         <TouchableOpacity
-          style={styles.dropdown}
+          style={[styles.dropdown, !canManage && { opacity: 0.6 }]}
           onPress={() => {
+            if (!canManage) return;
             setMultiSelectPref(pref);
             setMultiSelectValues([...values]);
           }}
-          activeOpacity={0.7}
+          activeOpacity={canManage ? 0.7 : 1}
+          disabled={!canManage}
         >
           <Text style={styles.dropdownText} numberOfLines={1}>
             {values.length > 0 ? values.join(', ') : 'Select...'}
@@ -300,10 +314,12 @@ export default function OrgPreferencesScreen() {
             ))}
           </View>
         )}
-        <TouchableOpacity onPress={() => handleReset(pref)} style={styles.resetLink}>
-          <RotateCcw size={11} color={Colors.gray[400]} />
-          <Text style={styles.resetLinkText}>Reset</Text>
-        </TouchableOpacity>
+        {canManage && (
+          <TouchableOpacity onPress={() => handleReset(pref)} style={styles.resetLink}>
+            <RotateCcw size={11} color={Colors.gray[400]} />
+            <Text style={styles.resetLinkText}>Reset</Text>
+          </TouchableOpacity>
+        )}
       </View>
     );
   };
@@ -320,7 +336,7 @@ export default function OrgPreferencesScreen() {
           {renderTooltip(pref)}
           <Text style={styles.prefName}>{pref.display_name}</Text>
         </View>
-        {isEditing ? (
+        {isEditing && canManage ? (
           <View style={styles.textEditRow}>
             <TextInput
               style={styles.textInput}
@@ -367,22 +383,26 @@ export default function OrgPreferencesScreen() {
           </View>
         ) : (
           <TouchableOpacity
-            style={styles.textValueBox}
+            style={[styles.textValueBox, !canManage && { opacity: 0.6 }]}
             onPress={() => {
+              if (!canManage) return;
               setEditingTextPref(pref.public_id);
               setEditTextValue(currentVal);
             }}
-            activeOpacity={0.7}
+            activeOpacity={canManage ? 0.7 : 1}
+            disabled={!canManage}
           >
             <Text style={[styles.textValue, !currentVal && styles.textPlaceholder]}>
-              {currentVal || 'Tap to set value'}
+              {currentVal || (canManage ? 'Tap to set value' : 'Not set')}
             </Text>
           </TouchableOpacity>
         )}
-        <TouchableOpacity onPress={() => handleReset(pref)} style={styles.resetLink}>
-          <RotateCcw size={11} color={Colors.gray[400]} />
-          <Text style={styles.resetLinkText}>Reset</Text>
-        </TouchableOpacity>
+        {canManage && (
+          <TouchableOpacity onPress={() => handleReset(pref)} style={styles.resetLink}>
+            <RotateCcw size={11} color={Colors.gray[400]} />
+            <Text style={styles.resetLinkText}>Reset</Text>
+          </TouchableOpacity>
+        )}
       </View>
     );
   };
@@ -421,20 +441,22 @@ export default function OrgPreferencesScreen() {
             return (
               <TouchableOpacity
                 key={val}
-                style={[styles.pill, isActive && styles.pillActiveBlue]}
-                onPress={() => handleUpdate(pref.public_id, val)}
-                disabled={updateMutation.isPending}
-                activeOpacity={0.7}
+                style={[styles.pill, isActive && styles.pillActiveBlue, !canManage && styles.pillDisabled]}
+                onPress={() => canManage && handleUpdate(pref.public_id, val)}
+                disabled={updateMutation.isPending || !canManage}
+                activeOpacity={canManage ? 0.7 : 1}
               >
                 <Text style={[styles.pillText, isActive && styles.pillTextActive]}>{val}</Text>
               </TouchableOpacity>
             );
           })}
         </View>
-        <TouchableOpacity onPress={() => handleReset(pref)} style={styles.resetLink}>
-          <RotateCcw size={11} color={Colors.gray[400]} />
-          <Text style={styles.resetLinkText}>Reset</Text>
-        </TouchableOpacity>
+        {canManage && (
+          <TouchableOpacity onPress={() => handleReset(pref)} style={styles.resetLink}>
+            <RotateCcw size={11} color={Colors.gray[400]} />
+            <Text style={styles.resetLinkText}>Reset</Text>
+          </TouchableOpacity>
+        )}
       </View>
     );
   };
@@ -506,10 +528,10 @@ export default function OrgPreferencesScreen() {
             </View>
             <View style={styles.pillRow}>
               <TouchableOpacity
-                style={[styles.pill, currentPolicy?.sunday_off !== false && styles.pillActiveGreen]}
-                onPress={() => handleWdpUpdate('sunday_off', true)}
-                disabled={updateWdpMutation.isPending || createWdpMutation.isPending}
-                activeOpacity={0.7}
+                style={[styles.pill, currentPolicy?.sunday_off !== false && styles.pillActiveGreen, !canManage && styles.pillDisabled]}
+                onPress={() => canManage && handleWdpUpdate('sunday_off', true)}
+                disabled={updateWdpMutation.isPending || createWdpMutation.isPending || !canManage}
+                activeOpacity={canManage ? 0.7 : 1}
               >
                 <Text
                   style={[
@@ -521,10 +543,10 @@ export default function OrgPreferencesScreen() {
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.pill, currentPolicy?.sunday_off === false && styles.pillActiveRed]}
-                onPress={() => handleWdpUpdate('sunday_off', false)}
-                disabled={updateWdpMutation.isPending || createWdpMutation.isPending}
-                activeOpacity={0.7}
+                style={[styles.pill, currentPolicy?.sunday_off === false && styles.pillActiveRed, !canManage && styles.pillDisabled]}
+                onPress={() => canManage && handleWdpUpdate('sunday_off', false)}
+                disabled={updateWdpMutation.isPending || createWdpMutation.isPending || !canManage}
+                activeOpacity={canManage ? 0.7 : 1}
               >
                 <Text
                   style={[
@@ -546,9 +568,10 @@ export default function OrgPreferencesScreen() {
               <Text style={styles.prefName}>Saturday Off Pattern</Text>
             </View>
             <TouchableOpacity
-              style={styles.dropdown}
-              onPress={() => setSaturdayDropdownOpen(true)}
-              activeOpacity={0.7}
+              style={[styles.dropdown, !canManage && { opacity: 0.6 }]}
+              onPress={() => canManage && setSaturdayDropdownOpen(true)}
+              activeOpacity={canManage ? 0.7 : 1}
+              disabled={!canManage}
             >
               <Text style={styles.dropdownText}>
                 {currentPolicy ? getSaturdayLabel(currentPolicy.saturday_off_pattern) : 'Select...'}
@@ -730,7 +753,7 @@ export default function OrgPreferencesScreen() {
           <View style={styles.topRow}>
             <TouchableOpacity
               style={styles.backBtn}
-              onPress={() => router.navigate('/(tabs)/(admin)/management')}
+              onPress={() => router.back()}
             >
               <ChevronLeft size={24} color="#fff" />
             </TouchableOpacity>
@@ -752,6 +775,13 @@ export default function OrgPreferencesScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
+          {/* Read-only banner for teachers */}
+          {!canManage && (
+            <View style={styles.readOnlyBanner}>
+              <Eye size={16} color="#7c3aed" />
+              <Text style={styles.readOnlyText}>View only — Contact admin to modify settings</Text>
+            </View>
+          )}
           <ScrollView
             ref={scrollRef}
             style={styles.scrollView}
@@ -863,6 +893,20 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: '800', color: '#fff' },
   subtitle: { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
   loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  // Read-only banner
+  readOnlyBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ede9fe',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  readOnlyText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#7c3aed',
+  },
   scrollView: { flex: 1 },
   scrollContent: { padding: 16, paddingBottom: 20 },
 
@@ -961,6 +1005,7 @@ const styles = StyleSheet.create({
   pillActiveGreen: { backgroundColor: '#dcfce7', borderColor: '#16a34a' },
   pillActiveRed: { backgroundColor: '#fee2e2', borderColor: '#dc2626' },
   pillActiveBlue: { backgroundColor: '#dbeafe', borderColor: '#2563eb' },
+  pillDisabled: { opacity: 0.6 },
   pillText: { fontSize: 14, fontWeight: '600', color: Colors.gray[500] },
   pillTextActive: { color: '#1e293b' },
 

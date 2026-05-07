@@ -44,26 +44,33 @@ import {
   FormDatePicker,
   FormPhotoUpload,
 } from '@/components/forms';
-import { useClasses } from '@/features/classes';
+import { useManagedClasses } from '@/features/classes';
 import { uploadProfilePhoto } from '@/features/core';
 import { useCreateStudent, useRestoreStudent } from '@/features/students';
 import { useDeletedDuplicateHandler } from '@/hooks/useDeletedDuplicateHandler';
+import { useAuthStore } from '@/lib/auth-store';
 import { headerStyles, layoutStyles } from '@/styles';
 import {
   isDeletedDuplicateError,
   getDeletedDuplicateMessage,
   getDeletedRecordId,
 } from '@/utils/deleted-duplicate';
+import { isTeacherRole } from '@/utils/role-utils';
 
 const adminGradient = getRoleGradient('admin');
 type FieldErrors = Record<string, string>;
 
 export default function CreateStudentScreen() {
   const router = useRouter();
+  const { user } = useAuthStore();
   const createMutation = useCreateStudent();
   const restoreMutation = useRestoreStudent();
 
-  const { data: classesData } = useClasses({ page_size: 100 });
+  // Check if user is a teacher (not admin)
+  const isTeacher = isTeacherRole(user?.role);
+
+  // Fetch managed classes - for teachers, only classes where they are class teacher
+  const { data: classesData } = useManagedClasses('student');
 
   const duplicateHandler = useDeletedDuplicateHandler<{
     payload: any;
@@ -259,6 +266,17 @@ export default function CreateStudentScreen() {
               />
             </View>
           </Animated.View>
+
+          {/* Info banner for teachers */}
+          {isTeacher && (
+            <Animated.View entering={FadeInDown.delay(60)}>
+              <View style={st.infoBanner}>
+                <Text style={st.infoBannerText}>
+                  ℹ️ You can add students only for classes where you are assigned as the class teacher.
+                </Text>
+              </View>
+            </Animated.View>
+          )}
 
           <Animated.View entering={FadeInDown.delay(80)}>
             <FormSection title="Class Assignment" icon="🏫">
@@ -638,6 +656,15 @@ const st = StyleSheet.create({
     borderColor: '#bfdbfe',
   },
   toggleLabel: { fontSize: 14, fontWeight: '600', color: '#1e40af' },
+  infoBanner: {
+    backgroundColor: '#dbeafe',
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#93c5fd',
+  },
+  infoBannerText: { fontSize: 13, color: '#1e40af', lineHeight: 18 },
   hint: {
     backgroundColor: '#fffbeb',
     padding: 14,

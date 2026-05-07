@@ -96,7 +96,7 @@ export function Button({
 
   return (
     <TouchableOpacity
-      className={`flex-row items-center justify-center rounded-xl ${styles.bg} ${styles.border || ''} ${sizes.container} ${fullWidth ? 'w-full' : ''} ${isDisabled ? 'opacity-50' : 'active:opacity-80'} ${className || ''} `}
+      className={`flex-row items-center justify-center rounded-xl ${styles.bg} ${styles.border ?? ''} ${sizes.container} ${fullWidth ? 'w-full' : ''} ${isDisabled ? 'opacity-50' : 'active:opacity-80'} ${className ?? ''} `}
       disabled={isDisabled}
       activeOpacity={0.8}
       {...props}

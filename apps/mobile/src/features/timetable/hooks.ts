@@ -109,8 +109,8 @@ export function useBulkSaveSlots(groupId: string) {
   return useMutation({
     mutationFn: (data: BulkSlotPayload) => bulkSaveSlots(groupId, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['timetable', 'slots', groupId] });
-      qc.invalidateQueries({ queryKey: ['timetable', 'class-timetable'] });
+      void qc.invalidateQueries({ queryKey: ['timetable', 'slots', groupId] });
+      void qc.invalidateQueries({ queryKey: ['timetable', 'class-timetable'] });
     },
   });
 }
@@ -120,8 +120,8 @@ export function useClearDaySlots(groupId: string) {
   return useMutation({
     mutationFn: (day: number) => clearDaySlots(groupId, day),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['timetable', 'slots', groupId] });
-      qc.invalidateQueries({ queryKey: ['timetable', 'class-timetable'] });
+      void qc.invalidateQueries({ queryKey: ['timetable', 'slots', groupId] });
+      void qc.invalidateQueries({ queryKey: ['timetable', 'class-timetable'] });
     },
   });
 }
@@ -130,7 +130,7 @@ export function useCreateEntry() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: TimetableEntryCreatePayload) => createEntry(data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['timetable', 'class-timetable'] }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ['timetable', 'class-timetable'] }),
   });
 }
 

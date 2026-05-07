@@ -16,6 +16,7 @@ export {
 export {
   classKeys,
   useClasses,
+  useManagedClasses,
   useClassDetail,
   useCreateClass,
   useUpdateClass,

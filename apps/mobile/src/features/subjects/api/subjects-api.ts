@@ -1,11 +1,21 @@
 /**
  * Subjects Feature — API Layer
+ * 
+ * Permission Model:
+ * - Admin: Full CRUD access
+ * - Teacher (Class Teacher): Can manage subjects in their assigned classes
+ * - Teacher (Other): Read-only access
+ * 
+ * The backend returns `can_manage` field indicating whether the user can edit/delete
  */
 
 import { API_ENDPOINTS } from '@educard/shared';
 import type { Subject, ApiListResponse, ApiDetailResponse } from '@educard/shared';
 
 import { apiClient } from '@/api/client';
+
+// Subjects use a single endpoint, backend handles permissions via can_manage field
+const BASE_URL = '/subjects/';
 
 export type SubjectListResponse = ApiListResponse<Subject>;
 export type SubjectDetailResponse = ApiDetailResponse<Subject>;
@@ -18,12 +28,14 @@ export interface SubjectQueryParams {
   page?: number;
   page_size?: number;
   ordering?: string;
+  is_deleted?: boolean;
 }
 
 export async function getSubjects(params?: SubjectQueryParams): Promise<SubjectListResponse> {
-  const response = await apiClient.get<SubjectListResponse>(API_ENDPOINTS.SUBJECTS.LIST, {
+  const response = await apiClient.get<SubjectListResponse>(BASE_URL, {
     params,
   });
+  // Backend returns can_manage field per subject based on user role
   return response.data;
 }
 
@@ -32,7 +44,7 @@ export async function getSubjectById(
   isDeleted?: boolean
 ): Promise<SubjectDetailResponse> {
   const response = await apiClient.get<SubjectDetailResponse>(
-    API_ENDPOINTS.SUBJECTS.DETAIL(publicId),
+    `${BASE_URL}${publicId}/`,
     isDeleted ? { params: { is_deleted: true } } : undefined
   );
   return response.data;
@@ -44,7 +56,7 @@ export async function createSubject(
 ): Promise<SubjectDetailResponse> {
   const params = forceCreate ? { force_create: 'true' } : {};
   const response = await apiClient.post<SubjectDetailResponse>(
-    API_ENDPOINTS.SUBJECTS.CREATE,
+    BASE_URL,
     data,
     { params }
   );
@@ -52,12 +64,12 @@ export async function createSubject(
 }
 
 export async function updateSubject(publicId: string, data: Partial<Subject>): Promise<void> {
-  await apiClient.patch(API_ENDPOINTS.SUBJECTS.PATCH(publicId), data);
+  await apiClient.patch(`${BASE_URL}${publicId}/`, data);
 }
 
 export async function deleteSubject(publicId: string): Promise<void> {
   try {
-    await apiClient.delete(API_ENDPOINTS.SUBJECTS.DELETE(publicId));
+    await apiClient.delete(`${BASE_URL}${publicId}/`);
   } catch (error: unknown) {
     const axiosError = error as { response?: { status?: number }; message?: string };
     const status = axiosError?.response?.status;
@@ -69,14 +81,14 @@ export async function deleteSubject(publicId: string): Promise<void> {
 
 export async function restoreSubject(publicId: string): Promise<SubjectDetailResponse> {
   const response = await apiClient.post<SubjectDetailResponse>(
-    `${API_ENDPOINTS.SUBJECTS.DETAIL(publicId)}activate/`
+    `${BASE_URL}${publicId}/activate/`
   );
   return response.data;
 }
 
 export async function getSubjectsByClass(classId: string): Promise<SubjectListResponse> {
-  const response = await apiClient.get<SubjectListResponse>(API_ENDPOINTS.SUBJECTS.BY_CLASS, {
-    params: { class_id: classId },
+  const response = await apiClient.get<SubjectListResponse>(BASE_URL, {
+    params: { class_assigned: classId },
   });
   return response.data;
 }

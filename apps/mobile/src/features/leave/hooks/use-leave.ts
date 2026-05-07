@@ -8,6 +8,7 @@ import { Alert } from 'react-native';
 
 import {
   getLeaveAllocations,
+  getEmployeeLeaveAllocations,
   getLeaveAllocationById,
   createLeaveAllocation,
   updateLeaveAllocation,
@@ -33,6 +34,8 @@ export const leaveKeys = {
   allocations: () => [...leaveKeys.all, 'allocations'] as const,
   allocationsList: (params?: LeaveAllocationQueryParams) =>
     [...leaveKeys.allocations(), 'list', params] as const,
+  employeeAllocationsList: (params?: LeaveAllocationQueryParams) =>
+    [...leaveKeys.allocations(), 'employee-list', params] as const,
   allocationDetail: (id: string) => [...leaveKeys.allocations(), 'detail', id] as const,
   leaveTypes: () => [...leaveKeys.all, 'leave-types'] as const,
   orgRoles: () => [...leaveKeys.all, 'org-roles'] as const,
@@ -44,10 +47,24 @@ export const leaveKeys = {
 
 // Leave Allocations Hooks
 
+/**
+ * Admin hook - full CRUD access to allocations
+ */
 export function useLeaveAllocations(params?: LeaveAllocationQueryParams) {
   return useQuery({
     queryKey: leaveKeys.allocationsList(params),
     queryFn: () => getLeaveAllocations(params),
+    staleTime: 30_000,
+  });
+}
+
+/**
+ * Employee hook - read-only access to allocations
+ */
+export function useEmployeeLeaveAllocations(params?: LeaveAllocationQueryParams) {
+  return useQuery({
+    queryKey: leaveKeys.employeeAllocationsList(params),
+    queryFn: () => getEmployeeLeaveAllocations(params),
     staleTime: 30_000,
   });
 }

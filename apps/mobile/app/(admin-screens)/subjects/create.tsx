@@ -31,26 +31,34 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { DeletedDuplicateModal } from '@/components/common/DeletedDuplicateModal';
 import { FormInput, FormSection, FormError, FormDropdown } from '@/components/forms';
-import { useClasses } from '@/features/classes';
+import { useManagedClasses } from '@/features/classes';
 import { useCoreSubjects } from '@/features/core';
 import { useCreateSubject, useRestoreSubject } from '@/features/subjects';
 import { useTeachers } from '@/features/teachers';
 import { useDeletedDuplicateHandler } from '@/hooks/useDeletedDuplicateHandler';
+import { useAuthStore } from '@/lib/auth-store';
 import { headerStyles, layoutStyles } from '@/styles';
 import {
   isDeletedDuplicateError,
   getDeletedDuplicateMessage,
   getDeletedRecordId,
 } from '@/utils/deleted-duplicate';
+import { isTeacherRole } from '@/utils/role-utils';
 
 const adminGradient = getRoleGradient('admin');
 type FieldErrors = Record<string, string>;
 
 export default function CreateSubjectScreen() {
   const router = useRouter();
+  const { user } = useAuthStore();
   const createMutation = useCreateSubject();
   const restoreMutation = useRestoreSubject();
-  const { data: classesData } = useClasses({ page_size: 100 });
+  
+  // Check if user is a teacher (not admin)
+  const isTeacher = isTeacherRole(user?.role);
+  
+  // Fetch managed classes - for teachers, only classes where they are class teacher
+  const { data: classesData } = useManagedClasses('subject');
   const { data: coreSubjects, isLoading: subjectsLoading } = useCoreSubjects();
   const { data: teachersData } = useTeachers({ page_size: 100 });
 
@@ -210,6 +218,17 @@ export default function CreateSubjectScreen() {
         >
           <FormError message={apiError} onDismiss={() => setApiError(null)} />
 
+          {/* Info banner for teachers */}
+          {isTeacher && (
+            <Animated.View entering={FadeInDown.delay(50)}>
+              <View style={st.infoBanner}>
+                <Text style={st.infoBannerText}>
+                  ℹ️ You can add subjects only for classes where you are assigned as the class teacher.
+                </Text>
+              </View>
+            </Animated.View>
+          )}
+
           <Animated.View entering={FadeInDown.delay(100)}>
             <FormSection title="Subject Assignment" icon="📚">
               <FormDropdown
@@ -291,6 +310,15 @@ export default function CreateSubjectScreen() {
 
 const st = StyleSheet.create({
   form: { padding: 16, paddingBottom: 40 },
+  infoBanner: {
+    backgroundColor: '#dbeafe',
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#93c5fd',
+  },
+  infoBannerText: { fontSize: 13, color: '#1e40af', lineHeight: 18 },
   subBtn: { marginTop: 8 },
   subGrad: {
     flexDirection: 'row',

@@ -4,6 +4,7 @@
 
 export { AddressForm } from './AddressForm';
 export type { AddressData, AddressErrors } from './AddressForm';
+export { AddressFormSection } from './AddressFormSection';
 export { FormInput } from './FormInput';
 export { FormSelect } from './FormSelect';
 export { FormSection } from './FormSection';

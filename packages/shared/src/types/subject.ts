@@ -50,6 +50,9 @@ export interface SubjectItem extends AuditFields {
   is_active?: boolean;
 }
 
+// Alias for backward compatibility and cleaner imports
+export type Subject = SubjectItem;
+
 export interface SubjectDetail extends SubjectItem {
   class_info: {
     public_id: string;

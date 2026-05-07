@@ -71,7 +71,7 @@ export function Badge({
 }: BadgeProps) {
   const styles = variantStyles[variant];
   const sizes = sizeStyles[size];
-  const content = text || children;
+  const content = text ?? children;
 
   return (
     <View className={`flex-row items-center rounded-full ${styles.bg} ${sizes.container} `}>

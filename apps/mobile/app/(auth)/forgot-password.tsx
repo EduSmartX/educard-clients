@@ -53,8 +53,9 @@ export default function ForgotPasswordScreen() {
     setIsLoading(true);
     try {
       await authApi.requestPasswordResetOtp(email.trim());
-      setStep('otp');
-      Alert.alert('Success', 'OTP sent to your email');
+      Alert.alert('Success', 'OTP sent to your email', [
+        { text: 'OK', onPress: () => setStep('otp') },
+      ]);
     } catch (error) {
       Alert.alert('Error', error instanceof Error ? error.message : 'Failed to send OTP');
     } finally {

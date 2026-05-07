@@ -178,7 +178,7 @@ interface AdminLinkItem {
 const adminLinks: AdminLinkItem[] = [
   {
     id: 'leave-allocations',
-    title: 'Leave Alloc.',
+    title: 'Leave Policy',
     icon: FileText,
     gradient: ['#8b5cf6', '#a78bfa'],
     route: '/(admin-screens)/leave/allocations',

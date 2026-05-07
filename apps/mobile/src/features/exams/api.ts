@@ -15,7 +15,7 @@ import type {
 } from './types';
 
 const ADMIN_BASE = '/exams/admin';
-const EMPLOYEE_BASE = '/exams/employee';
+// const EMPLOYEE_BASE = '/exams/employee';
 
 interface ListResponse<T> {
   success: boolean;

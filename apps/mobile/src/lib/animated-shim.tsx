@@ -4,6 +4,11 @@
  * This avoids the "installTurboModule" crash in Expo Go
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import React from 'react';
 import { View, Text, ScrollView, FlatList, Image, Animated as RNAnimated } from 'react-native';
 

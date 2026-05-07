@@ -5,18 +5,19 @@
 import type { UserRole } from '@/constants/config';
 
 export interface User {
-  id: string;
+  id?: string;
+  public_id: string;
   email: string;
-  first_name: string;
-  last_name: string;
+  first_name?: string;
+  last_name?: string;
   full_name: string;
   phone?: string;
   role: UserRole;
   profile_image?: string;
-  organization: Organization;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
+  organization?: Organization;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Organization {

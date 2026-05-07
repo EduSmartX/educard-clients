@@ -62,6 +62,7 @@ export function useStudentDetail(publicId: string, isDeleted?: boolean) {
   return useQuery({
     queryKey: [...studentKeys.detail(publicId), isDeleted],
     queryFn: () => getStudentById(publicId, isDeleted),
+    select: (response) => response.data,
     enabled: !!publicId,
   });
 }

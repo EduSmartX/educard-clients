@@ -74,9 +74,9 @@ export function useBulkUpsertMarks() {
   return useMutation({
     mutationFn: bulkUpsertMarks,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['marks-overview'] });
-      qc.invalidateQueries({ queryKey: ['exams'] });
-      qc.invalidateQueries({ queryKey: ['exam-marks'] });
+      void qc.invalidateQueries({ queryKey: ['marks-overview'] });
+      void qc.invalidateQueries({ queryKey: ['exams'] });
+      void qc.invalidateQueries({ queryKey: ['exam-marks'] });
     },
   });
 }

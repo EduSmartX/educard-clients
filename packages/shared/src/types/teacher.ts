@@ -20,7 +20,7 @@ import type {
 
 // Related Entities
 
-export interface Subject {
+export interface TeacherSubject {
   public_id: string;
   id?: number;
   code?: string;
@@ -56,7 +56,7 @@ export interface Teacher extends AuditFields {
   specialization: string;
   highest_qualification?: string;
   experience_years?: number;
-  subjects?: Subject[];
+  subjects?: TeacherSubject[];
 }
 
 // Teacher Response Types (Detail View - nested for complete info)
@@ -70,7 +70,7 @@ export interface TeacherDetail extends AuditFields {
   specialization: string;
   experience_years: number | null;
   joining_date: string | null;
-  subjects: Subject[];
+  subjects: TeacherSubject[];
   emergency_contact_name: string;
   emergency_contact_number: string;
   profile_photo_thumbnail?: string | null;

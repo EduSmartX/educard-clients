@@ -36,7 +36,7 @@ export function Card({
 
   return (
     <View
-      className={`rounded-2xl ${variantStyles[variant]} ${paddingStyles[padding]} ${className || ''} `}
+      className={`rounded-2xl ${variantStyles[variant]} ${paddingStyles[padding]} ${className ?? ''} `}
       {...props}
     >
       {children}

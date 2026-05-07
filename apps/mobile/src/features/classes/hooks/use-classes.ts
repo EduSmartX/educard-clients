@@ -58,6 +58,46 @@ export function useClasses(params?: Omit<ClassQueryParams, 'page'>) {
   });
 }
 
+/**
+ * Hook to fetch managed classes for forms (student/subject creation)
+ * 
+ * For teachers: Returns only classes where they are the class teacher
+ * For admins: Returns all classes
+ * 
+ * @param formType - 'student' or 'subject' to indicate which form is using this
+ */
+export function useManagedClasses(formType: 'student' | 'subject' = 'student') {
+  const params: ClassQueryParams = {
+    page_size: 100,
+    ...(formType === 'student' ? { for_student_form: true } : { for_subject_form: true }),
+  };
+
+  return useInfiniteQuery({
+    queryKey: [...classKeys.lists(), 'managed', formType],
+    queryFn: ({ pageParam = 1 }) =>
+      getClasses({
+        ...params,
+        page: pageParam,
+      }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.pagination.has_next) {
+        return lastPage.pagination.current_page + 1;
+      }
+      return undefined;
+    },
+    select: (data) => ({
+      classes: data.pages.flatMap((page) => page.data),
+      totalCount: data.pages[0]?.pagination.count ?? 0,
+      hasMore: data.pages[data.pages.length - 1]?.pagination.has_next ?? false,
+    }),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+}
+
 export function useClassDetail(publicId: string, isDeleted?: boolean) {
   return useQuery({
     queryKey: [...classKeys.detail(publicId), isDeleted],

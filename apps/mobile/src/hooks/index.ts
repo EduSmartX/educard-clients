@@ -9,7 +9,7 @@ export { useDebounce } from '@educard/shared';
 
 // Mobile-specific hooks
 export { useRefreshOnFocus } from './useRefreshOnFocus';
-export { useMyProfilePhoto } from './useProfile';
+export { useMyProfilePhoto, useUserProfile, useUpdateProfile } from './useProfile';
 export { useListScroll } from './useListScroll';
 export { useDeleteConfirm } from './useDeleteConfirm';
 export { useDeletedDuplicateHandler } from './useDeletedDuplicateHandler';

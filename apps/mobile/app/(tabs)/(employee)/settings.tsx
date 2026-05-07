@@ -14,25 +14,30 @@ import {
   Moon,
   Globe,
 } from 'lucide-react-native';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, Image } from 'react-native';
 
 import { Screen, Header } from '@/components/layout';
 import { Card, Avatar } from '@/components/ui';
 import { colors } from '@/constants/colors';
 import { useAuthStore } from '@/lib/auth-store';
+import { useMyProfilePhoto } from '@/hooks';
+import { getMediaUrl } from '@/constants/config';
 
 const settingsOptions = [
-  { id: 'profile', title: 'Edit Profile', icon: User, route: '/profile' },
+  { id: 'profile', title: 'Edit Profile', icon: User, route: '/(admin-screens)/profile' },
   { id: 'notifications', title: 'Notifications', icon: Bell, route: '/settings/notifications' },
-  { id: 'security', title: 'Security', icon: Shield, route: '/settings/security' },
+  { id: 'security', title: 'Change Password', icon: Shield, route: '/(admin-screens)/change-password' },
   { id: 'appearance', title: 'Appearance', icon: Moon, route: '/settings/appearance' },
   { id: 'language', title: 'Language', icon: Globe, route: '/settings/language' },
-  { id: 'help', title: 'Help & Support', icon: HelpCircle, route: '/settings/help' },
+  { id: 'help', title: 'Help & Support', icon: HelpCircle, route: '/(admin-screens)/help' },
 ];
 
 export default function EmployeeSettingsScreen() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
+  const { data: profilePhoto } = useMyProfilePhoto();
+
+  const profileImageUrl = getMediaUrl(profilePhoto?.thumbnail_url) || getMediaUrl(profilePhoto?.url) || getMediaUrl(user?.profile_image);
 
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
@@ -49,9 +54,16 @@ export default function EmployeeSettingsScreen() {
         <Card>
           <TouchableOpacity
             className="flex-row items-center py-2"
-            onPress={() => router.push('/(tabs)/(employee)/profile' as any)}
+            onPress={() => router.push('/(admin-screens)/profile' as any)}
           >
-            <Avatar name={user?.full_name || user?.first_name || 'T'} size="lg" />
+            {profileImageUrl ? (
+              <Image 
+                source={{ uri: profileImageUrl }} 
+                className="h-14 w-14 rounded-full"
+              />
+            ) : (
+              <Avatar name={user?.full_name || user?.first_name || 'T'} size="lg" />
+            )}
             <View className="ml-4 flex-1">
               <Text className="text-lg font-semibold text-gray-900">
                 {user?.full_name || user?.first_name || 'Teacher'}

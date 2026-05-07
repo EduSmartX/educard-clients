@@ -1,12 +1,17 @@
 /**
  * Subjects List Screen
  * Mobile-first subject management with search and real API integration
+ * 
+ * Permission Model:
+ * - Admin: Full CRUD access
+ * - Teacher (Class Teacher): Full CRUD for subjects in their assigned classes
+ * - Teacher (Other): View-only access
  */
 
-import { Colors, getRoleThemeColors, useDebounce, getErrorMessage } from '@educard/shared';
+import { Colors, getRoleThemeColors, useDebounce, getErrorMessage, Subject } from '@educard/shared';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Plus, BookOpen } from 'lucide-react-native';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -16,6 +21,7 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
+import Animated, { FadeInRight } from 'react-native-reanimated';
 
 import { SearchBar, ListHeader } from '@/components/common';
 import { EntityActions } from '@/components/common/EntityActions';
@@ -26,34 +32,40 @@ import {
   SUBJECT_FILTER_FIELDS,
   getSubjectFilterLabels,
 } from '@/components/filters';
-import { FormDropdown } from '@/components/forms';
 import { useClasses } from '@/features/classes';
 import { useSubjects, useDeleteSubject, useRestoreSubject } from '@/features/subjects';
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm';
 import { useListScroll } from '@/hooks/useListScroll';
+import { useAuthStore } from '@/lib/auth-store';
 import { layoutStyles, cardStyles, listStyles, textStyles } from '@/styles';
+import { isAdminRole, isTeacherRole } from '@/utils/role-utils';
 
 const adminTheme = getRoleThemeColors('admin');
 
 export default function SubjectsScreen() {
   const router = useRouter();
+  const { user } = useAuthStore();
   const { class_id, class_name } = useLocalSearchParams<{
     class_id?: string;
     class_name?: string;
   }>();
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState<Record<string, any>>({});
-  const [selectedClassId, setSelectedClassId] = useState<string>(class_id || '');
+  const [filters, setFilters] = useState<Record<string, unknown>>({});
+
+  // Check user role for permissions
+  const isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
+  const isTeacher = useMemo(() => isTeacherRole(user?.role), [user?.role]);
+
+  // Fetch classes to check if teacher has managed classes
+  const { data: classesData } = useClasses({ page_size: 100, for_subject_form: true });
+  const managedClasses = classesData?.classes ?? [];
+  
+  // Teachers who manage at least one class can create subjects
+  const isClassTeacher = isTeacher && managedClasses.length > 0;
+  const canCreateSubjects = isAdmin || isClassTeacher;
 
   const debouncedSearch = useDebounce(searchQuery, 300);
-
-  const classesQuery = useClasses({ page_size: 100 });
-  const classes = classesQuery.data?.classes || [];
-  const classOptions = classes.map((c) => ({
-    value: c.public_id,
-    label: c.class_master?.name ? `${c.class_master.name} - ${c.name}` : c.display_name || c.name,
-  }));
 
   const {
     data,
@@ -66,16 +78,18 @@ export default function SubjectsScreen() {
     hasNextPage,
     isFetchingNextPage,
   } = useSubjects({
-    search: debouncedSearch || undefined,
-    class_assigned: selectedClassId || undefined,
-    ...filters,
+    search: debouncedSearch ?? undefined,
+    class_assigned: class_id ?? undefined,
+    ...(filters as Record<string, string | boolean | undefined>),
   });
 
   const deleteMutation = useDeleteSubject();
   const confirmDelete = useDeleteConfirm({
     entityName: 'Subject',
     deleteMutation,
-    onSuccess: () => refetch(),
+    onSuccess: () => {
+      void refetch();
+    },
   });
 
   const restoreMutation = useRestoreSubject();
@@ -85,14 +99,16 @@ export default function SubjectsScreen() {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Reactivate',
-          onPress: async () => {
-            try {
-              await restoreMutation.mutateAsync(id);
-              refetch();
-              Alert.alert('Success', `${name} reactivated successfully`);
-            } catch (error) {
-              Alert.alert('Error', getErrorMessage(error, 'Failed to reactivate subject'));
-            }
+          onPress: () => {
+            void (async () => {
+              try {
+                await restoreMutation.mutateAsync(id);
+                void refetch();
+                Alert.alert('Success', `${name} reactivated successfully`);
+              } catch (err) {
+                Alert.alert('Error', getErrorMessage(err, 'Failed to reactivate subject'));
+              }
+            })();
           },
         },
       ]);
@@ -115,7 +131,7 @@ export default function SubjectsScreen() {
   });
 
   const handleView = useCallback(
-    (subject: any) => {
+    (subject: Subject) => {
       router.push({
         pathname: '/(admin-screens)/subjects/[id]',
         params: { id: subject.public_id, ...(isDeletedView ? { is_deleted: 'true' } : {}) },
@@ -125,7 +141,7 @@ export default function SubjectsScreen() {
   );
 
   const handleEdit = useCallback(
-    (subject: any) => {
+    (subject: Subject) => {
       router.push({
         pathname: '/(admin-screens)/subjects/edit',
         params: { id: subject.public_id },
@@ -134,8 +150,8 @@ export default function SubjectsScreen() {
     [router]
   );
 
-  const renderSubjectCard = ({ item, index }: { item: any; index: number }) => (
-    <View>
+  const renderSubjectCard = ({ item, index }: { item: Subject; index: number }) => (
+    <Animated.View entering={FadeInRight.delay(index * 50).duration(300)}>
       <TouchableOpacity
         style={[cardStyles.card, styles.subjectCard]}
         onPress={() => handleView(item)}
@@ -149,21 +165,19 @@ export default function SubjectsScreen() {
 
           <View style={styles.subjectInfo}>
             <Text style={textStyles.title} numberOfLines={1}>
-              {item.subject_info?.name || item.name}
+              {item.subject_info?.name ?? item.name}
             </Text>
 
-            {(item.subject_info?.code || item.code) && (
-              <Text style={textStyles.subtitle}>Code: {item.subject_info?.code || item.code}</Text>
+            {(item.subject_info?.code ?? item.code) && (
+              <Text style={textStyles.subtitle}>Code: {item.subject_info?.code ?? item.code}</Text>
             )}
 
             {item.class_info && (
               <Text style={textStyles.caption}>
                 Class:{' '}
-                {item.class_info.class_master?.name
-                  ? `${item.class_info.class_master.name} - ${item.class_info.name}`
-                  : item.class_info.class_master_name
-                    ? `${item.class_info.class_master_name} - ${item.class_info.name}`
-                    : item.class_info.name}
+                {item.class_info.class_master_name
+                  ? `${item.class_info.class_master_name} - ${item.class_info.name}`
+                  : item.class_info.name}
               </Text>
             )}
 
@@ -173,7 +187,7 @@ export default function SubjectsScreen() {
           </View>
         </View>
 
-        {/* Bottom — Actions */}
+        {/* Bottom — Actions (respect can_manage from backend for subjects) */}
         <EntityActions
           onView={() => handleView(item)}
           onEdit={isDeletedView ? undefined : () => handleEdit(item)}
@@ -183,7 +197,7 @@ export default function SubjectsScreen() {
               : () =>
                   confirmDelete(
                     item.public_id,
-                    item.subject_info?.name || item.name || 'this subject'
+                    item.subject_info?.name ?? item.name ?? 'this subject'
                   )
           }
           onReactivate={
@@ -191,13 +205,14 @@ export default function SubjectsScreen() {
               ? () =>
                   handleReactivate(
                     item.public_id,
-                    item.subject_info?.name || item.name || 'this subject'
+                    item.subject_info?.name ?? item.name ?? 'this subject'
                   )
               : undefined
           }
+          canManage={(item as any).can_manage ?? isAdmin}
         />
       </TouchableOpacity>
-    </View>
+    </Animated.View>
   );
 
   return (
@@ -208,13 +223,13 @@ export default function SubjectsScreen() {
         subtitle={`${totalCount} total`}
         role="admin"
         onBack={() => router.navigate('/(tabs)/(admin)/management')}
-        actions={[
+        actions={canCreateSubjects ? [
           {
             icon: Plus,
             onPress: () => router.push('/(admin-screens)/subjects/create'),
-            variant: 'primary',
+            variant: 'primary' as const,
           },
-        ]}
+        ] : []}
       />
 
       {/* Search Bar */}
@@ -232,18 +247,6 @@ export default function SubjectsScreen() {
         onRemove={(key) => setFilters((f) => ({ ...f, [key]: undefined }))}
         onClearAll={() => setFilters({})}
       />
-
-      {/* Class Filter Dropdown */}
-      <View style={styles.classFilterSection}>
-        <FormDropdown
-          label="Filter by Class"
-          placeholder="All Classes"
-          searchable
-          options={classOptions}
-          value={selectedClassId}
-          onChange={(val) => setSelectedClassId(val)}
-        />
-      </View>
 
       {/* Filter Modal */}
       <FilterModal
@@ -316,5 +319,4 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   subjectInfo: { flex: 1 },
-  classFilterSection: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
 });

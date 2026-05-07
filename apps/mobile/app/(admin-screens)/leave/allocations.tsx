@@ -38,10 +38,13 @@ import { ConfirmDialog } from '@/components/common';
 import { getLeaveTypeColor, getLeaveTypeBg } from '@/constants/leave-colors';
 import {
   useLeaveAllocations,
+  useEmployeeLeaveAllocations,
   useDeleteLeaveAllocation,
   type LeaveAllocation,
 } from '@/features/leave';
+import { useAuthStore } from '@/lib/auth-store';
 import { headerStyles, layoutStyles } from '@/styles';
+import { isAdminRole } from '@/utils/role-utils';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -52,6 +55,9 @@ interface GroupedSection {
 
 export default function LeaveAllocationsScreen() {
   const router = useRouter();
+  const { user } = useAuthStore();
+  const canManage = useMemo(() => isAdminRole(user?.role), [user?.role]);
+  
   const [refreshing, setRefreshing] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
   const [showFilters, setShowFilters] = useState(false);
@@ -63,7 +69,12 @@ export default function LeaveAllocationsScreen() {
     roles: '',
     title: '',
   });
-  const { data, isLoading, refetch } = useLeaveAllocations({ page_size: 100 });
+  
+  // Use admin endpoint for admins, employee endpoint for others
+  const adminQuery = useLeaveAllocations({ page_size: 100 });
+  const employeeQuery = useEmployeeLeaveAllocations({ page_size: 100 });
+  
+  const { data, isLoading, refetch } = canManage ? adminQuery : employeeQuery;
   const deleteMutation = useDeleteLeaveAllocation();
 
   const allocations = data?.data || [];
@@ -212,14 +223,17 @@ export default function LeaveAllocationsScreen() {
                   : `${item.roles?.split(',').length || 0} role(s) assigned`}
               </Text>
             </View>
-            <View style={styles.cardActions}>
-              <TouchableOpacity onPress={() => handleEdit(item)} style={styles.actionBtn}>
-                <Edit3 size={16} color="#7c3aed" />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleDelete(item)} style={styles.actionBtn}>
-                <Trash2 size={16} color={Colors.danger[500]} />
-              </TouchableOpacity>
-            </View>
+            {/* Edit/Delete buttons - only for admin */}
+            {canManage && (
+              <View style={styles.cardActions}>
+                <TouchableOpacity onPress={() => handleEdit(item)} style={styles.actionBtn}>
+                  <Edit3 size={16} color="#7c3aed" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDelete(item)} style={styles.actionBtn}>
+                  <Trash2 size={16} color={Colors.danger[500]} />
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
 
           <View style={styles.statsRow}>
@@ -311,15 +325,14 @@ export default function LeaveAllocationsScreen() {
           <View style={headerStyles.topRow}>
             <TouchableOpacity
               style={headerStyles.backBtn}
-              onPress={() => router.navigate('/(tabs)/(admin)/management')}
+              onPress={() => router.back()}
             >
               <ChevronLeft size={24} color="#fff" />
             </TouchableOpacity>
             <View style={headerStyles.titleContainer}>
-              <Text style={headerStyles.title}>Leave Allocations</Text>
+              <Text style={headerStyles.title}>Leave Policies</Text>
               <Text style={headerStyles.subtitle}>
-                {filteredAllocations.length} allocation
-                {filteredAllocations.length !== 1 ? 's' : ''}
+                {filteredAllocations.length} polic{filteredAllocations.length !== 1 ? 'ies' : 'y'}
               </Text>
             </View>
             <View style={headerStyles.actions}>
@@ -337,9 +350,12 @@ export default function LeaveAllocationsScreen() {
                   </View>
                 )}
               </TouchableOpacity>
-              <TouchableOpacity style={headerStyles.primaryBtn} onPress={handleAdd}>
-                <Plus size={20} color="#7c3aed" />
-              </TouchableOpacity>
+              {/* Add button - only for admin */}
+              {canManage && (
+                <TouchableOpacity style={headerStyles.primaryBtn} onPress={handleAdd}>
+                  <Plus size={20} color="#7c3aed" />
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         </View>

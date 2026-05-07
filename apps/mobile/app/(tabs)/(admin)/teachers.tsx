@@ -1,6 +1,10 @@
 /**
  * Teachers List Screen
  * Mobile-first teacher management with search, add, edit, delete
+ * 
+ * Permission Model:
+ * - Admin: Full CRUD access (Add, Edit, Delete buttons visible)
+ * - Teacher: View-only access (No Add, Edit, Delete buttons)
  */
 
 import {
@@ -22,7 +26,7 @@ import {
   Mail,
   ChevronRight,
 } from 'lucide-react-native';
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -50,7 +54,9 @@ import {
 import { getMediaUrl } from '@/constants/config';
 import { useTeachers, useDeleteTeacher, useRestoreTeacher } from '@/features/teachers';
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm';
+import { useAuthStore } from '@/lib/auth-store';
 import { layoutStyles, headerStyles, stateStyles, listStyles } from '@/styles';
+import { isAdminRole } from '@/utils/role-utils';
 
 const { width } = Dimensions.get('window');
 const adminTheme = getRoleThemeColors('admin');
@@ -58,6 +64,7 @@ const adminGradient = getRoleGradient('admin');
 
 export default function TeachersScreen() {
   const router = useRouter();
+  const { user } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -69,6 +76,9 @@ export default function TeachersScreen() {
     gender?: string;
     is_deleted?: boolean;
   }>({});
+
+  // Check if current user is admin (has full CRUD access)
+  const canManage = useMemo(() => isAdminRole(user?.role), [user?.role]);
 
   // Only fetch when search is submitted (not on every keystroke)
   const {
@@ -239,20 +249,21 @@ export default function TeachersScreen() {
           </View>
         </View>
 
-        {/* Bottom — Actions */}
+        {/* Bottom — Actions (Edit/Delete only shown for admins) */}
         <EntityActions
           onView={() => handleView(item)}
-          onEdit={isDeletedView ? undefined : () => handleEdit(item)}
+          onEdit={isDeletedView || !canManage ? undefined : () => handleEdit(item)}
           onDelete={
-            isDeletedView
+            isDeletedView || !canManage
               ? undefined
               : () => confirmDelete(item.public_id, item.full_name || 'this teacher')
           }
           onReactivate={
-            isDeletedView
+            isDeletedView && canManage
               ? () => handleReactivate(item.public_id, item.full_name || 'this teacher')
               : undefined
           }
+          canManage={canManage}
         />
       </TouchableOpacity>
     </Animated.View>
@@ -277,17 +288,20 @@ export default function TeachersScreen() {
               <Text style={headerStyles.title}>Teachers</Text>
               <Text style={headerStyles.subtitle}>{totalCount} total</Text>
             </View>
-            <View style={headerStyles.actions}>
-              <TouchableOpacity style={headerStyles.actionBtn}>
-                <Upload size={20} color="#fff" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={headerStyles.primaryBtn}
-                onPress={() => router.push('/(admin-screens)/teachers/create')}
-              >
-                <Plus size={20} color={adminTheme.accent} />
-              </TouchableOpacity>
-            </View>
+            {/* Action buttons only visible for admin */}
+            {canManage && (
+              <View style={headerStyles.actions}>
+                <TouchableOpacity style={headerStyles.actionBtn}>
+                  <Upload size={20} color="#fff" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={headerStyles.primaryBtn}
+                  onPress={() => router.push('/(admin-screens)/teachers/create')}
+                >
+                  <Plus size={20} color={adminTheme.accent} />
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </View>
       </LinearGradient>

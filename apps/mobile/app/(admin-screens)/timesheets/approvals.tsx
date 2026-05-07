@@ -318,7 +318,7 @@ export default function TimesheetApprovalsScreen() {
           <View style={headerStyles.topRow}>
             <TouchableOpacity
               style={headerStyles.backBtn}
-              onPress={() => router.navigate('/(tabs)/(admin)/management')}
+              onPress={() => router.back()}
             >
               <ChevronLeft size={24} color="#fff" />
             </TouchableOpacity>

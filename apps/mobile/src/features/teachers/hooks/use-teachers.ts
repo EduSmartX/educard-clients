@@ -68,6 +68,7 @@ export function useTeacherDetail(publicId: string, isDeleted?: boolean) {
   return useQuery({
     queryKey: [...teacherKeys.detail(publicId), isDeleted],
     queryFn: () => getTeacherById(publicId, isDeleted),
+    select: (response) => response.data,
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     enabled: !!publicId,
