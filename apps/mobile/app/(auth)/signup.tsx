@@ -123,7 +123,7 @@ export default function SignupScreen() {
       if (!response.all_success) {
         // Check for individual failures
         const failedEmail = response.results.find((r) => !r.success);
-        modal.error('Error', failedEmail?.message || 'Failed to send verification codes');
+        modal.error('Error', failedEmail?.message ?? 'Failed to send verification codes'); // ?? instead of ||
         return;
       }
 
@@ -264,12 +264,12 @@ export default function SignupScreen() {
         orgAddress.streetAddress || orgAddress.city || orgAddress.state || orgAddress.zipCode;
       if (hasAddress) {
         registrationData.address_info = {
-          street_address: orgAddress.streetAddress || '',
+          street_address: orgAddress.streetAddress ?? '', // ?? instead of ||
           address_line_2: orgAddress.addressLine2 || undefined,
-          city: orgAddress.city || '',
-          state: orgAddress.state || '',
-          zip_code: orgAddress.zipCode || '',
-          country: orgAddress.country || 'India',
+          city: orgAddress.city ?? '',
+          state: orgAddress.state ?? '',
+          zip_code: orgAddress.zipCode ?? '',
+          country: orgAddress.country ?? 'India',
         };
       }
 
@@ -450,7 +450,7 @@ export default function SignupScreen() {
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.primaryButton, isLoading && styles.buttonDisabled]}
-          onPress={handleStep1Submit}
+          onPress={() => void handleStep1Submit()} // void for async handler
           disabled={isLoading}
         >
           {isLoading ? (
@@ -496,7 +496,7 @@ export default function SignupScreen() {
           />
           <TouchableOpacity
             style={[styles.verifyButton, adminOtpVerified && styles.verifyButtonSuccess]}
-            onPress={handleVerifyAdminOtp}
+            onPress={() => void handleVerifyAdminOtp()} // void for async handler
             disabled={adminOtpVerified || isLoading}
           >
             {adminOtpVerified ? (
@@ -526,7 +526,7 @@ export default function SignupScreen() {
             />
             <TouchableOpacity
               style={[styles.verifyButton, orgOtpVerified && styles.verifyButtonSuccess]}
-              onPress={handleVerifyOrgOtp}
+              onPress={() => void handleVerifyOrgOtp()} // void for async handler
               disabled={orgOtpVerified || isLoading}
             >
               {orgOtpVerified ? (
@@ -812,7 +812,7 @@ export default function SignupScreen() {
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.primaryButton, styles.successButton, isLoading && styles.buttonDisabled]}
-          onPress={handleStep4Submit}
+          onPress={() => void handleStep4Submit()} // void for async handler
           disabled={isLoading}
         >
           {isLoading ? (

@@ -203,7 +203,7 @@ export default function ResetPasswordScreen() {
             {/* Reset Button */}
             <TouchableOpacity
               style={[styles.resetButton, isLoading && styles.buttonDisabled]}
-              onPress={handleResetPassword}
+              onPress={() => void handleResetPassword()} // void for async handler
               disabled={isLoading}
             >
               <Text style={styles.resetButtonText}>

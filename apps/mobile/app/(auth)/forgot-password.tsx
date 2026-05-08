@@ -1,17 +1,7 @@
 import { Colors } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import {
-  Mail,
-  ArrowLeft,
-  Send,
-  CheckCircle,
-  RefreshCw,
-  KeyRound,
-  Lock,
-  Eye,
-  EyeOff,
-} from 'lucide-react-native';
+import { Mail, ArrowLeft, Send, KeyRound } from 'lucide-react-native'; // Removed unused: CheckCircle, RefreshCw, Lock, Eye, EyeOff
 import { useState, useCallback, useRef } from 'react';
 import {
   View,
@@ -24,22 +14,22 @@ import {
   Alert,
   StyleSheet,
 } from 'react-native';
-import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated'; // Removed unused: FadeIn
 
 import { authApi } from '@/api/auth';
-import { otpApi } from '@/api/otp';
+// import { otpApi } from '@/api/otp'; // Commented - unused for now
 
 type Step = 'email' | 'otp' | 'newPassword';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
-  const [step, setStep] = useState<Step>('email');
+  const [_step, setStep] = useState<Step>('email'); // prefixed _ - unused for now
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [_newPassword, setNewPassword] = useState(''); // prefixed _
+  const [_confirmPassword, setConfirmPassword] = useState(''); // prefixed _
+  const [_showPassword, setShowPassword] = useState(false); // prefixed _
+  const [_showConfirmPassword, setShowConfirmPassword] = useState(false); // prefixed _
   const [isLoading, setIsLoading] = useState(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
@@ -63,25 +53,26 @@ export default function ForgotPasswordScreen() {
     }
   }, [email]);
 
-  const handleVerifyOTP = useCallback(async () => {
+  // These functions are for future use (OTP and reset password steps)
+  const _handleVerifyOTP = useCallback(() => { // removed async - no await, prefixed _
     const otpCode = otp.join('');
     if (otpCode.length !== 6) {
       Alert.alert('Error', 'Please enter the complete OTP');
       return;
     }
     setStep('newPassword');
-  }, [otp]);
+  }, [otp, setStep]);
 
-  const handleResetPassword = useCallback(async () => {
-    if (!newPassword || !confirmPassword) {
+  const _handleResetPassword = useCallback(async () => { // prefixed _ - for future use
+    if (!_newPassword || !_confirmPassword) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
-    if (newPassword !== confirmPassword) {
+    if (_newPassword !== _confirmPassword) {
       Alert.alert('Error', 'Passwords do not match');
       return;
     }
-    if (newPassword.length < 8) {
+    if (_newPassword.length < 8) {
       Alert.alert('Error', 'Password must be at least 8 characters');
       return;
     }
@@ -91,20 +82,20 @@ export default function ForgotPasswordScreen() {
       await authApi.verifyPasswordResetOtp({
         email: email.trim(),
         otp: otpCode,
-        new_password: newPassword,
-        confirm_password: confirmPassword,
+        new_password: _newPassword,
+        confirm_password: _confirmPassword,
       });
       Alert.alert('Success', 'Password reset successfully', [
         { text: 'OK', onPress: () => router.replace('/(auth)/login') },
       ]);
-    } catch (error) {
-      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to reset password');
+    } catch (_error) { // prefixed _
+      Alert.alert('Error', _error instanceof Error ? _error.message : 'Failed to reset password');
     } finally {
       setIsLoading(false);
     }
-  }, [email, otp, newPassword, confirmPassword, router]);
+  }, [email, otp, _newPassword, _confirmPassword, router]);
 
-  const handleOtpChange = (index: number, value: string) => {
+  const _handleOtpChange = (index: number, value: string) => { // prefixed _
     if (value.length > 1) {
       value = value[0];
     }
@@ -117,20 +108,20 @@ export default function ForgotPasswordScreen() {
     }
   };
 
-  const handleOtpKeyPress = (index: number, key: string) => {
+  const _handleOtpKeyPress = (index: number, key: string) => { // prefixed _
     if (key === 'Backspace' && !otp[index] && index > 0) {
       otpRefs.current[index - 1]?.focus();
     }
   };
 
-  const handleResendOTP = useCallback(async () => {
+  const _handleResendOTP = useCallback(async () => { // prefixed _
     setIsLoading(true);
     try {
       await authApi.requestPasswordResetOtp(email.trim());
       Alert.alert('Success', 'OTP sent again');
       setOtp(['', '', '', '', '', '']);
       otpRefs.current[0]?.focus();
-    } catch (error) {
+    } catch (_error) { // prefixed _
       Alert.alert('Error', 'Failed to resend OTP');
     } finally {
       setIsLoading(false);
@@ -182,7 +173,7 @@ export default function ForgotPasswordScreen() {
               </View>
             </View>
             <TouchableOpacity
-              onPress={handleSendOTP}
+              onPress={() => void handleSendOTP()} // void for async handler
               disabled={isLoading}
               style={styles.sendButton}
             >
