@@ -12,12 +12,12 @@ export default function StudentDetailScreen() {
   const { id, is_deleted } = useLocalSearchParams<{ id: string; is_deleted?: string }>();
   const router = useRouter();
   const isDeleted = is_deleted === 'true';
-  const { data: student, isLoading, isError } = useStudentDetail(id || '', isDeleted);
+  const { data: student, isLoading, isError } = useStudentDetail(id ?? '', isDeleted);
 
   return (
     <DetailScreenShell
       title="Student Details"
-      subtitle={student?.full_name || '...'}
+      subtitle={student?.full_name ?? '...'} // ?? instead of ||
       isLoading={isLoading}
       isError={isError || !student}
       onBack={() => router.back()}

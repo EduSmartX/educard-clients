@@ -52,7 +52,7 @@ export default function ExamsListScreen() {
 
   const onRefresh = () => {
     setRefreshing(true);
-    refetch().finally(() => setRefreshing(false));
+    void refetch().finally(() => setRefreshing(false));
   };
 
   const renderExamCard = ({ item, index }: { item: Exam; index: number }) => {

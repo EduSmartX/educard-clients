@@ -81,7 +81,7 @@ export default function LeaveApprovalsScreen() {
   const [rejectComment, setRejectComment] = useState('');
 
   const queryParams = useMemo(() => {
-    const p: Record<string, any> = {
+    const p: Record<string, string | number> = {
       page_size: 50,
       ordering: '-applied_at',
     };
@@ -96,11 +96,11 @@ export default function LeaveApprovalsScreen() {
   const approveMutation = useApproveLeave();
   const rejectMutation = useRejectLeave();
 
-  const reviews = data?.data || [];
+  const reviews = data?.data ?? [];
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    refetch().finally(() => setRefreshing(false));
+    void refetch().finally(() => setRefreshing(false));
   }, [refetch]);
 
   const handleSearch = () => {

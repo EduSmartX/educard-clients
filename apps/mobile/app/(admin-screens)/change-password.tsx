@@ -75,10 +75,11 @@ export default function ChangePasswordScreen() {
         [
           {
             text: 'OK',
-            onPress: async () => {
+            onPress: () => {
               // Logout and redirect to login
-              await logout();
-              router.replace('/(auth)/login');
+              void logout().then(() => {
+                router.replace('/(auth)/login');
+              });
             },
           },
         ]
@@ -225,7 +226,7 @@ export default function ChangePasswordScreen() {
 
             {/* Submit Button */}
             <TouchableOpacity
-              onPress={handleChangePassword}
+              onPress={() => void handleChangePassword()}
               disabled={isLoading}
               style={styles.submitButton}
             >

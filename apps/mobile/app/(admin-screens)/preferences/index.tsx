@@ -13,7 +13,6 @@ import {
   Settings,
   RotateCcw,
   Check,
-  Info,
   X,
   BookOpen,
   Clock,
@@ -23,7 +22,7 @@ import {
   HelpCircle,
   Calendar,
   Eye,
-} from 'lucide-react-native';
+} from 'lucide-react-native'; // Info removed - unused
 import { useState, useCallback, useRef, useMemo } from 'react';
 import {
   View,
@@ -40,10 +39,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
-  type TextInput as TextInputType,
-  type NativeSyntheticEvent,
-  type NativeScrollEvent,
-} from 'react-native';
+} from 'react-native'; // TextInputType, NativeSyntheticEvent, NativeScrollEvent removed - unused
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import type { SaturdayOffPattern } from '@/features/holidays/api/holidays-api';
@@ -64,8 +60,9 @@ import { isAdminRole } from '@/utils/role-utils';
 
 const adminGradient = getRoleGradient('admin');
 
-// Category icons and colors
-const CATEGORY_CONFIG: Record<string, { icon: any; bg: string; color: string }> = {
+// Category icons and colors - using React.ComponentType for icon type
+type IconComponent = React.ComponentType<{ size: number; color: string }>;
+const CATEGORY_CONFIG: Record<string, { icon: IconComponent; bg: string; color: string }> = {
   attendance: { icon: Clock, bg: '#dbeafe', color: '#2563eb' },
   leave: { icon: BookOpen, bg: '#dcfce7', color: '#16a34a' },
   notification: { icon: Bell, bg: '#fef3c7', color: '#d97706' },
@@ -147,11 +144,11 @@ export default function OrgPreferencesScreen() {
 
   const currentPolicy = wdpData?.data?.[0] ?? null;
 
-  const groups: GroupedPreference[] = data?.data || [];
+  const groups: GroupedPreference[] = data?.data ?? []; // ?? instead of ||
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    Promise.all([refetch(), refetchWdp()]).finally(() => setRefreshing(false));
+    void Promise.all([refetch(), refetchWdp()]).finally(() => setRefreshing(false)); // void added for floating promise
   }, [refetch, refetchWdp]);
 
   const toggleCategory = (category: string) => {
@@ -167,7 +164,8 @@ export default function OrgPreferencesScreen() {
     updateMutation.mutate(
       { publicId, value },
       {
-        onError: (err: any) => {
+        onError: (err: unknown) => {
+          // unknown instead of any
           Alert.alert('Error', extractApiError(err, 'Failed to update preference'));
         },
       }
@@ -357,11 +355,15 @@ export default function OrgPreferencesScreen() {
               onFocus={(e) => {
                 // Scroll to make input visible above keyboard
                 setTimeout(() => {
-                  (e.target as any)?.measureInWindow?.(
-                    (_x: number, y: number, _w: number, h: number) => {
-                      scrollRef.current?.scrollTo({ y: y - 200, animated: true });
-                    }
-                  );
+                  const target = e.target as {
+                    measureInWindow?: (
+                      cb: (x: number, y: number, w: number, h: number) => void
+                    ) => void;
+                  };
+                  target.measureInWindow?.((_x: number, y: number, _w: number, _h: number) => {
+                    // _h instead of h (unused)
+                    scrollRef.current?.scrollTo({ y: y - 200, animated: true });
+                  });
                 }, 300);
               }}
               onSubmitEditing={() => {
@@ -435,7 +437,7 @@ export default function OrgPreferencesScreen() {
 
   // ── Choice pills for 2-option choices ──
   const renderChoicePills = (pref: OrganizationPreference) => {
-    const vals = pref.applicable_values || [];
+    const vals = pref.applicable_values ?? []; // ?? instead of ||
     const currentVal = String(pref.value);
     return (
       <View style={styles.prefRow}>
@@ -484,7 +486,8 @@ export default function OrgPreferencesScreen() {
   const getSaturdayLabel = (val: SaturdayOffPattern) =>
     SATURDAY_OPTIONS.find((o) => o.value === val)?.label ?? val;
 
-  const handleWdpUpdate = async (field: string, value: any) => {
+  // handleWdpUpdate - async function for updating working day policy
+  const handleWdpUpdate = async (field: string, value: boolean | SaturdayOffPattern) => {
     try {
       if (currentPolicy) {
         await updateWdpMutation.mutateAsync({
@@ -494,10 +497,14 @@ export default function OrgPreferencesScreen() {
       } else {
         // Create new policy with defaults
         const today = new Date().toISOString().split('T')[0];
+        const defaultSundayOff = field === 'sunday_off' ? (value as boolean) : true;
+        const defaultSatPattern =
+          field === 'saturday_off_pattern' ? (value as SaturdayOffPattern) : 'SECOND_AND_FOURTH';
+        const defaultEffectiveFrom = field === 'effective_from' ? (value as string) : today;
         await createWdpMutation.mutateAsync({
-          sunday_off: field === 'sunday_off' ? value : true,
-          saturday_off_pattern: field === 'saturday_off_pattern' ? value : 'SECOND_AND_FOURTH',
-          effective_from: field === 'effective_from' ? value : today,
+          sunday_off: defaultSundayOff,
+          saturday_off_pattern: defaultSatPattern,
+          effective_from: defaultEffectiveFrom,
         });
       }
     } catch (e: unknown) {
@@ -545,7 +552,9 @@ export default function OrgPreferencesScreen() {
                   currentPolicy?.sunday_off !== false && styles.pillActiveGreen,
                   !canManage && styles.pillDisabled,
                 ]}
-                onPress={() => canManage && handleWdpUpdate('sunday_off', true)}
+                onPress={() => {
+                  if (canManage) void handleWdpUpdate('sunday_off', true);
+                }} // void for async
                 disabled={updateWdpMutation.isPending || createWdpMutation.isPending || !canManage}
                 activeOpacity={canManage ? 0.7 : 1}
               >
@@ -564,7 +573,9 @@ export default function OrgPreferencesScreen() {
                   currentPolicy?.sunday_off === false && styles.pillActiveRed,
                   !canManage && styles.pillDisabled,
                 ]}
-                onPress={() => canManage && handleWdpUpdate('sunday_off', false)}
+                onPress={() => {
+                  if (canManage) void handleWdpUpdate('sunday_off', false);
+                }} // void for async
                 disabled={updateWdpMutation.isPending || createWdpMutation.isPending || !canManage}
                 activeOpacity={canManage ? 0.7 : 1}
               >
@@ -645,7 +656,7 @@ export default function OrgPreferencesScreen() {
                   key={opt.value}
                   style={[styles.modalOption, isSelected && styles.modalOptionSelected]}
                   onPress={() => {
-                    handleWdpUpdate('saturday_off_pattern', opt.value);
+                    void handleWdpUpdate('saturday_off_pattern', opt.value); // void for async
                     setSaturdayDropdownOpen(false);
                   }}
                   activeOpacity={0.7}
@@ -671,7 +682,7 @@ export default function OrgPreferencesScreen() {
   // ── Single-select modal ──
   const renderDropdownModal = () => {
     if (!dropdownPref) return null;
-    const values = dropdownPref.applicable_values || [];
+    const values = dropdownPref.applicable_values ?? []; // ?? instead of ||
     const currentVal = String(dropdownPref.value);
     return (
       <Modal visible transparent animationType="slide" onRequestClose={() => setDropdownPref(null)}>
@@ -710,7 +721,7 @@ export default function OrgPreferencesScreen() {
   // ── Multi-select modal ──
   const renderMultiSelectModal = () => {
     if (!multiSelectPref) return null;
-    const values = multiSelectPref.applicable_values || [];
+    const values = multiSelectPref.applicable_values ?? []; // ?? instead of ||
     return (
       <Modal
         visible

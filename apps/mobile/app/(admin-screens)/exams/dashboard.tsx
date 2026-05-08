@@ -25,6 +25,8 @@ import { useExams, useMarksOverview } from '@/features/exams';
 import { EXAM_STATUS_LABELS, EXAM_STATUS_COLORS, type Exam } from '@/features/exams/types';
 import { headerStyles, layoutStyles } from '@/styles';
 
+import type { Class } from '@/features/classes/types';
+
 const adminGradient = getRoleGradient('admin');
 
 export default function ExamDashboardScreen() {
@@ -62,7 +64,7 @@ export default function ExamDashboardScreen() {
     class_id: selectedClassId,
     page_size: 100,
   });
-  const exams: Exam[] = examsData?.data || [];
+  const exams: Exam[] = examsData?.data ?? [];
   const allExamsCompleted = exams.length > 0 && exams.every((e) => e.status === 'completed');
 
   // Fetch student marks overview
@@ -71,7 +73,7 @@ export default function ExamDashboardScreen() {
     isLoading: marksLoading,
     refetch: refetchMarks,
   } = useMarksOverview(sessionId, selectedClassId);
-  const students = marksData?.students || [];
+  const students = marksData?.students ?? [];
   const permissions = marksData?.permissions;
 
   // Helper to check if user can edit marks for a specific subject
@@ -82,17 +84,16 @@ export default function ExamDashboardScreen() {
     return permissions.editable_subject_ids.includes(subjectPublicId);
   };
 
-  const onRefresh = async () => {
+  const onRefresh = () => {
     setRefreshing(true);
-    if (activeTab === 'exams') await refetchExams();
-    else await refetchMarks();
-    setRefreshing(false);
+    const refetchFn = activeTab === 'exams' ? refetchExams : refetchMarks;
+    void refetchFn().finally(() => setRefreshing(false));
   };
 
   const isLoading = activeTab === 'exams' ? examsLoading : marksLoading;
 
   const renderExam = ({ item, index }: { item: Exam; index: number }) => {
-    const statusColor = EXAM_STATUS_COLORS[item.status] || EXAM_STATUS_COLORS.draft;
+    const statusColor = EXAM_STATUS_COLORS[item.status] ?? EXAM_STATUS_COLORS.draft;
     const canEdit = canEditSubject(item.subject_public_id);
     const buttonText = canEdit ? 'Enter Marks' : 'View Marks';
     const buttonStyle = canEdit ? styles.enterMarksBtn : styles.viewMarksBtn;
@@ -163,7 +164,9 @@ export default function ExamDashboardScreen() {
               <Text style={styles.statItem}>
                 Total: {item.summary.total_obtained}/{item.summary.total_max}
               </Text>
-              <Text style={styles.statItem}>Avg: {item.summary.percentage.toFixed(1)}%</Text>
+              <Text style={styles.statItem}>
+                Avg: {(item.summary.percentage as number).toFixed(1)}%
+              </Text>
             </View>
           )}
         </TouchableOpacity>
@@ -210,8 +213,8 @@ export default function ExamDashboardScreen() {
           >
             <Text style={styles.classPickerText}>
               {selectedClass
-                ? selectedClass.display_name ||
-                  `${selectedClass.class_master?.name || ''} - ${selectedClass.name}`.trim()
+                ? (selectedClass.display_name ??
+                  `${selectedClass.class_master?.name ?? ''} - ${selectedClass.name}`.trim())
                 : 'Select Class'}
             </Text>
             <ChevronDown size={20} color="#fff" />
@@ -219,7 +222,7 @@ export default function ExamDashboardScreen() {
 
           {showClassPicker && (
             <ScrollView style={styles.classDropdown}>
-              {classes.map((cls: any) => (
+              {classes.map((cls: Class) => (
                 <TouchableOpacity
                   key={cls.public_id}
                   style={styles.classOption}
@@ -229,7 +232,7 @@ export default function ExamDashboardScreen() {
                   }}
                 >
                   <Text style={styles.classOptionText}>
-                    {cls.display_name || `${cls.class_master?.name || ''} - ${cls.name}`.trim()}
+                    {cls.display_name ?? `${cls.class_master?.name ?? ''} - ${cls.name}`.trim()}
                   </Text>
                 </TouchableOpacity>
               ))}

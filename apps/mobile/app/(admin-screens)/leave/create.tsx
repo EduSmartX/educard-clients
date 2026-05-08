@@ -3,7 +3,7 @@
  * Form to add a new leave allocation policy.
  */
 
-import { Colors, getRoleGradient, extractApiError } from '@educard/shared';
+import { Colors, getRoleGradient, extractApiError, LeaveType, RoleType } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Save } from 'lucide-react-native';
@@ -41,7 +41,7 @@ export default function CreateLeaveAllocationScreen() {
   const router = useRouter();
   const createMutation = useCreateLeaveAllocation();
   const { data: leaveTypes, isLoading: leaveTypesLoading } = useLeaveTypes();
-  const { data: roleTypes, isLoading: rolesLoading } = useRoleTypes();
+  const { data: roleTypes } = useRoleTypes();
 
   const [form, setForm] = useState({
     leave_type: '',
@@ -59,8 +59,8 @@ export default function CreateLeaveAllocationScreen() {
 
   const leaveTypeOpts = useMemo(
     () =>
-      (leaveTypes || []).map((lt: any) => ({
-        value: lt.id?.toString() || lt.public_id,
+      (leaveTypes ?? []).map((lt: LeaveType) => ({
+        value: lt.public_id,
         label: `${lt.name} (${lt.code})`,
       })),
     [leaveTypes]
@@ -68,7 +68,7 @@ export default function CreateLeaveAllocationScreen() {
 
   const roleOpts = useMemo(
     () =>
-      (roleTypes || []).map((r: any) => ({
+      (roleTypes ?? []).map((r: RoleType) => ({
         value: r.id.toString(),
         label: r.name,
       })),
@@ -76,7 +76,7 @@ export default function CreateLeaveAllocationScreen() {
   );
 
   const updateField = useCallback(
-    (field: string, value: any) => {
+    (field: string, value: string | boolean | string[]) => {
       setForm((prev) => ({ ...prev, [field]: value }));
       if (errors[field])
         setErrors((prev) => {
@@ -121,7 +121,7 @@ export default function CreateLeaveAllocationScreen() {
           { text: 'OK', onPress: () => router.back() },
         ]);
       },
-      onError: (err: any) => {
+      onError: (err: unknown) => {
         setApiError(extractApiError(err, 'Failed to create leave allocation'));
       },
     });

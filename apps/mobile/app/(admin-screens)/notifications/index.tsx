@@ -3,12 +3,12 @@
  * Manage notification preferences
  */
 
-import { Colors, getRoleGradient } from '@educard/shared';
+import { getRoleGradient } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, Bell, MessageSquare, Mail, Smartphone } from 'lucide-react-native';
-import { useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Switch, Alert } from 'react-native';
+import { ChevronLeft } from 'lucide-react-native';
+import { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Switch } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import {

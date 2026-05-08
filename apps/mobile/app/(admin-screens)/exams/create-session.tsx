@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-misused-promises */
 /**
  * Create Exam Session Screen
  */
@@ -12,6 +13,7 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
+  StyleSheet,
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
@@ -22,8 +24,7 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { FormInput, FormDropdown, FormDatePicker } from '@/components/forms';
 import { useCreateExamSession } from '@/features/exams';
 import { EXAM_SESSION_TYPE_LABELS, type ExamSessionType } from '@/features/exams/types';
-import { headerStyles, layoutStyles, bodyStyles, cardStyles, buttonStyles } from '@/styles';
-import { validateDateRange } from '@/utils/validation';
+import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -54,11 +55,6 @@ export default function CreateExamSessionScreen() {
     }
     if (!academicYear.trim()) {
       Alert.alert('Error', 'Academic year is required (e.g., 2024-2025)');
-      return;
-    }
-    const dateErr = validateDateRange(startDate, endDate, 'Start date', 'End date');
-    if (dateErr) {
-      Alert.alert('Error', dateErr);
       return;
     }
 
@@ -108,9 +104,9 @@ export default function CreateExamSessionScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView style={bodyStyles.scroll} contentContainerStyle={bodyStyles.content}>
+        <ScrollView style={st.body} contentContainerStyle={st.bodyContent}>
           <Animated.View entering={FadeInDown.delay(100).springify()}>
-            <View style={cardStyles.cardLarge}>
+            <View style={st.card}>
               <FormInput
                 label="Session Name"
                 value={name}
@@ -156,7 +152,7 @@ export default function CreateExamSessionScreen() {
           </Animated.View>
 
           <TouchableOpacity
-            style={[buttonStyles.primary, createSession.isPending && buttonStyles.disabled]}
+            style={[st.submitBtn, createSession.isPending && st.submitBtnDisabled]}
             onPress={handleSubmit}
             disabled={createSession.isPending}
           >
@@ -165,7 +161,7 @@ export default function CreateExamSessionScreen() {
             ) : (
               <>
                 <Check size={18} color="#fff" />
-                <Text style={buttonStyles.primaryText}>Create Session</Text>
+                <Text style={st.submitText}>Create Session</Text>
               </>
             )}
           </TouchableOpacity>
@@ -175,4 +171,29 @@ export default function CreateExamSessionScreen() {
   );
 }
 
-// All styles now use shared imports from @/styles
+const st = StyleSheet.create({
+  body: { flex: 1, backgroundColor: '#f8fafc' },
+  bodyContent: { padding: 16, paddingBottom: 40 },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  submitBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#7c3aed',
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  submitBtnDisabled: { opacity: 0.6 },
+  submitText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+});

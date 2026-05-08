@@ -18,6 +18,12 @@ export const layoutStyles = StyleSheet.create({
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
 });
 
+// Body/Scroll Content Styles
+export const bodyStyles = StyleSheet.create({
+  scroll: { flex: 1 },
+  content: { padding: Theme.spacing.md, paddingBottom: 100 },
+});
+
 // Card Styles
 export const cardStyles = StyleSheet.create({
   card: {
@@ -27,6 +33,25 @@ export const cardStyles = StyleSheet.create({
     marginBottom: Theme.spacing.sm,
     ...Theme.shadows.md,
   },
+  cardLarge: {
+    backgroundColor: Theme.colors.surface.card,
+    borderRadius: Theme.borderRadius.card,
+    padding: Theme.spacing.lg,
+    marginBottom: Theme.spacing.md,
+    ...Theme.shadows.md,
+  },
+});
+
+// Divider Styles
+export const dividerStyles = StyleSheet.create({
+  basic: { height: 1, backgroundColor: Colors.gray[200] },
+  spaced: { height: 1, backgroundColor: Colors.gray[200], marginVertical: Theme.spacing.md },
+});
+
+// Note/Info Box Styles
+export const noteStyles = StyleSheet.create({
+  muted: { marginTop: Theme.spacing.md, padding: Theme.spacing.md },
+  mutedText: { fontSize: 12, color: Colors.gray[500], lineHeight: 18, textAlign: 'center' },
 });
 
 // Avatar Styles

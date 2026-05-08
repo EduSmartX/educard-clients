@@ -1,9 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-misused-promises, @typescript-eslint/no-floating-promises, @typescript-eslint/prefer-nullish-coalescing */ /**
+/**
  * Edit Leave Allocation Screen
  * Fetches existing leave allocation, pre-populates form, PATCHes on save.
  */
 
-import { Colors, getRoleGradient, extractApiError } from '@educard/shared';
+import { Colors, getRoleGradient, extractApiError, LeaveType, RoleType } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Save } from 'lucide-react-native';
@@ -40,10 +40,10 @@ type FieldErrors = Record<string, string>;
 export default function EditLeaveAllocationScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { data: detail, isLoading: detailLoading } = useLeaveAllocationDetail(id || '');
+  const { data: detail, isLoading: detailLoading } = useLeaveAllocationDetail(id ?? '');
   const updateMutation = useUpdateLeaveAllocation();
   const { data: leaveTypes, isLoading: leaveTypesLoading } = useLeaveTypes();
-  const { data: roleTypes, isLoading: rolesLoading } = useRoleTypes();
+  const { data: roleTypes } = useRoleTypes();
 
   const [formLoaded, setFormLoaded] = useState(false);
   const [form, setForm] = useState({
@@ -66,15 +66,15 @@ export default function EditLeaveAllocationScreen() {
   useEffect(() => {
     if (allocation && !formLoaded) {
       setForm({
-        leave_type: allocation.leave_type_id?.toString() || '',
-        name: allocation.name || '',
-        description: allocation.description || '',
-        total_days: allocation.total_days?.toString() || '',
-        max_carry_forward_days: allocation.max_carry_forward_days?.toString() || '0',
+        leave_type: allocation.leave_type_id?.toString() ?? '',
+        name: allocation.name ?? '',
+        description: allocation.description ?? '',
+        total_days: allocation.total_days?.toString() ?? '',
+        max_carry_forward_days: allocation.max_carry_forward_days?.toString() ?? '0',
         applies_to_all_roles: allocation.applies_to_all_roles ?? true,
-        roles: (allocation.role_ids || []).map(String),
-        effective_from: allocation.effective_from || '',
-        effective_to: allocation.effective_to || '',
+        roles: (allocation.role_ids ?? []).map(String),
+        effective_from: allocation.effective_from ?? '',
+        effective_to: allocation.effective_to ?? '',
       });
       setFormLoaded(true);
     }
@@ -82,8 +82,8 @@ export default function EditLeaveAllocationScreen() {
 
   const leaveTypeOpts = useMemo(
     () =>
-      (leaveTypes || []).map((lt: any) => ({
-        value: lt.id?.toString() || lt.public_id,
+      (leaveTypes ?? []).map((lt: LeaveType) => ({
+        value: lt.public_id,
         label: `${lt.name} (${lt.code})`,
       })),
     [leaveTypes]
@@ -91,7 +91,7 @@ export default function EditLeaveAllocationScreen() {
 
   const roleOpts = useMemo(
     () =>
-      (roleTypes || []).map((r: any) => ({
+      (roleTypes ?? []).map((r: RoleType) => ({
         value: r.id.toString(),
         label: r.name,
       })),
@@ -99,7 +99,7 @@ export default function EditLeaveAllocationScreen() {
   );
 
   const updateField = useCallback(
-    (field: string, value: any) => {
+    (field: string, value: string | boolean | string[]) => {
       setForm((prev) => ({ ...prev, [field]: value }));
       if (errors[field])
         setErrors((prev) => {
@@ -125,11 +125,11 @@ export default function EditLeaveAllocationScreen() {
   const handleSubmit = useCallback(() => {
     if (!validate() || !id) return;
 
-    const payload: any = {
+    const payload = {
       name: form.name.trim(),
       description: form.description.trim() || undefined,
       total_days: form.total_days,
-      max_carry_forward_days: form.max_carry_forward_days || '0',
+      max_carry_forward_days: form.max_carry_forward_days ?? '0',
       applies_to_all_roles: form.applies_to_all_roles,
       roles: form.applies_to_all_roles ? [] : form.roles.map(Number),
       effective_from: form.effective_from,
@@ -144,7 +144,7 @@ export default function EditLeaveAllocationScreen() {
             { text: 'OK', onPress: () => router.back() },
           ]);
         },
-        onError: (err: any) => {
+        onError: (err: unknown) => {
           setApiError(extractApiError(err, 'Failed to update leave allocation'));
         },
       }

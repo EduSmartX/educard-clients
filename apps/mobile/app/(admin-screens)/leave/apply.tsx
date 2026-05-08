@@ -2,8 +2,8 @@
  * Apply Leave Screen - Submit leave requests
  */
 
-import { Colors, getRoleGradient, getRoleThemeColors, extractApiError } from '@educard/shared';
-import { format, parseISO, differenceInDays, isAfter } from 'date-fns';
+import { getRoleGradient, getRoleThemeColors, extractApiError } from '@educard/shared';
+import { parseISO, differenceInDays, isAfter } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Send, Calendar, ChevronDown, X, Check, Info } from 'lucide-react-native';
@@ -212,7 +212,7 @@ export default function ApplyLeaveScreen() {
         { startDate: form.start_date, endDate: form.end_date },
         {
           onSuccess: (data) => {
-            setCalculatedDays(data?.data?.working_days || 1);
+            setCalculatedDays(data?.data?.working_days ?? 1);
           },
           onError: () => {
             // Fallback to simple calculation
@@ -224,6 +224,7 @@ export default function ApplyLeaveScreen() {
     } else {
       setCalculatedDays(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.start_date, form.end_date]);
 
   const updateField = useCallback(
@@ -284,7 +285,7 @@ export default function ApplyLeaveScreen() {
       leave_balance: form.leave_balance,
       start_date: form.start_date,
       end_date: form.end_date,
-      number_of_days: calculatedDays || 1,
+      number_of_days: calculatedDays ?? 1,
       reason: form.reason.trim(),
     };
 
@@ -292,7 +293,7 @@ export default function ApplyLeaveScreen() {
       onSuccess: () => {
         router.back();
       },
-      onError: (err: any) => {
+      onError: (err: unknown) => {
         setApiError(extractApiError(err, 'Failed to submit leave request'));
       },
     });

@@ -22,7 +22,6 @@ import {
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { useMarksOverview } from '@/features/exams';
-import type { MarksOverviewStudent, MarksOverviewSubject } from '@/features/exams/types';
 import { useAuthStore } from '@/lib/auth-store';
 import { headerStyles, layoutStyles } from '@/styles';
 
@@ -52,7 +51,7 @@ function MarksBar({ obtained, max, pass }: { obtained: number; max: number; pass
 export default function MarksScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const { sessionId, classId, subjectName, className } = useLocalSearchParams<{
+  const { sessionId, classId, className } = useLocalSearchParams<{
     sessionId: string;
     classId: string;
     subjectName?: string;
@@ -63,15 +62,14 @@ export default function MarksScreen() {
 
   const { data, isLoading, refetch } = useMarksOverview(sessionId, classId, user?.role);
 
-  const onRefresh = async () => {
+  const onRefresh = () => {
     setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
+    void refetch().finally(() => setRefreshing(false));
   };
 
   const stats = data?.stats;
-  const subjects = data?.subjects || [];
-  const students = data?.students || [];
+  const subjects = data?.subjects ?? [];
+  const students = data?.students ?? [];
   const title = className ? decodeURIComponent(className) : 'Marks Overview';
 
   return (

@@ -7,7 +7,7 @@ import { getRoleGradient } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, ChevronRight, Calendar, BookOpen, Plus } from 'lucide-react-native';
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -44,12 +44,11 @@ export default function ExamSessionsScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const { data, isLoading, refetch } = useExamSessions({ page_size: 50 });
-  const sessions: ExamSession[] = data?.data || [];
+  const sessions: ExamSession[] = data?.data ?? [];
 
-  const onRefresh = async () => {
+  const onRefresh = () => {
     setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
+    void refetch().finally(() => setRefreshing(false));
   };
 
   const renderSession = ({ item, index }: { item: ExamSession; index: number }) => {

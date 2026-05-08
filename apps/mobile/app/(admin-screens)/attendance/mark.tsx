@@ -92,7 +92,7 @@ export default function MarkAttendanceScreen() {
   const selectedClassName = useMemo(() => {
     if (!selectedClassId || !eligibleClasses) return 'Select Class';
     const cls = eligibleClasses.find((c) => c.public_id === selectedClassId);
-    return cls?.display_name || 'Select Class';
+    return cls?.display_name ?? 'Select Class';
   }, [selectedClassId, eligibleClasses]);
 
   // Process comprehensive data
@@ -113,10 +113,9 @@ export default function MarkAttendanceScreen() {
     }
   }, [comprehensiveData]);
 
-  const onRefresh = useCallback(async () => {
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
+    void refetch().finally(() => setRefreshing(false));
   }, [refetch]);
 
   const handleReset = () => {
@@ -171,7 +170,7 @@ export default function MarkAttendanceScreen() {
         user: student.public_id,
         morning_present: student.morning_present ?? false,
         afternoon_present: student.afternoon_present ?? false,
-        remarks: student.attendance_remarks || '',
+        remarks: student.attendance_remarks ?? '',
       }));
 
     if (attendanceRecords.length === 0) {
@@ -189,7 +188,7 @@ export default function MarkAttendanceScreen() {
         },
       });
       setIsViewMode(true);
-    } catch (error) {
+    } catch {
       // Error handled in mutation
     }
   };
@@ -198,10 +197,10 @@ export default function MarkAttendanceScreen() {
   const stats = useMemo(() => {
     const total = students.length;
     const present = students.filter(
-      (s) => (s.morning_present || false) && (s.afternoon_present || false)
+      (s) => (s.morning_present ?? false) && (s.afternoon_present ?? false)
     ).length;
     const absent = students.filter(
-      (s) => !(s.morning_present || false) && !(s.afternoon_present || false)
+      (s) => !(s.morning_present ?? false) && !(s.afternoon_present ?? false)
     ).length;
     const onLeave = students.filter((s) => s.leave_status === 'approved').length;
     return { total, present, absent, onLeave };
@@ -336,7 +335,7 @@ export default function MarkAttendanceScreen() {
             <View style={styles.alertTextContainer}>
               <Text style={styles.alertTitle}>Cannot Mark Attendance</Text>
               <Text style={styles.alertDesc}>
-                {dateValidation.reason || 'This is not a working day'}
+                {dateValidation.reason ?? 'This is not a working day'}
               </Text>
             </View>
           </Animated.View>
@@ -394,7 +393,7 @@ export default function MarkAttendanceScreen() {
         {students.length > 0 && isWorkingDay && (
           <Animated.View entering={FadeInDown.delay(300).springify()}>
             <Text style={styles.sectionTitle}>Students</Text>
-            {students.map((student, index) => (
+            {students.map((student, _index) => (
               <View
                 key={student.public_id}
                 style={[styles.studentCard, !student.canEdit && styles.studentCardDisabled]}
@@ -435,7 +434,7 @@ export default function MarkAttendanceScreen() {
                   <View style={styles.toggleItem}>
                     <Text style={styles.toggleLabel}>AM</Text>
                     <Switch
-                      value={student.morning_present || false}
+                      value={student.morning_present ?? false}
                       onValueChange={(val) =>
                         handleToggleAttendance(student.public_id, 'morning_present', val)
                       }
@@ -447,7 +446,7 @@ export default function MarkAttendanceScreen() {
                   <View style={styles.toggleItem}>
                     <Text style={styles.toggleLabel}>PM</Text>
                     <Switch
-                      value={student.afternoon_present || false}
+                      value={student.afternoon_present ?? false}
                       onValueChange={(val) =>
                         handleToggleAttendance(student.public_id, 'afternoon_present', val)
                       }
@@ -501,7 +500,7 @@ export default function MarkAttendanceScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.actionBtn, styles.saveBtn, !canSubmit && styles.saveBtnDisabled]}
-                onPress={handleSubmit}
+                onPress={() => void handleSubmit()}
                 disabled={!canSubmit || isSubmitting}
               >
                 {isSubmitting ? (

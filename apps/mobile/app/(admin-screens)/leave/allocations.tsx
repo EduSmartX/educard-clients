@@ -77,7 +77,7 @@ export default function LeaveAllocationsScreen() {
   const { data, isLoading, refetch } = canManage ? adminQuery : employeeQuery;
   const deleteMutation = useDeleteLeaveAllocation();
 
-  const allocations = data?.data || [];
+  const allocations = useMemo(() => data?.data ?? [], [data?.data]);
 
   // Extract unique leave types for filter
   const leaveTypeOptions = useMemo(() => {
@@ -104,9 +104,7 @@ export default function LeaveAllocationsScreen() {
       filtered = filtered.filter((a) => a.leave_type_name === filterLeaveType);
     }
     if (filterRole) {
-      filtered = filtered.filter(
-        (a) => a.applies_to_all_roles || (a.roles && a.roles.includes(filterRole))
-      );
+      filtered = filtered.filter((a) => a.applies_to_all_roles || a.roles?.includes(filterRole));
     }
     return filtered;
   }, [allocations, filterLeaveType, filterRole]);
@@ -126,7 +124,7 @@ export default function LeaveAllocationsScreen() {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    refetch().finally(() => setRefreshing(false));
+    void refetch().finally(() => setRefreshing(false));
   }, [refetch]);
 
   const toggleGroup = (title: string) => {
@@ -147,7 +145,7 @@ export default function LeaveAllocationsScreen() {
       deleteMutation.mutate(deleteTarget.public_id, {
         onSuccess: () => {
           setDeleteTarget(null);
-          refetch();
+          void refetch();
         },
         onError: () => {
           setDeleteTarget(null);
@@ -157,7 +155,10 @@ export default function LeaveAllocationsScreen() {
   };
 
   const handleEdit = (item: LeaveAllocation) => {
-    router.push(`/(admin-screens)/leave/edit?id=${item.public_id}` as any);
+    router.push({
+      pathname: '/(admin-screens)/leave/edit',
+      params: { id: item.public_id },
+    });
   };
 
   const handleAdd = () => {
@@ -215,12 +216,12 @@ export default function LeaveAllocationsScreen() {
             </View>
             <View style={styles.cardInfo}>
               <Text style={styles.cardTitle} numberOfLines={1}>
-                {item.name || item.leave_type_name}
+                {item.name ?? item.leave_type_name}
               </Text>
               <Text style={styles.cardSubtitle}>
                 {item.applies_to_all_roles
                   ? 'All Roles'
-                  : `${item.roles?.split(',').length || 0} role(s) assigned`}
+                  : `${item.roles?.split(',').length ?? 0} role(s) assigned`}
               </Text>
             </View>
             {/* Edit/Delete buttons - only for admin */}
@@ -256,8 +257,8 @@ export default function LeaveAllocationsScreen() {
                 onPress={() =>
                   setRolesModal({
                     visible: true,
-                    roles: item.roles || '',
-                    title: item.name || item.leave_type_name,
+                    roles: item.roles ?? '',
+                    title: item.name ?? item.leave_type_name,
                   })
                 }
                 activeOpacity={0.7}
@@ -273,7 +274,7 @@ export default function LeaveAllocationsScreen() {
           <View style={styles.dateRow}>
             <Calendar size={14} color={Colors.gray[400]} />
             <Text style={styles.dateText}>
-              {item.effective_from || 'No start'} → {item.effective_to || 'Ongoing'}
+              {item.effective_from ?? 'No start'} → {item.effective_to ?? 'Ongoing'}
             </Text>
           </View>
         </View>
@@ -455,7 +456,7 @@ export default function LeaveAllocationsScreen() {
         title="Delete Allocation"
         message={
           deleteTarget
-            ? `Are you sure you want to delete "${deleteTarget.name || deleteTarget.leave_type_name}"?`
+            ? `Are you sure you want to delete "${deleteTarget.name ?? deleteTarget.leave_type_name}"?`
             : ''
         }
         confirmText="Delete"

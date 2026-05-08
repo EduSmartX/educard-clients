@@ -73,14 +73,14 @@ export default function CreateStudentScreen() {
   const { data: classesData } = useManagedClasses('student');
 
   const duplicateHandler = useDeletedDuplicateHandler<{
-    payload: any;
+    payload: Record<string, unknown>; // Record<string, unknown> instead of any
     deletedRecordId: string | null;
   }>();
   const classOptions = useMemo(() => {
-    const items = classesData?.classes || [];
-    return items.map((c: any) => ({
+    const items = classesData?.classes ?? []; // ?? instead of ||
+    return items.map((c: { public_id: string; class_master?: { name: string }; name: string }) => ({
       value: c.public_id,
-      label: `${c.class_master?.name || ''} - ${c.name}`.trim(),
+      label: `${c.class_master?.name ?? ''} - ${c.name}`.trim(), // ?? instead of ||
     }));
   }, [classesData]);
 
@@ -88,7 +88,7 @@ export default function CreateStudentScreen() {
   const [addressExpanded, setAddressExpanded] = useState(false);
   const [prevSchoolExpanded, setPrevSchoolExpanded] = useState(false);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
-  const [photoAsset, setPhotoAsset] = useState<any>(null);
+  const [_photoAsset, setPhotoAsset] = useState<unknown>(null); // prefixed with _ for unused, unknown instead of any
 
   const [form, setForm] = useState({
     class_id: '',

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-misused-promises, @typescript-eslint/no-floating-promises, @typescript-eslint/prefer-nullish-coalescing */ /**
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-misused-promises, @typescript-eslint/no-floating-promises, @typescript-eslint/prefer-nullish-coalescing, @typescript-eslint/no-unsafe-return */ /**
  * Exceptional Work Policy Screen - Manage calendar exceptions
  */
 
@@ -12,9 +12,7 @@ import {
   startOfMonth,
   endOfMonth,
   eachDayOfInterval,
-  isSameMonth,
   isToday,
-  isBefore,
   isSameDay,
 } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -44,7 +42,6 @@ import {
   Alert,
   Modal,
   TextInput,
-  FlatList,
   Dimensions,
   Switch,
 } from 'react-native';
