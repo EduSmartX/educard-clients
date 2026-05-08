@@ -1,0 +1,203 @@
+/**
+ * Employee Sidebar Configuration
+ * Navigation menu for teachers and staff members
+ */
+
+import {
+  LayoutDashboard,
+  Calendar,
+  CalendarDays,
+  CalendarCheck,
+  BookOpen,
+  ClipboardCheck,
+  Settings,
+  Briefcase,
+  AlertTriangle,
+  UserCog,
+  School,
+  GraduationCap,
+  BarChart3,
+  CheckSquare,
+  Clock,
+  ClipboardList,
+  FileText,
+} from 'lucide-react';
+import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
+import { ROUTES } from '@/constants/app-config';
+
+export const employeeSidebarConfig: SidebarSection[] = [
+  {
+    items: [
+      {
+        id: 'dashboard',
+        label: 'Dashboard',
+        icon: LayoutDashboard,
+        path: ROUTES.EMPLOYEE.DASHBOARD,
+      },
+      {
+        id: 'calendar',
+        label: 'My Calendar',
+        icon: Calendar,
+        path: ROUTES.CALENDAR,
+      },
+    ],
+  },
+  {
+    title: 'MANAGE',
+    items: [
+      {
+        id: 'teachers',
+        label: 'Teachers',
+        icon: UserCog,
+        path: ROUTES.EMPLOYEE.TEACHERS,
+      },
+      {
+        id: 'classes',
+        label: 'Classes',
+        icon: School,
+        path: ROUTES.EMPLOYEE.CLASSES,
+      },
+      {
+        id: 'students',
+        label: 'Students',
+        icon: GraduationCap,
+        path: ROUTES.STUDENTS,
+      },
+      {
+        id: 'subjects',
+        label: 'Subjects',
+        icon: BookOpen,
+        path: ROUTES.SUBJECTS,
+      },
+      {
+        id: 'timetable',
+        label: 'Timetable',
+        icon: Clock,
+        path: ROUTES.TIMETABLE,
+      },
+    ],
+  },
+  {
+    title: 'EXAMS & MARKS',
+    items: [
+      {
+        id: 'exam-sessions',
+        label: 'Exam Sessions',
+        icon: ClipboardList,
+        path: ROUTES.EXAMS,
+      },
+      {
+        id: 'exams',
+        label: 'Exams',
+        icon: FileText,
+        path: ROUTES.EXAMS_LIST,
+      },
+      {
+        id: 'exam-overview',
+        label: 'Exam Overview',
+        icon: BarChart3,
+        path: ROUTES.EXAMS_OVERVIEW,
+      },
+      {
+        id: 'marks-overview',
+        label: 'Marks Overview',
+        icon: CheckSquare,
+        path: ROUTES.MARKS_OVERVIEW,
+      },
+    ],
+  },
+  {
+    title: 'ATTENDANCE',
+    items: [
+      {
+        id: 'mark-attendance',
+        label: 'Mark Attendance',
+        icon: ClipboardCheck,
+        path: ROUTES.EMPLOYEE.ATTENDANCE.MARK,
+      },
+      {
+        id: 'attendance-summary',
+        label: 'View Summary',
+        icon: BarChart3,
+        path: ROUTES.EMPLOYEE.ATTENDANCE.SUMMARY,
+      },
+      {
+        id: 'attendance-reports',
+        label: 'Attendance Report',
+        icon: CalendarDays,
+        path: ROUTES.EMPLOYEE.ATTENDANCE.REPORT,
+      },
+      {
+        id: 'attendance-timesheet',
+        label: 'My Timesheet',
+        icon: CalendarCheck,
+        path: ROUTES.EMPLOYEE.ATTENDANCE.TIMESHEET,
+      },
+      {
+        id: 'timesheet-approvals',
+        label: 'Timesheet Approvals',
+        icon: CheckSquare,
+        path: ROUTES.EMPLOYEE.ATTENDANCE.APPROVALS,
+      },
+    ],
+  },
+  {
+    title: 'LEAVE SYSTEM',
+    items: [
+      {
+        id: 'leave-dashboard',
+        label: 'Leave Dashboard',
+        icon: Briefcase,
+        path: ROUTES.EMPLOYEE.LEAVE.DASHBOARD,
+      },
+      {
+        id: 'leave-reviews',
+        label: 'Leave Reviews',
+        icon: ClipboardCheck,
+        path: ROUTES.EMPLOYEE.LEAVE.REVIEWS,
+      },
+      {
+        id: 'manage-leave-balance',
+        label: 'Manage Leave Balances',
+        icon: CalendarDays,
+        path: ROUTES.EMPLOYEE.LEAVE.MANAGE_BALANCE,
+      },
+      {
+        id: 'leave-allocations',
+        label: 'Leave Policies',
+        icon: CalendarCheck,
+        path: ROUTES.EMPLOYEE.LEAVE.ALLOCATIONS,
+      },
+    ],
+  },
+  {
+    title: 'PREFERENCES',
+    defaultCollapsed: true,
+    items: [
+      {
+        id: 'holidays',
+        label: 'Holiday Calendar',
+        icon: CalendarDays,
+        path: ROUTES.EMPLOYEE.HOLIDAYS,
+      },
+      {
+        id: 'exceptional-work',
+        label: 'Exceptional Work Policy',
+        icon: AlertTriangle,
+        path: ROUTES.EMPLOYEE.EXCEPTIONAL_WORK,
+      },
+    ],
+  },
+  {
+    title: 'SETTINGS',
+    defaultCollapsed: true,
+    items: [
+      {
+        id: 'profile',
+        label: 'My Profile',
+        icon: Settings,
+        path: ROUTES.PROFILE,
+      },
+    ],
+  },
+];

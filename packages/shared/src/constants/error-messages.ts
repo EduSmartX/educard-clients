@@ -636,6 +636,13 @@ export const AttendanceUiText = {
   PERIOD_AFTERNOON: "Afternoon",
   PERIOD_FULL_DAY: "Full Day",
 
+  // Table headers
+  ROLL_NO: "Roll No",
+  STUDENT_NAME: "Name",
+  REMARKS: "Remarks",
+  LEAVE_PENDING: "Leave Pending",
+  ADD_REMARKS: "Add remarks...",
+
   // Date validation
   NOT_WORKING_DAY: "This is not a working day",
 

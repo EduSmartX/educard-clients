@@ -1,0 +1,508 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import 'react-day-picker/style.css';
+@import 'tailwindcss';
+
+@layer base {
+  :root {
+    /* Modern Design System Colors - Fresh & Vibrant */
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    
+    /* Primary - Modern Indigo/Violet */
+    --primary: 250 91% 62%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secondary - Soft Gray */
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 47% 11%;
+    
+    /* Muted - Subtle backgrounds */
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+    
+    /* Accent - Teal/Cyan for highlights */
+    --accent: 172 66% 50%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 250 91% 62%;
+    --radius: 0.75rem;
+
+    /* Extended Color Palette */
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+    
+    /* Gradient Colors */
+    --gradient-start: 250 91% 62%;
+    --gradient-end: 280 87% 65%;
+    
+    /* Shadows */
+    --shadow-color: 220 60% 50%;
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+    --card: 224 71% 6%;
+    --card-foreground: 213 31% 91%;
+    --popover: 224 71% 6%;
+    --popover-foreground: 213 31% 91%;
+    --primary: 250 91% 66%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 215 28% 17%;
+    --secondary-foreground: 213 31% 91%;
+    --muted: 215 28% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 172 66% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 215 28% 17%;
+    --input: 215 28% 17%;
+    --ring: 250 91% 66%;
+
+    /* Extended Color Palette - Dark Mode */
+    --success: 160 84% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --info: 217 91% 65%;
+    --info-foreground: 0 0% 100%;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family:
+      'Plus Jakarta Sans',
+      'Inter',
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      Roboto,
+      'Helvetica Neue',
+      Arial,
+      sans-serif;
+    font-feature-settings: 'cv11', 'ss01';
+    font-variation-settings: 'opsz' 32;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.01em;
+  }
+
+  /* Modern Scrollbar Styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted-foreground) / 0.15);
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.25);
+  }
+
+  /* Cursor Styles - Pointer for all interactive elements */
+  button,
+  a,
+  [role='button'],
+  [role='link'],
+  [role='tab'],
+  [role='menuitem'],
+  [type='button'],
+  [type='submit'],
+  [type='reset'],
+  label,
+  select,
+  summary,
+  .cursor-pointer {
+    cursor: pointer;
+  }
+
+  /* Keep default cursor for disabled elements */
+  button:disabled,
+  a:disabled,
+  [disabled] {
+    cursor: not-allowed;
+  }
+
+  /* Text input cursor */
+  input[type='text'],
+  input[type='email'],
+  input[type='password'],
+  input[type='number'],
+  input[type='search'],
+  input[type='tel'],
+  input[type='url'],
+  textarea {
+    cursor: text;
+  }
+}
+
+@layer utilities {
+  /* Animation utilities */
+  .animate-in {
+    animation: enter 0.2s ease-out;
+  }
+
+  .animate-out {
+    animation: exit 0.2s ease-in;
+  }
+
+  @keyframes enter {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes exit {
+    from {
+      opacity: 1;
+      transform: scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+  }
+
+  /* Custom focus ring */
+  .focus-ring:focus {
+    outline: none;
+    box-shadow:
+      0 0 0 2px hsl(var(--ring)),
+      0 0 0 4px hsl(var(--background));
+  }
+
+  /* Text gradient */
+  .text-gradient {
+    background: linear-gradient(to right, hsl(var(--primary)), hsl(270, 70%, 55%));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Glass morphism effect */
+  .glass {
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  /* Shimmer loading effect */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.2) 20%,
+      rgba(255, 255, 255, 0.5) 60%,
+      rgba(255, 255, 255, 0)
+    );
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+
+  /* Address form slide animations */
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      max-height: 0;
+      transform: translateY(-20px) scaleY(0);
+      transform-origin: top;
+    }
+    to {
+      opacity: 1;
+      max-height: 1000px;
+      transform: translateY(0) scaleY(1);
+      transform-origin: top;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 1;
+      max-height: 1000px;
+      transform: translateY(0) scaleY(1);
+      transform-origin: top;
+    }
+    to {
+      opacity: 0;
+      max-height: 0;
+      transform: translateY(-20px) scaleY(0);
+      transform-origin: top;
+    }
+  }
+
+  .address-form-enter {
+    animation: slideDown 0.5s ease-out forwards;
+  }
+
+  .address-form-exit {
+    animation: slideUp 0.3s ease-in forwards;
+  }
+
+  /* Calendar dropdown styles */
+  .rdp-dropdown_root {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .rdp-dropdown {
+    appearance: none;
+    background-color: hsl(var(--background));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 0.25rem 2rem 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .rdp-dropdown:hover {
+    background-color: hsl(var(--accent));
+  }
+
+  .rdp-dropdown:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--ring));
+  }
+
+  .rdp-caption_label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .rdp-dropdown_root::after {
+    content: '';
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid hsl(var(--foreground));
+    pointer-events: none;
+  }
+
+  /* React DatePicker Custom Styles */
+  .react-datepicker {
+    font-family: inherit !important;
+    border: 1px solid hsl(var(--border)) !important;
+    border-radius: var(--radius) !important;
+    box-shadow:
+      0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  }
+
+  .react-datepicker__header {
+    background-color: hsl(var(--background)) !important;
+    border-bottom: 1px solid hsl(var(--border)) !important;
+    padding-top: 0.5rem !important;
+  }
+
+  .react-datepicker__current-month,
+  .react-datepicker__day-name {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* Month and Year Dropdowns - Enhanced Width */
+  .react-datepicker__month-dropdown-container,
+  .react-datepicker__year-dropdown-container {
+    margin: 0 0.5rem !important;
+  }
+
+  .react-datepicker__month-read-view,
+  .react-datepicker__year-read-view {
+    min-width: 120px !important;
+    padding: 0.5rem 2rem 0.5rem 0.75rem !important;
+    border: 1px solid hsl(var(--border)) !important;
+    border-radius: var(--radius) !important;
+    background-color: hsl(var(--background)) !important;
+    font-size: 0.875rem !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+  }
+
+  .react-datepicker__year-read-view {
+    min-width: 100px !important;
+  }
+
+  .react-datepicker__month-read-view:hover,
+  .react-datepicker__year-read-view:hover {
+    background-color: hsl(var(--accent)) !important;
+    border-color: hsl(var(--primary)) !important;
+  }
+
+  .react-datepicker__month-dropdown,
+  .react-datepicker__year-dropdown {
+    background-color: hsl(var(--background)) !important;
+    border: 1px solid hsl(var(--border)) !important;
+    border-radius: var(--radius) !important;
+    min-width: 140px !important;
+    max-height: 300px !important;
+    overflow-y: auto !important;
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  }
+
+  .react-datepicker__year-dropdown {
+    min-width: 120px !important;
+  }
+
+  .react-datepicker__month-option,
+  .react-datepicker__year-option {
+    color: hsl(var(--foreground)) !important;
+    padding: 0.5rem 1rem !important;
+    cursor: pointer !important;
+    transition: all 0.15s !important;
+  }
+
+  .react-datepicker__month-option:hover,
+  .react-datepicker__year-option:hover {
+    background-color: hsl(var(--accent)) !important;
+  }
+
+  .react-datepicker__month-option--selected,
+  .react-datepicker__year-option--selected {
+    background-color: hsl(var(--primary)) !important;
+    color: hsl(var(--primary-foreground)) !important;
+    font-weight: 600 !important;
+  }
+
+  .react-datepicker__day {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  .react-datepicker__day:hover {
+    background-color: hsl(var(--accent)) !important;
+    border-radius: var(--radius) !important;
+  }
+
+  .react-datepicker__day--selected,
+  .react-datepicker__day--keyboard-selected {
+    background-color: hsl(var(--primary)) !important;
+    color: hsl(var(--primary-foreground)) !important;
+    border-radius: var(--radius) !important;
+  }
+
+  .react-datepicker__day--today {
+    font-weight: bold !important;
+    background-color: hsl(var(--accent)) !important;
+    border-radius: var(--radius) !important;
+  }
+
+  .react-datepicker__day--disabled {
+    color: hsl(var(--muted-foreground)) !important;
+    opacity: 0.5 !important;
+  }
+
+  .react-datepicker__navigation {
+    top: 0.75rem !important;
+  }
+
+  .react-datepicker__navigation-icon::before {
+    border-color: hsl(var(--foreground)) !important;
+  }
+
+  .react-datepicker__navigation:hover *::before {
+    border-color: hsl(var(--primary)) !important;
+  }
+
+  .date-picker-popper {
+    z-index: 9999 !important;
+  }
+
+  /* Scrollbar styling for year dropdown */
+  .react-datepicker__year-dropdown::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .react-datepicker__year-dropdown::-webkit-scrollbar-track {
+    background: hsl(var(--accent));
+    border-radius: var(--radius);
+  }
+
+  .react-datepicker__year-dropdown::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary));
+    border-radius: var(--radius);
+  }
+
+  .react-datepicker__year-dropdown::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary) / 0.8);
+  }
+
+  /* Toast close button positioning - move to right side */
+  [data-sonner-toast] [data-close-button] {
+    position: absolute !important;
+    right: 12px !important;
+    top: 12px !important;
+    left: auto !important;
+  }
+
+  /* Home Page Hero Animations */
+  .hero-image img {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+
+  .animation-delay-200 {
+    animation-delay: 0.2s;
+  }
+
+  .animation-delay-400 {
+    animation-delay: 0.4s;
+  }
+}

@@ -1,0 +1,38 @@
+services:
+  # Development service
+  educard-frontend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: educard-frontend-dev
+    ports:
+      - '5173:5173'
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_BASE_URL=http://localhost:8000/api
+    networks:
+      - educard-network
+    stdin_open: true
+    tty: true
+    command: npm run dev -- --host 0.0.0.0
+
+  # Production build service
+  educard-frontend-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: educard-frontend-prod
+    ports:
+      - '3000:80'
+    networks:
+      - educard-network
+    restart: unless-stopped
+
+networks:
+  educard-network:
+    driver: bridge

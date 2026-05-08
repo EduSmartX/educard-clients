@@ -1,0 +1,169 @@
+1. Currently Multi tenant - Multi role school application is implementing ...
+2. We have created the replit demo for front end implmentation
+3. But the forms and flow and look and feel are very ordinary in this generation
+4. As per AI with best features available:
+ 4.1 Need to implment a new repo from scractch by taking referance of each module referance.
+ 4.2 Use common utility for Date fields
+ 4.3 Use Common for Date rane and form fields [reusable components]
+ 4.4 Common Non field Error processings and Form Field Error processings [Heighlight that form field- if we have any error in response from backend]
+ 4.5 Common Toast messeges with new look and field and user feel better experience
+ 4.6 Common Filter utility through out the application
+ 4.7 Common Data Table for list pages to show data 
+ 4.8 Pagination for Data tables
+ 4.9 Better Page look up with Profile Images and Organization Images in the dash board with latest floating view
+ 4.10 Proper profile sections 
+ 4.11 Finally Keep components reusable for all roles [Admin/Teacher/Student(Parent)]
+ 4.12 Use latest tailwind or ano better framework for Type script and implement the application
+ 4.13 Follows the ESlint and typescript thing .. Make code matches that .
+ 4.14 PERFORMANCE: Render header ONCE in ProtectedLayout wrapper (not per page) - fetch user/org data once
+ 4.15 MOBILE: Hide logo on mobile, use gradient header with glass-morphism, responsive sizing (h-16 sm:h-20)
+ 4.16 LAYOUT: Header width - Logo section (w-64 fixed), Organization (natural), User controls (ml-auto right)
+ 4.17 FORMS: Create generic field components supporting multiple types (string, number, bool, choice, multi-choice)
+ 4.18 FORMS: Use key prop on Select components to force re-render for view/edit modes: key={`${itemId}-${field.value}`}
+ 4.19 VALIDATION: Extract validation to utils folder (don't inline in components) - make it reusable
+ 4.20 GROUPING: Group settings/preferences by category, use Tabs for navigation with icons
+ 4.21 BORDERS: Add border-bottom to each field (px-4 py-4 last:border-b-0) not wrapper divs
+ 4.22 TYPOGRAPHY: Use default Label component sizing (text-sm) - don't override. Hierarchy: text-2xl → text-lg → text-sm
+ 4.23 RESPONSIVE: Grid layouts grid-cols-1 sm:grid-cols-2 lg:grid-cols-3. Headers flex-col sm:flex-row
+ 4.24 SIDEBAR: Mobile sidebar fixed with transform translate-x, hamburger at top-4 left-4 (not floating bottom)
+ 4.25 TYPES: NO any types - use proper interfaces. Error type is Error not any. Icons Record<string, string>
+ 4.26 CLEANUP: Remove unused imports, NO console statements (ESLint will error), run eslint --fix before commit
+ 4.27 API: Match backend serializer structure exactly. Handle nested objects. Invalidate related queries after mutations
+ 4.28 EXPORTS: Create index.ts barrel exports in each folder for clean imports from single source
+ 4.30 TESTING: Pre-commit - 0 ESLint errors, 0 warnings allowed, TypeScript compiles, Prettier applied
+ 4.31 REUSABLE COMPONENTS: Create PageHeader component with smart icon mapping based on title keywords
+ 4.32 ICON MAPPING: Auto-detect icons from page titles (Holiday→Calendar, Leave→Briefcase, Settings→Gear)
+ 4.33 PAGE HEADERS: Consistent typography (text-3xl bold), optional icon with gradient container, action buttons
+ 4.34 CHILDREN POSITIONING: PageHeader children (buttons/dialogs) render on right side with flex-shrink-0
+ 4.35 DELETE DIALOGS: Reusable DeleteConfirmationDialog with orange/amber theme (industry standard warning colors)
+ 4.36 SOFT DELETE: Support isSoftDelete prop with context-aware messaging ("archived/restorable" vs "permanent")
+ 4.37 CALENDAR THEMES: Use distinct color schemes (blue/indigo for calendar) to avoid visual conflicts with page
+ 4.38 TOAST NOTIFICATIONS: Add closeButton prop with circular X button positioned top-right (right: 12px, top: 12px)
+ 4.39 SPACING CONSISTENCY: Remove component margins, let parent containers control spacing with space-y-* utilities
+ 4.40 BULK UPLOAD: Detect top-level error field in API responses, display file-level errors at row 0
+ 4.41 CALENDAR FEATURES: Auto-detect weekend patterns, generate weekend holidays, combine with API holidays
+ 4.42 DATE HIGHLIGHTS: Show today's date with blue circle indicator, handle overlap with holidays properly
+ 4.43 HOLIDAY TYPES: Color-coded legend (Festival=Orange, Organization=Green), visual differentiation in calendar
+ 4.44 CALENDAR NAVIGATION: Month navigation (Previous/Today/Next), view toggle (Calendar/Table), date range display
+ 4.45 DUAL VIEW MODES: Calendar grid view with month layout, Table view with sortable columns and filters
+ 4.46 WORKING DAY POLICY: Respect organization settings (Sunday off, Saturday patterns: Full/First/Second/Third/Off)
+ 4.47 HOLIDAY DIALOGS: Click date to view/add/delete holidays, styled with gradient headers and decorative elements
+ 4.48 FORM VALIDATION: Client-side validation with visual feedback, server-side error handling with field highlighting
+ 4.49 RESPONSIVE CALENDAR: Mobile-optimized (hide weekday names on small screens, stack navigation controls)
+ 4.50 BARREL EXPORTS: Export components from index.ts for clean imports (import { PageHeader } from '@/components/common')
+ 4.51 ALWAYS keeps mutations in separate file better modularity 
+ 4.52 Use PageHeader for Headers for Forms for uniqueness
+ 4.53 ESLINT STRICT: no-console rule set to ERROR (not warn), only console.warn/error allowed, --max-warnings=0 enforced
+ 4.54 CODE QUALITY: Zero tolerance for console.log/info/debug statements, all removed from codebase
+ 4.54: Keep mobile view as well into considerations for look and feel
+
+On front end side regarding the folder strucutre ..what ever the code I have done is as party of the Admin role ...
+
+But now we need to reuse the same code or create new peave of logic to show the side bars or links or pages will go based on roles and their permissions ..
+
+We will ahve three 3 roles as of now ..Admin[Pricipal] Employee [Staff of schoool] and Parent ..
+
+So keep this in mind and create the folder structure preoperly which explains the role so later point of the time it will easy for debug and also keep common components for all roles ..
+
+Same goes with backend keep folders in api [admin, employee and parent ] so corresponding apis will go to hte corresponding folders and add the preoper authorization and authentication classses
+
+
+
+Expo:
+-----
+Create a Web aplication along with Andriod and IOS applications ..
+
+Permissions handling, like , camera , notifications, locations with a fallback if user deny those permissions.
+Navigation structure like going from one from tab to another or going back by clicking on back button.
+API handling, loading state, errors, retries etc.
+Network handling, if you app requires internet, then how you handle the offline network.
+Responsive UI, your app should be responsive for all the android and ios devices.
+Push notifications 
+Performance handling, it should avoid unnecessary reloads
+
+
+You have to be certain you removed all of the side effects required to make that package work. 
+
+
+What is a Privacy manifest?
+A privacy manifest is a file named PrivacyInfo.xcprivacy that is included in your iOS native project. This file is used to declare why the app includes native code that calls into certain APIs that Apple considers sensitive.
+
+
+Make sure you have updated your Expo SDK libraries to the latest versions for your SDK version using npx expo install —fix.
+
+You can include an iOS privacy manifest in a bare Expo app by creating a PrivacyInfo.xcprivacy file using Xcode and adding it to your iOS app target. Follow Apple's Privacy manifest files guide to create a PrivacyInfo.xcprivacy file.
+
+
+When developing a native app that requires access to potentially sensitive information on a user's device, such as their location or contacts, the app must request the user's permission first. For example, to access the user's media library, the app will need to run MediaLibrary.requestPermissionsAsync().
+
+
+app.json
+
+Copy
+
+{
+  "android": {
+    "permissions": ["android.permission.SCHEDULE_EXACT_ALARM"]
+  }
+}
+
+
+app.json
+
+Copy
+
+{
+  "android": {
+    "blockedPermissions": ["android.permission.RECORD_AUDIO"]
+  }
+}
+
+
+
+
+
+app.json
+
+Copy
+
+{
+  "ios": {
+    "infoPlist": {
+      "NSCameraUsageDescription": "This app uses the camera to scan barcodes on event tickets."
+    }
+  }
+}
+
+
+Resetting permissions
+Often you want to be able to test what happens when a user rejects permissions, to ensure your app reacts gracefully. An operating-system level restriction on both Android and iOS prohibits an app from asking for the same permission more than once (you can imagine how this could be annoying for the user to be repeatedly prompted for permissions after rejecting them). 
+
+Create a .env file in the root of your project directory and add environment-specific variables on new lines in the form of EXPO_PUBLIC_[NAME]=VALUE:
+
+.env
+
+Copy
+
+EXPO_PUBLIC_API_URL=https://staging.example.com
+EXPO_PUBLIC_API_KEY=abc123
+Now you can use environment variables directly in your source code:
+import { Button } from 'react-native';
+
+function Post() {
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+
+  async function onPress() {
+    await fetch(apiUrl, { ... })
+  }
+
+  return <Button onPress={onPress} title="Post" />;
+}
+
+
+How to read from environment variables
+ Every environment variable must be statically referenced as a property of process.env using JavaScript's dot notation for it to be inlined. For example, the expression process.env.EXPO_PUBLIC_KEY is valid and will be inlined.
+ Alternative versions of the expression are not supported. For example, process.env['EXPO_PUBLIC_KEY'] or const {EXPO_PUBLIC_X} = process.env is invalid and will not be inlined.
+
+Linking …
+
+

@@ -1,0 +1,9 @@
+Staff/Teacher:
+--------------
+1. Staff can select the week to submit the attendance.
+2. Pull Holidays/Leaves/Working day policy/Exceptional Policy data for organization
+3. Display these data on the form for user to get to know about it.
+4. User can submit the attendance for the days selected.
+5. Add leave data as Abscent to the Attendance table [It will make Easy for calculating aggregation of Attendance]
+6. Display Leaves and Abscents properly on front end [Remove Leaves from Abscent to display accurate count]
+
