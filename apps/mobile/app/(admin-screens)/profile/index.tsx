@@ -1,7 +1,7 @@
 /**
  * Edit Profile Screen
  * Edit personal information, profile photo, and address
- * 
+ *
  * Features:
  * - Profile photo with upload
  * - Personal info form with dropdowns for Gender & Blood Group
@@ -9,6 +9,21 @@
  * - Email/Phone shown as read-only (OTP update not implemented in mobile)
  */
 
+import { getRoleGradient, GENDER_OPTIONS, BLOOD_GROUP_OPTIONS } from '@educard/shared';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import {
+  ChevronLeft,
+  Save,
+  Mail,
+  Phone,
+  Camera,
+  ChevronDown,
+  ChevronUp,
+  MapPin,
+  Info,
+  User,
+} from 'lucide-react-native';
 import { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -22,32 +37,14 @@ import {
   Platform,
   Image,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import {
-  ChevronLeft,
-  Save,
-  Mail,
-  Phone,
-  Camera,
-  ChevronDown,
-  ChevronUp,
-  MapPin,
-  Info,
-  User,
-} from 'lucide-react-native';
-import {
-  getRoleGradient,
-  GENDER_OPTIONS,
-  BLOOD_GROUP_OPTIONS,
-} from '@educard/shared';
-import { useAuthStore } from '@/lib/auth-store';
-import { useMyProfilePhoto, useUserProfile, useUpdateProfile } from '@/hooks';
-import { useProfileImage } from '@/hooks/useProfileImage';
-import { headerStyles, layoutStyles } from '@/styles';
+
 import { FormInput, FormDropdown, FormDatePicker } from '@/components/forms';
 import { getMediaUrl } from '@/constants/config';
+import { useMyProfilePhoto, useUserProfile, useUpdateProfile } from '@/hooks';
+import { useProfileImage } from '@/hooks/useProfileImage';
+import { useAuthStore } from '@/lib/auth-store';
+import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -94,17 +91,17 @@ export default function ProfileScreen() {
     if (profile && !formLoaded) {
       const addr = profile.address;
       setForm({
-        first_name: profile.first_name || '',
-        last_name: profile.last_name || '',
-        gender: profile.gender || '',
-        blood_group: profile.blood_group || '',
-        date_of_birth: profile.date_of_birth || '',
-        street_address: addr?.street_address || '',
-        address_line_2: addr?.address_line_2 || '',
-        city: addr?.city || '',
-        state: addr?.state || '',
-        postal_code: addr?.zip_code || '',
-        country: addr?.country || '',
+        first_name: profile.first_name ?? '',
+        last_name: profile.last_name ?? '',
+        gender: profile.gender ?? '',
+        blood_group: profile.blood_group ?? '',
+        date_of_birth: profile.date_of_birth ?? '',
+        street_address: addr?.street_address ?? '',
+        address_line_2: addr?.address_line_2 ?? '',
+        city: addr?.city ?? '',
+        state: addr?.state ?? '',
+        postal_code: addr?.zip_code ?? '',
+        country: addr?.country ?? '',
       });
       setFormLoaded(true);
     }
@@ -177,8 +174,11 @@ export default function ProfileScreen() {
   const isSaving = updateMutation.isPending;
 
   // Profile image
-  const photoUrl = localPhotoUri || getMediaUrl(profilePhoto?.thumbnail_url) || getMediaUrl(profilePhoto?.url);
-  const initials = (profile?.full_name || profile?.first_name || user?.full_name || 'U').charAt(0).toUpperCase();
+  const photoUrl =
+    localPhotoUri ?? getMediaUrl(profilePhoto?.thumbnail_url) ?? getMediaUrl(profilePhoto?.url);
+  const initials = (profile?.full_name ?? profile?.first_name ?? user?.full_name ?? 'U')
+    .charAt(0)
+    .toUpperCase();
 
   if (isLoading) {
     return (
@@ -207,8 +207,16 @@ export default function ProfileScreen() {
   return (
     <View style={layoutStyles.container}>
       <LinearGradient colors={adminGradient} style={headerStyles.header}>
-        <Animated.View entering={FadeIn.delay(100)} style={headerStyles.circle1} pointerEvents="none" />
-        <Animated.View entering={FadeIn.delay(200)} style={headerStyles.circle2} pointerEvents="none" />
+        <Animated.View
+          entering={FadeIn.delay(100)}
+          style={headerStyles.circle1}
+          pointerEvents="none"
+        />
+        <Animated.View
+          entering={FadeIn.delay(200)}
+          style={headerStyles.circle2}
+          pointerEvents="none"
+        />
         <View style={headerStyles.content}>
           <View style={headerStyles.topRow}>
             <TouchableOpacity style={headerStyles.backBtn} onPress={() => router.back()}>
@@ -240,7 +248,11 @@ export default function ProfileScreen() {
         <ScrollView style={s.body} contentContainerStyle={s.bodyContent}>
           {/* Avatar Section */}
           <Animated.View entering={FadeInDown.delay(100).springify()} style={s.avatarSection}>
-            <TouchableOpacity style={s.avatarWrapper} onPress={pickAndUpload} disabled={isPhotoUploading}>
+            <TouchableOpacity
+              style={s.avatarWrapper}
+              onPress={pickAndUpload}
+              disabled={isPhotoUploading}
+            >
               {photoUrl ? (
                 <Image source={{ uri: photoUrl }} style={s.avatarImage} />
               ) : (
@@ -256,8 +268,8 @@ export default function ProfileScreen() {
                 )}
               </View>
             </TouchableOpacity>
-            <Text style={s.userName}>{profile?.full_name || user?.full_name || 'User'}</Text>
-            <Text style={s.userRole}>{profile?.role || user?.role || 'Staff'}</Text>
+            <Text style={s.userName}>{profile?.full_name ?? user?.full_name ?? 'User'}</Text>
+            <Text style={s.userRole}>{profile?.role ?? user?.role ?? 'Staff'}</Text>
           </Animated.View>
 
           {/* Personal Information */}
@@ -336,7 +348,7 @@ export default function ProfileScreen() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={s.readOnlyLabel}>Username</Text>
-                  <Text style={s.readOnlyValue}>{profile?.username || '—'}</Text>
+                  <Text style={s.readOnlyValue}>{profile?.username ?? '—'}</Text>
                 </View>
               </View>
               <View style={s.divider} />
@@ -347,7 +359,7 @@ export default function ProfileScreen() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={s.readOnlyLabel}>Email</Text>
-                  <Text style={s.readOnlyValue}>{profile?.email || user?.email || '—'}</Text>
+                  <Text style={s.readOnlyValue}>{profile?.email ?? user?.email ?? '—'}</Text>
                 </View>
               </View>
               <View style={s.divider} />
@@ -358,7 +370,7 @@ export default function ProfileScreen() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={s.readOnlyLabel}>Phone</Text>
-                  <Text style={s.readOnlyValue}>{profile?.phone || user?.phone || '—'}</Text>
+                  <Text style={s.readOnlyValue}>{profile?.phone ?? user?.phone ?? '—'}</Text>
                 </View>
               </View>
             </View>
@@ -382,7 +394,7 @@ export default function ProfileScreen() {
                   <ChevronDown size={20} color="#6b7280" />
                 )}
               </TouchableOpacity>
-              
+
               {addressExpanded && (
                 <View style={s.addressFields}>
                   <FormInput

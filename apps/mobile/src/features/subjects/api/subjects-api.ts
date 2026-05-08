@@ -1,11 +1,11 @@
 /**
  * Subjects Feature — API Layer
- * 
+ *
  * Permission Model:
  * - Admin: Full CRUD access
  * - Teacher (Class Teacher): Can manage subjects in their assigned classes
  * - Teacher (Other): Read-only access
- * 
+ *
  * The backend returns `can_manage` field indicating whether the user can edit/delete
  */
 
@@ -55,11 +55,7 @@ export async function createSubject(
   forceCreate?: boolean
 ): Promise<SubjectDetailResponse> {
   const params = forceCreate ? { force_create: 'true' } : {};
-  const response = await apiClient.post<SubjectDetailResponse>(
-    BASE_URL,
-    data,
-    { params }
-  );
+  const response = await apiClient.post<SubjectDetailResponse>(BASE_URL, data, { params });
   return response.data;
 }
 
@@ -80,9 +76,7 @@ export async function deleteSubject(publicId: string): Promise<void> {
 }
 
 export async function restoreSubject(publicId: string): Promise<SubjectDetailResponse> {
-  const response = await apiClient.post<SubjectDetailResponse>(
-    `${BASE_URL}${publicId}/activate/`
-  );
+  const response = await apiClient.post<SubjectDetailResponse>(`${BASE_URL}${publicId}/activate/`);
   return response.data;
 }
 

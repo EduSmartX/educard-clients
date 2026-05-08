@@ -463,6 +463,13 @@ export const ValidationMessages = {
   // Numeric validations
   MARKS_EXCEED_MAXIMUM: "Marks obtained cannot exceed maximum marks.",
   INVALID_MARKS: "Please enter valid marks.",
+
+  // Exam Session validations
+  EXAM_SESSION: {
+    ENTER_NAME: "Please enter exam session name.",
+    SELECT_TYPE: "Please select exam session type.",
+    SELECT_ACADEMIC_YEAR: "Please select an academic year.",
+  },
 } as const;
 
 /**
@@ -485,6 +492,10 @@ export const FormPlaceholders = {
   FULL_NAME: "Enter full name",
   PHONE: "Enter phone number",
   DATE_OF_BIRTH: "Select date of birth",
+  ENTER_EMAIL: "Enter email address",
+  ENTER_FIRST_NAME: "Enter first name",
+  ENTER_LAST_NAME: "Enter last name",
+  ENTER_PHONE_NUMBER: "Enter phone number",
 
   // Address fields
   STREET_ADDRESS: "Enter street address",
@@ -503,20 +514,37 @@ export const FormPlaceholders = {
 
   // Teacher fields
   EMPLOYEE_ID: "Enter employee ID",
+  ENTER_EMPLOYEE_ID: "e.g., EMP001",
   DESIGNATION: "Enter designation",
+  DESIGNATION_EXAMPLE: "e.g., Senior Teacher, HOD",
   SPECIALIZATION: "Enter specialization",
+  SPECIALIZATION_EXAMPLE: "e.g., Mathematics, Physics",
   QUALIFICATION: "Enter highest qualification",
+  QUALIFICATION_EXAMPLE: "e.g., M.Sc., B.Ed.",
   EXPERIENCE_YEARS: "Enter years of experience",
+  ENTER_YEARS_OF_EXPERIENCE: "e.g., 5",
+  ENTER_CONTACT_NAME: "Enter emergency contact name",
+  ENTER_CONTACT_PHONE: "Enter emergency contact phone",
 
   // Class fields
   CLASS_NAME: "Enter class name",
   SECTION_NAME: "Enter section name",
+  CLASS_SECTION_EXAMPLE: "e.g., 1, 2, 3 or I, II, III",
   ROOM_NUMBER: "Enter room number",
   CAPACITY: "Enter capacity",
+  ENTER_CLASS_CAPACITY: "Enter maximum student capacity",
+  CLASS_INFO: "Enter any additional information about this class",
 
   // Subject fields
   SUBJECT_NAME: "Enter subject name",
   SUBJECT_CODE: "Enter subject code",
+  SUBJECT_INFO: "Enter any additional information about this subject",
+
+  // Selection fields
+  SELECT_CLASS: "Select class",
+  SELECT_SUBJECT: "Select subject",
+  SELECT_TEACHER: "Select teacher",
+  SELECT_CLASS_TEACHER: "Select class teacher",
 
   // Leave fields
   REASON: "Enter reason",
@@ -551,6 +579,12 @@ export const AttendanceUiText = {
   SUMMARY_PAGE_TITLE: "Attendance Summary",
   SUMMARY_PAGE_DESC: "Today's attendance overview across all classes",
 
+  // Form labels
+  CLASS_LABEL: "Class",
+  DATE_LABEL: "Date",
+  SELECT_CLASS_PLACEHOLDER: "Select a class",
+  SELECT_DATE_PLACEHOLDER: "Select a date",
+
   // Status labels
   PRESENT: "Present",
   ABSENT: "Absent",
@@ -584,6 +618,15 @@ export const AttendanceUiText = {
   WORKING_DAYS: "Working Days",
   DAYS_PRESENT: "Days Present",
   DAYS_ABSENT: "Days Absent",
+
+  // Period selection
+  PERIOD_LABEL: "Period",
+  PERIOD_MORNING: "Morning",
+  PERIOD_AFTERNOON: "Afternoon",
+  PERIOD_FULL_DAY: "Full Day",
+
+  // Date validation
+  NOT_WORKING_DAY: "This is not a working day",
 
   // Timesheet
   SUBMIT_TIMESHEET: "Submit Timesheet",

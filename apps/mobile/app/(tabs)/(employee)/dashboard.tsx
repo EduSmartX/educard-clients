@@ -3,6 +3,7 @@
  * Main dashboard for teachers and staff with real timetable data
  */
 
+import { getSubjectColor } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
@@ -33,7 +34,6 @@ import { colors } from '@/constants/colors';
 import { useMyTimetable } from '@/features/timetable';
 import type { TimetableEntry } from '@/features/timetable';
 import { useAuthStore } from '@/lib/auth-store';
-import { getSubjectColor } from '@educard/shared';
 
 // Day labels (0=Monday, 6=Sunday)
 const DAY_LABELS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -43,7 +43,10 @@ export default function EmployeeDashboard() {
   const { user } = useAuthStore();
   const [refreshing, setRefreshing] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
-  const [currentEntryLayout, setCurrentEntryLayout] = useState<{ y: number; height: number } | null>(null);
+  const [currentEntryLayout, setCurrentEntryLayout] = useState<{
+    y: number;
+    height: number;
+  } | null>(null);
 
   // Fetch real timetable data
   const { data: timetableData, isLoading, refetch } = useMyTimetable();
@@ -57,7 +60,8 @@ export default function EmployeeDashboard() {
   // Get today's classes sorted by time
   const todayClasses = useMemo((): TimetableEntry[] => {
     if (!timetableData?.days) return [];
-    const entries = timetableData.days[todayDayNum] || timetableData.days[String(todayDayNum)] || [];
+    const entries =
+      timetableData.days[todayDayNum] || timetableData.days[String(todayDayNum)] || [];
     return [...entries].sort((a, b) => {
       const timeA = a.start_time || '';
       const timeB = b.start_time || '';
@@ -69,7 +73,7 @@ export default function EmployeeDashboard() {
   const getClassStatus = useCallback((entry: TimetableEntry) => {
     const now = new Date();
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
-    
+
     const [startH, startM] = (entry.start_time || '00:00').split(':').map(Number);
     const [endH, endM] = (entry.end_time || '00:00').split(':').map(Number);
     const startMinutes = startH * 60 + startM;
@@ -104,10 +108,9 @@ export default function EmployeeDashboard() {
     }
   }, [currentEntryLayout]);
 
-  const onRefresh = useCallback(async () => {
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
+    void refetch().finally(() => setRefreshing(false));
   }, [refetch]);
 
   const formatGreeting = () => {
@@ -125,25 +128,15 @@ export default function EmployeeDashboard() {
     return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return colors.success[500];
-      case 'ongoing':
-        return colors.primary[500];
-      case 'upcoming':
-        return colors.gray[400];
-      default:
-        return colors.gray[400];
-    }
-  };
-
   // Count stats from timetable
-  const stats = useMemo(() => ({
-    classesToday: todayClasses.length,
-    completedToday: todayClasses.filter(e => getClassStatus(e) === 'completed').length,
-    remainingToday: todayClasses.filter(e => getClassStatus(e) !== 'completed').length,
-  }), [todayClasses, getClassStatus]);
+  const stats = useMemo(
+    () => ({
+      classesToday: todayClasses.length,
+      completedToday: todayClasses.filter((e) => getClassStatus(e) === 'completed').length,
+      remainingToday: todayClasses.filter((e) => getClassStatus(e) !== 'completed').length,
+    }),
+    [todayClasses, getClassStatus]
+  );
 
   return (
     <Screen scrollable={false}>
@@ -161,20 +154,21 @@ export default function EmployeeDashboard() {
             <View className="flex-1">
               <Text className="text-sm text-secondary-100">{formatGreeting()},</Text>
               <Text className="text-2xl font-bold text-white" numberOfLines={1}>
-                {user?.full_name || user?.first_name || 'Teacher'}
+                {user?.full_name ?? user?.first_name ?? 'Teacher'}
               </Text>
               <Text className="mt-1 text-sm text-secondary-200">
-                {timetableData?.teacher_name || 'Teacher'}
+                {timetableData?.teacher_name ?? 'Teacher'}
               </Text>
             </View>
             <View className="flex-row items-center">
               <TouchableOpacity
                 className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-white/20"
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
                 onPress={() => router.push('/(tabs)/(parent)/notifications' as any)}
               >
                 <Bell size={20} color="#ffffff" />
               </TouchableOpacity>
-              <Avatar name={user?.full_name || user?.first_name || 'T'} size="md" />
+              <Avatar name={user?.full_name ?? user?.first_name ?? 'T'} size="md" />
             </View>
           </View>
 
@@ -211,7 +205,9 @@ export default function EmployeeDashboard() {
               <View className="rounded-xl bg-white/20 p-3">
                 <View className="flex-row items-center">
                   <Calendar size={18} color="#ffffff" />
-                  <Text className="ml-2 text-sm font-bold text-white">{DAY_LABELS[todayDayNum]}</Text>
+                  <Text className="ml-2 text-sm font-bold text-white">
+                    {DAY_LABELS[todayDayNum]}
+                  </Text>
                 </View>
                 <Text className="mt-1 text-xs text-secondary-100">Today</Text>
               </View>
@@ -234,14 +230,24 @@ export default function EmployeeDashboard() {
                     {currentOrNextEntry.status === 'ongoing' ? 'Currently Teaching' : 'Next Class'}
                   </Text>
                   <Text className="font-semibold text-white">
-                    {currentOrNextEntry.entry.subject_name || currentOrNextEntry.entry.slot_label}
+                    {currentOrNextEntry.entry.subject_name ?? currentOrNextEntry.entry.slot_label}
                   </Text>
                   <Text className="text-xs text-white/80">
-                    {currentOrNextEntry.entry.class_name} • {formatTime(currentOrNextEntry.entry.start_time)} - {formatTime(currentOrNextEntry.entry.end_time)}
+                    {currentOrNextEntry.entry.class_name} •{' '}
+                    {formatTime(currentOrNextEntry.entry.start_time)} -{' '}
+                    {formatTime(currentOrNextEntry.entry.end_time)}
                   </Text>
                 </View>
-                <View className={`px-2 py-1 rounded ${currentOrNextEntry.status === 'ongoing' ? 'bg-white' : 'bg-white/30'}`}>
-                  <Text className={currentOrNextEntry.status === 'ongoing' ? 'text-primary-600 text-xs font-medium' : 'text-white text-xs'}>
+                <View
+                  className={`rounded px-2 py-1 ${currentOrNextEntry.status === 'ongoing' ? 'bg-white' : 'bg-white/30'}`}
+                >
+                  <Text
+                    className={
+                      currentOrNextEntry.status === 'ongoing'
+                        ? 'text-xs font-medium text-primary-600'
+                        : 'text-xs text-white'
+                    }
+                  >
                     {currentOrNextEntry.status === 'ongoing' ? 'Live' : 'Up Next'}
                   </Text>
                 </View>
@@ -275,7 +281,9 @@ export default function EmployeeDashboard() {
                 {todayClasses.map((entry, index) => {
                   const status = getClassStatus(entry);
                   const isCurrentOrNext = currentOrNextEntry?.entry.public_id === entry.public_id;
-                  const subjectColor = getSubjectColor(entry.subject_name || entry.slot_label || 'default');
+                  const subjectColor = getSubjectColor(
+                    entry.subject_name ?? entry.slot_label ?? 'default'
+                  );
 
                   return (
                     <TouchableOpacity
@@ -290,30 +298,38 @@ export default function EmployeeDashboard() {
                       }}
                       className={`flex-row items-center py-3 ${
                         index !== todayClasses.length - 1 ? 'border-b border-gray-100' : ''
-                      } ${isCurrentOrNext ? 'bg-primary-50 -mx-4 px-4 rounded-lg' : ''}`}
+                      } ${isCurrentOrNext ? '-mx-4 rounded-lg bg-primary-50 px-4' : ''}`}
                     >
                       <View
                         className="mr-3 h-12 w-1 rounded-full"
                         style={{ backgroundColor: subjectColor.hex }}
                       />
                       <View className="mr-3 w-16 items-center">
-                        <Text className={`text-sm font-semibold ${isCurrentOrNext ? 'text-primary-700' : 'text-gray-700'}`}>
+                        <Text
+                          className={`text-sm font-semibold ${isCurrentOrNext ? 'text-primary-700' : 'text-gray-700'}`}
+                        >
                           {formatTime(entry.start_time)}
                         </Text>
                         <Text className="text-xs text-gray-400">{formatTime(entry.end_time)}</Text>
                       </View>
                       <View className="flex-1">
-                        <Text className={`font-medium ${isCurrentOrNext ? 'text-primary-900' : 'text-gray-900'}`}>
-                          {entry.subject_name || entry.slot_label}
+                        <Text
+                          className={`font-medium ${isCurrentOrNext ? 'text-primary-900' : 'text-gray-900'}`}
+                        >
+                          {entry.subject_name ?? entry.slot_label}
                         </Text>
                         <Text className="text-sm text-gray-500">
                           {entry.class_name}
                           {entry.room && ` • ${entry.room}`}
                         </Text>
                       </View>
-                      {status === 'completed' && <CheckCircle size={20} color={colors.success[500]} />}
+                      {status === 'completed' && (
+                        <CheckCircle size={20} color={colors.success[500]} />
+                      )}
                       {status === 'ongoing' && (
-                        <Badge variant="primary" size="sm">Live</Badge>
+                        <Badge variant="primary" size="sm">
+                          Live
+                        </Badge>
                       )}
                       {status === 'upcoming' && <Clock size={20} color={colors.gray[400]} />}
                     </TouchableOpacity>

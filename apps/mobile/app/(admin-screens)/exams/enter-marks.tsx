@@ -47,6 +47,7 @@ export default function EnterMarksScreen() {
     subjectName,
     className,
     maxMarks: maxMarksStr,
+    viewOnly: viewOnlyParam,
   } = useLocalSearchParams<{
     examId: string;
     sessionId: string;
@@ -54,9 +55,11 @@ export default function EnterMarksScreen() {
     subjectName?: string;
     className?: string;
     maxMarks?: string;
+    viewOnly?: string;
   }>();
 
   const maxMarks = parseInt(maxMarksStr ?? '100', 10);
+  const isViewOnly = viewOnlyParam === 'true';
   const bulkUpsert = useBulkUpsertMarks();
 
   // Fetch existing marks
@@ -67,7 +70,7 @@ export default function EnterMarksScreen() {
     class_id: classId,
     page_size: 200,
   });
-  const students = studentsData?.students || [];
+  const students = studentsData?.students ?? [];
 
   const [marksMap, setMarksMap] = useState<Record<string, StudentMark>>({});
 
@@ -79,18 +82,18 @@ export default function EnterMarksScreen() {
       const existing = existingMarks?.find((m: Mark) => m.student_public_id === s.public_id);
       // Try to get student name from various sources
       const studentName =
-        existing?.student_name ||
-        s.full_name ||
-        (s as any).user_info?.full_name ||
-        `${(s as any).user_info?.first_name || ''} ${(s as any).user_info?.last_name || ''}`.trim() ||
-        `Student ${s.roll_number || s.admission_number}`;
+        (existing?.student_name ??
+          s.full_name ??
+          (s as any).user_info?.full_name ??
+          `${(s as any).user_info?.first_name ?? ''} ${(s as any).user_info?.last_name ?? ''}`.trim()) ||
+        `Student ${s.roll_number ?? s.admission_number}`;
       map[s.public_id] = {
         studentId: s.public_id,
         studentName,
-        admissionNumber: existing?.student_admission_number || s.admission_number || '',
-        rollNumber: s.roll_number || '',
+        admissionNumber: existing?.student_admission_number ?? s.admission_number ?? '',
+        rollNumber: s.roll_number ?? '',
         marksObtained: existing ? String(existing.marks_obtained) : '',
-        isAbsent: existing?.is_absent || false,
+        isAbsent: existing?.is_absent ?? false,
       };
     }
     setMarksMap(map);
@@ -180,18 +183,27 @@ export default function EnterMarksScreen() {
         </View>
         <View style={st.marksInput}>
           <TextInput
-            style={[st.marksField, item.isAbsent && st.marksFieldAbsent]}
+            style={[
+              st.marksField,
+              item.isAbsent && st.marksFieldAbsent,
+              isViewOnly && st.marksFieldDisabled,
+            ]}
             value={item.isAbsent ? 'AB' : item.marksObtained}
             onChangeText={(v) => updateMark(item.studentId, v)}
             keyboardType="numeric"
             placeholder={`/${maxMarks}`}
             placeholderTextColor="#cbd5e1"
-            editable={!item.isAbsent}
+            editable={!item.isAbsent && !isViewOnly}
             maxLength={4}
           />
           <TouchableOpacity
-            style={[st.absentBtn, item.isAbsent && st.absentBtnActive]}
-            onPress={() => toggleAbsent(item.studentId)}
+            style={[
+              st.absentBtn,
+              item.isAbsent && st.absentBtnActive,
+              isViewOnly && st.absentBtnDisabled,
+            ]}
+            onPress={() => !isViewOnly && toggleAbsent(item.studentId)}
+            disabled={isViewOnly}
           >
             <Text style={[st.absentText, item.isAbsent && st.absentTextActive]}>AB</Text>
           </TouchableOpacity>
@@ -219,25 +231,38 @@ export default function EnterMarksScreen() {
               <ChevronLeft size={24} color="#fff" />
             </TouchableOpacity>
             <View style={headerStyles.titleContainer}>
-              <Text style={headerStyles.title}>Enter Marks</Text>
+              <Text style={headerStyles.title}>{isViewOnly ? 'View Marks' : 'Enter Marks'}</Text>
               <Text style={headerStyles.subtitle}>
-                {decodeURIComponent(subjectName || '')} · {decodeURIComponent(className || '')}
+                {decodeURIComponent(subjectName ?? '')} · {decodeURIComponent(className ?? '')}
               </Text>
             </View>
-            <TouchableOpacity
-              style={st.saveHeaderBtn}
-              onPress={handleSave}
-              disabled={bulkUpsert.isPending}
-            >
-              {bulkUpsert.isPending ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Save size={20} color="#fff" />
-              )}
-            </TouchableOpacity>
+            {!isViewOnly ? (
+              <TouchableOpacity
+                style={st.saveHeaderBtn}
+                onPress={handleSave}
+                disabled={bulkUpsert.isPending}
+              >
+                {bulkUpsert.isPending ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Save size={20} color="#fff" />
+                )}
+              </TouchableOpacity>
+            ) : (
+              <View style={st.saveHeaderBtn} />
+            )}
           </View>
         </View>
       </LinearGradient>
+
+      {/* View-only banner */}
+      {isViewOnly && (
+        <View style={st.viewOnlyBanner}>
+          <Text style={st.viewOnlyText}>
+            You are viewing marks. Only the assigned teacher can edit this subject.
+          </Text>
+        </View>
+      )}
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -329,6 +354,11 @@ const st = StyleSheet.create({
     borderColor: '#fcd34d',
     color: '#92400e',
   },
+  marksFieldDisabled: {
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
+    color: '#94a3b8',
+  },
   absentBtn: {
     paddingHorizontal: 10,
     paddingVertical: 8,
@@ -341,8 +371,25 @@ const st = StyleSheet.create({
     backgroundColor: '#fef3c7',
     borderColor: '#f59e0b',
   },
+  absentBtnDisabled: {
+    opacity: 0.6,
+  },
   absentText: { fontSize: 12, fontWeight: '700', color: '#94a3b8' },
   absentTextActive: { color: '#d97706' },
+
+  viewOnlyBanner: {
+    backgroundColor: '#dbeafe',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#93c5fd',
+  },
+  viewOnlyText: {
+    fontSize: 12,
+    color: '#1d4ed8',
+    textAlign: 'center',
+    fontWeight: '500',
+  },
 
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center' },

@@ -6,7 +6,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Alert } from 'react-native';
 
-import { getMyProfilePhoto, getUserProfile, updateProfile, type UpdateProfilePayload } from '@/api/profile';
+import {
+  getMyProfilePhoto,
+  getUserProfile,
+  updateProfile,
+  type UpdateProfilePayload,
+} from '@/api/profile';
 
 /**
  * Hook to fetch current user's profile photo from attachments API

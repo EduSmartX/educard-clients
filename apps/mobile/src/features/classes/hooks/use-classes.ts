@@ -60,10 +60,10 @@ export function useClasses(params?: Omit<ClassQueryParams, 'page'>) {
 
 /**
  * Hook to fetch managed classes for forms (student/subject creation)
- * 
+ *
  * For teachers: Returns only classes where they are the class teacher
  * For admins: Returns all classes
- * 
+ *
  * @param formType - 'student' or 'subject' to indicate which form is using this
  */
 export function useManagedClasses(formType: 'student' | 'subject' = 'student') {

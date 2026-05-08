@@ -1,16 +1,15 @@
 /**
  * Admin Settings Screen
  * Simplified: Organization Settings (admin) + App Settings
- * 
+ *
  * Permission Model:
  * - Admin: Access to Organization Preferences, Holidays (CRUD)
  * - Teacher: App settings only (no Organization section)
  */
 
-import { View, Text, TouchableOpacity, Alert, ScrollView, StyleSheet, Image } from 'react-native';
-import { useRouter } from 'expo-router';
+import { getRoleGradient } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { useRouter } from 'expo-router';
 import {
   User,
   Bell,
@@ -24,12 +23,14 @@ import {
   type LucideIcon,
 } from 'lucide-react-native';
 import { useMemo } from 'react';
-import { Colors, getRoleGradient } from '@educard/shared';
-import { useAuthStore } from '@/lib/auth-store';
+import { View, Text, TouchableOpacity, Alert, ScrollView, StyleSheet, Image } from 'react-native';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+
+import { getMediaUrl } from '@/constants/config';
 import { useMyProfilePhoto } from '@/hooks';
+import { useAuthStore } from '@/lib/auth-store';
 import { headerStyles, layoutStyles } from '@/styles';
 import { isAdminRole } from '@/utils/role-utils';
-import { getMediaUrl } from '@/constants/config';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -60,7 +61,7 @@ export default function AdminSettingsScreen() {
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Logout', style: 'destructive', onPress: logout },
+      { text: 'Logout', style: 'destructive', onPress: () => void logout() },
     ]);
   };
 
@@ -131,18 +132,27 @@ export default function AdminSettingsScreen() {
   };
 
   // Build sections based on role
-  const sections: SettingSection[] = isAdmin 
-    ? [organizationSection, appSection]
-    : [appSection];
+  const sections: SettingSection[] = isAdmin ? [organizationSection, appSection] : [appSection];
 
-  const profileImageUrl = getMediaUrl(profilePhoto?.thumbnail_url) || getMediaUrl(profilePhoto?.url) || getMediaUrl(user?.profile_image);
-  const initials = (user?.full_name || user?.first_name || 'A').charAt(0).toUpperCase();
+  const profileImageUrl =
+    getMediaUrl(profilePhoto?.thumbnail_url) ??
+    getMediaUrl(profilePhoto?.url) ??
+    getMediaUrl(user?.profile_image);
+  const initials = (user?.full_name ?? user?.first_name ?? 'A').charAt(0).toUpperCase();
 
   return (
     <View style={layoutStyles.container}>
       <LinearGradient colors={adminGradient} style={headerStyles.header}>
-        <Animated.View entering={FadeIn.delay(100)} style={headerStyles.circle1} pointerEvents="none" />
-        <Animated.View entering={FadeIn.delay(200)} style={headerStyles.circle2} pointerEvents="none" />
+        <Animated.View
+          entering={FadeIn.delay(100)}
+          style={headerStyles.circle1}
+          pointerEvents="none"
+        />
+        <Animated.View
+          entering={FadeIn.delay(200)}
+          style={headerStyles.circle2}
+          pointerEvents="none"
+        />
         <View style={headerStyles.content}>
           <Animated.View entering={FadeInDown.delay(100).springify()} style={st.headerProfile}>
             {profileImageUrl ? (
@@ -153,11 +163,11 @@ export default function AdminSettingsScreen() {
               </View>
             )}
             <View style={{ flex: 1 }}>
-              <Text style={st.headerName}>{user?.full_name || user?.first_name || 'Admin'}</Text>
-              <Text style={st.headerEmail}>{user?.email || ''}</Text>
+              <Text style={st.headerName}>{user?.full_name ?? user?.first_name ?? 'Admin'}</Text>
+              <Text style={st.headerEmail}>{user?.email ?? ''}</Text>
               <View style={st.roleBadge}>
                 <Text style={st.roleText}>
-                  {user?.role === 'admin' ? 'Administrator' : user?.role || 'Staff'}
+                  {user?.role === 'admin' ? 'Administrator' : (user?.role ?? 'Staff')}
                 </Text>
               </View>
             </View>
@@ -167,7 +177,10 @@ export default function AdminSettingsScreen() {
 
       <ScrollView style={st.body} contentContainerStyle={st.bodyContent}>
         {sections.map((section, sIdx) => (
-          <Animated.View key={section.title} entering={FadeInDown.delay(100 + sIdx * 80).springify()}>
+          <Animated.View
+            key={section.title}
+            entering={FadeInDown.delay(100 + sIdx * 80).springify()}
+          >
             <Text style={st.sectionTitle}>{section.title}</Text>
             <View style={st.sectionCard}>
               {section.items.map((item, iIdx) => (
@@ -177,6 +190,7 @@ export default function AdminSettingsScreen() {
                   activeOpacity={0.6}
                   onPress={() => {
                     if (item.action) item.action();
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
                     else if (item.route) router.push(item.route as any);
                   }}
                 >

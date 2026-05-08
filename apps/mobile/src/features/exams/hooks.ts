@@ -1,5 +1,6 @@
 /**
  * Exam React Query hooks
+ * Role-aware hooks that use the correct API endpoints based on user role
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -12,6 +13,7 @@ import {
   fetchMarksOverview,
   fetchExamMarks,
   bulkUpsertMarks,
+  bulkSaveAllMarks,
   createExamSession,
   updateExamSession,
   deleteExamSession,
@@ -19,44 +21,44 @@ import {
   updateExam,
   deleteExam,
 } from './api';
-import type { ExamSessionCreatePayload, ExamCreatePayload } from './types';
+import type { ExamSessionCreatePayload, ExamCreatePayload, BulkSaveAllMarksPayload } from './types';
 
-export function useExamSessions(params?: Record<string, any>) {
+export function useExamSessions(params?: Record<string, any>, userRole?: string | null) {
   return useQuery({
-    queryKey: ['exam-sessions', params],
-    queryFn: () => fetchExamSessions(params),
+    queryKey: ['exam-sessions', params, userRole],
+    queryFn: () => fetchExamSessions(params, userRole),
     staleTime: 2 * 60 * 1000,
   });
 }
 
-export function useExamSession(id?: string) {
+export function useExamSession(id?: string, userRole?: string | null) {
   return useQuery({
-    queryKey: ['exam-session', id],
-    queryFn: () => fetchExamSession(id!),
+    queryKey: ['exam-session', id, userRole],
+    queryFn: () => fetchExamSession(id!, userRole),
     enabled: !!id,
   });
 }
 
-export function useExams(params?: Record<string, any>) {
+export function useExams(params?: Record<string, any>, userRole?: string | null) {
   return useQuery({
-    queryKey: ['exams', params],
-    queryFn: () => fetchExams(params),
+    queryKey: ['exams', params, userRole],
+    queryFn: () => fetchExams(params, userRole),
     staleTime: 2 * 60 * 1000,
   });
 }
 
-export function useExam(id?: string) {
+export function useExam(id?: string, userRole?: string | null) {
   return useQuery({
-    queryKey: ['exam', id],
-    queryFn: () => fetchExam(id!),
+    queryKey: ['exam', id, userRole],
+    queryFn: () => fetchExam(id!, userRole),
     enabled: !!id,
   });
 }
 
-export function useMarksOverview(sessionId?: string, classId?: string) {
+export function useMarksOverview(sessionId?: string, classId?: string, userRole?: string | null) {
   return useQuery({
-    queryKey: ['marks-overview', sessionId, classId],
-    queryFn: () => fetchMarksOverview({ session_id: sessionId!, class_id: classId! }),
+    queryKey: ['marks-overview', sessionId, classId, userRole],
+    queryFn: () => fetchMarksOverview({ session_id: sessionId!, class_id: classId! }, userRole),
     enabled: !!sessionId && !!classId,
   });
 }
@@ -69,14 +71,25 @@ export function useExamMarks(examId?: string) {
   });
 }
 
-export function useBulkUpsertMarks() {
+export function useBulkUpsertMarks(userRole?: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: bulkUpsertMarks,
+    mutationFn: (data: Parameters<typeof bulkUpsertMarks>[0]) => bulkUpsertMarks(data, userRole),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['marks-overview'] });
       void qc.invalidateQueries({ queryKey: ['exams'] });
       void qc.invalidateQueries({ queryKey: ['exam-marks'] });
+    },
+  });
+}
+
+export function useBulkSaveAllMarks(userRole?: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: BulkSaveAllMarksPayload) => bulkSaveAllMarks(data, userRole),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['marks-overview'] });
+      void qc.invalidateQueries({ queryKey: ['exams'] });
     },
   });
 }

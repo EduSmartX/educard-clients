@@ -1,5 +1,8 @@
 /**
  * Marks Overview Screen
+ * Displays marks overview for a session and class
+ * - Admin users see data via admin endpoint
+ * - Teacher users see data via employee endpoint with permission-based editing
  */
 
 import { getRoleGradient } from '@educard/shared';
@@ -20,6 +23,7 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { useMarksOverview } from '@/features/exams';
 import type { MarksOverviewStudent, MarksOverviewSubject } from '@/features/exams/types';
+import { useAuthStore } from '@/lib/auth-store';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -47,6 +51,7 @@ function MarksBar({ obtained, max, pass }: { obtained: number; max: number; pass
 
 export default function MarksScreen() {
   const router = useRouter();
+  const { user } = useAuthStore();
   const { sessionId, classId, subjectName, className } = useLocalSearchParams<{
     sessionId: string;
     classId: string;
@@ -56,7 +61,7 @@ export default function MarksScreen() {
   }>();
   const [refreshing, setRefreshing] = useState(false);
 
-  const { data, isLoading, refetch } = useMarksOverview(sessionId, classId);
+  const { data, isLoading, refetch } = useMarksOverview(sessionId, classId, user?.role);
 
   const onRefresh = async () => {
     setRefreshing(true);

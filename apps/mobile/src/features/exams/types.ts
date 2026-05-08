@@ -121,6 +121,7 @@ export interface MarksOverviewResponse {
     failed_count: number;
     pass_percentage: number;
   };
+  permissions?: MarksPermissions;
 }
 
 export interface BulkMarkEntry {
@@ -150,4 +151,31 @@ export interface ExamCreatePayload {
   start_time?: string | null;
   end_time?: string | null;
   description?: string;
+}
+
+// Bulk Save All Marks (for Marks Overview page)
+export interface StudentExamMark {
+  exam_id: string;
+  marks_obtained: number | null;
+  is_absent: boolean;
+}
+
+export interface StudentMarksEntry {
+  student_id: string;
+  marks: StudentExamMark[];
+}
+
+export interface BulkSaveAllMarksPayload {
+  session_id: string;
+  class_id: string;
+  students: StudentMarksEntry[];
+}
+
+// Permission info returned with marks overview
+export interface MarksPermissions {
+  is_admin: boolean;
+  is_class_teacher: boolean;
+  can_edit_all_subjects: boolean;
+  can_edit: boolean; // True if user can edit any subjects
+  editable_subject_ids: string[] | null; // null = all subjects, [] = view-only
 }

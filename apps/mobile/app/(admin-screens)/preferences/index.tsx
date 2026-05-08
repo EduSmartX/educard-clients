@@ -223,7 +223,11 @@ export default function OrgPreferencesScreen() {
         </View>
         <View style={styles.pillRow}>
           <TouchableOpacity
-            style={[styles.pill, isPositive && styles.pillActiveGreen, !canManage && styles.pillDisabled]}
+            style={[
+              styles.pill,
+              isPositive && styles.pillActiveGreen,
+              !canManage && styles.pillDisabled,
+            ]}
             onPress={() => canManage && handleUpdate(pref.public_id, labels.trueVal)}
             disabled={updateMutation.isPending || !canManage}
             activeOpacity={canManage ? 0.7 : 1}
@@ -233,7 +237,11 @@ export default function OrgPreferencesScreen() {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.pill, !isPositive && styles.pillActiveRed, !canManage && styles.pillDisabled]}
+            style={[
+              styles.pill,
+              !isPositive && styles.pillActiveRed,
+              !canManage && styles.pillDisabled,
+            ]}
             onPress={() => canManage && handleUpdate(pref.public_id, labels.falseVal)}
             disabled={updateMutation.isPending || !canManage}
             activeOpacity={canManage ? 0.7 : 1}
@@ -441,7 +449,11 @@ export default function OrgPreferencesScreen() {
             return (
               <TouchableOpacity
                 key={val}
-                style={[styles.pill, isActive && styles.pillActiveBlue, !canManage && styles.pillDisabled]}
+                style={[
+                  styles.pill,
+                  isActive && styles.pillActiveBlue,
+                  !canManage && styles.pillDisabled,
+                ]}
                 onPress={() => canManage && handleUpdate(pref.public_id, val)}
                 disabled={updateMutation.isPending || !canManage}
                 activeOpacity={canManage ? 0.7 : 1}
@@ -528,7 +540,11 @@ export default function OrgPreferencesScreen() {
             </View>
             <View style={styles.pillRow}>
               <TouchableOpacity
-                style={[styles.pill, currentPolicy?.sunday_off !== false && styles.pillActiveGreen, !canManage && styles.pillDisabled]}
+                style={[
+                  styles.pill,
+                  currentPolicy?.sunday_off !== false && styles.pillActiveGreen,
+                  !canManage && styles.pillDisabled,
+                ]}
                 onPress={() => canManage && handleWdpUpdate('sunday_off', true)}
                 disabled={updateWdpMutation.isPending || createWdpMutation.isPending || !canManage}
                 activeOpacity={canManage ? 0.7 : 1}
@@ -543,7 +559,11 @@ export default function OrgPreferencesScreen() {
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.pill, currentPolicy?.sunday_off === false && styles.pillActiveRed, !canManage && styles.pillDisabled]}
+                style={[
+                  styles.pill,
+                  currentPolicy?.sunday_off === false && styles.pillActiveRed,
+                  !canManage && styles.pillDisabled,
+                ]}
                 onPress={() => canManage && handleWdpUpdate('sunday_off', false)}
                 disabled={updateWdpMutation.isPending || createWdpMutation.isPending || !canManage}
                 activeOpacity={canManage ? 0.7 : 1}
@@ -751,10 +771,7 @@ export default function OrgPreferencesScreen() {
         <Animated.View entering={FadeIn.delay(200)} style={styles.circle2} />
         <View style={styles.headerContent}>
           <View style={styles.topRow}>
-            <TouchableOpacity
-              style={styles.backBtn}
-              onPress={() => router.back()}
-            >
+            <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
               <ChevronLeft size={24} color="#fff" />
             </TouchableOpacity>
             <View style={styles.titleContainer}>

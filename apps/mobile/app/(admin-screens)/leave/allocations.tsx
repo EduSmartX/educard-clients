@@ -57,7 +57,7 @@ export default function LeaveAllocationsScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
   const canManage = useMemo(() => isAdminRole(user?.role), [user?.role]);
-  
+
   const [refreshing, setRefreshing] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
   const [showFilters, setShowFilters] = useState(false);
@@ -69,11 +69,11 @@ export default function LeaveAllocationsScreen() {
     roles: '',
     title: '',
   });
-  
+
   // Use admin endpoint for admins, employee endpoint for others
   const adminQuery = useLeaveAllocations({ page_size: 100 });
   const employeeQuery = useEmployeeLeaveAllocations({ page_size: 100 });
-  
+
   const { data, isLoading, refetch } = canManage ? adminQuery : employeeQuery;
   const deleteMutation = useDeleteLeaveAllocation();
 
@@ -323,10 +323,7 @@ export default function LeaveAllocationsScreen() {
         />
         <View style={headerStyles.content}>
           <View style={headerStyles.topRow}>
-            <TouchableOpacity
-              style={headerStyles.backBtn}
-              onPress={() => router.back()}
-            >
+            <TouchableOpacity style={headerStyles.backBtn} onPress={() => router.back()}>
               <ChevronLeft size={24} color="#fff" />
             </TouchableOpacity>
             <View style={headerStyles.titleContainer}>

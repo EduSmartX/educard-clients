@@ -83,25 +83,21 @@ export interface ClassSummary {
 // Request Payloads
 
 export interface CreateClassPayload {
-  name: string;
-  section: string;
-  grade?: string;
-  academic_year?: string;
-  room_number?: string;
+  class_master: number; // id from core classes
+  name: string; // section name (e.g., "A", "B", "Section A")
+  class_teacher?: string; // public_id
+  info?: string;
   capacity?: number;
-  class_teacher?: string;
-  is_active?: boolean;
+  room_number?: string;
 }
 
 export interface UpdateClassPayload {
+  class_master?: number;
   name?: string;
-  section?: string;
-  grade?: string;
-  academic_year?: string;
-  room_number?: string;
+  class_teacher?: string;
+  info?: string;
   capacity?: number;
-  class_teacher?: string | null;
-  is_active?: boolean;
+  room_number?: string;
 }
 
 export interface AssignTeachersPayload {

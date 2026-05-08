@@ -2,7 +2,7 @@
  * My Leave Requests Screen - View and cancel leave requests
  */
 
-import { Colors, getRoleGradient, getRoleThemeColors, extractApiError } from '@educard/shared';
+import { getRoleGradient, getRoleThemeColors } from '@educard/shared';
 import { format, parseISO, isAfter, startOfToday } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -13,9 +13,7 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  AlertCircle,
   CalendarDays,
-  MoreVertical,
   X,
   CalendarCheck,
 } from 'lucide-react-native';
@@ -29,7 +27,6 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
-  SectionList,
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
@@ -100,8 +97,15 @@ export default function MyLeaveRequestsScreen() {
     const today = startOfToday();
     const holidays = holidaysData?.data ?? [];
     return holidays
-      .filter((h) => isAfter(parseISO(h.date), today) || format(parseISO(h.date), 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd'))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .filter((h) => {
+        const holidayDate = h.start_date;
+        if (!holidayDate) return false;
+        return (
+          isAfter(parseISO(holidayDate), today) ||
+          format(parseISO(holidayDate), 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')
+        );
+      })
+      .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime())
       .slice(0, 5); // Show only next 5 holidays
   }, [holidaysData]);
 
@@ -111,10 +115,9 @@ export default function MyLeaveRequestsScreen() {
     return data.filter((r) => r.status === filter);
   }, [requestsData, filter]);
 
-  const onRefresh = useCallback(async () => {
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
+    void refetch().finally(() => setRefreshing(false));
   }, [refetch]);
 
   const handleCancel = useCallback(
@@ -269,7 +272,10 @@ export default function MyLeaveRequestsScreen() {
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={
             upcomingHolidays.length > 0 ? (
-              <Animated.View entering={FadeInDown.delay(100).duration(300)} style={styles.holidaysSection}>
+              <Animated.View
+                entering={FadeInDown.delay(100).duration(300)}
+                style={styles.holidaysSection}
+              >
                 <View style={styles.holidaysSectionHeader}>
                   <CalendarCheck size={18} color="#dc2626" />
                   <Text style={styles.holidaysSectionTitle}>Upcoming Holidays</Text>
@@ -277,12 +283,18 @@ export default function MyLeaveRequestsScreen() {
                 {upcomingHolidays.map((holiday, index) => (
                   <View key={holiday.public_id ?? index} style={styles.holidayItem}>
                     <View style={styles.holidayDate}>
-                      <Text style={styles.holidayDay}>{format(parseISO(holiday.date), 'dd')}</Text>
-                      <Text style={styles.holidayMonth}>{format(parseISO(holiday.date), 'MMM')}</Text>
+                      <Text style={styles.holidayDay}>
+                        {format(parseISO(holiday.start_date), 'dd')}
+                      </Text>
+                      <Text style={styles.holidayMonth}>
+                        {format(parseISO(holiday.start_date), 'MMM')}
+                      </Text>
                     </View>
                     <View style={styles.holidayInfo}>
-                      <Text style={styles.holidayName}>{holiday.name}</Text>
-                      <Text style={styles.holidayDayName}>{format(parseISO(holiday.date), 'EEEE')}</Text>
+                      <Text style={styles.holidayName}>{holiday.description}</Text>
+                      <Text style={styles.holidayDayName}>
+                        {format(parseISO(holiday.start_date), 'EEEE')}
+                      </Text>
                     </View>
                   </View>
                 ))}

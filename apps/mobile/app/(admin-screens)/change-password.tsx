@@ -28,7 +28,7 @@ import { useAuthStore } from '@/lib/auth-store';
 export default function ChangePasswordScreen() {
   const router = useRouter();
   const { logout } = useAuthStore();
-  
+
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -67,7 +67,7 @@ export default function ChangePasswordScreen() {
         new_password: newPassword,
         confirm_password: confirmPassword,
       });
-      
+
       // Show success message and logout
       Alert.alert(
         'Password Changed',
@@ -102,12 +102,7 @@ export default function ChangePasswordScreen() {
   ) => (
     <View style={styles.inputWrapper}>
       <Text style={styles.inputLabel}>{label}</Text>
-      <View
-        style={[
-          styles.inputContainer,
-          focusedInput === inputKey && styles.inputFocused,
-        ]}
-      >
+      <View style={[styles.inputContainer, focusedInput === inputKey && styles.inputFocused]}>
         <Lock
           size={20}
           color={focusedInput === inputKey ? Colors.primary[500] : Colors.gray[400]}
@@ -196,28 +191,33 @@ export default function ChangePasswordScreen() {
             <View style={styles.requirements}>
               <Text style={styles.requirementsTitle}>Password Requirements:</Text>
               <View style={styles.requirementRow}>
-                <CheckCircle 
-                  size={14} 
-                  color={newPassword.length >= 8 ? Colors.success[500] : Colors.gray[300]} 
+                <CheckCircle
+                  size={14}
+                  color={newPassword.length >= 8 ? Colors.success[500] : Colors.gray[300]}
                 />
-                <Text style={[
-                  styles.requirementText,
-                  newPassword.length >= 8 && styles.requirementMet
-                ]}>
+                <Text
+                  style={[styles.requirementText, newPassword.length >= 8 && styles.requirementMet]}
+                >
                   At least 8 characters
                 </Text>
               </View>
               <View style={styles.requirementRow}>
-                <CheckCircle 
-                  size={14} 
-                  color={newPassword === confirmPassword && newPassword.length > 0 
-                    ? Colors.success[500] 
-                    : Colors.gray[300]} 
+                <CheckCircle
+                  size={14}
+                  color={
+                    newPassword === confirmPassword && newPassword.length > 0
+                      ? Colors.success[500]
+                      : Colors.gray[300]
+                  }
                 />
-                <Text style={[
-                  styles.requirementText,
-                  newPassword === confirmPassword && newPassword.length > 0 && styles.requirementMet
-                ]}>
+                <Text
+                  style={[
+                    styles.requirementText,
+                    newPassword === confirmPassword &&
+                      newPassword.length > 0 &&
+                      styles.requirementMet,
+                  ]}
+                >
                   Passwords match
                 </Text>
               </View>
@@ -253,11 +253,11 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   gradientBg: { position: 'absolute', top: 0, left: 0, right: 0, height: '45%' },
   scrollContent: { flexGrow: 1, paddingBottom: 40 },
-  header: { 
-    paddingTop: 50, 
-    paddingHorizontal: 24, 
-    paddingBottom: 32, 
-    alignItems: 'center' 
+  header: {
+    paddingTop: 50,
+    paddingHorizontal: 24,
+    paddingBottom: 32,
+    alignItems: 'center',
   },
   backButton: {
     position: 'absolute',
@@ -279,14 +279,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 16,
   },
-  headerTitle: { 
-    fontSize: 28, 
-    fontWeight: '800', 
-    color: '#ffffff', 
-    marginBottom: 8 
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#ffffff',
+    marginBottom: 8,
   },
-  headerSubtitle: { 
-    fontSize: 15, 
+  headerSubtitle: {
+    fontSize: 15,
     color: 'rgba(255,255,255,0.9)',
     textAlign: 'center',
     paddingHorizontal: 20,
@@ -299,11 +299,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   inputWrapper: { marginBottom: 20 },
-  inputLabel: { 
-    fontSize: 14, 
-    fontWeight: '600', 
-    color: Colors.gray[700], 
-    marginBottom: 8 
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.gray[700],
+    marginBottom: 8,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -316,9 +316,9 @@ const styles = StyleSheet.create({
     height: 56,
     gap: 12,
   },
-  inputFocused: { 
-    borderColor: Colors.primary[500], 
-    backgroundColor: '#fff' 
+  inputFocused: {
+    borderColor: Colors.primary[500],
+    backgroundColor: '#fff',
   },
   input: { flex: 1, fontSize: 16, color: Colors.gray[900] },
   requirements: {
@@ -354,10 +354,10 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     gap: 10,
   },
-  submitButtonText: { 
-    fontSize: 17, 
-    fontWeight: '700', 
-    color: '#ffffff' 
+  submitButtonText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#ffffff',
   },
   backLink: {
     flexDirection: 'row',
@@ -366,9 +366,9 @@ const styles = StyleSheet.create({
     marginTop: 8,
     gap: 8,
   },
-  backLinkText: { 
-    fontSize: 15, 
-    color: Colors.gray[600], 
-    fontWeight: '500' 
+  backLinkText: {
+    fontSize: 15,
+    color: Colors.gray[600],
+    fontWeight: '500',
   },
 });

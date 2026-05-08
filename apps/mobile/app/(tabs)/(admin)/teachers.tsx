@@ -1,7 +1,7 @@
 /**
  * Teachers List Screen
  * Mobile-first teacher management with search, add, edit, delete
- * 
+ *
  * Permission Model:
  * - Admin: Full CRUD access (Add, Edit, Delete buttons visible)
  * - Teacher: View-only access (No Add, Edit, Delete buttons)

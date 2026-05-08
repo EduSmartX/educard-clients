@@ -1,7 +1,7 @@
 /**
  * Holiday Calendar Screen
  * Premium calendar view with colored cells + Table list view
- * 
+ *
  * Permission Model:
  * - Admin: Add, Edit, Delete holidays
  * - Teacher: View-only access (no CRUD buttons)
@@ -677,10 +677,7 @@ export default function HolidayCalendarScreen() {
         />
         <View style={headerStyles.content}>
           <View style={headerStyles.topRow}>
-            <TouchableOpacity
-              style={headerStyles.backBtn}
-              onPress={() => router.back()}
-            >
+            <TouchableOpacity style={headerStyles.backBtn} onPress={() => router.back()}>
               <ChevronLeft size={24} color="#fff" />
             </TouchableOpacity>
             <View style={headerStyles.titleContainer}>

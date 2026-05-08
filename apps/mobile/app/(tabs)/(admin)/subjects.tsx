@@ -1,7 +1,7 @@
 /**
  * Subjects List Screen
  * Mobile-first subject management with search and real API integration
- * 
+ *
  * Permission Model:
  * - Admin: Full CRUD access
  * - Teacher (Class Teacher): Full CRUD for subjects in their assigned classes
@@ -60,7 +60,7 @@ export default function SubjectsScreen() {
   // Fetch classes to check if teacher has managed classes
   const { data: classesData } = useClasses({ page_size: 100, for_subject_form: true });
   const managedClasses = classesData?.classes ?? [];
-  
+
   // Teachers who manage at least one class can create subjects
   const isClassTeacher = isTeacher && managedClasses.length > 0;
   const canCreateSubjects = isAdmin || isClassTeacher;
@@ -223,13 +223,17 @@ export default function SubjectsScreen() {
         subtitle={`${totalCount} total`}
         role="admin"
         onBack={() => router.navigate('/(tabs)/(admin)/management')}
-        actions={canCreateSubjects ? [
-          {
-            icon: Plus,
-            onPress: () => router.push('/(admin-screens)/subjects/create'),
-            variant: 'primary' as const,
-          },
-        ] : []}
+        actions={
+          canCreateSubjects
+            ? [
+                {
+                  icon: Plus,
+                  onPress: () => router.push('/(admin-screens)/subjects/create'),
+                  variant: 'primary' as const,
+                },
+              ]
+            : []
+        }
       />
 
       {/* Search Bar */}

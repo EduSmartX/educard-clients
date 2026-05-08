@@ -3,9 +3,9 @@
  * Used in profile edit, teacher edit, student edit screens
  */
 
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { ChevronDown, ChevronUp, MapPin } from 'lucide-react-native';
 import { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
 import { FormInput } from './FormInput';
 

@@ -247,10 +247,7 @@ export default function LeaveApprovalsScreen() {
         />
         <View style={headerStyles.content}>
           <View style={headerStyles.topRow}>
-            <TouchableOpacity
-              style={headerStyles.backBtn}
-              onPress={() => router.back()}
-            >
+            <TouchableOpacity style={headerStyles.backBtn} onPress={() => router.back()}>
               <ChevronLeft size={24} color="#fff" />
             </TouchableOpacity>
             <View style={headerStyles.titleContainer}>

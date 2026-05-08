@@ -72,6 +72,15 @@ export default function ExamDashboardScreen() {
     refetch: refetchMarks,
   } = useMarksOverview(sessionId, selectedClassId);
   const students = marksData?.students || [];
+  const permissions = marksData?.permissions;
+
+  // Helper to check if user can edit marks for a specific subject
+  const canEditSubject = (subjectPublicId: string): boolean => {
+    if (!permissions) return true; // Default to editable if no permissions data
+    if (permissions.is_admin || permissions.is_class_teacher) return true;
+    if (permissions.editable_subject_ids === null) return true; // null means all
+    return permissions.editable_subject_ids.includes(subjectPublicId);
+  };
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -84,6 +93,11 @@ export default function ExamDashboardScreen() {
 
   const renderExam = ({ item, index }: { item: Exam; index: number }) => {
     const statusColor = EXAM_STATUS_COLORS[item.status] || EXAM_STATUS_COLORS.draft;
+    const canEdit = canEditSubject(item.subject_public_id);
+    const buttonText = canEdit ? 'Enter Marks' : 'View Marks';
+    const buttonStyle = canEdit ? styles.enterMarksBtn : styles.viewMarksBtn;
+    const textStyle = canEdit ? styles.enterMarksText : styles.viewMarksText;
+
     return (
       <Animated.View
         entering={FadeInDown.delay(index * 40)
@@ -103,14 +117,14 @@ export default function ExamDashboardScreen() {
             Max: {item.max_marks} • Pass: {item.passing_marks} • Marks: {item.marks_count}
           </Text>
           <TouchableOpacity
-            style={styles.enterMarksBtn}
+            style={buttonStyle}
             onPress={() =>
               router.push(
-                `/(admin-screens)/exams/enter-marks?examId=${item.public_id}&sessionId=${sessionId}&classId=${selectedClassId}&subjectName=${encodeURIComponent(item.subject_name)}&className=${encodeURIComponent(fullClassName)}&maxMarks=${item.max_marks}` as any
+                `/(admin-screens)/exams/enter-marks?examId=${item.public_id}&sessionId=${sessionId}&classId=${selectedClassId}&subjectName=${encodeURIComponent(item.subject_name)}&className=${encodeURIComponent(fullClassName)}&maxMarks=${item.max_marks}&viewOnly=${!canEdit}` as any
               )
             }
           >
-            <Text style={styles.enterMarksText}>Enter Marks</Text>
+            <Text style={textStyle}>{buttonText}</Text>
           </TouchableOpacity>
         </View>
       </Animated.View>
@@ -392,6 +406,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   enterMarksText: { fontSize: 14, fontWeight: '600', color: '#fff' },
+  viewMarksBtn: {
+    backgroundColor: '#f1f5f9',
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  viewMarksText: { fontSize: 14, fontWeight: '600', color: '#64748b' },
 
   studentCard: {
     backgroundColor: '#fff',

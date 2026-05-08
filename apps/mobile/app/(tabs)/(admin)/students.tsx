@@ -1,7 +1,7 @@
 /**
  * Students List Screen
  * Mobile-first student management with search, class filtering, and real API integration
- * 
+ *
  * Permission Model:
  * - Admin: Full CRUD access
  * - Teacher (Class Teacher): Full CRUD for their assigned classes
@@ -70,11 +70,11 @@ export default function StudentsScreen() {
   // Backend returns only managed classes for teachers (where they are class teacher)
   const { data: classesData } = useClasses({ page_size: 100 });
   const managedClasses = classesData?.classes ?? [];
-  
+
   // Teachers who manage at least one class can create students
   const isClassTeacher = isTeacher && managedClasses.length > 0;
   const canCreateStudents = isAdmin || isClassTeacher;
-  
+
   const classOptions = useMemo(() => {
     return managedClasses.map((c) => ({
       value: c.public_id,
@@ -273,14 +273,20 @@ export default function StudentsScreen() {
         subtitle={`${totalCount} total`}
         role="admin"
         onBack={() => router.navigate('/(tabs)/(admin)/management')}
-        actions={canCreateStudents ? [
-          ...(isAdmin ? [{ icon: Upload, onPress: () => Alert.alert('Bulk Upload', 'Coming soon') }] : []),
-          {
-            icon: Plus,
-            onPress: () => router.push('/(admin-screens)/students/create'),
-            variant: 'primary' as const,
-          },
-        ] : []}
+        actions={
+          canCreateStudents
+            ? [
+                ...(isAdmin
+                  ? [{ icon: Upload, onPress: () => Alert.alert('Bulk Upload', 'Coming soon') }]
+                  : []),
+                {
+                  icon: Plus,
+                  onPress: () => router.push('/(admin-screens)/students/create'),
+                  variant: 'primary' as const,
+                },
+              ]
+            : []
+        }
       />
 
       {/* Search Bar */}

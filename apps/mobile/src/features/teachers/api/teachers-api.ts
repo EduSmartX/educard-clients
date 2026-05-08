@@ -1,7 +1,7 @@
 /**
  * Teachers Feature — API Layer
  * All API calls for teacher CRUD operations
- * 
+ *
  * Permission Model:
  * - Admin: Full CRUD access via /teacher/admin/ endpoints
  * - Teacher: Read-only access via /teacher/employee/ endpoints (masked phone numbers)
@@ -44,7 +44,7 @@ function getBaseUrl(userRole?: string | null, isWriteOperation = false): string 
   if (isWriteOperation) {
     return ADMIN_BASE_URL;
   }
-  
+
   // Read operations: use employee endpoint for non-admins, admin endpoint for admins
   return isAdminRole(userRole) ? ADMIN_BASE_URL : EMPLOYEE_BASE_URL;
 }
@@ -81,11 +81,9 @@ export async function createTeacher(
 ): Promise<ApiDetailResponse<TeacherDetail>> {
   // Always use admin endpoint for create
   const params = forceCreate ? { force_create: 'true' } : {};
-  const response = await apiClient.post<ApiDetailResponse<TeacherDetail>>(
-    ADMIN_BASE_URL,
-    data,
-    { params }
-  );
+  const response = await apiClient.post<ApiDetailResponse<TeacherDetail>>(ADMIN_BASE_URL, data, {
+    params,
+  });
   return response.data;
 }
 

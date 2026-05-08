@@ -53,10 +53,10 @@ export default function CreateSubjectScreen() {
   const { user } = useAuthStore();
   const createMutation = useCreateSubject();
   const restoreMutation = useRestoreSubject();
-  
+
   // Check if user is a teacher (not admin)
   const isTeacher = isTeacherRole(user?.role);
-  
+
   // Fetch managed classes - for teachers, only classes where they are class teacher
   const { data: classesData } = useManagedClasses('subject');
   const { data: coreSubjects, isLoading: subjectsLoading } = useCoreSubjects();
@@ -223,7 +223,8 @@ export default function CreateSubjectScreen() {
             <Animated.View entering={FadeInDown.delay(50)}>
               <View style={st.infoBanner}>
                 <Text style={st.infoBannerText}>
-                  ℹ️ You can add subjects only for classes where you are assigned as the class teacher.
+                  ℹ️ You can add subjects only for classes where you are assigned as the class
+                  teacher.
                 </Text>
               </View>
             </Animated.View>

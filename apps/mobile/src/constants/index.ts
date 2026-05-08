@@ -167,5 +167,17 @@ export type {
 // Only for mobile app, not shared
 // ============================================
 
+// Design System Theme
+export {
+  Theme,
+  SemanticColors,
+  Spacing,
+  BorderRadius,
+  Typography,
+  Shadows,
+  IconSize,
+  ComponentSize,
+} from './theme';
+
 // Mobile-specific configuration can be added here
 // e.g., animation durations, platform-specific values

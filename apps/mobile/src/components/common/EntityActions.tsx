@@ -1,11 +1,11 @@
 /**
  * EntityActions — Shared View / Edit / Delete icon buttons rendered as a bottom bar
- * 
+ *
  * Respects role-based permissions:
  * - Admin: View, Edit, Delete
  * - Teacher (Class Teacher): View, Edit, Delete (for their classes only)
  * - Teacher (Other): View only
- * 
+ *
  * Use `canManage` prop to control Edit/Delete visibility based on backend permissions
  */
 
@@ -27,17 +27,17 @@ interface EntityActionsProps {
   canManage?: boolean;
 }
 
-export function EntityActions({ 
-  onView, 
-  onEdit, 
-  onDelete, 
+export function EntityActions({
+  onView,
+  onEdit,
+  onDelete,
   onReactivate,
-  canManage = true 
+  canManage = true,
 }: EntityActionsProps) {
   // Show Edit/Delete only if canManage is true AND the callback is provided
   const showEdit = canManage && onEdit;
   const showDelete = canManage && onDelete;
-  
+
   return (
     <View style={s.bar}>
       <TouchableOpacity style={[s.btn, s.viewBtn]} onPress={onView} activeOpacity={0.7}>

@@ -1,6 +1,6 @@
 /**
  * Classes Feature — API Layer
- * 
+ *
  * Permission Model:
  * - Admin: Full CRUD access via /classes/admin/ endpoints
  * - Teacher: Read-only access via /classes/employee/ endpoints
@@ -41,7 +41,7 @@ function getBaseUrl(userRole?: string | null, isWriteOperation = false): string 
   if (isWriteOperation) {
     return ADMIN_BASE_URL;
   }
-  
+
   // Read operations: use employee endpoint for non-admins, admin endpoint for admins
   return isAdminRole(userRole) ? ADMIN_BASE_URL : EMPLOYEE_BASE_URL;
 }

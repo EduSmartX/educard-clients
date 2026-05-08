@@ -272,7 +272,8 @@ export default function CreateStudentScreen() {
             <Animated.View entering={FadeInDown.delay(60)}>
               <View style={st.infoBanner}>
                 <Text style={st.infoBannerText}>
-                  ℹ️ You can add students only for classes where you are assigned as the class teacher.
+                  ℹ️ You can add students only for classes where you are assigned as the class
+                  teacher.
                 </Text>
               </View>
             </Animated.View>
