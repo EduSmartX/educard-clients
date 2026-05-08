@@ -2,21 +2,20 @@
   "name": "educard-clients",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "pnpm@9.15.0",
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "scripts": {
-    "dev:web": "npm run dev --workspace=apps/web",
-    "dev:mobile": "npm run start --workspace=apps/mobile",
-    "build:web": "npm run build --workspace=apps/web",
-    "build:mobile:ios": "npm run build:ios --workspace=apps/mobile",
-    "build:mobile:android": "npm run build:android --workspace=apps/mobile",
-    "lint": "npm run lint --workspaces --if-present",
-    "lint:fix": "npm run lint:fix --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present",
-    "format": "prettier --write \"**/*.{ts,tsx,json,md,yml,yaml}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,json,md,yml,yaml}\"",
+    "dev:web": "pnpm --filter @educard/web dev",
+    "dev:mobile": "pnpm --filter @educard/mobile start",
+    "build:web": "pnpm --filter @educard/web build",
+    "build:mobile:ios": "pnpm --filter @educard/mobile build:ios",
+    "build:mobile:android": "pnpm --filter @educard/mobile build:android",
+    "lint": "pnpm -r lint",
+    "lint:fix": "pnpm -r lint:fix",
+    "typecheck": "pnpm -r typecheck",
     "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules",
     "prepare": "husky"
   },
@@ -30,6 +29,7 @@
     "typescript": "^5.3.3"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.0.0",
+    "pnpm": ">=9.0.0"
   }
 }
