@@ -9,7 +9,11 @@ import { Platform } from 'react-native';
 const getDefaultApiUrl = () => {
   // If running in Expo Go on a physical device, we need the host machine's IP
   // Expo provides this in the manifest
-  const debuggerHost = Constants.expoConfig?.hostUri || Constants.manifest?.debuggerHost;
+  const expoHostUri = Constants.expoConfig?.hostUri;
+  // Access manifest with type assertion for legacy support
+  const manifest = Constants.manifest as { debuggerHost?: string } | undefined;
+  const manifestDebugger = manifest?.debuggerHost;
+  const debuggerHost = expoHostUri ?? manifestDebugger;
 
   if (debuggerHost) {
     // Extract IP from debuggerHost (format: "192.168.1.x:8081")
@@ -28,7 +32,7 @@ const getDefaultApiUrl = () => {
 
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: process.env.EXPO_PUBLIC_API_URL?.trim() || getDefaultApiUrl(),
+  BASE_URL: process.env.EXPO_PUBLIC_API_URL?.trim() ?? getDefaultApiUrl(),
   TIMEOUT: 30000,
   DEFAULT_PAGE_SIZE: 15,
 } as const;

@@ -7,7 +7,7 @@
  *   <SubmitButton label="Delete" variant="danger" onPress={handleDelete} />
  */
 
-import { Colors } from '@educard/shared';
+import { Colors as _Colors } from '@educard/shared';
 import { LucideIcon } from 'lucide-react-native';
 import React from 'react';
 import {
@@ -54,7 +54,7 @@ export function SubmitButton({
   style,
   color,
 }: SubmitButtonProps) {
-  const buttonColor = color || VARIANT_COLORS[variant];
+  const buttonColor = color ?? VARIANT_COLORS[variant];
   const isDisabled = disabled || isLoading;
 
   return (

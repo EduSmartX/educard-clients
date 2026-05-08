@@ -1,14 +1,13 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-misused-promises, @typescript-eslint/no-floating-promises, @typescript-eslint/prefer-nullish-coalescing */ /**
+/**
  * Timetable Setup Screen
  * Manage class groups, time slots, and assign entries
  * Matches web app's 3-tab setup flow
  */
 
-import { Colors, getRoleGradient, extractApiError } from '@educard/shared';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronLeft, Plus, Trash2, Pencil, X, Check, Users, Clock } from 'lucide-react-native';
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -17,11 +16,12 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-  TextInput,
   RefreshControl,
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
+import type { Class } from '@educard/shared';
+import { getRoleGradient, extractApiError } from '@educard/shared';
 import { FormInput, FormDropdown } from '@/components/forms';
 import { useClasses } from '@/features/classes';
 import {
@@ -32,8 +32,8 @@ import {
   useAddClassToGroup,
   useRemoveClassFromGroup,
 } from '@/features/timetable';
-import type { ClassGroup, ClassGroupMapping } from '@/features/timetable/types';
-import { headerStyles, layoutStyles, bodyStyles, emptyStyles } from '@/styles';
+import type { ClassGroup } from '@/features/timetable/types';
+import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -44,7 +44,6 @@ export default function TimetableSetupScreen() {
   // Data
   const { data: groups = [], isLoading, refetch } = useClassGroups();
   const { data: classesData } = useClasses({ page_size: 200 });
-  const allClasses = classesData?.classes || [];
 
   // Group form state
   const [showGroupForm, setShowGroupForm] = useState(false);
@@ -72,15 +71,16 @@ export default function TimetableSetupScreen() {
   // Classes not yet assigned to the target group
   const unassignedClasses = useCallback(
     (group: ClassGroup) => {
-      const assignedIds = new Set((group.classes || []).map((c) => c.class_public_id));
+      const allClasses = classesData?.classes ?? [];
+      const assignedIds = new Set((group.classes ?? []).map((c) => c.class_public_id));
       return allClasses
-        .filter((c: any) => !assignedIds.has(c.public_id))
-        .map((c: any) => ({
-          label: `${c.class_master?.name || c.name} - ${c.name}`,
+        .filter((c: Class) => !assignedIds.has(c.public_id))
+        .map((c: Class) => ({
+          label: `${c.class_master?.name ?? c.name} - ${c.name}`,
           value: c.public_id,
         }));
     },
-    [allClasses]
+    [classesData]
   );
 
   const handleSaveGroup = async () => {
@@ -104,7 +104,7 @@ export default function TimetableSetupScreen() {
       setEditingGroup(null);
       setGroupName('');
       setGroupDesc('');
-    } catch (err: any) {
+    } catch (err) {
       Alert.alert('Error', extractApiError(err));
     }
   };
@@ -115,12 +115,14 @@ export default function TimetableSetupScreen() {
       {
         text: 'Delete',
         style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteGroup.mutateAsync(group.public_id);
-          } catch (err: any) {
-            Alert.alert('Error', extractApiError(err));
-          }
+        onPress: () => {
+          void (async () => {
+            try {
+              await deleteGroup.mutateAsync(group.public_id);
+            } catch (err) {
+              Alert.alert('Error', extractApiError(err));
+            }
+          })();
         },
       },
     ]);
@@ -132,7 +134,7 @@ export default function TimetableSetupScreen() {
       await addClassMutation.mutateAsync({ groupId, classId: selectedClassId });
       setSelectedClassId('');
       setAddingToGroupId(null);
-    } catch (err: any) {
+    } catch (err) {
       Alert.alert('Error', extractApiError(err));
     }
   };
@@ -143,12 +145,14 @@ export default function TimetableSetupScreen() {
       {
         text: 'Remove',
         style: 'destructive',
-        onPress: async () => {
-          try {
-            await removeClassMutation.mutateAsync({ groupId, classId });
-          } catch (err: any) {
-            Alert.alert('Error', extractApiError(err));
-          }
+        onPress: () => {
+          void (async () => {
+            try {
+              await removeClassMutation.mutateAsync({ groupId, classId });
+            } catch (err) {
+              Alert.alert('Error', extractApiError(err));
+            }
+          })();
         },
       },
     ]);
@@ -157,7 +161,7 @@ export default function TimetableSetupScreen() {
   const openEditGroup = (group: ClassGroup) => {
     setEditingGroup(group);
     setGroupName(group.name);
-    setGroupDesc(group.description || '');
+    setGroupDesc(group.description ?? '');
     setShowGroupForm(true);
   };
 
@@ -198,10 +202,14 @@ export default function TimetableSetupScreen() {
       </LinearGradient>
 
       <ScrollView
-        style={bodyStyles.scroll}
-        contentContainerStyle={bodyStyles.content}
+        style={st.body}
+        contentContainerStyle={st.bodyContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#7c3aed']} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => void onRefresh()}
+            colors={['#7c3aed']}
+          />
         }
       >
         {/* Group Form */}
@@ -237,7 +245,7 @@ export default function TimetableSetupScreen() {
                   st.saveBtn,
                   (createGroup.isPending || updateGroup.isPending) && st.saveBtnDisabled,
                 ]}
-                onPress={handleSaveGroup}
+                onPress={() => void handleSaveGroup()}
                 disabled={createGroup.isPending || updateGroup.isPending}
               >
                 {createGroup.isPending || updateGroup.isPending ? (
@@ -252,14 +260,14 @@ export default function TimetableSetupScreen() {
 
         {/* Loading */}
         {isLoading ? (
-          <View style={emptyStyles.container}>
+          <View style={st.loading}>
             <ActivityIndicator size="large" color="#7c3aed" />
           </View>
         ) : groups.length === 0 && !showGroupForm ? (
           <View style={st.empty}>
-            <Text style={emptyStyles.icon}>📦</Text>
-            <Text style={emptyStyles.title}>No Class Groups</Text>
-            <Text style={emptyStyles.subtitle}>
+            <Text style={st.emptyIcon}>📦</Text>
+            <Text style={st.emptyTitle}>No Class Groups</Text>
+            <Text style={st.emptySubtitle}>
               Create class groups to organize your timetable. Groups share the same time slot
               structure.
             </Text>
@@ -288,7 +296,7 @@ export default function TimetableSetupScreen() {
                       style={st.iconBtn}
                       onPress={() =>
                         router.push(
-                          `/(admin-screens)/timetable/slots-editor?groupId=${group.public_id}&groupName=${encodeURIComponent(group.name)}` as any
+                          `/(admin-screens)/timetable?groupId=${group.public_id}&groupName=${encodeURIComponent(group.name)}` as any
                         )
                       }
                     >
@@ -305,8 +313,8 @@ export default function TimetableSetupScreen() {
 
                 {/* Classes in group */}
                 <View style={st.classesSection}>
-                  <Text style={st.classesLabel}>Classes ({(group.classes || []).length})</Text>
-                  {(group.classes || []).map((cls) => (
+                  <Text style={st.classesLabel}>Classes ({(group.classes ?? []).length})</Text>
+                  {(group.classes ?? []).map((cls) => (
                     <View key={cls.public_id} style={st.classChip}>
                       <Text style={st.classChipText}>
                         {cls.class_master_name} - {cls.section_name}
@@ -335,7 +343,7 @@ export default function TimetableSetupScreen() {
                       </View>
                       <TouchableOpacity
                         style={st.addClassConfirm}
-                        onPress={() => handleAddClass(group.public_id)}
+                        onPress={() => void handleAddClass(group.public_id)}
                         disabled={!selectedClassId}
                       >
                         <Check size={16} color="#fff" />
@@ -378,6 +386,8 @@ const st = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  body: { flex: 1, backgroundColor: '#f8fafc' },
+  bodyContent: { padding: 16, paddingBottom: 40 },
 
   formCard: {
     backgroundColor: '#fff',
@@ -403,7 +413,18 @@ const st = StyleSheet.create({
   saveBtnDisabled: { opacity: 0.6 },
   saveText: { fontSize: 14, fontWeight: '600', color: '#fff' },
 
+  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 60 },
   empty: { alignItems: 'center', paddingVertical: 60 },
+  emptyIcon: { fontSize: 48, marginBottom: 12 },
+  emptyTitle: { fontSize: 18, fontWeight: '700', color: '#334155' },
+  emptySubtitle: {
+    fontSize: 14,
+    color: '#94a3b8',
+    textAlign: 'center',
+    paddingHorizontal: 32,
+    marginTop: 6,
+    marginBottom: 20,
+  },
   createFirstBtn: {
     flexDirection: 'row',
     alignItems: 'center',

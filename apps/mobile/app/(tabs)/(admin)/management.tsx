@@ -2,9 +2,9 @@
  * Management Screen - Organization data management
  */
 
-import { getRoleThemeColors } from '@educard/shared';
+// getRoleThemeColors import removed - unused
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router'; // import Href type
 import {
   GraduationCap,
   User,
@@ -35,7 +35,7 @@ import { useMyProfilePhoto } from '@/hooks';
 import { useAuthStore } from '@/lib/auth-store';
 
 const { width } = Dimensions.get('window');
-const adminTheme = getRoleThemeColors('admin');
+// const adminTheme = getRoleThemeColors('admin'); // commented - unused
 
 interface ManagementItem {
   id: string;
@@ -114,7 +114,7 @@ export default function ManagementScreen() {
     subjects: subjectsData?.totalCount,
   };
 
-  const profileImageUrl = profilePhoto?.thumbnail_url || user?.profile_image;
+  const profileImageUrl = profilePhoto?.thumbnail_url ?? user?.profile_image; // ?? instead of ||
 
   return (
     <View style={styles.container}>
@@ -172,7 +172,7 @@ export default function ManagementScreen() {
             >
               <TouchableOpacity
                 style={styles.iconCard}
-                onPress={() => router.push(item.route as any)}
+                onPress={() => router.push(item.route as Href)} // Href type instead of any
                 activeOpacity={0.8}
               >
                 <LinearGradient

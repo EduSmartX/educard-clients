@@ -4,7 +4,7 @@
 
 import { getRoleGradient } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router'; // import Href type
 import {
   CheckSquare,
   Briefcase,
@@ -24,7 +24,7 @@ interface AdminItem {
   subtitle: string;
   icon: LucideIcon;
   gradient: readonly [string, string];
-  route: string;
+  route: Href; // use Href type
 }
 
 const adminItems: AdminItem[] = [
@@ -120,7 +120,7 @@ export default function AdminScreen() {
             >
               <TouchableOpacity
                 style={styles.card}
-                onPress={() => router.push(item.route as any)}
+                onPress={() => router.push(item.route)} // removed `as any`
                 activeOpacity={0.8}
               >
                 <LinearGradient

@@ -9,7 +9,6 @@ import {
   Bell,
   BookOpen,
   ClipboardCheck,
-  TrendingUp,
   Calendar,
   CreditCard,
   MessageCircle,
@@ -20,7 +19,7 @@ import {
   Award,
 } from 'lucide-react-native';
 import { useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Image } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 
 import { Screen } from '@/components/layout';
 import { Card, Avatar, Badge } from '@/components/ui';
@@ -107,7 +106,9 @@ export default function ParentDashboard() {
     <Screen scrollable={false}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />
+        }
       >
         {/* Header */}
         <LinearGradient
@@ -118,20 +119,20 @@ export default function ParentDashboard() {
             <View className="flex-1">
               <Text className="text-sm text-green-100">{formatGreeting()},</Text>
               <Text className="text-2xl font-bold text-white" numberOfLines={1}>
-                {user?.full_name || user?.first_name || 'Parent'}
+                {user?.full_name ?? user?.first_name ?? 'Parent'}
               </Text>
             </View>
             <View className="flex-row items-center">
               <TouchableOpacity
                 className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-white/20"
-                onPress={() => router.push('/(tabs)/(parent)/notifications' as any)}
+                onPress={() => router.push('/(admin-screens)/notifications')}
               >
                 <Bell size={20} color="#ffffff" />
                 <View className="absolute -right-1 -top-1 h-5 w-5 items-center justify-center rounded-full bg-danger-500">
                   <Text className="text-xs font-bold text-white">2</Text>
                 </View>
               </TouchableOpacity>
-              <Avatar name={user?.full_name || user?.first_name || 'P'} size="md" />
+              <Avatar name={user?.full_name ?? user?.first_name ?? 'P'} size="md" />
             </View>
           </View>
 

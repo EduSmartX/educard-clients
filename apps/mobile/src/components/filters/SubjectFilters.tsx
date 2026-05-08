@@ -22,14 +22,16 @@ export const SUBJECT_FILTER_FIELDS: FilterField[] = [
   makeDeletedToggle('subjects'),
 ];
 
-export function getSubjectFilterLabels(filters: Record<string, any>): FilterLabel[] {
+export function getSubjectFilterLabels(filters: Record<string, unknown>): FilterLabel[] {
   const result: FilterLabel[] = [];
 
-  if (filters.subject_type) {
+  const subjectType = filters.subject_type;
+  if (typeof subjectType === 'string' && subjectType) {
+    const label = subjectType.charAt(0).toUpperCase() + subjectType.slice(1);
     result.push({
       key: 'subject_type',
-      label: filters.subject_type.charAt(0).toUpperCase() + filters.subject_type.slice(1),
-      value: filters.subject_type,
+      label,
+      value: subjectType,
     });
   }
 

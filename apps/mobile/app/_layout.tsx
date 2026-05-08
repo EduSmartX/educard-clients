@@ -13,7 +13,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/lib/auth-store';
 
 // Keep splash screen visible while loading
-SplashScreen.preventAutoHideAsync();
+void SplashScreen.preventAutoHideAsync();
 
 // Create React Query client outside component to avoid recreation
 const queryClient = new QueryClient({
@@ -42,14 +42,14 @@ function RootLayoutNav() {
   // Initialize auth on mount
   useEffect(() => {
     if (isMounted) {
-      initialize();
+      void initialize();
     }
   }, [initialize, isMounted]);
 
   // Hide splash screen when initialized
   useEffect(() => {
     if (isInitialized && isMounted) {
-      SplashScreen.hideAsync();
+      void SplashScreen.hideAsync();
     }
   }, [isInitialized, isMounted]);
 
@@ -58,7 +58,7 @@ function RootLayoutNav() {
     if (!isInitialized || !isMounted) return;
 
     const inAuthGroup = segments[0] === '(auth)';
-    const inTabsGroup = segments[0] === '(tabs)';
+    // Note: inTabsGroup check could be added for additional routing logic if needed
 
     if (!isAuthenticated && !inAuthGroup) {
       // Not authenticated, redirect to login

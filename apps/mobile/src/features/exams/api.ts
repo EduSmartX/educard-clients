@@ -51,9 +51,9 @@ function getBaseUrl(userRole?: string | null, isWriteOperation = false): string 
 
 // Sessions — Queries
 export async function fetchExamSessions(
-  params?: Record<string, any>,
+  params?: Record<string, unknown>,
   userRole?: string | null
-): Promise<{ data: ExamSession[]; pagination?: any }> {
+): Promise<{ data: ExamSession[]; pagination?: unknown }> {
   const baseUrl = getBaseUrl(userRole, false);
   const res = await apiClient.get<ListResponse<ExamSession>>(`${baseUrl}/sessions/`, { params });
   return { data: res.data.data, pagination: res.data.pagination };
@@ -88,9 +88,9 @@ export async function deleteExamSession(publicId: string): Promise<void> {
 
 // Exams — Queries
 export async function fetchExams(
-  params?: Record<string, any>,
+  params?: Record<string, unknown>,
   userRole?: string | null
-): Promise<{ data: Exam[]; pagination?: any }> {
+): Promise<{ data: Exam[]; pagination?: unknown }> {
   const baseUrl = getBaseUrl(userRole, false);
   const res = await apiClient.get<ListResponse<Exam>>(`${baseUrl}/exams/`, { params });
   return { data: res.data.data, pagination: res.data.pagination };

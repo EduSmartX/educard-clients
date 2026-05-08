@@ -4,9 +4,9 @@
  */
 
 import { Colors } from '@educard/shared';
-import { Eye, Edit3, Trash2, MoreVertical, LucideIcon } from 'lucide-react-native';
+import { Eye, Edit3, Trash2, LucideIcon } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { View, TouchableOpacity, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 
 interface ActionButton {
   icon: LucideIcon;
@@ -46,39 +46,51 @@ export function ActionButtons({
 }: ActionButtonsProps) {
   const sizeConfig = SIZES[size];
 
-  const actions: { key: string; show: boolean; button: ActionButton }[] = [
+  const actions: { key: string; show: boolean; button: ActionButtonItemProps | null }[] = [
     {
       key: 'view',
       show: showView && !!onView,
-      button: {
-        icon: Eye,
-        color: Colors.info[600],
-        bgColor: Colors.info[50],
-        hoverBgColor: Colors.info[100],
-        onPress: onView!,
-      },
+      button: onView
+        ? {
+            icon: Eye,
+            color: Colors.info[600],
+            bgColor: Colors.info[50],
+            hoverBgColor: Colors.info[100],
+            onPress: onView,
+            size: sizeConfig.button,
+            iconSize: sizeConfig.icon,
+          }
+        : null,
     },
     {
       key: 'edit',
       show: showEdit && !!onEdit,
-      button: {
-        icon: Edit3,
-        color: Colors.success[600],
-        bgColor: Colors.success[50],
-        hoverBgColor: Colors.success[100],
-        onPress: onEdit!,
-      },
+      button: onEdit
+        ? {
+            icon: Edit3,
+            color: Colors.success[600],
+            bgColor: Colors.success[50],
+            hoverBgColor: Colors.success[100],
+            onPress: onEdit,
+            size: sizeConfig.button,
+            iconSize: sizeConfig.icon,
+          }
+        : null,
     },
     {
       key: 'delete',
       show: showDelete && !!onDelete,
-      button: {
-        icon: Trash2,
-        color: Colors.error[600],
-        bgColor: Colors.error[50],
-        hoverBgColor: Colors.error[100],
-        onPress: onDelete!,
-      },
+      button: onDelete
+        ? {
+            icon: Trash2,
+            color: Colors.error[600],
+            bgColor: Colors.error[50],
+            hoverBgColor: Colors.error[100],
+            onPress: onDelete,
+            size: sizeConfig.button,
+            iconSize: sizeConfig.icon,
+          }
+        : null,
     },
   ];
 
@@ -91,9 +103,9 @@ export function ActionButtons({
       ]}
     >
       {actions
-        .filter((a) => a.show)
+        .filter((a) => a.show && a.button)
         .map(({ key, button }) => (
-          <ActionButton key={key} {...button} size={sizeConfig.button} iconSize={sizeConfig.icon} />
+          <ActionButtonItem key={key} {...button!} />
         ))}
     </View>
   );
@@ -110,7 +122,7 @@ interface ActionButtonItemProps {
   disabled?: boolean;
 }
 
-function ActionButton({
+function ActionButtonItem({
   icon: Icon,
   color,
   bgColor,

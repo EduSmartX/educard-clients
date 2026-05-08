@@ -9,16 +9,19 @@ import { LayoutDashboard, Building2, User, Shield, Settings } from 'lucide-react
 import { View, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors } from '@/constants/colors';
+// colors import removed - unused
 
-const adminTheme = getRoleThemeColors('admin');
+const _adminTheme = getRoleThemeColors('admin'); // prefixed _ - unused for now
+
+// Icon props type
+type IconProps = { size: number; color: string };
 
 const GradientIcon = ({
   Icon,
   size,
   focused,
 }: {
-  Icon: React.ComponentType<any>;
+  Icon: React.ComponentType<IconProps>; // proper type instead of any
   size: number;
   focused: boolean;
 }) => {

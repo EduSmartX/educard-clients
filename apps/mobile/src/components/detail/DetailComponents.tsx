@@ -8,15 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import React from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Pressable,
-  StyleSheet,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { ProfileAvatar } from '@/components/common/ProfileAvatar';
@@ -142,7 +134,7 @@ export function DetailScreenShell({
         </View>
       ) : isError ? (
         <View style={styles.center}>
-          <Text style={styles.errorText}>{errorMessage || 'Failed to load details.'}</Text>
+          <Text style={styles.errorText}>{errorMessage ?? 'Failed to load details.'}</Text>
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>

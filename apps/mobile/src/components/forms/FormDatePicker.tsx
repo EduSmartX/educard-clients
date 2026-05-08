@@ -299,7 +299,11 @@ export function FormDatePicker({
                 keyExtractor={(item) => String(item)}
                 style={styles.yearList}
                 initialScrollIndex={Math.max(0, years.indexOf(viewYear) - 2)}
-                getItemLayout={(_, index: number) => ({ length: 48, offset: 48 * index, index })}
+                getItemLayout={(_data, index: number) => ({
+                  length: 48,
+                  offset: 48 * index,
+                  index,
+                })}
                 renderItem={({ item }) => (
                   <TouchableOpacity
                     style={[styles.yearItem, item === viewYear && styles.yearItemActive]}

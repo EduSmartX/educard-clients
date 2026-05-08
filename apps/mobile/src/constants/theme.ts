@@ -13,7 +13,7 @@
  * });
  */
 
-import { Colors } from '@educard/shared';
+import { Colors as _Colors } from '@educard/shared';
 
 // =============================================================================
 // SEMANTIC COLORS

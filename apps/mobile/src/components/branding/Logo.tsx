@@ -4,7 +4,12 @@
  */
 import { Colors } from '@educard/shared';
 import React from 'react';
-import { View, Image, Text, StyleSheet, ViewStyle } from 'react-native';
+import { View, Image, Text, StyleSheet, ViewStyle, ImageSourcePropType } from 'react-native';
+
+// Static require for image asset - typed as ImageSourcePropType
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const logoImage: ImageSourcePropType =
+  require('../../../assets/images/educard-logo.jpg') as ImageSourcePropType;
 
 interface LogoProps {
   /** Logo size variant */
@@ -91,7 +96,7 @@ export function Logo({
         ]}
       >
         <Image
-          source={require('../../../assets/images/educard-logo.jpg')}
+          source={logoImage}
           style={[
             styles.image,
             {

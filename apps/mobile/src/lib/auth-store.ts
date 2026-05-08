@@ -136,7 +136,7 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
         isLoading: false,
         error: null,
       });
-    } catch (_error) {
+    } catch {
       // Still clear local state even if API call fails
       set({
         user: null,

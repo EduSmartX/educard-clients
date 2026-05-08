@@ -23,7 +23,7 @@ import {
 } from './api';
 import type { ExamSessionCreatePayload, ExamCreatePayload, BulkSaveAllMarksPayload } from './types';
 
-export function useExamSessions(params?: Record<string, any>, userRole?: string | null) {
+export function useExamSessions(params?: Record<string, unknown>, userRole?: string | null) {
   return useQuery({
     queryKey: ['exam-sessions', params, userRole],
     queryFn: () => fetchExamSessions(params, userRole),
@@ -39,7 +39,7 @@ export function useExamSession(id?: string, userRole?: string | null) {
   });
 }
 
-export function useExams(params?: Record<string, any>, userRole?: string | null) {
+export function useExams(params?: Record<string, unknown>, userRole?: string | null) {
   return useQuery({
     queryKey: ['exams', params, userRole],
     queryFn: () => fetchExams(params, userRole),

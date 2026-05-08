@@ -265,6 +265,7 @@ export const CommonUiText = {
 export const SuccessMessages = {
   // Generic success
   SUCCESS: "Operation completed successfully.",
+  LOGIN_SUCCESS: "Logged in successfully.",
 
   // CRUD operation success
   CREATE_SUCCESS: "Created successfully.",
@@ -396,6 +397,16 @@ export const SuccessMessages = {
     PASSWORD_RESET_SUCCESS: "Password reset successful.",
     LOGIN_SUCCESS: "Logged in successfully.",
     LOGOUT_SUCCESS: "Logged out successfully.",
+  },
+
+  FILES: {
+    TEMPLATE_DOWNLOADED: "Template downloaded successfully.",
+    UPLOAD_SUCCESS: "File uploaded successfully.",
+    DOWNLOAD_SUCCESS: "File downloaded successfully.",
+  },
+
+  LOCATION: {
+    AUTO_FILLED: "Location details auto-filled from pincode.",
   },
 } as const;
 

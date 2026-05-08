@@ -47,11 +47,11 @@ export function useUpdateProfile() {
     mutationFn: (payload: UpdateProfilePayload) => updateProfile(payload),
     onSuccess: () => {
       // Invalidate profile queries to refetch
-      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
-      queryClient.invalidateQueries({ queryKey: ['profile-photo'] });
+      void queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+      void queryClient.invalidateQueries({ queryKey: ['profile-photo'] });
     },
     onError: (error: Error) => {
-      Alert.alert('Error', error.message || 'Failed to update profile');
+      Alert.alert('Error', error.message ?? 'Failed to update profile');
     },
   });
 }

@@ -10,27 +10,35 @@ export interface ValidationRule {
 
 export type FieldErrors = Record<string, string>;
 
+/** Helper to safely convert value to string */
+const toString = (v: unknown): string => {
+  if (v === null || v === undefined) return '';
+  if (typeof v === 'string') return v;
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+  return '';
+};
+
 /** Check if a value is present (not empty/null/undefined) */
 export const required = (label: string): ValidationRule => ({
-  validate: (v) => v !== undefined && v !== null && String(v).trim().length > 0,
+  validate: (v) => v !== undefined && v !== null && toString(v).trim().length > 0,
   message: `${label} is required`,
 });
 
 /** Minimum length */
 export const minLength = (label: string, min: number): ValidationRule => ({
-  validate: (v) => !v || String(v).trim().length >= min,
+  validate: (v) => !v || toString(v).trim().length >= min,
   message: `${label} must be at least ${min} characters`,
 });
 
 /** Maximum length */
 export const maxLength = (label: string, max: number): ValidationRule => ({
-  validate: (v) => !v || String(v).trim().length <= max,
+  validate: (v) => !v || toString(v).trim().length <= max,
   message: `${label} must be less than ${max} characters`,
 });
 
 /** Valid email */
 export const email = (label = 'Email'): ValidationRule => ({
-  validate: (v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v).trim()),
+  validate: (v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(toString(v).trim()),
   message: `${label} must be a valid email address`,
 });
 
@@ -38,7 +46,7 @@ export const email = (label = 'Email'): ValidationRule => ({
 export const phone = (label = 'Phone'): ValidationRule => ({
   validate: (v) => {
     if (!v) return true; // optional by default
-    const digits = String(v).replace(/[\s\-()+"]/g, '');
+    const digits = toString(v).replace(/[\s\-()+"]/g, '');
     return /^\d{10,15}$/.test(digits);
   },
   message: `${label} must be a valid phone number (10-15 digits)`,

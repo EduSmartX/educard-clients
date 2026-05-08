@@ -34,7 +34,7 @@ export function Header({
   light = false,
 }: HeaderProps) {
   const router = useRouter();
-  const pathname = usePathname();
+  const _pathname = usePathname();
 
   const textColor = light || transparent ? '#ffffff' : Colors.text.primary;
   const iconColor = light || transparent ? '#ffffff' : Colors.secondary[600];
@@ -80,7 +80,7 @@ export function Header({
       <View className="flex-row items-center gap-2">
         {showNotifications && (
           <TouchableOpacity
-            onPress={() => router.push('/(tabs)/(parent)/notifications' as any)}
+            onPress={() => router.push('/(admin-screens)/notifications')}
             className="h-10 w-10 items-center justify-center rounded-full bg-white/10"
             activeOpacity={0.7}
           >

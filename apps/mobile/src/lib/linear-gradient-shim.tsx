@@ -20,9 +20,9 @@ export const LinearGradient: React.FC<LinearGradientProps> = ({
   colors,
   style,
   children,
-  start,
-  end,
-  locations,
+  start: _start,
+  end: _end,
+  locations: _locations,
   ...rest
 }) => {
   // Use the first color as a solid background fallback

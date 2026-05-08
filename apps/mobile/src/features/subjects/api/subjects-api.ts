@@ -9,7 +9,7 @@
  * The backend returns `can_manage` field indicating whether the user can edit/delete
  */
 
-import { API_ENDPOINTS } from '@educard/shared';
+// import { API_ENDPOINTS } from '@educard/shared'; // unused - keeping for future reference
 import type { Subject, ApiListResponse, ApiDetailResponse } from '@educard/shared';
 
 import { apiClient } from '@/api/client';

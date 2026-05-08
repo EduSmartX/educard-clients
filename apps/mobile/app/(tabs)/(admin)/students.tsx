@@ -69,7 +69,9 @@ export default function StudentsScreen() {
   // Classes for label resolution and permission checks
   // Backend returns only managed classes for teachers (where they are class teacher)
   const { data: classesData } = useClasses({ page_size: 100 });
-  const managedClasses = classesData?.classes ?? [];
+
+  // Memoize managedClasses to avoid changing dependencies on every render
+  const managedClasses = useMemo(() => classesData?.classes ?? [], [classesData?.classes]);
 
   // Teachers who manage at least one class can create students
   const isClassTeacher = isTeacher && managedClasses.length > 0;
@@ -252,17 +254,17 @@ export default function StudentsScreen() {
                       handleReactivate(
                         item.public_id,
                         item.class_info?.public_id,
-                        fullName || 'this student'
+                        fullName ?? 'this student' // ?? instead of ||
                       )
                   : undefined
               }
-              canManage={(item as any).can_manage ?? isAdmin}
+              canManage={(item as { can_manage?: boolean }).can_manage ?? isAdmin} // proper type
             />
           </TouchableOpacity>
         </Animated.View>
       );
     },
-    [handleView, handleEdit, confirmDelete, handleReactivate, isDeletedView]
+    [handleView, handleEdit, confirmDelete, handleReactivate, isDeletedView, isAdmin] // added isAdmin dependency
   );
 
   return (

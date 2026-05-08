@@ -16,7 +16,8 @@ import type {
 } from '@educard/shared';
 
 import { apiClient } from '@/api/client';
-import { API_ENDPOINTS } from '@/constants';
+// API_ENDPOINTS unused - keeping for future reference
+// import { API_ENDPOINTS } from '@/constants';
 import { isAdminRole } from '@/utils/role-utils';
 
 // Admin endpoints - Full CRUD operations

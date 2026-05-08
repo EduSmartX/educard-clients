@@ -26,8 +26,8 @@ export default function ForgotPasswordScreen() {
   const [_step, setStep] = useState<Step>('email'); // prefixed _ - unused for now
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [_newPassword, setNewPassword] = useState(''); // prefixed _
-  const [_confirmPassword, setConfirmPassword] = useState(''); // prefixed _
+  const [_newPassword, _setNewPassword] = useState(''); // prefixed _
+  const [_confirmPassword, _setConfirmPassword] = useState(''); // prefixed _
   const [_showPassword, setShowPassword] = useState(false); // prefixed _
   const [_showConfirmPassword, setShowConfirmPassword] = useState(false); // prefixed _
   const [isLoading, setIsLoading] = useState(false);
@@ -54,7 +54,8 @@ export default function ForgotPasswordScreen() {
   }, [email]);
 
   // These functions are for future use (OTP and reset password steps)
-  const _handleVerifyOTP = useCallback(() => { // removed async - no await, prefixed _
+  const _handleVerifyOTP = useCallback(() => {
+    // removed async - no await, prefixed _
     const otpCode = otp.join('');
     if (otpCode.length !== 6) {
       Alert.alert('Error', 'Please enter the complete OTP');
@@ -63,7 +64,8 @@ export default function ForgotPasswordScreen() {
     setStep('newPassword');
   }, [otp, setStep]);
 
-  const _handleResetPassword = useCallback(async () => { // prefixed _ - for future use
+  const _handleResetPassword = useCallback(async () => {
+    // prefixed _ - for future use
     if (!_newPassword || !_confirmPassword) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
@@ -88,14 +90,16 @@ export default function ForgotPasswordScreen() {
       Alert.alert('Success', 'Password reset successfully', [
         { text: 'OK', onPress: () => router.replace('/(auth)/login') },
       ]);
-    } catch (_error) { // prefixed _
+    } catch (_error) {
+      // prefixed _
       Alert.alert('Error', _error instanceof Error ? _error.message : 'Failed to reset password');
     } finally {
       setIsLoading(false);
     }
   }, [email, otp, _newPassword, _confirmPassword, router]);
 
-  const _handleOtpChange = (index: number, value: string) => { // prefixed _
+  const _handleOtpChange = (index: number, value: string) => {
+    // prefixed _
     if (value.length > 1) {
       value = value[0];
     }
@@ -108,20 +112,23 @@ export default function ForgotPasswordScreen() {
     }
   };
 
-  const _handleOtpKeyPress = (index: number, key: string) => { // prefixed _
+  const _handleOtpKeyPress = (index: number, key: string) => {
+    // prefixed _
     if (key === 'Backspace' && !otp[index] && index > 0) {
       otpRefs.current[index - 1]?.focus();
     }
   };
 
-  const _handleResendOTP = useCallback(async () => { // prefixed _
+  const _handleResendOTP = useCallback(async () => {
+    // prefixed _
     setIsLoading(true);
     try {
       await authApi.requestPasswordResetOtp(email.trim());
       Alert.alert('Success', 'OTP sent again');
       setOtp(['', '', '', '', '', '']);
       otpRefs.current[0]?.focus();
-    } catch (_error) { // prefixed _
+    } catch (_error) {
+      // prefixed _
       Alert.alert('Error', 'Failed to resend OTP');
     } finally {
       setIsLoading(false);

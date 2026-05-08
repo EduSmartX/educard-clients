@@ -4,10 +4,9 @@
  * Accessed from timetable view by tapping an unassigned slot
  */
 
-import { Colors, getRoleGradient, extractApiError } from '@educard/shared';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ChevronLeft, Check, BookOpen, Trash2 } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { ChevronLeft, Check, Trash2 } from 'lucide-react-native';
 import { useState, useMemo } from 'react';
 import {
   View,
@@ -20,10 +19,11 @@ import {
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
+import { getRoleGradient, extractApiError } from '@educard/shared';
 import { FormDropdown, FormInput } from '@/components/forms';
 import { useSubjects } from '@/features/subjects';
 import { useCreateEntry, useDeleteEntry } from '@/features/timetable';
-import { headerStyles, layoutStyles, bodyStyles } from '@/styles';
+import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -47,7 +47,7 @@ export default function AssignEntryScreen() {
     className?: string;
   }>();
 
-  const [selectedSubjectId, setSelectedSubjectId] = useState(existingSubjectId || '');
+  const [selectedSubjectId, setSelectedSubjectId] = useState(existingSubjectId ?? '');
   const [room, setRoom] = useState('');
   const [notes, setNotes] = useState('');
 
@@ -56,11 +56,10 @@ export default function AssignEntryScreen() {
 
   // Fetch subjects for this class
   const { data: subjectsData } = useSubjects({ class_id: classId, page_size: 100 });
-  const subjects = subjectsData?.subjects || [];
 
   const subjectOptions = useMemo(
-    () => subjects.map((s: any) => ({ label: s.name, value: s.public_id })),
-    [subjects]
+    () => (subjectsData?.subjects ?? []).map((s) => ({ label: s.name, value: s.public_id })),
+    [subjectsData]
   );
 
   const handleAssign = async () => {
@@ -88,7 +87,7 @@ export default function AssignEntryScreen() {
       } else {
         router.back();
       }
-    } catch (err: any) {
+    } catch (err) {
       Alert.alert('Error', extractApiError(err));
     }
   };
@@ -100,13 +99,15 @@ export default function AssignEntryScreen() {
       {
         text: 'Remove',
         style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteEntry.mutateAsync(entryId);
-            router.back();
-          } catch (err: any) {
-            Alert.alert('Error', extractApiError(err));
-          }
+        onPress: () => {
+          void (async () => {
+            try {
+              await deleteEntry.mutateAsync(entryId);
+              router.back();
+            } catch (err) {
+              Alert.alert('Error', extractApiError(err));
+            }
+          })();
         },
       },
     ]);
@@ -135,8 +136,8 @@ export default function AssignEntryScreen() {
             <View style={headerStyles.titleContainer}>
               <Text style={headerStyles.title}>Assign Subject</Text>
               <Text style={headerStyles.subtitle}>
-                {decodeURIComponent(slotLabel || 'Slot')} ·{' '}
-                {decodeURIComponent(className || 'Class')}
+                {decodeURIComponent(slotLabel ?? 'Slot')} ·{' '}
+                {decodeURIComponent(className ?? 'Class')}
               </Text>
             </View>
             <View style={{ width: 40 }} />
@@ -144,7 +145,7 @@ export default function AssignEntryScreen() {
         </View>
       </LinearGradient>
 
-      <ScrollView style={bodyStyles.scroll} contentContainerStyle={bodyStyles.content}>
+      <ScrollView style={st.body} contentContainerStyle={st.bodyContent}>
         <Animated.View entering={FadeInDown.delay(100).springify()}>
           <View style={st.card}>
             <FormDropdown
@@ -174,7 +175,7 @@ export default function AssignEntryScreen() {
         <View style={st.actions}>
           <TouchableOpacity
             style={[st.assignBtn, isPending && st.assignBtnDisabled]}
-            onPress={handleAssign}
+            onPress={() => void handleAssign()}
             disabled={isPending}
           >
             {isPending ? (
@@ -200,6 +201,9 @@ export default function AssignEntryScreen() {
 }
 
 const st = StyleSheet.create({
+  body: { flex: 1, backgroundColor: '#f8fafc' },
+  bodyContent: { padding: 16, paddingBottom: 40 },
+
   card: {
     backgroundColor: '#fff',
     borderRadius: 16,

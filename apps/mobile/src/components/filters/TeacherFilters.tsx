@@ -31,11 +31,12 @@ export const TEACHER_FILTER_FIELDS: FilterField[] = [
   makeDeletedToggle('teachers'),
 ];
 
-export function getTeacherFilterLabels(filters: Record<string, any>): FilterLabel[] {
+export function getTeacherFilterLabels(filters: Record<string, unknown>): FilterLabel[] {
   const result: FilterLabel[] = [];
 
-  if (filters.designation) {
-    result.push({ key: 'designation', label: filters.designation, value: filters.designation });
+  const designation = filters.designation;
+  if (typeof designation === 'string' && designation) {
+    result.push({ key: 'designation', label: designation, value: designation });
   }
 
   const gender = getGenderLabel(filters);

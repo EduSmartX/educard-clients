@@ -4,15 +4,7 @@
  */
 
 import { LinearGradient } from 'expo-linear-gradient';
-import {
-  Calendar,
-  Clock,
-  BookOpen,
-  Building2,
-  Users,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react-native';
+import { Calendar, Clock, BookOpen, Building2, Users } from 'lucide-react-native';
 import { useState, useCallback, useMemo } from 'react';
 import {
   View,
@@ -26,7 +18,8 @@ import {
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { Screen } from '@/components/layout';
-import { colors } from '@/constants/colors';
+// colors constant unused - keeping import commented for future use
+// import { colors } from '@/constants/colors';
 import { useMyTimetable } from '@/features/timetable';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -80,7 +73,7 @@ function TimeSlotCard({ entry }: { entry: TimetableEntry }) {
         <View style={styles.slotHeader}>
           <View style={styles.subjectBadge}>
             <BookOpen size={14} color="#3b82f6" />
-            <Text style={styles.subjectName}>{entry.subject_name || 'Free Period'}</Text>
+            <Text style={styles.subjectName}>{entry.subject_name ?? 'Free Period'}</Text>
           </View>
         </View>
 
@@ -140,7 +133,12 @@ export default function EmployeeScheduleScreen() {
     <Screen scrollable={false}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => void handleRefresh()}
+          />
+        }
         contentContainerStyle={styles.scrollContent}
       >
         {/* Header */}

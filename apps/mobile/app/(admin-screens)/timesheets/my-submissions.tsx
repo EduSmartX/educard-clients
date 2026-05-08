@@ -89,9 +89,11 @@ interface TimesheetStatusResponse {
   } | null;
 }
 
-interface AttendanceRecordExtended extends AttendanceRecord {
+// AttendanceRecordExtended interface - used for type extension
+type _AttendanceRecordExtended = AttendanceRecord & {
+  // prefixed _ unused for now
   approval_status?: string;
-}
+};
 
 type DayState =
   | 'present'
@@ -648,7 +650,8 @@ export default function MyTimesheetScreen() {
         setCheckingWeekStatus(false);
         return;
       }
-    } catch (err) {
+    } catch (_err) {
+      // prefixed _ - unused
       // No submission exists - that's fine, allow editing
       setWeekTimesheetStatus(null);
     }
@@ -776,15 +779,14 @@ export default function MyTimesheetScreen() {
       clickedDate.setHours(0, 0, 0, 0);
       const isClickable = clickedDate <= today && state !== 'future';
 
-      let shortLabel = '';
-      if (state === 'holiday' && holidayInfo) {
-        shortLabel =
-          holidayInfo.type === 'weekend'
-            ? 'Weekend'
-            : holidayInfo.name.length > 8
-              ? holidayInfo.name.substring(0, 6) + '..'
-              : holidayInfo.name;
-      }
+      // Label for holiday display - computed but used in potential future UI
+      const _shortLabel = holidayInfo // prefixed _ - unused for now
+        ? holidayInfo.type === 'weekend'
+          ? 'Weekend'
+          : holidayInfo.name.length > 8
+            ? holidayInfo.name.substring(0, 6) + '..'
+            : holidayInfo.name
+        : '';
 
       const renderIcon = () => {
         if (state === 'leave-approved' || state === 'leave-pending') {

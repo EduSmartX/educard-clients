@@ -6,7 +6,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
@@ -19,7 +19,6 @@ import {
   Clock,
   ChevronRight,
   UserCheck,
-  CalendarDays,
   AlertTriangle,
   PartyPopper,
 } from 'lucide-react-native';
@@ -38,7 +37,8 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { apiClient } from '@/api/client';
 import { Screen } from '@/components/layout';
-import { colors } from '@/constants/colors';
+// colors unused - keeping for future use
+// import { colors } from '@/constants/colors';
 import { useAuthStore } from '@/lib/auth-store';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -61,7 +61,22 @@ const getDashboardStats = async (): Promise<{
   employees_present: number;
 }> => {
   const response = await apiClient.get('/attendance/admin/dashboard-stats/');
-  return response.data.data || response.data;
+  const data = response.data as { data?: unknown } | undefined;
+  return (data?.data ?? response.data) as {
+    working_day_status: {
+      is_working_day: boolean;
+      reason?: string;
+      message?: string;
+      is_holiday?: boolean;
+      holiday_name?: string;
+    };
+    students_registered: number;
+    students_marked: number;
+    students_present: number;
+    employees_registered: number;
+    employees_marked: number;
+    employees_present: number;
+  };
 };
 
 const getEmployeeAttendance = async (): Promise<{
@@ -76,14 +91,27 @@ const getEmployeeAttendance = async (): Promise<{
   const response = await apiClient.get('/attendance/employee-attendance/', {
     params: { start_date: today, end_date: today },
   });
-  return response.data.data || response.data;
+  const data = response.data as { data?: unknown } | undefined;
+  return (data?.data ?? response.data) as {
+    results: {
+      date: string;
+      status: string;
+      check_in_time?: string;
+      check_out_time?: string;
+    }[];
+  };
 };
 
 const getEligibleClasses = async (): Promise<
   { public_id: string; display_name: string; total_students: number }[]
 > => {
   const response = await apiClient.get('/classes/employee/eligible/');
-  return response.data.data || response.data;
+  const data = response.data as { data?: unknown } | undefined;
+  return (data?.data ?? response.data) as {
+    public_id: string;
+    display_name: string;
+    total_students: number;
+  }[];
 };
 
 // Quick Action Items

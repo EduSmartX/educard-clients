@@ -65,7 +65,7 @@ export function AddressFormSection({
       />
       <FormInput
         label="Address Line 2"
-        value={addressLine2 || ''}
+        value={addressLine2 ?? ''}
         onChangeText={(v) => onFieldChange('address_line_2', v)}
         placeholder="Apartment, suite, etc. (optional)"
       />

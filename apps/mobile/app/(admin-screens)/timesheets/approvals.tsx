@@ -11,14 +11,12 @@ import { useRouter } from 'expo-router';
 import {
   ChevronLeft,
   CheckCircle,
-  RotateCcw,
-  Clock,
   User,
   ClipboardList,
   Search,
   Filter,
   X,
-} from 'lucide-react-native';
+} from 'lucide-react-native'; // Removed unused: RotateCcw, Clock
 import { useState, useCallback, useMemo } from 'react';
 import {
   View,
@@ -140,17 +138,17 @@ export default function TimesheetApprovalsScreen() {
     }) => {
       const res = await apiClient.post(`/attendance/timesheet-submission/${publicId}/review/`, {
         submission_status: submissionStatus,
-        review_comments: reviewComments || '',
+        review_comments: reviewComments ?? '', // ?? instead of ||
       });
-      return res.data;
+      return res.data as unknown; // type assertion to fix unsafe return
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['timesheets'] });
+      void qc.invalidateQueries({ queryKey: ['timesheets'] }); // void for floating promise
     },
   });
 
   const timesheets = useMemo(() => {
-    const list = data?.data || [];
+    const list = data?.data ?? []; // ?? instead of ||
     if (!searchQuery) return list;
     const q = searchQuery.toLowerCase();
     return list.filter(
@@ -162,7 +160,7 @@ export default function TimesheetApprovalsScreen() {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    refetch().finally(() => setRefreshing(false));
+    void refetch().finally(() => setRefreshing(false)); // void for floating promise
   }, [refetch]);
 
   const handleSearch = () => {

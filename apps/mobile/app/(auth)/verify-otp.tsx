@@ -46,13 +46,15 @@ export default function VerifyOTPScreen() {
     }
   };
 
-  const handleKeyPress = (e: { nativeEvent: { key: string } }, index: number) => { // proper type instead of any
+  const handleKeyPress = (e: { nativeEvent: { key: string } }, index: number) => {
+    // proper type instead of any
     if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
   };
 
-  const handleVerify = () => { // removed async - no await
+  const handleVerify = () => {
+    // removed async - no await
     const otpCode = otp.join('');
     if (otpCode.length !== 6) {
       setError('Please enter the complete 6-digit code');

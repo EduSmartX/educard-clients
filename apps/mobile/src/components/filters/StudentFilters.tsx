@@ -36,9 +36,14 @@ export function useStudentFilterFields(): FilterField[] {
   const { data: classesData } = useClasses({ page_size: 100 });
 
   return useMemo(() => {
-    const classOptions = (classesData?.classes || []).map((c: any) => ({
+    interface ClassItem {
+      public_id: string;
+      name: string;
+      class_master?: { name: string };
+    }
+    const classOptions = (classesData?.classes ?? []).map((c: ClassItem) => ({
       value: c.public_id,
-      label: `${c.class_master?.name || ''} - ${c.name}`.trim(),
+      label: `${c.class_master?.name ?? ''} - ${c.name}`.trim(),
     }));
 
     const classField: FilterField = {
@@ -54,18 +59,18 @@ export function useStudentFilterFields(): FilterField[] {
 }
 
 export function getStudentFilterLabels(
-  filters: Record<string, any>,
+  filters: Record<string, unknown>,
   classOptions?: { value: string; label: string }[]
 ): FilterLabel[] {
   const result: FilterLabel[] = [];
 
   // Class filter label
-  if (filters.class_id && classOptions) {
-    const cls = classOptions.find((c) => c.value === filters.class_id);
-    if (cls)
-      result.push({ key: 'class_id', label: `Class: ${cls.label}`, value: filters.class_id });
-  } else if (filters.class_id) {
-    result.push({ key: 'class_id', label: 'Class filter', value: filters.class_id });
+  const classId = filters.class_id as string | undefined;
+  if (classId && classOptions) {
+    const cls = classOptions.find((c) => c.value === classId);
+    if (cls) result.push({ key: 'class_id', label: `Class: ${cls.label}`, value: classId });
+  } else if (classId) {
+    result.push({ key: 'class_id', label: 'Class filter', value: classId });
   }
 
   const gender = getGenderLabel(filters, 'user__gender');

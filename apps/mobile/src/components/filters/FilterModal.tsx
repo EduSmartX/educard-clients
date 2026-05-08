@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: _SCREEN_WIDTH } = Dimensions.get('window');
 
 // ── Color palette for chips ──────────────────────────────────────
 const CHIP_COLORS = [
@@ -50,9 +50,9 @@ export interface FilterField {
 interface FilterModalProps {
   visible: boolean;
   onClose: () => void;
-  onApply: (filters: Record<string, any>) => void;
+  onApply: (filters: Record<string, unknown>) => void;
   fields: FilterField[];
-  currentFilters: Record<string, any>;
+  currentFilters: Record<string, unknown>;
   title?: string;
 }
 
@@ -64,7 +64,7 @@ export function FilterModal({
   currentFilters,
   title = 'Filters',
 }: FilterModalProps) {
-  const [localFilters, setLocalFilters] = useState<Record<string, any>>({});
+  const [localFilters, setLocalFilters] = useState<Record<string, unknown>>({});
 
   useEffect(() => {
     if (visible) {
@@ -96,7 +96,7 @@ export function FilterModal({
   };
 
   const handleApply = () => {
-    const cleaned: Record<string, any> = {};
+    const cleaned: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(localFilters)) {
       if (v !== '' && v !== undefined && v !== false) {
         cleaned[k] = v;
@@ -164,7 +164,7 @@ export function FilterModal({
             }
 
             // select type
-            const selectOptions = (field.options || []).filter((o) => o.value !== '');
+            const selectOptions = (field.options ?? []).filter((o) => o.value !== '');
 
             return (
               <Animated.View

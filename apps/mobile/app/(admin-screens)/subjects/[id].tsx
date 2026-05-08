@@ -2,6 +2,7 @@
  * Subject Detail Screen — /(admin-screens)/subjects/[id]
  */
 
+import type { SubjectDetail } from '@educard/shared';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
@@ -12,22 +13,25 @@ export default function SubjectDetailScreen() {
   const { id, is_deleted } = useLocalSearchParams<{ id: string; is_deleted?: string }>();
   const router = useRouter();
   const isDeleted = is_deleted === 'true';
-  const { data: subject, isLoading, isError } = useSubjectDetail(id || '', isDeleted);
+  const { data: subject, isLoading, isError } = useSubjectDetail(id ?? '', isDeleted);
 
-  const s = subject;
+  const s = subject as SubjectDetail | undefined;
+  const subjectName = s?.subject_info?.name ?? s?.name ?? '...';
+  const subjectCode = s?.subject_info?.code ?? s?.code;
+  const className = s?.class_info?.class_master_name ?? s?.class_info?.name;
 
   return (
     <DetailScreenShell
       title="Subject Details"
-      subtitle={s?.subject_info?.name || s?.name || '...'}
+      subtitle={subjectName}
       isLoading={isLoading}
       isError={isError || !subject}
       onBack={() => router.back()}
     >
       <Animated.View entering={FadeInDown.delay(100)}>
         <DetailSection title="Subject Info" icon="📚">
-          <DetailRow label="Name" value={s?.subject_info?.name || s?.name} />
-          <DetailRow label="Code" value={s?.subject_info?.code || s?.code} />
+          <DetailRow label="Name" value={s?.subject_info?.name ?? s?.name} />
+          <DetailRow label="Code" value={subjectCode} />
           <DetailRow label="Description" value={s?.description} />
         </DetailSection>
       </Animated.View>
@@ -35,7 +39,7 @@ export default function SubjectDetailScreen() {
       {s?.class_info && (
         <Animated.View entering={FadeInDown.delay(200)}>
           <DetailSection title="Class" icon="🏫">
-            <DetailRow label="Class" value={s.class_info.class_master_name || s.class_info.name} />
+            <DetailRow label="Class" value={className} />
             <DetailRow label="Section" value={s.class_info.name} />
           </DetailSection>
         </Animated.View>

@@ -3,18 +3,10 @@
  * Select a class → see weekly timetable grid
  */
 
-import { Colors, getRoleGradient } from '@educard/shared';
+import { getRoleGradient } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import {
-  ChevronLeft,
-  ChevronDown,
-  Clock,
-  BookOpen,
-  User,
-  Settings,
-  Plus,
-} from 'lucide-react-native';
+import { ChevronLeft, Clock, BookOpen, User, Settings } from 'lucide-react-native';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import {
   View,
@@ -43,7 +35,7 @@ import { headerStyles, layoutStyles } from '@/styles';
 import { isAdminRole } from '@/utils/role-utils';
 
 const adminGradient = getRoleGradient('admin');
-const SCREEN_WIDTH = Dimensions.get('window').width;
+const _SCREEN_WIDTH = Dimensions.get('window').width;
 
 const SLOT_COLORS: Record<string, { bg: string; border: string; text: string }> = {
   period: { bg: '#eff6ff', border: '#93c5fd', text: '#1e40af' },
@@ -65,7 +57,7 @@ function formatTime(t: string) {
 export default function TimetableScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ classId?: string }>();
-  const [selectedClassId, setSelectedClassId] = useState(params.classId || '');
+  const [selectedClassId, setSelectedClassId] = useState(params.classId ?? '');
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const dayScrollRef = useRef<ScrollView>(null);
@@ -85,14 +77,17 @@ export default function TimetableScreen() {
     refetch,
   } = useClassTimetable(selectedClassId || undefined);
 
-  const classOptions = useMemo(
-    () =>
-      (classesData?.classes || []).map((c: any) => ({
-        label: `${c.class_master?.name || c.name} - ${c.name}`,
-        value: c.public_id,
-      })),
-    [classesData]
-  );
+  const classOptions = useMemo(() => {
+    interface ClassItem {
+      public_id: string;
+      name: string;
+      class_master?: { name: string } | null;
+    }
+    return (classesData?.classes ?? []).map((c: ClassItem) => ({
+      label: `${c.class_master?.name ?? c.name} - ${c.name}`,
+      value: c.public_id,
+    }));
+  }, [classesData]);
 
   // Get available days from timetable
   const availableDays = useMemo(() => {
@@ -132,13 +127,23 @@ export default function TimetableScreen() {
 
   const renderSlotCard = (slot: ClassTimetableSlot, index: number) => {
     const isBreak = BREAK_TYPES.has(slot.slot_type);
-    const colors = SLOT_COLORS[slot.slot_type] || SLOT_COLORS.period;
+    const colors = SLOT_COLORS[slot.slot_type] ?? SLOT_COLORS.period;
 
     const handleSlotPress = () => {
       if (isBreak || !canManage) return;
-      router.push(
-        `/(admin-screens)/timetable/assign-entry?slotId=${slot.public_id}&dayOfWeek=${activeDay}&classId=${selectedClassId}&entryId=${slot.entry_public_id || ''}&subjectId=${slot.subject_public_id || ''}&slotLabel=${encodeURIComponent(slot.label)}&className=${encodeURIComponent(classOptions.find((c: any) => c.value === selectedClassId)?.label || '')}` as any
-      );
+      const classLabel = classOptions.find((c) => c.value === selectedClassId)?.label ?? '';
+      router.push({
+        pathname: '/(admin-screens)/timetable/assign-entry',
+        params: {
+          slotId: slot.public_id,
+          dayOfWeek: activeDay.toString(),
+          classId: selectedClassId ?? '',
+          entryId: slot.entry_public_id ?? '',
+          subjectId: slot.subject_public_id ?? '',
+          slotLabel: encodeURIComponent(slot.label),
+          className: encodeURIComponent(classLabel),
+        },
+      });
     };
 
     return (
@@ -161,7 +166,7 @@ export default function TimetableScreen() {
             </Text>
             <View style={[styles.slotTypeBadge, { backgroundColor: colors.border + '40' }]}>
               <Text style={[styles.slotTypeText, { color: colors.text }]}>
-                {SLOT_TYPE_LABELS[slot.slot_type] || slot.label}
+                {SLOT_TYPE_LABELS[slot.slot_type] ?? slot.label}
               </Text>
             </View>
           </View>
@@ -173,7 +178,7 @@ export default function TimetableScreen() {
               <View style={styles.slotRow}>
                 <BookOpen size={14} color={colors.text} />
                 <Text style={[styles.slotSubject, { color: colors.text }]}>
-                  {slot.subject_name || 'No subject assigned'}
+                  {slot.subject_name ?? 'No subject assigned'}
                 </Text>
               </View>
               {slot.teacher_name && (
@@ -237,7 +242,11 @@ export default function TimetableScreen() {
         style={styles.body}
         contentContainerStyle={styles.bodyContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#7c3aed']} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => void onRefresh()}
+            colors={['#7c3aed']}
+          />
         }
       >
         {/* Class Selector */}

@@ -34,6 +34,7 @@ import {
   StyleSheet,
   Image,
   ActivityIndicator,
+  ImageSourcePropType,
 } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 
@@ -41,6 +42,10 @@ import { sendOtps, verifyOtp, parseApiError, registerOrganization } from '@/api'
 import type { OrganizationRegistrationData } from '@/api';
 import { AddressForm, type AddressData } from '@/components/forms';
 import { useModal } from '@/components/ui';
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const logoImage: ImageSourcePropType =
+  require('../../assets/images/educard-logo.jpg') as ImageSourcePropType;
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -265,7 +270,7 @@ export default function SignupScreen() {
       if (hasAddress) {
         registrationData.address_info = {
           street_address: orgAddress.streetAddress ?? '', // ?? instead of ||
-          address_line_2: orgAddress.addressLine2 || undefined,
+          address_line_2: orgAddress.addressLine2 ?? undefined,
           city: orgAddress.city ?? '',
           state: orgAddress.state ?? '',
           zip_code: orgAddress.zipCode ?? '',
@@ -847,11 +852,7 @@ export default function SignupScreen() {
             </TouchableOpacity>
 
             <View style={styles.logoContainer}>
-              <Image
-                source={require('../../assets/images/educard-logo.jpg')}
-                style={styles.logo}
-                resizeMode="contain"
-              />
+              <Image source={logoImage} style={styles.logo} resizeMode="contain" />
             </View>
 
             <Text style={styles.title}>Create Your Account</Text>

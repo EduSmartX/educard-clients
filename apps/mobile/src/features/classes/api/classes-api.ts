@@ -6,7 +6,7 @@
  * - Teacher: Read-only access via /classes/employee/ endpoints
  */
 
-import { API_ENDPOINTS } from '@educard/shared';
+// import { API_ENDPOINTS } from '@educard/shared'; // unused - keeping for future reference
 import type { Class, ApiListResponse, ApiDetailResponse } from '@educard/shared';
 
 import { apiClient } from '@/api/client';

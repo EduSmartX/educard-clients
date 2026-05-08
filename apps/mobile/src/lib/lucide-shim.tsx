@@ -4,11 +4,20 @@
  * to avoid TurboModule crash in Expo Go
  */
 
-import { Ionicons, MaterialIcons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
+import {
+  Ionicons,
+  MaterialIcons as _MaterialIcons,
+  MaterialCommunityIcons as _MaterialCommunityIcons,
+  Feather,
+} from '@expo/vector-icons';
 import React from 'react';
 
 // Map lucide icon names to @expo/vector-icons equivalents
-const iconMap: Record<string, { lib: any; name: string }> = {
+interface IconMapping {
+  lib: typeof Ionicons | typeof Feather;
+  name: string;
+}
+const iconMap: Record<string, IconMapping> = {
   // Navigation
   ChevronLeft: { lib: Ionicons, name: 'chevron-back' },
   ChevronRight: { lib: Ionicons, name: 'chevron-forward' },
@@ -174,21 +183,21 @@ interface IconProps {
   size?: number;
   color?: string;
   strokeWidth?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   style?: any;
-  [key: string]: any;
 }
 
 function createIconComponent(lucideName: string) {
-  const IconComponent = React.forwardRef(
-    ({ size = 24, color = '#000', style, ...rest }: IconProps, ref: any) => {
+  const IconComponent = React.forwardRef<typeof Ionicons, IconProps>(
+    ({ size = 24, color = '#000', style }, _ref) => {
       const mapping = iconMap[lucideName];
       if (!mapping) {
         // Fallback: render a generic icon
-        const Lib = Ionicons;
-        return <Lib ref={ref} name="help-outline" size={size} color={color} style={style} />;
+        return <Ionicons name="help-outline" size={size} color={color} style={style} />;
       }
-      const Lib = mapping.lib;
-      return <Lib ref={ref} name={mapping.name as any} size={size} color={color} style={style} />;
+      const Lib = mapping.lib as typeof Ionicons;
+      const iconName = mapping.name as keyof typeof Ionicons.glyphMap;
+      return <Lib name={iconName} size={size} color={color} style={style} />;
     }
   );
   IconComponent.displayName = lucideName;
@@ -197,7 +206,7 @@ function createIconComponent(lucideName: string) {
 
 // Export all icons as named exports using a Proxy
 // This way any `import { IconName } from 'lucide-react-native'` will work
-const handler: ProxyHandler<Record<string, any>> = {
+const handler: ProxyHandler<Record<string, ReturnType<typeof createIconComponent>>> = {
   get(_target, prop: string) {
     if (prop === '__esModule') return true;
     if (prop === 'default') return undefined;
@@ -205,7 +214,7 @@ const handler: ProxyHandler<Record<string, any>> = {
   },
 };
 
-const allIcons = new Proxy({}, handler);
+const _allIcons = new Proxy({}, handler);
 
 // Pre-create commonly used icons for better tree-shaking hints
 export const ChevronLeft = createIconComponent('ChevronLeft');
@@ -350,4 +359,4 @@ export const TriangleAlert = createIconComponent('TriangleAlert');
 // Type alias for LucideIcon used in typed icon props
 export type LucideIcon = React.FC<IconProps>;
 
-export default allIcons;
+export default _allIcons;

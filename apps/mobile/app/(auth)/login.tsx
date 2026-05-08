@@ -15,11 +15,16 @@ import {
   StyleSheet,
   Image,
   Switch,
+  ImageSourcePropType,
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated';
 
 import { getErrorMessage } from '@/api';
 import { useAuthStore } from '@/lib/auth-store';
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const logoImage: ImageSourcePropType =
+  require('../../assets/images/educard-logo.jpg') as ImageSourcePropType;
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -62,11 +67,7 @@ export default function LoginScreen() {
         >
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
             <View style={styles.logoContainer}>
-              <Image
-                source={require('../../assets/images/educard-logo.jpg')}
-                style={styles.logo}
-                resizeMode="contain"
-              />
+              <Image source={logoImage} style={styles.logo} resizeMode="contain" />
             </View>
             <Text style={styles.welcomeText}>Welcome Back!</Text>
             <Text style={styles.subtitleText}>Sign in to continue your journey</Text>
@@ -174,7 +175,11 @@ export default function LoginScreen() {
               </TouchableOpacity>
             </Link>
 
-            <TouchableOpacity onPress={() => void handleLogin()} disabled={isLoading} style={styles.loginButton}>
+            <TouchableOpacity
+              onPress={() => void handleLogin()}
+              disabled={isLoading}
+              style={styles.loginButton}
+            >
               <LinearGradient
                 colors={['#6366f1', '#8b5cf6']}
                 start={{ x: 0, y: 0 }}

@@ -4,20 +4,15 @@
  * This avoids the "installTurboModule" crash in Expo Go
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import React from 'react';
 import { View, Text, ScrollView, FlatList, Image, Animated as RNAnimated } from 'react-native';
 
 // Re-export plain View as Animated default
-const AnimatedView = RNAnimated.View;
-const AnimatedText = RNAnimated.Text;
-const AnimatedScrollView = RNAnimated.ScrollView;
-const AnimatedFlatList = RNAnimated.FlatList;
-const AnimatedImage = RNAnimated.Image;
+const _AnimatedView = RNAnimated.View;
+const _AnimatedText = RNAnimated.Text;
+const _AnimatedScrollView = RNAnimated.ScrollView;
+const _AnimatedFlatList = RNAnimated.FlatList;
+const _AnimatedImage = RNAnimated.Image;
 
 // Chainable no-op animation object that supports .delay(), .duration(), .springify(), etc.
 function createChainableAnimation(): any {
@@ -54,11 +49,16 @@ const Layout = createChainableAnimation();
 const LinearTransition = createChainableAnimation();
 
 // Create a wrapper that strips reanimated-specific props (entering, exiting, layout)
-function createAnimatedComponent(BaseComponent: any) {
-  return React.forwardRef((props: any, ref: any) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function createAnimatedComponent(BaseComponent: React.ComponentType<any>) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const AnimatedWrapper = React.forwardRef<unknown, any>((props, ref) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { entering, exiting, layout: layoutProp, ...rest } = props;
     return <BaseComponent ref={ref} {...rest} />;
   });
+  AnimatedWrapper.displayName = `Animated(${BaseComponent.displayName ?? BaseComponent.name ?? 'Component'})`;
+  return AnimatedWrapper;
 }
 
 const Animated = {
@@ -116,16 +116,21 @@ function interpolate(value: number, inputRange: number[], outputRange: number[])
 }
 
 // runOnJS / runOnUI - just call the function
-function runOnJS(fn: any) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function runOnJS<T extends (...args: unknown[]) => unknown>(fn: T): T {
   return fn;
 }
-function runOnUI(fn: any) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function runOnUI<T extends (...args: unknown[]) => unknown>(fn: T): T {
   return fn;
 }
 
 // useAnimatedScrollHandler
-function useAnimatedScrollHandler(handlers: any) {
-  return handlers?.onScroll || (() => {});
+interface ScrollHandlers {
+  onScroll?: () => void;
+}
+function useAnimatedScrollHandler(handlers: ScrollHandlers) {
+  return handlers?.onScroll ?? (() => {});
 }
 
 export default Animated;

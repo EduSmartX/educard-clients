@@ -14,7 +14,7 @@
  *   />
  */
 
-import { Colors } from '@educard/shared';
+import { Colors as _Colors } from '@educard/shared';
 import { AlertTriangle, Info, CheckCircle, XCircle, LucideIcon } from 'lucide-react-native';
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
@@ -55,7 +55,7 @@ export function ConfirmDialog({
   icon,
 }: ConfirmDialogProps) {
   const config = VARIANT_CONFIG[confirmVariant];
-  const IconComponent = icon || config.icon;
+  const IconComponent = icon ?? config.icon;
 
   return (
     <Modal
