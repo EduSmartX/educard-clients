@@ -11,6 +11,9 @@ export interface SidebarItem {
   path?: string;
   badge?: string | number;
   children?: SidebarItem[];
+  requiresSupervisor?: boolean;
+  /** Additional paths that should highlight this sidebar item when active */
+  matchPaths?: string[];
 }
 
 export interface SidebarSection {
@@ -24,6 +27,8 @@ interface DashboardSidebarProps {
   footer?: React.ReactNode;
   onNavigate?: () => void;
   userRole?: string;
+  /** Whether the user is a supervisor (can manage subordinates) */
+  isSupervisor?: boolean;
 }
 
 function SidebarNavItem({
@@ -78,8 +83,8 @@ function SidebarNavItem({
                 key={child.id}
                 item={child}
                 siblingPaths={item
-                  .children!.filter((s) => s.path && s.id !== child.id)
-                  .map((s) => s.path!)}
+                  .children!.filter((s) => s.id !== child.id)
+                  .flatMap((s) => [s.path, ...(s.matchPaths || [])].filter(Boolean) as string[])}
                 onNavigate={onNavigate}
                 theme={theme}
               />
@@ -95,12 +100,16 @@ function SidebarNavItem({
     return null;
   }
 
-  // Compute active state: pathname matches this item's path but not a sibling's
-  // longer path. E.g. /attendance/timesheet should NOT be active when at
+  // Compute active state: pathname matches this item's path (or any of its matchPaths)
+  // but not a sibling's longer path. E.g. /attendance/timesheet should NOT be active when at
   // /attendance/timesheet/approvals because the sibling /attendance/timesheet/approvals
   // is a more specific match.
+  const matchesMainPath = pathname === item.path || pathname.startsWith(`${item.path}/`);
+  const matchesExtraPaths = item.matchPaths?.some(
+    (mp) => pathname === mp || pathname.startsWith(`${mp}/`)
+  );
   const isItemActive =
-    (pathname === item.path || pathname.startsWith(`${item.path}/`)) &&
+    (matchesMainPath || matchesExtraPaths) &&
     !(siblingPaths ?? []).some((sp) => sp.length > item.path!.length && pathname.startsWith(sp));
 
   return (
@@ -141,14 +150,25 @@ function SidebarNavItem({
   );
 }
 
-export function DashboardSidebar({ sections, footer, onNavigate, userRole }: DashboardSidebarProps) {
+export function DashboardSidebar({ sections, footer, onNavigate, userRole, isSupervisor = false }: DashboardSidebarProps) {
   const theme = getThemeConfig(userRole);
+  
+  // Filter sections and items based on supervisor status
+  const filteredSections = sections.map((section) => ({
+    ...section,
+    items: section.items.filter((item) => {
+      if (item.requiresSupervisor && !isSupervisor) {
+        return false;
+      }
+      return true;
+    }),
+  })).filter((section) => section.items.length > 0); // Remove empty sections
   
   return (
     <div className="flex h-full flex-col bg-white">
       {/* Navigation */}
       <nav className="flex-1 px-4 py-6 overflow-y-auto">
-        {sections.map((section, sectionIndex) => (
+        {filteredSections.map((section, sectionIndex) => (
           <CollapsibleSection
             key={sectionIndex}
             section={section}
@@ -209,8 +229,8 @@ function CollapsibleSection({
               key={item.id}
               item={item}
               siblingPaths={section.items
-                .filter((s) => s.path && s.id !== item.id)
-                .map((s) => s.path!)}
+                .filter((s) => s.id !== item.id)
+                .flatMap((s) => [s.path, ...(s.matchPaths || [])].filter(Boolean) as string[])}
               onNavigate={onNavigate}
               theme={theme}
             />
@@ -243,8 +263,8 @@ function CollapsibleSection({
               key={item.id}
               item={item}
               siblingPaths={section.items
-                .filter((s) => s.path && s.id !== item.id)
-                .map((s) => s.path!)}
+                .filter((s) => s.id !== item.id)
+                .flatMap((s) => [s.path, ...(s.matchPaths || [])].filter(Boolean) as string[])}
               onNavigate={onNavigate}
               theme={theme}
             />

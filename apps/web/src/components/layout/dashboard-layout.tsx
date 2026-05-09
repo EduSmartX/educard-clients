@@ -9,13 +9,15 @@ interface DashboardLayoutProps {
   children: ReactNode;
   sidebarSections: SidebarSection[];
   userRole?: string;
+  /** Whether the user is a supervisor (can manage subordinates) */
+  isSupervisor?: boolean;
 }
 
 /**
  * DashboardLayout - Provides sidebar navigation for dashboard pages
  * Note: Header is rendered once in ProtectedLayout, not here
  */
-export function DashboardLayout({ children, sidebarSections, userRole }: DashboardLayoutProps) {
+export function DashboardLayout({ children, sidebarSections, userRole, isSupervisor = false }: DashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const theme = getThemeConfig(userRole);
 
@@ -44,6 +46,7 @@ export function DashboardLayout({ children, sidebarSections, userRole }: Dashboa
           sections={sidebarSections} 
           onNavigate={() => setIsSidebarOpen(false)}
           userRole={userRole}
+          isSupervisor={isSupervisor}
         />
       </aside>
 

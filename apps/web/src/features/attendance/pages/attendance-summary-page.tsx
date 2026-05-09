@@ -291,7 +291,7 @@ export function AttendanceSummaryPage() {
             />
             Refresh
           </Button>
-          {summaryData && summaryData.summary.classes_pending > 0 && (
+          {summaryData && summaryData.summary.classes_pending > 0 && summaryData.is_working_day && !summaryData.is_holiday && (
             <Button
               variant="default"
               size="sm"
@@ -462,30 +462,90 @@ export function AttendanceSummaryPage() {
         </Card>
       )}
 
-      {/* Class-wise DataTable */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-slate-800">
-              Class-wise Attendance Status
-            </h3>
-            {summaryData && (
-              <Badge variant="secondary" className="text-xs">
-                {summaryData.classes.length} classes
-              </Badge>
-            )}
-          </div>
-          <DataTable
-            columns={columns}
-            data={summaryData?.classes || []}
-            isLoading={isLoading}
-            emptyMessage="No classes found for this organization."
-            getRowKey={(row) => row.public_id}
-            maxHeight="600px"
-            minWidth="900px"
-          />
-        </CardContent>
-      </Card>
+      {/* Class-wise DataTable - Only show on working days */}
+      {summaryData && (summaryData.is_working_day && !summaryData.is_holiday) ? (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-slate-800">
+                Class-wise Attendance Status
+              </h3>
+              {summaryData && (
+                <Badge variant="secondary" className="text-xs">
+                  {summaryData.classes.length} classes
+                </Badge>
+              )}
+            </div>
+            <DataTable
+              columns={columns}
+              data={summaryData?.classes || []}
+              isLoading={isLoading}
+              emptyMessage="No classes found for this organization."
+              getRowKey={(row) => row.public_id}
+              maxHeight="600px"
+              minWidth="900px"
+            />
+          </CardContent>
+        </Card>
+      ) : summaryData && (!summaryData.is_working_day || summaryData.is_holiday) ? (
+        <Card className="border-slate-200">
+          <CardContent className="py-12">
+            <div className="flex flex-col items-center justify-center text-center gap-3">
+              <div className="p-4 bg-slate-100 rounded-full">
+                <CalendarDays className="h-8 w-8 text-slate-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-slate-700">
+                  No Attendance Required
+                </h3>
+                <p className="text-sm text-slate-500 mt-1">
+                  {summaryData.is_holiday
+                    ? `${summaryData.holiday_name || 'Holiday'} - Attendance is not required on holidays.`
+                    : `${format(selectedDate, 'EEEE')} is not a working day. No attendance tracking needed.`}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : !summaryData && !isLoading ? (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-slate-800">
+                Class-wise Attendance Status
+              </h3>
+            </div>
+            <DataTable
+              columns={columns}
+              data={[]}
+              isLoading={isLoading}
+              emptyMessage="No classes found for this organization."
+              getRowKey={(row) => row.public_id}
+              maxHeight="600px"
+              minWidth="900px"
+            />
+          </CardContent>
+        </Card>
+      ) : isLoading ? (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-slate-800">
+                Class-wise Attendance Status
+              </h3>
+            </div>
+            <DataTable
+              columns={columns}
+              data={[]}
+              isLoading={true}
+              emptyMessage="No classes found for this organization."
+              getRowKey={(row) => row.public_id}
+              maxHeight="600px"
+              minWidth="900px"
+            />
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   );
 }

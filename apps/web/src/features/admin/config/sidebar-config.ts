@@ -100,6 +100,9 @@ export const adminSidebarConfig: SidebarSection[] = [
         label: 'Exams',
         icon: FileText,
         path: ROUTES.EXAMS_LIST,
+        // Include create/edit/bulk-create under Exams highlighting
+        // Note: Edit path /exams/:id/edit is handled by prefix matching from /exams/list
+        matchPaths: [ROUTES.EXAMS_NEW, ROUTES.EXAMS_BULK_CREATE],
       },
       {
         id: 'exam-overview',

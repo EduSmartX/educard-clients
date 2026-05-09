@@ -10,9 +10,8 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { ArrowLeft, Loader2, CalendarDays, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Loader2, CalendarDays, AlertTriangle, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,13 +24,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
-import { PageHeader, FormActions } from '@/components/common';
-import { ROUTES } from '@/constants';
-import { ValidationMessages } from '@/constants';
+import { Button } from '@/components/ui/button';
+import { PageHeader, FormActions, WarningConfirmationDialog } from '@/components/common';
+import { ROUTES, ValidationMessages } from '@/constants';
 import { formatDateForAPI, parseDate } from '@/lib/utils/date-utils';
-import { useExam, useExamSessions } from '../hooks/use-exams';
+import { useExam, useExamSessions, useExams } from '../hooks/use-exams';
 import { useCreateExam, useUpdateExam } from '../hooks/mutations';
 import { useSubjects } from '@/features/subjects/hooks/use-subjects';
+import { useClasses } from '@/features/classes/hooks/use-classes';
 import { useRole } from '@/hooks/use-role';
 import { validateAttendanceDate } from '@/features/attendance/api/attendance-api';
 import {
@@ -61,13 +61,11 @@ export function ExamFormPage() {
 
   const { data: existingExam, isLoading: isLoadingExam } = useExam(id);
   const { data: sessionsData } = useExamSessions({ page: 1, page_size: 100 });
-  const { data: subjectsData } = useSubjects({ page: 1, page_size: 200 });
-
-  const sessionsList = useMemo(() => sessionsData?.data || [], [sessionsData]);
-  const subjectsList = useMemo(() => subjectsData?.data || [], [subjectsData]);
-
-  // Form state
+  const { data: classesData } = useClasses({ page: 1, page_size: 200 });
+  
+  // Form state - add classId for filtering subjects
   const [sessionId, setSessionId] = useState('');
+  const [classId, setClassId] = useState('');
   const [subjectId, setSubjectId] = useState('');
   const [status, setStatus] = useState<ExamStatus | ''>('');
   const [maxMarks, setMaxMarks] = useState('100');
@@ -78,6 +76,23 @@ export function ExamFormPage() {
   const [description, setDescription] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [dateError, setDateError] = useState<string | undefined>();
+  const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
+  const [pendingPayload, setPendingPayload] = useState<ExamCreatePayload | null>(null);
+  
+  // Only fetch subjects for the selected class
+  const { data: subjectsData } = useSubjects(
+    classId ? { page: 1, page_size: 200, class_assigned: classId } : { page: 1, page_size: 0 }
+  );
+  
+  // Fetch existing exams for duplicate detection (only when creating)
+  const { data: existingExamsData } = useExams(
+    isCreate && sessionId ? { page: 1, page_size: 500, session: sessionId } : { page: 1, page_size: 0 }
+  );
+
+  const sessionsList = useMemo(() => sessionsData?.data || [], [sessionsData]);
+  const classesList = useMemo(() => classesData?.data || [], [classesData]);
+  const subjectsList = useMemo(() => subjectsData?.data || [], [subjectsData]);
+  const existingExams = useMemo(() => existingExamsData?.data || [], [existingExamsData]);
 
   // Get the selected session to display its date range
   const selectedSession = useMemo(
@@ -152,6 +167,7 @@ export function ExamFormPage() {
   useEffect(() => {
     if (existingExam) {
       setSessionId(existingExam.session_public_id);
+      setClassId(existingExam.class_public_id);
       setSubjectId(existingExam.subject_public_id);
       setStatus(existingExam.status);
       setMaxMarks(String(existingExam.max_marks));
@@ -163,8 +179,18 @@ export function ExamFormPage() {
     }
   }, [existingExam]);
 
+  // Check if exam already exists for this session + subject
+  const checkDuplicateExam = useMemo(() => {
+    if (!isCreate || !sessionId || !subjectId) return null;
+    return existingExams.find((exam) => exam.subject_public_id === subjectId);
+  }, [isCreate, sessionId, subjectId, existingExams]);
+
   const createMutation = useCreateExam({
-    onSuccess: () => navigate(ROUTES.EXAMS_LIST),
+    onSuccess: () => {
+      setShowDuplicateWarning(false);
+      setPendingPayload(null);
+      navigate(ROUTES.EXAMS_LIST);
+    },
     onError: (_err, errors) => {
       if (errors) {
         setFieldErrors(errors as Record<string, string>);
@@ -191,6 +217,9 @@ export function ExamFormPage() {
     const errors: Record<string, string> = {};
     if (!sessionId) {
       errors.session_id = ValidationMessages.EXAM.SELECT_SESSION;
+    }
+    if (!classId) {
+      errors.class_id = ValidationMessages.EXAM.SELECT_CLASS;
     }
     if (!subjectId) {
       errors.subject_id = ValidationMessages.EXAM.SELECT_SUBJECT;
@@ -221,6 +250,14 @@ export function ExamFormPage() {
         end_time: endTime || null,
         description: description.trim(),
       };
+      
+      // Check for duplicate exam before creating
+      if (checkDuplicateExam) {
+        setPendingPayload(payload);
+        setShowDuplicateWarning(true);
+        return;
+      }
+      
       createMutation.mutate(payload);
     } else if (isEdit && id) {
       const payload: ExamUpdatePayload = {
@@ -316,14 +353,52 @@ export function ExamFormPage() {
                 )}
               </div>
 
-              {/* Subject (includes class) */}
+              {/* Class Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="class_id">
+                  Class <span className="text-red-500">*</span>
+                </Label>
+                {isView ? (
+                  <Input
+                    value={existingExam?.class_name || '-'}
+                    disabled
+                    className="bg-gray-50"
+                  />
+                ) : (
+                  <Select
+                    key={`class-${classId || 'empty'}`}
+                    value={classId}
+                    onValueChange={(value) => {
+                      setClassId(value);
+                      setSubjectId(''); // Reset subject when class changes
+                    }}
+                    disabled={isEdit}
+                  >
+                    <SelectTrigger className={fieldErrors.class_id ? 'border-red-500' : ''}>
+                      <SelectValue placeholder="Select class" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {classesList.map((cls) => (
+                        <SelectItem key={cls.public_id} value={cls.public_id}>
+                          {cls.class_master?.name || 'Unknown'} - {cls.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {fieldErrors.class_id && (
+                  <p className="text-sm text-red-500">{fieldErrors.class_id}</p>
+                )}
+              </div>
+
+              {/* Subject (now filtered by class) */}
               <div className="space-y-2">
                 <Label htmlFor="subject_id">
                   Subject <span className="text-red-500">*</span>
                 </Label>
                 {isView ? (
                   <Input
-                    value={existingExam ? `${existingExam.subject_name} - ${existingExam.class_name}` : '-'}
+                    value={existingExam?.subject_name || '-'}
                     disabled
                     className="bg-gray-50"
                   />
@@ -332,15 +407,15 @@ export function ExamFormPage() {
                     key={`subject-${subjectId || 'empty'}`}
                     value={subjectId}
                     onValueChange={setSubjectId}
-                    disabled={isEdit}
+                    disabled={isEdit || !classId}
                   >
                     <SelectTrigger className={fieldErrors.subject_id ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Select subject" />
+                      <SelectValue placeholder={classId ? "Select subject" : "Select class first"} />
                     </SelectTrigger>
                     <SelectContent>
                       {subjectsList.map((subject) => (
                         <SelectItem key={subject.public_id} value={subject.public_id}>
-                          {subject.subject_info.name} - {subject.class_info.name}
+                          {subject.subject_info.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -349,7 +424,16 @@ export function ExamFormPage() {
                 {fieldErrors.subject_id && (
                   <p className="text-sm text-red-500">{fieldErrors.subject_id}</p>
                 )}
-                {!isView && selectedSubject && (
+                {/* Duplicate warning inline */}
+                {checkDuplicateExam && (
+                  <div className="flex items-center gap-1.5 rounded-md bg-amber-50 px-2.5 py-1.5 text-xs text-amber-700 border border-amber-200">
+                    <AlertCircle className="h-3.5 w-3.5" />
+                    <span>
+                      An exam for this subject already exists in this session. Creating will replace the existing exam.
+                    </span>
+                  </div>
+                )}
+                {!isView && selectedSubject && !checkDuplicateExam && (
                   <p className="text-xs text-gray-500">
                     Class: {selectedSubject.class_info.name}
                   </p>
@@ -511,6 +595,38 @@ export function ExamFormPage() {
           </CardContent>
         </Card>
       </form>
+
+      {/* Duplicate Exam Warning Dialog */}
+      <WarningConfirmationDialog
+        open={showDuplicateWarning}
+        onOpenChange={setShowDuplicateWarning}
+        title="Exam Already Exists"
+        description={
+          <>
+            An exam for <strong>{selectedSubject?.subject_info.name}</strong> already exists 
+            in this session.
+          </>
+        }
+        warningText="Do you want to edit the existing exam instead?"
+        cancelButtonText="Cancel"
+        confirmButtonText="Create Anyway"
+        onCancel={() => setPendingPayload(null)}
+        onConfirm={() => {
+          if (pendingPayload) {
+            createMutation.mutate(pendingPayload);
+          }
+        }}
+        secondaryAction={{
+          label: 'Edit Existing',
+          onClick: () => {
+            setShowDuplicateWarning(false);
+            if (checkDuplicateExam) {
+              navigate(ROUTES.EXAMS_EDIT.replace(':id', checkDuplicateExam.public_id));
+            }
+          },
+        }}
+        isLoading={createMutation.isPending}
+      />
     </div>
   );
 }

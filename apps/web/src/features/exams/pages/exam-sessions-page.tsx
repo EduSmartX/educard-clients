@@ -20,7 +20,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { PageHeader, DeletedViewToggle, DeleteConfirmationDialog, ReactivateConfirmationDialog } from '@/components/common';
+import { PageHeader, DeletedViewToggle, DeleteConfirmationDialog, ReactivateConfirmationDialog, HowItWorksDialog } from '@/components/common';
 import { ROUTES } from '@/constants';
 import { useExamSessions } from '../hooks/use-exams';
 import { useDeleteExamSession, useReactivateExamSession } from '../hooks/mutations';
@@ -30,6 +30,62 @@ import { useRole } from '@/hooks/use-role';
 import { EXAM_SESSION_TYPE_OPTIONS, EXAM_SESSION_TYPE_LABELS, type ExamSession } from '../types';
 import { format } from 'date-fns';
 import { downloadFile } from '@/lib/utils';
+
+// How It Works content for Exam Sessions
+const examSessionsHowItWorks = {
+  title: 'How Exam Sessions Work',
+  steps: [
+    {
+      title: 'Create an Exam Session',
+      description: (
+        <>
+          An exam session represents a term or examination period like "Unit Test 1",
+          "Quarterly Exam", "Half Yearly", or "Annual Exam".
+          Set the date range for when exams will be conducted.
+        </>
+      ),
+    },
+    {
+      title: 'Create Exams for Each Class',
+      description: (
+        <>
+          Go to <strong>Exams → Create Exams (Bulk)</strong> to add exams for all subjects
+          in a class at once. Select the session, class, and set dates/times for each subject.
+        </>
+      ),
+    },
+    {
+      title: 'Enter Exam Marks',
+      description: (
+        <>
+          After exams are conducted, enter marks for each student. Go to <strong>Exams →
+          View Exam</strong> to enter or edit marks.
+        </>
+      ),
+    },
+  ],
+  tips: [
+    {
+      title: 'Bulk Creation Tip',
+      description: (
+        <>
+          Use <strong>Create Exams (Bulk)</strong> to quickly create exams for all subjects
+          in a class. You can copy dates and times from one subject to others.
+        </>
+      ),
+    },
+  ],
+  warnings: [
+    {
+      title: 'Important Notes',
+      items: [
+        "Exam dates must be within the session's date range",
+        'Deleting a session will also delete all exams under it',
+        'Make sure to set max marks and passing marks for each exam',
+      ],
+    },
+  ],
+};
 
 export function ExamSessionsPage() {
   const navigate = useNavigate();
@@ -126,7 +182,9 @@ export function ExamSessionsPage() {
         title="Exam Sessions" 
         icon={ClipboardList}
         description="Manage exam terms like Unit Tests, Quarterly, Half Yearly, Annual exams"
-      />
+      >
+        <HowItWorksDialog {...examSessionsHowItWorks} />
+      </PageHeader>
 
       <Card className="border shadow-sm">
         <CardHeader className="flex flex-col gap-4 border-b bg-muted/30 px-6 py-4">

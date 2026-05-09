@@ -5,11 +5,12 @@ import { useAuth } from '../../hooks/use-auth';
 import { useStorageListener } from '@/hooks/use-storage-listener';
 import { getSidebarConfig } from '@/lib/utils/sidebar-utils';
 import { formatRole } from '@/lib/utils/auth-utils';
-import { ROUTES } from '@/constants';
+import { ROUTES, USER_ROLES } from '@/constants';
 import { useMyProfilePhoto } from '@/features/profile/hooks/queries';
 import { getMediaUrl } from '@/lib/utils/media-utils';
 import { getThemeConfig } from '@/lib/utils/theme-utils';
 import { cn } from '@/lib/utils';
+import { useTeacherManagementContext } from '@/features/leave/hooks/use-teacher-management-context';
 
 /**
  * Protected Layout - Wraps all authenticated pages with header and sidebar.
@@ -18,6 +19,7 @@ import { cn } from '@/lib/utils';
 export function ProtectedLayout() {
   const { user, organization } = useAuth();
   const { data: profilePhoto } = useMyProfilePhoto();
+  const { data: managementContext } = useTeacherManagementContext();
 
   useStorageListener();
 
@@ -33,6 +35,12 @@ export function ProtectedLayout() {
   // Profile photo from attachments API takes priority over user.profile_image from login
   const avatarUrl = getMediaUrl(profilePhoto?.thumbnail_url) || user?.profile_image;
 
+  // Determine if user is a supervisor (can manage subordinates)
+  // Admins are always supervisors
+  // Teachers/staff check the management context
+  const isAdmin = user?.role === USER_ROLES.ADMIN;
+  const isSupervisor = isAdmin || managementContext?.can_review_requests || false;
+
   return (
     <div className={cn("min-h-screen", theme.mainBgGradient)}>
       <DashboardHeader
@@ -45,7 +53,11 @@ export function ProtectedLayout() {
         notificationCount={3}
       />
 
-      <DashboardLayout sidebarSections={getSidebarConfig()} userRole={userRoleFormatted}>
+      <DashboardLayout 
+        sidebarSections={getSidebarConfig()} 
+        userRole={userRoleFormatted}
+        isSupervisor={isSupervisor}
+      >
         <Outlet />
       </DashboardLayout>
     </div>

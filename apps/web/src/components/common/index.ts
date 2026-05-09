@@ -4,6 +4,8 @@ export { StudentAvatar } from './student-avatar';
 export * from './bulk-upload-dialog';
 export * from './delete-confirmation-dialog';
 export * from './reactivate-confirmation-dialog';
+export * from './warning-confirmation-dialog';
+export * from './how-it-works-dialog';
 export * from './deleted-duplicate-dialog';
 export * from './deleted-view-toggle';
 export { PageHeader } from './page-header';

@@ -820,7 +820,7 @@ export function ExamOverviewPage() {
 
                 {/* Charts Row */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Subject-wise Pass/Fail Bar Chart */}
+                  {/* Subject-wise Pass/Fail Bar Chart - Changed to horizontal layout (vertical bars) */}
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-lg flex items-center gap-2">
@@ -831,17 +831,17 @@ export function ExamOverviewPage() {
                     <CardContent>
                       <div className="h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={subjectChartData} layout="vertical">
+                          <BarChart data={subjectChartData}>
                             <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis type="number" />
-                            <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12 }} />
+                            <XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-45} textAnchor="end" height={60} />
+                            <YAxis />
                             <Tooltip 
                               formatter={(value, name) => [value, name === 'passed' ? 'Passed' : name === 'failed' ? 'Failed' : 'Absent']}
                             />
                             <Legend />
-                            <Bar dataKey="passed" name="Passed" fill={CHART_COLORS.passed} radius={[0, 4, 4, 0]} />
-                            <Bar dataKey="failed" name="Failed" fill={CHART_COLORS.failed} radius={[0, 4, 4, 0]} />
-                            <Bar dataKey="absent" name="Absent" fill={CHART_COLORS.absent} radius={[0, 4, 4, 0]} />
+                            <Bar dataKey="passed" name="Passed" fill={CHART_COLORS.passed} radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="failed" name="Failed" fill={CHART_COLORS.failed} radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="absent" name="Absent" fill={CHART_COLORS.absent} radius={[4, 4, 0, 0]} />
                           </BarChart>
                         </ResponsiveContainer>
                       </div>

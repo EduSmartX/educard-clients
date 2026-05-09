@@ -31,7 +31,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { PageHeader, FormActions } from '@/components/common';
+import { PageHeader, FormActions, WarningConfirmationDialog } from '@/components/common';
 import {
   Table,
   TableBody,
@@ -40,8 +40,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ROUTES } from '@/constants';
-import { ValidationMessages } from '@/constants';
+import { ROUTES, ValidationMessages } from '@/constants';
 import { formatDateForAPI } from '@/lib/utils/date-utils';
 import { useExamSessions } from '../hooks/use-exams';
 import { useSubjects } from '@/features/subjects/hooks/use-subjects';
@@ -72,7 +71,7 @@ export function BulkExamCreatePage() {
   // Non-admin users cannot access bulk create
   useEffect(() => {
     if (!isAdmin) {
-      navigate(ROUTES.EXAMS, { replace: true });
+      navigate(ROUTES.EXAMS_LIST, { replace: true });
     }
   }, [isAdmin, navigate]);
 
@@ -84,6 +83,8 @@ export function BulkExamCreatePage() {
   const [selectAll, setSelectAll] = useState(false);
   const [subjectRows, setSubjectRows] = useState<SubjectRow[]>([]);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [showMissingDateTimeWarning, setShowMissingDateTimeWarning] = useState(false);
+  const [pendingSubmitPayload, setPendingSubmitPayload] = useState<BulkExamCreatePayload | null>(null);
 
   // Data fetching
   const { data: sessionsData, isLoading: isLoadingSessions } = useExamSessions({
@@ -257,7 +258,7 @@ export function BulkExamCreatePage() {
     onSuccess: (data) => {
       toast.success(`Successfully created ${data.length} exam(s)`);
       queryClient.invalidateQueries({ queryKey: ['exams'] });
-      navigate(ROUTES.EXAMS);
+      navigate(ROUTES.EXAMS_LIST);
     },
     onError: (error: Error & { response?: { data?: { message?: string; errors?: Record<string, string[]> } } }) => {
       const respData = error.response?.data;
@@ -347,7 +348,27 @@ export function BulkExamCreatePage() {
       exams,
     };
 
+    const rowsWithMissingDateTime = selectedRows.filter((row) => !row.date || !row.start_time);
+    if (rowsWithMissingDateTime.length > 0) {
+      setPendingSubmitPayload(payload);
+      setShowMissingDateTimeWarning(true);
+      return;
+    }
+
     bulkCreateMutation.mutate(payload);
+  };
+
+  const handleConfirmSubmit = () => {
+    setShowMissingDateTimeWarning(false);
+    if (pendingSubmitPayload) {
+      bulkCreateMutation.mutate(pendingSubmitPayload);
+      setPendingSubmitPayload(null);
+    }
+  };
+
+  const handleCancelSubmit = () => {
+    setShowMissingDateTimeWarning(false);
+    setPendingSubmitPayload(null);
   };
 
   const selectedCount = subjectRows.filter((r) => r.selected).length;
@@ -357,7 +378,7 @@ export function BulkExamCreatePage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Create Exams (Bulk)">
-        <Button variant="brandOutline" onClick={() => navigate(ROUTES.EXAMS)} className="gap-2">
+        <Button variant="brandOutline" onClick={() => navigate(ROUTES.EXAMS_LIST)} className="gap-2">
           <ArrowLeft className="h-4 w-4" />
           Back to Exams
         </Button>
@@ -692,11 +713,24 @@ export function BulkExamCreatePage() {
             }}
             secondaryAction={{
               label: 'Cancel',
-              onClick: () => navigate(ROUTES.EXAMS),
+              onClick: () => navigate(ROUTES.EXAMS_LIST),
             }}
           />
         </form>
       )}
+
+      {/* Warning Dialog for missing date/time */}
+      <WarningConfirmationDialog
+        open={showMissingDateTimeWarning}
+        onOpenChange={setShowMissingDateTimeWarning}
+        onCancel={handleCancelSubmit}
+        onConfirm={handleConfirmSubmit}
+        title="Missing Exam Date or Start Time"
+        description="Some of the selected exams are missing a date or start time. These exams will be created without a schedule."
+        warningText="Are you sure you want to continue?"
+        confirmButtonText="Continue Anyway"
+        cancelButtonText="Go Back"
+      />
     </div>
   );
 }

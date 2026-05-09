@@ -12,21 +12,10 @@ import {
   Users,
   Clock,
   Calendar,
-  AlertTriangle,
   ChevronRight,
-  Lightbulb,
-  ShieldAlert,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { PageHeader } from '@/components/common';
+import { PageHeader, HowItWorksDialog } from '@/components/common';
 import { ClassGroupsTab } from '../components/class-groups-tab';
 import { TimeSlotsTab } from '../components/time-slots-tab';
 import { TimetableViewTab } from '../components/timetable-view-tab';
@@ -67,105 +56,62 @@ const STEPS = [
   },
 ] as const;
 
-function HowItWorksDialog() {
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-1.5 border-amber-200 bg-amber-50 text-amber-700 shadow-sm hover:bg-amber-100"
-        >
-          <Lightbulb className="h-4 w-4 text-amber-500" />
-          <span className="hidden sm:inline">How it works</span>
-        </Button>
-      </DialogTrigger>
-
-      <DialogContent className="max-h-[85vh] overflow-y-auto border-amber-200 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-lg">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100">
-              <Lightbulb className="h-4 w-4 text-amber-600" />
-            </div>
-            How Timetable Setup Works
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4 pt-2">
-          {/* Step 1 */}
-          <div className="flex gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700">
-              1
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-800">Create Class Groups</p>
-              <p className="mt-0.5 text-sm text-slate-500">
-                Group classes that share the same period structure. E.g., &quot;Primary&quot;
-                (1st–5th), &quot;Senior&quot; (9th–10th). Classes in the same group have the same
-                timings.
-              </p>
-            </div>
-          </div>
-
-          {/* Step 2 */}
-          <div className="flex gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-700">
-              2
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-800">Define Time Slots</p>
-              <p className="mt-0.5 text-sm text-slate-500">
-                For each group, set up periods, breaks, and assemblies. You can apply the same slot
-                structure to <strong>multiple days at once</strong> (e.g., Mon–Fri).
-              </p>
-            </div>
-          </div>
-
-          {/* Step 3 */}
-          <div className="flex gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-100 text-sm font-bold text-violet-700">
-              3
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-800">Assign Teachers & Subjects</p>
-              <p className="mt-0.5 text-sm text-slate-500">
-                In the View Timetable tab, select a class and assign teachers/subjects to each
-                period. Each class gets its own assignments even within the same group.
-              </p>
-            </div>
-          </div>
-
-          {/* Warning */}
-          <div className="flex gap-2 rounded-xl bg-red-50 px-3 py-3">
-            <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
-            <div>
-              <p className="text-xs font-semibold text-red-700">Teacher Conflict Prevention</p>
-              <p className="mt-0.5 text-xs text-red-600">
-                The system automatically prevents assigning the same teacher to two classes at the
-                same time. If a conflict is detected, the assignment will be rejected.
-              </p>
-            </div>
-          </div>
-
-          {/* Warning 2 */}
-          <div className="flex gap-2 rounded-xl bg-amber-50 px-3 py-3">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
-            <div>
-              <p className="text-xs font-semibold text-amber-700">Important Notes</p>
-              <ul className="mt-1 list-inside list-disc space-y-0.5 text-xs text-amber-600">
-                <li>
-                  Each class can only belong to <strong>one</strong> group
-                </li>
-                <li>Changing slots will remove existing entries for affected days</li>
-                <li>Breaks and assemblies cannot have teacher/subject assignments</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
+// How It Works content for Timetable Setup
+const timetableHowItWorks = {
+  title: 'How Timetable Setup Works',
+  steps: [
+    {
+      title: 'Create Class Groups',
+      description: (
+        <>
+          Group classes that share the same period structure. E.g., "Primary"
+          (1st–5th), "Senior" (9th–10th). Classes in the same group have the same
+          timings.
+        </>
+      ),
+      color: 'green' as const,
+    },
+    {
+      title: 'Define Time Slots',
+      description: (
+        <>
+          For each group, set up periods, breaks, and assemblies. You can apply the same slot
+          structure to <strong>multiple days at once</strong> (e.g., Mon–Fri).
+        </>
+      ),
+    },
+    {
+      title: 'Assign Teachers & Subjects',
+      description: (
+        <>
+          In the View Timetable tab, select a class and assign teachers/subjects to each
+          period. Each class gets its own assignments even within the same group.
+        </>
+      ),
+    },
+  ],
+  tips: [
+    {
+      title: 'Teacher Conflict Prevention',
+      description: (
+        <>
+          The system automatically prevents assigning the same teacher to two classes at the
+          same time. If a conflict is detected, the assignment will be rejected.
+        </>
+      ),
+    },
+  ],
+  warnings: [
+    {
+      title: 'Important Notes',
+      items: [
+        'Each class can only belong to one group',
+        'Changing slots will remove existing entries for affected days',
+        'Breaks and assemblies cannot have teacher/subject assignments',
+      ],
+    },
+  ],
+};
 
 export default function TimetableSetupPage() {
   const [activeTab, setActiveTab] = useState('groups');
@@ -177,7 +123,7 @@ export default function TimetableSetupPage() {
         title="Timetable Management"
         description="Set up class groups, define time slots, and manage your school timetable"
       >
-        <HowItWorksDialog />
+        <HowItWorksDialog {...timetableHowItWorks} />
       </PageHeader>
 
       {/* Step indicator */}

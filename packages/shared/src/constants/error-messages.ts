@@ -141,6 +141,13 @@ export const ErrorMessages = {
     DOWNLOAD_TEMPLATE_FAILED: "Failed to download holiday template.",
   },
 
+  EXCEPTIONAL_WORK: {
+    CREATE_FAILED: "Failed to create exception. Please try again.",
+    UPDATE_FAILED: "Failed to update exception. Please try again.",
+    DELETE_FAILED: "Failed to delete exception. Please try again.",
+    FETCH_FAILED: "Failed to load exceptions. Please try again.",
+  },
+
   ORGANIZATION: {
     CREATE_FAILED: "Failed to create organization. Please try again.",
     UPDATE_FAILED: "Failed to update organization. Please try again.",
@@ -344,6 +351,12 @@ export const SuccessMessages = {
     BULK_UPLOAD_SUCCESS: "Holidays uploaded successfully.",
   },
 
+  EXCEPTIONAL_WORK: {
+    CREATED: "Exception created successfully.",
+    UPDATED: "Exception updated successfully.",
+    DELETED: "Exception deleted successfully.",
+  },
+
   ORGANIZATION: {
     CREATE_SUCCESS: "Organization created successfully.",
     UPDATE_SUCCESS: "Organization updated successfully.",
@@ -474,6 +487,20 @@ export const ValidationMessages = {
   // Numeric validations
   MARKS_EXCEED_MAXIMUM: "Marks obtained cannot exceed maximum marks.",
   INVALID_MARKS: "Please enter valid marks.",
+
+  // Exam validations
+  EXAM: {
+    SELECT_SESSION: "Please select an exam session.",
+    SELECT_SUBJECT: "Please select a subject.",
+    SELECT_STATUS: "Please select a status.",
+    SELECT_CLASS: "Please select a class.",
+    SELECT_AT_LEAST_ONE_SUBJECT: "Please select at least one subject.",
+    DATE_IS_HOLIDAY: "The selected date falls on a holiday. Please select a working day.",
+    DATE_OUTSIDE_SESSION: "The exam date must be within the session date range.",
+    MARKS_LESS_THAN_ZERO: "Marks cannot be less than 0.",
+    MARKS_EXCEED_MAX: "Marks cannot exceed the maximum marks.",
+    MARKS_INVALID_RANGE: "Marks must be between 0 and maximum marks.",
+  },
 
   // Exam Session validations
   EXAM_SESSION: {

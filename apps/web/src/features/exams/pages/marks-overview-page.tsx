@@ -475,20 +475,21 @@ export function MarksOverviewPage() {
             </div>
           )}
           <CardContent className="p-0">
-            <div className="overflow-x-auto" ref={containerRef}>
+            {/* Scrollable container with max height and sticky header */}
+            <div className="overflow-auto max-h-[70vh] relative" ref={containerRef}>
               <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="border-2 border-gray-300 p-3 text-left font-semibold sticky left-0 bg-gray-100 z-10 min-w-[80px]">
+                <thead className="sticky top-0 z-20 bg-gray-100">
+                  <tr>
+                    <th className="border-2 border-gray-300 p-3 text-left font-semibold sticky left-0 top-0 bg-gray-100 z-30 min-w-[80px]">
                       S.No
                     </th>
-                    <th className="border-2 border-gray-300 p-3 text-left font-semibold sticky left-[80px] bg-gray-100 z-10 min-w-[80px]">
+                    <th className="border-2 border-gray-300 p-3 text-left font-semibold sticky left-[80px] top-0 bg-gray-100 z-30 min-w-[80px]">
                       Photo
                     </th>
-                    <th className="border-2 border-gray-300 p-3 text-left font-semibold sticky left-[160px] bg-gray-100 z-10 min-w-[120px]">
+                    <th className="border-2 border-gray-300 p-3 text-left font-semibold sticky left-[160px] top-0 bg-gray-100 z-30 min-w-[120px]">
                       Roll No
                     </th>
-                    <th className="border-2 border-gray-300 p-3 text-left font-semibold sticky left-[280px] bg-gray-100 z-10 min-w-[200px]">
+                    <th className="border-2 border-gray-300 p-3 text-left font-semibold sticky left-[280px] top-0 bg-gray-100 z-30 min-w-[200px]">
                       Student Name
                     </th>
                     {subjects.map((subject) => {
@@ -496,7 +497,7 @@ export function MarksOverviewPage() {
                       return (
                         <th
                           key={subject.exam_public_id}
-                          className={`border-2 ${colors.border} p-3 text-center font-semibold ${colors.header} min-w-[150px]`}
+                          className={`border-2 ${colors.border} p-3 text-center font-semibold ${colors.header} min-w-[150px] sticky top-0 z-20`}
                         >
                           <div className="space-y-1">
                             <div className={`font-bold ${colors.text}`}>{subject.subject_name}</div>
@@ -513,7 +514,7 @@ export function MarksOverviewPage() {
                       );
                     })}
                     {/* Total & Percentage columns */}
-                    <th className="border-2 border-gray-300 p-3 text-center font-semibold bg-emerald-200 min-w-[100px]">
+                    <th className="border-2 border-gray-300 p-3 text-center font-semibold bg-emerald-200 min-w-[100px] sticky top-0 z-20">
                       <div className="space-y-1">
                         <div className="font-bold text-emerald-800">Total</div>
                         <div className="text-xs text-gray-600">
@@ -521,7 +522,7 @@ export function MarksOverviewPage() {
                         </div>
                       </div>
                     </th>
-                    <th className="border-2 border-gray-300 p-3 text-center font-semibold bg-amber-200 min-w-[90px]">
+                    <th className="border-2 border-gray-300 p-3 text-center font-semibold bg-amber-200 min-w-[90px] sticky top-0 z-20">
                       <div className="font-bold text-amber-800">%</div>
                     </th>
                   </tr>

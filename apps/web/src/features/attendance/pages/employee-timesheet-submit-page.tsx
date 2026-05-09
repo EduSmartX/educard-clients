@@ -265,10 +265,12 @@ export function EmployeeTimesheetSubmitPage() {
         });
       });
 
-      // Create calendar exception map (only for exceptions applicable to all classes)
+      // Create calendar exception map
+      // For employee attendance, include exceptions that apply to all teachers
       const exceptionByDate = new Map<string, CalendarException>();
       (calendarExceptions?.data || []).forEach((exception) => {
-        if (exception.is_applicable_to_all_classes) {
+        // Include exceptions that apply to all classes OR all teachers
+        if (exception.is_applicable_to_all_classes || exception.is_applicable_to_all_teachers) {
           exceptionByDate.set(exception.date, exception);
         }
       });
