@@ -7,7 +7,7 @@
 // Type definitions
 type FormValue = string | number | boolean | null | undefined;
 type FormValues = Record<string, FormValue>;
-type ApiErrorData = Record<string, unknown>;
+export type ApiErrorData = Record<string, unknown>;
 
 /** Safely trim a string value */
 function safeTrim(value: FormValue): string | undefined {

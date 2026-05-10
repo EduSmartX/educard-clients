@@ -101,7 +101,10 @@ export function useManagedClasses(formType: 'student' | 'subject' = 'student') {
 export function useClassDetail(publicId: string, isDeleted?: boolean) {
   return useQuery({
     queryKey: [...classKeys.detail(publicId), isDeleted],
-    queryFn: () => getClassById(publicId, isDeleted),
+    queryFn: async () => {
+      const response = await getClassById(publicId, isDeleted);
+      return response.data; // Extract the Class from ApiDetailResponse<Class>
+    },
     enabled: !!publicId,
   });
 }

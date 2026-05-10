@@ -71,7 +71,10 @@ export function useSubjectsByClass(classId: string) {
 export function useSubjectDetail(publicId: string, isDeleted?: boolean) {
   return useQuery({
     queryKey: [...subjectKeys.detail(publicId), isDeleted],
-    queryFn: () => getSubjectById(publicId, isDeleted),
+    queryFn: async () => {
+      const response = await getSubjectById(publicId, isDeleted);
+      return response.data; // Extract the Subject from ApiDetailResponse<Subject>
+    },
     enabled: !!publicId,
   });
 }
