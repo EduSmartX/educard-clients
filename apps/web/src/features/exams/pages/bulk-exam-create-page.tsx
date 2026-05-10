@@ -48,7 +48,7 @@ import { useClasses } from '@/features/classes/hooks/use-classes';
 import { useRole } from '@/hooks/use-role';
 import { bulkCreateExams } from '../api/exams-api';
 import { validateAttendanceDate } from '@/features/attendance/api/attendance-api';
-import type { BulkExamCreatePayload, BulkExamItem } from '../types';
+import type { BulkExamCreatePayload, BulkExamItem } from '@educard/shared';
 
 // Subject row state for the table
 interface SubjectRow {
@@ -234,9 +234,9 @@ export function BulkExamCreatePage() {
   // Copy start_time/end_time from previous row
   const copyTimeFromPrevious = useCallback((index: number, field: 'start_time' | 'end_time') => {
     setSubjectRows((prev) => {
-      if (index <= 0) return prev;
+      if (index <= 0) {return prev;}
       const prevValue = prev[index - 1][field];
-      if (!prevValue) return prev;
+      if (!prevValue) {return prev;}
       const updated = [...prev];
       updated[index] = { ...updated[index], [field]: prevValue };
       return updated;
@@ -245,7 +245,7 @@ export function BulkExamCreatePage() {
 
   // Apply a time value to all selected rows
   const applyTimeToAllSelected = useCallback((field: 'start_time' | 'end_time', value: string) => {
-    if (!value) return;
+    if (!value) {return;}
     setSubjectRows((prev) =>
       prev.map((row) => (row.selected ? { ...row, [field]: value } : row))
     );

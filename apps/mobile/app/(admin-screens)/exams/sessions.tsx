@@ -4,6 +4,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any, @typescript-eslint/no-misused-promises */
 
 import { getRoleGradient } from '@educard/shared';
+import { EXAM_SESSION_TYPE_LABELS, type ExamSession } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, ChevronRight, Calendar, BookOpen, Plus } from 'lucide-react-native';
@@ -20,7 +21,6 @@ import {
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { useExamSessions } from '@/features/exams';
-import { EXAM_SESSION_TYPE_LABELS, type ExamSession } from '@/features/exams/types';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');

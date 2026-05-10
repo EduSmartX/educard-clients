@@ -26,6 +26,7 @@ export interface Subject {
   class_info: ClassInfo;
   subject_info: CoreSubject;
   teacher_info: TeacherInfo | null;
+  subject_type: 'core' | 'elective' | 'language';
   description: string;
   created_at: string;
   updated_at: string;
@@ -49,6 +50,7 @@ export interface SubjectListParams {
 export interface SubjectFormData {
   class_id: string;
   subject_id: number;
+  subject_type?: 'core' | 'elective' | 'language';
   teacher_id?: string;
   description?: string;
 }
@@ -56,11 +58,13 @@ export interface SubjectFormData {
 export interface SubjectCreatePayload {
   class_id: string;
   subject_id: number;
+  subject_type?: 'core' | 'elective' | 'language';
   teacher_id?: string | null;
   description?: string;
 }
 
 export interface SubjectUpdatePayload {
+  subject_type?: 'core' | 'elective' | 'language';
   teacher_id?: string | null;
   description?: string;
 }

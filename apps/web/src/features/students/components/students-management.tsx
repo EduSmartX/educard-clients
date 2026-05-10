@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ROUTES } from '@/constants/app-config';
-import { ErrorMessages, SuccessMessages } from '@/constants';
+import { ErrorMessages, SuccessMessages, USER_ROLES } from '@/constants';
 import { useStudents } from '../hooks/use-students';
 import { useManagedClasses } from '../hooks/use-managed-classes';
 import { useDeleteStudent, useReactivateStudent } from '../hooks/mutations';
@@ -17,7 +17,6 @@ import type { StudentListItem } from '../types';
 import { DeleteConfirmationDialog, ReactivateConfirmationDialog } from '@/components/common';
 import { useDeletedView } from '@/hooks/use-deleted-view';
 import { useAuth } from '@/hooks/use-auth';
-import { USER_ROLES } from '@/constants';
 
 type PageMode = 'list' | 'create' | 'edit' | 'view';
 
@@ -56,11 +55,11 @@ export function StudentsManagement() {
     const newFilters: Record<string, string> = {};
 
     if (params.class_assigned__public_id)
-      newFilters.class_assigned__public_id = params.class_assigned__public_id;
-    if (params.user__gender) newFilters.user__gender = params.user__gender;
-    if (params.admission_date_from) newFilters.admission_date_from = params.admission_date_from;
-    if (params.admission_date_to) newFilters.admission_date_to = params.admission_date_to;
-    if (params.search) setSearchQuery(params.search);
+      {newFilters.class_assigned__public_id = params.class_assigned__public_id;}
+    if (params.user__gender) {newFilters.user__gender = params.user__gender;}
+    if (params.admission_date_from) {newFilters.admission_date_from = params.admission_date_from;}
+    if (params.admission_date_to) {newFilters.admission_date_to = params.admission_date_to;}
+    if (params.search) {setSearchQuery(params.search);}
 
     setFilters(newFilters);
   }, [searchParams]);
@@ -69,10 +68,10 @@ export function StudentsManagement() {
   useEffect(() => {
     const params = new URLSearchParams();
 
-    if (searchQuery) params.set('search', searchQuery);
+    if (searchQuery) {params.set('search', searchQuery);}
 
     Object.entries(filters).forEach(([key, value]) => {
-      if (value) params.set(key, value);
+      if (value) {params.set(key, value);}
     });
 
     const newSearch = params.toString();

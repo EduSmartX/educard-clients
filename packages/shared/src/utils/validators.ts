@@ -109,7 +109,7 @@ export function validateDateRange(
   startLabel: string = 'Start date',
   endLabel: string = 'End date'
 ): string | null {
-  if (!startDate || !endDate) return null;
+  if (!startDate || !endDate) {return null;}
   const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
   const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
   start.setHours(0, 0, 0, 0);

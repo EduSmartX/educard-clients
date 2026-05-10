@@ -80,15 +80,15 @@ export function MarksOverviewPage() {
 
   // Helper to check if a subject is editable
   const isSubjectEditable = (subjectPublicId: string): boolean => {
-    if (!permissions) return true; // Default to editable if no permissions
-    if (permissions.is_admin || permissions.is_class_teacher) return true;
-    if (permissions.editable_subject_ids === null) return true; // null means all
+    if (!permissions) {return true;} // Default to editable if no permissions
+    if (permissions.is_admin || permissions.is_class_teacher) {return true;}
+    if (permissions.editable_subject_ids === null) {return true;} // null means all
     return permissions.editable_subject_ids.includes(subjectPublicId);
   };
 
   // Check if user can edit ANY marks
   const canEditAny = useMemo(() => {
-    if (!permissions) return true;
+    if (!permissions) {return true;}
     return permissions.can_edit;
   }, [permissions]);
 
@@ -646,7 +646,7 @@ export function MarksOverviewPage() {
                       <div className="text-emerald-700 font-bold">
                         Class Avg: {(() => {
                           const vals = Object.values(studentTotals).filter(t => t.subjectsAttempted > 0);
-                          if (vals.length === 0) return '--';
+                          if (vals.length === 0) {return '--';}
                           const avg = vals.reduce((s, t) => s + t.total, 0) / vals.length;
                           return Math.round(avg * 100) / 100;
                         })()}
@@ -656,9 +656,9 @@ export function MarksOverviewPage() {
                       <div className="text-amber-700 font-bold">
                         Avg: {(() => {
                           const vals = Object.values(studentTotals).filter(t => t.subjectsAttempted > 0);
-                          if (vals.length === 0) return '--';
+                          if (vals.length === 0) {return '--';}
                           const avg = vals.reduce((s, t) => s + t.percentage, 0) / vals.length;
-                          return Math.round(avg * 100) / 100 + '%';
+                          return `${Math.round(avg * 100) / 100  }%`;
                         })()}
                       </div>
                     </td>

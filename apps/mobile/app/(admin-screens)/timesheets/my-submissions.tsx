@@ -650,8 +650,7 @@ export default function MyTimesheetScreen() {
         setCheckingWeekStatus(false);
         return;
       }
-    } catch (_err) {
-      // prefixed _ - unused
+    } catch {
       // No submission exists - that's fine, allow editing
       setWeekTimesheetStatus(null);
     }

@@ -29,6 +29,11 @@ import {
   SaturdayOffPattern,
   SaturdayOffPatternLabels,
   type SaturdayOffPatternType,
+  CommonUiText,
+  ErrorMessages,
+  FormPlaceholders,
+  SuccessMessages,
+  ToastTitles,
 } from '@/constants';
 import {
   createWorkingDayPolicy,
@@ -36,7 +41,6 @@ import {
   updateWorkingDayPolicy,
   type CreateWorkingDayPolicyPayload,
 } from '@/lib/api/working-day-policy-api';
-import { CommonUiText, ErrorMessages, FormPlaceholders, SuccessMessages, ToastTitles } from '@/constants';
 import {
   workingDayPolicySchema,
   type WorkingDayPolicyFormValues,
@@ -87,7 +91,7 @@ export function WorkingDayPolicyForm() {
 
   // Create/Update mutation
   const saveMutation = useMutation({
-    mutationFn: async (payload: CreateWorkingDayPolicyPayload) => {
+    mutationFn: (payload: CreateWorkingDayPolicyPayload) => {
       if (policyData) {
         return updateWorkingDayPolicy(policyData.public_id, payload);
       } else {

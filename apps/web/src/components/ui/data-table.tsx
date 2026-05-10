@@ -3,8 +3,7 @@
  */
 
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
-import type { ReactNode } from 'react';
+import { useState, useRef, useEffect, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -108,12 +107,12 @@ export function DataTable<T>({
     }
 
     // Handle null/undefined
-    if (aValue === null || aValue === undefined) aValue = '';
-    if (bValue === null || bValue === undefined) bValue = '';
+    if (aValue === null || aValue === undefined) {aValue = '';}
+    if (bValue === null || bValue === undefined) {bValue = '';}
 
     // Convert to lowercase for string comparison
-    if (typeof aValue === 'string') aValue = aValue.toLowerCase();
-    if (typeof bValue === 'string') bValue = bValue.toLowerCase();
+    if (typeof aValue === 'string') {aValue = aValue.toLowerCase();}
+    if (typeof bValue === 'string') {bValue = bValue.toLowerCase();}
 
     const normalizedA = aValue as string | number;
     const normalizedB = bValue as string | number;
@@ -129,7 +128,7 @@ export function DataTable<T>({
 
   // Toggle sort: Click same column to flip direction, click new column to sort asc
   const handleSort = (column: Column<T>) => {
-    if (!column.sortable) return;
+    if (!column.sortable) {return;}
 
     const field = column.sortKey || column.header.toLowerCase().replace(/\s+/g, '_');
 
@@ -142,7 +141,7 @@ export function DataTable<T>({
   };
 
   const getSortIcon = (column: Column<T>) => {
-    if (!column.sortable) return null;
+    if (!column.sortable) {return null;}
 
     const field = column.sortKey || column.header.toLowerCase().replace(/\s+/g, '_');
 
@@ -166,7 +165,7 @@ export function DataTable<T>({
   };
 
   useEffect(() => {
-    if (resizingIndex === null) return;
+    if (resizingIndex === null) {return;}
 
     const handleMouseMove = (e: MouseEvent) => {
       const deltaX = e.clientX - startXRef.current;

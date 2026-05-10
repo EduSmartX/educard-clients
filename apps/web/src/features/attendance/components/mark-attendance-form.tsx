@@ -342,8 +342,9 @@ export function MarkAttendanceForm() {
                     {dateValidation.reason || AttendanceUiText.NOT_WORKING_DAY}
                   </h3>
                   <p className="text-sm text-red-700">
-                    Attendance cannot be marked for holidays or weekends. Please select a valid
-                    working day.
+                    {dateValidation.reason
+                      ? `This date is marked as "${dateValidation.reason}" (Exceptional Holiday). Please select a valid working day.`
+                      : 'Attendance cannot be marked for holidays or weekends. Please select a valid working day.'}
                   </p>
                 </div>
               </CardContent>

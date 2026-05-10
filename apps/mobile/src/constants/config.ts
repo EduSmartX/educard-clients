@@ -40,12 +40,19 @@ export const API_CONFIG = {
 /**
  * Resolve a media/attachment path from the backend to a full URL.
  * Backend returns paths like "/media/attachments/..." — on mobile we need the full host.
+ * Also handles Base64 data URIs (embed_images=true) which are returned directly.
  */
 export function getMediaUrl(path?: string | null): string | undefined {
   if (!path) return undefined;
-  // Already a full URL or local file URI
-  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('file://'))
+  // Already a full URL, local file URI, or Base64 data URI (embed_images mode)
+  if (
+    path.startsWith('http://') ||
+    path.startsWith('https://') ||
+    path.startsWith('file://') ||
+    path.startsWith('data:')
+  ) {
     return path;
+  }
   // Relative path — prepend the server host
   const baseUrl = API_CONFIG.BASE_URL; // e.g. "http://192.168.x.x:8000/api"
   const serverOrigin = baseUrl.replace(/\/api\/?$/, ''); // "http://192.168.x.x:8000"

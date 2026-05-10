@@ -89,6 +89,7 @@ export interface Student extends AuditFields {
   previous_school_class?: string;
   emergency_contact_name?: string;
   emergency_contact_phone?: string;
+  profile_photo_thumbnail?: string | null;
 }
 
 export interface StudentListItem {

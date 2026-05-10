@@ -1,67 +1,40 @@
 /**
  * Holiday Calendar Types
- * TypeScript interfaces for holiday calendar feature
+ * Re-exports from @educard/shared + web-specific types
  */
 
 import type { ApiListResponse, ApiDetailResponse } from '../../../lib/utils/api-response-handler';
+import type {
+  Holiday as SharedHoliday,
+  HolidayListParams,
+  HolidayCreatePayload,
+  HolidayUpdatePayload as SharedHolidayUpdatePayload,
+  WorkingDayPolicy as SharedWorkingDayPolicy,
+  WorkingDayPolicyCreatePayload,
+  WorkingDayPolicyUpdatePayload,
+  SaturdayOffPatternType,
+} from '@educard/shared';
 
-/**
- * Holiday types supported by the system
- */
-export type HolidayType =
-  | 'SUNDAY'
-  | 'SATURDAY'
-  | 'SECOND_SATURDAY'
-  | 'NATIONAL_HOLIDAY'
-  | 'FESTIVAL'
-  | 'ORGANIZATION_HOLIDAY'
-  | 'OTHER';
+// Re-export shared types
+export type {
+  HolidayListParams,
+  HolidayCreatePayload,
+  WorkingDayPolicyCreatePayload,
+  WorkingDayPolicyUpdatePayload,
+  SaturdayOffPatternType,
+};
 
-/**
- * Holiday entity from backend
- */
-export interface Holiday {
-  public_id: string;
-  start_date: string; // ISO date string (YYYY-MM-DD)
-  end_date: string; // ISO date string (YYYY-MM-DD)
-  holiday_type: HolidayType;
-  description: string;
-  created_at?: string;
-  updated_at?: string;
-  created_by_public_id?: string | null;
-  created_by_name?: string | null;
-  updated_by_public_id?: string | null;
-  updated_by_name?: string | null;
-}
+export type { HolidayTypeValue } from '@educard/shared';
+export { HOLIDAY_TYPE_COLORS, HolidayType, HolidayTypeLabels, SaturdayOffPattern, SaturdayOffPatternLabels } from '@educard/shared';
 
-/**
- * Create holiday payload (for POST request)
- */
-export interface CreateHolidayPayload {
-  start_date: string; // YYYY-MM-DD
-  end_date?: string; // YYYY-MM-DD (optional, defaults to start_date)
-  holiday_type: Exclude<HolidayType, 'SUNDAY' | 'SATURDAY'>; // Cannot manually create weekends
-  description: string;
-}
+// Re-export with original names for backward compatibility
+export type Holiday = SharedHoliday;
+export type WorkingDayPolicy = SharedWorkingDayPolicy;
 
-/**
- * Update holiday payload (for PUT/PATCH request)
- */
-export interface UpdateHolidayPayload extends CreateHolidayPayload {
-  public_id: string;
-}
-
-/**
- * Fetch holidays query parameters
- */
-export interface FetchHolidaysParams {
-  from_date?: string; // YYYY-MM-DD
-  to_date?: string; // YYYY-MM-DD
-  holiday_type?: HolidayType;
-  ordering?: string; // e.g., 'start_date', '-start_date'
-  page?: number;
-  page_size?: number;
-}
+// Backward-compatible type aliases
+export type CreateHolidayPayload = HolidayCreatePayload;
+export type UpdateHolidayPayload = SharedHolidayUpdatePayload & { public_id: string };
+export type FetchHolidaysParams = HolidayListParams;
 
 /**
  * API response for holiday list
@@ -86,28 +59,6 @@ export interface BulkUploadResult {
     field?: string;
     message: string;
   }>;
-}
-
-/**
- * Saturday off pattern for working day policy
- */
-export type SaturdayOffPattern = 'NONE' | 'SECOND_ONLY' | 'SECOND_AND_FOURTH' | 'ALL';
-
-/**
- * Working day policy entity
- */
-export interface WorkingDayPolicy {
-  public_id: string;
-  sunday_off: boolean;
-  saturday_off_pattern: SaturdayOffPattern;
-  effective_from: string; // YYYY-MM-DD
-  effective_to: string | null; // YYYY-MM-DD or null
-  created_at?: string;
-  updated_at?: string;
-  created_by_public_id?: string | null;
-  created_by_name?: string | null;
-  updated_by_public_id?: string | null;
-  updated_by_name?: string | null;
 }
 
 /**

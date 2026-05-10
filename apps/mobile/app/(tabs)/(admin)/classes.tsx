@@ -50,6 +50,14 @@ export default function ClassesScreen() {
   // Check if current user is admin (has full CRUD access)
   const canManage = useMemo(() => isAdminRole(user?.role), [user?.role]);
 
+  // Filter fields - only admins can see "Deleted" filter
+  const filterFields = useMemo(() => {
+    if (canManage) {
+      return CLASS_FILTER_FIELDS;
+    }
+    return CLASS_FILTER_FIELDS.filter((f) => f.name !== 'is_deleted');
+  }, [canManage]);
+
   const debouncedSearch = useDebounce(searchQuery, 300);
 
   const {
@@ -274,7 +282,7 @@ export default function ClassesScreen() {
           setFilters(f);
           setShowFilters(false);
         }}
-        fields={CLASS_FILTER_FIELDS}
+        fields={filterFields}
         title="Filter Classes"
       />
 

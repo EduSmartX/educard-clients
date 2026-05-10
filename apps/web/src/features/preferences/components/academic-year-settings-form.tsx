@@ -88,7 +88,7 @@ export function AcademicYearSettingsForm() {
 
   // Update mutation
   const updateMutation = useMutation({
-    mutationFn: async (payload: UpdateAcademicYearPayload) => {
+    mutationFn: (payload: UpdateAcademicYearPayload) => {
       return updateAcademicYear(payload);
     },
     onSuccess: () => {

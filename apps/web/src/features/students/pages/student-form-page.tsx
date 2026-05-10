@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { Edit, X, AlertCircle, UserPlus, Eye, Trash2, RefreshCw } from 'lucide-react';
+import { Edit, X, AlertCircle, UserPlus, Eye, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   PageHeader,
@@ -37,8 +37,8 @@ export default function StudentFormPage() {
 
   // Determine mode based on URL path
   const getMode = (): 'create' | 'edit' | 'view' => {
-    if (!id) return 'create';
-    if (location.pathname.endsWith('/edit')) return 'edit';
+    if (!id) {return 'create';}
+    if (location.pathname.endsWith('/edit')) {return 'edit';}
     return 'view';
   };
 

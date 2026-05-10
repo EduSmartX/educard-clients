@@ -5,8 +5,9 @@
  */
 
 import { Colors } from '@educard/shared';
+import { Image } from 'expo-image';
 import { Camera } from 'lucide-react-native';
-import { View, Text, Image, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 
 import { getMediaUrl } from '@/constants/config';
 
@@ -52,6 +53,8 @@ export function ProfileAvatar({
     <Image
       source={{ uri: resolvedUri }}
       style={[styles.image, { width: size, height: size, borderRadius }]}
+      contentFit="cover"
+      transition={200}
     />
   ) : (
     <View

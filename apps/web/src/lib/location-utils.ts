@@ -110,14 +110,15 @@ export const getCurrentLocationAddress = async (apiKey?: string): Promise<Locati
       switch (error.code) {
         case error.PERMISSION_DENIED:
           throw new Error(
-            'Location permission denied. Please enable location access in your browser settings.'
+            'Location permission denied. Please enable location access in your browser settings.',
+            { cause: error }
           );
         case error.POSITION_UNAVAILABLE:
-          throw new Error('Location information unavailable. Please try again.');
+          throw new Error('Location information unavailable. Please try again.', { cause: error });
         case error.TIMEOUT:
-          throw new Error('Location request timed out. Please try again.');
+          throw new Error('Location request timed out. Please try again.', { cause: error });
         default:
-          throw new Error('Unable to get your location. Please try again.');
+          throw new Error('Unable to get your location. Please try again.', { cause: error });
       }
     }
     throw error;

@@ -28,7 +28,7 @@ import { createExamColumns } from '../components/exam-columns';
 import { useDeletedView } from '@/hooks/use-deleted-view';
 import { useRole } from '@/hooks/use-role';
 import { useClasses } from '@/features/classes/hooks/use-classes';
-import { EXAM_STATUS_OPTIONS, EXAM_SESSION_TYPE_LABELS, EXAM_STATUS_LABELS, type Exam } from '../types';
+import { EXAM_STATUS_OPTIONS, EXAM_SESSION_TYPE_LABELS, EXAM_STATUS_LABELS, type Exam } from '@educard/shared';
 import { format } from 'date-fns';
 import { downloadFile } from '@/lib/utils';
 

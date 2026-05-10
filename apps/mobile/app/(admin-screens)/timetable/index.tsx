@@ -4,6 +4,13 @@
  */
 
 import { getRoleGradient } from '@educard/shared';
+import {
+  DAY_SHORT_LABELS,
+  DAY_LABELS,
+  SLOT_TYPE_LABELS,
+  BREAK_TYPES,
+  type ClassTimetableSlot,
+} from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Clock, BookOpen, User, Settings } from 'lucide-react-native';
@@ -23,13 +30,6 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { FormDropdown } from '@/components/forms';
 import { useClasses } from '@/features/classes';
 import { useClassTimetable } from '@/features/timetable';
-import {
-  DAY_SHORT_LABELS,
-  DAY_LABELS,
-  SLOT_TYPE_LABELS,
-  BREAK_TYPES,
-  type ClassTimetableSlot,
-} from '@/features/timetable/types';
 import { useAuthStore } from '@/lib/auth-store';
 import { headerStyles, layoutStyles } from '@/styles';
 import { isAdminRole } from '@/utils/role-utils';

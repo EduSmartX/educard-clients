@@ -5,12 +5,13 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { updateOrganization, updateOrganizationAddress } from '../api/organization-api';
-import { ErrorMessages, SuccessMessages } from '@/constants';
-import type {
-  UpdateOrganizationPayload,
-  UpdateOrganizationAddressPayload,
+import {
+  updateOrganization,
+  updateOrganizationAddress,
+  type UpdateOrganizationPayload,
+  type UpdateOrganizationAddressPayload,
 } from '../api/organization-api';
+import { ErrorMessages, SuccessMessages } from '@/constants';
 
 /**
  * Hook to update organization information

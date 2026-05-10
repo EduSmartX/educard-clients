@@ -23,7 +23,7 @@ export const createStep3Schema = (includeAddress: boolean) =>
       .min(1, 'Phone number is required')
       .refine(
         (val) => {
-          if (!val || val === '+91') return false;
+          if (!val || val === '+91') {return false;}
           return isValidIndianPhone(val);
         },
         {
@@ -44,8 +44,8 @@ export const step4Schema = z
       .optional()
       .refine(
         (val) => {
-          if (!val) return true; // Optional field
-          if (val === '+91') return false;
+          if (!val) {return true;} // Optional field
+          if (val === '+91') {return false;}
           return isValidIndianPhone(val);
         },
         {

@@ -1,7 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Drop-in replacement for react-native-reanimated
  * Uses plain React Native Animated API instead of reanimated TurboModules
  * This avoids the "installTurboModule" crash in Expo Go
+ *
+ * Note: This shim file intentionally uses `any` types to match
+ * the reanimated API signatures for drop-in compatibility.
  */
 
 import React from 'react';
@@ -71,7 +75,8 @@ const Animated = {
 };
 
 // useAnimatedStyle - just return the style as-is
-function useAnimatedStyle(styleFactory: () => any, deps?: any[]) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function useAnimatedStyle(styleFactory: () => any, _deps?: unknown[]) {
   return styleFactory();
 }
 

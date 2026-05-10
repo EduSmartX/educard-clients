@@ -3,7 +3,7 @@
  * Configures providers and handles auth state
  */
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
@@ -11,20 +11,10 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useAuthStore } from '@/lib/auth-store';
+import { queryClient } from '@/lib/query-client';
 
 // Keep splash screen visible while loading
 void SplashScreen.preventAutoHideAsync();
-
-// Create React Query client outside component to avoid recreation
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 2,
-      refetchOnWindowFocus: false, // Disable auto-refetch to avoid state update issues
-    },
-  },
-});
 
 function RootLayoutNav() {
   const router = useRouter();

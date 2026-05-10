@@ -3,6 +3,7 @@
  */
 
 // getRoleThemeColors import removed - unused
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, type Href } from 'expo-router'; // import Href type
 import {
@@ -16,17 +17,10 @@ import {
   LucideIcon,
   Layers,
 } from 'lucide-react-native';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-  Dimensions,
-} from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 
+import { getMediaUrl } from '@/constants/config';
 import { useClasses } from '@/features/classes';
 import { useStudents } from '@/features/students';
 import { useSubjects } from '@/features/subjects';
@@ -114,7 +108,10 @@ export default function ManagementScreen() {
     subjects: subjectsData?.totalCount,
   };
 
-  const profileImageUrl = profilePhoto?.thumbnail_url ?? user?.profile_image; // ?? instead of ||
+  const profileImageUrl =
+    getMediaUrl(profilePhoto?.thumbnail_url) ??
+    getMediaUrl(profilePhoto?.url) ??
+    getMediaUrl(user?.profile_image);
 
   return (
     <View style={styles.container}>
@@ -145,7 +142,12 @@ export default function ManagementScreen() {
             activeOpacity={0.8}
           >
             {profileImageUrl ? (
-              <Image source={{ uri: profileImageUrl }} style={styles.profileImage} />
+              <Image
+                source={{ uri: profileImageUrl }}
+                style={styles.profileImage}
+                contentFit="cover"
+                transition={200}
+              />
             ) : (
               <View style={styles.profileFallback}>
                 <User size={28} color="#fff" />

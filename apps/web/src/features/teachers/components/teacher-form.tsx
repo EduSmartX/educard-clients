@@ -16,7 +16,7 @@ import { TextInputField, DateInputField, GenderField, BloodGroupField } from '@/
 import { AddressForm } from '@/components/forms/address-form';
 import { OrganizationRoleField } from '@/components/forms/organization-role-field';
 import { SupervisorField } from '@/components/forms/supervisor-field';
-import { ADDRESS_TYPE } from '@/constants';
+import { ADDRESS_TYPE, ErrorMessages, FormPlaceholders, SuccessMessages, ToastTitles } from '@/constants';
 import { useCreateTeacher, useUpdateTeacher, useReactivateTeacher } from '../hooks/mutations';
 import {
   teacherFormSchema,
@@ -43,7 +43,6 @@ import { STANDARD_FORM_VALIDATION_CONFIG } from '@/lib/utils/form-validation';
 import { FormMetadata } from '@/components/form/form-metadata';
 import { DeletedDuplicateDialog } from '@/components/common';
 import { useDeletedDuplicateHandler } from '@/hooks/use-deleted-duplicate-handler';
-import { ErrorMessages, FormPlaceholders, SuccessMessages, ToastTitles } from '@/constants';
 
 /**
  * Scroll to the first field with an error

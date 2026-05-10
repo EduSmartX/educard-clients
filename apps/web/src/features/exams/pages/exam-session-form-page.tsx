@@ -19,16 +19,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
 import { PageHeader, FormActions } from '@/components/common';
-import { ROUTES } from '@/constants';
-import { ValidationMessages } from '@/constants';
+import { ROUTES, ValidationMessages } from '@/constants';
 import { formatDateForAPI, parseDate } from '@/lib/utils/date-utils';
-import { validateDateRange } from '@educard/shared';
 import { useExamSession } from '../hooks/use-exams';
 import { useCreateExamSession, useUpdateExamSession } from '../hooks/mutations';
 import { useAcademicYears } from '@/features/organizations/hooks/queries';
 import { useRole } from '@/hooks/use-role';
-import { EXAM_SESSION_TYPE_OPTIONS, EXAM_SESSION_TYPE_LABELS, type ExamSessionType, type ExamSessionCreatePayload, type ExamSessionUpdatePayload } from '../types';
-
+import { EXAM_SESSION_TYPE_OPTIONS, EXAM_SESSION_TYPE_LABELS, type ExamSessionType, type ExamSessionCreatePayload, type ExamSessionUpdatePayload } from '@educard/shared';
 export function ExamSessionFormPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -127,10 +124,6 @@ export function ExamSessionFormPage() {
     }
     if (!academicYear.trim()) {
       errors.academic_year = ValidationMessages.EXAM_SESSION.SELECT_ACADEMIC_YEAR;
-    }
-    const dateRangeError = validateDateRange(startDate, endDate, 'Start date', 'End date');
-    if (dateRangeError) {
-      errors.end_date = dateRangeError;
     }
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);

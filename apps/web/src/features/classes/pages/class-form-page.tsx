@@ -64,8 +64,8 @@ export default function ClassFormPage() {
 
   // Determine mode based on URL path
   const getMode = (): 'create' | 'edit' | 'view' => {
-    if (!id) return 'create';
-    if (location.pathname.endsWith('/edit')) return 'edit';
+    if (!id) {return 'create';}
+    if (location.pathname.endsWith('/edit')) {return 'edit';}
     return 'view';
   };
 

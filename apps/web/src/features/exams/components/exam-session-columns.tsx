@@ -6,7 +6,7 @@ import { Eye, Pencil, Trash2, RotateCcw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Column } from '@/components/ui/data-table';
-import { EXAM_SESSION_TYPE_LABELS, type ExamSession, type ExamSessionType } from '../types';
+import { EXAM_SESSION_TYPE_LABELS, type ExamSession, type ExamSessionType } from '@educard/shared';
 import { format } from 'date-fns';
 
 interface CreateColumnsParams {

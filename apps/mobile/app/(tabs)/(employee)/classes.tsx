@@ -6,14 +6,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import {
-  BookOpen,
-  Users,
-  GraduationCap,
-  ClipboardCheck,
-  ChevronRight,
-  Building2,
-} from 'lucide-react-native';
+import { BookOpen, Users, GraduationCap, ClipboardCheck, Building2 } from 'lucide-react-native';
 import { useState, useCallback } from 'react';
 import {
   View,
@@ -120,7 +113,7 @@ export default function EmployeeClassesScreen() {
     router.push({
       pathname: '/(admin-screens)/attendance/mark',
       params: { classId },
-    } as any);
+    } as Parameters<typeof router.push>[0]);
   };
 
   const totalStudents =
@@ -130,7 +123,9 @@ export default function EmployeeClassesScreen() {
     <Screen scrollable={false}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => void handleRefresh()} />
+        }
         contentContainerStyle={styles.scrollContent}
       >
         {/* Header */}

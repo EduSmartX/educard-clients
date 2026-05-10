@@ -150,9 +150,12 @@ export const getComprehensiveAttendance = async (
   classId: string,
   date: string
 ): Promise<ComprehensiveAttendanceRecord[]> => {
+  // Embed images to reduce HTTP requests (Base64 data URIs for profile photos)
   const response = await apiClient.get<
     ApiResponse<ComprehensiveAttendanceRecord[]> | ComprehensiveAttendanceRecord[]
-  >(`/attendance/class/${classId}/student-attendance/comprehensive/`, { params: { date } });
+  >(`/attendance/class/${classId}/student-attendance/comprehensive/`, {
+    params: { date, embed_images: true },
+  });
   const data = response.data;
   return 'data' in data ? data.data : data;
 };

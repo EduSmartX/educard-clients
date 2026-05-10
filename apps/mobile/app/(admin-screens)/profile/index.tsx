@@ -10,6 +10,7 @@
  */
 
 import { getRoleGradient, GENDER_OPTIONS, BLOOD_GROUP_OPTIONS } from '@educard/shared';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
@@ -35,7 +36,6 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Image,
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
@@ -254,7 +254,12 @@ export default function ProfileScreen() {
               disabled={isPhotoUploading}
             >
               {photoUrl ? (
-                <Image source={{ uri: photoUrl }} style={s.avatarImage} />
+                <Image
+                  source={{ uri: photoUrl }}
+                  style={s.avatarImage}
+                  contentFit="cover"
+                  transition={200}
+                />
               ) : (
                 <View style={s.avatarCircle}>
                   <Text style={s.avatarText}>{initials}</Text>

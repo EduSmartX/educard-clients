@@ -5,6 +5,7 @@
  */
 
 import { getRoleGradient, extractApiError } from '@educard/shared';
+import { EXAM_STATUS_LABELS, type ExamStatus } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Check } from 'lucide-react-native';
@@ -24,7 +25,6 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { FormInput, FormDropdown, FormDatePicker } from '@/components/forms';
 import { useCreateExam, useExamSessions } from '@/features/exams';
-import { EXAM_STATUS_LABELS, type ExamStatus } from '@/features/exams/types';
 import { useSubjects } from '@/features/subjects';
 import { headerStyles, layoutStyles } from '@/styles';
 

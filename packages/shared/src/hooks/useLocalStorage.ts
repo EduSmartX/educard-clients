@@ -66,7 +66,7 @@ export function useLocalStorage<T>(
 
   // Sync with other tabs/windows
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined") {return;}
 
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === key && e.newValue !== null) {

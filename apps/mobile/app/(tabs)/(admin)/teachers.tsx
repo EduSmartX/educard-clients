@@ -24,7 +24,6 @@ import {
   Briefcase,
   AlertCircle,
   Mail,
-  ChevronRight,
 } from 'lucide-react-native';
 import { useState, useCallback, useRef, useMemo } from 'react';
 import {
@@ -41,7 +40,7 @@ import {
   type NativeSyntheticEvent,
   type NativeScrollEvent,
 } from 'react-native';
-import Animated, { FadeIn, FadeInDown, FadeInRight } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInRight } from 'react-native-reanimated';
 
 import { SearchBar } from '@/components/common';
 import { EntityActions } from '@/components/common/EntityActions';
@@ -58,7 +57,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import { layoutStyles, headerStyles, stateStyles, listStyles } from '@/styles';
 import { isAdminRole } from '@/utils/role-utils';
 
-const { width } = Dimensions.get('window');
+const { width: _width } = Dimensions.get('window');
 const adminTheme = getRoleThemeColors('admin');
 const adminGradient = getRoleGradient('admin');
 
@@ -79,6 +78,15 @@ export default function TeachersScreen() {
 
   // Check if current user is admin (has full CRUD access)
   const canManage = useMemo(() => isAdminRole(user?.role), [user?.role]);
+
+  // Filter fields - only admins can see "Deleted" filter
+  const filterFields = useMemo(() => {
+    if (canManage) {
+      return TEACHER_FILTER_FIELDS;
+    }
+    // Remove is_deleted filter for non-admins
+    return TEACHER_FILTER_FIELDS.filter((f) => f.name !== 'is_deleted');
+  }, [canManage]);
 
   // Only fetch when search is submitted (not on every keystroke)
   const {
@@ -102,7 +110,7 @@ export default function TeachersScreen() {
   const confirmDelete = useDeleteConfirm({
     entityName: 'Teacher',
     deleteMutation,
-    onSuccess: () => refetch(),
+    onSuccess: () => void refetch(),
   });
 
   // Restore mutation for reactivating deleted teachers
@@ -113,14 +121,16 @@ export default function TeachersScreen() {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Reactivate',
-          onPress: async () => {
-            try {
-              await restoreMutation.mutateAsync(id);
-              refetch();
-              Alert.alert('Success', `${name} reactivated successfully`);
-            } catch (error) {
-              Alert.alert('Error', getErrorMessage(error, 'Failed to reactivate teacher'));
-            }
+          onPress: () => {
+            void (async () => {
+              try {
+                await restoreMutation.mutateAsync(id);
+                void refetch();
+                Alert.alert('Success', `${name} reactivated successfully`);
+              } catch (error) {
+                Alert.alert('Error', getErrorMessage(error, 'Failed to reactivate teacher'));
+              }
+            })();
           },
         },
       ]);
@@ -138,7 +148,7 @@ export default function TeachersScreen() {
     // Cooldown: skip refresh if last one was less than 3 seconds ago
     if (now - lastRefreshRef.current < 3000) return;
     lastRefreshRef.current = now;
-    refetch();
+    void refetch();
   }, [refetch]);
 
   // Submit search (called on blur or submit)
@@ -170,7 +180,7 @@ export default function TeachersScreen() {
   // Load more when scrolling to the end - only when scrolling DOWN
   const loadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage && !isRefetching && isScrollingDownRef.current) {
-      fetchNextPage();
+      void fetchNextPage();
     }
   }, [hasNextPage, isFetchingNextPage, isRefetching, fetchNextPage]);
 
@@ -330,7 +340,7 @@ export default function TeachersScreen() {
         onClose={() => setShowFilters(false)}
         currentFilters={filters}
         onApply={handleApplyFilters}
-        fields={TEACHER_FILTER_FIELDS}
+        fields={filterFields}
         title="Filter Teachers"
       />
 
@@ -345,7 +355,7 @@ export default function TeachersScreen() {
           <AlertCircle size={48} color={Colors.error[400]} />
           <Text style={stateStyles.errorText}>Failed to load teachers</Text>
           <Text style={stateStyles.errorSubtext}>{error?.message || 'Please try again'}</Text>
-          <TouchableOpacity style={stateStyles.retryBtn} onPress={() => refetch()}>
+          <TouchableOpacity style={stateStyles.retryBtn} onPress={() => void refetch()}>
             <Text style={stateStyles.retryText}>Retry</Text>
           </TouchableOpacity>
         </View>

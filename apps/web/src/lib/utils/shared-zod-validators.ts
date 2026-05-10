@@ -10,7 +10,18 @@ export const PHONE_REGEX = /^\d{10}$/;
 export const EMPLOYEE_ID_REGEX = /^[A-Z0-9_-]+$/i;
 export const NAME_REGEX = /^[a-zA-Z\s'-]+$/;
 
+/**
+ * Check if phone number is masked (contains asterisks from backend)
+ */
+export const isPhoneMasked = (phone: string): boolean => {
+  return phone.includes('*');
+};
+
 export const cleanPhoneNumber = (phone: string): string => {
+  // If phone is masked, return as-is
+  if (isPhoneMasked(phone)) {
+    return phone;
+  }
   return phone.replace(/\D/g, '');
 };
 
@@ -32,7 +43,9 @@ export const phoneSchema = (required = false) => {
     .string()
     .refine(
       (val) => {
-        if (!val) return true;
+        if (!val) {return true;}
+        // Allow masked phone numbers from backend (contains *)
+        if (isPhoneMasked(val)) {return true;}
         const cleaned = cleanPhoneNumber(val);
         return PHONE_REGEX.test(cleaned);
       },
@@ -93,20 +106,20 @@ export const numberSchema = (
   const validator = z
     .union([z.string(), z.number()])
     .transform((val) => {
-      if (!val) return undefined;
+      if (!val) {return undefined;}
       const num = typeof val === 'string' ? parseFloat(val) : val;
       return isNaN(num) ? undefined : num;
     })
     .refine(
       (val) => {
-        if (val === undefined) return true;
-        if (integer && !Number.isInteger(val)) return false;
-        if (min !== undefined && val < min) return false;
-        if (max !== undefined && val > max) return false;
+        if (val === undefined) {return true;}
+        if (integer && !Number.isInteger(val)) {return false;}
+        if (min !== undefined && val < min) {return false;}
+        if (max !== undefined && val > max) {return false;}
         return true;
       },
       (val) => {
-        if (val === undefined) return { message: '' };
+        if (val === undefined) {return { message: '' };}
         if (integer && !Number.isInteger(val)) {
           return { message: `${fieldName} must be a whole number` };
         }

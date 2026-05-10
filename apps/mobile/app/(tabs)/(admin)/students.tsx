@@ -64,7 +64,7 @@ export default function StudentsScreen() {
   const debouncedSearch = useDebounce(searchQuery, 300);
 
   // Dynamic filter fields (includes class dropdown)
-  const studentFilterFields = useStudentFilterFields();
+  const allStudentFilterFields = useStudentFilterFields();
 
   // Classes for label resolution and permission checks
   // Backend returns only managed classes for teachers (where they are class teacher)
@@ -75,6 +75,15 @@ export default function StudentsScreen() {
 
   // Teachers who manage at least one class can create students
   const isClassTeacher = isTeacher && managedClasses.length > 0;
+
+  // Filter fields - admins and class teachers can see "Deleted" filter
+  // Class teachers can view deleted students in their managed classes
+  const studentFilterFields = useMemo(() => {
+    if (isAdmin || isClassTeacher) {
+      return allStudentFilterFields;
+    }
+    return allStudentFilterFields.filter((f) => f.name !== 'is_deleted');
+  }, [isAdmin, isClassTeacher, allStudentFilterFields]);
   const canCreateStudents = isAdmin || isClassTeacher;
 
   const classOptions = useMemo(() => {
@@ -143,8 +152,8 @@ export default function StudentsScreen() {
     hasNextPage,
     isFetchingNextPage,
     isRefetching,
-    fetchNextPage,
-    refetch,
+    fetchNextPage: () => void fetchNextPage(),
+    refetch: () => void refetch(),
   });
 
   const handleView = useCallback(

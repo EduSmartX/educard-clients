@@ -54,7 +54,7 @@ const MASTER_SUBJECT_COLOR_INDEX: Record<string, number> = {
 };
 
 export function getSubjectColor(subjectName: string | null | undefined): SubjectColorScheme {
-  if (!subjectName) return UNASSIGNED_SUBJECT_COLOR;
+  if (!subjectName) {return UNASSIGNED_SUBJECT_COLOR;}
 
   const key = subjectName.trim().toLowerCase();
   const knownIdx = MASTER_SUBJECT_COLOR_INDEX[key];

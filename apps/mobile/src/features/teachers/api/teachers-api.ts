@@ -35,6 +35,7 @@ export interface TeacherQueryParams {
   is_deleted?: boolean;
   gender?: string;
   designation?: string;
+  embed_images?: boolean;
 }
 
 /**
@@ -54,10 +55,13 @@ export async function getTeachers(
   params?: TeacherQueryParams,
   userRole?: string | null
 ): Promise<TeacherListResponse> {
-  // Deleted view requires admin endpoint (employee endpoint ignores is_deleted)
-  const baseUrl = params?.is_deleted ? ADMIN_BASE_URL : getBaseUrl(userRole, false);
+  // Only admins can view deleted teachers - use admin endpoint only if admin
+  // Non-admins should not be able to view deleted teachers at all
+  const baseUrl = getBaseUrl(userRole, false);
+  // By default, embed images to reduce HTTP requests (Base64 data URIs)
+  const queryParams = { embed_images: true, ...params };
   const response = await apiClient.get<TeacherListResponse>(baseUrl, {
-    params,
+    params: queryParams,
   });
   return response.data;
 }
@@ -67,8 +71,8 @@ export async function getTeacherById(
   isDeleted?: boolean,
   userRole?: string | null
 ): Promise<ApiDetailResponse<TeacherDetail>> {
-  // Deleted view requires admin endpoint
-  const baseUrl = isDeleted ? ADMIN_BASE_URL : getBaseUrl(userRole, false);
+  // Only admins can view deleted teachers
+  const baseUrl = getBaseUrl(userRole, false);
   const response = await apiClient.get<ApiDetailResponse<TeacherDetail>>(
     `${baseUrl}${publicId}/`,
     isDeleted ? { params: { is_deleted: true } } : undefined

@@ -9,11 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { DataTable } from '@/components/ui/data-table';
+import { DataTable, type PaginationInfo } from '@/components/ui/data-table';
 import { ResourceFilter, type FilterField } from '@/components/filters/resource-filter';
 import { PageHeader, DeletedViewToggle } from '@/components/common';
 import type { Teacher } from '../types';
-import type { PaginationInfo } from '@/components/ui/data-table';
 import { createTeacherListColumns } from './teacher-list-columns';
 import { BulkUploadTeachersDialog } from './bulk-upload-dialog';
 import {

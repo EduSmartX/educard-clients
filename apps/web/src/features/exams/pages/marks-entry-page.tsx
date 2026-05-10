@@ -24,12 +24,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { PageHeader, StudentAvatar } from '@/components/common';
-import { ROUTES } from '@/constants';
-import { ValidationMessages } from '@/constants';
+import { ROUTES, ValidationMessages } from '@/constants';
 import { useExamSessions, useExams } from '../hooks/use-exams';
 import { bulkUpsertMarks, type BulkMarkUpsertPayload } from '../api/exams-api';
 import { studentApi } from '@/lib/api/student-api';
-import type { Exam, BulkMarkEntry } from '../types';
+import type { Exam, BulkMarkEntry } from '@educard/shared';
 
 interface StudentMarkEntry {
   student_id: string;
@@ -87,21 +86,15 @@ export function MarksEntryPage() {
 
   const handleMarksKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
     const totalRows = markEntries.length;
-    let nextIndex: number | null = null;
+    let nextIndex: number | null;
 
     switch (e.key) {
       case 'ArrowDown':
       case 'Enter':
-        nextIndex = index + 1;
-        if (nextIndex >= totalRows) {
-          nextIndex = null;
-        }
+        nextIndex = index + 1 >= totalRows ? null : index + 1;
         break;
       case 'ArrowUp':
-        nextIndex = index - 1;
-        if (nextIndex < 0) {
-          nextIndex = null;
-        }
+        nextIndex = index - 1 < 0 ? null : index - 1;
         break;
       default:
         return; // Don't prevent default for other keys

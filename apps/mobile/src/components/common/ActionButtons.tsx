@@ -8,7 +8,7 @@ import { Eye, Edit3, Trash2, LucideIcon } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 
-interface ActionButton {
+interface _ActionButton {
   icon: LucideIcon;
   color: string;
   bgColor: string;
@@ -103,9 +103,12 @@ export function ActionButtons({
       ]}
     >
       {actions
-        .filter((a) => a.show && a.button)
+        .filter(
+          (a): a is typeof a & { button: NonNullable<typeof a.button> } =>
+            a.show && a.button !== undefined
+        )
         .map(({ key, button }) => (
-          <ActionButtonItem key={key} {...button!} />
+          <ActionButtonItem key={key} {...button} />
         ))}
     </View>
   );

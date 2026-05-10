@@ -682,8 +682,8 @@ export default function TimesheetApprovalsPage() {
                             const hasRecord = !!record;
 
                             // Determine status
-                            let statusText = '';
-                            let statusColor = '';
+                            let statusText: string;
+                            let statusColor: string;
                             let rowBg = '';
 
                             if (isForceHoliday) {

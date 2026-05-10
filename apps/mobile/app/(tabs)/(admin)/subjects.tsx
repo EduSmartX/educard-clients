@@ -10,7 +10,7 @@
 
 import { Colors, getRoleThemeColors, useDebounce, getErrorMessage, Subject } from '@educard/shared';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Plus, BookOpen } from 'lucide-react-native';
+import { BookOpen, Plus } from 'lucide-react-native';
 import { useState, useCallback, useMemo } from 'react';
 import {
   View,
@@ -64,6 +64,13 @@ export default function SubjectsScreen() {
   // Teachers who manage at least one class can create subjects
   const isClassTeacher = isTeacher && managedClasses.length > 0;
   const canCreateSubjects = isAdmin || isClassTeacher;
+
+  // Filter fields - admins and class teachers can see "Deleted" filter
+  // Class teachers can view deleted subjects in their managed classes
+  const subjectFilterFields = useMemo(() => {
+    if (isAdmin || isClassTeacher) return SUBJECT_FILTER_FIELDS;
+    return SUBJECT_FILTER_FIELDS.filter((f) => f.name !== 'is_deleted');
+  }, [isAdmin, isClassTeacher]);
 
   const debouncedSearch = useDebounce(searchQuery, 300);
 
@@ -126,8 +133,8 @@ export default function SubjectsScreen() {
     hasNextPage,
     isFetchingNextPage,
     isRefetching,
-    fetchNextPage,
-    refetch,
+    fetchNextPage: () => void fetchNextPage(),
+    refetch: () => void refetch(),
   });
 
   const handleView = useCallback(
@@ -209,7 +216,7 @@ export default function SubjectsScreen() {
                   )
               : undefined
           }
-          canManage={(item as any).can_manage ?? isAdmin}
+          canManage={(item as Subject & { can_manage?: boolean }).can_manage ?? isAdmin}
         />
       </TouchableOpacity>
     </Animated.View>
@@ -257,11 +264,11 @@ export default function SubjectsScreen() {
         visible={showFilters}
         onClose={() => setShowFilters(false)}
         currentFilters={filters}
-        onApply={(f: Record<string, any>) => {
+        onApply={(f: Record<string, string | boolean | undefined>) => {
           setFilters(f);
           setShowFilters(false);
         }}
-        fields={SUBJECT_FILTER_FIELDS}
+        fields={subjectFilterFields}
         title="Filter Subjects"
       />
 
@@ -272,7 +279,7 @@ export default function SubjectsScreen() {
         <ErrorState
           message="Failed to load subjects"
           detail={error?.message}
-          onRetry={() => refetch()}
+          onRetry={() => void refetch()}
         />
       ) : (
         <FlatList

@@ -28,8 +28,8 @@ export default function ForgotPasswordScreen() {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [_newPassword, _setNewPassword] = useState(''); // prefixed _
   const [_confirmPassword, _setConfirmPassword] = useState(''); // prefixed _
-  const [_showPassword, setShowPassword] = useState(false); // prefixed _
-  const [_showConfirmPassword, setShowConfirmPassword] = useState(false); // prefixed _
+  const [_showPassword, _setShowPassword] = useState(false); // prefixed _
+  const [_showConfirmPassword, _setShowConfirmPassword] = useState(false); // prefixed _
   const [isLoading, setIsLoading] = useState(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
@@ -127,8 +127,8 @@ export default function ForgotPasswordScreen() {
       Alert.alert('Success', 'OTP sent again');
       setOtp(['', '', '', '', '', '']);
       otpRefs.current[0]?.focus();
-    } catch (_error) {
-      // prefixed _
+    } catch {
+      // Error handled with alert
       Alert.alert('Error', 'Failed to resend OTP');
     } finally {
       setIsLoading(false);

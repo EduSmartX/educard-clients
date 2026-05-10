@@ -13,3 +13,9 @@ export { useMyProfilePhoto, useUserProfile, useUpdateProfile } from './useProfil
 export { useListScroll } from './useListScroll';
 export { useDeleteConfirm } from './useDeleteConfirm';
 export { useDeletedDuplicateHandler } from './useDeletedDuplicateHandler';
+export {
+  useTeacherManagementContext,
+  useIsSubordinateOf,
+  useIsClassTeacherFor,
+  type TeacherManagementContext,
+} from './useManagementContext';

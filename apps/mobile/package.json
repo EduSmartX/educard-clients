@@ -4,7 +4,11 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
+    "start:local": "cp .env.local .env && expo start",
+    "start:prod": "cp .env.production .env && expo start",
     "android": "expo run:android",
+    "android:local": "cp .env.local .env && expo start --android",
+    "android:prod": "cp .env.production .env && expo start --android",
     "ios": "expo run:ios",
     "test": "jest",
     "lint": "eslint . --ext .ts,.tsx --max-warnings=0",
@@ -12,7 +16,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,json}\"",
     "typecheck": "tsc --noEmit",
     "build:ios": "eas build --platform ios",
-    "build:android": "eas build --platform android"
+    "build:android": "eas build --platform android",
+    "build:android:prod": "cp .env.production .env && eas build --platform android"
   },
   "dependencies": {
     "@babel/runtime": "^7.29.2",

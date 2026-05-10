@@ -17,11 +17,14 @@ export interface StudentQueryParams {
   page_size?: number;
   ordering?: string;
   is_active?: boolean;
+  embed_images?: boolean;
 }
 
 export async function getStudents(params?: StudentQueryParams): Promise<StudentListResponse> {
+  // By default, embed images to reduce HTTP requests (Base64 data URIs)
+  const queryParams = { embed_images: true, ...params };
   const response = await apiClient.get<StudentListResponse>(API_ENDPOINTS.STUDENTS.LIST, {
-    params,
+    params: queryParams,
   });
   return response.data;
 }

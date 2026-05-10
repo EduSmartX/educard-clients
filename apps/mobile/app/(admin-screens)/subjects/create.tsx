@@ -11,6 +11,10 @@ import {
   buildSubjectPayload,
   parseApiErrors,
   getErrorMessage,
+  SUBJECT_TYPE_OPTIONS,
+  type Class,
+  type Teacher,
+  type ApiErrorData,
 } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -63,13 +67,13 @@ export default function CreateSubjectScreen() {
   const { data: teachersData } = useTeachers({ page_size: 100 });
 
   const duplicateHandler = useDeletedDuplicateHandler<{
-    payload: any;
+    payload: Record<string, unknown>;
     deletedRecordId: string | null;
   }>();
 
   const classOpts = useMemo(() => {
     const items = classesData?.classes || [];
-    return items.map((c: any) => ({
+    return items.map((c: Class) => ({
       value: c.public_id,
       label: `${c.class_master?.name || ''} - ${c.name}`.trim(),
     }));
@@ -82,12 +86,16 @@ export default function CreateSubjectScreen() {
 
   const teacherOpts = useMemo(() => {
     const teachers = teachersData?.teachers || [];
-    return teachers.map((t: any) => ({ value: t.public_id, label: `${t.full_name} (${t.email})` }));
+    return teachers.map((t: Teacher) => ({
+      value: t.public_id,
+      label: `${t.full_name} (${t.email})`,
+    }));
   }, [teachersData]);
 
   const [form, setForm] = useState({
     class_id: '',
     subject_id: '',
+    subject_type: 'core' as 'core' | 'elective' | 'language',
     teacher_id: '',
     description: '',
   });
@@ -107,7 +115,7 @@ export default function CreateSubjectScreen() {
     [errors]
   );
 
-  const blurValidate = useCallback(
+  const _blurValidate = useCallback(
     (field: string) => {
       const err = validateField(subjectFormSchema, field, form[field as keyof typeof form]);
       setErrors((prev) => {
@@ -120,18 +128,8 @@ export default function CreateSubjectScreen() {
     [form]
   );
 
-  const handleSubmit = useCallback(() => {
-    setApiError(null);
-    const fe = validateAllFields(subjectFormSchema, form);
-    setErrors(fe);
-    if (Object.keys(fe).length > 0) return;
-
-    const payload = buildSubjectPayload(form);
-    submitCreate(payload, false);
-  }, [form, createMutation, router]);
-
   const submitCreate = useCallback(
-    (payload: any, forceCreate: boolean) => {
+    (payload: Record<string, unknown>, forceCreate: boolean) => {
       createMutation.mutate(
         { data: payload, forceCreate },
         {
@@ -141,14 +139,15 @@ export default function CreateSubjectScreen() {
               { text: 'OK', onPress: () => router.back() },
             ]);
           },
-          onError: (err: any) => {
+          onError: (err: unknown) => {
             if (isDeletedDuplicateError(err)) {
               const msg = getDeletedDuplicateMessage(err);
               const recordId = getDeletedRecordId(err);
               duplicateHandler.openDialog(msg, { payload, deletedRecordId: recordId });
               return;
             }
-            const { fieldErrors: fe, generalError } = parseApiErrors(err?.response?.data);
+            const axiosError = err as { response?: { data?: ApiErrorData } };
+            const { fieldErrors: fe, generalError } = parseApiErrors(axiosError?.response?.data);
             if (Object.keys(fe).length > 0) {
               setErrors(fe);
               return;
@@ -160,6 +159,16 @@ export default function CreateSubjectScreen() {
     },
     [createMutation, router, duplicateHandler]
   );
+
+  const handleSubmit = useCallback(() => {
+    setApiError(null);
+    const fe = validateAllFields(subjectFormSchema, form);
+    setErrors(fe);
+    if (Object.keys(fe).length > 0) return;
+
+    const payload = buildSubjectPayload(form);
+    submitCreate(payload, false);
+  }, [form, submitCreate]);
 
   const handleReactivate = useCallback(() => {
     const recordId = duplicateHandler.pendingData?.deletedRecordId;
@@ -252,6 +261,17 @@ export default function CreateSubjectScreen() {
                 placeholder="Select a subject"
                 searchable
                 loading={subjectsLoading}
+              />
+              <FormDropdown
+                label="Subject Type (Optional)"
+                options={SUBJECT_TYPE_OPTIONS.map((opt) => ({
+                  value: opt.value,
+                  label: opt.label,
+                }))}
+                value={form.subject_type}
+                onChange={(v) => updateField('subject_type', v)}
+                error={errors.subject_type}
+                placeholder="Select subject type"
               />
               <FormDropdown
                 label="Teacher"

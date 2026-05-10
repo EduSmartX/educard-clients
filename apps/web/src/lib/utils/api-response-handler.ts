@@ -71,7 +71,7 @@ export function isValidApiResponse(response: unknown): boolean {
  * Validates if the response is a list response with pagination
  */
 export function isListResponse<T>(response: unknown): response is ApiListResponse<T> {
-  if (!isValidApiResponse(response)) return false;
+  if (!isValidApiResponse(response)) {return false;}
 
   const apiResponse = response as Record<string, unknown>;
   return (

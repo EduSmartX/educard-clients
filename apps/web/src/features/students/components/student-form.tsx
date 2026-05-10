@@ -49,15 +49,16 @@ import { uploadProfilePhotoForUser } from '@/lib/utils/upload-profile-photo';
 import { FormMetadata } from '@/components/form/form-metadata';
 import { DeletedDuplicateDialog } from '@/components/common';
 import { useDeletedDuplicateHandler } from '@/hooks/use-deleted-duplicate-handler';
-import { RELATIONSHIP_OPTIONS } from '@/constants';
-import { MinimalStudentFields } from './minimal-student-fields';
 import {
+  RELATIONSHIP_OPTIONS,
   CommonUiText,
   ErrorMessages,
   FormPlaceholders,
   SuccessMessages,
   ToastTitles,
+  USER_ROLES,
 } from '@/constants';
+import { MinimalStudentFields } from './minimal-student-fields';
 import {
   getStudentFormValuesFromInitialData,
   scrollToFirstFormError,
@@ -68,7 +69,6 @@ import {
 } from '../utils/student-form.utils';
 import { STANDARD_FORM_VALIDATION_CONFIG } from '@/lib/utils/form-validation';
 import { useAuth } from '@/hooks/use-auth';
-import { USER_ROLES } from '@/constants';
 
 interface StudentFormProps {
   mode: 'create' | 'edit' | 'view';

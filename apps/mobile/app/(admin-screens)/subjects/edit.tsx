@@ -10,6 +10,7 @@ import {
   validateAllFields,
   buildSubjectPayload,
   parseApiErrors,
+  SUBJECT_TYPE_OPTIONS,
 } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -71,6 +72,7 @@ export default function EditSubjectScreen() {
   const [form, setForm] = useState({
     class_id: '',
     subject_id: '',
+    subject_type: 'core' as 'core' | 'elective' | 'language',
     teacher_id: '',
     description: '',
   });
@@ -90,6 +92,7 @@ export default function EditSubjectScreen() {
           subject.subject_master?.id?.toString() ||
           subject.subject_id ||
           '',
+        subject_type: (subject.subject_type as 'core' | 'elective' | 'language') || 'core',
         teacher_id:
           subject.teacher_info?.public_id || subject.teacher?.public_id || subject.teacher_id || '',
         description: subject.description || '',
@@ -111,7 +114,7 @@ export default function EditSubjectScreen() {
     [errors]
   );
 
-  const blurValidate = useCallback(
+  const _blurValidate = useCallback(
     (field: string) => {
       const err = validateField(subjectFormSchema, field, form[field as keyof typeof form]);
       setErrors((prev) => {
@@ -212,6 +215,17 @@ export default function EditSubjectScreen() {
                 placeholder="Select a subject"
                 searchable
                 loading={subjectsLoading}
+              />
+              <FormDropdown
+                label="Subject Type (Optional)"
+                options={SUBJECT_TYPE_OPTIONS.map((opt) => ({
+                  value: opt.value,
+                  label: opt.label,
+                }))}
+                value={form.subject_type}
+                onChange={(v) => updateField('subject_type', v)}
+                error={errors.subject_type}
+                placeholder="Select subject type"
               />
               <FormDropdown
                 label="Teacher"

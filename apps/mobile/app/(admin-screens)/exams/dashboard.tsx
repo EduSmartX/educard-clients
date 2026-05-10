@@ -4,6 +4,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any, @typescript-eslint/no-misused-promises */
 
 import { getRoleGradient } from '@educard/shared';
+import { EXAM_STATUS_LABELS, EXAM_STATUS_COLORS, type Exam } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, ChevronDown, Plus } from 'lucide-react-native';
@@ -22,7 +23,6 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { useClasses } from '@/features/classes';
 import { useExams, useMarksOverview } from '@/features/exams';
-import { EXAM_STATUS_LABELS, EXAM_STATUS_COLORS, type Exam } from '@/features/exams/types';
 import { headerStyles, layoutStyles } from '@/styles';
 
 import type { Class } from '@/features/classes/types';

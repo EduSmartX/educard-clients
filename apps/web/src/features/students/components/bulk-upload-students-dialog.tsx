@@ -7,8 +7,7 @@ import { useState } from 'react';
 import api from '@/lib/api';
 import { BulkUploadDialog } from '@/components/common/bulk-upload-dialog';
 import { useAuth } from '@/hooks/use-auth';
-import { USER_ROLES } from '@/constants';
-import { InfoMessages } from '@/constants';
+import { USER_ROLES, InfoMessages } from '@/constants';
 import { validateStudentExcelFile } from '@/lib/utils/bulk-upload';
 
 const STUDENTS_API = '/students/';

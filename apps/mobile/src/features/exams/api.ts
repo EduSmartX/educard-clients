@@ -1,6 +1,9 @@
 /**
  * Exams API — Role-based Admin and Employee endpoints
  *
+ * NOTE: Types are now imported directly from @educard/shared
+ * This ensures type consistency between Web and Mobile.
+ *
  * Permission model:
  * - Admin: Full CRUD on sessions, exams, marks
  * - Employee (Teacher):
@@ -8,9 +11,6 @@
  *   - Class Teacher: Can view and edit ALL subject marks for their class
  *   - Subject Teacher: Can view ALL marks but only edit their assigned subjects
  */
-
-import { apiClient } from '@/api/client';
-import { isAdminRole } from '@/utils/role-utils';
 
 import type {
   ExamSession,
@@ -21,7 +21,12 @@ import type {
   ExamSessionCreatePayload,
   ExamCreatePayload,
   BulkSaveAllMarksPayload,
-} from './types';
+} from '@educard/shared';
+
+import { apiClient } from '@/api/client';
+import { isAdminRole } from '@/utils/role-utils';
+
+// Types imported directly from shared package
 
 const ADMIN_BASE = '/exams/admin';
 const EMPLOYEE_BASE = '/exams/employee';
@@ -167,9 +172,12 @@ export async function bulkSaveAllMarks(
 
 // Fetch marks for a specific exam (for marks entry)
 export async function fetchExamMarks(examId: string): Promise<Mark[]> {
-  // Note: by-exam endpoint is only in admin, may need to add to employee if needed
-  const res = await apiClient.get<{ success: boolean; data: Mark[] }>(`${EMPLOYEE_BASE}/marks/`, {
-    params: { exam_id: examId },
-  });
+  // Use the by-exam endpoint which extracts marks from marks_data JSON
+  const res = await apiClient.get<{ success: boolean; data: Mark[] }>(
+    `${EMPLOYEE_BASE}/marks/by-exam/`,
+    {
+      params: { exam_id: examId },
+    }
+  );
   return res.data.data;
 }

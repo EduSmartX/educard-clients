@@ -16,3 +16,6 @@ export * from "./subject";
 export * from "./master";
 export * from "./attendance";
 export * from "./leave";
+export * from "./exam";
+export * from "./timetable";
+export * from "./holiday";

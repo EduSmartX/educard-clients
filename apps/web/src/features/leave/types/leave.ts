@@ -1,6 +1,10 @@
 /**
  * Leave Management Type Definitions
+ * Base types imported from @educard/shared + web-specific types
  */
+
+// Import shared leave types
+import type { LeaveRequestStatus as SharedLeaveRequestStatus } from '@educard/shared';
 
 // Leave Balance Types
 export interface LeaveBalance {
@@ -49,7 +53,7 @@ export interface LeaveBalanceSummary {
   };
 }
 
-// Leave Request Types
+// Leave Request Types - use shared type
 export const LeaveRequestStatus = {
   PENDING: 'pending',
   APPROVED: 'approved',
@@ -57,7 +61,7 @@ export const LeaveRequestStatus = {
   CANCELLED: 'cancelled',
 } as const;
 
-export type LeaveRequestStatus = (typeof LeaveRequestStatus)[keyof typeof LeaveRequestStatus];
+export type LeaveRequestStatus = SharedLeaveRequestStatus;
 
 export interface LeaveRequest {
   public_id: string;

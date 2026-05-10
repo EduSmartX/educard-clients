@@ -213,7 +213,7 @@ export function useGridKeyboardNavigation({
       return;
     }
 
-    let direction: 'up' | 'down' | 'left' | 'right' | 'home' | 'end' | 'tableStart' | 'tableEnd' | null = null;
+    let direction: 'up' | 'down' | 'left' | 'right' | 'home' | 'end' | 'tableStart' | 'tableEnd';
 
     switch (e.key) {
       case 'ArrowUp':
@@ -257,11 +257,9 @@ export function useGridKeyboardNavigation({
         return; // Don't prevent default for other keys
     }
 
-    if (direction) {
-      const nextPos = getNextPosition(currentRow, currentCol, direction);
-      if (nextPos && focusCell(nextPos.row, nextPos.col)) {
-        e.preventDefault();
-      }
+    const nextPos = getNextPosition(currentRow, currentCol, direction);
+    if (nextPos && focusCell(nextPos.row, nextPos.col)) {
+      e.preventDefault();
     }
   }, [getNextPosition, focusCell]);
 

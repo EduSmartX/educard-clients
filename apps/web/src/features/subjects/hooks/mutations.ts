@@ -22,6 +22,7 @@ import type { SubjectCreatePayload, SubjectUpdatePayload } from '../types/subjec
 export interface SubjectFieldErrors extends FieldErrors {
   class_id?: string;
   subject_id?: string;
+  subject_type?: string;
   teacher_id?: string;
   description?: string;
 }

@@ -4,6 +4,7 @@
  */
 
 import { getRoleThemeColors, getSubjectColor } from '@educard/shared';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
@@ -30,7 +31,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-  Image,
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
@@ -319,6 +319,8 @@ export default function AdminDashboard() {
                   <Image
                     source={{ uri: profileImageUrl }}
                     style={styles.profileImage}
+                    contentFit="cover"
+                    transition={200}
                     onError={() => setImgError(true)}
                   />
                 ) : (

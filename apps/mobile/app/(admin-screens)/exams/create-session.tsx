@@ -4,6 +4,7 @@
  */
 
 import { getRoleGradient, extractApiError } from '@educard/shared';
+import { EXAM_SESSION_TYPE_LABELS, type ExamSessionType } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Check } from 'lucide-react-native';
@@ -23,7 +24,6 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { FormInput, FormDropdown, FormDatePicker } from '@/components/forms';
 import { useCreateExamSession } from '@/features/exams';
-import { EXAM_SESSION_TYPE_LABELS, type ExamSessionType } from '@/features/exams/types';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');

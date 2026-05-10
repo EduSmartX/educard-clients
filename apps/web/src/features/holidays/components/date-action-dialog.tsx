@@ -79,7 +79,7 @@ export function DateActionDialog({
     }
   };
 
-  if (!date) return null;
+  if (!date) {return null;}
 
   return (
     <>

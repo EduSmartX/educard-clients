@@ -359,7 +359,7 @@ export default function HolidayCalendarScreen() {
     }
     const payload: CreateHolidayPayload = {
       description: formData.description.trim(),
-      holiday_type: formData.holiday_type as any,
+      holiday_type: formData.holiday_type,
       start_date: formData.start_date,
       end_date: formData.end_date || formData.start_date,
     };
@@ -417,7 +417,10 @@ export default function HolidayCalendarScreen() {
   const upcomingHolidays = useMemo(() => {
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    return tableHolidays.filter((h) => h.start_date >= todayStr).slice(0, 6);
+    return tableHolidays
+      .filter((h) => h.start_date >= todayStr)
+      .sort((a, b) => a.start_date.localeCompare(b.start_date)) // Sort by date ascending (earliest first)
+      .slice(0, 6);
   }, [tableHolidays]);
 
   const isSaving = createMutation.isPending || updateMutation.isPending;

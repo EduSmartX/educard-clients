@@ -159,7 +159,7 @@ const timesheetActions = [
 
 export default function EmployeeAttendanceScreen() {
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user: _user } = useAuthStore();
   const [refreshing, setRefreshing] = useState(false);
 
   const {
@@ -201,7 +201,9 @@ export default function EmployeeAttendanceScreen() {
     <Screen scrollable={false}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => void handleRefresh()} />
+        }
         contentContainerStyle={styles.scrollContent}
       >
         {/* Header */}
@@ -337,11 +339,11 @@ export default function EmployeeAttendanceScreen() {
           <Animated.View entering={FadeInDown.delay(400)}>
             <Text style={styles.sectionTitle}>Student Attendance</Text>
             <View style={styles.actionGrid}>
-              {studentAttendanceActions.map((action, index) => (
+              {studentAttendanceActions.map((action, _index) => (
                 <TouchableOpacity
                   key={action.id}
                   style={styles.actionCard}
-                  onPress={() => router.push(action.route as any)}
+                  onPress={() => router.push(action.route as Parameters<typeof router.push>[0])}
                   activeOpacity={0.7}
                 >
                   <View style={[styles.actionIcon, { backgroundColor: action.bgColor }]}>
@@ -361,7 +363,7 @@ export default function EmployeeAttendanceScreen() {
               <TouchableOpacity
                 key={action.id}
                 style={styles.listActionCard}
-                onPress={() => router.push(action.route as any)}
+                onPress={() => router.push(action.route as Parameters<typeof router.push>[0])}
                 activeOpacity={0.7}
               >
                 <View style={[styles.listActionIcon, { backgroundColor: action.bgColor }]}>
@@ -389,7 +391,7 @@ export default function EmployeeAttendanceScreen() {
                       router.push({
                         pathname: '/(admin-screens)/attendance/mark',
                         params: { classId: cls.public_id },
-                      } as any)
+                      } as Parameters<typeof router.push>[0])
                     }
                   >
                     <Text style={styles.classChipText}>{cls.display_name}</Text>

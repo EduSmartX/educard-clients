@@ -40,7 +40,7 @@ import {
   type ExamStatus,
   type ExamCreatePayload,
   type ExamUpdatePayload,
-} from '../types';
+} from '@educard/shared';
 
 export function ExamFormPage() {
   const navigate = useNavigate();
@@ -181,7 +181,7 @@ export function ExamFormPage() {
 
   // Check if exam already exists for this session + subject
   const checkDuplicateExam = useMemo(() => {
-    if (!isCreate || !sessionId || !subjectId) return null;
+    if (!isCreate || !sessionId || !subjectId) {return null;}
     return existingExams.find((exam) => exam.subject_public_id === subjectId);
   }, [isCreate, sessionId, subjectId, existingExams]);
 

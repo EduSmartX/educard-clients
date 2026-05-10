@@ -1,61 +1,38 @@
 /**
  * Holiday Calendar — API Layer
+ *
+ * Types are now imported from @educard/shared for consistency
  */
+
+import {
+  createHolidaysApi,
+  HolidayType,
+  HolidayTypeLabels,
+  type Holiday,
+  type HolidayListParams,
+  type HolidayCreatePayload,
+  type HolidayUpdatePayload,
+  type WorkingDayPolicy,
+  type WorkingDayPolicyCreatePayload,
+  type HolidayTypeValue,
+  type SaturdayOffPatternType,
+} from '@educard/shared';
 
 import { apiClient } from '@/api/client';
 
-// ============================================================================
-// Types
-// ============================================================================
+// Re-export types for external use with backward-compatible names
+export type { Holiday, WorkingDayPolicy, HolidayTypeValue };
+export type FetchHolidaysParams = HolidayListParams;
+export type CreateHolidayPayload = HolidayCreatePayload;
+export type UpdateHolidayPayload = HolidayUpdatePayload;
+export type SaturdayOffPattern = SaturdayOffPatternType;
 
-export type HolidayType =
-  | 'SUNDAY'
-  | 'SATURDAY'
-  | 'SECOND_SATURDAY'
-  | 'NATIONAL_HOLIDAY'
-  | 'FESTIVAL'
-  | 'ORGANIZATION_HOLIDAY'
-  | 'OTHER';
+// Re-export constants
+export { HolidayType, HolidayTypeLabels };
 
-export interface Holiday {
-  public_id: string;
-  start_date: string;
-  end_date: string;
-  holiday_type: HolidayType;
-  description: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface CreateHolidayPayload {
-  start_date: string;
-  end_date?: string;
-  holiday_type: Exclude<HolidayType, 'SUNDAY' | 'SATURDAY'>;
-  description: string;
-}
-
-export interface UpdateHolidayPayload extends CreateHolidayPayload {
-  public_id: string;
-}
-
-export interface FetchHolidaysParams {
-  from_date?: string;
-  to_date?: string;
-  holiday_type?: HolidayType;
-  ordering?: string;
-  page?: number;
-  page_size?: number;
-}
-
-export type SaturdayOffPattern = 'NONE' | 'SECOND_ONLY' | 'SECOND_AND_FOURTH' | 'ALL';
-
-export interface WorkingDayPolicy {
-  public_id: string;
-  sunday_off: boolean;
-  saturday_off_pattern: SaturdayOffPattern;
-  effective_from: string;
-  effective_to: string | null;
-}
+// Note: We use manual API functions below instead of shared factory
+// because this module exports additional response wrapper types
+const _holidaysApi = createHolidaysApi({ client: apiClient });
 
 interface ApiListResponse<T> {
   success: boolean;
@@ -136,12 +113,8 @@ export async function getWorkingDayPolicy(): Promise<ApiListResponse<WorkingDayP
   return response.data;
 }
 
-export interface CreateWorkingDayPolicyPayload {
-  sunday_off: boolean;
-  saturday_off_pattern: SaturdayOffPattern;
-  effective_from: string;
-  effective_to?: string | null;
-}
+// Type re-exported from shared above
+export type CreateWorkingDayPolicyPayload = WorkingDayPolicyCreatePayload;
 
 export async function createWorkingDayPolicy(
   data: CreateWorkingDayPolicyPayload

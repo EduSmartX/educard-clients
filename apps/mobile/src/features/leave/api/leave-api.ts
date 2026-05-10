@@ -1,11 +1,20 @@
 /**
  * Leave Management API
+ * Types imported from @educard/shared for consistency
  */
+
+import { createLeaveApi } from '@educard/shared';
 
 import { apiClient } from '@/api/client';
 
-// Types
+// Note: We use manual API functions below instead of shared factory
+// because this module exports additional response wrapper types
+const _leaveApi = createLeaveApi({ client: apiClient });
 
+// Re-export types from shared
+export type { LeaveRequestStatus } from '@educard/shared';
+
+// Types - keeping inline for backward compatibility but could be moved to shared
 export interface LeaveAllocation {
   public_id: string;
   leave_type_id: number;

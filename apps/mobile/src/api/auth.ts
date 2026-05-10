@@ -5,6 +5,7 @@
 import * as SecureStore from 'expo-secure-store';
 
 import { STORAGE_KEYS } from '@/constants/config';
+import { clearQueryCache } from '@/lib/query-client';
 import type {
   AuthTokens,
   LoginCredentials,
@@ -103,6 +104,9 @@ export async function logout(): Promise<void> {
     await SecureStore.deleteItemAsync(STORAGE_KEYS.ACCESS_TOKEN);
     await SecureStore.deleteItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
     await SecureStore.deleteItemAsync(STORAGE_KEYS.USER_DATA);
+
+    // Clear React Query cache to remove stale user data
+    clearQueryCache();
   }
 }
 
@@ -197,6 +201,55 @@ export async function changePassword(data: {
   return response.data;
 }
 
+/**
+ * Send OTP for email or phone verification
+ */
+export async function sendOtp(data: {
+  purpose: 'EMAIL_VERIFICATION' | 'PHONE_VERIFICATION';
+  email?: string;
+  phone?: string;
+}): Promise<{ message: string; expires_in_minutes: number }> {
+  const response = await apiClient.post<{
+    success: boolean;
+    message: string;
+    data: { expires_in_minutes: number };
+  }>('/users/send-otp/', data);
+  return {
+    message: response.data.message,
+    expires_in_minutes: response.data.data.expires_in_minutes,
+  };
+}
+
+/**
+ * Update email with OTP verification
+ */
+export async function updateEmail(data: {
+  new_email: string;
+  otp: string;
+}): Promise<{ message: string; email: string }> {
+  const response = await apiClient.post<{
+    success: boolean;
+    message: string;
+    data: { email: string };
+  }>('/users/update-email/', data);
+  return { message: response.data.message, email: response.data.data.email };
+}
+
+/**
+ * Update phone with OTP verification
+ */
+export async function updatePhone(data: {
+  new_phone: string;
+  otp: string;
+}): Promise<{ message: string; phone: string }> {
+  const response = await apiClient.post<{
+    success: boolean;
+    message: string;
+    data: { phone: string };
+  }>('/users/update-phone/', data);
+  return { message: response.data.message, phone: response.data.data.phone };
+}
+
 // Export all auth functions as authApi object for convenience
 export const authApi = {
   login,
@@ -208,4 +261,7 @@ export const authApi = {
   requestPasswordResetOtp,
   verifyPasswordResetOtp,
   changePassword,
+  sendOtp,
+  updateEmail,
+  updatePhone,
 };

@@ -4,9 +4,9 @@
  */
 
 import axios, {
-  AxiosInstance,
-  AxiosError,
-  InternalAxiosRequestConfig,
+  type AxiosInstance,
+  type AxiosError,
+  type InternalAxiosRequestConfig,
 } from "axios";
 
 // Re-export parseApiError from utils for convenience

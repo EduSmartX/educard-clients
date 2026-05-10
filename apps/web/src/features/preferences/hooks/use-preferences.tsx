@@ -72,7 +72,7 @@ export function useUpdatePreference() {
         queryClient.setQueryData<{ data: GroupedPreference[] }>(
           ['organization-preferences', 'grouped'],
           (old) => {
-            if (!old) return old;
+            if (!old) {return old;}
             return {
               ...old,
               data: old.data.map((group) => ({
@@ -90,7 +90,7 @@ export function useUpdatePreference() {
       if (previousSingle) {
         queryClient.setQueryData(['organization-preference', publicId], (old: unknown) => {
           const oldData = old as { data: OrganizationPreference };
-          if (!oldData) return old;
+          if (!oldData) {return old;}
           return {
             ...oldData,
             data: { ...oldData.data, value },
@@ -141,7 +141,7 @@ export function useBulkUpdatePreferences() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (updates: Array<{ publicId: string; value: string | string[] }>) => {
+    mutationFn: (updates: Array<{ publicId: string; value: string | string[] }>) => {
       // Update each preference individually
       const promises = updates.map(({ publicId, value }) => updatePreference(publicId, value));
       return Promise.all(promises);

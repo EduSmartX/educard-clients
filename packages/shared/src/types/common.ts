@@ -12,7 +12,6 @@ import type {
   AddressTypeValue,
   GenderValue,
   BloodGroupValue,
-  UserRoleValue,
 } from "../constants";
 
 // API Response Types

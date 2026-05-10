@@ -97,7 +97,7 @@ export function parseError(error: unknown): NormalizedError {
   };
 
   // Handle null/undefined
-  if (!error) return result;
+  if (!error) {return result;}
 
   // Handle string errors
   if (typeof error === "string") {
@@ -259,13 +259,13 @@ export function getErrorTitle(error: unknown): string {
   const normalized = parseError(error);
   const code = normalized.statusCode;
 
-  if (!code) return "Error";
-  if (code >= 500) return "Server Error";
-  if (code === 404) return "Not Found";
-  if (code === 403) return "Access Denied";
-  if (code === 401) return "Authentication Required";
-  if (code === 400 && normalized.isValidation) return "Validation Error";
-  if (code >= 400) return "Request Error";
+  if (!code) {return "Error";}
+  if (code >= 500) {return "Server Error";}
+  if (code === 404) {return "Not Found";}
+  if (code === 403) {return "Access Denied";}
+  if (code === 401) {return "Authentication Required";}
+  if (code === 400 && normalized.isValidation) {return "Validation Error";}
+  if (code >= 400) {return "Request Error";}
 
   return "Error";
 }
@@ -286,7 +286,7 @@ export function extractApiError(
   fallback = "Something went wrong",
 ): string {
   const data = (err as AxiosErrorWrapper)?.response?.data;
-  if (!data) return (err as Error)?.message || fallback;
+  if (!data) {return (err as Error)?.message || fallback;}
 
   // First check for errors object (Django validation errors)
   if (data.errors && typeof data.errors === "object") {
@@ -360,7 +360,7 @@ export function extractApiError(
 export function isDeletedDuplicateError(error: unknown): boolean {
   const axiosError = error as AxiosErrorWrapper;
   const data = axiosError?.response?.data;
-  if (!data?.errors) return false;
+  if (!data?.errors) {return false;}
 
   const hasDuplicate = data.errors.has_deleted_duplicate;
   if (
@@ -392,16 +392,16 @@ export function getDeletedDuplicateMessage(error: unknown): string {
         "You can modify here, or go to 'View Deleted' to restore it.",
       );
 
-  if (!data?.errors) return fallback;
+  if (!data?.errors) {return fallback;}
   const errors = data.errors;
 
   if (Array.isArray(errors.non_field_errors) && errors.non_field_errors.length > 0)
-    return normalize(errors.non_field_errors[0] as string);
+    {return normalize(errors.non_field_errors[0] as string);}
   if (typeof errors.non_field_errors === "string")
-    return normalize(errors.non_field_errors);
-  if (typeof errors.detail === "string") return normalize(errors.detail);
+    {return normalize(errors.non_field_errors);}
+  if (typeof errors.detail === "string") {return normalize(errors.detail);}
   if (Array.isArray(errors.detail) && errors.detail.length > 0)
-    return normalize(errors.detail[0] as string);
+    {return normalize(errors.detail[0] as string);}
 
   return fallback;
 }
@@ -409,11 +409,11 @@ export function getDeletedDuplicateMessage(error: unknown): string {
 /** Extract deleted record ID from error */
 export function getDeletedRecordId(error: unknown): string | null {
   const errors = (error as AxiosErrorWrapper)?.response?.data?.errors;
-  if (!errors) return null;
+  if (!errors) {return null;}
 
-  if (typeof errors.deleted_record_id === "string") return errors.deleted_record_id;
+  if (typeof errors.deleted_record_id === "string") {return errors.deleted_record_id;}
   if (Array.isArray(errors.deleted_record_id) && errors.deleted_record_id.length > 0)
-    return errors.deleted_record_id[0] as string;
+    {return errors.deleted_record_id[0] as string;}
 
   return null;
 }

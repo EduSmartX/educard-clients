@@ -1,11 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-misused-promises, @typescript-eslint/no-floating-promises, @typescript-eslint/prefer-nullish-coalescing */ /**
  * Teacher Detail Screen — /(admin-screens)/teachers/[id]
+ * Phone numbers are handled by backend - masked unless user has permission
  */
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { DetailScreenShell, DetailSection, DetailRow, ChipRow } from '@/components/detail';
+import { getMediaUrl } from '@/constants/config';
 import { useTeacherDetail } from '@/features/teachers';
 
 export default function TeacherDetailScreen() {
@@ -13,6 +15,18 @@ export default function TeacherDetailScreen() {
   const router = useRouter();
   const isDeleted = is_deleted === 'true';
   const { data: teacher, isLoading, isError } = useTeacherDetail(id || '', isDeleted);
+
+  // The backend handles phone masking based on permissions
+  // - Admin sees full phone
+  // - Supervisor sees subordinate's full phone
+  // - Class teacher sees student/guardian full phone
+  // - Others see masked phone (e.g., 07******75)
+  // Frontend just displays whatever backend returns
+  const phoneDisplay = teacher?.user?.phone || '—';
+  const emergencyPhoneDisplay = teacher?.emergency_contact_number || '—';
+
+  // Get profile image URL
+  const profileImageUrl = getMediaUrl(teacher?.profile_photo_thumbnail);
 
   return (
     <DetailScreenShell
@@ -22,13 +36,13 @@ export default function TeacherDetailScreen() {
       isError={isError || !teacher}
       onBack={() => router.back()}
       avatarName={teacher?.user?.full_name}
-      avatarImageUri={teacher?.profile_photo_thumbnail}
+      avatarImageUri={profileImageUrl}
     >
       <Animated.View entering={FadeInDown.delay(100)}>
         <DetailSection title="Personal Info" icon="👤">
           <DetailRow label="Full Name" value={teacher?.user?.full_name} />
           <DetailRow label="Email" value={teacher?.user?.email} />
-          <DetailRow label="Phone" value={teacher?.user?.phone} />
+          <DetailRow label="Phone" value={phoneDisplay} />
           <DetailRow label="Gender" value={teacher?.user?.gender} />
           <DetailRow label="Date of Birth" value={teacher?.user?.date_of_birth} />
           <DetailRow label="Blood Group" value={teacher?.user?.blood_group} />
@@ -62,7 +76,7 @@ export default function TeacherDetailScreen() {
       <Animated.View entering={FadeInDown.delay(400)}>
         <DetailSection title="Emergency Contact" icon="🆘">
           <DetailRow label="Name" value={teacher?.emergency_contact_name} />
-          <DetailRow label="Number" value={teacher?.emergency_contact_number} />
+          <DetailRow label="Number" value={emergencyPhoneDisplay} />
         </DetailSection>
       </Animated.View>
     </DetailScreenShell>

@@ -198,7 +198,7 @@ export function AttendanceSummaryPage() {
 
   const handleNextDay = () => {
     const today = new Date();
-    if (selectedDate >= today) return;
+    if (selectedDate >= today) {return;}
     setSelectedDate((prev) => {
       const newDate = new Date(prev);
       newDate.setDate(newDate.getDate() + 1);

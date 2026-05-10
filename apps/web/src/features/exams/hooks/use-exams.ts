@@ -11,7 +11,7 @@ import {
   fetchMarksOverview,
   type MarksOverviewParams,
 } from '../api/exams-api';
-import type { ExamSessionListParams, ExamListParams } from '../types';
+import type { ExamSessionListParams, ExamListParams } from '@educard/shared';
 
 // Exam Sessions
 

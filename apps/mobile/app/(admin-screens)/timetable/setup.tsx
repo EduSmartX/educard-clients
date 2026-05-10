@@ -4,8 +4,10 @@
  * Matches web app's 3-tab setup flow
  */
 
-import { useRouter } from 'expo-router';
+import type { Class, ClassGroup } from '@educard/shared';
+import { getRoleGradient, extractApiError } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import { ChevronLeft, Plus, Trash2, Pencil, X, Check, Users, Clock } from 'lucide-react-native';
 import { useState, useCallback } from 'react';
 import {
@@ -20,8 +22,6 @@ import {
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import type { Class } from '@educard/shared';
-import { getRoleGradient, extractApiError } from '@educard/shared';
 import { FormInput, FormDropdown } from '@/components/forms';
 import { useClasses } from '@/features/classes';
 import {
@@ -32,7 +32,6 @@ import {
   useAddClassToGroup,
   useRemoveClassFromGroup,
 } from '@/features/timetable';
-import type { ClassGroup } from '@/features/timetable/types';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -296,7 +295,9 @@ export default function TimetableSetupScreen() {
                       style={st.iconBtn}
                       onPress={() =>
                         router.push(
-                          `/(admin-screens)/timetable?groupId=${group.public_id}&groupName=${encodeURIComponent(group.name)}` as any
+                          `/(admin-screens)/timetable?groupId=${group.public_id}&groupName=${encodeURIComponent(group.name)}` as Parameters<
+                            typeof router.push
+                          >[0]
                         )
                       }
                     >

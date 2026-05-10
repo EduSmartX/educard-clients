@@ -3,8 +3,6 @@
  * Provides consistent color themes across web and mobile based on user roles
  */
 
-import { Colors } from "./colors";
-
 export type RoleTheme = "admin" | "teacher" | "parent" | "student";
 
 export interface RoleThemeColors {

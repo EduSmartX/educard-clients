@@ -18,6 +18,7 @@ import {
 import { authApi } from '@/lib/api/auth-api';
 import { ROUTES } from '@/constants/app-config';
 import { ErrorMessages, SuccessMessages } from '@/constants';
+import { getErrorMessage } from '@/lib/utils/error-handler';
 import type {
   ChangePasswordPayload,
   SendOTPPayload,
@@ -39,7 +40,7 @@ export function useUpdateProfile() {
       toast.success(SuccessMessages.PROFILE.UPDATED);
     },
     onError: (error: Error) => {
-      toast.error(error.message || ErrorMessages.PROFILE.UPDATE_FAILED);
+      toast.error(getErrorMessage(error, ErrorMessages.PROFILE.UPDATE_FAILED));
     },
   });
 }
@@ -72,7 +73,7 @@ export function useChangePassword() {
       window.location.reload();
     },
     onError: (error: Error) => {
-      toast.error(error.message || ErrorMessages.PROFILE.CHANGE_PASSWORD_FAILED);
+      toast.error(getErrorMessage(error, ErrorMessages.PROFILE.CHANGE_PASSWORD_FAILED));
     },
   });
 }
@@ -87,7 +88,7 @@ export function useSendOTP() {
       toast.success(data.data?.message || SuccessMessages.PROFILE.OTP_SENT);
     },
     onError: (error: Error) => {
-      toast.error(error.message || ErrorMessages.PROFILE.SEND_OTP_FAILED);
+      toast.error(getErrorMessage(error, ErrorMessages.PROFILE.SEND_OTP_FAILED));
     },
   });
 }
@@ -105,7 +106,7 @@ export function useUpdateEmail() {
       toast.success(SuccessMessages.PROFILE.EMAIL_UPDATED);
     },
     onError: (error: Error) => {
-      toast.error(error.message || ErrorMessages.PROFILE.UPDATE_EMAIL_FAILED);
+      toast.error(getErrorMessage(error, ErrorMessages.PROFILE.UPDATE_EMAIL_FAILED));
     },
   });
 }
@@ -123,7 +124,7 @@ export function useUpdatePhone() {
       toast.success(SuccessMessages.PROFILE.PHONE_UPDATED);
     },
     onError: (error: Error) => {
-      toast.error(error.message || ErrorMessages.PROFILE.UPDATE_PHONE_FAILED);
+      toast.error(getErrorMessage(error, ErrorMessages.PROFILE.UPDATE_PHONE_FAILED));
     },
   });
 }

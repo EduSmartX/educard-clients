@@ -117,5 +117,8 @@ export * from './organization-types';
 // Subject colors (UI styling)
 export * from './subject-colors';
 
+// Subject type options
+export * from './subject-constants';
+
 // Button styles (Tailwind classes - web-specific)
 export * from './button-styles';

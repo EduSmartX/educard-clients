@@ -9,22 +9,19 @@
  *  3. Optionally select "Also save to" additional days
  *  4. Save — bulk-saves all slots for the selected days
  */
-
 import { getRoleGradient, extractApiError } from '@educard/shared';
+import {
+  DAY_LABELS,
+  DAY_SHORT_LABELS,
+  SLOT_TYPE_LABELS,
+  BREAK_TYPES,
+  type TimetableSlot,
+  type BulkSlotItem,
+} from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import {
-  ChevronLeft,
-  Plus,
-  Trash2,
-  Save,
-  Clock,
-  Coffee,
-  BookOpen,
-  Copy,
-  Check,
-} from 'lucide-react-native';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { ChevronLeft, Trash2, Save, Coffee, BookOpen, Copy, Check } from 'lucide-react-native';
+import { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -39,24 +36,13 @@ import {
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { useSlots, useBulkSaveSlots, useClearDaySlots } from '@/features/timetable';
-import {
-  DAY_LABELS,
-  DAY_SHORT_LABELS,
-  SLOT_TYPE_LABELS,
-  BREAK_TYPES,
-  type TimetableSlot,
-  type BulkSlotItem,
-} from '@/features/timetable/types';
 import { headerStyles, layoutStyles, bodyStyles, emptyStyles } from '@/styles';
-
 const adminGradient = getRoleGradient('admin');
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
-
 const SLOT_TYPE_OPTIONS = Object.entries(SLOT_TYPE_LABELS).map(([value, label]) => ({
   value,
   label,
 }));
-
 const SLOT_COLORS: Record<string, { bg: string; border: string; text: string }> = {
   period: { bg: '#eff6ff', border: '#93c5fd', text: '#1e40af' },
   lunch_break: { bg: '#fef3c7', border: '#fcd34d', text: '#92400e' },
@@ -65,17 +51,14 @@ const SLOT_COLORS: Record<string, { bg: string; border: string; text: string }> 
   free_period: { bg: '#f1f5f9', border: '#cbd5e1', text: '#475569' },
   special: { bg: '#fef2f2', border: '#fca5a5', text: '#991b1b' },
 };
-
 function toInputTime(apiTime: string): string {
   if (!apiTime) return '';
   return apiTime.slice(0, 5); // "HH:MM:SS" -> "HH:MM"
 }
-
 function toApiTime(inputTime: string): string {
   if (!inputTime) return '';
   return inputTime.length === 5 ? `${inputTime}:00` : inputTime;
 }
-
 function formatTimeDisplay(t: string): string {
   if (!t) return '';
   const [h, m] = t.split(':');
@@ -84,7 +67,6 @@ function formatTimeDisplay(t: string): string {
   const h12 = hour % 12 || 12;
   return `${h12}:${m} ${ampm}`;
 }
-
 function buildDaySlotMap(allSlots: TimetableSlot[]): Record<number, BulkSlotItem[]> {
   const map: Record<number, BulkSlotItem[]> = {};
   for (const s of allSlots) {
@@ -111,26 +93,21 @@ function buildDaySlotMap(allSlots: TimetableSlot[]): Record<number, BulkSlotItem
   }
   return map;
 }
-
 export default function TimeSlotsEditorScreen() {
   const router = useRouter();
   const { groupId, groupName } = useLocalSearchParams<{ groupId: string; groupName: string }>();
   const decodedName = decodeURIComponent(groupName || 'Group');
-
   const [activeDay, setActiveDay] = useState(0); // Mon
   const [saveToDays, setSaveToDays] = useState<number[]>([0]); // Days to also save to
   const [slots, setSlots] = useState<BulkSlotItem[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [showTypePickerForIdx, setShowTypePickerForIdx] = useState<number | null>(null);
-
   // Fetch all slots for this group
   const { data: allSlots = [], isLoading, refetch } = useSlots(groupId);
   const saveMutation = useBulkSaveSlots(groupId);
   const clearMutation = useClearDaySlots(groupId);
-
   // Build day -> slots map
   const daySlotMap = useMemo(() => buildDaySlotMap(allSlots), [allSlots]);
-
   // Days that have saved slots
   const configuredDays = useMemo(() => {
     const set = new Set<number>();
@@ -139,31 +116,26 @@ export default function TimeSlotsEditorScreen() {
     }
     return set;
   }, [daySlotMap]);
-
   // Load slots when active day changes
   useEffect(() => {
     const saved = daySlotMap[activeDay];
     setSlots(saved ? saved.map((s) => ({ ...s })) : []);
   }, [activeDay, daySlotMap]);
-
   const onRefresh = async () => {
     setRefreshing(true);
-    await refetch();
+    await void refetch();
     setRefreshing(false);
   };
-
   const handleDayChange = (day: number) => {
     setActiveDay(day);
     setSaveToDays([day]);
   };
-
   const toggleSaveToDay = (day: number) => {
     if (day === activeDay) return; // Always included
     setSaveToDays((prev) =>
       prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort()
     );
   };
-
   const addPeriod = () => {
     const nextNum = slots.length > 0 ? Math.max(...slots.map((s) => s.slot_number)) + 1 : 1;
     const prev = slots[slots.length - 1];
@@ -178,7 +150,6 @@ export default function TimeSlotsEditorScreen() {
       },
     ]);
   };
-
   const addBreak = (breakType: string = 'short_break') => {
     const nextNum = slots.length > 0 ? Math.max(...slots.map((s) => s.slot_number)) + 1 : 1;
     const prev = slots[slots.length - 1];
@@ -193,15 +164,12 @@ export default function TimeSlotsEditorScreen() {
       },
     ]);
   };
-
-  const updateSlot = (idx: number, field: keyof BulkSlotItem, value: any) => {
+  const updateSlot = (idx: number, field: keyof BulkSlotItem, value: string | number) => {
     setSlots((prev) => prev.map((s, i) => (i === idx ? { ...s, [field]: value } : s)));
   };
-
   const removeSlot = (idx: number) => {
     setSlots((prev) => prev.filter((_, i) => i !== idx));
   };
-
   const handleCopyFromDay = (sourceDay: number) => {
     const source = daySlotMap[sourceDay];
     if (!source || source.length === 0) {
@@ -211,7 +179,6 @@ export default function TimeSlotsEditorScreen() {
     setSlots(source.map((s, i) => ({ ...s, slot_number: i + 1 })));
     Alert.alert('Copied', `Loaded ${source.length} slots from ${DAY_LABELS[sourceDay]}`);
   };
-
   const handleSave = () => {
     if (slots.length === 0) {
       Alert.alert('Error', 'Add at least one slot before saving');
@@ -227,7 +194,6 @@ export default function TimeSlotsEditorScreen() {
         return;
       }
     }
-
     saveMutation.mutate(
       {
         days_of_week: saveToDays,
@@ -243,15 +209,14 @@ export default function TimeSlotsEditorScreen() {
             'Saved',
             `Slots saved for ${saveToDays.map((d) => DAY_SHORT_LABELS[d]).join(', ')}`
           );
-          refetch();
+          void refetch();
         },
-        onError: (err: any) => {
+        onError: (err: unknown) => {
           Alert.alert('Error', extractApiError(err));
         },
       }
     );
   };
-
   const handleClearDay = () => {
     Alert.alert('Clear Day', `Remove all slots for ${DAY_LABELS[activeDay]}?`, [
       { text: 'Cancel', style: 'cancel' },
@@ -262,15 +227,14 @@ export default function TimeSlotsEditorScreen() {
           clearMutation.mutate(activeDay, {
             onSuccess: () => {
               setSlots([]);
-              refetch();
+              void refetch();
             },
-            onError: (err: any) => Alert.alert('Error', extractApiError(err)),
+            onError: (err: unknown) => Alert.alert('Error', extractApiError(err)),
           });
         },
       },
     ]);
   };
-
   // Copy from days that have slots
   const copyFromDays = useMemo(
     () =>
@@ -280,7 +244,6 @@ export default function TimeSlotsEditorScreen() {
         .sort(),
     [daySlotMap, activeDay]
   );
-
   return (
     <View style={layoutStyles.container}>
       {/* Header */}
@@ -318,12 +281,15 @@ export default function TimeSlotsEditorScreen() {
           </View>
         </View>
       </LinearGradient>
-
       <ScrollView
         style={bodyStyles.scroll}
         contentContainerStyle={bodyStyles.contentLarge}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#7c3aed']} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => void onRefresh()}
+            colors={['#7c3aed']}
+          />
         }
       >
         {/* Editing Day Selector */}
@@ -367,7 +333,6 @@ export default function TimeSlotsEditorScreen() {
             })}
           </ScrollView>
         </Animated.View>
-
         {/* Also Save To */}
         <Animated.View entering={FadeInDown.delay(100).springify()}>
           <View style={st.alsoSaveHeader}>
@@ -419,7 +384,6 @@ export default function TimeSlotsEditorScreen() {
             })}
           </ScrollView>
         </Animated.View>
-
         {/* Copy From */}
         {copyFromDays.length > 0 && (
           <Animated.View entering={FadeInDown.delay(150).springify()}>
@@ -443,7 +407,6 @@ export default function TimeSlotsEditorScreen() {
             </ScrollView>
           </Animated.View>
         )}
-
         {/* Loading */}
         {isLoading ? (
           <View style={emptyStyles.container}>
@@ -455,11 +418,9 @@ export default function TimeSlotsEditorScreen() {
             <Text style={[st.sectionLabel, { marginTop: 16 }]}>
               {DAY_LABELS[activeDay]} — {slots.length} SLOT{slots.length !== 1 ? 'S' : ''}
             </Text>
-
             {slots.map((slot, idx) => {
               const colors = SLOT_COLORS[slot.slot_type] || SLOT_COLORS.period;
               const isBreak = BREAK_TYPES.has(slot.slot_type);
-
               return (
                 <Animated.View
                   key={`${idx}-${slot.slot_number}`}
@@ -499,7 +460,6 @@ export default function TimeSlotsEditorScreen() {
                         <Trash2 size={14} color="#dc2626" />
                       </TouchableOpacity>
                     </View>
-
                     {/* Type Picker (shown inline) */}
                     {showTypePickerForIdx === idx && (
                       <View style={st.typePicker}>
@@ -530,7 +490,6 @@ export default function TimeSlotsEditorScreen() {
                         ))}
                       </View>
                     )}
-
                     {/* Row 2: Times */}
                     <View style={st.timeRow}>
                       <View style={st.timeField}>
@@ -568,7 +527,6 @@ export default function TimeSlotsEditorScreen() {
                 </Animated.View>
               );
             })}
-
             {/* Add Slot Buttons */}
             <View style={st.addBtnRow}>
               <TouchableOpacity style={st.addPeriodBtn} onPress={addPeriod}>
@@ -584,7 +542,6 @@ export default function TimeSlotsEditorScreen() {
                 <Text style={[st.addBreakText, { color: '#d97706' }]}>+ Lunch</Text>
               </TouchableOpacity>
             </View>
-
             {/* Action Buttons */}
             <View style={st.actionRow}>
               <TouchableOpacity
@@ -606,7 +563,6 @@ export default function TimeSlotsEditorScreen() {
                   </>
                 )}
               </TouchableOpacity>
-
               {slots.length > 0 && (
                 <TouchableOpacity style={st.clearBtn} onPress={handleClearDay}>
                   <Trash2 size={14} color="#dc2626" />
@@ -620,7 +576,6 @@ export default function TimeSlotsEditorScreen() {
     </View>
   );
 }
-
 const st = StyleSheet.create({
   saveHeaderBtn: {
     width: 40,
@@ -630,7 +585,6 @@ const st = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
   sectionLabel: {
     fontSize: 11,
     fontWeight: '700',
@@ -639,7 +593,6 @@ const st = StyleSheet.create({
     marginBottom: 8,
     marginTop: 12,
   },
-
   // Day selector chips
   dayRow: { gap: 6, paddingBottom: 4 },
   dayChip: {
@@ -673,7 +626,6 @@ const st = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
   // Also Save To chips
   alsoSaveHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 12 },
   quickLink: { fontSize: 11, fontWeight: '600', color: '#7c3aed' },
@@ -696,7 +648,6 @@ const st = StyleSheet.create({
   saveChipText: { fontSize: 11, fontWeight: '600', color: '#94a3b8' },
   saveChipTextEditing: { color: '#7c3aed' },
   saveChipTextSelected: { color: '#fff' },
-
   // Copy from chips
   copyChip: {
     flexDirection: 'row',
@@ -710,7 +661,6 @@ const st = StyleSheet.create({
     borderColor: '#c4b5fd',
   },
   copyChipText: { fontSize: 11, fontWeight: '600', color: '#7c3aed' },
-
   // Slot card
   slotCard: {
     borderRadius: 14,
@@ -755,7 +705,6 @@ const st = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
   // Inline type picker
   typePicker: {
     flexDirection: 'row',
@@ -780,7 +729,6 @@ const st = StyleSheet.create({
   },
   typeOptionText: { fontSize: 11, fontWeight: '600', color: '#64748b' },
   typeOptionTextActive: { color: '#fff' },
-
   // Time row
   timeRow: {
     flexDirection: 'row',
@@ -803,7 +751,6 @@ const st = StyleSheet.create({
   },
   timeArrow: { fontSize: 16, fontWeight: '700', color: '#94a3b8', marginTop: 12 },
   timePreview: { fontSize: 10, fontWeight: '500', marginTop: 12, flexShrink: 1 },
-
   // Add buttons
   addBtnRow: {
     flexDirection: 'row',
@@ -839,7 +786,6 @@ const st = StyleSheet.create({
     borderRadius: 12,
   },
   addBreakText: { fontSize: 13, fontWeight: '600', color: '#16a34a' },
-
   // Action buttons
   actionRow: { gap: 10, marginTop: 16 },
   primaryBtn: {

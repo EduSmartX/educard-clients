@@ -8,6 +8,7 @@
  */
 
 import { getRoleGradient } from '@educard/shared';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
@@ -20,10 +21,12 @@ import {
   SlidersHorizontal,
   Calendar,
   Info,
+  Mail,
+  Phone,
   type LucideIcon,
 } from 'lucide-react-native';
 import { useMemo } from 'react';
-import { View, Text, TouchableOpacity, Alert, ScrollView, StyleSheet, Image } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, ScrollView, StyleSheet } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { getMediaUrl } from '@/constants/config';
@@ -121,12 +124,31 @@ export default function AdminSettingsScreen() {
         route: '/(admin-screens)/change-password',
       },
       {
+        id: 'change-email',
+        title: 'Change Email',
+        subtitle: 'Update your email address',
+        icon: Mail,
+        iconColor: '#10b981',
+        iconBg: '#d1fae5',
+        route: '/(admin-screens)/change-email',
+      },
+      {
+        id: 'change-phone',
+        title: 'Change Phone',
+        subtitle: 'Update your phone number',
+        icon: Phone,
+        iconColor: '#8b5cf6',
+        iconBg: '#ede9fe',
+        route: '/(admin-screens)/change-phone',
+      },
+      {
         id: 'help',
         title: 'Help & Support',
         subtitle: 'FAQs, contact support',
         icon: HelpCircle,
         iconColor: '#64748b',
         iconBg: '#f1f5f9',
+        route: '/(admin-screens)/help-support',
       },
     ],
   };
@@ -156,7 +178,12 @@ export default function AdminSettingsScreen() {
         <View style={headerStyles.content}>
           <Animated.View entering={FadeInDown.delay(100).springify()} style={st.headerProfile}>
             {profileImageUrl ? (
-              <Image source={{ uri: profileImageUrl }} style={st.avatarImage} />
+              <Image
+                source={{ uri: profileImageUrl }}
+                style={st.avatarImage}
+                contentFit="cover"
+                transition={200}
+              />
             ) : (
               <View style={st.avatarCircle}>
                 <Text style={st.avatarText}>{initials}</Text>

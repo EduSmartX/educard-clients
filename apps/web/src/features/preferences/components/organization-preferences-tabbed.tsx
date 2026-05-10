@@ -54,7 +54,7 @@ function PreferencesByCategory({ preferences }: PreferencesByCategoryProps) {
   );
 
   const updateMutation = useMutation({
-    mutationFn: async ({ publicId, value }: { publicId: string; value: string | string[] }) => {
+    mutationFn: ({ publicId, value }: { publicId: string; value: string | string[] }) => {
       return updatePreference(publicId, value);
     },
     onSuccess: (_, variables) => {

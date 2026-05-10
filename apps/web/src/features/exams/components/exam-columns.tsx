@@ -13,7 +13,7 @@ import {
   type Exam,
   type ExamStatus,
   type ExamSessionType,
-} from '../types';
+} from '@educard/shared';
 import { format } from 'date-fns';
 
 interface CreateColumnsParams {

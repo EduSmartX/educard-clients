@@ -11,8 +11,7 @@ import { Loader2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
-import { TextInputField } from '@/components/forms/form-fields';
-import { SelectField } from '@/components/forms/form-fields';
+import { TextInputField, SelectField } from '@/components/forms/form-fields';
 import { useUpdateOrganization } from '../hooks/mutations';
 import type { Organization } from '../api/organization-api';
 import {

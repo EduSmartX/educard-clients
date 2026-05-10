@@ -4,8 +4,7 @@
  */
 
 import { z } from 'zod';
-import { GENDER_ENUM, BLOOD_GROUP_ENUM } from '@/constants';
-import { ADDRESS_TYPE } from '@/constants';
+import { GENDER_ENUM, BLOOD_GROUP_ENUM, ADDRESS_TYPE } from '@/constants';
 import {
   emailSchema,
   phoneSchema,

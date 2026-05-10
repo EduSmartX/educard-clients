@@ -4,6 +4,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/no-misused-promises, react-hooks/exhaustive-deps */
 
 import { getRoleGradient, extractApiError } from '@educard/shared';
+import type { Mark, BulkMarkEntry } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Save } from 'lucide-react-native';
@@ -23,7 +24,6 @@ import {
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { useBulkUpsertMarks, useExamMarks } from '@/features/exams';
-import type { Mark, BulkMarkEntry } from '@/features/exams/types';
 import { useStudents } from '@/features/students';
 import { headerStyles, layoutStyles } from '@/styles';
 
@@ -99,8 +99,34 @@ export default function EnterMarksScreen() {
     setMarksMap(map);
   }, [students, existingMarks]);
 
+  // Natural sort function for roll numbers (A1, A2, A10 instead of A1, A10, A2)
+  const naturalSortKey = (rollNumber: string) => {
+    if (!rollNumber) return [Infinity, '', 0];
+    const parts = rollNumber.split(/(\d+)/);
+    return parts.map((part) => {
+      const num = parseInt(part, 10);
+      return isNaN(num) ? part.toLowerCase() : num;
+    });
+  };
+
+  const compareRollNumbers = (a: string, b: string) => {
+    const aParts = naturalSortKey(a);
+    const bParts = naturalSortKey(b);
+    for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+      const aVal = aParts[i] ?? '';
+      const bVal = bParts[i] ?? '';
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        if (aVal !== bVal) return aVal - bVal;
+      } else {
+        const cmp = String(aVal).localeCompare(String(bVal));
+        if (cmp !== 0) return cmp;
+      }
+    }
+    return 0;
+  };
+
   const studentList = useMemo(
-    () => Object.values(marksMap).sort((a, b) => a.studentName.localeCompare(b.studentName)),
+    () => Object.values(marksMap).sort((a, b) => compareRollNumbers(a.rollNumber, b.rollNumber)),
     [marksMap]
   );
 

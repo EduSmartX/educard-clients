@@ -5,8 +5,7 @@
 
 import type { TeacherFormValues } from '../schemas/teacher-form-schema';
 import type { CreateTeacherPayload, UpdateTeacherPayload, TeacherDetail } from '../types';
-import type { GenderValue, BloodGroupValue } from '@/constants';
-import { ADDRESS_TYPE } from '@/constants';
+import { ADDRESS_TYPE, type GenderValue, type BloodGroupValue } from '@/constants';
 import { getTenDigitPhoneNumber } from '@/lib/phone-utils';
 
 /**

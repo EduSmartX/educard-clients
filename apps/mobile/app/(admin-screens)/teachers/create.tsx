@@ -74,7 +74,7 @@ export default function CreateTeacherScreen() {
   const [quickAdd, setQuickAdd] = useState(false);
   const [addressExpanded, setAddressExpanded] = useState(false);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
-  const [photoAsset, setPhotoAsset] = useState<any>(null);
+  const [_photoAsset, setPhotoAsset] = useState<unknown>(null);
 
   const [form, setForm] = useState({
     employee_id: '',
@@ -162,7 +162,7 @@ export default function CreateTeacherScreen() {
       payload.subjects = form.subjects.map(Number);
     }
     submitCreate(payload, false);
-  }, [form, quickAdd, schema]);
+  }, [form, quickAdd, schema, submitCreate]);
 
   const submitCreate = useCallback(
     (payload: any, forceCreate: boolean) => {

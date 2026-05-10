@@ -131,7 +131,7 @@ export function getOngoingHolidays(holidays: Holiday[], currentDate: Date): Holi
   const today = startOfDay(currentDate);
 
   const ongoing = holidays.filter((h) => {
-    if (isWeekendHoliday(h)) return false;
+    if (isWeekendHoliday(h)) {return false;}
     const startDate = startOfDay(parseISO(h.start_date));
     const endDate = startOfDay(parseISO(h.end_date));
     return startDate <= today && endDate >= today;
@@ -149,7 +149,7 @@ export function getUpcomingHolidays(
   limit: number = 5
 ): Holiday[] {
   const upcoming = holidays.filter((h) => {
-    if (isWeekendHoliday(h)) return false;
+    if (isWeekendHoliday(h)) {return false;}
     const startDate = parseISO(h.start_date);
     return startDate >= startOfDay(fromDate);
   });
@@ -164,7 +164,7 @@ export function getUpcomingHolidays(
  * @param nths - Array of nth occurrences to check (e.g., [2, 4])
  */
 export function isNthWeekdayOfMonth(date: Date, weekday: number, nths: number[]): boolean {
-  if (date.getDay() !== weekday) return false;
+  if (date.getDay() !== weekday) {return false;}
 
   const day = date.getDate();
   const nthWeekday = Math.ceil(day / 7);
@@ -204,7 +204,7 @@ export function generateWeekendHolidays(options: GenerateWeekendHolidaysOptions)
 
     // Check for Saturday
     if (dayOfWeek === 6) {
-      let isSaturdayOff = false;
+      let isSaturdayOff: boolean;
       let holidayType: 'SATURDAY' | 'SECOND_SATURDAY' = 'SATURDAY';
       const nthSaturday = Math.ceil(currentDate.getDate() / 7);
 

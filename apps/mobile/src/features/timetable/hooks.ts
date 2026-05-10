@@ -2,6 +2,11 @@
  * Timetable React Query hooks
  */
 
+import type {
+  ClassGroupCreatePayload,
+  BulkSlotPayload,
+  TimetableEntryCreatePayload,
+} from '@educard/shared';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import {
@@ -19,11 +24,6 @@ import {
   createEntry,
   deleteEntry,
 } from './api';
-import type {
-  ClassGroupCreatePayload,
-  BulkSlotPayload,
-  TimetableEntryCreatePayload,
-} from './types';
 
 export function useClassGroups() {
   return useQuery({
@@ -36,7 +36,7 @@ export function useClassGroups() {
 export function useSlots(groupId: string | undefined, day?: number) {
   return useQuery({
     queryKey: ['timetable', 'slots', groupId, day],
-    queryFn: () => fetchSlots(groupId!, day),
+    queryFn: () => fetchSlots(groupId ?? '', day),
     enabled: !!groupId,
     staleTime: 5 * 60 * 1000,
   });
@@ -45,7 +45,7 @@ export function useSlots(groupId: string | undefined, day?: number) {
 export function useClassTimetable(classId: string | undefined) {
   return useQuery({
     queryKey: ['timetable', 'class-timetable', classId],
-    queryFn: () => fetchClassTimetable(classId!),
+    queryFn: () => fetchClassTimetable(classId ?? ''),
     enabled: !!classId,
     staleTime: 2 * 60 * 1000,
   });

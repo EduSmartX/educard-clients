@@ -3,6 +3,7 @@
  */
 
 import { getRoleGradient } from '@educard/shared';
+import { EXAM_STATUS_LABELS, EXAM_STATUS_COLORS, type Exam } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, ChevronRight, Calendar, Clock, Plus } from 'lucide-react-native';
@@ -19,7 +20,6 @@ import {
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { useExams } from '@/features/exams';
-import { EXAM_STATUS_LABELS, EXAM_STATUS_COLORS, type Exam } from '@/features/exams/types';
 
 const adminGradient = getRoleGradient('admin');
 

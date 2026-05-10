@@ -27,7 +27,7 @@ import { useDeleteExamSession, useReactivateExamSession } from '../hooks/mutatio
 import { createExamSessionColumns } from '../components/exam-session-columns';
 import { useDeletedView } from '@/hooks/use-deleted-view';
 import { useRole } from '@/hooks/use-role';
-import { EXAM_SESSION_TYPE_OPTIONS, EXAM_SESSION_TYPE_LABELS, type ExamSession } from '../types';
+import { EXAM_SESSION_TYPE_OPTIONS, EXAM_SESSION_TYPE_LABELS, type ExamSession } from '@educard/shared';
 import { format } from 'date-fns';
 import { downloadFile } from '@/lib/utils';
 

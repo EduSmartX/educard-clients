@@ -589,7 +589,11 @@ export const FormPlaceholders = {
   COMMENTS: "Enter comments",
   REMARKS: "Enter remarks (optional)",
   SELECT_LEAVE_TYPE: "Select leave type",
+  SEARCH_LEAVE_TYPES: "Search leave types...",
+  SELECT_LEAVE_ALLOCATION_POLICY: "Select leave allocation policy",
   ENTER_LEAVE_REASON: "Enter reason for leave...",
+  ENTER_ALLOCATED_DAYS: "Enter total days allocated",
+  ENTER_CARRY_FORWARD_DAYS: "Enter maximum carry forward days",
 
   // Organization fields
   ORGANIZATION_NAME: "Enter organization name",
@@ -597,6 +601,12 @@ export const FormPlaceholders = {
 
   // OTP
   OTP: "Enter 6-digit OTP",
+
+  // Search
+  SEARCH_CLASSES: "Search classes...",
+  SEARCH_STUDENTS: "Search students...",
+  SEARCH_TEACHERS: "Search teachers...",
+  SEARCH_USERS: "Search users...",
 
   // Date
   SELECT_DATE: "Select date",

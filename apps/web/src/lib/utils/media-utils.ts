@@ -26,14 +26,17 @@ const BACKEND_ORIGIN = (
  * @example
  * getMediaUrl("/media/attachments/org-abc/profiles/user-xyz/photo.jpg")
  * // => "http://localhost:8000/media/attachments/org-abc/profiles/user-xyz/photo.jpg"
+ *
+ * getMediaUrl("data:image/jpeg;base64,/9j/4AAQ...")
+ * // => "data:image/jpeg;base64,/9j/4AAQ..." (returned as-is)
  */
 export function getMediaUrl(path: string | null | undefined): string {
   if (!path) {
     return '';
   }
 
-  // Already a full URL (e.g. GCS signed URL)
-  if (path.startsWith('http://') || path.startsWith('https://')) {
+  // Already a full URL (e.g. GCS signed URL) or Base64 data URI (embed_images mode)
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
     return path;
   }
 

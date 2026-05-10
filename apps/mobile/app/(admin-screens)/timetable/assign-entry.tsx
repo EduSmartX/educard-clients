@@ -4,8 +4,9 @@
  * Accessed from timetable view by tapping an unassigned slot
  */
 
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { getRoleGradient, extractApiError } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Check, Trash2 } from 'lucide-react-native';
 import { useState, useMemo } from 'react';
 import {
@@ -19,7 +20,6 @@ import {
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { getRoleGradient, extractApiError } from '@educard/shared';
 import { FormDropdown, FormInput } from '@/components/forms';
 import { useSubjects } from '@/features/subjects';
 import { useCreateEntry, useDeleteEntry } from '@/features/timetable';

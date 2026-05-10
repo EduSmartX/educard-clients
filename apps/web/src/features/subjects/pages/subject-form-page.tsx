@@ -49,6 +49,7 @@ import {
   FormPlaceholders,
   SuccessMessages,
 } from '@/constants';
+import { SUBJECT_TYPE_OPTIONS } from '@educard/shared';
 import {
   useCreateSubject,
   useUpdateSubject,
@@ -66,6 +67,7 @@ import { STANDARD_FORM_VALIDATION_CONFIG } from '@/lib/utils/form-validation';
 const subjectSchema = z.object({
   class_id: z.string().min(1, 'Class is required'),
   subject_id: z.number({ required_error: 'Subject is required' }),
+  subject_type: z.enum(['core', 'elective', 'language']).optional().default('core'),
   teacher_id: z.string().optional(),
   description: z.string().optional(),
 });
@@ -82,8 +84,8 @@ export default function SubjectFormPage() {
 
   // Determine mode based on URL path
   const getMode = (): 'create' | 'edit' | 'view' => {
-    if (!id) return 'create';
-    if (location.pathname.endsWith('/edit')) return 'edit';
+    if (!id) {return 'create';}
+    if (location.pathname.endsWith('/edit')) {return 'edit';}
     return 'view';
   };
 
@@ -125,6 +127,7 @@ export default function SubjectFormPage() {
     defaultValues: {
       class_id: '',
       subject_id: 0,
+      subject_type: 'core',
       teacher_id: '',
       description: '',
     },
@@ -138,6 +141,7 @@ export default function SubjectFormPage() {
         {
           class_id: subject.class_info.public_id,
           subject_id: subject.subject_info.id,
+          subject_type: (subject.subject_type as 'core' | 'elective' | 'language') || 'core',
           teacher_id: teacherId,
           description: subject.description || '',
         },
@@ -280,6 +284,7 @@ export default function SubjectFormPage() {
         data: {
           class_id: pendingData.class_id,
           subject_id: pendingData.subject_id,
+          subject_type: pendingData.subject_type || 'core',
           teacher_id: pendingData.teacher_id || undefined,
           description: pendingData.description || undefined,
         },
@@ -295,6 +300,7 @@ export default function SubjectFormPage() {
       updateMutation.mutate({
         id: subject.public_id,
         data: {
+          subject_type: data.subject_type || 'core',
           teacher_id: data.teacher_id || undefined,
           description: data.description || undefined,
         },
@@ -304,6 +310,7 @@ export default function SubjectFormPage() {
         data: {
           class_id: data.class_id,
           subject_id: data.subject_id,
+          subject_type: data.subject_type || 'core',
           teacher_id: data.teacher_id || undefined,
           description: data.description || undefined,
         },
@@ -537,6 +544,38 @@ export default function SubjectFormPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Subject Type Dropdown */}
+                  <FormField
+                    control={form.control}
+                    name="subject_type"
+                    render={({ field, fieldState }) => (
+                      <FormItem
+                        ref={fieldState.error && !firstErrorRef.current ? firstErrorRef : null}
+                      >
+                        <FormLabel>Subject Type (Optional)</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value || 'core'}
+                          disabled={isPending || mode === 'view'}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select subject type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {SUBJECT_TYPE_OPTIONS.map((opt) => (
+                              <SelectItem key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   {/* Teacher Dropdown */}
                   <FormField
                     control={form.control}

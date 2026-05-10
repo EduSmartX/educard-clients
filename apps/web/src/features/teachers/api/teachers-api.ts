@@ -44,7 +44,9 @@ export async function fetchTeachers(
 ): Promise<PaginatedResponse<Teacher>> {
   // Deleted view requires admin endpoint (employee endpoint ignores is_deleted)
   const baseUrl = params.is_deleted ? ADMIN_BASE_URL : getBaseUrl(false);
-  const response = await api.get<TeachersResponse>(baseUrl, { params });
+  // By default, embed images to reduce HTTP requests (Base64 data URIs)
+  const queryParams = { embed_images: true, ...params };
+  const response = await api.get<TeachersResponse>(baseUrl, { params: queryParams });
   return {
     data: response.data.data,
     pagination: response.data.pagination!,

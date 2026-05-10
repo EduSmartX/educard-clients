@@ -60,7 +60,8 @@ export async function getClassById(
   isDeleted?: boolean,
   userRole?: string | null
 ): Promise<ClassDetailResponse> {
-  const baseUrl = isDeleted ? ADMIN_BASE_URL : getBaseUrl(userRole, false);
+  // Only admins can view deleted classes via admin endpoint
+  const baseUrl = getBaseUrl(userRole, false);
   const response = await apiClient.get<ClassDetailResponse>(
     `${baseUrl}${publicId}/`,
     isDeleted ? { params: { is_deleted: true } } : undefined

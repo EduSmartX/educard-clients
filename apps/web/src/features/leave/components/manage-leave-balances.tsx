@@ -195,7 +195,9 @@ export default function ManageLeaveBalances() {
       const response = await api.get(
         `/leave/employee/allocations/?user_public_id=${effectiveUserId}`
       );
-      // Handle different API response structures
+      if (response.data && Array.isArray(response.data.data)) {
+        return { data: response.data.data };
+      }
       if (Array.isArray(response.data)) {
         return { data: response.data };
       }
@@ -580,9 +582,18 @@ export default function ManageLeaveBalances() {
     if (unallocatedLeaveTypes.length === 0) {
       // Differentiate between "no allocations configured" and "all allocations assigned"
       if (userAllocations.length === 0) {
+        // Get user's organization role for a more helpful message
+        const userOrgRole =
+          typeof selectedUserDetails?.organization_role === 'object'
+            ? selectedUserDetails?.organization_role?.name
+            : selectedUserDetails?.organization_role;
+        const roleLabel = userOrgRole || 'this user\'s role';
+
         toast.warning('No leave allocations available', {
-          description:
-            'No leave types are configured for this user\'s role. Please contact the administrator to set up leave allocations.',
+          description: isAdmin
+            ? `No leave policies are configured for "${roleLabel}". Go to Leave Policies and either enable "All Roles" or add this specific role to the policy.`
+            : `No leave types are configured for ${roleLabel}. Please contact the administrator to set up leave allocations.`,
+          duration: 6000,
         });
       } else {
         toast.info(ErrorMessages.LEAVE.NO_AVAILABLE_TYPES, {

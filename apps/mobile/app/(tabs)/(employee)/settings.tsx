@@ -3,6 +3,7 @@
  * App and account settings for teachers
  */
 
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import {
   User,
@@ -11,10 +12,10 @@ import {
   HelpCircle,
   LogOut,
   ChevronRight,
-  Moon,
-  Globe,
+  Mail,
+  Phone,
 } from 'lucide-react-native';
-import { View, Text, TouchableOpacity, Alert, Image } from 'react-native';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
 
 import { Screen, Header } from '@/components/layout';
 import { Card, Avatar } from '@/components/ui';
@@ -32,9 +33,19 @@ const settingsOptions = [
     icon: Shield,
     route: '/(admin-screens)/change-password',
   },
-  { id: 'appearance', title: 'Appearance', icon: Moon, route: '/settings/appearance' },
-  { id: 'language', title: 'Language', icon: Globe, route: '/settings/language' },
-  { id: 'help', title: 'Help & Support', icon: HelpCircle, route: '/(admin-screens)/help' },
+  {
+    id: 'change-email',
+    title: 'Change Email',
+    icon: Mail,
+    route: '/(admin-screens)/change-email',
+  },
+  {
+    id: 'change-phone',
+    title: 'Change Phone',
+    icon: Phone,
+    route: '/(admin-screens)/change-phone',
+  },
+  { id: 'help', title: 'Help & Support', icon: HelpCircle, route: '/(admin-screens)/help-support' },
 ];
 
 export default function EmployeeSettingsScreen() {
@@ -65,7 +76,12 @@ export default function EmployeeSettingsScreen() {
             onPress={() => router.push('/(admin-screens)/profile')}
           >
             {profileImageUrl ? (
-              <Image source={{ uri: profileImageUrl }} className="h-14 w-14 rounded-full" />
+              <Image
+                source={{ uri: profileImageUrl }}
+                className="h-14 w-14 rounded-full"
+                contentFit="cover"
+                transition={200}
+              />
             ) : (
               <Avatar name={user?.full_name ?? user?.first_name ?? 'T'} size="lg" />
             )}

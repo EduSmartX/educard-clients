@@ -52,7 +52,11 @@ interface StudentApiResponse {
 export async function fetchStudents(
   params: StudentQueryParams = {}
 ): Promise<ApiListResponse<StudentListItem>> {
-  const response = await api.get<ApiListResponse<StudentApiResponse>>(STUDENTS_BASE, { params });
+  // By default, embed images to reduce HTTP requests (Base64 data URIs)
+  const queryParams = { embed_images: true, ...params };
+  const response = await api.get<ApiListResponse<StudentApiResponse>>(STUDENTS_BASE, {
+    params: queryParams,
+  });
 
   // Transform nested API response to flat StudentListItem
   const transformedData: StudentListItem[] = response.data.data.map(

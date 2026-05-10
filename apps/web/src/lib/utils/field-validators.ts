@@ -330,15 +330,15 @@ export function validateAlphanumeric(
   }
 
   let pattern = 'a-zA-Z0-9';
-  if (allowSpaces) pattern += '\\s';
-  if (allowSpecialChars) pattern += allowSpecialChars.replace(/[-[\]{}()*+?.,\\^$|#]/g, '\\$&');
+  if (allowSpaces) {pattern += '\\s';}
+  if (allowSpecialChars) {pattern += allowSpecialChars.replace(/[-[\]{}()*+?.,\\^$|#]/g, '\\$&');}
 
   const regex = new RegExp(`^[${pattern}]+$`);
 
   if (!regex.test(value)) {
     let allowedChars = 'letters and numbers';
-    if (allowSpaces) allowedChars += ', spaces';
-    if (allowSpecialChars) allowedChars += `, and these characters: ${allowSpecialChars}`;
+    if (allowSpaces) {allowedChars += ', spaces';}
+    if (allowSpecialChars) {allowedChars += `, and these characters: ${allowSpecialChars}`;}
 
     return {
       isValid: false,

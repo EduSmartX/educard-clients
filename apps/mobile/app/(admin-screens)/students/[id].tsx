@@ -1,5 +1,6 @@
 /**
  * Student Detail Screen — /(admin-screens)/students/[id]
+ * Phone numbers are handled by backend - masked unless user has permission
  */
 
 import { useLocalSearchParams, useRouter } from 'expo-router';

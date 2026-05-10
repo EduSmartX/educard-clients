@@ -28,7 +28,7 @@ import type {
   ExamCreatePayload,
   ExamUpdatePayload,
   ExamStatus,
-} from '../types';
+} from '@educard/shared';
 
 export type { MutationOptions };
 

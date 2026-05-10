@@ -13,8 +13,7 @@ import { cn } from '@/lib/utils';
 import { getCurrentLocationAddress } from '@/lib/location-utils';
 import { MapPin, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { ADDRESS_TYPE_OPTIONS } from '@/constants';
-import { CommonUiText, ErrorMessages, FormPlaceholders, SuccessMessages } from '@/constants';
+import { ADDRESS_TYPE_OPTIONS, CommonUiText, ErrorMessages, FormPlaceholders, SuccessMessages } from '@/constants';
 
 interface FieldNames {
   addressType?: string;

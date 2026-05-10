@@ -214,8 +214,8 @@ function CollapsibleSection({
   
   // Default to expanded if any item is active, or if no title (top-level items), or based on defaultCollapsed
   const [isExpanded, setIsExpanded] = useState(() => {
-    if (!section.title) return true; // No title means always expanded
-    if (isAnyItemActive) return true; // Expand if active item
+    if (!section.title) {return true;} // No title means always expanded
+    if (isAnyItemActive) {return true;} // Expand if active item
     return !section.defaultCollapsed; // Otherwise use default
   });
 

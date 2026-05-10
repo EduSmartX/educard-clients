@@ -4,6 +4,7 @@
  */
 
 import { getSubjectColor } from '@educard/shared';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
@@ -31,8 +32,10 @@ import {
 import { Screen } from '@/components/layout';
 import { Card, Avatar, Badge } from '@/components/ui';
 import { colors } from '@/constants/colors';
+import { getMediaUrl } from '@/constants/config';
 import { useMyTimetable } from '@/features/timetable';
 import type { TimetableEntry } from '@/features/timetable';
+import { useMyProfilePhoto } from '@/hooks';
 import { useAuthStore } from '@/lib/auth-store';
 
 // Day labels (0=Monday, 6=Sunday)
@@ -41,7 +44,9 @@ const DAY_LABELS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Sat
 export default function EmployeeDashboard() {
   const router = useRouter();
   const { user } = useAuthStore();
+  const { data: profilePhoto } = useMyProfilePhoto();
   const [refreshing, setRefreshing] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const [currentEntryLayout, setCurrentEntryLayout] = useState<{
     y: number;
@@ -168,7 +173,27 @@ export default function EmployeeDashboard() {
               >
                 <Bell size={20} color="#ffffff" />
               </TouchableOpacity>
-              <Avatar name={user?.full_name ?? user?.first_name ?? 'T'} size="md" />
+              <TouchableOpacity
+                onPress={() => router.push('/(tabs)/(employee)/settings')}
+                activeOpacity={0.8}
+              >
+                {(() => {
+                  const profileImageUrl =
+                    getMediaUrl(profilePhoto?.thumbnail_url) ?? getMediaUrl(profilePhoto?.url);
+                  if (profileImageUrl && !imgError) {
+                    return (
+                      <Image
+                        source={{ uri: profileImageUrl }}
+                        style={{ width: 42, height: 42, borderRadius: 21 }}
+                        contentFit="cover"
+                        transition={200}
+                        onError={() => setImgError(true)}
+                      />
+                    );
+                  }
+                  return <Avatar name={user?.full_name ?? user?.first_name ?? 'T'} size="md" />;
+                })()}
+              </TouchableOpacity>
             </View>
           </View>
 

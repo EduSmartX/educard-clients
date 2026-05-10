@@ -47,8 +47,8 @@ export async function getOrganizationPreferences(
   category?: string
 ): Promise<ApiResponse<OrganizationPreference[]>> {
   const params = new URLSearchParams();
-  if (grouped) params.append('grouped', 'false'); // We'll handle grouping on frontend
-  if (category) params.append('category', category);
+  if (grouped) {params.append('grouped', 'false');} // We'll handle grouping on frontend
+  if (category) {params.append('category', category);}
 
   const response = await api.get(`/organization-preferences/?${params.toString()}`);
   return response.data;

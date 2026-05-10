@@ -44,7 +44,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type { ExamStatus } from '../types';
+import type { ExamStatus } from '@educard/shared';
 
 // Status colors and icons
 const STATUS_CONFIG: Record<ExamStatus, { color: string; bgColor: string; icon: typeof Circle; label: string }> = {

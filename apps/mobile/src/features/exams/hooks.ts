@@ -3,6 +3,11 @@
  * Role-aware hooks that use the correct API endpoints based on user role
  */
 
+import type {
+  ExamSessionCreatePayload,
+  ExamCreatePayload,
+  BulkSaveAllMarksPayload,
+} from '@educard/shared';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import {
@@ -21,7 +26,6 @@ import {
   updateExam,
   deleteExam,
 } from './api';
-import type { ExamSessionCreatePayload, ExamCreatePayload, BulkSaveAllMarksPayload } from './types';
 
 export function useExamSessions(params?: Record<string, unknown>, userRole?: string | null) {
   return useQuery({
@@ -34,7 +38,7 @@ export function useExamSessions(params?: Record<string, unknown>, userRole?: str
 export function useExamSession(id?: string, userRole?: string | null) {
   return useQuery({
     queryKey: ['exam-session', id, userRole],
-    queryFn: () => fetchExamSession(id!, userRole),
+    queryFn: () => fetchExamSession(id ?? '', userRole),
     enabled: !!id,
   });
 }
@@ -50,7 +54,7 @@ export function useExams(params?: Record<string, unknown>, userRole?: string | n
 export function useExam(id?: string, userRole?: string | null) {
   return useQuery({
     queryKey: ['exam', id, userRole],
-    queryFn: () => fetchExam(id!, userRole),
+    queryFn: () => fetchExam(id ?? '', userRole),
     enabled: !!id,
   });
 }
@@ -58,7 +62,8 @@ export function useExam(id?: string, userRole?: string | null) {
 export function useMarksOverview(sessionId?: string, classId?: string, userRole?: string | null) {
   return useQuery({
     queryKey: ['marks-overview', sessionId, classId, userRole],
-    queryFn: () => fetchMarksOverview({ session_id: sessionId!, class_id: classId! }, userRole),
+    queryFn: () =>
+      fetchMarksOverview({ session_id: sessionId ?? '', class_id: classId ?? '' }, userRole),
     enabled: !!sessionId && !!classId,
   });
 }
@@ -66,7 +71,7 @@ export function useMarksOverview(sessionId?: string, classId?: string, userRole?
 export function useExamMarks(examId?: string) {
   return useQuery({
     queryKey: ['exam-marks', examId],
-    queryFn: () => fetchExamMarks(examId!),
+    queryFn: () => fetchExamMarks(examId ?? ''),
     enabled: !!examId,
   });
 }

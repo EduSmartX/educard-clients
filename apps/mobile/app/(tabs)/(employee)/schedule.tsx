@@ -134,10 +134,7 @@ export default function EmployeeScheduleScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => void handleRefresh()}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={() => void handleRefresh()} />
         }
         contentContainerStyle={styles.scrollContent}
       >

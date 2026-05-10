@@ -15,6 +15,7 @@ import {
   buildStudentPayload,
   parseApiErrors,
   getErrorMessage,
+  type ApiErrorData,
 } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -153,37 +154,42 @@ export default function CreateStudentScreen() {
     [form, schema]
   );
 
-  const handleSubmit = useCallback(() => {
-    setApiError(null);
-    const fe = validateAllFields(schema, form);
-    setErrors(fe);
-    if (Object.keys(fe).length > 0) return;
-
-    const payload = buildStudentPayload(form, quickAdd);
-    submitCreate(payload, false);
-  }, [form, quickAdd, schema, createMutation, router, photoUri]);
+  // Define response type for create mutation
+  interface CreateStudentResponse {
+    data?: {
+      user_info?: {
+        public_id?: string;
+      };
+    };
+    user_info?: {
+      public_id?: string;
+    };
+  }
 
   const submitCreate = useCallback(
-    (payload: any, forceCreate: boolean) => {
+    (payload: Record<string, unknown>, forceCreate: boolean) => {
       createMutation.mutate(
         { data: payload, forceCreate },
         {
-          onSuccess: (response: any) => {
+          onSuccess: (response: CreateStudentResponse) => {
             duplicateHandler.closeDialog();
             const uid = response?.data?.user_info?.public_id || response?.user_info?.public_id;
-            if (photoUri && uid) uploadProfilePhoto(uid, photoUri, 'photo.jpg').catch(() => {});
+            if (photoUri && uid) {
+              void uploadProfilePhoto(uid, photoUri, 'photo.jpg').catch(() => {});
+            }
             Alert.alert('Success', 'Student created successfully', [
               { text: 'OK', onPress: () => router.back() },
             ]);
           },
-          onError: (err: any) => {
+          onError: (err: unknown) => {
             if (isDeletedDuplicateError(err)) {
               const msg = getDeletedDuplicateMessage(err);
               const recordId = getDeletedRecordId(err);
               duplicateHandler.openDialog(msg, { payload, deletedRecordId: recordId });
               return;
             }
-            const { fieldErrors: afe, generalError } = parseApiErrors(err?.response?.data);
+            const axiosError = err as { response?: { data?: ApiErrorData } };
+            const { fieldErrors: afe, generalError } = parseApiErrors(axiosError?.response?.data);
             if (Object.keys(afe).length > 0) {
               setErrors(afe);
               return;
@@ -195,6 +201,16 @@ export default function CreateStudentScreen() {
     },
     [createMutation, router, photoUri, duplicateHandler]
   );
+
+  const handleSubmit = useCallback(() => {
+    setApiError(null);
+    const fe = validateAllFields(schema, form);
+    setErrors(fe);
+    if (Object.keys(fe).length > 0) return;
+
+    const payload = buildStudentPayload(form, quickAdd);
+    submitCreate(payload, false);
+  }, [form, quickAdd, schema, submitCreate]);
 
   const handleReactivate = useCallback(() => {
     const recordId = duplicateHandler.pendingData?.deletedRecordId;

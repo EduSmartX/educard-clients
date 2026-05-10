@@ -22,7 +22,7 @@ import type {
   BulkExamCreatePayload,
   Mark,
   BulkMarkEntry,
-} from '../types';
+} from '@educard/shared';
 
 // Role-based endpoints
 const ADMIN_BASE_URL = '/exams/admin';

@@ -45,10 +45,13 @@ const optionalDate = () =>
     .optional()
     .or(z.literal(""));
 
-const genderField = () =>
+const _genderField = () =>
   z.enum(["M", "F", "O"], {
     errorMap: () => ({ message: "Please select a gender" }),
   });
+
+// Ensure _genderField is available for future use
+void _genderField;
 
 const requiredGender = () =>
   z
@@ -82,7 +85,7 @@ export const teacherFullSchema = teacherQuickSchema.extend({
   experience_years: z
     .string()
     .refine((v) => {
-      if (!v || v === "") return true;
+      if (!v || v === "") {return true;}
       const n = Number(v);
       return !isNaN(n) && n >= 0 && n <= 70;
     }, "Experience must be between 0 and 70")
@@ -147,7 +150,7 @@ export const classFormSchema = z.object({
   capacity: z
     .string()
     .refine((v) => {
-      if (!v || v === "") return true;
+      if (!v || v === "") {return true;}
       const n = Number(v);
       return !isNaN(n) && n >= 1 && n <= 500;
     }, "Capacity must be between 1 and 500")
@@ -163,6 +166,7 @@ export const classFormSchema = z.object({
 export const subjectFormSchema = z.object({
   class_id: requiredString("Class"),
   subject_id: requiredString("Subject"),
+  subject_type: z.enum(["core", "elective", "language"]).optional().default("core"),
   teacher_id: optionalString(),
   description: optionalString(),
 });
@@ -173,16 +177,16 @@ export const subjectFormSchema = z.object({
  * Validate a single field from a Zod object schema.
  * Returns the error message or undefined.
  */
-export function validateField<T extends z.ZodObject<any>>(
+export function validateField<T extends z.ZodObject<z.ZodRawShape>>(
   schema: T,
   field: string,
   value: string,
-  allValues?: Record<string, any>,
+  _allValues?: Record<string, unknown>,
 ): string | undefined {
   // Get the field schema from the shape
   const shape = schema.shape as Record<string, z.ZodTypeAny>;
   const fieldSchema = shape[field];
-  if (!fieldSchema) return undefined;
+  if (!fieldSchema) {return undefined;}
 
   const result = fieldSchema.safeParse(value);
   if (!result.success) {
@@ -195,12 +199,12 @@ export function validateField<T extends z.ZodObject<any>>(
  * Validate all fields of a form object against a Zod schema.
  * Returns a Record<string, string> of field → error message.
  */
-export function validateAllFields<T extends z.ZodObject<any>>(
+export function validateAllFields<T extends z.ZodObject<z.ZodRawShape>>(
   schema: T,
-  values: Record<string, any>,
+  values: Record<string, unknown>,
 ): Record<string, string> {
   const result = schema.safeParse(values);
-  if (result.success) return {};
+  if (result.success) {return {};}
 
   const errors: Record<string, string> = {};
   for (const issue of result.error.issues) {

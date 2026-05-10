@@ -8,7 +8,7 @@
  * @returns Error message if invalid, null if valid
  */
 export function validateTimeFormat(time: string): string | null {
-  if (!time) return null;
+  if (!time) {return null;}
   const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
   if (!timeRegex.test(time)) {
     return 'Please enter time in HH:MM format (e.g., 14:30)';
@@ -22,7 +22,7 @@ export function validateTimeFormat(time: string): string | null {
  * @returns Error message if invalid, null if valid
  */
 export function validateDeadlineDay(day: string): string | null {
-  if (!day) return null;
+  if (!day) {return null;}
   const dayNum = parseInt(day, 10);
   if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) {
     return 'Please enter a day between 1 and 31';

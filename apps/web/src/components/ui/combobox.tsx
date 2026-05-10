@@ -42,7 +42,7 @@ export function Combobox({
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   const filteredOptions = React.useMemo(() => {
-    if (!searchQuery) return options;
+    if (!searchQuery) {return options;}
 
     return options.filter(
       (option) =>
