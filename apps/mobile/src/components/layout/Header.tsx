@@ -80,7 +80,7 @@ export function Header({
       <View className="flex-row items-center gap-2">
         {showNotifications && (
           <TouchableOpacity
-            onPress={() => router.push('/(admin-screens)/notifications')}
+            onPress={() => router.push('/(shared-screens)/notifications')}
             className="h-10 w-10 items-center justify-center rounded-full bg-white/10"
             activeOpacity={0.7}
           >

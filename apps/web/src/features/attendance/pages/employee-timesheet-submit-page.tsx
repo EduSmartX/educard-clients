@@ -45,15 +45,11 @@ import { TimesheetStatus } from '@/constants';
 import { TimesheetStatusBadge } from '@/features/attendance/components';
 import { useSubmitTimesheet, useReturnTimesheetToDraft } from '@/features/attendance/hooks';
 import {
-  fetchOrganizationHolidays,
   getEmployeeAttendance,
   checkTimesheetStatus,
 } from '@/features/attendance/api/attendance-api';
 import { fetchMyLeaveRequests } from '@/features/leave/api/leave-api';
 import type { LeaveRequest } from '@/features/leave/types';
-import { fetchCalendarExceptions } from '@/features/exceptional-work/api/calendar-exception-api';
-import type { CalendarException } from '@/features/exceptional-work/types';
-import { getCurrentWorkingDayPolicy } from '@/lib/api/working-day-policy-api';
 import { LeaveRequestDialog } from '@/features/attendance/components/leave-request-dialog';
 
 type WeekRow = {
@@ -208,26 +204,14 @@ export function EmployeeTimesheetSubmitPage() {
       const fromDate = format(weekStart, 'yyyy-MM-dd');
       const toDate = format(weekEnd, 'yyyy-MM-dd');
 
-      const [
-        leaveResponse,
-        holidayResponse,
-        workingDayPolicy,
-        calendarExceptions,
-        submissionStatus,
-      ] = await Promise.all([
+      const [leaveResponse, attendanceResponse, submissionStatus] = await Promise.all([
         fetchMyLeaveRequests({
           start_date__lte: toDate,
           end_date__gte: fromDate,
           status__in: 'approved,pending',
           page_size: 100,
         }),
-        fetchOrganizationHolidays({ from_date: fromDate, to_date: toDate }),
-        getCurrentWorkingDayPolicy().catch(() => null),
-        fetchCalendarExceptions({
-          from_date: fromDate,
-          to_date: toDate,
-          page_size: 100,
-        }).catch(() => ({ data: [] as CalendarException[] })),
+        getEmployeeAttendance({ from_date: fromDate, to_date: toDate }),
         checkTimesheetStatus({
           week_start_date: fromDate,
           week_end_date: toDate,
@@ -236,8 +220,8 @@ export function EmployeeTimesheetSubmitPage() {
 
       const leaveByDate = new Map<string, { leave_name: string; status: string }>();
       (leaveResponse?.data || []).forEach((leave: LeaveRequest) => {
-        const start = parseISO(leave.start_date);
-        const end = parseISO(leave.end_date);
+        const start = new Date(leave.start_date + 'T00:00:00');
+        const end = new Date(leave.end_date + 'T00:00:00');
         eachDayOfInterval({ start, end }).forEach((day) => {
           leaveByDate.set(format(day, 'yyyy-MM-dd'), {
             leave_name: leave.leave_type_name || leave.leave_name || 'Leave',
@@ -246,149 +230,108 @@ export function EmployeeTimesheetSubmitPage() {
         });
       });
 
-      const holidayByDate = new Map<
-        string,
-        { start_date: string; end_date: string; description: string; holiday_type: string }
-      >();
-      (holidayResponse?.holidays || []).forEach((holiday) => {
-        const start = parseISO(holiday.start_date);
-        const end = parseISO(holiday.end_date);
-        // Add each day in the holiday range to the map
-        eachDayOfInterval({ start, end }).forEach((day) => {
-          const key = format(day, 'yyyy-MM-dd');
-          holidayByDate.set(key, {
-            start_date: holiday.start_date,
-            end_date: holiday.end_date,
-            description: holiday.description,
-            holiday_type: holiday.holiday_type,
-          });
-        });
-      });
+      const holidayDescriptions = attendanceResponse?.holiday_descriptions || {};
+      const workingDayPolicy = attendanceResponse?.working_day_policy || null;
+      const calendarExceptions = attendanceResponse?.calendar_exceptions || [];
 
-      // Create calendar exception map
-      // For employee attendance, include exceptions that apply to all teachers
-      const exceptionByDate = new Map<string, CalendarException>();
-      (calendarExceptions?.data || []).forEach((exception) => {
-        // Include exceptions that apply to all classes OR all teachers
-        if (exception.is_applicable_to_all_classes || exception.is_applicable_to_all_teachers) {
-          exceptionByDate.set(exception.date, exception);
+      const exceptionByDate = new Map<string, { type: string; reason: string }>();
+      calendarExceptions.forEach(
+        (exception: { date: string; type: string; reason: string }) => {
+          exceptionByDate.set(exception.date, { type: exception.type, reason: exception.reason });
         }
-      });
+      );
 
-      // Helper function to determine if a day is a working day
       const isWorkingDay = (day: Date): boolean => {
         const dayKey = format(day, 'yyyy-MM-dd');
         const exception = exceptionByDate.get(dayKey);
+        const holidayInfo = holidayDescriptions[dayKey];
 
-        // If there's an exception, respect it
         if (exception) {
-          return exception.override_type === 'FORCE_WORKING';
+          return exception.type === 'force_working' || exception.type === 'FORCE_WORKING';
         }
 
-        // Otherwise, check working day policy
-        const dayOfWeek = getDay(day); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+        if (
+          holidayInfo?.type === 'official_holiday' ||
+          holidayInfo?.type === 'holiday'
+        ) {
+          return false;
+        }
+
+        const dayOfWeek = getDay(day);
 
         if (!workingDayPolicy) {
-          // Default: Monday to Friday
           return dayOfWeek >= 1 && dayOfWeek <= 5;
         }
 
-        // Check Sunday
         if (dayOfWeek === 0) {
-          return !workingDayPolicy.sunday_off; // If sunday_off is true, it's NOT a working day
+          return !workingDayPolicy.sunday_off;
         }
 
-        // Check Saturday
         if (dayOfWeek === 6) {
           const pattern = workingDayPolicy.saturday_off_pattern;
-
-          // If pattern is NONE, all Saturdays are working days
-          if (pattern === 'NONE') {
-            return true;
-          }
-
-          // If pattern is ALL, all Saturdays are off
-          if (pattern === 'ALL') {
-            return false;
-          }
-
-          // For FIRST_AND_THIRD or SECOND_AND_FOURTH, calculate which Saturday of the month this is
-          const dayOfMonth = day.getDate();
-          const saturdayOfMonth = Math.ceil(dayOfMonth / 7); // 1st, 2nd, 3rd, 4th, or 5th Saturday
-
-          if (pattern === 'FIRST_AND_THIRD') {
-            return saturdayOfMonth !== 1 && saturdayOfMonth !== 3;
-          }
-
-          if (pattern === 'SECOND_AND_FOURTH') {
+          if (pattern === 'NONE') return true;
+          if (pattern === 'ALL') return false;
+          const saturdayOfMonth = Math.ceil(day.getDate() / 7);
+          if (pattern === 'FIRST_AND_THIRD') return saturdayOfMonth !== 1 && saturdayOfMonth !== 3;
+          if (pattern === 'SECOND_AND_FOURTH')
             return saturdayOfMonth !== 2 && saturdayOfMonth !== 4;
-          }
-
-          // Default for unknown patterns: Saturday is working
           return true;
         }
 
-        // Monday to Friday are working days by default
         return true;
       };
 
       const today = new Date();
-      today.setHours(0, 0, 0, 0); // Set to start of day for comparison
+      today.setHours(0, 0, 0, 0);
 
-      // IMPORTANT: Always fetch actual attendance records for this week.
-      // This covers both submitted timesheets AND daily attendance that was
-      // recorded but not yet submitted as a timesheet.
       const submittedAttendanceMap = new Map<
         string,
         { morning_present: boolean; afternoon_present: boolean; remarks: string }
       >();
-
-      try {
-        const attendanceResponse = await getEmployeeAttendance({
-          from_date: fromDate,
-          to_date: toDate,
-        });
-
-        // Build a map of date -> attendance record for quick lookup
-        (attendanceResponse?.records || []).forEach((record) => {
+      (attendanceResponse?.records || []).forEach(
+        (record: {
+          date: string;
+          morning_present: boolean;
+          afternoon_present: boolean;
+          remarks?: string;
+        }) => {
           submittedAttendanceMap.set(record.date, {
             morning_present: record.morning_present,
             afternoon_present: record.afternoon_present,
             remarks: record.remarks || '',
           });
-        });
-      } catch (error) {
-        console.error('Error fetching attendance records:', error);
-        toast.warning('Could not load existing attendance records');
-      }
+        }
+      );
 
       const rows: WeekRow[] = eachDayOfInterval({ start: weekStart, end: weekEnd })
         .filter((day) => {
-          // Only include dates up to today (exclude future dates)
           return day <= today;
         })
         .map((day) => {
           const key = format(day, 'yyyy-MM-dd');
-          const holiday = holidayByDate.get(key);
-          const isHoliday = !!holiday;
+          const holidayInfo = holidayDescriptions[key];
+          const isHoliday =
+            holidayInfo?.type === 'official_holiday' ||
+            holidayInfo?.type === 'holiday' ||
+            holidayInfo?.type === 'weekend';
+          const isForceWorking = holidayInfo?.type === 'force_working';
           const leaveInfo = leaveByDate.get(key);
           const isLeave = !!leaveInfo;
           const exception = exceptionByDate.get(key);
           const workingDay = isWorkingDay(day);
 
-          // Determine locked reason
           let lockedReason: WeekRow['locked_reason'] = undefined;
-          let description = holiday?.description;
+          let description = holidayInfo?.name || holidayInfo?.description;
 
-          if (isHoliday) {
+          if (isHoliday && !isForceWorking) {
             lockedReason = 'holiday';
           } else if (isLeave) {
             lockedReason = 'leave';
           } else if (exception) {
-            if (exception.override_type === 'FORCE_HOLIDAY') {
+            if (exception.type === 'force_holiday' || exception.type === 'FORCE_HOLIDAY') {
               lockedReason = 'exception_holiday';
               description = `Exception: ${exception.reason}`;
-            } else if (exception.override_type === 'FORCE_WORKING') {
+            } else if (exception.type === 'force_working' || exception.type === 'FORCE_WORKING') {
               lockedReason = 'exception_working';
             }
           } else if (!workingDay) {
@@ -398,8 +341,6 @@ export function EmployeeTimesheetSubmitPage() {
 
           const isLocked = !!lockedReason && lockedReason !== 'exception_working';
 
-          // IMPORTANT: Use actual submitted attendance data if available
-          // Otherwise fall back to default values for new weeks
           const submittedData = submittedAttendanceMap.get(key);
 
           return {
@@ -420,7 +361,7 @@ export function EmployeeTimesheetSubmitPage() {
             is_working_day: workingDay,
             leave_type_name: leaveInfo?.leave_name,
             leave_status: leaveInfo?.status,
-            exception_type: exception?.override_type,
+            exception_type: exception?.type,
             exception_reason: exception?.reason,
           };
         });

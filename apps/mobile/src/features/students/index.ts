@@ -22,3 +22,6 @@ export {
   useDeleteStudent,
   useRestoreStudent,
 } from './hooks/use-students';
+
+// Components
+export { StudentList, type StudentListProps } from './components';

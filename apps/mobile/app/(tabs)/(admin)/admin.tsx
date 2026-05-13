@@ -34,7 +34,7 @@ const adminItems: AdminItem[] = [
     subtitle: 'Review employee timesheets',
     icon: CheckSquare,
     gradient: ['#d97706', '#fbbf24'],
-    route: '/(admin-screens)/timesheets/approvals',
+    route: '/(shared-screens)/timesheets/approvals',
   },
   {
     id: 'leave-approvals',
@@ -42,7 +42,7 @@ const adminItems: AdminItem[] = [
     subtitle: 'Approve/reject requests',
     icon: Briefcase,
     gradient: ['#16a34a', '#4ade80'],
-    route: '/(admin-screens)/leave/approvals',
+    route: '/(shared-screens)/leave/approvals',
   },
   {
     id: 'leave-allocations',
@@ -50,7 +50,7 @@ const adminItems: AdminItem[] = [
     subtitle: 'Manage leave policies',
     icon: FileText,
     gradient: ['#8b5cf6', '#c084fc'],
-    route: '/(admin-screens)/leave/allocations',
+    route: '/(shared-screens)/leave/allocations',
   },
   {
     id: 'holidays',
@@ -58,7 +58,7 @@ const adminItems: AdminItem[] = [
     subtitle: 'Manage holidays',
     icon: CalendarCheck,
     gradient: ['#dc2626', '#f87171'],
-    route: '/(admin-screens)/holidays',
+    route: '/(shared-screens)/holidays',
   },
   {
     id: 'exceptions',
@@ -66,7 +66,7 @@ const adminItems: AdminItem[] = [
     subtitle: 'Force working/holidays',
     icon: AlertTriangle,
     gradient: ['#0891b2', '#22d3ee'],
-    route: '/(admin-screens)/exceptional-work',
+    route: '/(shared-screens)/exceptional-work',
   },
   {
     id: 'preferences',
@@ -74,7 +74,7 @@ const adminItems: AdminItem[] = [
     subtitle: 'Organization settings',
     icon: SlidersHorizontal,
     gradient: ['#0284c7', '#38bdf8'],
-    route: '/(admin-screens)/preferences',
+    route: '/(shared-screens)/preferences',
   },
 ];
 

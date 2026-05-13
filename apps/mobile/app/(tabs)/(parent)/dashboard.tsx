@@ -125,7 +125,7 @@ export default function ParentDashboard() {
             <View className="flex-row items-center">
               <TouchableOpacity
                 className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-white/20"
-                onPress={() => router.push('/(admin-screens)/notifications')}
+                onPress={() => router.push('/(shared-screens)/notifications')}
               >
                 <Bell size={20} color="#ffffff" />
                 <View className="absolute -right-1 -top-1 h-5 w-5 items-center justify-center rounded-full bg-danger-500">

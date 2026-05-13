@@ -3,7 +3,7 @@
  * Glassmorphism cards, spring animations, vibrant gradients, floating feel
  */
 
-import { getRoleThemeColors, getSubjectColor } from '@educard/shared';
+import { getRoleThemeColors } from '@educard/shared';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -14,14 +14,12 @@ import {
   Clock,
   Bell,
   Calendar,
-  ChevronRight,
   CalendarCheck,
   Settings,
   FileText,
   ClipboardList,
   SlidersHorizontal,
   Star,
-  AlertCircle,
 } from 'lucide-react-native';
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
@@ -32,21 +30,20 @@ import {
   StyleSheet,
   Dimensions,
   RefreshControl,
-  ActivityIndicator,
 } from 'react-native';
-import Animated, { FadeIn, FadeInDown, ZoomIn, SlideInRight } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 
+import { TodaySchedule, StatsGrid, type StatCardProps } from '@/components/dashboard';
 import { getMediaUrl } from '@/constants/config';
 import { useDashboardAttendanceStats } from '@/features/attendance/hooks/use-attendance';
 import { useClasses } from '@/features/classes';
 import { useStudents } from '@/features/students';
 import { useTeachers } from '@/features/teachers';
-import { useMyTimetable, type TimetableEntry } from '@/features/timetable';
+import { useMyTimetable } from '@/features/timetable';
 import { useMyProfilePhoto } from '@/hooks';
 import { useAuthStore } from '@/lib/auth-store';
 
 const { width } = Dimensions.get('window');
-const STAT_CARD_WIDTH = (width - 48) / 2;
 
 const getGreeting = () => {
   const hour = new Date().getHours();
@@ -65,45 +62,6 @@ const getGreetingEmoji = () => {
 // Theme colors for admin - can be used for future theming
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const _adminTheme = getRoleThemeColors('admin');
-
-interface StatItem {
-  id: string;
-  title: string;
-  icon: typeof GraduationCap;
-  gradient: readonly [string, string, string];
-  shadowColor: string;
-}
-
-const statsConfig: StatItem[] = [
-  {
-    id: 'students',
-    title: 'Students',
-    icon: GraduationCap,
-    gradient: ['#667eea', '#764ba2', '#8b5cf6'],
-    shadowColor: '#764ba2',
-  },
-  {
-    id: 'teachers',
-    title: 'Teachers',
-    icon: Users,
-    gradient: ['#06b6d4', '#0891b2', '#0e7490'],
-    shadowColor: '#0891b2',
-  },
-  {
-    id: 'classes',
-    title: 'Classes',
-    icon: BookOpen,
-    gradient: ['#10b981', '#059669', '#047857'],
-    shadowColor: '#059669',
-  },
-  {
-    id: 'attendance',
-    title: 'Attendance',
-    icon: Clock,
-    gradient: ['#f59e0b', '#d97706', '#b45309'],
-    shadowColor: '#d97706',
-  },
-];
 
 interface AdminLinkItem {
   id: string;
@@ -158,9 +116,6 @@ const adminLinks: AdminLinkItem[] = [
   },
 ];
 
-// Day labels (0=Monday, 6=Sunday)
-const DAY_LABELS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
 export default function AdminDashboard() {
   const router = useRouter();
   const { user } = useAuthStore();
@@ -189,60 +144,8 @@ export default function AdminDashboard() {
     refetch: refetchTimetable,
   } = useMyTimetable();
 
-  // Get today's day index (0=Monday, 6=Sunday)
-  const todayDayNum = useMemo(() => {
-    const jsDay = new Date().getDay();
-    return jsDay === 0 ? 6 : jsDay - 1;
-  }, []);
-
-  // Get today's classes sorted by time
-  const todayClasses = useMemo((): TimetableEntry[] => {
-    if (!timetableData?.days) return [];
-    const entries =
-      timetableData.days[todayDayNum] || timetableData.days[String(todayDayNum)] || [];
-    return [...entries].sort((a, b) => {
-      const timeA = a.start_time || '';
-      const timeB = b.start_time || '';
-      return timeA.localeCompare(timeB);
-    });
-  }, [timetableData, todayDayNum]);
-
-  // Determine class status: completed, ongoing, or upcoming
-  const getClassStatus = useCallback((entry: TimetableEntry) => {
-    const now = new Date();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-    const [startH, startM] = (entry.start_time || '00:00').split(':').map(Number);
-    const [endH, endM] = (entry.end_time || '00:00').split(':').map(Number);
-    const startMinutes = startH * 60 + startM;
-    const endMinutes = endH * 60 + endM;
-
-    if (currentMinutes >= endMinutes) return 'completed';
-    if (currentMinutes >= startMinutes && currentMinutes < endMinutes) return 'ongoing';
-    return 'upcoming';
-  }, []);
-
-  // Find current or next upcoming class
-  const currentOrNextEntry = useMemo(() => {
-    for (const entry of todayClasses) {
-      const status = getClassStatus(entry);
-      if (status === 'ongoing' || status === 'upcoming') {
-        return { entry, status };
-      }
-    }
-    return null;
-  }, [todayClasses, getClassStatus]);
-
-  const formatTime = (timeStr: string): string => {
-    if (!timeStr) return '';
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    const period = hours >= 12 ? 'PM' : 'AM';
-    const displayHours = hours % 12 || 12;
-    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
-  };
-
   // Format attendance display
-  const getAttendanceDisplay = () => {
+  const getAttendanceDisplay = useCallback(() => {
     if (!attendanceStats) return '...';
     if (attendanceStats.is_holiday) {
       return attendanceStats.holiday_name ?? 'Holiday';
@@ -250,18 +153,53 @@ export default function AdminDashboard() {
     if (!attendanceStats.is_working_day) {
       return 'Off Day';
     }
-    if (attendanceStats.overall_attendance_percentage === null) {
+    const percentage = attendanceStats.overall_attendance_percentage;
+    if (percentage === null || percentage === undefined) {
       return 'N/A';
     }
-    return `${attendanceStats.overall_attendance_percentage}%`;
-  };
+    // Ensure it's a valid number
+    const numValue = typeof percentage === 'number' ? percentage : parseFloat(String(percentage));
+    if (isNaN(numValue)) {
+      return 'N/A';
+    }
+    return `${Math.round(numValue)}%`;
+  }, [attendanceStats]);
 
-  const statsValues: Record<string, string> = {
-    students: studentsData?.totalCount?.toLocaleString() ?? '0',
-    teachers: teachersData?.totalCount?.toLocaleString() ?? '0',
-    classes: classesData?.totalCount?.toLocaleString() ?? '0',
-    attendance: getAttendanceDisplay(),
-  };
+  // Build stats configuration with current values
+  const statsConfig: StatCardProps[] = useMemo(() => [
+    {
+      id: 'students',
+      title: 'Students',
+      value: studentsData?.totalCount?.toLocaleString() ?? '0',
+      icon: GraduationCap,
+      gradient: ['#667eea', '#764ba2', '#8b5cf6'] as const,
+      shadowColor: '#764ba2',
+    },
+    {
+      id: 'teachers',
+      title: 'Teachers',
+      value: teachersData?.totalCount?.toLocaleString() ?? '0',
+      icon: Users,
+      gradient: ['#06b6d4', '#0891b2', '#0e7490'] as const,
+      shadowColor: '#0891b2',
+    },
+    {
+      id: 'classes',
+      title: 'Classes',
+      value: classesData?.totalCount?.toLocaleString() ?? '0',
+      icon: BookOpen,
+      gradient: ['#10b981', '#059669', '#047857'] as const,
+      shadowColor: '#059669',
+    },
+    {
+      id: 'attendance',
+      title: 'Attendance',
+      value: getAttendanceDisplay(),
+      icon: Clock,
+      gradient: ['#f59e0b', '#d97706', '#b45309'] as const,
+      shadowColor: '#d97706',
+    },
+  ], [studentsData, teachersData, classesData, getAttendanceDisplay]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -344,34 +282,8 @@ export default function AdminDashboard() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#10b981" />
         }
       >
-        {/* Floating Stats Grid */}
-        <View style={styles.statsGrid}>
-          {statsConfig.map((stat, index) => (
-            <Animated.View
-              key={stat.id}
-              entering={ZoomIn.delay(150 + index * 80)
-                .springify()
-                .damping(12)
-                .stiffness(100)}
-              style={[styles.statCard, { shadowColor: stat.shadowColor }]}
-            >
-              <LinearGradient
-                colors={stat.gradient}
-                style={styles.statGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <View style={styles.statHeader}>
-                  <View style={styles.statIconContainer}>
-                    <stat.icon size={16} color="#fff" strokeWidth={2.5} />
-                  </View>
-                </View>
-                <Text style={styles.statValue}>{statsValues[stat.id]}</Text>
-                <Text style={styles.statTitle}>{stat.title}</Text>
-              </LinearGradient>
-            </Animated.View>
-          ))}
-        </View>
+        {/* Stats Grid - uses shared component */}
+        <StatsGrid stats={statsConfig} />
 
         {/* Quick Access */}
         <Animated.View
@@ -415,142 +327,12 @@ export default function AdminDashboard() {
           </View>
         </Animated.View>
 
-        {/* Today's Schedule (if admin has timetable entries) */}
-        {todayClasses.length > 0 && (
-          <Animated.View
-            entering={FadeInDown.delay(550).springify().damping(15)}
-            style={styles.section}
-          >
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Today's Schedule — {DAY_LABELS[todayDayNum]}</Text>
-              <Text style={styles.seeAll}>{todayClasses.length} classes</Text>
-            </View>
-
-            {/* Current/Next Class Banner */}
-            {currentOrNextEntry && (
-              <View style={styles.nextClassBanner}>
-                <View style={styles.nextClassIconBg}>
-                  {currentOrNextEntry.status === 'ongoing' ? (
-                    <AlertCircle size={20} color="#059669" />
-                  ) : (
-                    <Clock size={20} color="#059669" />
-                  )}
-                </View>
-                <View style={styles.nextClassContent}>
-                  <Text style={styles.nextClassLabel}>
-                    {currentOrNextEntry.status === 'ongoing' ? 'Currently Teaching' : 'Next Class'}
-                  </Text>
-                  <Text style={styles.nextClassSubject}>
-                    {currentOrNextEntry.entry.subject_name ?? currentOrNextEntry.entry.slot_label}
-                  </Text>
-                  <Text style={styles.nextClassMeta}>
-                    {currentOrNextEntry.entry.class_name} •{' '}
-                    {formatTime(currentOrNextEntry.entry.start_time)} -{' '}
-                    {formatTime(currentOrNextEntry.entry.end_time)}
-                  </Text>
-                </View>
-                <View
-                  style={[
-                    styles.nextClassBadge,
-                    currentOrNextEntry.status === 'ongoing' && styles.nextClassBadgeLive,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.nextClassBadgeText,
-                      currentOrNextEntry.status === 'ongoing' && styles.nextClassBadgeTextLive,
-                    ]}
-                  >
-                    {currentOrNextEntry.status === 'ongoing' ? 'Live' : 'Up Next'}
-                  </Text>
-                </View>
-              </View>
-            )}
-
-            {/* Schedule List */}
-            {todayClasses.slice(0, 4).map((entry, index) => {
-              const status = getClassStatus(entry);
-              const isCurrentOrNext = currentOrNextEntry?.entry.public_id === entry.public_id;
-              const subjectColor = getSubjectColor(
-                entry.subject_name ?? entry.slot_label ?? 'default'
-              );
-
-              return (
-                <Animated.View
-                  key={entry.public_id || index}
-                  entering={SlideInRight.delay(600 + index * 60)
-                    .springify()
-                    .damping(16)}
-                >
-                  <View style={[styles.scheduleCard, isCurrentOrNext && styles.scheduleCardActive]}>
-                    <View style={[styles.scheduleBar, { backgroundColor: subjectColor.hex }]} />
-                    <View style={styles.scheduleTimeBox}>
-                      <Text
-                        style={[styles.scheduleTime, isCurrentOrNext && styles.scheduleTimeActive]}
-                      >
-                        {formatTime(entry.start_time)}
-                      </Text>
-                    </View>
-                    <View style={styles.scheduleContent}>
-                      <Text
-                        style={[
-                          styles.scheduleSubject,
-                          isCurrentOrNext && styles.scheduleSubjectActive,
-                        ]}
-                      >
-                        {entry.subject_name ?? entry.slot_label}
-                      </Text>
-                      <Text style={styles.scheduleClass}>
-                        {entry.class_name}
-                        {entry.room && ` • Room ${entry.room}`}
-                      </Text>
-                    </View>
-                    <View
-                      style={[
-                        styles.scheduleStatus,
-                        status === 'completed' && styles.scheduleStatusCompleted,
-                        status === 'ongoing' && styles.scheduleStatusOngoing,
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.scheduleStatusText,
-                          status === 'completed' && styles.scheduleStatusTextCompleted,
-                          status === 'ongoing' && styles.scheduleStatusTextOngoing,
-                        ]}
-                      >
-                        {status === 'completed' ? '✓' : status === 'ongoing' ? '●' : '○'}
-                      </Text>
-                    </View>
-                  </View>
-                </Animated.View>
-              );
-            })}
-
-            {todayClasses.length > 4 && (
-              <TouchableOpacity style={styles.viewMoreBtn}>
-                <Text style={styles.viewMoreText}>View all {todayClasses.length} classes</Text>
-                <ChevronRight size={16} color="#059669" />
-              </TouchableOpacity>
-            )}
-          </Animated.View>
-        )}
-
-        {/* Loading state for timetable */}
-        {loadingTimetable && (
-          <Animated.View
-            entering={FadeInDown.delay(550).springify().damping(15)}
-            style={styles.section}
-          >
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Today's Schedule</Text>
-            </View>
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color="#059669" />
-              <Text style={styles.loadingText}>Loading schedule...</Text>
-            </View>
-          </Animated.View>
-        )}
+        {/* Today's Schedule (uses shared component) */}
+        <TodaySchedule
+          timetableData={timetableData}
+          isLoading={loadingTimetable}
+          maxDisplay={4}
+        />
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -646,47 +428,6 @@ const styles = StyleSheet.create({
   },
   content: { flex: 1 },
   scrollContent: { paddingTop: 16, paddingBottom: 100 },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 16,
-    gap: 10,
-    marginBottom: 8,
-  },
-  statCard: {
-    width: STAT_CARD_WIDTH,
-    borderRadius: 18,
-    overflow: 'hidden',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 10,
-  },
-  statGradient: { padding: 14, height: 120, overflow: 'hidden' },
-  statHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  statIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-  },
-  statValue: { fontSize: 26, fontWeight: '900', color: '#fff', letterSpacing: -0.5 },
-  statTitle: {
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.9)',
-    fontWeight: '700',
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
-  },
   section: { paddingHorizontal: 16, marginTop: 16 },
   sectionHeader: {
     flexDirection: 'row',
@@ -727,164 +468,4 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   adminLinkLabel: { fontSize: 11, fontWeight: '700', color: '#334155', textAlign: 'center' },
-  // Schedule styles
-  nextClassBanner: {
-    backgroundColor: '#ecfdf5',
-    borderRadius: 16,
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#d1fae5',
-  },
-  nextClassIconBg: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  nextClassContent: {
-    flex: 1,
-  },
-  nextClassLabel: {
-    fontSize: 11,
-    color: '#059669',
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  nextClassSubject: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#065f46',
-    marginTop: 2,
-  },
-  nextClassMeta: {
-    fontSize: 12,
-    color: '#10b981',
-    marginTop: 2,
-  },
-  nextClassBadge: {
-    backgroundColor: '#d1fae5',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  nextClassBadgeLive: {
-    backgroundColor: '#059669',
-  },
-  nextClassBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#059669',
-  },
-  nextClassBadgeTextLive: {
-    color: '#fff',
-  },
-  scheduleCard: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#f0fdf4',
-    shadowColor: '#10b981',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  scheduleCardActive: {
-    backgroundColor: '#ecfdf5',
-    borderColor: '#a7f3d0',
-  },
-  scheduleBar: {
-    width: 3,
-    height: 40,
-    borderRadius: 2,
-    marginRight: 12,
-  },
-  scheduleTimeBox: {
-    width: 60,
-    marginRight: 10,
-  },
-  scheduleTime: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#64748b',
-  },
-  scheduleTimeActive: {
-    color: '#059669',
-  },
-  scheduleContent: {
-    flex: 1,
-  },
-  scheduleSubject: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1e293b',
-  },
-  scheduleSubjectActive: {
-    color: '#065f46',
-  },
-  scheduleClass: {
-    fontSize: 12,
-    color: '#64748b',
-    marginTop: 2,
-  },
-  scheduleStatus: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#f1f5f9',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scheduleStatusCompleted: {
-    backgroundColor: '#dcfce7',
-  },
-  scheduleStatusOngoing: {
-    backgroundColor: '#ecfdf5',
-  },
-  scheduleStatusText: {
-    fontSize: 12,
-    color: '#94a3b8',
-  },
-  scheduleStatusTextCompleted: {
-    color: '#16a34a',
-  },
-  scheduleStatusTextOngoing: {
-    color: '#059669',
-  },
-  viewMoreBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-  },
-  viewMoreText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#059669',
-    marginRight: 4,
-  },
-  loadingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 20,
-    backgroundColor: '#fff',
-    borderRadius: 14,
-  },
-  loadingText: {
-    fontSize: 13,
-    color: '#64748b',
-    marginLeft: 10,
-  },
 });

@@ -3,17 +3,21 @@
  */
 
 import { API_ENDPOINTS, getErrorMessage } from '@educard/shared';
+import { useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import { useState, useCallback } from 'react';
 import { Alert, Platform } from 'react-native';
 
 import { apiClient } from '@/api/client';
+import { useAuthStore } from '@/lib/auth-store';
 
 interface UseProfileImageOptions {
   /** The user's public_id (not teacher/student public_id) */
   userPublicId: string | undefined;
   /** Called after successful upload with the new image URL */
   onSuccess?: (imageUrl: string) => void;
+  /** Additional query keys to invalidate after upload (e.g., teacher/student details) */
+  additionalInvalidateKeys?: (readonly unknown[])[];
 }
 
 interface FormDataFile {
@@ -29,9 +33,26 @@ interface UploadResponse {
   };
 }
 
-export function useProfileImage({ userPublicId, onSuccess }: UseProfileImageOptions) {
+export function useProfileImage({ userPublicId, onSuccess, additionalInvalidateKeys }: UseProfileImageOptions) {
   const [isUploading, setIsUploading] = useState(false);
   const [localUri, setLocalUri] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const user = useAuthStore((state) => state.user);
+
+  const invalidateProfilePhoto = useCallback(() => {
+    // Invalidate all profile-photo queries to force refetch
+    void queryClient.invalidateQueries({ queryKey: ['profile-photo'] });
+    // Also refetch immediately
+    if (user?.public_id) {
+      void queryClient.refetchQueries({ queryKey: ['profile-photo', user.public_id] });
+    }
+    // Invalidate additional queries (e.g., teacher/student details)
+    if (additionalInvalidateKeys) {
+      for (const key of additionalInvalidateKeys) {
+        void queryClient.invalidateQueries({ queryKey: key });
+      }
+    }
+  }, [queryClient, user?.public_id, additionalInvalidateKeys]);
 
   const pickAndUpload = useCallback(() => {
     if (!userPublicId) {
@@ -108,7 +129,7 @@ export function useProfileImage({ userPublicId, onSuccess }: UseProfileImageOpti
         formData.append('image_type', 'profile_photo');
 
         const response = await apiClient.post<UploadResponse>(
-          API_ENDPOINTS.ATTACHMENTS.USER_PHOTO_UPLOAD(userPublicId),
+          API_ENDPOINTS.ATTACHMENTS.USER_PHOTO_UPLOAD(userPublicId!),
           formData,
           {
             headers: { 'Content-Type': 'multipart/form-data' },
@@ -119,6 +140,9 @@ export function useProfileImage({ userPublicId, onSuccess }: UseProfileImageOpti
         const imageUrl =
           response.data?.data?.thumbnail_url ?? response.data?.data?.original_url ?? asset.uri;
 
+        // Invalidate profile photo cache to force all components to refetch
+        invalidateProfilePhoto();
+        
         onSuccess?.(imageUrl);
         Alert.alert('Success', 'Profile photo updated!');
       } catch (error) {
@@ -128,7 +152,7 @@ export function useProfileImage({ userPublicId, onSuccess }: UseProfileImageOpti
         setIsUploading(false);
       }
     }
-  }, [userPublicId, onSuccess]);
+  }, [userPublicId, onSuccess, invalidateProfilePhoto]);
 
-  return { pickAndUpload, isUploading, localUri };
+  return { pickAndUpload, isUploading, localUri, invalidateProfilePhoto };
 }

@@ -25,7 +25,7 @@ import { useClasses } from '@/features/classes';
 import { useStudents } from '@/features/students';
 import { useSubjects } from '@/features/subjects';
 import { useTeachers } from '@/features/teachers';
-import { useMyProfilePhoto } from '@/hooks';
+import { useProfileImageUrl } from '@/hooks';
 import { useAuthStore } from '@/lib/auth-store';
 
 const { width } = Dimensions.get('window');
@@ -79,7 +79,7 @@ const managementItemsConfig: ManagementItem[] = [
     subtitle: 'Class schedules',
     icon: Calendar,
     gradient: ['#6366f1', '#818cf8'],
-    route: '/(admin-screens)/timetable',
+    route: '/(shared-screens)/timetable',
   },
   {
     id: 'exams',
@@ -87,14 +87,14 @@ const managementItemsConfig: ManagementItem[] = [
     subtitle: 'Exams & marks',
     icon: ClipboardList,
     gradient: ['#e11d48', '#fb7185'],
-    route: '/(admin-screens)/exams/sessions',
+    route: '/(shared-screens)/exams/sessions',
   },
 ];
 
 export default function ManagementScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const { data: profilePhoto } = useMyProfilePhoto();
+  const { profileImageUrl } = useProfileImageUrl();
 
   const { data: teachersData } = useTeachers({ page_size: 1 });
   const { data: studentsData } = useStudents({ page_size: 1 });
@@ -107,11 +107,6 @@ export default function ManagementScreen() {
     classes: classesData?.totalCount,
     subjects: subjectsData?.totalCount,
   };
-
-  const profileImageUrl =
-    getMediaUrl(profilePhoto?.thumbnail_url) ??
-    getMediaUrl(profilePhoto?.url) ??
-    getMediaUrl(user?.profile_image);
 
   return (
     <View style={styles.container}>

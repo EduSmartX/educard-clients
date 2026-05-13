@@ -32,7 +32,7 @@ const workItems: WorkItem[] = [
     subtitle: 'Submit your attendance',
     icon: Clock,
     gradient: ['#f59e0b', '#fcd34d'],
-    route: '/(admin-screens)/timesheets/my-submissions',
+    route: '/(shared-screens)/timesheets/my-submissions',
   },
   {
     id: 'my-leaves',
@@ -40,7 +40,7 @@ const workItems: WorkItem[] = [
     subtitle: 'View & apply for leave',
     icon: CalendarDays,
     gradient: ['#10b981', '#6ee7b7'],
-    route: '/(admin-screens)/leave/my-requests',
+    route: '/(shared-screens)/leave/my-requests',
   },
   {
     id: 'mark-attendance',
@@ -48,7 +48,7 @@ const workItems: WorkItem[] = [
     subtitle: 'Student attendance',
     icon: ClipboardCheck,
     gradient: ['#0d9488', '#2dd4bf'],
-    route: '/(admin-screens)/attendance/mark',
+    route: '/(shared-screens)/attendance/mark',
   },
   {
     id: 'enter-marks',
@@ -56,7 +56,7 @@ const workItems: WorkItem[] = [
     subtitle: 'Exam marks entry',
     icon: GraduationCap,
     gradient: ['#e11d48', '#fb7185'],
-    route: '/(admin-screens)/exams/sessions',
+    route: '/(shared-screens)/exams/sessions',
   },
   {
     id: 'attendance-reports',
@@ -64,7 +64,7 @@ const workItems: WorkItem[] = [
     subtitle: 'View summaries',
     icon: BarChart3,
     gradient: ['#0891b2', '#22d3ee'],
-    route: '/(admin-screens)/attendance',
+    route: '/(shared-screens)/attendance',
   },
 ];
 

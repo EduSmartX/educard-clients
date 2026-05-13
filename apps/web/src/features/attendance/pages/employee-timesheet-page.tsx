@@ -7,7 +7,6 @@ import {
   format,
   isBefore,
   isSameDay,
-  parseISO,
   startOfMonth,
   startOfWeek,
   endOfWeek,
@@ -32,10 +31,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ROUTES } from '@/constants/app-config';
 import { useAuth } from '@/hooks/use-auth';
-import {
-  getEmployeeAttendance,
-  fetchOrganizationHolidays,
-} from '@/features/attendance/api/attendance-api';
+import { getEmployeeAttendance } from '@/features/attendance/api/attendance-api';
 import { EmployeeInfoCard } from '@/features/attendance/components/employee-info-card';
 import { SingleDayAttendanceDialog } from '@/features/attendance/components/single-day-attendance-dialog';
 
@@ -197,18 +193,6 @@ export function EmployeeTimesheetPage() {
     queryFn: () => getEmployeeAttendance({ from_date: fromDate, to_date: toDate }),
   });
 
-  const { data: holidaysData, isLoading: loadingHolidays } = useQuery({
-    queryKey: ['timesheet', 'holidays', fromDate, toDate],
-    queryFn: async () => {
-      const response = await fetchOrganizationHolidays({
-        from_date: fromDate,
-        to_date: toDate,
-      });
-
-      return response?.holidays || [];
-    },
-  });
-
   const attendanceByDate = useMemo(() => {
     const map = new Map<string, AttendanceRecord>();
     (attendanceData?.records || []).forEach((record: AttendanceRecord) => {
@@ -243,24 +227,14 @@ export function EmployeeTimesheetPage() {
 
   const holidaySet = useMemo(() => {
     const set = new Set<string>();
-    // From dedicated holiday calendar API
-    (holidaysData || []).forEach((holiday: { start_date: string; end_date: string }) => {
-      const start = parseISO(holiday.start_date);
-      const end = parseISO(holiday.end_date);
-      eachDayOfInterval({ start, end }).forEach((date: Date) => {
-        set.add(toDateKey(date));
-      });
-    });
-    // Also include official holidays from attendance API's holiday_descriptions
-    // This catches holidays that may be missing from the holiday calendar API (e.g. pagination)
     const descriptions = attendanceData?.holiday_descriptions || {};
     Object.entries(descriptions).forEach(([dateKey, info]: [string, { type?: string }]) => {
-      if (info?.type === 'official_holiday') {
+      if (info?.type === 'official_holiday' || info?.type === 'holiday') {
         set.add(dateKey);
       }
     });
     return set;
-  }, [holidaysData, attendanceData]);
+  }, [attendanceData]);
 
   const exceptionsMap = useMemo(() => {
     const map = new Map<string, { type: string; reason: string }>();
@@ -292,7 +266,7 @@ export function EmployeeTimesheetPage() {
     };
   }, [attendanceData]);
 
-  const loading = loadingAttendance || loadingHolidays;
+  const loading = loadingAttendance;
 
   const handleDateClick = (date: Date, state: DayState) => {
     const dateKey = toDateKey(date);

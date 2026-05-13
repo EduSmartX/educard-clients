@@ -111,7 +111,7 @@ export default function EmployeeClassesScreen() {
 
   const handleMarkAttendance = (classId: string) => {
     router.push({
-      pathname: '/(admin-screens)/attendance/mark',
+      pathname: '/(shared-screens)/attendance/mark',
       params: { classId },
     } as Parameters<typeof router.push>[0]);
   };

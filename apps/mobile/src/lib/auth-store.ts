@@ -124,27 +124,20 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
 
   // Logout
   logout: async () => {
+    // Set state atomically to prevent multiple re-renders
+    set({
+      user: null,
+      tokens: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
+    });
+    
+    // Then perform cleanup in background (don't block UI)
     try {
-      set({ isLoading: true });
-
       await apiLogout();
-
-      set({
-        user: null,
-        tokens: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: null,
-      });
     } catch {
-      // Still clear local state even if API call fails
-      set({
-        user: null,
-        tokens: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: null,
-      });
+      // Ignore logout API errors - local state is already cleared
     }
   },
 

@@ -188,6 +188,7 @@ export function buildStudentPayload(
   };
 
   const payload: Record<string, unknown> = {
+    class_id: form.class_id,
     class_assigned: form.class_id,
     roll_number: safeTrim(form.roll_number),
     user,
