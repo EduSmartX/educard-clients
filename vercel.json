@@ -1,6 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
+  "git": {
+    "deploymentEnabled": {
+      "develop": true
+    }
+  },
   "installCommand": "pnpm install --no-frozen-lockfile",
   "buildCommand": "pnpm --filter @educard/web build",
   "outputDirectory": "apps/web/dist",
