@@ -289,17 +289,22 @@ export default function TimesheetApprovalsScreen() {
             </View>
           )}
 
-          {item.submission_status !== 'SUBMITTED' && item.submission_status !== 'DRAFT' && item.reviewed_by_name && (
-            <View style={styles.reviewerInfo}>
-              <Text style={styles.reviewerLabel}>
-                {item.submission_status === 'APPROVED' ? '✓ Approved by: ' : '✗ Rejected by: '}
-              </Text>
-              <Text style={styles.reviewerName}>{item.reviewed_by_name}</Text>
-              {item.reviewed_at && (
-                <Text style={styles.reviewerDate}> on {formatDate(item.reviewed_at.split('T')[0])}</Text>
-              )}
-            </View>
-          )}
+          {item.submission_status !== 'SUBMITTED' &&
+            item.submission_status !== 'DRAFT' &&
+            item.reviewed_by_name && (
+              <View style={styles.reviewerInfo}>
+                <Text style={styles.reviewerLabel}>
+                  {item.submission_status === 'APPROVED' ? '✓ Approved by: ' : '✗ Rejected by: '}
+                </Text>
+                <Text style={styles.reviewerName}>{item.reviewed_by_name}</Text>
+                {item.reviewed_at && (
+                  <Text style={styles.reviewerDate}>
+                    {' '}
+                    on {formatDate(item.reviewed_at.split('T')[0])}
+                  </Text>
+                )}
+              </View>
+            )}
 
           {item.review_comments ? (
             <Text style={styles.reviewComments} numberOfLines={2}>

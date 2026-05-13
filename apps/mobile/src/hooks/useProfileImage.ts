@@ -33,7 +33,11 @@ interface UploadResponse {
   };
 }
 
-export function useProfileImage({ userPublicId, onSuccess, additionalInvalidateKeys }: UseProfileImageOptions) {
+export function useProfileImage({
+  userPublicId,
+  onSuccess,
+  additionalInvalidateKeys,
+}: UseProfileImageOptions) {
   const [isUploading, setIsUploading] = useState(false);
   const [localUri, setLocalUri] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -142,7 +146,7 @@ export function useProfileImage({ userPublicId, onSuccess, additionalInvalidateK
 
         // Invalidate profile photo cache to force all components to refetch
         invalidateProfilePhoto();
-        
+
         onSuccess?.(imageUrl);
         Alert.alert('Success', 'Profile photo updated!');
       } catch (error) {

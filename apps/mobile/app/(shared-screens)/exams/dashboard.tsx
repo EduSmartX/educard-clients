@@ -22,10 +22,9 @@ import {
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { useClasses } from '@/features/classes';
+import type { Class } from '@/features/classes/types';
 import { useExams, useMarksOverview } from '@/features/exams';
 import { headerStyles, layoutStyles } from '@/styles';
-
-import type { Class } from '@/features/classes/types';
 
 const adminGradient = getRoleGradient('admin');
 

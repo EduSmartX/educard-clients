@@ -89,12 +89,12 @@ export function useUpdateProfile() {
 
 /**
  * Unified hook to get profile image URL with cache-busting
- * 
+ *
  * This hook:
  * - Fetches profile photo data
  * - Constructs a cache-busted URL using dataUpdatedAt timestamp
  * - Returns loading state and the ready-to-use URL
- * 
+ *
  * @returns {Object} Profile image state
  * - `profileImageUrl`: Cache-busted URL ready for Image component (undefined if no photo)
  * - `serverUrl`: Raw server URL without cache-busting (for comparisons)
@@ -103,7 +103,7 @@ export function useUpdateProfile() {
  */
 export function useProfileImageUrl() {
   const { data: profilePhoto, isLoading, dataUpdatedAt } = useMyProfilePhoto();
-  
+
   const serverUrl = useMemo(() => {
     return getMediaUrl(profilePhoto?.thumbnail_url) ?? getMediaUrl(profilePhoto?.url);
   }, [profilePhoto?.thumbnail_url, profilePhoto?.url]);

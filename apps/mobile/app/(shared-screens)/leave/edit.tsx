@@ -382,7 +382,9 @@ export default function EditLeaveAllocationScreen() {
                     <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
                       {isSelected && <Check size={14} color="#fff" />}
                     </View>
-                    <Text style={[styles.modalOptionText, isSelected && styles.modalOptionTextSelected]}>
+                    <Text
+                      style={[styles.modalOptionText, isSelected && styles.modalOptionTextSelected]}
+                    >
                       {item.label}
                     </Text>
                   </TouchableOpacity>
@@ -393,9 +395,7 @@ export default function EditLeaveAllocationScreen() {
               style={styles.modalDoneBtn}
               onPress={() => setRolesModalVisible(false)}
             >
-              <Text style={styles.modalDoneBtnText}>
-                Done ({form.roles.length} selected)
-              </Text>
+              <Text style={styles.modalDoneBtnText}>Done ({form.roles.length} selected)</Text>
             </TouchableOpacity>
           </Pressable>
         </Pressable>

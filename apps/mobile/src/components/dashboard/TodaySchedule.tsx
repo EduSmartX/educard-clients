@@ -107,10 +107,7 @@ export function TodaySchedule({
   }
 
   return (
-    <Animated.View
-      entering={FadeInDown.delay(550).springify().damping(15)}
-      style={styles.section}
-    >
+    <Animated.View entering={FadeInDown.delay(550).springify().damping(15)} style={styles.section}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Today's Schedule — {DAY_LABELS[todayDayNum]}</Text>
         <Text style={styles.seeAll}>{todayClasses.length} classes</Text>
@@ -161,9 +158,7 @@ export function TodaySchedule({
       {todayClasses.slice(0, maxDisplay).map((entry, index) => {
         const status = getClassStatus(entry);
         const isCurrentOrNext = currentOrNextEntry?.entry.public_id === entry.public_id;
-        const subjectColor = getSubjectColor(
-          entry.subject_name ?? entry.slot_label ?? 'default'
-        );
+        const subjectColor = getSubjectColor(entry.subject_name ?? entry.slot_label ?? 'default');
 
         return (
           <Animated.View
@@ -175,18 +170,13 @@ export function TodaySchedule({
             <View style={[styles.scheduleCard, isCurrentOrNext && styles.scheduleCardActive]}>
               <View style={[styles.scheduleBar, { backgroundColor: subjectColor.hex }]} />
               <View style={styles.scheduleTimeBox}>
-                <Text
-                  style={[styles.scheduleTime, isCurrentOrNext && styles.scheduleTimeActive]}
-                >
+                <Text style={[styles.scheduleTime, isCurrentOrNext && styles.scheduleTimeActive]}>
                   {formatTime(entry.start_time)}
                 </Text>
               </View>
               <View style={styles.scheduleContent}>
                 <Text
-                  style={[
-                    styles.scheduleSubject,
-                    isCurrentOrNext && styles.scheduleSubjectActive,
-                  ]}
+                  style={[styles.scheduleSubject, isCurrentOrNext && styles.scheduleSubjectActive]}
                 >
                   {entry.subject_name ?? entry.slot_label}
                 </Text>

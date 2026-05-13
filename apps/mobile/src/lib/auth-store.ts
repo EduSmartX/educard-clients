@@ -132,7 +132,7 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
       isLoading: false,
       error: null,
     });
-    
+
     // Then perform cleanup in background (don't block UI)
     try {
       await apiLogout();

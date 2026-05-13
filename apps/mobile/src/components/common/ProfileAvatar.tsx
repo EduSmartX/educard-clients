@@ -52,9 +52,10 @@ export function ProfileAvatar({
 
   const baseUri = getMediaUrl(imageUri);
   // Add cache-busting query param when cacheVersion is provided
-  const resolvedUri = baseUri && cacheVersion 
-    ? `${baseUri}${baseUri.includes('?') ? '&' : '?'}v=${cacheVersion}`
-    : baseUri;
+  const resolvedUri =
+    baseUri && cacheVersion
+      ? `${baseUri}${baseUri.includes('?') ? '&' : '?'}v=${cacheVersion}`
+      : baseUri;
 
   const content = resolvedUri ? (
     <Image

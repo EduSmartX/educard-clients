@@ -20,7 +20,6 @@ import {
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 
-import { getMediaUrl } from '@/constants/config';
 import { useClasses } from '@/features/classes';
 import { useStudents } from '@/features/students';
 import { useSubjects } from '@/features/subjects';
@@ -93,7 +92,7 @@ const managementItemsConfig: ManagementItem[] = [
 
 export default function ManagementScreen() {
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user: _user } = useAuthStore();
   const { profileImageUrl } = useProfileImageUrl();
 
   const { data: teachersData } = useTeachers({ page_size: 1 });

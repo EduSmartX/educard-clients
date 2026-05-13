@@ -464,9 +464,10 @@ export default function MyTimesheetScreen() {
           morning_present,
           afternoon_present,
           locked_reason,
-          holiday_name: (isHoliday && !isForceWorking) ? holidayInfo?.name || 'Holiday' : undefined,
+          holiday_name: isHoliday && !isForceWorking ? holidayInfo?.name || 'Holiday' : undefined,
           leave_name: isLeave ? record?.leave_type_name || 'Leave' : undefined,
-          is_working_day: (dayIsWorkingDay || isForceWorking) && !(isHoliday && !isForceWorking) && !isLeave,
+          is_working_day:
+            (dayIsWorkingDay || isForceWorking) && !(isHoliday && !isForceWorking) && !isLeave,
         };
       });
 
@@ -510,9 +511,10 @@ export default function MyTimesheetScreen() {
           morning_present: record?.morning_present ?? defaultPresent,
           afternoon_present: record?.afternoon_present ?? defaultPresent,
           locked_reason,
-          holiday_name: (isHoliday && !isForceWorking) ? holidayInfo?.name || 'Holiday' : undefined,
+          holiday_name: isHoliday && !isForceWorking ? holidayInfo?.name || 'Holiday' : undefined,
           leave_name: isLeave ? record?.leave_type_name || 'Leave' : undefined,
-          is_working_day: (dayIsWorkingDay || isForceWorking) && !(isHoliday && !isForceWorking) && !isLeave,
+          is_working_day:
+            (dayIsWorkingDay || isForceWorking) && !(isHoliday && !isForceWorking) && !isLeave,
         };
       });
       setWeeks((prev) =>
@@ -966,21 +968,30 @@ export default function MyTimesheetScreen() {
                     </Text>
                   )}
                 </View>
-                {(week.submissionStatus === 'APPROVED' || week.submissionStatus === 'REJECTED') && week.reviewedByName && (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4, flexWrap: 'wrap' }}>
-                    <Text style={{ fontSize: 10, color: '#64748b' }}>
-                      {week.submissionStatus === 'APPROVED' ? '✓ Approved by ' : '✗ Rejected by '}
-                    </Text>
-                    <Text style={{ fontSize: 10, color: '#1e40af', fontWeight: '600' }}>
-                      {week.reviewedByName}
-                    </Text>
-                    {week.reviewedAt && (
+                {(week.submissionStatus === 'APPROVED' || week.submissionStatus === 'REJECTED') &&
+                  week.reviewedByName && (
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginTop: 4,
+                        flexWrap: 'wrap',
+                      }}
+                    >
                       <Text style={{ fontSize: 10, color: '#64748b' }}>
-                        {' on '}{format(parseISO(week.reviewedAt), 'dd MMM yyyy')}
+                        {week.submissionStatus === 'APPROVED' ? '✓ Approved by ' : '✗ Rejected by '}
                       </Text>
-                    )}
-                  </View>
-                )}
+                      <Text style={{ fontSize: 10, color: '#1e40af', fontWeight: '600' }}>
+                        {week.reviewedByName}
+                      </Text>
+                      {week.reviewedAt && (
+                        <Text style={{ fontSize: 10, color: '#64748b' }}>
+                          {' on '}
+                          {format(parseISO(week.reviewedAt), 'dd MMM yyyy')}
+                        </Text>
+                      )}
+                    </View>
+                  )}
               </View>
             )}
           </View>

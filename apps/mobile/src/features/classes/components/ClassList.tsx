@@ -30,12 +30,13 @@ import {
   CLASS_FILTER_FIELDS,
   getClassFilterLabels,
 } from '@/components/filters';
-import { useClasses, useDeleteClass, useRestoreClass } from '../hooks/use-classes';
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm';
 import { useListScroll } from '@/hooks/useListScroll';
 import { useAuthStore } from '@/lib/auth-store';
 import { layoutStyles, listStyles } from '@/styles';
 import { isAdminRole } from '@/utils/role-utils';
+
+import { useClasses, useDeleteClass, useRestoreClass } from '../hooks/use-classes';
 
 const adminTheme = getRoleThemeColors('admin');
 

@@ -94,7 +94,7 @@ const managementItemsConfig: ManagementItem[] = [
 
 export default function ManagementScreen() {
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user: _user } = useAuthStore();
   const { profileImageUrl } = useProfileImageUrl();
 
   const { data: teachersData } = useTeachers({ page_size: 1 });
@@ -184,7 +184,10 @@ export default function ManagementScreen() {
                 <Text style={styles.iconLabel} numberOfLines={1}>
                   {item.title}
                 </Text>
-                {(item.id === 'teachers' || item.id === 'students' || item.id === 'classes' || item.id === 'subjects') && (
+                {(item.id === 'teachers' ||
+                  item.id === 'students' ||
+                  item.id === 'classes' ||
+                  item.id === 'subjects') && (
                   <View style={styles.countBadge}>
                     <Text style={[styles.iconCount, { color: item.gradient[0] }]}>
                       {counts[item.id]?.toLocaleString() ?? '...'}

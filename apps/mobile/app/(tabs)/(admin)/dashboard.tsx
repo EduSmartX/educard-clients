@@ -166,40 +166,43 @@ export default function AdminDashboard() {
   }, [attendanceStats]);
 
   // Build stats configuration with current values
-  const statsConfig: StatCardProps[] = useMemo(() => [
-    {
-      id: 'students',
-      title: 'Students',
-      value: studentsData?.totalCount?.toLocaleString() ?? '0',
-      icon: GraduationCap,
-      gradient: ['#667eea', '#764ba2', '#8b5cf6'] as const,
-      shadowColor: '#764ba2',
-    },
-    {
-      id: 'teachers',
-      title: 'Teachers',
-      value: teachersData?.totalCount?.toLocaleString() ?? '0',
-      icon: Users,
-      gradient: ['#06b6d4', '#0891b2', '#0e7490'] as const,
-      shadowColor: '#0891b2',
-    },
-    {
-      id: 'classes',
-      title: 'Classes',
-      value: classesData?.totalCount?.toLocaleString() ?? '0',
-      icon: BookOpen,
-      gradient: ['#10b981', '#059669', '#047857'] as const,
-      shadowColor: '#059669',
-    },
-    {
-      id: 'attendance',
-      title: 'Attendance',
-      value: getAttendanceDisplay(),
-      icon: Clock,
-      gradient: ['#f59e0b', '#d97706', '#b45309'] as const,
-      shadowColor: '#d97706',
-    },
-  ], [studentsData, teachersData, classesData, getAttendanceDisplay]);
+  const statsConfig: StatCardProps[] = useMemo(
+    () => [
+      {
+        id: 'students',
+        title: 'Students',
+        value: studentsData?.totalCount?.toLocaleString() ?? '0',
+        icon: GraduationCap,
+        gradient: ['#667eea', '#764ba2', '#8b5cf6'] as const,
+        shadowColor: '#764ba2',
+      },
+      {
+        id: 'teachers',
+        title: 'Teachers',
+        value: teachersData?.totalCount?.toLocaleString() ?? '0',
+        icon: Users,
+        gradient: ['#06b6d4', '#0891b2', '#0e7490'] as const,
+        shadowColor: '#0891b2',
+      },
+      {
+        id: 'classes',
+        title: 'Classes',
+        value: classesData?.totalCount?.toLocaleString() ?? '0',
+        icon: BookOpen,
+        gradient: ['#10b981', '#059669', '#047857'] as const,
+        shadowColor: '#059669',
+      },
+      {
+        id: 'attendance',
+        title: 'Attendance',
+        value: getAttendanceDisplay(),
+        icon: Clock,
+        gradient: ['#f59e0b', '#d97706', '#b45309'] as const,
+        shadowColor: '#d97706',
+      },
+    ],
+    [studentsData, teachersData, classesData, getAttendanceDisplay]
+  );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -328,11 +331,7 @@ export default function AdminDashboard() {
         </Animated.View>
 
         {/* Today's Schedule (uses shared component) */}
-        <TodaySchedule
-          timetableData={timetableData}
-          isLoading={loadingTimetable}
-          maxDisplay={4}
-        />
+        <TodaySchedule timetableData={timetableData} isLoading={loadingTimetable} maxDisplay={4} />
 
         <View style={{ height: 100 }} />
       </ScrollView>

@@ -47,7 +47,7 @@ function RootLayoutNav() {
   // Handle navigation based on auth state
   useEffect(() => {
     if (!isInitialized || !isMounted) return;
-    
+
     // Prevent multiple navigations during state transitions
     if (isNavigating.current) return;
 
@@ -79,7 +79,8 @@ function RootLayoutNav() {
       }
 
       // Check if user is in wrong dashboard for their role
-      const needsRedirect = inAuthGroup || 
+      const needsRedirect =
+        inAuthGroup ||
         (isAdmin && !inAdminTabs) ||
         (isTeacher && !inEmployeeTabs) ||
         (isParent && !inParentTabs);

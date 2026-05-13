@@ -634,7 +634,13 @@ export default function SignupScreen() {
           >
             <Building2
               size={20}
-              color={errors.orgName ? '#ef4444' : focusedInput === 'orgName' ? Colors.primary[500] : Colors.gray[400]}
+              color={
+                errors.orgName
+                  ? '#ef4444'
+                  : focusedInput === 'orgName'
+                    ? Colors.primary[500]
+                    : Colors.gray[400]
+              }
             />
             <TextInput
               style={styles.input}
@@ -703,7 +709,13 @@ export default function SignupScreen() {
           >
             <Phone
               size={20}
-              color={errors.orgPhone ? '#ef4444' : focusedInput === 'orgPhone' ? Colors.primary[500] : Colors.gray[400]}
+              color={
+                errors.orgPhone
+                  ? '#ef4444'
+                  : focusedInput === 'orgPhone'
+                    ? Colors.primary[500]
+                    : Colors.gray[400]
+              }
             />
             <TextInput
               style={styles.input}
@@ -846,7 +858,13 @@ export default function SignupScreen() {
           >
             <User
               size={18}
-              color={errors.firstName ? '#ef4444' : focusedInput === 'firstName' ? Colors.primary[500] : Colors.gray[400]}
+              color={
+                errors.firstName
+                  ? '#ef4444'
+                  : focusedInput === 'firstName'
+                    ? Colors.primary[500]
+                    : Colors.gray[400]
+              }
             />
             <TextInput
               style={styles.input}
@@ -880,7 +898,13 @@ export default function SignupScreen() {
           >
             <User
               size={18}
-              color={errors.lastName ? '#ef4444' : focusedInput === 'lastName' ? Colors.primary[500] : Colors.gray[400]}
+              color={
+                errors.lastName
+                  ? '#ef4444'
+                  : focusedInput === 'lastName'
+                    ? Colors.primary[500]
+                    : Colors.gray[400]
+              }
             />
             <TextInput
               style={styles.input}
@@ -917,7 +941,13 @@ export default function SignupScreen() {
         >
           <Phone
             size={20}
-            color={errors.phoneNumber ? '#ef4444' : focusedInput === 'phone' ? Colors.primary[500] : Colors.gray[400]}
+            color={
+              errors.phoneNumber
+                ? '#ef4444'
+                : focusedInput === 'phone'
+                  ? Colors.primary[500]
+                  : Colors.gray[400]
+            }
           />
           <TextInput
             style={styles.input}
@@ -955,7 +985,13 @@ export default function SignupScreen() {
         >
           <Lock
             size={20}
-            color={errors.password ? '#ef4444' : focusedInput === 'password' ? Colors.primary[500] : Colors.gray[400]}
+            color={
+              errors.password
+                ? '#ef4444'
+                : focusedInput === 'password'
+                  ? Colors.primary[500]
+                  : Colors.gray[400]
+            }
           />
           <TextInput
             style={styles.input}
@@ -998,7 +1034,13 @@ export default function SignupScreen() {
         >
           <Lock
             size={20}
-            color={errors.confirmPassword ? '#ef4444' : focusedInput === 'confirmPassword' ? Colors.primary[500] : Colors.gray[400]}
+            color={
+              errors.confirmPassword
+                ? '#ef4444'
+                : focusedInput === 'confirmPassword'
+                  ? Colors.primary[500]
+                  : Colors.gray[400]
+            }
           />
           <TextInput
             style={styles.input}

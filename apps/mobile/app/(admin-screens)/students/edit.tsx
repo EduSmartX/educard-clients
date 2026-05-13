@@ -19,16 +19,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Save, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-} from 'react-native';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { ProfileAvatar } from '@/components/common/ProfileAvatar';
 import {
@@ -263,324 +256,324 @@ export default function EditStudentScreen() {
         extraScrollHeight={120}
         extraHeight={150}
       >
-          {/* Profile Avatar */}
-          <Animated.View
-            entering={FadeIn.delay(150)}
-            style={{ alignItems: 'center', marginBottom: 16 }}
-          >
-            <ProfileAvatar
-              name={`${form.first_name} ${form.last_name}`.trim()}
-              imageUri={localPhotoUri ?? student?.profile_photo_thumbnail}
-              size={90}
-              onPress={pickAndUpload}
-              isUploading={isPhotoUploading}
-              cacheVersion={dataUpdatedAt}
+        {/* Profile Avatar */}
+        <Animated.View
+          entering={FadeIn.delay(150)}
+          style={{ alignItems: 'center', marginBottom: 16 }}
+        >
+          <ProfileAvatar
+            name={`${form.first_name} ${form.last_name}`.trim()}
+            imageUri={localPhotoUri ?? student?.profile_photo_thumbnail}
+            size={90}
+            onPress={pickAndUpload}
+            isUploading={isPhotoUploading}
+            cacheVersion={dataUpdatedAt}
+          />
+          <Text style={{ marginTop: 8, fontSize: 18, fontWeight: '700', color: '#1e293b' }}>
+            {form.first_name} {form.last_name}
+          </Text>
+        </Animated.View>
+
+        <FormError message={apiError} onDismiss={() => setApiError(null)} />
+
+        <Animated.View entering={FadeInDown.delay(80)}>
+          <FormSection title="Class Assignment" icon="🏫">
+            <FormDropdown
+              label="Class"
+              required
+              options={classOptions}
+              value={form.class_id}
+              onChange={() => {}}
+              error={errors.class_id}
+              placeholder="Select a class"
+              searchable
+              disabled
             />
-            <Text style={{ marginTop: 8, fontSize: 18, fontWeight: '700', color: '#1e293b' }}>
-              {form.first_name} {form.last_name}
-            </Text>
-          </Animated.View>
+          </FormSection>
+        </Animated.View>
 
-          <FormError message={apiError} onDismiss={() => setApiError(null)} />
+        <Animated.View entering={FadeInDown.delay(120)}>
+          <FormSection title="Basic Information" icon="👤">
+            <FormInput
+              label="First Name"
+              required
+              value={form.first_name}
+              onChangeText={(v) => updateField('first_name', v)}
+              onBlurValidate={() => blurValidate('first_name')}
+              error={errors.first_name}
+              placeholder="Enter first name"
+            />
+            <FormInput
+              label="Last Name"
+              required
+              value={form.last_name}
+              onChangeText={(v) => updateField('last_name', v)}
+              onBlurValidate={() => blurValidate('last_name')}
+              error={errors.last_name}
+              placeholder="Enter last name"
+            />
+            <FormInput
+              label="Roll Number"
+              required
+              value={form.roll_number}
+              onChangeText={(v) => updateField('roll_number', v)}
+              onBlurValidate={() => blurValidate('roll_number')}
+              error={errors.roll_number}
+              placeholder="Enter roll number"
+            />
+            <FormInput
+              label="Email"
+              value={form.email}
+              onChangeText={(v) => updateField('email', v)}
+              onBlurValidate={() => blurValidate('email')}
+              error={errors.email}
+              placeholder="Enter email"
+              keyboardType="email-address"
+            />
+            <FormInput
+              label="Phone"
+              value={form.phone}
+              onChangeText={(v) => updateField('phone', v)}
+              onBlurValidate={() => blurValidate('phone')}
+              error={errors.phone}
+              placeholder="Enter phone"
+              keyboardType="phone-pad"
+              maxLength={10}
+            />
+            <FormSelect
+              label="Gender"
+              options={GENDER_OPTIONS.map((g) => ({
+                value: g.value,
+                label: `${g.value === 'M' ? '👨' : g.value === 'F' ? '👩' : '🧑'} ${g.label}`,
+              }))}
+              value={form.gender}
+              onChange={(v) => updateField('gender', v)}
+            />
+            <FormDropdown
+              label="Blood Group"
+              options={bloodGroupOpts}
+              value={form.blood_group}
+              onChange={(v) => updateField('blood_group', v)}
+              placeholder="Select blood group"
+            />
+            <FormDatePicker
+              label="Date of Birth"
+              value={form.date_of_birth}
+              onChange={(v) => updateField('date_of_birth', v)}
+            />
+          </FormSection>
+        </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(80)}>
-            <FormSection title="Class Assignment" icon="🏫">
-              <FormDropdown
-                label="Class"
-                required
-                options={classOptions}
-                value={form.class_id}
-                onChange={() => {}}
-                error={errors.class_id}
-                placeholder="Select a class"
-                searchable
-                disabled
-              />
-            </FormSection>
-          </Animated.View>
+        <Animated.View entering={FadeInDown.delay(180)}>
+          <FormSection title="Admission Information" icon="🎓">
+            <FormInput
+              label="Admission Number"
+              value={form.admission_number}
+              onChangeText={(v) => updateField('admission_number', v)}
+              placeholder="Enter admission number"
+            />
+            <FormDatePicker
+              label="Admission Date"
+              value={form.admission_date}
+              onChange={(v) => updateField('admission_date', v)}
+            />
+          </FormSection>
+        </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(120)}>
-            <FormSection title="Basic Information" icon="👤">
-              <FormInput
-                label="First Name"
-                required
-                value={form.first_name}
-                onChangeText={(v) => updateField('first_name', v)}
-                onBlurValidate={() => blurValidate('first_name')}
-                error={errors.first_name}
-                placeholder="Enter first name"
-              />
-              <FormInput
-                label="Last Name"
-                required
-                value={form.last_name}
-                onChangeText={(v) => updateField('last_name', v)}
-                onBlurValidate={() => blurValidate('last_name')}
-                error={errors.last_name}
-                placeholder="Enter last name"
-              />
-              <FormInput
-                label="Roll Number"
-                required
-                value={form.roll_number}
-                onChangeText={(v) => updateField('roll_number', v)}
-                onBlurValidate={() => blurValidate('roll_number')}
-                error={errors.roll_number}
-                placeholder="Enter roll number"
-              />
-              <FormInput
-                label="Email"
-                value={form.email}
-                onChangeText={(v) => updateField('email', v)}
-                onBlurValidate={() => blurValidate('email')}
-                error={errors.email}
-                placeholder="Enter email"
-                keyboardType="email-address"
-              />
-              <FormInput
-                label="Phone"
-                value={form.phone}
-                onChangeText={(v) => updateField('phone', v)}
-                onBlurValidate={() => blurValidate('phone')}
-                error={errors.phone}
-                placeholder="Enter phone"
-                keyboardType="phone-pad"
-                maxLength={10}
-              />
-              <FormSelect
-                label="Gender"
-                options={GENDER_OPTIONS.map((g) => ({
-                  value: g.value,
-                  label: `${g.value === 'M' ? '👨' : g.value === 'F' ? '👩' : '🧑'} ${g.label}`,
-                }))}
-                value={form.gender}
-                onChange={(v) => updateField('gender', v)}
-              />
-              <FormDropdown
-                label="Blood Group"
-                options={bloodGroupOpts}
-                value={form.blood_group}
-                onChange={(v) => updateField('blood_group', v)}
-                placeholder="Select blood group"
-              />
-              <FormDatePicker
-                label="Date of Birth"
-                value={form.date_of_birth}
-                onChange={(v) => updateField('date_of_birth', v)}
-              />
-            </FormSection>
-          </Animated.View>
+        <Animated.View entering={FadeInDown.delay(240)}>
+          <FormSection title="Guardian Information" icon="👨‍👩‍👦">
+            <FormInput
+              label="Guardian Name"
+              value={form.guardian_name}
+              onChangeText={(v) => updateField('guardian_name', v)}
+              placeholder="Enter guardian name"
+            />
+            <FormInput
+              label="Guardian Phone"
+              value={form.guardian_phone}
+              onChangeText={(v) => updateField('guardian_phone', v)}
+              onBlurValidate={() => blurValidate('guardian_phone')}
+              error={errors.guardian_phone}
+              placeholder="Enter guardian phone"
+              keyboardType="phone-pad"
+              maxLength={15}
+            />
+            <FormInput
+              label="Guardian Email"
+              value={form.guardian_email}
+              onChangeText={(v) => updateField('guardian_email', v)}
+              onBlurValidate={() => blurValidate('guardian_email')}
+              error={errors.guardian_email}
+              placeholder="Enter guardian email"
+              keyboardType="email-address"
+            />
+            <FormDropdown
+              label="Relationship"
+              options={relationOpts}
+              value={form.guardian_relationship}
+              onChange={(v) => updateField('guardian_relationship', v)}
+              placeholder="Select relationship"
+            />
+          </FormSection>
+        </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(180)}>
-            <FormSection title="Admission Information" icon="🎓">
-              <FormInput
-                label="Admission Number"
-                value={form.admission_number}
-                onChangeText={(v) => updateField('admission_number', v)}
-                placeholder="Enter admission number"
-              />
-              <FormDatePicker
-                label="Admission Date"
-                value={form.admission_date}
-                onChange={(v) => updateField('admission_date', v)}
-              />
-            </FormSection>
-          </Animated.View>
+        <Animated.View entering={FadeInDown.delay(300)}>
+          <FormSection title="Medical & Additional" icon="🏥">
+            <FormInput
+              label="Medical Conditions"
+              value={form.medical_conditions}
+              onChangeText={(v) => updateField('medical_conditions', v)}
+              placeholder="Any medical conditions"
+              multiline
+              numberOfLines={3}
+            />
+            <FormInput
+              label="Description"
+              value={form.description}
+              onChangeText={(v) => updateField('description', v)}
+              placeholder="Additional notes"
+              multiline
+              numberOfLines={3}
+            />
+          </FormSection>
+        </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(240)}>
-            <FormSection title="Guardian Information" icon="👨‍👩‍👦">
-              <FormInput
-                label="Guardian Name"
-                value={form.guardian_name}
-                onChangeText={(v) => updateField('guardian_name', v)}
-                placeholder="Enter guardian name"
-              />
-              <FormInput
-                label="Guardian Phone"
-                value={form.guardian_phone}
-                onChangeText={(v) => updateField('guardian_phone', v)}
-                onBlurValidate={() => blurValidate('guardian_phone')}
-                error={errors.guardian_phone}
-                placeholder="Enter guardian phone"
-                keyboardType="phone-pad"
-                maxLength={15}
-              />
-              <FormInput
-                label="Guardian Email"
-                value={form.guardian_email}
-                onChangeText={(v) => updateField('guardian_email', v)}
-                onBlurValidate={() => blurValidate('guardian_email')}
-                error={errors.guardian_email}
-                placeholder="Enter guardian email"
-                keyboardType="email-address"
-              />
-              <FormDropdown
-                label="Relationship"
-                options={relationOpts}
-                value={form.guardian_relationship}
-                onChange={(v) => updateField('guardian_relationship', v)}
-                placeholder="Select relationship"
-              />
-            </FormSection>
-          </Animated.View>
+        <Animated.View entering={FadeInDown.delay(340)}>
+          <FormSection title="Emergency Contact" icon="🆘">
+            <FormInput
+              label="Emergency Contact Name"
+              value={form.emergency_contact_name}
+              onChangeText={(v) => updateField('emergency_contact_name', v)}
+              placeholder="Enter contact name"
+            />
+            <FormInput
+              label="Emergency Contact Phone"
+              value={form.emergency_contact_phone}
+              onChangeText={(v) => updateField('emergency_contact_phone', v)}
+              placeholder="Enter contact phone"
+              keyboardType="phone-pad"
+              maxLength={15}
+            />
+          </FormSection>
+        </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(300)}>
-            <FormSection title="Medical & Additional" icon="🏥">
-              <FormInput
-                label="Medical Conditions"
-                value={form.medical_conditions}
-                onChangeText={(v) => updateField('medical_conditions', v)}
-                placeholder="Any medical conditions"
-                multiline
-                numberOfLines={3}
-              />
-              <FormInput
-                label="Description"
-                value={form.description}
-                onChangeText={(v) => updateField('description', v)}
-                placeholder="Additional notes"
-                multiline
-                numberOfLines={3}
-              />
-            </FormSection>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(340)}>
-            <FormSection title="Emergency Contact" icon="🆘">
-              <FormInput
-                label="Emergency Contact Name"
-                value={form.emergency_contact_name}
-                onChangeText={(v) => updateField('emergency_contact_name', v)}
-                placeholder="Enter contact name"
-              />
-              <FormInput
-                label="Emergency Contact Phone"
-                value={form.emergency_contact_phone}
-                onChangeText={(v) => updateField('emergency_contact_phone', v)}
-                placeholder="Enter contact phone"
-                keyboardType="phone-pad"
-                maxLength={15}
-              />
-            </FormSection>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(380)}>
-            <TouchableOpacity
-              style={st.colH}
-              onPress={() => setPrevSchoolExpanded(!prevSchoolExpanded)}
-              activeOpacity={0.7}
-            >
-              <Text style={st.colT}>
-                🏫 Previous School <Text style={st.opt}>(Optional)</Text>
-              </Text>
-              {prevSchoolExpanded ? (
-                <ChevronUp size={20} color="#64748b" />
-              ) : (
-                <ChevronDown size={20} color="#64748b" />
-              )}
-            </TouchableOpacity>
-            {prevSchoolExpanded && (
-              <View style={st.colB}>
-                <FormInput
-                  label="Previous School Name"
-                  value={form.previous_school_name}
-                  onChangeText={(v) => updateField('previous_school_name', v)}
-                  placeholder="Enter previous school name"
-                />
-                <FormInput
-                  label="Previous School Class"
-                  value={form.previous_school_class}
-                  onChangeText={(v) => updateField('previous_school_class', v)}
-                  placeholder="Enter previous class"
-                />
-                <FormInput
-                  label="Previous School Address"
-                  value={form.previous_school_address}
-                  onChangeText={(v) => updateField('previous_school_address', v)}
-                  placeholder="Enter school address"
-                  multiline
-                  numberOfLines={3}
-                />
-              </View>
-            )}
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(420)}>
-            <TouchableOpacity
-              style={st.colH}
-              onPress={() => setAddressExpanded(!addressExpanded)}
-              activeOpacity={0.7}
-            >
-              <Text style={st.colT}>
-                📍 Address <Text style={st.opt}>(Optional)</Text>
-              </Text>
-              {addressExpanded ? (
-                <ChevronUp size={20} color="#64748b" />
-              ) : (
-                <ChevronDown size={20} color="#64748b" />
-              )}
-            </TouchableOpacity>
-            {addressExpanded && (
-              <View style={st.colB}>
-                <FormInput
-                  label="Street Address"
-                  value={form.street_address}
-                  onChangeText={(v) => updateField('street_address', v)}
-                  placeholder="Enter street address"
-                />
-                <FormInput
-                  label="City"
-                  value={form.city}
-                  onChangeText={(v) => updateField('city', v)}
-                  placeholder="Enter city"
-                />
-                <FormInput
-                  label="State"
-                  value={form.state}
-                  onChangeText={(v) => updateField('state', v)}
-                  placeholder="Enter state"
-                />
-                <FormInput
-                  label="Postal Code"
-                  value={form.postal_code}
-                  onChangeText={(v) => updateField('postal_code', v)}
-                  placeholder="Enter postal code"
-                  keyboardType="numeric"
-                  maxLength={6}
-                />
-                <FormInput
-                  label="Country"
-                  value={form.country}
-                  onChangeText={(v) => updateField('country', v)}
-                  placeholder="Enter country"
-                />
-              </View>
-            )}
-          </Animated.View>
-
+        <Animated.View entering={FadeInDown.delay(380)}>
           <TouchableOpacity
-            onPress={handleSubmit}
-            disabled={updateMutation.isPending}
-            style={st.subBtn}
-            activeOpacity={0.8}
+            style={st.colH}
+            onPress={() => setPrevSchoolExpanded(!prevSchoolExpanded)}
+            activeOpacity={0.7}
           >
-            <LinearGradient
-              colors={['#7c3aed', '#4f46e5']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={st.subGrad}
-            >
-              {updateMutation.isPending ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <>
-                  <Save size={20} color="#fff" />
-                  <Text style={st.subText}>Update Student</Text>
-                </>
-              )}
-            </LinearGradient>
+            <Text style={st.colT}>
+              🏫 Previous School <Text style={st.opt}>(Optional)</Text>
+            </Text>
+            {prevSchoolExpanded ? (
+              <ChevronUp size={20} color="#64748b" />
+            ) : (
+              <ChevronDown size={20} color="#64748b" />
+            )}
           </TouchableOpacity>
-        </KeyboardAwareScrollView>
+          {prevSchoolExpanded && (
+            <View style={st.colB}>
+              <FormInput
+                label="Previous School Name"
+                value={form.previous_school_name}
+                onChangeText={(v) => updateField('previous_school_name', v)}
+                placeholder="Enter previous school name"
+              />
+              <FormInput
+                label="Previous School Class"
+                value={form.previous_school_class}
+                onChangeText={(v) => updateField('previous_school_class', v)}
+                placeholder="Enter previous class"
+              />
+              <FormInput
+                label="Previous School Address"
+                value={form.previous_school_address}
+                onChangeText={(v) => updateField('previous_school_address', v)}
+                placeholder="Enter school address"
+                multiline
+                numberOfLines={3}
+              />
+            </View>
+          )}
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(420)}>
+          <TouchableOpacity
+            style={st.colH}
+            onPress={() => setAddressExpanded(!addressExpanded)}
+            activeOpacity={0.7}
+          >
+            <Text style={st.colT}>
+              📍 Address <Text style={st.opt}>(Optional)</Text>
+            </Text>
+            {addressExpanded ? (
+              <ChevronUp size={20} color="#64748b" />
+            ) : (
+              <ChevronDown size={20} color="#64748b" />
+            )}
+          </TouchableOpacity>
+          {addressExpanded && (
+            <View style={st.colB}>
+              <FormInput
+                label="Street Address"
+                value={form.street_address}
+                onChangeText={(v) => updateField('street_address', v)}
+                placeholder="Enter street address"
+              />
+              <FormInput
+                label="City"
+                value={form.city}
+                onChangeText={(v) => updateField('city', v)}
+                placeholder="Enter city"
+              />
+              <FormInput
+                label="State"
+                value={form.state}
+                onChangeText={(v) => updateField('state', v)}
+                placeholder="Enter state"
+              />
+              <FormInput
+                label="Postal Code"
+                value={form.postal_code}
+                onChangeText={(v) => updateField('postal_code', v)}
+                placeholder="Enter postal code"
+                keyboardType="numeric"
+                maxLength={6}
+              />
+              <FormInput
+                label="Country"
+                value={form.country}
+                onChangeText={(v) => updateField('country', v)}
+                placeholder="Enter country"
+              />
+            </View>
+          )}
+        </Animated.View>
+
+        <TouchableOpacity
+          onPress={handleSubmit}
+          disabled={updateMutation.isPending}
+          style={st.subBtn}
+          activeOpacity={0.8}
+        >
+          <LinearGradient
+            colors={['#7c3aed', '#4f46e5']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={st.subGrad}
+          >
+            {updateMutation.isPending ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Save size={20} color="#fff" />
+                <Text style={st.subText}>Update Student</Text>
+              </>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+      </KeyboardAwareScrollView>
     </View>
   );
 }

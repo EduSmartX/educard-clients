@@ -1,9 +1,9 @@
 /**
  * KeyboardAwareForm - Wrapper component that handles keyboard avoiding for forms
- * 
+ *
  * This component ensures that form inputs are visible when the keyboard is open,
  * especially on Android where KeyboardAvoidingView alone doesn't work well.
- * 
+ *
  * Features:
  * - Automatically scrolls to focused input
  * - Works on both iOS and Android
@@ -12,7 +12,13 @@
  */
 
 import React from 'react';
-import { Platform, StyleSheet, type ViewStyle, type StyleProp, type RefreshControlProps } from 'react-native';
+import {
+  Platform,
+  StyleSheet,
+  type ViewStyle,
+  type StyleProp,
+  type RefreshControlProps,
+} from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 interface KeyboardAwareFormProps {
@@ -59,7 +65,7 @@ export function KeyboardAwareForm({
   showsVerticalScrollIndicator = false,
   keyboardShouldPersistTaps = 'handled',
   onContentSizeChange,
-  onScroll,
+  onScroll: _onScroll,
   bounces = Platform.OS === 'ios',
   stickyHeader,
   refreshControl,

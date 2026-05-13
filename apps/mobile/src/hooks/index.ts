@@ -9,10 +9,10 @@ export { useDebounce } from '@educard/shared';
 
 // Mobile-specific hooks
 export { useRefreshOnFocus } from './useRefreshOnFocus';
-export { 
-  useMyProfilePhoto, 
-  useUserProfile, 
-  useUpdateProfile, 
+export {
+  useMyProfilePhoto,
+  useUserProfile,
+  useUpdateProfile,
   useInvalidateProfilePhoto,
   useProfileImageUrl,
 } from './useProfile';

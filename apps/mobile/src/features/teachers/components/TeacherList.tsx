@@ -49,11 +49,12 @@ import {
   getTeacherFilterLabels,
 } from '@/components/filters';
 import { getMediaUrl } from '@/constants/config';
-import { useTeachers, useDeleteTeacher, useRestoreTeacher } from '../hooks/use-teachers';
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm';
 import { useAuthStore } from '@/lib/auth-store';
 import { layoutStyles, headerStyles, stateStyles, listStyles } from '@/styles';
 import { isAdminRole } from '@/utils/role-utils';
+
+import { useTeachers, useDeleteTeacher, useRestoreTeacher } from '../hooks/use-teachers';
 
 const adminTheme = getRoleThemeColors('admin');
 const adminGradient = getRoleGradient('admin');

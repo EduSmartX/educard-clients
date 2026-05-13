@@ -44,7 +44,12 @@ const settingsOptions = [
     icon: Phone,
     route: '/(shared-screens)/change-phone',
   },
-  { id: 'help', title: 'Help & Support', icon: HelpCircle, route: '/(shared-screens)/help-support' },
+  {
+    id: 'help',
+    title: 'Help & Support',
+    icon: HelpCircle,
+    route: '/(shared-screens)/help-support',
+  },
 ];
 
 export default function ParentSettingsScreen() {

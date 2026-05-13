@@ -32,12 +32,13 @@ import {
   getSubjectFilterLabels,
 } from '@/components/filters';
 import { useClasses } from '@/features/classes/hooks/use-classes';
-import { useSubjects, useDeleteSubject, useRestoreSubject } from '../hooks/use-subjects';
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm';
 import { useListScroll } from '@/hooks/useListScroll';
 import { useAuthStore } from '@/lib/auth-store';
 import { layoutStyles, cardStyles, listStyles, textStyles } from '@/styles';
 import { isAdminRole, isTeacherRole } from '@/utils/role-utils';
+
+import { useSubjects, useDeleteSubject, useRestoreSubject } from '../hooks/use-subjects';
 
 const adminTheme = getRoleThemeColors('admin');
 

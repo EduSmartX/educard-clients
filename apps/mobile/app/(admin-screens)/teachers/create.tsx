@@ -28,8 +28,8 @@ import {
   ActivityIndicator,
   Switch,
 } from 'react-native';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { DeletedDuplicateModal } from '@/components/common/DeletedDuplicateModal';
 import {
@@ -264,282 +264,282 @@ export default function CreateTeacherScreen() {
         extraScrollHeight={120}
         extraHeight={150}
       >
-          <FormError message={apiError} onDismiss={() => setApiError(null)} />
+        <FormError message={apiError} onDismiss={() => setApiError(null)} />
 
-          <Animated.View entering={FadeInDown.delay(50)}>
-            <View style={s.toggle}>
-              <Text style={s.toggleLabel}>Quick Add (Only Required Fields)</Text>
-              <Switch
-                value={quickAdd}
-                onValueChange={setQuickAdd}
-                trackColor={{ false: '#e2e8f0', true: '#c4b5fd' }}
-                thumbColor={quickAdd ? '#7c3aed' : '#94a3b8'}
-              />
-            </View>
-          </Animated.View>
+        <Animated.View entering={FadeInDown.delay(50)}>
+          <View style={s.toggle}>
+            <Text style={s.toggleLabel}>Quick Add (Only Required Fields)</Text>
+            <Switch
+              value={quickAdd}
+              onValueChange={setQuickAdd}
+              trackColor={{ false: '#e2e8f0', true: '#c4b5fd' }}
+              thumbColor={quickAdd ? '#7c3aed' : '#94a3b8'}
+            />
+          </View>
+        </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(100)}>
-            <FormSection title="Basic Information" icon="👤">
-              <FormPhotoUpload
-                imageUri={photoUri}
-                onImageSelected={(uri, asset) => {
-                  setPhotoUri(uri);
-                  setPhotoAsset(asset);
-                }}
-                name={`${form.first_name} ${form.last_name}`.trim()}
-                gender={form.gender}
-              />
-              <FormInput
-                label="Employee ID"
-                required
-                value={form.employee_id}
-                onChangeText={(v) => updateField('employee_id', v)}
-                onBlurValidate={() => blurValidate('employee_id')}
-                error={errors.employee_id}
-                placeholder="Enter employee ID"
-              />
-              <FormInput
-                label="Email"
-                required
-                value={form.email}
-                onChangeText={(v) => updateField('email', v)}
-                onBlurValidate={() => blurValidate('email')}
-                error={errors.email}
-                placeholder="Enter email"
-                keyboardType="email-address"
-              />
-              <FormInput
-                label="First Name"
-                required
-                value={form.first_name}
-                onChangeText={(v) => updateField('first_name', v)}
-                onBlurValidate={() => blurValidate('first_name')}
-                error={errors.first_name}
-                placeholder="Enter first name"
-              />
-              <FormInput
-                label="Last Name"
-                required
-                value={form.last_name}
-                onChangeText={(v) => updateField('last_name', v)}
-                onBlurValidate={() => blurValidate('last_name')}
-                error={errors.last_name}
-                placeholder="Enter last name"
-              />
-              <FormSelect
-                label="Gender"
-                required
-                options={GENDER_OPTIONS.map((g) => ({
-                  value: g.value,
-                  label: `${g.value === 'M' ? '👨' : g.value === 'F' ? '👩' : '🧑'} ${g.label}`,
-                }))}
-                value={form.gender}
-                onChange={(v) => updateField('gender', v)}
-                error={errors.gender}
-              />
-              <FormDropdown
-                label="Organization Role"
-                required
-                options={roleOptions}
-                value={form.organization_role}
-                onChange={(v) => updateField('organization_role', v)}
-                error={errors.organization_role}
-                placeholder="Select organization role"
-                searchable
-                loading={rolesLoading}
-              />
-              {!quickAdd && (
-                <>
-                  <FormInput
-                    label="Phone"
-                    value={form.phone}
-                    onChangeText={(v) => updateField('phone', v)}
-                    onBlurValidate={() => blurValidate('phone')}
-                    error={errors.phone}
-                    placeholder="Enter phone number"
-                    keyboardType="phone-pad"
-                    maxLength={10}
-                    hint="10-digit mobile number"
-                  />
-                  <FormDropdown
-                    label="Blood Group"
-                    options={bloodGroupOpts}
-                    value={form.blood_group}
-                    onChange={(v) => updateField('blood_group', v)}
-                    placeholder="Select blood group"
-                  />
-                  <FormDatePicker
-                    label="Date of Birth"
-                    value={form.date_of_birth}
-                    onChange={(v) => updateField('date_of_birth', v)}
-                  />
-                </>
-              )}
-            </FormSection>
-          </Animated.View>
-
-          {!quickAdd && (
-            <Animated.View entering={FadeInDown.delay(200)}>
-              <FormSection title="Professional Details" icon="💼">
+        <Animated.View entering={FadeInDown.delay(100)}>
+          <FormSection title="Basic Information" icon="👤">
+            <FormPhotoUpload
+              imageUri={photoUri}
+              onImageSelected={(uri, asset) => {
+                setPhotoUri(uri);
+                setPhotoAsset(asset);
+              }}
+              name={`${form.first_name} ${form.last_name}`.trim()}
+              gender={form.gender}
+            />
+            <FormInput
+              label="Employee ID"
+              required
+              value={form.employee_id}
+              onChangeText={(v) => updateField('employee_id', v)}
+              onBlurValidate={() => blurValidate('employee_id')}
+              error={errors.employee_id}
+              placeholder="Enter employee ID"
+            />
+            <FormInput
+              label="Email"
+              required
+              value={form.email}
+              onChangeText={(v) => updateField('email', v)}
+              onBlurValidate={() => blurValidate('email')}
+              error={errors.email}
+              placeholder="Enter email"
+              keyboardType="email-address"
+            />
+            <FormInput
+              label="First Name"
+              required
+              value={form.first_name}
+              onChangeText={(v) => updateField('first_name', v)}
+              onBlurValidate={() => blurValidate('first_name')}
+              error={errors.first_name}
+              placeholder="Enter first name"
+            />
+            <FormInput
+              label="Last Name"
+              required
+              value={form.last_name}
+              onChangeText={(v) => updateField('last_name', v)}
+              onBlurValidate={() => blurValidate('last_name')}
+              error={errors.last_name}
+              placeholder="Enter last name"
+            />
+            <FormSelect
+              label="Gender"
+              required
+              options={GENDER_OPTIONS.map((g) => ({
+                value: g.value,
+                label: `${g.value === 'M' ? '👨' : g.value === 'F' ? '👩' : '🧑'} ${g.label}`,
+              }))}
+              value={form.gender}
+              onChange={(v) => updateField('gender', v)}
+              error={errors.gender}
+            />
+            <FormDropdown
+              label="Organization Role"
+              required
+              options={roleOptions}
+              value={form.organization_role}
+              onChange={(v) => updateField('organization_role', v)}
+              error={errors.organization_role}
+              placeholder="Select organization role"
+              searchable
+              loading={rolesLoading}
+            />
+            {!quickAdd && (
+              <>
                 <FormInput
-                  label="Designation"
-                  value={form.designation}
-                  onChangeText={(v) => updateField('designation', v)}
-                  placeholder="e.g. Senior Teacher"
-                />
-                <FormInput
-                  label="Qualification"
-                  value={form.highest_qualification}
-                  onChangeText={(v) => updateField('highest_qualification', v)}
-                  placeholder="e.g. M.Ed, B.Sc"
-                />
-                <FormInput
-                  label="Specialization"
-                  value={form.specialization}
-                  onChangeText={(v) => updateField('specialization', v)}
-                  placeholder="e.g. Mathematics, Science"
-                />
-                <FormInput
-                  label="Experience (Years)"
-                  value={form.experience_years}
-                  onChangeText={(v) => updateField('experience_years', v)}
-                  onBlurValidate={() => blurValidate('experience_years')}
-                  error={errors.experience_years}
-                  placeholder="Years of experience"
-                  keyboardType="numeric"
-                  maxLength={2}
+                  label="Phone"
+                  value={form.phone}
+                  onChangeText={(v) => updateField('phone', v)}
+                  onBlurValidate={() => blurValidate('phone')}
+                  error={errors.phone}
+                  placeholder="Enter phone number"
+                  keyboardType="phone-pad"
+                  maxLength={10}
+                  hint="10-digit mobile number"
                 />
                 <FormDropdown
-                  label="Supervisor"
-                  options={supervisorOptions}
-                  value={form.supervisor_email}
-                  onChange={(v) => updateField('supervisor_email', v)}
-                  error={errors.supervisor_email}
-                  placeholder="Select supervisor"
-                  searchable
-                  loading={supervisorsLoading}
+                  label="Blood Group"
+                  options={bloodGroupOpts}
+                  value={form.blood_group}
+                  onChange={(v) => updateField('blood_group', v)}
+                  placeholder="Select blood group"
                 />
-
-                {/* Subjects Multi-Select */}
-                <FormMultiSelect
-                  label="Subjects to Teach"
-                  options={subjectOptions}
-                  value={form.subjects}
-                  onChange={(v) => updateField('subjects', v)}
-                  placeholder="Select subjects..."
-                  searchable
-                />
-
                 <FormDatePicker
-                  label="Date of Joining"
-                  value={form.joining_date}
-                  onChange={(v) => updateField('joining_date', v)}
+                  label="Date of Birth"
+                  value={form.date_of_birth}
+                  onChange={(v) => updateField('date_of_birth', v)}
                 />
-              </FormSection>
-            </Animated.View>
-          )}
+              </>
+            )}
+          </FormSection>
+        </Animated.View>
 
-          {!quickAdd && (
-            <Animated.View entering={FadeInDown.delay(300)}>
-              <FormSection title="Emergency Contact" icon="🆘">
-                <FormInput
-                  label="Emergency Contact Name"
-                  value={form.emergency_contact_name}
-                  onChangeText={(v) => updateField('emergency_contact_name', v)}
-                  placeholder="Enter contact name"
-                />
-                <FormInput
-                  label="Emergency Contact Phone"
-                  value={form.emergency_contact_number}
-                  onChangeText={(v) => updateField('emergency_contact_number', v)}
-                  onBlurValidate={() => blurValidate('emergency_contact_number')}
-                  error={errors.emergency_contact_number}
-                  placeholder="Enter contact phone"
-                  keyboardType="phone-pad"
-                  maxLength={15}
-                />
-              </FormSection>
-            </Animated.View>
-          )}
+        {!quickAdd && (
+          <Animated.View entering={FadeInDown.delay(200)}>
+            <FormSection title="Professional Details" icon="💼">
+              <FormInput
+                label="Designation"
+                value={form.designation}
+                onChangeText={(v) => updateField('designation', v)}
+                placeholder="e.g. Senior Teacher"
+              />
+              <FormInput
+                label="Qualification"
+                value={form.highest_qualification}
+                onChangeText={(v) => updateField('highest_qualification', v)}
+                placeholder="e.g. M.Ed, B.Sc"
+              />
+              <FormInput
+                label="Specialization"
+                value={form.specialization}
+                onChangeText={(v) => updateField('specialization', v)}
+                placeholder="e.g. Mathematics, Science"
+              />
+              <FormInput
+                label="Experience (Years)"
+                value={form.experience_years}
+                onChangeText={(v) => updateField('experience_years', v)}
+                onBlurValidate={() => blurValidate('experience_years')}
+                error={errors.experience_years}
+                placeholder="Years of experience"
+                keyboardType="numeric"
+                maxLength={2}
+              />
+              <FormDropdown
+                label="Supervisor"
+                options={supervisorOptions}
+                value={form.supervisor_email}
+                onChange={(v) => updateField('supervisor_email', v)}
+                error={errors.supervisor_email}
+                placeholder="Select supervisor"
+                searchable
+                loading={supervisorsLoading}
+              />
 
-          {!quickAdd && (
-            <Animated.View entering={FadeInDown.delay(400)}>
-              <TouchableOpacity
-                style={s.collapseHead}
-                onPress={() => setAddressExpanded(!addressExpanded)}
-                activeOpacity={0.7}
-              >
-                <Text style={s.collapseTitle}>
-                  📍 Address <Text style={s.optText}>(Optional)</Text>
-                </Text>
-                {addressExpanded ? (
-                  <ChevronUp size={20} color="#64748b" />
-                ) : (
-                  <ChevronDown size={20} color="#64748b" />
-                )}
-              </TouchableOpacity>
-              {addressExpanded && (
-                <View style={s.collapseBody}>
-                  <FormInput
-                    label="Street Address"
-                    value={form.street_address}
-                    onChangeText={(v) => updateField('street_address', v)}
-                    placeholder="Enter street address"
-                  />
-                  <FormInput
-                    label="City"
-                    value={form.city}
-                    onChangeText={(v) => updateField('city', v)}
-                    placeholder="Enter city"
-                  />
-                  <FormInput
-                    label="State"
-                    value={form.state}
-                    onChangeText={(v) => updateField('state', v)}
-                    placeholder="Enter state"
-                  />
-                  <FormInput
-                    label="Postal Code"
-                    value={form.postal_code}
-                    onChangeText={(v) => updateField('postal_code', v)}
-                    placeholder="Enter postal code"
-                    keyboardType="numeric"
-                    maxLength={6}
-                  />
-                  <FormInput
-                    label="Country"
-                    value={form.country}
-                    onChangeText={(v) => updateField('country', v)}
-                    placeholder="Enter country"
-                  />
-                </View>
-              )}
-            </Animated.View>
-          )}
+              {/* Subjects Multi-Select */}
+              <FormMultiSelect
+                label="Subjects to Teach"
+                options={subjectOptions}
+                value={form.subjects}
+                onChange={(v) => updateField('subjects', v)}
+                placeholder="Select subjects..."
+                searchable
+              />
 
-          <TouchableOpacity
-            onPress={handleSubmit}
-            disabled={createMutation.isPending}
-            style={s.submitBtn}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={['#7c3aed', '#4f46e5']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={s.submitGrad}
+              <FormDatePicker
+                label="Date of Joining"
+                value={form.joining_date}
+                onChange={(v) => updateField('joining_date', v)}
+              />
+            </FormSection>
+          </Animated.View>
+        )}
+
+        {!quickAdd && (
+          <Animated.View entering={FadeInDown.delay(300)}>
+            <FormSection title="Emergency Contact" icon="🆘">
+              <FormInput
+                label="Emergency Contact Name"
+                value={form.emergency_contact_name}
+                onChangeText={(v) => updateField('emergency_contact_name', v)}
+                placeholder="Enter contact name"
+              />
+              <FormInput
+                label="Emergency Contact Phone"
+                value={form.emergency_contact_number}
+                onChangeText={(v) => updateField('emergency_contact_number', v)}
+                onBlurValidate={() => blurValidate('emergency_contact_number')}
+                error={errors.emergency_contact_number}
+                placeholder="Enter contact phone"
+                keyboardType="phone-pad"
+                maxLength={15}
+              />
+            </FormSection>
+          </Animated.View>
+        )}
+
+        {!quickAdd && (
+          <Animated.View entering={FadeInDown.delay(400)}>
+            <TouchableOpacity
+              style={s.collapseHead}
+              onPress={() => setAddressExpanded(!addressExpanded)}
+              activeOpacity={0.7}
             >
-              {createMutation.isPending ? (
-                <ActivityIndicator color="#fff" />
+              <Text style={s.collapseTitle}>
+                📍 Address <Text style={s.optText}>(Optional)</Text>
+              </Text>
+              {addressExpanded ? (
+                <ChevronUp size={20} color="#64748b" />
               ) : (
-                <>
-                  <Save size={20} color="#fff" />
-                  <Text style={s.submitText}>Create Teacher</Text>
-                </>
+                <ChevronDown size={20} color="#64748b" />
               )}
-            </LinearGradient>
-          </TouchableOpacity>
-        </KeyboardAwareScrollView>
+            </TouchableOpacity>
+            {addressExpanded && (
+              <View style={s.collapseBody}>
+                <FormInput
+                  label="Street Address"
+                  value={form.street_address}
+                  onChangeText={(v) => updateField('street_address', v)}
+                  placeholder="Enter street address"
+                />
+                <FormInput
+                  label="City"
+                  value={form.city}
+                  onChangeText={(v) => updateField('city', v)}
+                  placeholder="Enter city"
+                />
+                <FormInput
+                  label="State"
+                  value={form.state}
+                  onChangeText={(v) => updateField('state', v)}
+                  placeholder="Enter state"
+                />
+                <FormInput
+                  label="Postal Code"
+                  value={form.postal_code}
+                  onChangeText={(v) => updateField('postal_code', v)}
+                  placeholder="Enter postal code"
+                  keyboardType="numeric"
+                  maxLength={6}
+                />
+                <FormInput
+                  label="Country"
+                  value={form.country}
+                  onChangeText={(v) => updateField('country', v)}
+                  placeholder="Enter country"
+                />
+              </View>
+            )}
+          </Animated.View>
+        )}
+
+        <TouchableOpacity
+          onPress={handleSubmit}
+          disabled={createMutation.isPending}
+          style={s.submitBtn}
+          activeOpacity={0.8}
+        >
+          <LinearGradient
+            colors={['#7c3aed', '#4f46e5']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={s.submitGrad}
+          >
+            {createMutation.isPending ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Save size={20} color="#fff" />
+                <Text style={s.submitText}>Create Teacher</Text>
+              </>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+      </KeyboardAwareScrollView>
 
       {/* Deleted Duplicate Modal */}
       <DeletedDuplicateModal

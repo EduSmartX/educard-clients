@@ -34,12 +34,13 @@ import {
 } from '@/components/filters';
 import { getMediaUrl } from '@/constants/config';
 import { useClasses } from '@/features/classes/hooks/use-classes';
-import { useStudents, useDeleteStudent, useRestoreStudent } from '../hooks/use-students';
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm';
 import { useListScroll } from '@/hooks/useListScroll';
 import { useAuthStore } from '@/lib/auth-store';
 import { layoutStyles, cardStyles, avatarStyles, listStyles, textStyles } from '@/styles';
 import { isAdminRole, isTeacherRole } from '@/utils/role-utils';
+
+import { useStudents, useDeleteStudent, useRestoreStudent } from '../hooks/use-students';
 
 const adminTheme = getRoleThemeColors('admin');
 

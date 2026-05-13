@@ -214,7 +214,10 @@ export default function LeaveApprovalsScreen() {
               </Text>
               <Text style={styles.reviewerName}>{item.reviewed_by_name}</Text>
               {item.reviewed_at && (
-                <Text style={styles.reviewerDate}> on {formatDate(item.reviewed_at.split('T')[0])}</Text>
+                <Text style={styles.reviewerDate}>
+                  {' '}
+                  on {formatDate(item.reviewed_at.split('T')[0])}
+                </Text>
               )}
             </View>
           )}
