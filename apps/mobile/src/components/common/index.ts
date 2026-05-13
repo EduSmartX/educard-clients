@@ -11,9 +11,12 @@ export { EmptyState as ListEmptyState } from './ListStates';
 export { EntityActions } from './EntityActions';
 export { DeletedDuplicateModal } from './DeletedDuplicateModal';
 export { ProfileAvatar } from './ProfileAvatar';
+export { HeaderProfileButton } from './HeaderProfileButton';
 
 // New Reusable UI Components
 export { FAB } from './FAB';
 export { BottomSheetModal } from './BottomSheetModal';
 export { ConfirmDialog } from './ConfirmDialog';
 export { SubmitButton, CancelButton, ButtonRow } from './SubmitButton';
+export { BulkUploadModal } from './BulkUploadModal';
+export type { BulkUploadError, BulkUploadResult, BulkUploadResponse } from './BulkUploadModal';

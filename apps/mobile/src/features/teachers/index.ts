@@ -24,3 +24,6 @@ export {
   useDeleteTeacher,
   useRestoreTeacher,
 } from './hooks/use-teachers';
+
+// Components
+export { TeacherList, type TeacherListProps } from './components';

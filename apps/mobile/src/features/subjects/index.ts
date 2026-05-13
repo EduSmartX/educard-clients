@@ -24,3 +24,6 @@ export {
   useDeleteSubject,
   useRestoreSubject,
 } from './hooks/use-subjects';
+
+// Components
+export { SubjectList, type SubjectListProps } from './components';

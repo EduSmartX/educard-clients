@@ -21,6 +21,8 @@ import {
   Eye,
   EyeOff,
   Phone,
+  ChevronDown,
+  AlertCircle,
 } from 'lucide-react-native';
 import { useState, useCallback } from 'react';
 import {
@@ -35,6 +37,8 @@ import {
   Image,
   ActivityIndicator,
   ImageSourcePropType,
+  Modal,
+  FlatList,
 } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 
@@ -46,6 +50,12 @@ import { useModal } from '@/components/ui';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const logoImage: ImageSourcePropType =
   require('../../assets/images/educard-logo.jpg') as ImageSourcePropType;
+
+const isValidPhone = (phone: string): boolean => {
+  if (!phone) return true;
+  const digits = phone.replace(/[\s\-()+"]/g, '');
+  return /^[6-9]\d{9}$/.test(digits);
+};
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -94,8 +104,24 @@ export default function SignupScreen() {
 
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
+  // Dropdown states
+  const [showOrgTypeDropdown, setShowOrgTypeDropdown] = useState(false);
+  const [showBoardDropdown, setShowBoardDropdown] = useState(false);
+
+  // Field errors
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   // Email validation
   const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  // Clear error on field change
+  const clearError = (field: string) => {
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[field];
+      return newErrors;
+    });
+  };
 
   // Step 1: Send OTPs
   const handleStep1Submit = useCallback(async () => {
@@ -216,31 +242,53 @@ export default function SignupScreen() {
 
   // Step 3: Organization Details
   const handleStep3Submit = useCallback(() => {
+    const newErrors: Record<string, string> = {};
+
     if (!orgName.trim()) {
-      modal.error('Error', 'Please enter organization name');
-      return;
+      newErrors.orgName = 'Organization name is required';
     }
     if (!orgType) {
-      modal.error('Error', 'Please select organization type');
+      newErrors.orgType = 'Please select organization type';
+    }
+    if (orgPhone && !isValidPhone(orgPhone)) {
+      newErrors.orgPhone = 'Phone must be a valid 10-digit mobile number';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+
+    setErrors({});
     setCurrentStep(4);
-  }, [orgName, orgType, modal]);
+  }, [orgName, orgType, orgPhone]);
 
   // Step 4: Final Registration
   const handleStep4Submit = useCallback(async () => {
-    if (!firstName.trim() || !lastName.trim()) {
-      modal.error('Error', 'Please enter your name');
-      return;
+    const newErrors: Record<string, string> = {};
+
+    if (!firstName.trim()) {
+      newErrors.firstName = 'First name is required';
+    }
+    if (!lastName.trim()) {
+      newErrors.lastName = 'Last name is required';
+    }
+    if (phoneNumber && !isValidPhone(phoneNumber)) {
+      newErrors.phoneNumber = 'Phone must be a valid 10-digit mobile number';
     }
     if (!password || password.length < 8) {
-      modal.error('Error', 'Password must be at least 8 characters');
-      return;
+      newErrors.password = 'Password must be at least 8 characters';
     }
     if (password !== confirmPassword) {
-      modal.error('Error', 'Passwords do not match');
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+
+    setErrors({});
 
     setIsLoading(true);
     try {
@@ -568,120 +616,231 @@ export default function SignupScreen() {
   );
 
   // Step 3: Organization Details
-  const renderStep3 = () => (
-    <Animated.View entering={FadeInUp.duration(400)} style={styles.stepContent}>
-      {/* Organization Name */}
-      <View style={styles.inputWrapper}>
-        <Text style={styles.inputLabel}>Organization Name *</Text>
-        <View style={[styles.inputContainer, focusedInput === 'orgName' && styles.inputFocused]}>
-          <Building2
-            size={20}
-            color={focusedInput === 'orgName' ? Colors.primary[500] : Colors.gray[400]}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="ABC International School"
-            placeholderTextColor={Colors.gray[400]}
-            value={orgName}
-            onChangeText={setOrgName}
-            onFocus={() => setFocusedInput('orgName')}
-            onBlur={() => setFocusedInput(null)}
-          />
+  const renderStep3 = () => {
+    const selectedOrgType = ORGANIZATION_TYPES.find((t) => t.value === orgType);
+    const selectedBoard = BOARD_AFFILIATIONS.find((b) => b.value === boardAffiliation);
+
+    return (
+      <Animated.View entering={FadeInUp.duration(400)} style={styles.stepContent}>
+        {/* Organization Name */}
+        <View style={styles.inputWrapper}>
+          <Text style={styles.inputLabel}>Organization Name *</Text>
+          <View
+            style={[
+              styles.inputContainer,
+              focusedInput === 'orgName' && styles.inputFocused,
+              errors.orgName && styles.inputError,
+            ]}
+          >
+            <Building2
+              size={20}
+              color={
+                errors.orgName
+                  ? '#ef4444'
+                  : focusedInput === 'orgName'
+                    ? Colors.primary[500]
+                    : Colors.gray[400]
+              }
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="ABC International School"
+              placeholderTextColor={Colors.gray[400]}
+              value={orgName}
+              onChangeText={(v) => {
+                setOrgName(v);
+                clearError('orgName');
+              }}
+              onFocus={() => setFocusedInput('orgName')}
+              onBlur={() => setFocusedInput(null)}
+            />
+          </View>
+          {errors.orgName && (
+            <View style={styles.errorRow}>
+              <AlertCircle size={14} color="#ef4444" />
+              <Text style={styles.errorText}>{errors.orgName}</Text>
+            </View>
+          )}
         </View>
-      </View>
 
-      {/* Organization Type */}
-      <View style={styles.inputWrapper}>
-        <Text style={styles.inputLabel}>Organization Type *</Text>
-        <View style={styles.pickerRow}>
-          {ORGANIZATION_TYPES.map((type) => (
-            <TouchableOpacity
-              key={type.value}
-              style={[styles.pickerOption, orgType === type.value && styles.pickerOptionSelected]}
-              onPress={() => setOrgType(type.value)}
-            >
-              <Text
-                style={[
-                  styles.pickerOptionText,
-                  orgType === type.value && styles.pickerOptionTextSelected,
-                ]}
-              >
-                {type.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        {/* Organization Type - Dropdown */}
+        <View style={styles.inputWrapper}>
+          <Text style={styles.inputLabel}>Organization Type *</Text>
+          <TouchableOpacity
+            style={[styles.dropdownButton, errors.orgType && styles.inputError]}
+            onPress={() => setShowOrgTypeDropdown(true)}
+          >
+            <Text style={selectedOrgType ? styles.dropdownText : styles.dropdownPlaceholder}>
+              {selectedOrgType?.label || 'Select organization type'}
+            </Text>
+            <ChevronDown size={20} color={Colors.gray[400]} />
+          </TouchableOpacity>
+          {errors.orgType && (
+            <View style={styles.errorRow}>
+              <AlertCircle size={14} color="#ef4444" />
+              <Text style={styles.errorText}>{errors.orgType}</Text>
+            </View>
+          )}
         </View>
-      </View>
 
-      {/* Board Affiliation */}
-      <View style={styles.inputWrapper}>
-        <Text style={styles.inputLabel}>Board Affiliation</Text>
-        <View style={styles.pickerRow}>
-          {BOARD_AFFILIATIONS.map((board) => (
-            <TouchableOpacity
-              key={board.value}
-              style={[
-                styles.pickerOption,
-                boardAffiliation === board.value && styles.pickerOptionSelected,
-              ]}
-              onPress={() => setBoardAffiliation(board.value)}
-            >
-              <Text
-                style={[
-                  styles.pickerOptionText,
-                  boardAffiliation === board.value && styles.pickerOptionTextSelected,
-                ]}
-              >
-                {board.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        {/* Board Affiliation - Dropdown */}
+        <View style={styles.inputWrapper}>
+          <Text style={styles.inputLabel}>Board Affiliation</Text>
+          <TouchableOpacity
+            style={styles.dropdownButton}
+            onPress={() => setShowBoardDropdown(true)}
+          >
+            <Text style={selectedBoard ? styles.dropdownText : styles.dropdownPlaceholder}>
+              {selectedBoard?.label || 'Select board affiliation'}
+            </Text>
+            <ChevronDown size={20} color={Colors.gray[400]} />
+          </TouchableOpacity>
         </View>
-      </View>
 
-      {/* Organization Phone */}
-      <View style={styles.inputWrapper}>
-        <Text style={styles.inputLabel}>Organization Phone</Text>
-        <View style={[styles.inputContainer, focusedInput === 'orgPhone' && styles.inputFocused]}>
-          <Phone
-            size={20}
-            color={focusedInput === 'orgPhone' ? Colors.primary[500] : Colors.gray[400]}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="+91 98765 43210"
-            placeholderTextColor={Colors.gray[400]}
-            value={orgPhone}
-            onChangeText={setOrgPhone}
-            keyboardType="phone-pad"
-            onFocus={() => setFocusedInput('orgPhone')}
-            onBlur={() => setFocusedInput(null)}
-          />
+        {/* Organization Phone */}
+        <View style={styles.inputWrapper}>
+          <Text style={styles.inputLabel}>Organization Phone</Text>
+          <View
+            style={[
+              styles.inputContainer,
+              focusedInput === 'orgPhone' && styles.inputFocused,
+              errors.orgPhone && styles.inputError,
+            ]}
+          >
+            <Phone
+              size={20}
+              color={
+                errors.orgPhone
+                  ? '#ef4444'
+                  : focusedInput === 'orgPhone'
+                    ? Colors.primary[500]
+                    : Colors.gray[400]
+              }
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="9876543210"
+              placeholderTextColor={Colors.gray[400]}
+              value={orgPhone}
+              onChangeText={(v) => {
+                const digits = v.replace(/\D/g, '').slice(0, 10);
+                setOrgPhone(digits);
+                clearError('orgPhone');
+              }}
+              keyboardType="phone-pad"
+              maxLength={10}
+              onFocus={() => setFocusedInput('orgPhone')}
+              onBlur={() => setFocusedInput(null)}
+            />
+          </View>
+          {errors.orgPhone && (
+            <View style={styles.errorRow}>
+              <AlertCircle size={14} color="#ef4444" />
+              <Text style={styles.errorText}>{errors.orgPhone}</Text>
+            </View>
+          )}
         </View>
-      </View>
 
-      {/* Organization Address - Using reusable AddressForm component */}
-      <AddressForm
-        values={orgAddress}
-        onChange={handleAddressChange}
-        required={false}
-        showHeader={true}
-        showLocationButton={true}
-      />
+        {/* Organization Address - Using reusable AddressForm component */}
+        <AddressForm
+          values={orgAddress}
+          onChange={handleAddressChange}
+          required={false}
+          showHeader={true}
+          showLocationButton={true}
+        />
 
-      {/* Action Buttons */}
-      <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.secondaryButton} onPress={goBack}>
-          <ArrowLeft size={20} color={Colors.gray[600]} />
-          <Text style={styles.secondaryButtonText}>Back</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.primaryButton} onPress={handleStep3Submit}>
-          <Text style={styles.primaryButtonText}>Continue</Text>
-          <ArrowRight size={20} color="#fff" />
-        </TouchableOpacity>
-      </View>
-    </Animated.View>
-  );
+        {/* Organization Type Dropdown Modal */}
+        <Modal visible={showOrgTypeDropdown} transparent animationType="fade">
+          <TouchableOpacity
+            style={styles.dropdownOverlay}
+            activeOpacity={1}
+            onPress={() => setShowOrgTypeDropdown(false)}
+          >
+            <View style={styles.dropdownModal}>
+              <Text style={styles.dropdownTitle}>Select Organization Type</Text>
+              <FlatList
+                data={ORGANIZATION_TYPES}
+                keyExtractor={(item) => item.value}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[
+                      styles.dropdownItem,
+                      orgType === item.value && styles.dropdownItemSelected,
+                    ]}
+                    onPress={() => {
+                      setOrgType(item.value);
+                      clearError('orgType');
+                      setShowOrgTypeDropdown(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.dropdownItemText,
+                        orgType === item.value && styles.dropdownItemTextSelected,
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          </TouchableOpacity>
+        </Modal>
+
+        {/* Board Affiliation Dropdown Modal */}
+        <Modal visible={showBoardDropdown} transparent animationType="fade">
+          <TouchableOpacity
+            style={styles.dropdownOverlay}
+            activeOpacity={1}
+            onPress={() => setShowBoardDropdown(false)}
+          >
+            <View style={styles.dropdownModal}>
+              <Text style={styles.dropdownTitle}>Select Board Affiliation</Text>
+              <FlatList
+                data={BOARD_AFFILIATIONS}
+                keyExtractor={(item) => item.value}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[
+                      styles.dropdownItem,
+                      boardAffiliation === item.value && styles.dropdownItemSelected,
+                    ]}
+                    onPress={() => {
+                      setBoardAffiliation(item.value);
+                      setShowBoardDropdown(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.dropdownItemText,
+                        boardAffiliation === item.value && styles.dropdownItemTextSelected,
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          </TouchableOpacity>
+        </Modal>
+
+        {/* Action Buttons */}
+        <View style={styles.buttonRow}>
+          <TouchableOpacity style={styles.secondaryButton} onPress={goBack}>
+            <ArrowLeft size={20} color={Colors.gray[600]} />
+            <Text style={styles.secondaryButtonText}>Back</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.primaryButton} onPress={handleStep3Submit}>
+            <Text style={styles.primaryButtonText}>Continue</Text>
+            <ArrowRight size={20} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
+    );
+  };
 
   // Step 4: Admin Details
   const renderStep4 = () => (
@@ -691,80 +850,158 @@ export default function SignupScreen() {
         <View style={[styles.inputWrapper, styles.halfWidth]}>
           <Text style={styles.inputLabel}>First Name *</Text>
           <View
-            style={[styles.inputContainer, focusedInput === 'firstName' && styles.inputFocused]}
+            style={[
+              styles.inputContainer,
+              focusedInput === 'firstName' && styles.inputFocused,
+              errors.firstName && styles.inputError,
+            ]}
           >
             <User
               size={18}
-              color={focusedInput === 'firstName' ? Colors.primary[500] : Colors.gray[400]}
+              color={
+                errors.firstName
+                  ? '#ef4444'
+                  : focusedInput === 'firstName'
+                    ? Colors.primary[500]
+                    : Colors.gray[400]
+              }
             />
             <TextInput
               style={styles.input}
               placeholder="John"
               placeholderTextColor={Colors.gray[400]}
               value={firstName}
-              onChangeText={setFirstName}
+              onChangeText={(v) => {
+                setFirstName(v);
+                clearError('firstName');
+              }}
               autoCapitalize="words"
               onFocus={() => setFocusedInput('firstName')}
               onBlur={() => setFocusedInput(null)}
             />
           </View>
+          {errors.firstName && (
+            <View style={styles.errorRow}>
+              <AlertCircle size={12} color="#ef4444" />
+              <Text style={styles.errorTextSmall}>{errors.firstName}</Text>
+            </View>
+          )}
         </View>
         <View style={[styles.inputWrapper, styles.halfWidth]}>
           <Text style={styles.inputLabel}>Last Name *</Text>
-          <View style={[styles.inputContainer, focusedInput === 'lastName' && styles.inputFocused]}>
+          <View
+            style={[
+              styles.inputContainer,
+              focusedInput === 'lastName' && styles.inputFocused,
+              errors.lastName && styles.inputError,
+            ]}
+          >
             <User
               size={18}
-              color={focusedInput === 'lastName' ? Colors.primary[500] : Colors.gray[400]}
+              color={
+                errors.lastName
+                  ? '#ef4444'
+                  : focusedInput === 'lastName'
+                    ? Colors.primary[500]
+                    : Colors.gray[400]
+              }
             />
             <TextInput
               style={styles.input}
               placeholder="Doe"
               placeholderTextColor={Colors.gray[400]}
               value={lastName}
-              onChangeText={setLastName}
+              onChangeText={(v) => {
+                setLastName(v);
+                clearError('lastName');
+              }}
               autoCapitalize="words"
               onFocus={() => setFocusedInput('lastName')}
               onBlur={() => setFocusedInput(null)}
             />
           </View>
+          {errors.lastName && (
+            <View style={styles.errorRow}>
+              <AlertCircle size={12} color="#ef4444" />
+              <Text style={styles.errorTextSmall}>{errors.lastName}</Text>
+            </View>
+          )}
         </View>
       </View>
 
       {/* Phone */}
       <View style={styles.inputWrapper}>
         <Text style={styles.inputLabel}>Phone Number</Text>
-        <View style={[styles.inputContainer, focusedInput === 'phone' && styles.inputFocused]}>
+        <View
+          style={[
+            styles.inputContainer,
+            focusedInput === 'phone' && styles.inputFocused,
+            errors.phoneNumber && styles.inputError,
+          ]}
+        >
           <Phone
             size={20}
-            color={focusedInput === 'phone' ? Colors.primary[500] : Colors.gray[400]}
+            color={
+              errors.phoneNumber
+                ? '#ef4444'
+                : focusedInput === 'phone'
+                  ? Colors.primary[500]
+                  : Colors.gray[400]
+            }
           />
           <TextInput
             style={styles.input}
-            placeholder="+91 98765 43210"
+            placeholder="9876543210"
             placeholderTextColor={Colors.gray[400]}
             value={phoneNumber}
-            onChangeText={setPhoneNumber}
+            onChangeText={(v) => {
+              const digits = v.replace(/\D/g, '').slice(0, 10);
+              setPhoneNumber(digits);
+              clearError('phoneNumber');
+            }}
             keyboardType="phone-pad"
+            maxLength={10}
             onFocus={() => setFocusedInput('phone')}
             onBlur={() => setFocusedInput(null)}
           />
         </View>
+        {errors.phoneNumber && (
+          <View style={styles.errorRow}>
+            <AlertCircle size={14} color="#ef4444" />
+            <Text style={styles.errorText}>{errors.phoneNumber}</Text>
+          </View>
+        )}
       </View>
 
       {/* Password */}
       <View style={styles.inputWrapper}>
         <Text style={styles.inputLabel}>Password *</Text>
-        <View style={[styles.inputContainer, focusedInput === 'password' && styles.inputFocused]}>
+        <View
+          style={[
+            styles.inputContainer,
+            focusedInput === 'password' && styles.inputFocused,
+            errors.password && styles.inputError,
+          ]}
+        >
           <Lock
             size={20}
-            color={focusedInput === 'password' ? Colors.primary[500] : Colors.gray[400]}
+            color={
+              errors.password
+                ? '#ef4444'
+                : focusedInput === 'password'
+                  ? Colors.primary[500]
+                  : Colors.gray[400]
+            }
           />
           <TextInput
             style={styles.input}
             placeholder="Create a strong password"
             placeholderTextColor={Colors.gray[400]}
             value={password}
-            onChangeText={setPassword}
+            onChangeText={(v) => {
+              setPassword(v);
+              clearError('password');
+            }}
             secureTextEntry={!showPassword}
             onFocus={() => setFocusedInput('password')}
             onBlur={() => setFocusedInput(null)}
@@ -777,24 +1014,43 @@ export default function SignupScreen() {
             )}
           </TouchableOpacity>
         </View>
+        {errors.password && (
+          <View style={styles.errorRow}>
+            <AlertCircle size={14} color="#ef4444" />
+            <Text style={styles.errorText}>{errors.password}</Text>
+          </View>
+        )}
       </View>
 
       {/* Confirm Password */}
       <View style={styles.inputWrapper}>
         <Text style={styles.inputLabel}>Confirm Password *</Text>
         <View
-          style={[styles.inputContainer, focusedInput === 'confirmPassword' && styles.inputFocused]}
+          style={[
+            styles.inputContainer,
+            focusedInput === 'confirmPassword' && styles.inputFocused,
+            errors.confirmPassword && styles.inputError,
+          ]}
         >
           <Lock
             size={20}
-            color={focusedInput === 'confirmPassword' ? Colors.primary[500] : Colors.gray[400]}
+            color={
+              errors.confirmPassword
+                ? '#ef4444'
+                : focusedInput === 'confirmPassword'
+                  ? Colors.primary[500]
+                  : Colors.gray[400]
+            }
           />
           <TextInput
             style={styles.input}
             placeholder="Confirm your password"
             placeholderTextColor={Colors.gray[400]}
             value={confirmPassword}
-            onChangeText={setConfirmPassword}
+            onChangeText={(v) => {
+              setConfirmPassword(v);
+              clearError('confirmPassword');
+            }}
             secureTextEntry={!showConfirmPassword}
             onFocus={() => setFocusedInput('confirmPassword')}
             onBlur={() => setFocusedInput(null)}
@@ -807,6 +1063,12 @@ export default function SignupScreen() {
             )}
           </TouchableOpacity>
         </View>
+        {errors.confirmPassword && (
+          <View style={styles.errorRow}>
+            <AlertCircle size={14} color="#ef4444" />
+            <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+          </View>
+        )}
       </View>
 
       {/* Action Buttons */}
@@ -1089,6 +1351,84 @@ const styles = StyleSheet.create({
   pickerOptionSelected: { backgroundColor: Colors.primary[50], borderColor: Colors.primary[500] },
   pickerOptionText: { fontSize: 14, fontWeight: '500', color: Colors.gray[600] },
   pickerOptionTextSelected: { color: Colors.primary[700], fontWeight: '600' },
+
+  // Dropdown styles
+  dropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderWidth: 1.5,
+    borderColor: Colors.gray[200],
+  },
+  dropdownText: {
+    fontSize: 15,
+    color: Colors.gray[800],
+  },
+  dropdownPlaceholder: {
+    fontSize: 15,
+    color: Colors.gray[400],
+  },
+  dropdownOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  dropdownModal: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    width: '100%',
+    maxHeight: 400,
+  },
+  dropdownTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.gray[800],
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  dropdownItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    marginBottom: 4,
+  },
+  dropdownItemSelected: {
+    backgroundColor: Colors.primary[50],
+  },
+  dropdownItemText: {
+    fontSize: 15,
+    color: Colors.gray[700],
+  },
+  dropdownItemTextSelected: {
+    color: Colors.primary[600],
+    fontWeight: '600',
+  },
+
+  // Error styles
+  inputError: {
+    borderColor: '#ef4444',
+  },
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 6,
+  },
+  errorText: {
+    fontSize: 12,
+    color: '#ef4444',
+  },
+  errorTextSmall: {
+    fontSize: 11,
+    color: '#ef4444',
+  },
 
   // Rows
   row: { flexDirection: 'row', gap: 12 },

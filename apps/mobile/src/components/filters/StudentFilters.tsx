@@ -5,7 +5,7 @@
 
 import { useMemo } from 'react';
 
-import { useClasses } from '@/features/classes';
+import { useClasses } from '@/features/classes/hooks/use-classes';
 
 import { FilterField } from './FilterModal';
 import {

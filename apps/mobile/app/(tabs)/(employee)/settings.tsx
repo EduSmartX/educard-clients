@@ -1,9 +1,11 @@
 /**
  * Employee Settings Screen
- * App and account settings for teachers
+ * Matches admin settings layout with role-based access (Teachers see App section only)
  */
 
+import { getRoleGradient } from '@educard/shared';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
   User,
@@ -12,51 +14,40 @@ import {
   HelpCircle,
   LogOut,
   ChevronRight,
+  Info,
   Mail,
   Phone,
+  type LucideIcon,
 } from 'lucide-react-native';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, ScrollView, StyleSheet } from 'react-native';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { Screen, Header } from '@/components/layout';
-import { Card, Avatar } from '@/components/ui';
-import { colors } from '@/constants/colors';
-import { getMediaUrl } from '@/constants/config';
-import { useMyProfilePhoto } from '@/hooks';
+import { useProfileImageUrl } from '@/hooks';
 import { useAuthStore } from '@/lib/auth-store';
+import { headerStyles, layoutStyles } from '@/styles';
 
-const settingsOptions = [
-  { id: 'profile', title: 'Edit Profile', icon: User, route: '/(admin-screens)/profile' },
-  { id: 'notifications', title: 'Notifications', icon: Bell, route: '/settings/notifications' },
-  {
-    id: 'security',
-    title: 'Change Password',
-    icon: Shield,
-    route: '/(admin-screens)/change-password',
-  },
-  {
-    id: 'change-email',
-    title: 'Change Email',
-    icon: Mail,
-    route: '/(admin-screens)/change-email',
-  },
-  {
-    id: 'change-phone',
-    title: 'Change Phone',
-    icon: Phone,
-    route: '/(admin-screens)/change-phone',
-  },
-  { id: 'help', title: 'Help & Support', icon: HelpCircle, route: '/(admin-screens)/help-support' },
-];
+const adminGradient = getRoleGradient('admin');
+
+interface SettingItem {
+  id: string;
+  title: string;
+  subtitle?: string;
+  icon: LucideIcon;
+  iconColor: string;
+  iconBg: string;
+  route?: string;
+  action?: () => void;
+}
+
+interface SettingSection {
+  title: string;
+  items: SettingItem[];
+}
 
 export default function EmployeeSettingsScreen() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
-  const { data: profilePhoto } = useMyProfilePhoto();
-
-  const profileImageUrl =
-    getMediaUrl(profilePhoto?.thumbnail_url) ??
-    getMediaUrl(profilePhoto?.url) ??
-    getMediaUrl(user?.profile_image);
+  const { profileImageUrl } = useProfileImageUrl();
 
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
@@ -65,74 +56,246 @@ export default function EmployeeSettingsScreen() {
     ]);
   };
 
-  return (
-    <Screen>
-      <Header title="Settings" showBack={false} />
+  // App section - for all users
+  const appSection: SettingSection = {
+    title: 'APP',
+    items: [
+      {
+        id: 'profile',
+        title: 'Edit Profile',
+        subtitle: 'Update your information',
+        icon: User,
+        iconColor: '#2563eb',
+        iconBg: '#eff6ff',
+        route: '/(shared-screens)/profile',
+      },
+      {
+        id: 'notifications',
+        title: 'Notifications',
+        subtitle: 'Manage notification preferences',
+        icon: Bell,
+        iconColor: '#f59e0b',
+        iconBg: '#fef3c7',
+      },
+      {
+        id: 'security',
+        title: 'Change Password',
+        subtitle: 'Update your password',
+        icon: Shield,
+        iconColor: '#059669',
+        iconBg: '#dcfce7',
+        route: '/(shared-screens)/change-password',
+      },
+      {
+        id: 'change-email',
+        title: 'Change Email',
+        subtitle: 'Update your email address',
+        icon: Mail,
+        iconColor: '#10b981',
+        iconBg: '#d1fae5',
+        route: '/(shared-screens)/change-email',
+      },
+      {
+        id: 'change-phone',
+        title: 'Change Phone',
+        subtitle: 'Update your phone number',
+        icon: Phone,
+        iconColor: '#8b5cf6',
+        iconBg: '#ede9fe',
+        route: '/(shared-screens)/change-phone',
+      },
+      {
+        id: 'help',
+        title: 'Help & Support',
+        subtitle: 'FAQs, contact support',
+        icon: HelpCircle,
+        iconColor: '#64748b',
+        iconBg: '#f1f5f9',
+        route: '/(shared-screens)/help-support',
+      },
+    ],
+  };
 
-      <View className="px-4 pt-4">
-        <Card>
-          <TouchableOpacity
-            className="flex-row items-center py-2"
-            onPress={() => router.push('/(admin-screens)/profile')}
-          >
+  const sections: SettingSection[] = [appSection];
+
+  const initials = (user?.full_name ?? user?.first_name ?? 'T').charAt(0).toUpperCase();
+
+  return (
+    <View style={layoutStyles.container}>
+      <LinearGradient colors={adminGradient} style={headerStyles.header}>
+        <Animated.View
+          entering={FadeIn.delay(100)}
+          style={headerStyles.circle1}
+          pointerEvents="none"
+        />
+        <Animated.View
+          entering={FadeIn.delay(200)}
+          style={headerStyles.circle2}
+          pointerEvents="none"
+        />
+        <View style={headerStyles.content}>
+          <Animated.View entering={FadeInDown.delay(100).springify()} style={st.headerProfile}>
             {profileImageUrl ? (
               <Image
                 source={{ uri: profileImageUrl }}
-                className="h-14 w-14 rounded-full"
+                style={st.avatarImage}
                 contentFit="cover"
                 transition={200}
               />
             ) : (
-              <Avatar name={user?.full_name ?? user?.first_name ?? 'T'} size="lg" />
-            )}
-            <View className="ml-4 flex-1">
-              <Text className="text-lg font-semibold text-gray-900">
-                {user?.full_name ?? user?.first_name ?? 'Teacher'}
-              </Text>
-              <Text className="text-gray-500">{user?.email}</Text>
-              <Text className="mt-1 text-sm text-secondary-600">Teacher</Text>
-            </View>
-            <ChevronRight size={20} color={colors.gray[400]} />
-          </TouchableOpacity>
-        </Card>
-      </View>
-
-      <View className="px-4 pt-6">
-        <Text className="mb-3 px-1 text-sm font-medium text-gray-500">GENERAL</Text>
-        <Card>
-          {settingsOptions.map((option, index) => (
-            <TouchableOpacity
-              key={option.id}
-              className={`flex-row items-center py-4 ${
-                index !== settingsOptions.length - 1 ? 'border-b border-gray-100' : ''
-              }`}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
-              onPress={() => router.push(option.route as any)}
-            >
-              <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-gray-100">
-                <option.icon size={20} color={colors.gray[600]} strokeWidth={1.5} />
+              <View style={st.avatarCircle}>
+                <Text style={st.avatarText}>{initials}</Text>
               </View>
-              <Text className="flex-1 text-gray-900">{option.title}</Text>
-              <ChevronRight size={20} color={colors.gray[400]} />
-            </TouchableOpacity>
-          ))}
-        </Card>
-      </View>
-
-      <View className="px-4 pb-8 pt-6">
-        <Card>
-          <TouchableOpacity className="flex-row items-center py-4" onPress={handleLogout}>
-            <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-danger-100">
-              <LogOut size={20} color={colors.danger[600]} strokeWidth={1.5} />
+            )}
+            <View style={{ flex: 1 }}>
+              <Text style={st.headerName}>{user?.full_name ?? user?.first_name ?? 'Teacher'}</Text>
+              <Text style={st.headerEmail}>{user?.email ?? ''}</Text>
+              <View style={st.roleBadge}>
+                <Text style={st.roleText}>{user?.role ?? 'Teacher'}</Text>
+              </View>
             </View>
-            <Text className="flex-1 font-medium text-danger-600">Logout</Text>
-          </TouchableOpacity>
-        </Card>
-      </View>
+          </Animated.View>
+        </View>
+      </LinearGradient>
 
-      <View className="items-center pb-6">
-        <Text className="text-sm text-gray-400">EduCard v1.0.0</Text>
-      </View>
-    </Screen>
+      <ScrollView style={st.body} contentContainerStyle={st.bodyContent}>
+        {sections.map((section, sIdx) => (
+          <Animated.View
+            key={section.title}
+            entering={FadeInDown.delay(100 + sIdx * 80).springify()}
+          >
+            <Text style={st.sectionTitle}>{section.title}</Text>
+            <View style={st.sectionCard}>
+              {section.items.map((item, iIdx) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[st.settingRow, iIdx < section.items.length - 1 && st.settingRowBorder]}
+                  activeOpacity={0.6}
+                  onPress={() => {
+                    if (item.action) item.action();
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
+                    else if (item.route) router.push(item.route as any);
+                  }}
+                >
+                  <View style={[st.iconCircle, { backgroundColor: item.iconBg }]}>
+                    <item.icon size={18} color={item.iconColor} strokeWidth={2} />
+                  </View>
+                  <View style={st.settingInfo}>
+                    <Text style={st.settingTitle}>{item.title}</Text>
+                    {item.subtitle && <Text style={st.settingSubtitle}>{item.subtitle}</Text>}
+                  </View>
+                  <ChevronRight size={18} color="#cbd5e1" />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </Animated.View>
+        ))}
+
+        {/* Logout */}
+        <Animated.View entering={FadeInDown.delay(500).springify()}>
+          <View style={st.sectionCard}>
+            <TouchableOpacity style={st.settingRow} activeOpacity={0.6} onPress={handleLogout}>
+              <View style={[st.iconCircle, { backgroundColor: '#fee2e2' }]}>
+                <LogOut size={18} color="#dc2626" strokeWidth={2} />
+              </View>
+              <View style={st.settingInfo}>
+                <Text style={[st.settingTitle, { color: '#dc2626' }]}>Logout</Text>
+                <Text style={st.settingSubtitle}>Sign out of your account</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+
+        {/* App Version */}
+        <View style={st.versionRow}>
+          <Info size={14} color="#cbd5e1" />
+          <Text style={st.versionText}>EduCard v1.0.0</Text>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
+
+const st = StyleSheet.create({
+  headerProfile: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingTop: 8 },
+  avatarCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.4)',
+  },
+  avatarImage: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.4)',
+  },
+  avatarText: { fontSize: 22, fontWeight: '700', color: '#fff' },
+  headerName: { fontSize: 18, fontWeight: '700', color: '#fff' },
+  headerEmail: { fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
+  roleBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 8,
+    marginTop: 6,
+  },
+  roleText: { fontSize: 11, fontWeight: '700', color: '#fff', textTransform: 'capitalize' },
+
+  body: { flex: 1, backgroundColor: '#f8fafc' },
+  bodyContent: { padding: 16, paddingBottom: 40 },
+
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#94a3b8',
+    letterSpacing: 0.5,
+    marginBottom: 8,
+    marginTop: 16,
+    marginLeft: 4,
+  },
+  sectionCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  settingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 12,
+  },
+  settingRowBorder: { borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  iconCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  settingInfo: { flex: 1 },
+  settingTitle: { fontSize: 15, fontWeight: '600', color: '#1e293b' },
+  settingSubtitle: { fontSize: 12, color: '#94a3b8', marginTop: 2 },
+
+  versionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 24,
+    marginBottom: 16,
+  },
+  versionText: { fontSize: 12, color: '#cbd5e1' },
+});

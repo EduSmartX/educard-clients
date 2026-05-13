@@ -124,3 +124,47 @@ export async function restoreTeacher(publicId: string): Promise<ApiDetailRespons
   );
   return response.data;
 }
+
+/**
+ * Download teacher bulk import template
+ */
+export async function downloadTeacherTemplate(): Promise<ArrayBuffer> {
+  const response = await apiClient.get(`${ADMIN_BASE_URL}download-template/`, {
+    responseType: 'arraybuffer',
+  });
+  return response.data;
+}
+
+/**
+ * Bulk upload teachers from Excel file
+ */
+export async function bulkUploadTeachers(
+  fileUri: string,
+  fileName: string
+): Promise<{
+  success: boolean;
+  message: string;
+  data: {
+    created_count?: number;
+    successful_count?: number;
+    failed_count: number;
+    total_rows?: number;
+    errors: { row: number; error: string; data?: Record<string, unknown> | null }[];
+  };
+  code: number;
+}> {
+  const formData = new FormData();
+  formData.append('file', {
+    uri: fileUri,
+    name: fileName,
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  } as unknown as Blob);
+
+  const response = await apiClient.post(`${ADMIN_BASE_URL}bulk-upload/`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
+  return response.data;
+}

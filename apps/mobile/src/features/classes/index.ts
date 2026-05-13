@@ -23,3 +23,6 @@ export {
   useDeleteClass,
   useRestoreClass,
 } from './hooks/use-classes';
+
+// Components
+export { ClassList, type ClassListProps } from './components';

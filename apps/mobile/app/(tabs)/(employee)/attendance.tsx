@@ -123,7 +123,7 @@ const studentAttendanceActions = [
     icon: ClipboardCheck,
     color: '#3b82f6',
     bgColor: '#eff6ff',
-    route: '/(admin-screens)/attendance/mark',
+    route: '/(shared-screens)/attendance/mark',
   },
   {
     id: 'view-summary',
@@ -132,7 +132,7 @@ const studentAttendanceActions = [
     icon: BarChart3,
     color: '#8b5cf6',
     bgColor: '#f5f3ff',
-    route: '/(admin-screens)/attendance/summary',
+    route: '/(shared-screens)/attendance/summary',
   },
   {
     id: 'attendance-report',
@@ -141,7 +141,7 @@ const studentAttendanceActions = [
     icon: FileText,
     color: '#059669',
     bgColor: '#ecfdf5',
-    route: '/(admin-screens)/attendance/report',
+    route: '/(shared-screens)/attendance/report',
   },
 ];
 
@@ -153,7 +153,7 @@ const timesheetActions = [
     icon: Calendar,
     color: '#f97316',
     bgColor: '#fff7ed',
-    route: '/(admin-screens)/timesheets/my-submissions',
+    route: '/(shared-screens)/timesheets/my-submissions',
   },
 ];
 
@@ -389,7 +389,7 @@ export default function EmployeeAttendanceScreen() {
                     style={styles.classChip}
                     onPress={() =>
                       router.push({
-                        pathname: '/(admin-screens)/attendance/mark',
+                        pathname: '/(shared-screens)/attendance/mark',
                         params: { classId: cls.public_id },
                       } as Parameters<typeof router.push>[0])
                     }

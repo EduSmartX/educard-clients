@@ -16,6 +16,8 @@ import {
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import { HeaderProfileButton } from '@/components/common/HeaderProfileButton';
+
 interface WorkItem {
   id: string;
   title: string;
@@ -32,7 +34,7 @@ const workItems: WorkItem[] = [
     subtitle: 'Submit your attendance',
     icon: Clock,
     gradient: ['#f59e0b', '#fcd34d'],
-    route: '/(admin-screens)/timesheets/my-submissions',
+    route: '/(shared-screens)/timesheets/my-submissions',
   },
   {
     id: 'my-leaves',
@@ -40,7 +42,7 @@ const workItems: WorkItem[] = [
     subtitle: 'View & apply for leave',
     icon: CalendarDays,
     gradient: ['#10b981', '#6ee7b7'],
-    route: '/(admin-screens)/leave/my-requests',
+    route: '/(shared-screens)/leave/my-requests',
   },
   {
     id: 'mark-attendance',
@@ -48,7 +50,7 @@ const workItems: WorkItem[] = [
     subtitle: 'Student attendance',
     icon: ClipboardCheck,
     gradient: ['#0d9488', '#2dd4bf'],
-    route: '/(admin-screens)/attendance/mark',
+    route: '/(shared-screens)/attendance/mark',
   },
   {
     id: 'enter-marks',
@@ -56,7 +58,7 @@ const workItems: WorkItem[] = [
     subtitle: 'Exam marks entry',
     icon: GraduationCap,
     gradient: ['#e11d48', '#fb7185'],
-    route: '/(admin-screens)/exams/sessions',
+    route: '/(shared-screens)/exams/sessions',
   },
   {
     id: 'attendance-reports',
@@ -64,7 +66,7 @@ const workItems: WorkItem[] = [
     subtitle: 'View summaries',
     icon: BarChart3,
     gradient: ['#0891b2', '#22d3ee'],
-    route: '/(admin-screens)/attendance',
+    route: '/(shared-screens)/attendance',
   },
 ];
 
@@ -81,8 +83,11 @@ export default function MyWorkScreen() {
         style={styles.header}
       >
         <View style={styles.headerContent}>
-          <Text style={styles.greeting}>My Work</Text>
-          <Text style={styles.subtitle}>Your daily tasks & activities</Text>
+          <View>
+            <Text style={styles.greeting}>My Work</Text>
+            <Text style={styles.subtitle}>Your daily tasks & activities</Text>
+          </View>
+          <HeaderProfileButton route="/(tabs)/(admin)/settings" />
         </View>
       </LinearGradient>
 
@@ -134,7 +139,11 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     paddingHorizontal: 20,
   },
-  headerContent: {},
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   greeting: {
     fontSize: 24,
     fontWeight: '700',

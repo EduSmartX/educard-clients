@@ -173,7 +173,7 @@ export function AddressForm({
 
   return (
     <View style={styles.container}>
-      {/* Header with Location Button */}
+      {/* Header */}
       {showHeader && (
         <View style={styles.header}>
           <View style={styles.headerLeft}>
@@ -187,24 +187,25 @@ export function AddressForm({
               </Text>
             </View>
           </View>
-
-          {showLocationButton && (
-            <TouchableOpacity
-              style={[styles.locationButton, isLoadingLocation && styles.locationButtonLoading]}
-              onPress={() => void handleUseLocation()}
-              disabled={isLoadingLocation || disabled}
-            >
-              {isLoadingLocation ? (
-                <ActivityIndicator size="small" color={Colors.primary[600]} />
-              ) : (
-                <Navigation size={16} color={Colors.primary[600]} />
-              )}
-              <Text style={styles.locationButtonText}>
-                {isLoadingLocation ? 'Getting...' : 'Use Location'}
-              </Text>
-            </TouchableOpacity>
-          )}
         </View>
+      )}
+
+      {/* Use Location Button - Below Header */}
+      {showLocationButton && (
+        <TouchableOpacity
+          style={[styles.useLocationButton, isLoadingLocation && styles.locationButtonLoading]}
+          onPress={() => void handleUseLocation()}
+          disabled={isLoadingLocation || disabled}
+        >
+          {isLoadingLocation ? (
+            <ActivityIndicator size="small" color={Colors.primary[600]} />
+          ) : (
+            <Navigation size={16} color={Colors.primary[600]} />
+          )}
+          <Text style={styles.useLocationButtonText}>
+            {isLoadingLocation ? 'Getting Location...' : 'Use Current Location'}
+          </Text>
+        </TouchableOpacity>
       )}
 
       {/* Form Fields */}
@@ -341,6 +342,26 @@ const styles = StyleSheet.create({
   },
   locationButtonText: {
     fontSize: 12,
+    fontWeight: '600',
+    color: Colors.primary[600],
+  },
+
+  // Use Location Button - Standalone
+  useLocationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Colors.primary[50],
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: Colors.primary[200],
+    borderStyle: 'dashed',
+  },
+  useLocationButtonText: {
+    fontSize: 14,
     fontWeight: '600',
     color: Colors.primary[600],
   },

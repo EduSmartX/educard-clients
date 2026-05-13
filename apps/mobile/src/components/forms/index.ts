@@ -12,3 +12,5 @@ export { FormError } from './FormError';
 export { FormDropdown } from './FormDropdown';
 export { FormDatePicker } from './FormDatePicker';
 export { FormPhotoUpload } from './FormPhotoUpload';
+export { KeyboardAwareForm } from './KeyboardAwareForm';
+export type { KeyboardAwareScrollView } from './KeyboardAwareForm';

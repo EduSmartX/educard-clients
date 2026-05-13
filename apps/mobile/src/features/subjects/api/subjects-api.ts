@@ -86,3 +86,55 @@ export async function getSubjectsByClass(classId: string): Promise<SubjectListRe
   });
   return response.data;
 }
+
+/**
+ * Download subject bulk import template and save to Downloads folder
+ */
+export async function downloadSubjectTemplate(): Promise<{
+  success: boolean;
+  message: string;
+  filePath?: string;
+}> {
+  // Import dynamically to avoid circular dependencies
+  const { downloadAndSaveTemplate } = await import('@/utils/download-template');
+
+  const response = await apiClient.get(`${BASE_URL}download-template/`, {
+    responseType: 'arraybuffer',
+  });
+
+  return downloadAndSaveTemplate(response.data as ArrayBuffer, 'subjects_template.xlsx');
+}
+
+/**
+ * Bulk upload subjects from Excel file
+ */
+export async function bulkUploadSubjects(
+  fileUri: string,
+  fileName: string
+): Promise<{
+  success: boolean;
+  message: string;
+  data: {
+    created_count?: number;
+    successful_count?: number;
+    failed_count: number;
+    total_rows?: number;
+    errors: { row: number; error: string; data?: Record<string, unknown> | null }[];
+  };
+  code: number;
+}> {
+  const formData = new FormData();
+  formData.append('file', {
+    uri: fileUri,
+    name: fileName,
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  } as unknown as Blob);
+
+  const response = await apiClient.post(`${BASE_URL}bulk-upload/`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
+  return response.data;
+}

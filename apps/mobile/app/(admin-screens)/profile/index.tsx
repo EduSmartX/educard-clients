@@ -26,20 +26,10 @@ import {
   User,
 } from 'lucide-react-native';
 import { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { FormInput, FormDropdown, FormDatePicker } from '@/components/forms';
+import { FormInput, FormDropdown, FormDatePicker, KeyboardAwareForm } from '@/components/forms';
 import { getMediaUrl } from '@/constants/config';
 import { useMyProfilePhoto, useUserProfile, useUpdateProfile } from '@/hooks';
 import { useProfileImage } from '@/hooks/useProfileImage';
@@ -53,7 +43,7 @@ type FieldErrors = Record<string, string>;
 export default function ProfileScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const { data: profilePhoto, isLoading: photoLoading } = useMyProfilePhoto();
+  const { data: profilePhoto, isLoading: photoLoading, dataUpdatedAt } = useMyProfilePhoto();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const updateMutation = useUpdateProfile();
   const [addressExpanded, setAddressExpanded] = useState(false);
@@ -66,7 +56,7 @@ export default function ProfileScreen() {
   } = useProfileImage({
     userPublicId: user?.public_id,
     onSuccess: () => {
-      // Photo updated
+      // Photo updated - cache will be invalidated by the hook
     },
   });
 
@@ -173,9 +163,12 @@ export default function ProfileScreen() {
   const isLoading = profileLoading || photoLoading;
   const isSaving = updateMutation.isPending;
 
-  // Profile image
-  const photoUrl =
-    localPhotoUri ?? getMediaUrl(profilePhoto?.thumbnail_url) ?? getMediaUrl(profilePhoto?.url);
+  // Profile image - add cache busting for server images
+  const serverPhotoUrl = getMediaUrl(profilePhoto?.thumbnail_url) ?? getMediaUrl(profilePhoto?.url);
+  const cacheBustedPhotoUrl = serverPhotoUrl
+    ? `${serverPhotoUrl}${serverPhotoUrl.includes('?') ? '&' : '?'}v=${dataUpdatedAt || Date.now()}`
+    : undefined;
+  const photoUrl = localPhotoUri ?? cacheBustedPhotoUrl;
   const initials = (profile?.full_name ?? profile?.first_name ?? user?.full_name ?? 'U')
     .charAt(0)
     .toUpperCase();
@@ -241,225 +234,220 @@ export default function ProfileScreen() {
         </View>
       </LinearGradient>
 
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView style={s.body} contentContainerStyle={s.bodyContent}>
-          {/* Avatar Section */}
-          <Animated.View entering={FadeInDown.delay(100).springify()} style={s.avatarSection}>
-            <TouchableOpacity
-              style={s.avatarWrapper}
-              onPress={pickAndUpload}
-              disabled={isPhotoUploading}
-            >
-              {photoUrl ? (
-                <Image
-                  source={{ uri: photoUrl }}
-                  style={s.avatarImage}
-                  contentFit="cover"
-                  transition={200}
-                />
+      <KeyboardAwareForm style={s.body} contentContainerStyle={s.bodyContent}>
+        {/* Avatar Section */}
+        <Animated.View entering={FadeInDown.delay(100).springify()} style={s.avatarSection}>
+          <TouchableOpacity
+            style={s.avatarWrapper}
+            onPress={pickAndUpload}
+            disabled={isPhotoUploading}
+          >
+            {photoUrl ? (
+              <Image
+                source={{ uri: photoUrl }}
+                style={s.avatarImage}
+                contentFit="cover"
+                transition={200}
+              />
+            ) : (
+              <View style={s.avatarCircle}>
+                <Text style={s.avatarText}>{initials}</Text>
+              </View>
+            )}
+            <View style={s.cameraIcon}>
+              {isPhotoUploading ? (
+                <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <View style={s.avatarCircle}>
-                  <Text style={s.avatarText}>{initials}</Text>
-                </View>
+                <Camera size={16} color="#fff" />
               )}
-              <View style={s.cameraIcon}>
-                {isPhotoUploading ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Camera size={16} color="#fff" />
-                )}
+            </View>
+          </TouchableOpacity>
+          <Text style={s.userName}>{profile?.full_name ?? user?.full_name ?? 'User'}</Text>
+          <Text style={s.userRole}>{profile?.role ?? user?.role ?? 'Staff'}</Text>
+        </Animated.View>
+
+        {/* Personal Information */}
+        <Animated.View entering={FadeInDown.delay(200).springify()}>
+          <View style={s.card}>
+            <Text style={s.cardTitle}>Personal Information</Text>
+            <View style={s.formFields}>
+              <View style={s.row}>
+                <View style={s.halfField}>
+                  <FormInput
+                    label="First Name"
+                    value={form.first_name}
+                    onChangeText={(v) => updateField('first_name', v)}
+                    placeholder="First name"
+                    error={errors.first_name}
+                    required
+                  />
+                </View>
+                <View style={s.halfField}>
+                  <FormInput
+                    label="Last Name"
+                    value={form.last_name}
+                    onChangeText={(v) => updateField('last_name', v)}
+                    placeholder="Last name"
+                    error={errors.last_name}
+                    required
+                  />
+                </View>
               </View>
+
+              <View style={s.row}>
+                <View style={s.halfField}>
+                  <FormDropdown
+                    label="Gender"
+                    options={genderOptions}
+                    value={form.gender}
+                    onChange={(v) => updateField('gender', v)}
+                    placeholder="Select gender"
+                  />
+                </View>
+                <View style={s.halfField}>
+                  <FormDropdown
+                    label="Blood Group"
+                    options={bloodGroupOptions}
+                    value={form.blood_group}
+                    onChange={(v) => updateField('blood_group', v)}
+                    placeholder="Select blood group"
+                  />
+                </View>
+              </View>
+
+              <FormDatePicker
+                label="Date of Birth"
+                value={form.date_of_birth}
+                onChange={(v) => updateField('date_of_birth', v)}
+                maxYear={new Date().getFullYear()}
+              />
+            </View>
+          </View>
+        </Animated.View>
+
+        {/* Contact Information (Read-only) */}
+        <Animated.View entering={FadeInDown.delay(300).springify()}>
+          <View style={s.card}>
+            <Text style={s.cardTitle}>Contact Information</Text>
+            <View style={s.infoNote}>
+              <Info size={14} color="#f59e0b" />
+              <Text style={s.infoNoteText}>
+                Email and phone can only be updated via OTP verification on the web dashboard.
+              </Text>
+            </View>
+            {/* Username */}
+            <View style={s.readOnlyField}>
+              <View style={s.readOnlyIcon}>
+                <User size={16} color="#64748b" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={s.readOnlyLabel}>Username</Text>
+                <Text style={s.readOnlyValue}>{profile?.username ?? '—'}</Text>
+              </View>
+            </View>
+            <View style={s.divider} />
+            {/* Email */}
+            <View style={s.readOnlyField}>
+              <View style={s.readOnlyIcon}>
+                <Mail size={16} color="#64748b" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={s.readOnlyLabel}>Email</Text>
+                <Text style={s.readOnlyValue}>{profile?.email ?? user?.email ?? '—'}</Text>
+              </View>
+            </View>
+            <View style={s.divider} />
+            {/* Phone */}
+            <View style={s.readOnlyField}>
+              <View style={s.readOnlyIcon}>
+                <Phone size={16} color="#64748b" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={s.readOnlyLabel}>Phone</Text>
+                <Text style={s.readOnlyValue}>{profile?.phone ?? user?.phone ?? '—'}</Text>
+              </View>
+            </View>
+          </View>
+        </Animated.View>
+
+        {/* Address Section */}
+        <Animated.View entering={FadeInDown.delay(400).springify()}>
+          <View style={s.card}>
+            <TouchableOpacity
+              style={s.addressHeader}
+              onPress={() => setAddressExpanded(!addressExpanded)}
+              activeOpacity={0.7}
+            >
+              <View style={s.addressHeaderLeft}>
+                <MapPin size={18} color="#6366f1" />
+                <Text style={s.addressHeaderTitle}>Address Information</Text>
+              </View>
+              {addressExpanded ? (
+                <ChevronUp size={20} color="#6b7280" />
+              ) : (
+                <ChevronDown size={20} color="#6b7280" />
+              )}
             </TouchableOpacity>
-            <Text style={s.userName}>{profile?.full_name ?? user?.full_name ?? 'User'}</Text>
-            <Text style={s.userRole}>{profile?.role ?? user?.role ?? 'Staff'}</Text>
-          </Animated.View>
 
-          {/* Personal Information */}
-          <Animated.View entering={FadeInDown.delay(200).springify()}>
-            <View style={s.card}>
-              <Text style={s.cardTitle}>Personal Information</Text>
-              <View style={s.formFields}>
-                <View style={s.row}>
-                  <View style={s.halfField}>
-                    <FormInput
-                      label="First Name"
-                      value={form.first_name}
-                      onChangeText={(v) => updateField('first_name', v)}
-                      placeholder="First name"
-                      error={errors.first_name}
-                      required
-                    />
-                  </View>
-                  <View style={s.halfField}>
-                    <FormInput
-                      label="Last Name"
-                      value={form.last_name}
-                      onChangeText={(v) => updateField('last_name', v)}
-                      placeholder="Last name"
-                      error={errors.last_name}
-                      required
-                    />
-                  </View>
-                </View>
-
-                <View style={s.row}>
-                  <View style={s.halfField}>
-                    <FormDropdown
-                      label="Gender"
-                      options={genderOptions}
-                      value={form.gender}
-                      onChange={(v) => updateField('gender', v)}
-                      placeholder="Select gender"
-                    />
-                  </View>
-                  <View style={s.halfField}>
-                    <FormDropdown
-                      label="Blood Group"
-                      options={bloodGroupOptions}
-                      value={form.blood_group}
-                      onChange={(v) => updateField('blood_group', v)}
-                      placeholder="Select blood group"
-                    />
-                  </View>
-                </View>
-
-                <FormDatePicker
-                  label="Date of Birth"
-                  value={form.date_of_birth}
-                  onChange={(v) => updateField('date_of_birth', v)}
-                  maxYear={new Date().getFullYear()}
+            {addressExpanded && (
+              <View style={s.addressFields}>
+                <FormInput
+                  label="Street Address"
+                  value={form.street_address}
+                  onChangeText={(v) => updateField('street_address', v)}
+                  placeholder="Enter street address"
                 />
-              </View>
-            </View>
-          </Animated.View>
-
-          {/* Contact Information (Read-only) */}
-          <Animated.View entering={FadeInDown.delay(300).springify()}>
-            <View style={s.card}>
-              <Text style={s.cardTitle}>Contact Information</Text>
-              <View style={s.infoNote}>
-                <Info size={14} color="#f59e0b" />
-                <Text style={s.infoNoteText}>
-                  Email and phone can only be updated via OTP verification on the web dashboard.
-                </Text>
-              </View>
-              {/* Username */}
-              <View style={s.readOnlyField}>
-                <View style={s.readOnlyIcon}>
-                  <User size={16} color="#64748b" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={s.readOnlyLabel}>Username</Text>
-                  <Text style={s.readOnlyValue}>{profile?.username ?? '—'}</Text>
-                </View>
-              </View>
-              <View style={s.divider} />
-              {/* Email */}
-              <View style={s.readOnlyField}>
-                <View style={s.readOnlyIcon}>
-                  <Mail size={16} color="#64748b" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={s.readOnlyLabel}>Email</Text>
-                  <Text style={s.readOnlyValue}>{profile?.email ?? user?.email ?? '—'}</Text>
-                </View>
-              </View>
-              <View style={s.divider} />
-              {/* Phone */}
-              <View style={s.readOnlyField}>
-                <View style={s.readOnlyIcon}>
-                  <Phone size={16} color="#64748b" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={s.readOnlyLabel}>Phone</Text>
-                  <Text style={s.readOnlyValue}>{profile?.phone ?? user?.phone ?? '—'}</Text>
-                </View>
-              </View>
-            </View>
-          </Animated.View>
-
-          {/* Address Section */}
-          <Animated.View entering={FadeInDown.delay(400).springify()}>
-            <View style={s.card}>
-              <TouchableOpacity
-                style={s.addressHeader}
-                onPress={() => setAddressExpanded(!addressExpanded)}
-                activeOpacity={0.7}
-              >
-                <View style={s.addressHeaderLeft}>
-                  <MapPin size={18} color="#6366f1" />
-                  <Text style={s.addressHeaderTitle}>Address Information</Text>
-                </View>
-                {addressExpanded ? (
-                  <ChevronUp size={20} color="#6b7280" />
-                ) : (
-                  <ChevronDown size={20} color="#6b7280" />
-                )}
-              </TouchableOpacity>
-
-              {addressExpanded && (
-                <View style={s.addressFields}>
-                  <FormInput
-                    label="Street Address"
-                    value={form.street_address}
-                    onChangeText={(v) => updateField('street_address', v)}
-                    placeholder="Enter street address"
-                  />
-                  <FormInput
-                    label="Address Line 2"
-                    value={form.address_line_2}
-                    onChangeText={(v) => updateField('address_line_2', v)}
-                    placeholder="Apartment, suite, etc. (optional)"
-                  />
-                  <View style={s.row}>
-                    <View style={s.halfField}>
-                      <FormInput
-                        label="City"
-                        value={form.city}
-                        onChangeText={(v) => updateField('city', v)}
-                        placeholder="City"
-                      />
-                    </View>
-                    <View style={s.halfField}>
-                      <FormInput
-                        label="State"
-                        value={form.state}
-                        onChangeText={(v) => updateField('state', v)}
-                        placeholder="State"
-                      />
-                    </View>
+                <FormInput
+                  label="Address Line 2"
+                  value={form.address_line_2}
+                  onChangeText={(v) => updateField('address_line_2', v)}
+                  placeholder="Apartment, suite, etc. (optional)"
+                />
+                <View style={s.row}>
+                  <View style={s.halfField}>
+                    <FormInput
+                      label="City"
+                      value={form.city}
+                      onChangeText={(v) => updateField('city', v)}
+                      placeholder="City"
+                    />
                   </View>
-                  <View style={s.row}>
-                    <View style={s.halfField}>
-                      <FormInput
-                        label="Zip Code"
-                        value={form.postal_code}
-                        onChangeText={(v) => updateField('postal_code', v)}
-                        placeholder="Zip Code"
-                        keyboardType="number-pad"
-                      />
-                    </View>
-                    <View style={s.halfField}>
-                      <FormInput
-                        label="Country"
-                        value={form.country}
-                        onChangeText={(v) => updateField('country', v)}
-                        placeholder="Country"
-                      />
-                    </View>
+                  <View style={s.halfField}>
+                    <FormInput
+                      label="State"
+                      value={form.state}
+                      onChangeText={(v) => updateField('state', v)}
+                      placeholder="State"
+                    />
                   </View>
                 </View>
-              )}
-            </View>
-          </Animated.View>
+                <View style={s.row}>
+                  <View style={s.halfField}>
+                    <FormInput
+                      label="Zip Code"
+                      value={form.postal_code}
+                      onChangeText={(v) => updateField('postal_code', v)}
+                      placeholder="Zip Code"
+                      keyboardType="number-pad"
+                    />
+                  </View>
+                  <View style={s.halfField}>
+                    <FormInput
+                      label="Country"
+                      value={form.country}
+                      onChangeText={(v) => updateField('country', v)}
+                      placeholder="Country"
+                    />
+                  </View>
+                </View>
+              </View>
+            )}
+          </View>
+        </Animated.View>
 
-          {/* Spacer for bottom */}
-          <View style={{ height: 40 }} />
-        </ScrollView>
-      </KeyboardAvoidingView>
+        {/* Spacer for bottom */}
+        <View style={{ height: 40 }} />
+      </KeyboardAwareForm>
     </View>
   );
 }

@@ -45,11 +45,11 @@ export const email = (label = 'Email'): ValidationRule => ({
 /** Valid phone (10 digits, optional country code) */
 export const phone = (label = 'Phone'): ValidationRule => ({
   validate: (v) => {
-    if (!v) return true; // optional by default
+    if (!v) return true;
     const digits = toString(v).replace(/[\s\-()+"]/g, '');
-    return /^\d{10,15}$/.test(digits);
+    return /^[6-9]\d{9}$/.test(digits);
   },
-  message: `${label} must be a valid phone number (10-15 digits)`,
+  message: `${label} must be a valid 10-digit mobile number`,
 });
 
 /** Numeric value in range */

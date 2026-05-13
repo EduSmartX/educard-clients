@@ -22,6 +22,7 @@ export const layoutStyles = StyleSheet.create({
 export const bodyStyles = StyleSheet.create({
   scroll: { flex: 1 },
   content: { padding: Theme.spacing.md, paddingBottom: 100 },
+  contentLarge: { padding: Theme.spacing.lg, paddingBottom: 120 },
 });
 
 // Card Styles
@@ -188,6 +189,20 @@ export const stateStyles = StyleSheet.create({
     borderRadius: 8,
   },
   retryText: { fontSize: 14, fontWeight: '600', color: '#fff' },
+});
+
+// Empty State Styles (for loading/empty screens)
+export const emptyStyles = StyleSheet.create({
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 100 },
+  icon: { marginBottom: 16 },
+  title: { fontSize: 18, fontWeight: '700', color: Colors.gray[700], marginTop: 12 },
+  subtitle: {
+    fontSize: 14,
+    color: Colors.gray[500],
+    marginTop: 6,
+    textAlign: 'center',
+    paddingHorizontal: 32,
+  },
 });
 
 // List Styles

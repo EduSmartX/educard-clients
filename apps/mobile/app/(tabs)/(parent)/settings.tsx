@@ -20,43 +20,42 @@ import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { Screen, Header } from '@/components/layout';
 import { Card, Avatar } from '@/components/ui';
 import { colors } from '@/constants/colors';
-import { getMediaUrl } from '@/constants/config';
-import { useMyProfilePhoto } from '@/hooks';
+import { useProfileImageUrl } from '@/hooks';
 import { useAuthStore } from '@/lib/auth-store';
 
 const settingsOptions = [
-  { id: 'profile', title: 'Edit Profile', icon: User, route: '/(admin-screens)/profile' },
+  { id: 'profile', title: 'Edit Profile', icon: User, route: '/(shared-screens)/profile' },
   { id: 'notifications', title: 'Notifications', icon: Bell, route: '/settings/notifications' },
   {
     id: 'security',
     title: 'Change Password',
     icon: Shield,
-    route: '/(admin-screens)/change-password',
+    route: '/(shared-screens)/change-password',
   },
   {
     id: 'change-email',
     title: 'Change Email',
     icon: Mail,
-    route: '/(admin-screens)/change-email',
+    route: '/(shared-screens)/change-email',
   },
   {
     id: 'change-phone',
     title: 'Change Phone',
     icon: Phone,
-    route: '/(admin-screens)/change-phone',
+    route: '/(shared-screens)/change-phone',
   },
-  { id: 'help', title: 'Help & Support', icon: HelpCircle, route: '/(admin-screens)/help-support' },
+  {
+    id: 'help',
+    title: 'Help & Support',
+    icon: HelpCircle,
+    route: '/(shared-screens)/help-support',
+  },
 ];
 
 export default function ParentSettingsScreen() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
-  const { data: profilePhoto } = useMyProfilePhoto();
-
-  const profileImageUrl =
-    getMediaUrl(profilePhoto?.thumbnail_url) ??
-    getMediaUrl(profilePhoto?.url) ??
-    getMediaUrl(user?.profile_image);
+  const { profileImageUrl } = useProfileImageUrl();
 
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
@@ -73,7 +72,7 @@ export default function ParentSettingsScreen() {
         <Card>
           <TouchableOpacity
             className="flex-row items-center py-2"
-            onPress={() => router.push('/(admin-screens)/profile')}
+            onPress={() => router.push('/(shared-screens)/profile')}
           >
             {profileImageUrl ? (
               <Image

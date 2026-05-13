@@ -29,8 +29,7 @@ import { useMemo } from 'react';
 import { View, Text, TouchableOpacity, Alert, ScrollView, StyleSheet } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { getMediaUrl } from '@/constants/config';
-import { useMyProfilePhoto } from '@/hooks';
+import { useProfileImageUrl } from '@/hooks';
 import { useAuthStore } from '@/lib/auth-store';
 import { headerStyles, layoutStyles } from '@/styles';
 import { isAdminRole } from '@/utils/role-utils';
@@ -56,7 +55,7 @@ interface SettingSection {
 export default function AdminSettingsScreen() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
-  const { data: profilePhoto } = useMyProfilePhoto();
+  const { profileImageUrl } = useProfileImageUrl();
 
   // Check if current user is admin
   const isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
@@ -79,7 +78,7 @@ export default function AdminSettingsScreen() {
         icon: SlidersHorizontal,
         iconColor: '#0284c7',
         iconBg: '#e0f2fe',
-        route: '/(admin-screens)/preferences',
+        route: '/(shared-screens)/preferences',
       },
       {
         id: 'holidays',
@@ -88,7 +87,7 @@ export default function AdminSettingsScreen() {
         icon: Calendar,
         iconColor: '#dc2626',
         iconBg: '#fee2e2',
-        route: '/(admin-screens)/holidays',
+        route: '/(shared-screens)/holidays',
       },
     ],
   };
@@ -104,7 +103,7 @@ export default function AdminSettingsScreen() {
         icon: User,
         iconColor: '#2563eb',
         iconBg: '#eff6ff',
-        route: '/(admin-screens)/profile',
+        route: '/(shared-screens)/profile',
       },
       {
         id: 'notifications',
@@ -121,7 +120,7 @@ export default function AdminSettingsScreen() {
         icon: Shield,
         iconColor: '#059669',
         iconBg: '#dcfce7',
-        route: '/(admin-screens)/change-password',
+        route: '/(shared-screens)/change-password',
       },
       {
         id: 'change-email',
@@ -130,7 +129,7 @@ export default function AdminSettingsScreen() {
         icon: Mail,
         iconColor: '#10b981',
         iconBg: '#d1fae5',
-        route: '/(admin-screens)/change-email',
+        route: '/(shared-screens)/change-email',
       },
       {
         id: 'change-phone',
@@ -139,7 +138,7 @@ export default function AdminSettingsScreen() {
         icon: Phone,
         iconColor: '#8b5cf6',
         iconBg: '#ede9fe',
-        route: '/(admin-screens)/change-phone',
+        route: '/(shared-screens)/change-phone',
       },
       {
         id: 'help',
@@ -148,7 +147,7 @@ export default function AdminSettingsScreen() {
         icon: HelpCircle,
         iconColor: '#64748b',
         iconBg: '#f1f5f9',
-        route: '/(admin-screens)/help-support',
+        route: '/(shared-screens)/help-support',
       },
     ],
   };
@@ -156,10 +155,6 @@ export default function AdminSettingsScreen() {
   // Build sections based on role
   const sections: SettingSection[] = isAdmin ? [organizationSection, appSection] : [appSection];
 
-  const profileImageUrl =
-    getMediaUrl(profilePhoto?.thumbnail_url) ??
-    getMediaUrl(profilePhoto?.url) ??
-    getMediaUrl(user?.profile_image);
   const initials = (user?.full_name ?? user?.first_name ?? 'A').charAt(0).toUpperCase();
 
   return (
