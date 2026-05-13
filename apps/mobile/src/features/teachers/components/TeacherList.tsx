@@ -41,6 +41,7 @@ import {
 import Animated, { FadeIn, FadeInRight } from 'react-native-reanimated';
 
 import { SearchBar } from '@/components/common';
+import { BulkUploadModal } from '@/components/common/BulkUploadModal';
 import { EntityActions } from '@/components/common/EntityActions';
 import {
   FilterModal,
@@ -54,6 +55,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import { layoutStyles, headerStyles, stateStyles, listStyles } from '@/styles';
 import { isAdminRole } from '@/utils/role-utils';
 
+import { downloadTeacherTemplate, bulkUploadTeachers } from '../api/teachers-api';
 import { useTeachers, useDeleteTeacher, useRestoreTeacher } from '../hooks/use-teachers';
 
 const adminTheme = getRoleThemeColors('admin');
@@ -70,6 +72,7 @@ export function TeacherList({ onBack }: TeacherListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
   const scrollOffsetRef = useRef(0);
   const isScrollingDownRef = useRef(false);
   const lastRefreshRef = useRef(0);
@@ -293,7 +296,10 @@ export function TeacherList({ onBack }: TeacherListProps) {
             </View>
             {canManage && (
               <View style={headerStyles.actions}>
-                <TouchableOpacity style={headerStyles.actionBtn}>
+                <TouchableOpacity
+                  style={headerStyles.actionBtn}
+                  onPress={() => setShowBulkUpload(true)}
+                >
                   <Upload size={20} color="#fff" />
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -307,6 +313,18 @@ export function TeacherList({ onBack }: TeacherListProps) {
           </View>
         </View>
       </LinearGradient>
+
+      {/* Bulk Upload Modal */}
+      <BulkUploadModal
+        visible={showBulkUpload}
+        onClose={() => setShowBulkUpload(false)}
+        title="Bulk Upload Teachers"
+        description="Upload multiple teachers at once using an Excel template"
+        downloadTemplate={downloadTeacherTemplate}
+        uploadFile={bulkUploadTeachers}
+        templateFileName="teachers_template.xlsx"
+        onUploadSuccess={() => void refetch()}
+      />
 
       {/* Search Bar */}
       <SearchBar

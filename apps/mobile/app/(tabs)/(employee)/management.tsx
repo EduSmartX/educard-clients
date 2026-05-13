@@ -5,12 +5,10 @@
  * Admins: Full CRUD access
  */
 
-import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, type Href } from 'expo-router';
 import {
   GraduationCap,
-  User,
   UserCheck,
   BookMarked,
   Building2,
@@ -22,11 +20,11 @@ import {
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 
+import { HeaderProfileButton } from '@/components/common';
 import { useClasses } from '@/features/classes';
 import { useStudents } from '@/features/students';
 import { useSubjects } from '@/features/subjects';
 import { useTeachers } from '@/features/teachers';
-import { useProfileImageUrl } from '@/hooks';
 import { useAuthStore } from '@/lib/auth-store';
 
 const { width } = Dimensions.get('window');
@@ -95,7 +93,6 @@ const managementItemsConfig: ManagementItem[] = [
 export default function ManagementScreen() {
   const router = useRouter();
   const { user: _user } = useAuthStore();
-  const { profileImageUrl } = useProfileImageUrl();
 
   const { data: teachersData } = useTeachers({ page_size: 1 });
   const { data: studentsData } = useStudents({ page_size: 1 });
@@ -132,24 +129,7 @@ export default function ManagementScreen() {
             </View>
             <Text style={styles.headerSubtitle}>Organization data</Text>
           </View>
-          <TouchableOpacity
-            style={styles.profileButton}
-            onPress={() => router.push('/(tabs)/(employee)/settings')}
-            activeOpacity={0.8}
-          >
-            {profileImageUrl ? (
-              <Image
-                source={{ uri: profileImageUrl }}
-                style={styles.profileImage}
-                contentFit="cover"
-                transition={200}
-              />
-            ) : (
-              <View style={styles.profileFallback}>
-                <User size={28} color="#fff" />
-              </View>
-            )}
-          </TouchableOpacity>
+          <HeaderProfileButton route="/(tabs)/(employee)/settings" />
         </Animated.View>
       </LinearGradient>
 
@@ -247,22 +227,6 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.8)',
     fontWeight: '500',
     letterSpacing: 0.2,
-  },
-  profileButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 15,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.35)',
-  },
-  profileImage: { width: 44, height: 44, borderRadius: 15 },
-  profileFallback: {
-    width: '100%',
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
   },
   content: { flex: 1 },
   scrollContent: { padding: 16, paddingBottom: 100 },

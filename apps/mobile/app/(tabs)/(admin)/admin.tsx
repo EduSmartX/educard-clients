@@ -18,6 +18,8 @@ import {
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import { HeaderProfileButton } from '@/components/common/HeaderProfileButton';
+
 interface AdminItem {
   id: string;
   title: string;
@@ -100,6 +102,7 @@ export default function AdminScreen() {
               <Text style={styles.subtitle}>Approvals & configurations</Text>
             </View>
           </View>
+          <HeaderProfileButton route="/(tabs)/(admin)/settings" />
         </View>
       </LinearGradient>
 
@@ -154,6 +157,7 @@ const styles = StyleSheet.create({
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   headerLeft: {
     flexDirection: 'row',

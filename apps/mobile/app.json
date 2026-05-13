@@ -18,10 +18,7 @@
       "infoPlist": {
         "NSCameraUsageDescription": "EduCard uses the camera to scan documents and capture photos.",
         "NSPhotoLibraryUsageDescription": "EduCard needs access to your photos to upload profile pictures.",
-        "UIBackgroundModes": [
-          "remote-notification",
-          "remote-notification"
-        ]
+        "UIBackgroundModes": ["remote-notification", "remote-notification"]
       }
     },
     "android": {
@@ -52,7 +49,22 @@
         }
       ],
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-sharing",
+      [
+        "expo-document-picker",
+        {
+          "iCloudContainerEnvironment": "Production"
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to save templates to your device.",
+          "savePhotosPermission": "Allow $(PRODUCT_NAME) to save templates to your device.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

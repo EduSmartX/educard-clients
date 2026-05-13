@@ -20,7 +20,7 @@ import {
 } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ChevronLeft, Trash2, Save, Coffee, BookOpen, Copy, Check } from 'lucide-react-native';
+import { ChevronLeft, Trash2, Save, Clock, BookOpen, Copy, Check } from 'lucide-react-native';
 import { useState, useEffect, useMemo } from 'react';
 import {
   View,
@@ -37,6 +37,7 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { useSlots, useBulkSaveSlots, useClearDaySlots } from '@/features/timetable';
 import { headerStyles, layoutStyles, bodyStyles, emptyStyles } from '@/styles';
+
 const adminGradient = getRoleGradient('admin');
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
 const SLOT_TYPE_OPTIONS = Object.entries(SLOT_TYPE_LABELS).map(([value, label]) => ({
@@ -441,7 +442,7 @@ export default function TimeSlotsEditorScreen() {
                         }
                       >
                         {isBreak ? (
-                          <Coffee size={12} color={colors.text} />
+                          <Clock size={12} color={colors.text} />
                         ) : (
                           <BookOpen size={12} color={colors.text} />
                         )}
@@ -534,11 +535,11 @@ export default function TimeSlotsEditorScreen() {
                 <Text style={st.addPeriodText}>+ Period</Text>
               </TouchableOpacity>
               <TouchableOpacity style={st.addBreakBtn} onPress={() => addBreak('short_break')}>
-                <Coffee size={14} color="#16a34a" />
+                <Clock size={14} color="#16a34a" />
                 <Text style={st.addBreakText}>+ Break</Text>
               </TouchableOpacity>
               <TouchableOpacity style={st.addBreakBtn} onPress={() => addBreak('lunch_break')}>
-                <Coffee size={14} color="#d97706" />
+                <Clock size={14} color="#d97706" />
                 <Text style={[st.addBreakText, { color: '#d97706' }]}>+ Lunch</Text>
               </TouchableOpacity>
             </View>

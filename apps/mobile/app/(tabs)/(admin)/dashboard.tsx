@@ -21,7 +21,7 @@ import {
   SlidersHorizontal,
   Star,
 } from 'lucide-react-native';
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -35,7 +35,7 @@ import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 
 import { TodaySchedule, StatsGrid, type StatCardProps } from '@/components/dashboard';
 import { getMediaUrl } from '@/constants/config';
-import { useDashboardAttendanceStats } from '@/features/attendance/hooks/use-attendance';
+import { useDashboardAttendanceStats, useAttendanceDisplay } from '@/features/attendance/hooks';
 import { useClasses } from '@/features/classes';
 import { useStudents } from '@/features/students';
 import { useTeachers } from '@/features/teachers';
@@ -77,35 +77,35 @@ const adminLinks: AdminLinkItem[] = [
     title: 'Leave Policy',
     icon: FileText,
     gradient: ['#8b5cf6', '#a78bfa'],
-    route: '/(admin-screens)/leave/allocations',
+    route: '/(shared-screens)/leave/allocations',
   },
   {
     id: 'org-preferences',
     title: 'Org Prefs',
     icon: SlidersHorizontal,
     gradient: ['#0ea5e9', '#38bdf8'],
-    route: '/(admin-screens)/preferences',
+    route: '/(shared-screens)/preferences',
   },
   {
     id: 'holiday-calendar',
     title: 'Holidays',
     icon: Calendar,
     gradient: ['#ef4444', '#f87171'],
-    route: '/(admin-screens)/holidays',
+    route: '/(shared-screens)/holidays',
   },
   {
     id: 'leave-approvals',
     title: 'Leave Appr.',
     icon: CalendarCheck,
     gradient: ['#10b981', '#34d399'],
-    route: '/(admin-screens)/leave/approvals',
+    route: '/(shared-screens)/leave/approvals',
   },
   {
     id: 'timesheet-approvals',
     title: 'Timesheets',
     icon: ClipboardList,
     gradient: ['#f59e0b', '#fbbf24'],
-    route: '/(admin-screens)/timesheets/approvals',
+    route: '/(shared-screens)/timesheets/approvals',
   },
   {
     id: 'settings',
@@ -144,26 +144,8 @@ export default function AdminDashboard() {
     refetch: refetchTimetable,
   } = useMyTimetable();
 
-  // Format attendance display
-  const getAttendanceDisplay = useCallback(() => {
-    if (!attendanceStats) return '...';
-    if (attendanceStats.is_holiday) {
-      return attendanceStats.holiday_name ?? 'Holiday';
-    }
-    if (!attendanceStats.is_working_day) {
-      return 'Off Day';
-    }
-    const percentage = attendanceStats.overall_attendance_percentage;
-    if (percentage === null || percentage === undefined) {
-      return 'N/A';
-    }
-    // Ensure it's a valid number
-    const numValue = typeof percentage === 'number' ? percentage : parseFloat(String(percentage));
-    if (isNaN(numValue)) {
-      return 'N/A';
-    }
-    return `${Math.round(numValue)}%`;
-  }, [attendanceStats]);
+  // Use shared hook for formatting attendance display
+  const getAttendanceDisplay = useAttendanceDisplay(attendanceStats);
 
   // Build stats configuration with current values
   const statsConfig: StatCardProps[] = useMemo(

@@ -24,6 +24,7 @@ export interface DashboardAttendanceStats {
   is_working_day: boolean;
   is_holiday: boolean;
   holiday_name: string | null;
+  reason?: string | null; // Added: reason for non-working day
   overall_attendance_percentage: number | null;
   students: AttendanceCategorySummary;
   employees: AttendanceCategorySummary;

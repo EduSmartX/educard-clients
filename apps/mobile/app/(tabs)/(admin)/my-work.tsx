@@ -16,6 +16,8 @@ import {
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import { HeaderProfileButton } from '@/components/common/HeaderProfileButton';
+
 interface WorkItem {
   id: string;
   title: string;
@@ -81,8 +83,11 @@ export default function MyWorkScreen() {
         style={styles.header}
       >
         <View style={styles.headerContent}>
-          <Text style={styles.greeting}>My Work</Text>
-          <Text style={styles.subtitle}>Your daily tasks & activities</Text>
+          <View>
+            <Text style={styles.greeting}>My Work</Text>
+            <Text style={styles.subtitle}>Your daily tasks & activities</Text>
+          </View>
+          <HeaderProfileButton route="/(tabs)/(admin)/settings" />
         </View>
       </LinearGradient>
 
@@ -134,7 +139,11 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     paddingHorizontal: 20,
   },
-  headerContent: {},
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   greeting: {
     fontSize: 24,
     fontWeight: '700',

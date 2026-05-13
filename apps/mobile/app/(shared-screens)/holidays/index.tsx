@@ -22,6 +22,7 @@ import {
   Grid3x3,
   X,
   Clock,
+  Upload,
 } from 'lucide-react-native';
 import { useState, useCallback, useMemo } from 'react';
 import {
@@ -40,7 +41,7 @@ import {
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { ConfirmDialog } from '@/components/common';
+import { ConfirmDialog, BulkUploadModal } from '@/components/common';
 import { FormInput, FormDropdown, FormDatePicker } from '@/components/forms';
 import {
   useHolidays,
@@ -48,6 +49,8 @@ import {
   useUpdateHoliday,
   useDeleteHoliday,
   useWorkingDayPolicy,
+  downloadHolidayTemplate,
+  bulkUploadHolidays,
   type Holiday,
   type CreateHolidayPayload,
 } from '@/features/holidays';
@@ -130,6 +133,7 @@ export default function HolidayCalendarScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState<'calendar' | 'table'>('calendar');
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
 
   // Check if current user is admin (has CRUD access)
   const canManage = useMemo(() => isAdminRole(user?.role), [user?.role]);
@@ -703,6 +707,15 @@ export default function HolidayCalendarScreen() {
                   <Grid3x3 size={18} color="#fff" />
                 )}
               </TouchableOpacity>
+              {/* Bulk upload button - only for admin */}
+              {canManage && (
+                <TouchableOpacity
+                  style={headerStyles.actionBtn}
+                  onPress={() => setShowBulkUpload(true)}
+                >
+                  <Upload size={18} color="#fff" />
+                </TouchableOpacity>
+              )}
               {/* Add button - only for admin */}
               {canManage && (
                 <TouchableOpacity style={headerStyles.primaryBtn} onPress={openAddModal}>
@@ -713,6 +726,18 @@ export default function HolidayCalendarScreen() {
           </View>
         </View>
       </LinearGradient>
+
+      {/* Bulk Upload Modal */}
+      <BulkUploadModal
+        visible={showBulkUpload}
+        onClose={() => setShowBulkUpload(false)}
+        title="Bulk Upload Holidays"
+        description="Upload multiple holidays at once using an Excel template"
+        downloadTemplate={downloadHolidayTemplate}
+        uploadFile={bulkUploadHolidays}
+        templateFileName="holidays_template.xlsx"
+        onUploadSuccess={() => void refetch()}
+      />
 
       {/* Content */}
       {isLoading && !refreshing ? (

@@ -9,7 +9,7 @@
 
 import { Colors, getRoleThemeColors, useDebounce, getErrorMessage, Subject } from '@educard/shared';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { BookOpen, Plus } from 'lucide-react-native';
+import { BookOpen, Plus, Upload } from 'lucide-react-native';
 import { useState, useCallback, useMemo } from 'react';
 import {
   View,
@@ -22,7 +22,7 @@ import {
 } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 
-import { SearchBar, ListHeader } from '@/components/common';
+import { SearchBar, ListHeader, BulkUploadModal } from '@/components/common';
 import { EntityActions } from '@/components/common/EntityActions';
 import { LoadingState, ErrorState, EmptyState, ListFooter } from '@/components/common/ListStates';
 import {
@@ -38,6 +38,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import { layoutStyles, cardStyles, listStyles, textStyles } from '@/styles';
 import { isAdminRole, isTeacherRole } from '@/utils/role-utils';
 
+import { downloadSubjectTemplate, bulkUploadSubjects } from '../api/subjects-api';
 import { useSubjects, useDeleteSubject, useRestoreSubject } from '../hooks/use-subjects';
 
 const adminTheme = getRoleThemeColors('admin');
@@ -56,6 +57,7 @@ export function SubjectList({ onBack }: SubjectListProps) {
   }>();
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [filters, setFilters] = useState<Record<string, unknown>>({});
 
   const isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
@@ -225,6 +227,11 @@ export function SubjectList({ onBack }: SubjectListProps) {
     </Animated.View>
   );
 
+  // Info message for class teachers
+  const bulkUploadInfoMessage = isTeacher
+    ? 'As a Class Teacher, you can only upload subjects for classes you are assigned to.'
+    : undefined;
+
   return (
     <View style={layoutStyles.container}>
       <ListHeader
@@ -235,6 +242,7 @@ export function SubjectList({ onBack }: SubjectListProps) {
         actions={
           canCreateSubjects
             ? [
+                { icon: Upload, onPress: () => setShowBulkUpload(true) },
                 {
                   icon: Plus,
                   onPress: () => router.push('/(shared-screens)/subjects/create'),
@@ -243,6 +251,19 @@ export function SubjectList({ onBack }: SubjectListProps) {
               ]
             : []
         }
+      />
+
+      {/* Bulk Upload Modal */}
+      <BulkUploadModal
+        visible={showBulkUpload}
+        onClose={() => setShowBulkUpload(false)}
+        title="Bulk Upload Subjects"
+        description="Upload multiple subjects at once using an Excel template"
+        downloadTemplate={downloadSubjectTemplate}
+        uploadFile={bulkUploadSubjects}
+        templateFileName="subjects_template.xlsx"
+        customInfoMessage={bulkUploadInfoMessage}
+        onUploadSuccess={() => void refetch()}
       />
 
       <SearchBar

@@ -47,6 +47,7 @@ export default function SharedScreensLayout() {
       {/* Timetable */}
       <Stack.Screen name="timetable/index" />
       <Stack.Screen name="timetable/setup" />
+      <Stack.Screen name="timetable/slots-editor" />
       <Stack.Screen name="timetable/assign-entry" />
       {/* Exams */}
       <Stack.Screen name="exams/sessions" />

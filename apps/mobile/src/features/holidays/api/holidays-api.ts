@@ -136,3 +136,55 @@ export async function updateWorkingDayPolicy(
   );
   return response.data;
 }
+
+// ============================================================================
+// Bulk Upload API
+// ============================================================================
+
+/**
+ * Download holiday bulk import template
+ */
+export async function downloadHolidayTemplate(): Promise<ArrayBuffer> {
+  const response = await apiClient.get('/attendance/admin/holiday-calendar/download-template/', {
+    responseType: 'arraybuffer',
+  });
+  return response.data;
+}
+
+/**
+ * Bulk upload holidays from Excel file
+ */
+export async function bulkUploadHolidays(
+  fileUri: string,
+  fileName: string
+): Promise<{
+  success: boolean;
+  message: string;
+  data: {
+    created_count?: number;
+    successful_count?: number;
+    failed_count: number;
+    total_rows?: number;
+    errors: { row: number; error: string; data?: Record<string, unknown> | null }[];
+  };
+  code: number;
+}> {
+  const formData = new FormData();
+  formData.append('file', {
+    uri: fileUri,
+    name: fileName,
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  } as unknown as Blob);
+
+  const response = await apiClient.post(
+    '/attendance/admin/holiday-calendar/bulk-upload/',
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );
+
+  return response.data;
+}

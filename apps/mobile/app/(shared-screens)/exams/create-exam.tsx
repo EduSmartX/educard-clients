@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-misused-promises, @typescript-eslint/prefer-nullish-coalescing, react-hooks/exhaustive-deps */
 /**
  * Create Exam Screen
- * Create an exam by selecting session + subject
+ * Create an exam by selecting session, class, and subject
+ * Flow: Select Session → Select Class → Select Subject (filtered by class)
  */
 
 import { getRoleGradient, extractApiError } from '@educard/shared';
@@ -9,7 +10,7 @@ import { EXAM_STATUS_LABELS, type ExamStatus } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Check } from 'lucide-react-native';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -24,8 +25,9 @@ import {
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { FormInput, FormDropdown, FormDatePicker } from '@/components/forms';
+import { useClasses } from '@/features/classes';
 import { useCreateExam, useExamSessions } from '@/features/exams';
-import { useSubjects } from '@/features/subjects';
+import { useSubjectsByClass } from '@/features/subjects';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -40,13 +42,16 @@ export default function CreateExamScreen() {
   const { sessionId: preSelectedSessionId } = useLocalSearchParams<{ sessionId?: string }>();
   const createExam = useCreateExam();
 
+  // Fetch data
   const { data: sessionsData } = useExamSessions({ page_size: 100 });
   const sessions = sessionsData?.data || [];
 
-  const { data: subjectsData } = useSubjects({ page_size: 200 });
-  const subjects = subjectsData?.subjects || [];
+  const { data: classesData } = useClasses({ page_size: 100 });
+  const classes = classesData?.classes || [];
 
+  // Form state
   const [sessionId, setSessionId] = useState(preSelectedSessionId || '');
+  const [classId, setClassId] = useState('');
   const [subjectId, setSubjectId] = useState('');
   const [status, setStatus] = useState<string>('draft');
   const [maxMarks, setMaxMarks] = useState('100');
@@ -56,15 +61,34 @@ export default function CreateExamScreen() {
   const [endTime, setEndTime] = useState('');
   const [description, setDescription] = useState('');
 
+  // Fetch subjects filtered by class (backend filtering using class_assigned)
+  const { data: subjectsData, isLoading: subjectsLoading } = useSubjectsByClass(classId || '');
+  const subjects = subjectsData?.data || [];
+
+  // Reset subject when class changes
+  useEffect(() => {
+    setSubjectId('');
+  }, [classId]);
+
+  // Dropdown options
   const sessionOptions = useMemo(
     () => sessions.map((s) => ({ label: s.name, value: s.public_id })),
     [sessions]
   );
 
+  const classOptions = useMemo(
+    () =>
+      classes.map((c: any) => ({
+        label: `${c.class_master?.name || ''} - ${c.name}`.trim(),
+        value: c.public_id,
+      })),
+    [classes]
+  );
+
   const subjectOptions = useMemo(
     () =>
       subjects.map((s: any) => ({
-        label: `${s.name} (${s.class_name || s.class_info?.name || ''})`,
+        label: s.subject_info?.name || s.name || 'Unknown Subject',
         value: s.public_id,
       })),
     [subjects]
@@ -73,6 +97,10 @@ export default function CreateExamScreen() {
   const handleSubmit = async () => {
     if (!sessionId) {
       Alert.alert('Error', 'Please select an exam session');
+      return;
+    }
+    if (!classId) {
+      Alert.alert('Error', 'Please select a class');
       return;
     }
     if (!subjectId) {
@@ -141,12 +169,29 @@ export default function CreateExamScreen() {
                 required
               />
               <FormDropdown
+                label="Class"
+                value={classId}
+                onChange={setClassId}
+                options={classOptions}
+                placeholder="Select class first"
+                required
+                searchable
+              />
+              <FormDropdown
                 label="Subject"
                 value={subjectId}
                 onChange={setSubjectId}
                 options={subjectOptions}
-                placeholder="Select subject"
+                placeholder={
+                  classId
+                    ? subjectsLoading
+                      ? 'Loading subjects...'
+                      : 'Select subject'
+                    : 'Select class first'
+                }
                 required
+                disabled={!classId}
+                searchable
               />
               <FormDropdown
                 label="Status"

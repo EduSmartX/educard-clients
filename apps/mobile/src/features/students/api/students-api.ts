@@ -87,3 +87,61 @@ export async function restoreStudent(
   const response = await apiClient.post<StudentDetailResponse>(url);
   return response.data;
 }
+
+/**
+ * Download student bulk import template and save to Downloads folder
+ */
+export async function downloadStudentTemplate(minimalFields = false): Promise<{
+  success: boolean;
+  message: string;
+  filePath?: string;
+}> {
+  // Import dynamically to avoid circular dependencies
+  const { downloadAndSaveTemplate } = await import('@/utils/download-template');
+
+  const params = minimalFields ? { minimal_fields: 'true' } : {};
+  const response = await apiClient.get('/students/bulk-operations/download_template/', {
+    params,
+    responseType: 'arraybuffer',
+  });
+
+  const fileName = minimalFields ? 'students_template_minimal.xlsx' : 'students_template.xlsx';
+  return downloadAndSaveTemplate(response.data as ArrayBuffer, fileName);
+}
+
+/**
+ * Bulk upload students from Excel file
+ */
+export async function bulkUploadStudents(
+  fileUri: string,
+  fileName: string,
+  minimalFields = false
+): Promise<{
+  success: boolean;
+  message: string;
+  data: {
+    created_count?: number;
+    successful_count?: number;
+    failed_count: number;
+    total_rows?: number;
+    errors: { row: number; error: string; data?: Record<string, unknown> | null }[];
+  };
+  code: number;
+}> {
+  const formData = new FormData();
+  formData.append('file', {
+    uri: fileUri,
+    name: fileName,
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  } as unknown as Blob);
+
+  const params = minimalFields ? { minimal_fields: 'true' } : {};
+  const response = await apiClient.post('/students/bulk-operations/bulk_upload/', formData, {
+    params,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
+  return response.data;
+}

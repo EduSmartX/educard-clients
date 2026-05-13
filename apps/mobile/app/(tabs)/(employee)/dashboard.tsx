@@ -28,7 +28,7 @@ import {
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 
 import { TodaySchedule, StatsGrid, type StatCardProps } from '@/components/dashboard';
-import { useDashboardAttendanceStats } from '@/features/attendance/hooks/use-attendance';
+import { useDashboardAttendanceStats, useAttendanceDisplay } from '@/features/attendance/hooks';
 import { useClasses } from '@/features/classes';
 import { useStudents } from '@/features/students';
 import { useMyTimetable } from '@/features/timetable';
@@ -123,25 +123,8 @@ export default function EmployeeDashboard() {
     return [...entries].sort((a, b) => (a.start_time || '').localeCompare(b.start_time || ''));
   }, [timetableData, todayDayNum]);
 
-  // Format attendance display
-  const getAttendanceDisplay = useCallback(() => {
-    if (!attendanceStats) return '...';
-    if (attendanceStats.is_holiday) {
-      return attendanceStats.holiday_name ?? 'Holiday';
-    }
-    if (!attendanceStats.is_working_day) {
-      return 'Off Day';
-    }
-    const percentage = attendanceStats.overall_attendance_percentage;
-    if (percentage === null || percentage === undefined) {
-      return 'N/A';
-    }
-    const numValue = typeof percentage === 'number' ? percentage : parseFloat(String(percentage));
-    if (isNaN(numValue)) {
-      return 'N/A';
-    }
-    return `${Math.round(numValue)}%`;
-  }, [attendanceStats]);
+  // Use shared hook for formatting attendance display
+  const getAttendanceDisplay = useAttendanceDisplay(attendanceStats);
 
   // Build stats configuration for Teacher dashboard
   // Shows: Students, Classes, Attendance, My Classes Today

@@ -21,7 +21,7 @@ import {
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { FormDropdown, FormInput } from '@/components/forms';
-import { useSubjects } from '@/features/subjects';
+import { useSubjectsByClass } from '@/features/subjects';
 import { useCreateEntry, useDeleteEntry } from '@/features/timetable';
 import { headerStyles, layoutStyles } from '@/styles';
 
@@ -54,13 +54,17 @@ export default function AssignEntryScreen() {
   const createEntry = useCreateEntry();
   const deleteEntry = useDeleteEntry();
 
-  // Fetch subjects for this class
-  const { data: subjectsData } = useSubjects({ class_id: classId, page_size: 100 });
+  // Fetch subjects for this class (filtered at backend using class_assigned filter)
+  const { data: subjectsData } = useSubjectsByClass(classId);
 
-  const subjectOptions = useMemo(
-    () => (subjectsData?.subjects ?? []).map((s) => ({ label: s.name, value: s.public_id })),
-    [subjectsData]
-  );
+  const subjectOptions = useMemo(() => {
+    const subjects = subjectsData?.data ?? [];
+    // Map to dropdown options
+    return subjects.map((s: { public_id: string; name: string }) => ({
+      label: s.name,
+      value: s.public_id,
+    }));
+  }, [subjectsData]);
 
   const handleAssign = async () => {
     if (!selectedSubjectId) {

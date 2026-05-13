@@ -23,7 +23,7 @@ import {
 } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 
-import { SearchBar, ListHeader } from '@/components/common';
+import { SearchBar, ListHeader, BulkUploadModal } from '@/components/common';
 import { EntityActions } from '@/components/common/EntityActions';
 import { LoadingState, ErrorState, EmptyState, ListFooter } from '@/components/common/ListStates';
 import {
@@ -40,6 +40,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import { layoutStyles, cardStyles, avatarStyles, listStyles, textStyles } from '@/styles';
 import { isAdminRole, isTeacherRole } from '@/utils/role-utils';
 
+import { downloadStudentTemplate, bulkUploadStudents } from '../api/students-api';
 import { useStudents, useDeleteStudent, useRestoreStudent } from '../hooks/use-students';
 
 const adminTheme = getRoleThemeColors('admin');
@@ -58,6 +59,7 @@ export function StudentList({ onBack }: StudentListProps) {
   }>();
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [filters, setFilters] = useState<Record<string, unknown>>({});
 
   const isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
@@ -270,6 +272,11 @@ export function StudentList({ onBack }: StudentListProps) {
     [handleView, handleEdit, confirmDelete, handleReactivate, isDeletedView, isAdmin]
   );
 
+  // Info message for class teachers
+  const bulkUploadInfoMessage = isTeacherRole(user?.role)
+    ? 'As a Class Teacher, you can only upload students to classes you are assigned to.'
+    : undefined;
+
   return (
     <View style={layoutStyles.container}>
       <ListHeader
@@ -280,8 +287,8 @@ export function StudentList({ onBack }: StudentListProps) {
         actions={
           canCreateStudents
             ? [
-                ...(isAdmin
-                  ? [{ icon: Upload, onPress: () => Alert.alert('Bulk Upload', 'Coming soon') }]
+                ...(canCreateStudents
+                  ? [{ icon: Upload, onPress: () => setShowBulkUpload(true) }]
                   : []),
                 {
                   icon: Plus,
@@ -291,6 +298,19 @@ export function StudentList({ onBack }: StudentListProps) {
               ]
             : []
         }
+      />
+
+      {/* Bulk Upload Modal */}
+      <BulkUploadModal
+        visible={showBulkUpload}
+        onClose={() => setShowBulkUpload(false)}
+        title="Bulk Upload Students"
+        description="Upload multiple students at once using an Excel template"
+        downloadTemplate={() => downloadStudentTemplate(false)}
+        uploadFile={(uri, name) => bulkUploadStudents(uri, name, false)}
+        templateFileName="students_template.xlsx"
+        customInfoMessage={bulkUploadInfoMessage}
+        onUploadSuccess={() => void refetch()}
       />
 
       <SearchBar

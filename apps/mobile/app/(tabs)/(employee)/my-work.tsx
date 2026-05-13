@@ -12,10 +12,13 @@ import {
   ClipboardCheck,
   GraduationCap,
   BarChart3,
+  Briefcase,
   LucideIcon,
 } from 'lucide-react-native';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+
+import { HeaderProfileButton } from '@/components/common';
 
 interface WorkItem {
   id: string;
@@ -82,8 +85,16 @@ export default function MyWorkScreen() {
         style={styles.header}
       >
         <View style={styles.headerContent}>
-          <Text style={styles.greeting}>My Work</Text>
-          <Text style={styles.subtitle}>Your daily tasks & activities</Text>
+          <View style={styles.headerLeft}>
+            <View style={styles.headerIcon}>
+              <Briefcase size={24} color="#fff" />
+            </View>
+            <View>
+              <Text style={styles.greeting}>My Work</Text>
+              <Text style={styles.subtitle}>Your daily tasks & activities</Text>
+            </View>
+          </View>
+          <HeaderProfileButton route="/(tabs)/(employee)/settings" />
         </View>
       </LinearGradient>
 
@@ -135,9 +146,26 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     paddingHorizontal: 20,
   },
-  headerContent: {},
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
   greeting: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '700',
     color: '#fff',
   },

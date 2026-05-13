@@ -8,7 +8,7 @@
 
 import { Colors, getRoleThemeColors, Class, useDebounce, getErrorMessage } from '@educard/shared';
 import { useRouter } from 'expo-router';
-import { Plus, School, GraduationCap, BookOpen } from 'lucide-react-native';
+import { Plus, School, GraduationCap, BookOpen, Upload } from 'lucide-react-native';
 import { useState, useCallback, useMemo } from 'react';
 import {
   View,
@@ -21,7 +21,7 @@ import {
 } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 
-import { SearchBar, ListHeader } from '@/components/common';
+import { SearchBar, ListHeader, BulkUploadModal } from '@/components/common';
 import { EntityActions } from '@/components/common/EntityActions';
 import { LoadingState, ErrorState, EmptyState, ListFooter } from '@/components/common/ListStates';
 import {
@@ -36,6 +36,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import { layoutStyles, listStyles } from '@/styles';
 import { isAdminRole } from '@/utils/role-utils';
 
+import { downloadClassTemplate, bulkUploadClasses } from '../api/classes-api';
 import { useClasses, useDeleteClass, useRestoreClass } from '../hooks/use-classes';
 
 const adminTheme = getRoleThemeColors('admin');
@@ -50,6 +51,7 @@ export function ClassList({ onBack }: ClassListProps) {
   const { user } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [filters, setFilters] = useState<Record<string, string | boolean | undefined>>({});
 
   const canManage = useMemo(() => isAdminRole(user?.role), [user?.role]);
@@ -250,6 +252,10 @@ export function ClassList({ onBack }: ClassListProps) {
           canManage
             ? [
                 {
+                  icon: Upload,
+                  onPress: () => setShowBulkUpload(true),
+                },
+                {
                   icon: Plus,
                   onPress: () => router.push('/(shared-screens)/classes/create'),
                   variant: 'primary',
@@ -257,6 +263,18 @@ export function ClassList({ onBack }: ClassListProps) {
               ]
             : []
         }
+      />
+
+      {/* Bulk Upload Modal - Admin only */}
+      <BulkUploadModal
+        visible={showBulkUpload}
+        onClose={() => setShowBulkUpload(false)}
+        title="Bulk Upload Classes"
+        description="Upload multiple classes at once using an Excel template"
+        downloadTemplate={downloadClassTemplate}
+        uploadFile={bulkUploadClasses}
+        templateFileName="classes_template.xlsx"
+        onUploadSuccess={() => void refetch()}
       />
 
       <SearchBar

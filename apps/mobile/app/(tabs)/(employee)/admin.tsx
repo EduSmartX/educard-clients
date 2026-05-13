@@ -7,8 +7,8 @@ import { getRoleGradient } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, type Href } from 'expo-router';
 import {
-  Clock,
-  CalendarDays,
+  CheckSquare,
+  Briefcase,
   FileText,
   CalendarCheck,
   LucideIcon,
@@ -16,6 +16,8 @@ import {
 } from 'lucide-react-native';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+
+import { HeaderProfileButton } from '@/components/common';
 
 const { width: _width } = Dimensions.get('window');
 
@@ -30,18 +32,18 @@ interface AdminItem {
 // Routes point to shared-screens which have role-based permission checks
 const adminItems: AdminItem[] = [
   {
-    id: 'my-timesheets',
-    title: 'My Timesheets',
-    icon: Clock,
+    id: 'timesheet-approvals',
+    title: 'Timesheet Approvals',
+    icon: CheckSquare,
     gradient: ['#d97706', '#fbbf24'],
-    route: '/(shared-screens)/timesheets/my-submissions',
+    route: '/(shared-screens)/timesheets/approvals',
   },
   {
-    id: 'my-leaves',
-    title: 'My Leave',
-    icon: CalendarDays,
+    id: 'leave-approvals',
+    title: 'Leave Approvals',
+    icon: Briefcase,
     gradient: ['#16a34a', '#4ade80'],
-    route: '/(shared-screens)/leave/my-requests',
+    route: '/(shared-screens)/leave/approvals',
   },
   {
     id: 'leave-policies',
@@ -81,6 +83,7 @@ export default function AdminScreen() {
               <Text style={styles.subtitle}>My requests & policies</Text>
             </View>
           </View>
+          <HeaderProfileButton route="/(tabs)/(employee)/settings" />
         </View>
       </LinearGradient>
 
@@ -135,6 +138,7 @@ const styles = StyleSheet.create({
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   headerLeft: {
     flexDirection: 'row',

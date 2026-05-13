@@ -13,18 +13,7 @@ import { getRoleGradient, GENDER_OPTIONS, BLOOD_GROUP_OPTIONS } from '@educard/s
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import {
-  ChevronLeft,
-  Save,
-  Mail,
-  Phone,
-  Camera,
-  ChevronDown,
-  ChevronUp,
-  MapPin,
-  Info,
-  User,
-} from 'lucide-react-native';
+import { ChevronLeft, Save, Camera, ChevronDown, ChevronUp, MapPin } from 'lucide-react-native';
 import { useState, useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
@@ -325,53 +314,8 @@ export default function ProfileScreen() {
           </View>
         </Animated.View>
 
-        {/* Contact Information (Read-only) */}
-        <Animated.View entering={FadeInDown.delay(300).springify()}>
-          <View style={s.card}>
-            <Text style={s.cardTitle}>Contact Information</Text>
-            <View style={s.infoNote}>
-              <Info size={14} color="#f59e0b" />
-              <Text style={s.infoNoteText}>
-                Email and phone can only be updated via OTP verification on the web dashboard.
-              </Text>
-            </View>
-            {/* Username */}
-            <View style={s.readOnlyField}>
-              <View style={s.readOnlyIcon}>
-                <User size={16} color="#64748b" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={s.readOnlyLabel}>Username</Text>
-                <Text style={s.readOnlyValue}>{profile?.username ?? '—'}</Text>
-              </View>
-            </View>
-            <View style={s.divider} />
-            {/* Email */}
-            <View style={s.readOnlyField}>
-              <View style={s.readOnlyIcon}>
-                <Mail size={16} color="#64748b" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={s.readOnlyLabel}>Email</Text>
-                <Text style={s.readOnlyValue}>{profile?.email ?? user?.email ?? '—'}</Text>
-              </View>
-            </View>
-            <View style={s.divider} />
-            {/* Phone */}
-            <View style={s.readOnlyField}>
-              <View style={s.readOnlyIcon}>
-                <Phone size={16} color="#64748b" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={s.readOnlyLabel}>Phone</Text>
-                <Text style={s.readOnlyValue}>{profile?.phone ?? user?.phone ?? '—'}</Text>
-              </View>
-            </View>
-          </View>
-        </Animated.View>
-
         {/* Address Section */}
-        <Animated.View entering={FadeInDown.delay(400).springify()}>
+        <Animated.View entering={FadeInDown.delay(300).springify()}>
           <View style={s.card}>
             <TouchableOpacity
               style={s.addressHeader}

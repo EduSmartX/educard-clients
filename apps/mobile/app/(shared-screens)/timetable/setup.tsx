@@ -8,7 +8,17 @@ import type { Class, ClassGroup } from '@educard/shared';
 import { getRoleGradient, extractApiError } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, Plus, Trash2, Pencil, X, Check, Users, Clock } from 'lucide-react-native';
+import {
+  ChevronLeft,
+  Plus,
+  Trash2,
+  Pencil,
+  X,
+  Check,
+  Users,
+  Clock,
+  Calendar,
+} from 'lucide-react-native';
 import { useState, useCallback } from 'react';
 import {
   View,
@@ -193,9 +203,19 @@ export default function TimetableSetupScreen() {
               <Text style={headerStyles.title}>Timetable Setup</Text>
               <Text style={headerStyles.subtitle}>Manage class groups & slots</Text>
             </View>
-            <TouchableOpacity style={st.addBtn} onPress={openCreateGroup}>
-              <Plus size={20} color="#fff" />
-            </TouchableOpacity>
+            <View style={st.headerActions}>
+              <TouchableOpacity
+                style={st.headerIconBtn}
+                onPress={() =>
+                  router.push('/(shared-screens)/timetable' as Parameters<typeof router.push>[0])
+                }
+              >
+                <Calendar size={20} color="#fff" />
+              </TouchableOpacity>
+              <TouchableOpacity style={st.addBtn} onPress={openCreateGroup}>
+                <Plus size={20} color="#fff" />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </LinearGradient>
@@ -295,7 +315,7 @@ export default function TimetableSetupScreen() {
                       style={st.iconBtn}
                       onPress={() =>
                         router.push(
-                          `/(shared-screens)/timetable?groupId=${group.public_id}&groupName=${encodeURIComponent(group.name)}` as Parameters<
+                          `/(shared-screens)/timetable/slots-editor?groupId=${group.public_id}&groupName=${encodeURIComponent(group.name)}` as Parameters<
                             typeof router.push
                           >[0]
                         )
@@ -379,6 +399,19 @@ export default function TimetableSetupScreen() {
 }
 
 const st = StyleSheet.create({
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerIconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   addBtn: {
     width: 40,
     height: 40,
