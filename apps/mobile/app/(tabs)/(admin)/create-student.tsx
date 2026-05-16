@@ -19,7 +19,13 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { ChevronLeft, Save } from 'lucide-react-native';
-import { Colors, getRoleGradient, getRoleThemeColors } from '@educard/shared';
+import {
+  Colors,
+  getRoleGradient,
+  getRoleThemeColors,
+  extractApiError,
+  getFieldErrors,
+} from '@educard/shared';
 import { useCreateStudent } from '@/hooks';
 import { FormInput, FormSelect, FormSection, FormError } from '@/components/forms';
 import {
@@ -122,11 +128,22 @@ export default function CreateStudentScreen() {
           { text: 'OK', onPress: () => router.back() },
         ]);
       },
-      onError: (err: any) => {
-        const msg =
-          err?.response?.data?.message ||
-          err?.response?.data?.detail ||
-          'Failed to create student. Please check your input.';
+      onError: (err: unknown) => {
+        // Extract field-level validation errors from API response
+        const fieldErrors = getFieldErrors(err);
+        if (Object.keys(fieldErrors).length > 0) {
+          // Map backend field names to form field names (e.g., user.email -> email)
+          const mappedErrors: FieldErrors = {};
+          Object.entries(fieldErrors).forEach(([key, message]) => {
+            const fieldName = key.startsWith('user.') ? key.replace('user.', '') : key;
+            mappedErrors[fieldName] = message;
+          });
+          setErrors((prev) => ({ ...prev, ...mappedErrors }));
+          // Inline field errors are sufficient - no banner needed
+          return;
+        }
+        // Show banner only for non-field errors (server errors, network issues, etc.)
+        const msg = extractApiError(err, 'Failed to create student. Please check your input.');
         setApiError(msg);
       },
     });

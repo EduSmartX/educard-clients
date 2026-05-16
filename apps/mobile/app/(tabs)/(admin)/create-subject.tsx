@@ -19,7 +19,7 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { ChevronLeft, Save } from 'lucide-react-native';
-import { getRoleGradient } from '@educard/shared';
+import { getRoleGradient, extractApiError, getFieldErrors } from '@educard/shared';
 import { useCreateSubject } from '@/hooks';
 import { FormInput, FormSection, FormError } from '@/components/forms';
 import { validateForm, hasErrors, required, type FieldErrors } from '@/utils/validation';
@@ -73,10 +73,16 @@ export default function CreateSubjectScreen() {
           { text: 'OK', onPress: () => router.back() },
         ]);
       },
-      onError: (err: any) => {
-        setApiError(
-          err?.response?.data?.message || err?.response?.data?.detail || 'Failed to create subject.'
-        );
+      onError: (err: unknown) => {
+        // Extract field-level validation errors from API response
+        const fieldErrors = getFieldErrors(err);
+        if (Object.keys(fieldErrors).length > 0) {
+          setErrors((prev) => ({ ...prev, ...fieldErrors }));
+          // Inline field errors are sufficient - no banner needed
+          return;
+        }
+        // Show banner only for non-field errors (server errors, network issues, etc.)
+        setApiError(extractApiError(err, 'Failed to create subject.'));
       },
     });
   }, [form, createMutation, router]);

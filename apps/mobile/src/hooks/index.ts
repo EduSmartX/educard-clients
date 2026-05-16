@@ -25,3 +25,4 @@ export {
   useIsClassTeacherFor,
   type TeacherManagementContext,
 } from './useManagementContext';
+export { useFormErrors, type FormErrors } from './useFormErrors';

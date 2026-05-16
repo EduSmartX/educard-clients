@@ -42,6 +42,7 @@ import {
 } from '@/components/ui/select';
 import { FileUpload, type UploadedFile } from '@/components/ui/file-upload';
 import { cn } from '@/lib/utils';
+import { applyFieldErrors } from '@/lib/utils/error-handler';
 import { SUCCESS_MESSAGES } from '@/constants/app-config';
 
 import {
@@ -166,6 +167,7 @@ export default function HomeworkFormPage() {
     reset,
     watch,
     setValue,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<HomeworkFormData>({
     resolver: zodResolver(homeworkSchema),
@@ -331,7 +333,12 @@ export default function HomeworkFormPage() {
       }
     } catch (error) {
       console.error('Failed to save homework:', error);
-      toast.error(isEditMode ? 'Failed to update homework' : 'Failed to create homework');
+      // Apply field-level validation errors to form fields
+      const result = applyFieldErrors(error, setError);
+      // Show toast only for non-field errors (server errors, network issues, etc.)
+      if (!result.hasFieldErrors) {
+        toast.error(isEditMode ? 'Failed to update homework' : 'Failed to create homework');
+      }
     }
   };
 

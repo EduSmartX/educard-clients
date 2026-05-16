@@ -181,7 +181,10 @@ export default function SubmissionReviewPage() {
     if (!homework || !userProfile) {
       return false;
     }
-    return userProfile.teacher_public_id === homework.assigned_by_public_id;
+    // Both assigned teacher and subject teacher can review
+    const isAssignedTeacher = userProfile.teacher_public_id === homework.assigned_by_public_id;
+    const isSubjectTeacher = userProfile.teacher_public_id === homework.subject_teacher_public_id;
+    return isAssignedTeacher || isSubjectTeacher;
   }, [homework, userProfile]);
 
   const navigation = useMemo(() => {

@@ -8,7 +8,7 @@
  * - date: Assigned date (YYYY-MM-DD)
  *
  * Permissions:
- * - Admin: Cannot create (view-only mode shows message)
+ * - Admin: Can create homework for any class/subject (uses subject teacher or class teacher)
  * - Class Teacher: Can create for any subject in their class
  * - Subject Teacher: Can only create for subjects they teach
  */
@@ -49,6 +49,7 @@ import {
   useCreateHomework,
   useUploadHomeworkAttachment,
 } from '@/features/homework';
+import { useFormErrors } from '@/hooks';
 import { useAuthStore } from '@/lib/auth-store';
 import { headerStyles, layoutStyles } from '@/styles';
 import { isAdminRole } from '@/utils/role-utils';
@@ -80,6 +81,15 @@ export default function CreateHomeworkScreen() {
   const { data: teacherClasses = [], isLoading: classesLoading } = useTeacherClasses();
   const createMutation = useCreateHomework();
   const uploadMutation = useUploadHomeworkAttachment();
+
+  // Form errors hook for inline validation
+  const { errors, setFieldError, clearFieldError, handleApiError, validateRequired } =
+    useFormErrors({
+      fieldMap: {
+        subject_public_id: 'subject',
+        due_datetime: 'dueDate',
+      },
+    });
 
   // Form State - Initialize from URL params
   const [selectedClass] = useState<string>(params.class || '');
@@ -124,10 +134,10 @@ export default function CreateHomeworkScreen() {
   );
 
   const canCreate = useMemo(() => {
-    if (isAdmin) return false;
+    // Admin can create homework for any class/subject
     if (!selectedClass || !selectedSubject || !title.trim()) return false;
     return true;
-  }, [isAdmin, selectedClass, selectedSubject, title]);
+  }, [selectedClass, selectedSubject, title]);
 
   const uploadAttachments = async (homeworkId: string) => {
     if (attachments.length === 0) return;
@@ -154,9 +164,21 @@ export default function CreateHomeworkScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!canCreate) {
-      Alert.alert('Validation Error', 'Please fill in all required fields');
-      return;
+    // Validate required fields
+    const isValid = validateRequired([
+      { name: 'subject', value: selectedSubject, label: 'Subject' },
+      { name: 'title', value: title, label: 'Title' },
+    ]);
+
+    if (!isValid) return;
+
+    // Validate reference link format if provided
+    if (referenceLink.trim()) {
+      const urlPattern = /^https?:\/\/.+/i;
+      if (!urlPattern.test(referenceLink.trim())) {
+        setFieldError('reference_link', 'Enter a valid URL (must start with http:// or https://)');
+        return;
+      }
     }
 
     const dueDateTime = `${dueDate}T${dueTime}:00`;
@@ -184,24 +206,11 @@ export default function CreateHomeworkScreen() {
           { text: 'OK', onPress: () => router.back() },
         ]);
       },
-      onError: (error: any) => {
-        const message = error?.response?.data?.message || 'Failed to create homework';
-        Alert.alert('Error', message);
+      onError: (error: unknown) => {
+        handleApiError(error, 'Failed to create homework');
       },
     });
   };
-
-  if (isAdmin) {
-    return (
-      <View style={[layoutStyles.container, styles.centerContent]}>
-        <AlertCircle size={48} color={Colors.gray[300]} />
-        <Text style={styles.errorText}>Admins cannot create homework</Text>
-        <TouchableOpacity style={styles.goBackBtn} onPress={() => router.back()}>
-          <Text style={styles.goBackBtnText}>Go Back</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
 
   return (
     <KeyboardAvoidingView
@@ -265,7 +274,9 @@ export default function CreateHomeworkScreen() {
         {/* Subject Selection */}
         {selectedClass && availableSubjects.length > 0 && (
           <Animated.View entering={FadeInDown.delay(150)} style={styles.section}>
-            <Text style={styles.sectionTitle}>Select Subject *</Text>
+            <Text style={[styles.sectionTitle, errors.subject && styles.sectionTitleError]}>
+              Select Subject *
+            </Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -278,12 +289,16 @@ export default function CreateHomeworkScreen() {
                     key={subject.public_id}
                     style={[
                       styles.chip,
+                      errors.subject && styles.chipError,
                       selectedSubject === subject.public_id && [
                         styles.chipSelected,
                         { backgroundColor: subjectColor.hex },
                       ],
                     ]}
-                    onPress={() => setSelectedSubject(subject.public_id)}
+                    onPress={() => {
+                      setSelectedSubject(subject.public_id);
+                      clearFieldError('subject');
+                    }}
                   >
                     <Text
                       style={[
@@ -297,23 +312,40 @@ export default function CreateHomeworkScreen() {
                 );
               })}
             </ScrollView>
+            {errors.subject && (
+              <View style={styles.errorRow}>
+                <AlertCircle size={13} color="#ef4444" />
+                <Text style={styles.errorText}>{errors.subject}</Text>
+              </View>
+            )}
           </Animated.View>
         )}
 
         {/* Title */}
         <Animated.View entering={FadeInDown.delay(200)} style={styles.section}>
-          <Text style={styles.sectionTitle}>Title *</Text>
-          <View style={styles.inputWrapper}>
-            <BookOpen size={18} color={Colors.gray[400]} />
+          <Text style={[styles.sectionTitle, errors.title && styles.sectionTitleError]}>
+            Title *
+          </Text>
+          <View style={[styles.inputWrapper, errors.title && styles.inputWrapperError]}>
+            <BookOpen size={18} color={errors.title ? '#ef4444' : Colors.gray[400]} />
             <TextInput
               style={styles.input}
               placeholder="e.g., Chapter 5 Exercises"
               placeholderTextColor={Colors.gray[400]}
               value={title}
-              onChangeText={setTitle}
+              onChangeText={(text) => {
+                setTitle(text);
+                clearFieldError('title');
+              }}
               maxLength={255}
             />
           </View>
+          {errors.title && (
+            <View style={styles.errorRow}>
+              <AlertCircle size={13} color="#ef4444" />
+              <Text style={styles.errorText}>{errors.title}</Text>
+            </View>
+          )}
         </Animated.View>
 
         {/* Description */}
@@ -429,19 +461,30 @@ export default function CreateHomeworkScreen() {
 
         {/* Reference Link */}
         <Animated.View entering={FadeInDown.delay(500)} style={styles.section}>
-          <Text style={styles.sectionTitle}>Reference Link</Text>
-          <View style={styles.inputWrapper}>
-            <Link size={18} color={Colors.gray[400]} />
+          <Text style={[styles.sectionTitle, errors.reference_link && styles.sectionTitleError]}>
+            Reference Link
+          </Text>
+          <View style={[styles.inputWrapper, errors.reference_link && styles.inputWrapperError]}>
+            <Link size={18} color={errors.reference_link ? '#ef4444' : Colors.gray[400]} />
             <TextInput
               style={styles.input}
               placeholder="https://example.com/resource"
               placeholderTextColor={Colors.gray[400]}
               value={referenceLink}
-              onChangeText={setReferenceLink}
+              onChangeText={(text) => {
+                setReferenceLink(text);
+                clearFieldError('reference_link');
+              }}
               keyboardType="url"
               autoCapitalize="none"
             />
           </View>
+          {errors.reference_link && (
+            <View style={styles.errorRow}>
+              <AlertCircle size={13} color="#ef4444" />
+              <Text style={styles.fieldErrorText}>{errors.reference_link}</Text>
+            </View>
+          )}
         </Animated.View>
 
         {/* Attachments */}
@@ -543,6 +586,19 @@ const styles = StyleSheet.create({
     color: Colors.gray[800],
     marginBottom: 10,
   },
+  sectionTitleError: {
+    color: '#dc2626',
+  },
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 6,
+  },
+  fieldErrorText: {
+    fontSize: 12,
+    color: '#ef4444',
+  },
   chipContainer: {
     flexDirection: 'row',
     gap: 8,
@@ -563,6 +619,10 @@ const styles = StyleSheet.create({
   },
   chipSelected: {
     backgroundColor: Colors.primary[500],
+  },
+  chipError: {
+    borderWidth: 1,
+    borderColor: '#ef4444',
   },
   chipText: {
     fontSize: 13,
@@ -593,6 +653,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.gray[200],
     gap: 10,
+  },
+  inputWrapperError: {
+    borderColor: '#ef4444',
+    borderWidth: 2,
+    backgroundColor: '#fef2f2',
   },
   input: {
     flex: 1,

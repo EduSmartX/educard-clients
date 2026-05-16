@@ -154,19 +154,17 @@ export function LeaveAllocationForm({
     onError: (error: unknown) => {
       const { hasFieldError, nonFieldErrors } = setFormFieldErrors(error, form.setError);
 
-      // Check for non-field errors first (like duplicate allocation)
+      // If we have field errors, the inline errors are enough - no toast needed
+      if (hasFieldError) {
+        return;
+      }
+
+      // Check for non-field errors (like duplicate allocation)
       if (nonFieldErrors.length > 0) {
         toast.error(ErrorMessages.CREATE_FAILED, {
           description: nonFieldErrors[0],
           icon: <AlertCircle className="h-4 w-4" />,
           duration: 6000,
-        });
-      } else if (hasFieldError) {
-        // For field-specific errors, show a brief info toast since error is already on the field
-        toast.error(ErrorMessages.FORM.INVALID_INPUT, {
-          description: 'Check the highlighted fields below for specific error details',
-          icon: <AlertCircle className="h-4 w-4" />,
-          duration: 4000,
         });
       } else {
         // Fallback to generic error
@@ -195,26 +193,20 @@ export function LeaveAllocationForm({
     onError: (error: unknown) => {
       const { hasFieldError, nonFieldErrors } = setFormFieldErrors(error, form.setError);
 
-      // Check for non-field errors first
+      // If we have field errors, the inline errors are enough - no toast needed
+      if (hasFieldError) {
+        return;
+      }
+
+      // Check for non-field errors
       if (nonFieldErrors.length > 0) {
         toast.error(ErrorMessages.UPDATE_FAILED, {
           description: nonFieldErrors[0],
           icon: <AlertCircle className="h-4 w-4" />,
           duration: 6000,
         });
-      } else if (hasFieldError) {
-        // For field-specific errors, show a brief info toast since error is already on the field
-        toast.error(ErrorMessages.FORM.INVALID_INPUT, {
-          description: 'Check the highlighted fields below for specific error details',
-          icon: <AlertCircle className="h-4 w-4" />,
-          duration: 4000,
-        });
       } else {
-        const errorMessage = parseApiError(error, ErrorMessages.UPDATE_FAILED);
-        toast.error(ErrorMessages.UPDATE_FAILED, {
-          description: errorMessage,
-          icon: <AlertCircle className="h-4 w-4" />,
-        });
+        toast.error(ErrorMessages.UPDATE_FAILED);
       }
     },
   });

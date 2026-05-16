@@ -33,12 +33,6 @@ interface UseFormErrorHandlerOptions {
   toastDuration?: number;
 
   /**
-   * Custom toast title for validation errors
-   * @default "Validation Error"
-   */
-  validationErrorTitle?: string;
-
-  /**
    * Custom toast title for general errors
    * @default "Error"
    */
@@ -70,23 +64,25 @@ export function useFormErrorHandler<TFieldValues extends FieldValues>(
     fieldMap,
     showToast = true,
     toastDuration = 5000,
-    validationErrorTitle = ToastTitles.VALIDATION_ERROR,
     generalErrorTitle = ToastTitles.ERROR,
   } = options;
 
   return (error: unknown) => {
-    // Apply field errors to form and get toast message
+    // Apply field-level validation errors to form fields
     const result = applyFieldErrors(error, setError, fieldMap);
 
     if (!showToast) {
       return result;
     }
 
-    // Show toast with appropriate message
-    if (result.toastMessage) {
-      const title = result.hasFieldErrors ? validationErrorTitle : generalErrorTitle;
+    // Field errors are displayed inline - no toast needed
+    if (result.hasFieldErrors) {
+      return result;
+    }
 
-      toast.error(title, {
+    // Show toast only for non-field errors (server errors, network issues, etc.)
+    if (result.toastMessage) {
+      toast.error(generalErrorTitle, {
         description: result.toastMessage || getErrorMessage(error, defaultErrorMessage),
         icon: <AlertCircle className="h-4 w-4" />,
         duration: toastDuration,

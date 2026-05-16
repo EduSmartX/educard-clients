@@ -43,6 +43,7 @@ export interface Homework {
   class_name: string;
   subject_public_id: string;
   subject_name: string;
+  subject_teacher_public_id: string | null;
   assigned_by_public_id: string;
   assigned_by_name: string;
   due_datetime: string;

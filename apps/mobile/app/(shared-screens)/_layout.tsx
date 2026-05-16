@@ -32,6 +32,7 @@ export default function SharedScreensLayout() {
       <Stack.Screen name="leave/my-requests" />
       <Stack.Screen name="leave/allocations" />
       <Stack.Screen name="leave/approvals" />
+      <Stack.Screen name="leave/apply" />
       <Stack.Screen name="leave/create" />
       <Stack.Screen name="leave/edit" />
       {/* Holidays */}
@@ -56,12 +57,10 @@ export default function SharedScreensLayout() {
       <Stack.Screen name="exams/create-exam" />
       <Stack.Screen name="exams/student-detail" />
       <Stack.Screen name="exams/enter-marks" />
+      <Stack.Screen name="exams/exams-list" />
+      <Stack.Screen name="exams/marks" />
       {/* Homework */}
-      <Stack.Screen name="homework/index" />
-      <Stack.Screen name="homework/create" />
-      <Stack.Screen name="homework/[id]" />
-      <Stack.Screen name="homework/submissions" />
-      <Stack.Screen name="homework/review" />
+      <Stack.Screen name="homework" />
       {/* Profile */}
       <Stack.Screen name="profile/index" />
     </Stack>

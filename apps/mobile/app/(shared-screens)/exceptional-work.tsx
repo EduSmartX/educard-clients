@@ -2,7 +2,7 @@
  * Exceptional Work Policy Screen - Manage calendar exceptions
  */
 
-import { getRoleGradient, getRoleThemeColors } from '@educard/shared';
+import { getRoleGradient, getRoleThemeColors, extractApiError } from '@educard/shared';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   format,
@@ -233,11 +233,8 @@ function CreateExceptionModal({
       onSuccess();
       onClose();
     },
-    onError: (error: any) => {
-      const message =
-        error?.response?.data?.message ||
-        error?.response?.data?.detail ||
-        'Failed to create exception';
+    onError: (error: unknown) => {
+      const message = extractApiError(error, 'Failed to create exception');
       Alert.alert('Error', message);
     },
   });

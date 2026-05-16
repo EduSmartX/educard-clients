@@ -4,7 +4,7 @@
  * Includes prev/next navigation between submissions
  *
  * Permissions:
- * - Only the assigned teacher (subject teacher) can submit reviews
+ * - The assigned teacher OR the subject teacher can submit reviews
  * - Admin and class teacher can view but NOT submit reviews
  * - Backend enforces this permission
  */
@@ -16,6 +16,7 @@ import {
   SUBMISSION_STATUS_COLORS,
   getSubmissionStatusLabel,
   HOMEWORK_UI,
+  extractApiError,
 } from '@educard/shared';
 import type { HomeworkSubmissionDetail, SubmissionStatus } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -94,7 +95,10 @@ export default function ReviewScreen() {
   const canReview = useMemo(() => {
     if (!homework || !profile) return false;
     if (isAdmin) return false;
-    return homework.assigned_by_public_id === profile.teacher_public_id;
+    // Both assigned teacher and subject teacher can review
+    const isAssignedTeacher = homework.assigned_by_public_id === profile.teacher_public_id;
+    const isSubjectTeacher = homework.subject_teacher_public_id === profile.teacher_public_id;
+    return isAssignedTeacher || isSubjectTeacher;
   }, [homework, profile, isAdmin]);
 
   const isAlreadyReviewed = submission?.status === SUBMISSION_STATUS.REVIEWED;
@@ -142,9 +146,9 @@ export default function ReviewScreen() {
           Alert.alert('Success', 'Review submitted successfully');
           void refetch();
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
           setIsSubmitting(false);
-          const message = error?.response?.data?.message || 'Failed to submit review';
+          const message = extractApiError(error, 'Failed to submit review');
           Alert.alert('Error', message);
         },
       }

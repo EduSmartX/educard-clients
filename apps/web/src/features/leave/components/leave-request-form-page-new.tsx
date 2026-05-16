@@ -41,7 +41,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { getErrorMessage } from '@/lib/utils/error-handler';
+import { getErrorMessage, applyFieldErrors } from '@/lib/utils/error-handler';
 import { getMediaUrl } from '@/lib/utils/media-utils';
 import {
   useLeaveRequest,
@@ -180,8 +180,13 @@ export function LeaveRequestFormPageNew() {
           navigate('/leave/dashboard');
         },
         onError: (error) => {
-          const errorMessage = getErrorMessage(error, ErrorMessages.LEAVE.CREATE_REQUEST_FAILED);
-          toast.error(ToastTitles.ERROR, { description: errorMessage });
+          // Apply field-level validation errors to form fields
+          const result = applyFieldErrors(error, form.setError);
+          // Show toast only for non-field errors (server errors, network issues, etc.)
+          if (!result.hasFieldErrors) {
+            const errorMessage = getErrorMessage(error, ErrorMessages.LEAVE.CREATE_REQUEST_FAILED);
+            toast.error(ToastTitles.ERROR, { description: errorMessage });
+          }
         },
       });
     } else if (mode === 'edit' && id) {
@@ -195,8 +200,16 @@ export function LeaveRequestFormPageNew() {
             navigate('/leave/dashboard');
           },
           onError: (error) => {
-            const errorMessage = getErrorMessage(error, ErrorMessages.LEAVE.UPDATE_REQUEST_FAILED);
-            toast.error(ToastTitles.ERROR, { description: errorMessage });
+            // Apply field-level validation errors to form fields
+            const result = applyFieldErrors(error, form.setError);
+            // Show toast only for non-field errors (server errors, network issues, etc.)
+            if (!result.hasFieldErrors) {
+              const errorMessage = getErrorMessage(
+                error,
+                ErrorMessages.LEAVE.UPDATE_REQUEST_FAILED
+              );
+              toast.error(ToastTitles.ERROR, { description: errorMessage });
+            }
           },
         }
       );

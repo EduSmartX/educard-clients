@@ -16,7 +16,13 @@ import { TextInputField, DateInputField, GenderField, BloodGroupField } from '@/
 import { AddressForm } from '@/components/forms/address-form';
 import { OrganizationRoleField } from '@/components/forms/organization-role-field';
 import { SupervisorField } from '@/components/forms/supervisor-field';
-import { ADDRESS_TYPE, ErrorMessages, FormPlaceholders, SuccessMessages, ToastTitles } from '@/constants';
+import {
+  ADDRESS_TYPE,
+  ErrorMessages,
+  FormPlaceholders,
+  SuccessMessages,
+  ToastTitles,
+} from '@/constants';
 import { useCreateTeacher, useUpdateTeacher, useReactivateTeacher } from '../hooks/mutations';
 import {
   teacherFormSchema,
@@ -201,19 +207,14 @@ export function TeacherForm({
       // Scroll to first error field if there are field errors
       if (result.hasFieldErrors) {
         scrollToFirstError(setIsAddressExpanded, form.formState.errors);
+        // Don't show toast - inline field errors are enough
+        return;
       }
 
-      if (!result.hasFieldErrors) {
-        toast.error(ErrorMessages.TEACHER.CREATE_FAILED);
-      } else if (
-        result.toastMessage &&
-        result.toastMessage !== 'Please check the form fields for errors'
-      ) {
-        // Show toast only for non-field errors, not for general validation summary
-        toast.error(ToastTitles.VALIDATION_ERROR, {
-          description: result.toastMessage,
-        });
-      }
+      // Only show toast for non-field errors (when no field errors were set)
+      toast.error(ErrorMessages.TEACHER.CREATE_FAILED, {
+        description: result.toastMessage,
+      });
     },
   });
 
@@ -248,19 +249,14 @@ export function TeacherForm({
       // Scroll to first error field if there are field errors
       if (result.hasFieldErrors) {
         scrollToFirstError(setIsAddressExpanded, form.formState.errors);
+        // Don't show toast - inline field errors are enough
+        return;
       }
 
-      if (!result.hasFieldErrors) {
-        toast.error(ErrorMessages.TEACHER.UPDATE_FAILED);
-      } else if (
-        result.toastMessage &&
-        result.toastMessage !== 'Please check the form fields for errors'
-      ) {
-        // Show toast only for non-field errors, not for general validation summary
-        toast.error(ToastTitles.VALIDATION_ERROR, {
-          description: result.toastMessage,
-        });
-      }
+      // Only show toast for non-field errors (when no field errors were set)
+      toast.error(ErrorMessages.TEACHER.UPDATE_FAILED, {
+        description: result.toastMessage,
+      });
     },
   });
 

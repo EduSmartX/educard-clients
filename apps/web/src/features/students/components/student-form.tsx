@@ -62,7 +62,6 @@ import { MinimalStudentFields } from './minimal-student-fields';
 import {
   getStudentFormValuesFromInitialData,
   scrollToFirstFormError,
-  shouldShowValidationToast,
   STUDENT_FORM_DEFAULT_VALUES,
   STUDENT_FORM_FIELD_ERROR_MAP,
   transformStudentFormToPayload,
@@ -171,15 +170,14 @@ export function StudentForm({
           setIsPreviousSchoolExpanded,
           form.formState.errors
         );
+        // Don't show toast - inline field errors are enough
+        return;
       }
 
-      if (!result.hasFieldErrors) {
-        toast.error(ErrorMessages.STUDENT.CREATE_FAILED);
-      } else if (shouldShowValidationToast(result.toastMessage)) {
-        toast.error(ToastTitles.VALIDATION_ERROR, {
-          description: result.toastMessage,
-        });
-      }
+      // Only show toast for non-field errors
+      toast.error(ErrorMessages.STUDENT.CREATE_FAILED, {
+        description: result.toastMessage,
+      });
     },
   });
 
@@ -198,20 +196,14 @@ export function StudentForm({
           setIsPreviousSchoolExpanded,
           form.formState.errors
         );
+        // Don't show toast - inline field errors are enough
+        return;
       }
 
-      // Show the actual error message from backend
-      if (!result.hasFieldErrors && result.toastMessage) {
-        toast.error(ToastTitles.ERROR, {
-          description: result.toastMessage,
-        });
-      } else if (result.hasFieldErrors) {
-        toast.error(ToastTitles.VALIDATION_ERROR, {
-          description: result.toastMessage,
-        });
-      } else {
-        toast.error(ErrorMessages.STUDENT.UPDATE_FAILED);
-      }
+      // Only show toast for non-field errors
+      toast.error(ErrorMessages.STUDENT.UPDATE_FAILED, {
+        description: result.toastMessage,
+      });
     },
   });
 

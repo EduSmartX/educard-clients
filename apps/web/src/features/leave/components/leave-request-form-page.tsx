@@ -44,7 +44,12 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { ErrorMessages, FormPlaceholders, SuccessMessages, ToastTitles } from '@/constants';
 import { getErrorMessage, applyFieldErrors } from '@/lib/utils/error-handler';
 import { getMediaUrl } from '@/lib/utils/media-utils';
-import { formatDate, formatLocalDate, parseLocalDate, validateDateRange } from '@/lib/utils/date-utils';
+import {
+  formatDate,
+  formatLocalDate,
+  parseLocalDate,
+  validateDateRange,
+} from '@/lib/utils/date-utils';
 import {
   useLeaveRequest,
   useMyLeaveBalancesSummary,
@@ -243,16 +248,21 @@ export function LeaveRequestFormPage() {
           navigate('/leave/dashboard');
         },
         onError: (error: unknown) => {
-          const errorMessage = getErrorMessage(error, ErrorMessages.LEAVE.CREATE_REQUEST_FAILED);
-          toast.error(ToastTitles.ERROR, { description: errorMessage });
-          applyFieldErrors(error, form.setError);
+          // Apply field-level validation errors to form fields
+          const result = applyFieldErrors(error, form.setError);
 
-          // Handle conflicting leaves
+          // Handle conflicting leaves (special case for date overlap errors)
           const apiError = error as {
             response?: { data?: { data?: { conflicting_leaves?: string[] } } };
           };
           if (apiError?.response?.data?.data?.conflicting_leaves) {
             setConflictingLeaves(apiError.response.data.data.conflicting_leaves);
+          }
+
+          // Show toast only for non-field errors (server errors, network issues, etc.)
+          if (!result.hasFieldErrors) {
+            const errorMessage = getErrorMessage(error, ErrorMessages.LEAVE.CREATE_REQUEST_FAILED);
+            toast.error(ToastTitles.ERROR, { description: errorMessage });
           }
         },
       });
@@ -275,16 +285,24 @@ export function LeaveRequestFormPage() {
             navigate(`/leave/requests/${id}`);
           },
           onError: (error: unknown) => {
-            const errorMessage = getErrorMessage(error, ErrorMessages.LEAVE.UPDATE_REQUEST_FAILED);
-            toast.error(ToastTitles.ERROR, { description: errorMessage });
-            applyFieldErrors(error, form.setError);
+            // Apply field-level validation errors to form fields
+            const result = applyFieldErrors(error, form.setError);
 
-            // Handle conflicting leaves
+            // Handle conflicting leaves (special case for date overlap errors)
             const apiError = error as {
               response?: { data?: { data?: { conflicting_leaves?: string[] } } };
             };
             if (apiError?.response?.data?.data?.conflicting_leaves) {
               setConflictingLeaves(apiError.response.data.data.conflicting_leaves);
+            }
+
+            // Show toast only for non-field errors (server errors, network issues, etc.)
+            if (!result.hasFieldErrors) {
+              const errorMessage = getErrorMessage(
+                error,
+                ErrorMessages.LEAVE.UPDATE_REQUEST_FAILED
+              );
+              toast.error(ToastTitles.ERROR, { description: errorMessage });
             }
           },
         }

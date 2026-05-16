@@ -17,13 +17,13 @@ export interface MutationOptions<TFieldErrors extends FieldErrors = FieldErrors>
 }
 
 /**
- * Handles a mutation error with the standard toast + field-error pattern.
+ * Centralized mutation error handler for consistent error display.
  *
- * Behaviour:
+ * Behavior:
  *  1. Parses the error into a human-readable message and field-level errors.
- *  2. Skips the toast when the error is a "deleted duplicate" (the caller
- *     typically shows a reactivation dialog instead).
- *  3. Calls the optional `onError` callback so the form can display field errors.
+ *  2. Shows toast only for non-field errors (server errors, network issues, etc.).
+ *  3. Skips toast for deleted duplicate errors (handled with reactivation dialog).
+ *  4. Calls the optional `onError` callback so the form can display field errors inline.
  */
 export function handleMutationError<TFieldErrors extends FieldErrors = FieldErrors>(
   error: Error,
@@ -32,8 +32,12 @@ export function handleMutationError<TFieldErrors extends FieldErrors = FieldErro
 ): void {
   const errorMessage = getErrorMessage(error, fallbackMessage);
   const fieldErrors = getFieldErrors(error) as TFieldErrors | undefined;
+  const hasFieldErrors = fieldErrors && Object.keys(fieldErrors).length > 0;
 
-  if (!isDeletedDuplicateError(error)) {
+  // Show toast only when:
+  // - Not a deleted duplicate error (those show a reactivation dialog)
+  // - No field errors exist (inline field errors are sufficient)
+  if (!isDeletedDuplicateError(error) && !hasFieldErrors) {
     toast.error(ToastTitles.ERROR, {
       description: errorMessage,
       duration: 5000,

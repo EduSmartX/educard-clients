@@ -125,6 +125,14 @@ export default function AdminTabLayout() {
       <Tabs.Screen name="teachers" options={{ href: null }} />
       <Tabs.Screen name="classes" options={{ href: null }} />
       <Tabs.Screen name="subjects" options={{ href: null }} />
+      <Tabs.Screen name="create-class" options={{ href: null }} />
+      <Tabs.Screen name="create-student" options={{ href: null }} />
+      <Tabs.Screen name="create-subject" options={{ href: null }} />
+      <Tabs.Screen name="create-teacher" options={{ href: null }} />
+      <Tabs.Screen name="view-class" options={{ href: null }} />
+      <Tabs.Screen name="view-student" options={{ href: null }} />
+      <Tabs.Screen name="view-subject" options={{ href: null }} />
+      <Tabs.Screen name="view-teacher" options={{ href: null }} />
     </Tabs>
   );
 }

@@ -18,6 +18,8 @@ import {
   HOMEWORK_STATUS_OPTIONS,
   HOMEWORK_PRIORITY_OPTIONS,
   SUBMISSION_TYPE_OPTIONS,
+  extractApiError,
+  getFieldErrors,
 } from '@educard/shared';
 import type { HomeworkUpdatePayload } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -188,13 +190,18 @@ export default function EditHomeworkScreen() {
             { text: 'OK', onPress: () => router.back() },
           ]);
         },
-        onError: (error: any) => {
-          console.error('[EditHomework] Update failed:', {
-            status: error?.response?.status,
-            data: error?.response?.data,
-            message: error?.message,
-          });
-          const message = error?.response?.data?.message || 'Failed to update homework';
+        onError: (error: unknown) => {
+          // Extract field-level validation errors from API response
+          const fieldErrors = getFieldErrors(error);
+          if (Object.keys(fieldErrors).length > 0) {
+            // Display first field error as alert (mobile doesn't have inline field errors in this form)
+            const firstField = Object.keys(fieldErrors)[0];
+            const message = fieldErrors[firstField];
+            Alert.alert('Validation Error', `${firstField.replace(/_/g, ' ')}: ${message}`);
+            return;
+          }
+          // Show alert only for non-field errors (server errors, network issues, etc.)
+          const message = extractApiError(error, 'Failed to update homework');
           Alert.alert('Error', message);
         },
       }
