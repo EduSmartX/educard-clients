@@ -23,6 +23,8 @@ import {
   Clock,
   ClipboardList,
   FileText,
+  BookMarked,
+  ClipboardList as SubmissionsIcon,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
 import { ROUTES } from '@/constants/app-config';
@@ -86,6 +88,23 @@ export const adminSidebarConfig: SidebarSection[] = [
     ],
   },
   {
+    title: 'HOMEWORK',
+    items: [
+      {
+        id: 'homework',
+        label: 'Homework',
+        icon: BookMarked,
+        path: ROUTES.ADMIN.HOMEWORK.LIST,
+      },
+      {
+        id: 'homework-submissions',
+        label: 'Submissions',
+        icon: SubmissionsIcon,
+        path: ROUTES.HOMEWORK_SUBMISSIONS,
+      },
+    ],
+  },
+  {
     title: 'EXAMS & MARKS',
     defaultCollapsed: true,
     items: [
@@ -100,8 +119,6 @@ export const adminSidebarConfig: SidebarSection[] = [
         label: 'Exams',
         icon: FileText,
         path: ROUTES.EXAMS_LIST,
-        // Include create/edit/bulk-create under Exams highlighting
-        // Note: Edit path /exams/:id/edit is handled by prefix matching from /exams/list
         matchPaths: [ROUTES.EXAMS_NEW, ROUTES.EXAMS_BULK_CREATE],
       },
       {

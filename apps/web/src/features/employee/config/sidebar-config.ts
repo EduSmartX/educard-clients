@@ -21,6 +21,8 @@ import {
   Clock,
   ClipboardList,
   FileText,
+  BookMarked,
+  ClipboardList as SubmissionsIcon,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
 import { ROUTES } from '@/constants/app-config';
@@ -36,9 +38,15 @@ export const employeeSidebarConfig: SidebarSection[] = [
       },
       {
         id: 'calendar',
-        label: 'My Calendar',
+        label: 'Calendar',
         icon: Calendar,
         path: ROUTES.CALENDAR,
+      },
+      {
+        id: 'analytics',
+        label: 'Analytics',
+        icon: BarChart3,
+        path: '/analytics', // TODO: Add proper analytics route
       },
     ],
   },
@@ -74,6 +82,23 @@ export const employeeSidebarConfig: SidebarSection[] = [
         label: 'Timetable',
         icon: Clock,
         path: ROUTES.TIMETABLE,
+      },
+    ],
+  },
+  {
+    title: 'HOMEWORK',
+    items: [
+      {
+        id: 'homework',
+        label: 'Homework',
+        icon: BookMarked,
+        path: ROUTES.EMPLOYEE.HOMEWORK.LIST,
+      },
+      {
+        id: 'homework-submissions',
+        label: 'Submissions',
+        icon: SubmissionsIcon,
+        path: ROUTES.HOMEWORK_SUBMISSIONS,
       },
     ],
   },

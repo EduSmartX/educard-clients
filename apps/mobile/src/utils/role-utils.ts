@@ -50,7 +50,8 @@ export async function isTeacherUser(): Promise<boolean> {
  */
 export function isAdminRole(role?: string | null): boolean {
   if (!role) return false;
-  return role.toLowerCase() === 'admin';
+  const normalizedRole = role.toLowerCase();
+  return ['admin', 'super_admin', 'organization_admin'].includes(normalizedRole);
 }
 
 /**

@@ -73,6 +73,13 @@ interface AdminLinkItem {
 
 const adminLinks: AdminLinkItem[] = [
   {
+    id: 'homework',
+    title: 'Homework',
+    icon: BookOpen,
+    gradient: ['#7c3aed', '#a78bfa'],
+    route: '/(shared-screens)/homework',
+  },
+  {
     id: 'leave-allocations',
     title: 'Leave Policy',
     icon: FileText,

@@ -43,6 +43,7 @@ export interface UserProfile {
   is_active: boolean;
   is_email_verified: boolean;
   notification_opt_in: boolean;
+  teacher_public_id?: string | null;
   address?: Address;
 }
 

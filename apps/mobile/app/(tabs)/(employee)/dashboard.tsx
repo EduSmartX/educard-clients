@@ -13,6 +13,7 @@ import {
   GraduationCap,
   CalendarDays,
   Star,
+  FileText,
   type LucideIcon,
 } from 'lucide-react-native';
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
@@ -61,6 +62,13 @@ interface QuickAction {
 }
 
 const quickActions: QuickAction[] = [
+  {
+    id: 'homework',
+    title: 'Homework',
+    icon: FileText,
+    gradient: ['#7c3aed', '#a78bfa'],
+    route: '/(shared-screens)/homework',
+  },
   {
     id: 'mark-attendance',
     title: 'Mark Attendance',

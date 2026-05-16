@@ -264,19 +264,31 @@ export function SingleDayAttendanceDialog({
             detail?: string;
             message?: string;
             data?: { errors?: Array<{ error?: string; date?: string }> };
+            errors?: Record<string, string[]>;
           };
         };
         message?: string;
       };
-      // Extract error from bulk submit response: data.data.errors[0].error
+
+      // Extract error from different response formats
+      // Format 1: data.data.errors[0].error (old bulk submit)
       const bulkErrors = err?.response?.data?.data?.errors;
       const bulkErrorMessage = bulkErrors?.[0]?.error;
+
+      // Format 2: errors.attendance_records[0] (new validation format)
+      const validationErrors = err?.response?.data?.errors;
+      const validationErrorMessage = validationErrors
+        ? Object.values(validationErrors).flat()[0]
+        : undefined;
+
       const errorMessage =
         bulkErrorMessage ||
+        validationErrorMessage ||
         err?.response?.data?.detail ||
         err?.response?.data?.message ||
         err?.message ||
         'Failed to submit attendance';
+
       toast.error('Submission Failed', {
         description: errorMessage,
         duration: 6000,

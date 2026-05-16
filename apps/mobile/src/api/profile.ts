@@ -58,6 +58,7 @@ export interface UserProfile {
     name: string;
   };
   notification_opt_in?: boolean;
+  teacher_public_id?: string;
 }
 
 export interface UpdateProfilePayload {

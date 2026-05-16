@@ -19,3 +19,4 @@ export * from "./leave";
 export * from "./exam";
 export * from "./timetable";
 export * from "./holiday";
+export * from "./homework.types";

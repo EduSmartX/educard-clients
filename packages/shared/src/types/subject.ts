@@ -48,7 +48,6 @@ export interface SubjectItem extends AuditFields {
   teacher_info?: SubjectTeacher | null;
   teacher?: SubjectTeacher | null;
   is_active?: boolean;
-  // Permission field - indicates if user can edit/delete this subject
   can_manage?: boolean;
 }
 

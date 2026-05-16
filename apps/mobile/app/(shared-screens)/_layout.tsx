@@ -56,6 +56,12 @@ export default function SharedScreensLayout() {
       <Stack.Screen name="exams/create-exam" />
       <Stack.Screen name="exams/student-detail" />
       <Stack.Screen name="exams/enter-marks" />
+      {/* Homework */}
+      <Stack.Screen name="homework/index" />
+      <Stack.Screen name="homework/create" />
+      <Stack.Screen name="homework/[id]" />
+      <Stack.Screen name="homework/submissions" />
+      <Stack.Screen name="homework/review" />
       {/* Profile */}
       <Stack.Screen name="profile/index" />
     </Stack>
