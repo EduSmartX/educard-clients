@@ -8,7 +8,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Briefcase, Loader2, AlertCircle, Paperclip, X, FileText, Download } from 'lucide-react';
 import { toast } from 'sonner';
-import { validateDateRange } from '@educard/shared';
 import { PageHeader } from '@/components/common/page-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -137,9 +136,11 @@ export function LeaveRequestFormPageNew() {
         return;
       }
 
-      const dateError = validateDateRange(startDate, endDate, 'Start date', 'End date');
-      if (dateError) {
-        setDateRangeError(dateError);
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+
+      if (end < start) {
+        setDateRangeError('End date must be on or after start date');
         setHolidays([]);
         form.setValue('number_of_days', 0);
         return;

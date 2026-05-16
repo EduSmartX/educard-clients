@@ -18,8 +18,7 @@ import {
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { Screen } from '@/components/layout';
-// colors constant unused - keeping import commented for future use
-// import { colors } from '@/constants/colors';
+import { colors } from '@/constants/colors';
 import { useMyTimetable } from '@/features/timetable';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];

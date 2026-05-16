@@ -164,6 +164,12 @@ export const SUCCESS_MESSAGES = {
   leaveRejected: 'Leave request rejected',
   leaveCancelled: 'Leave request cancelled',
 
+  // Homework
+  homeworkCreated: 'Homework created successfully',
+  homeworkUpdated: 'Homework updated successfully',
+  homeworkDeleted: 'Homework deleted successfully',
+  submissionReviewed: 'Submission reviewed successfully',
+
   // Auth
   loginSuccess: 'Login successful',
   logoutSuccess: 'Logout successful',
@@ -272,6 +278,13 @@ export const ROUTES = {
   EXCEPTIONAL_WORK: '/exceptional-work',
   TIMETABLE: '/timetable',
   TIMETABLE_SETUP: '/timetable/setup',
+  // Homework
+  HOMEWORK: '/homework',
+  HOMEWORK_NEW: '/homework/new',
+  HOMEWORK_SUBMISSIONS: '/homework/submissions',
+  HOMEWORK_SUBMISSION_REVIEW: '/homework/:homeworkId/submissions/:submissionId/review',
+  HOMEWORK_VIEW: '/homework/:id',
+  HOMEWORK_EDIT: '/homework/:id/edit',
   // Role-specific routes
   ADMIN: {
     DASHBOARD: '/admin/dashboard',
@@ -299,6 +312,12 @@ export const ROUTES = {
     HOLIDAYS: '/admin/holidays',
     EXCEPTIONAL_WORK: '/admin/exceptional-work',
     PREFERENCES: '/admin/preferences',
+    HOMEWORK: {
+      LIST: '/homework',
+      NEW: '/homework/new',
+      VIEW: '/homework/:id',
+      EDIT: '/homework/:id/edit',
+    },
   },
   EMPLOYEE: {
     DASHBOARD: '/employee/dashboard',
@@ -325,6 +344,14 @@ export const ROUTES = {
       REVIEWS: '/employee/leave/reviews',
       ALLOCATIONS: '/employee/leave/allocations',
       MANAGE_BALANCE: '/employee/leave/manage-balance',
+    },
+    HOMEWORK: {
+      LIST: '/homework',
+      NEW: '/homework/new',
+      VIEW: '/homework/:id',
+      EDIT: '/homework/:id/edit',
+      SUBMISSIONS: '/homework/submissions',
+      SUBMISSION_REVIEW: '/homework/:homeworkId/submissions/:submissionId/review',
     },
     PROFILE: '/employee/profile',
   },

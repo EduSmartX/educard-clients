@@ -220,8 +220,8 @@ export function EmployeeTimesheetSubmitPage() {
 
       const leaveByDate = new Map<string, { leave_name: string; status: string }>();
       (leaveResponse?.data || []).forEach((leave: LeaveRequest) => {
-        const start = new Date(leave.start_date + 'T00:00:00');
-        const end = new Date(leave.end_date + 'T00:00:00');
+        const start = new Date(`${leave.start_date}T00:00:00`);
+        const end = new Date(`${leave.end_date}T00:00:00`);
         eachDayOfInterval({ start, end }).forEach((day) => {
           leaveByDate.set(format(day, 'yyyy-MM-dd'), {
             leave_name: leave.leave_type_name || leave.leave_name || 'Leave',
@@ -235,11 +235,9 @@ export function EmployeeTimesheetSubmitPage() {
       const calendarExceptions = attendanceResponse?.calendar_exceptions || [];
 
       const exceptionByDate = new Map<string, { type: string; reason: string }>();
-      calendarExceptions.forEach(
-        (exception: { date: string; type: string; reason: string }) => {
-          exceptionByDate.set(exception.date, { type: exception.type, reason: exception.reason });
-        }
-      );
+      calendarExceptions.forEach((exception: { date: string; type: string; reason: string }) => {
+        exceptionByDate.set(exception.date, { type: exception.type, reason: exception.reason });
+      });
 
       const isWorkingDay = (day: Date): boolean => {
         const dayKey = format(day, 'yyyy-MM-dd');
@@ -250,10 +248,7 @@ export function EmployeeTimesheetSubmitPage() {
           return exception.type === 'force_working' || exception.type === 'FORCE_WORKING';
         }
 
-        if (
-          holidayInfo?.type === 'official_holiday' ||
-          holidayInfo?.type === 'holiday'
-        ) {
+        if (holidayInfo?.type === 'official_holiday' || holidayInfo?.type === 'holiday') {
           return false;
         }
 
@@ -269,12 +264,19 @@ export function EmployeeTimesheetSubmitPage() {
 
         if (dayOfWeek === 6) {
           const pattern = workingDayPolicy.saturday_off_pattern;
-          if (pattern === 'NONE') return true;
-          if (pattern === 'ALL') return false;
+          if (pattern === 'NONE') {
+            return true;
+          }
+          if (pattern === 'ALL') {
+            return false;
+          }
           const saturdayOfMonth = Math.ceil(day.getDate() / 7);
-          if (pattern === 'FIRST_AND_THIRD') return saturdayOfMonth !== 1 && saturdayOfMonth !== 3;
-          if (pattern === 'SECOND_AND_FOURTH')
+          if (pattern === 'FIRST_AND_THIRD') {
+            return saturdayOfMonth !== 1 && saturdayOfMonth !== 3;
+          }
+          if (pattern === 'SECOND_AND_FOURTH') {
             return saturdayOfMonth !== 2 && saturdayOfMonth !== 4;
+          }
           return true;
         }
 

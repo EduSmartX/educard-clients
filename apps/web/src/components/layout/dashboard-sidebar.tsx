@@ -12,7 +12,6 @@ export interface SidebarItem {
   badge?: string | number;
   children?: SidebarItem[];
   requiresSupervisor?: boolean;
-  /** Additional paths that should highlight this sidebar item when active */
   matchPaths?: string[];
 }
 
@@ -57,14 +56,17 @@ function SidebarNavItem({
           onClick={() => setIsOpen((prev) => !prev)}
           className={cn(
             'flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
-            isChildActive 
+            isChildActive
               ? cn(theme.accentColor, theme.accentBg)
               : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
           )}
         >
           <div className="flex items-center gap-3">
             <item.icon
-              className={cn('h-5 w-5 transition-colors', isChildActive ? theme.accentColor : 'text-slate-400')}
+              className={cn(
+                'h-5 w-5 transition-colors',
+                isChildActive ? theme.accentColor : 'text-slate-400'
+              )}
               strokeWidth={2}
             />
             <span>{item.label}</span>
@@ -100,16 +102,20 @@ function SidebarNavItem({
     return null;
   }
 
-  // Compute active state: pathname matches this item's path (or any of its matchPaths)
-  // but not a sibling's longer path. E.g. /attendance/timesheet should NOT be active when at
-  // /attendance/timesheet/approvals because the sibling /attendance/timesheet/approvals
-  // is a more specific match.
   const matchesMainPath = pathname === item.path || pathname.startsWith(`${item.path}/`);
   const matchesExtraPaths = item.matchPaths?.some(
     (mp) => pathname === mp || pathname.startsWith(`${mp}/`)
   );
+
+  const isHomeworkSubmissionsItem = item.id === 'homework-submissions';
+  const isHomeworkItem = item.id === 'homework';
+  const isOnSubmissionsReviewPage = /^\/homework\/[^/]+\/submissions\//.test(pathname);
+  const matchesSubmissionsPattern = isHomeworkSubmissionsItem && isOnSubmissionsReviewPage;
+  const excludeHomeworkOnSubmissions = isHomeworkItem && isOnSubmissionsReviewPage;
+
   const isItemActive =
-    (matchesMainPath || matchesExtraPaths) &&
+    (matchesMainPath || matchesExtraPaths || matchesSubmissionsPattern) &&
+    !excludeHomeworkOnSubmissions &&
     !(siblingPaths ?? []).some((sp) => sp.length > item.path!.length && pathname.startsWith(sp));
 
   return (
@@ -150,24 +156,32 @@ function SidebarNavItem({
   );
 }
 
-export function DashboardSidebar({ sections, footer, onNavigate, userRole, isSupervisor = false }: DashboardSidebarProps) {
+export function DashboardSidebar({
+  sections,
+  footer,
+  onNavigate,
+  userRole,
+  isSupervisor = false,
+}: DashboardSidebarProps) {
   const theme = getThemeConfig(userRole);
-  
+
   // Filter sections and items based on supervisor status
-  const filteredSections = sections.map((section) => ({
-    ...section,
-    items: section.items.filter((item) => {
-      if (item.requiresSupervisor && !isSupervisor) {
-        return false;
-      }
-      return true;
-    }),
-  })).filter((section) => section.items.length > 0); // Remove empty sections
-  
+  const filteredSections = sections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => {
+        if (item.requiresSupervisor && !isSupervisor) {
+          return false;
+        }
+        return true;
+      }),
+    }))
+    .filter((section) => section.items.length > 0); // Remove empty sections
+
   return (
     <div className="flex h-full flex-col bg-white">
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 overflow-y-auto">
+      <nav className="flex-1 overflow-y-auto px-4 py-6">
         {filteredSections.map((section, sectionIndex) => (
           <CollapsibleSection
             key={sectionIndex}
@@ -197,7 +211,7 @@ function CollapsibleSection({
   theme: ThemeConfig;
 }) {
   const { pathname } = useLocation();
-  
+
   // Check if any item in this section is active
   const isAnyItemActive = section.items.some((item) => {
     if (item.path && (pathname === item.path || pathname.startsWith(`${item.path}/`))) {
@@ -205,17 +219,21 @@ function CollapsibleSection({
     }
     // Check children too
     if (item.children) {
-      return item.children.some((child) => 
-        child.path && (pathname === child.path || pathname.startsWith(`${child.path}/`))
+      return item.children.some(
+        (child) => child.path && (pathname === child.path || pathname.startsWith(`${child.path}/`))
       );
     }
     return false;
   });
-  
+
   // Default to expanded if any item is active, or if no title (top-level items), or based on defaultCollapsed
   const [isExpanded, setIsExpanded] = useState(() => {
-    if (!section.title) {return true;} // No title means always expanded
-    if (isAnyItemActive) {return true;} // Expand if active item
+    if (!section.title) {
+      return true;
+    } // No title means always expanded
+    if (isAnyItemActive) {
+      return true;
+    } // Expand if active item
     return !section.defaultCollapsed; // Otherwise use default
   });
 
@@ -244,9 +262,9 @@ function CollapsibleSection({
     <div key={sectionIndex} className="mb-4">
       <button
         onClick={() => setIsExpanded((prev) => !prev)}
-        className="flex w-full items-center justify-between mb-2 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors group"
+        className="group mb-2 flex w-full items-center justify-between rounded-lg px-3 py-1.5 transition-colors hover:bg-slate-50"
       >
-        <h3 className="text-[11px] font-bold tracking-widest text-slate-400 uppercase group-hover:text-slate-600 transition-colors">
+        <h3 className="text-[11px] font-bold tracking-widest text-slate-400 uppercase transition-colors group-hover:text-slate-600">
           {section.title}
         </h3>
         <ChevronDown

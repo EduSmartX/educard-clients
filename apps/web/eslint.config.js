@@ -19,8 +19,8 @@ export default tseslint.config(
     },
     rules: {
       'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn',
-      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+      'react-hooks/exhaustive-deps': 'error',
+      'react-refresh/only-export-components': 'off',
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': [
         'error',
@@ -45,9 +45,18 @@ export default tseslint.config(
       'prefer-template': 'error',
       'prefer-arrow-callback': 'error',
       'object-shorthand': ['error', 'always'],
-      'curly': ['error', 'all'],
+      curly: ['error', 'all'],
       'no-return-await': 'off',
       'require-await': 'off',
+      'no-unused-expressions': 'off',
+      '@typescript-eslint/no-unused-expressions': [
+        'error',
+        {
+          allowShortCircuit: true,
+          allowTernary: true,
+          allowTaggedTemplates: true,
+        },
+      ],
     },
   }
 );

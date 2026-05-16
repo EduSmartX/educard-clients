@@ -159,6 +159,16 @@ const ExceptionalWorkPage = lazy(() => import('./pages/exceptional-work-page'));
 const ClassTimetablePage = lazy(() => import('./features/timetable/pages/class-timetable-page'));
 const TimetableSetupPage = lazy(() => import('./features/timetable/pages/timetable-setup-page'));
 
+// Homework
+const HomeworkListPage = lazy(() => import('./features/homework/pages/homework-list-page'));
+const HomeworkCreatePage = lazy(() => import('./features/homework/pages/homework-create-page'));
+const HomeworkDetailPage = lazy(() => import('./features/homework/pages/homework-detail-page'));
+const HomeworkFormPage = lazy(() => import('./features/homework/pages/homework-form-page'));
+const HomeworkSubmissionsPage = lazy(
+  () => import('./features/homework/pages/homework-submissions-page')
+);
+const SubmissionReviewPage = lazy(() => import('./features/homework/pages/submission-review-page'));
+
 // Profile
 const ProfilePage = lazy(() => import('./features/profile/pages/profile-page'));
 
@@ -271,6 +281,14 @@ function App() {
             {/* Timetable */}
             <Route path={ROUTES.TIMETABLE} element={<ClassTimetablePage />} />
             <Route path={ROUTES.TIMETABLE_SETUP} element={<TimetableSetupPage />} />
+
+            {/* Homework */}
+            <Route path={ROUTES.HOMEWORK} element={<HomeworkListPage />} />
+            <Route path={ROUTES.HOMEWORK_NEW} element={<HomeworkCreatePage />} />
+            <Route path={ROUTES.HOMEWORK_SUBMISSIONS} element={<HomeworkSubmissionsPage />} />
+            <Route path={ROUTES.HOMEWORK_SUBMISSION_REVIEW} element={<SubmissionReviewPage />} />
+            <Route path={ROUTES.HOMEWORK_VIEW} element={<HomeworkDetailPage />} />
+            <Route path={ROUTES.HOMEWORK_EDIT} element={<HomeworkFormPage />} />
 
             {/* Profile */}
             <Route path={ROUTES.PROFILE} element={<ProfilePage />} />

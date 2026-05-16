@@ -13,6 +13,7 @@ import {
   GraduationCap,
   BarChart3,
   Briefcase,
+  FileText,
   LucideIcon,
 } from 'lucide-react-native';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
@@ -30,6 +31,14 @@ interface WorkItem {
 }
 
 const workItems: WorkItem[] = [
+  {
+    id: 'homework',
+    title: 'Homework',
+    subtitle: 'Create & review homework',
+    icon: FileText,
+    gradient: ['#7c3aed', '#a78bfa'],
+    route: '/(shared-screens)/homework',
+  },
   {
     id: 'my-timesheet',
     title: 'My Timesheet',

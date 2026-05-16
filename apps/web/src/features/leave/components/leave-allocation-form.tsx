@@ -31,7 +31,6 @@ import {
 } from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ErrorMessages, FormPlaceholders, SuccessMessages } from '@/constants';
-import { validateDateRange } from '@educard/shared';
 import { leaveApi, type LeaveAllocationPayload } from '@/lib/api/leave-api';
 import { getCurrentAcademicYear } from '@/lib/api/organization-api';
 import {
@@ -222,15 +221,6 @@ export function LeaveAllocationForm({
 
   // Form submission handler
   const onSubmit = (values: LeaveAllocationFormValues) => {
-    // Validate date range
-    const dateRangeError = validateDateRange(
-      values.effective_from, values.effective_to, 'Effective from', 'Effective to'
-    );
-    if (dateRangeError) {
-      form.setError('effective_to', { type: 'manual', message: dateRangeError });
-      return;
-    }
-
     // Validate carry forward
     const validation = validateCarryForward(values.total_days, values.max_carry_forward_days);
     if (!validation.valid) {

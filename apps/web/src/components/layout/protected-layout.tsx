@@ -35,14 +35,11 @@ export function ProtectedLayout() {
   // Profile photo from attachments API takes priority over user.profile_image from login
   const avatarUrl = getMediaUrl(profilePhoto?.thumbnail_url) || user?.profile_image;
 
-  // Determine if user is a supervisor (can manage subordinates)
-  // Admins are always supervisors
-  // Teachers/staff check the management context
   const isAdmin = user?.role === USER_ROLES.ADMIN;
   const isSupervisor = isAdmin || managementContext?.can_review_requests || false;
 
   return (
-    <div className={cn("min-h-screen", theme.mainBgGradient)}>
+    <div className={cn('min-h-screen', theme.mainBgGradient)}>
       <DashboardHeader
         organizationName={organization?.name}
         organizationLogo={organization?.logo}
@@ -53,8 +50,8 @@ export function ProtectedLayout() {
         notificationCount={3}
       />
 
-      <DashboardLayout 
-        sidebarSections={getSidebarConfig()} 
+      <DashboardLayout
+        sidebarSections={getSidebarConfig()}
         userRole={userRoleFormatted}
         isSupervisor={isSupervisor}
       >

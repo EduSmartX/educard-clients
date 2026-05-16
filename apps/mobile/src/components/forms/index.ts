@@ -12,5 +12,7 @@ export { FormError } from './FormError';
 export { FormDropdown } from './FormDropdown';
 export { FormDatePicker } from './FormDatePicker';
 export { FormPhotoUpload } from './FormPhotoUpload';
+export { FormAttachmentPicker } from './FormAttachmentPicker';
+export type { SelectedFile, FormAttachmentPickerProps } from './FormAttachmentPicker';
 export { KeyboardAwareForm } from './KeyboardAwareForm';
 export type { KeyboardAwareScrollView } from './KeyboardAwareForm';

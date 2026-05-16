@@ -74,6 +74,11 @@ const iconMap: Record<string, IconMapping> = {
   CalendarDays: { lib: Ionicons, name: 'calendar' },
   Clock: { lib: Ionicons, name: 'time-outline' },
   FileText: { lib: Ionicons, name: 'document-text-outline' },
+  FileTextIcon: { lib: Ionicons, name: 'document-text-outline' },
+  File: { lib: Ionicons, name: 'document-outline' },
+  FileIcon: { lib: Ionicons, name: 'document-outline' },
+  Paperclip: { lib: Ionicons, name: 'attach-outline' },
+  PaperclipIcon: { lib: Ionicons, name: 'attach-outline' },
   Folder: { lib: Ionicons, name: 'folder-outline' },
   Image: { lib: Ionicons, name: 'image-outline' },
   Camera: { lib: Ionicons, name: 'camera-outline' },
@@ -306,6 +311,13 @@ export const CircleX = createIconComponent('CircleX');
 export const Minus = createIconComponent('Minus');
 export const Loader2 = createIconComponent('Loader2');
 export const RotateCcw = createIconComponent('RotateCcw');
+
+// File and attachment icons
+export const File = createIconComponent('File');
+export const FileIcon = createIconComponent('FileIcon');
+export const FileTextIcon = createIconComponent('FileTextIcon');
+export const Paperclip = createIconComponent('Paperclip');
+export const PaperclipIcon = createIconComponent('PaperclipIcon');
 
 // Additional icons used in the app
 export const UserCircle = createIconComponent('UserCircle');
