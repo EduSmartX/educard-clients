@@ -25,6 +25,7 @@ import {
   Sparkles,
   TrendingUp,
   Clock,
+  CreditCard,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
@@ -125,7 +126,9 @@ function StatCard({
       className="group cursor-pointer"
     >
       <Card className="relative overflow-hidden border border-gray-100 shadow-sm transition-shadow duration-300 hover:shadow-xl">
-        <div className={`absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 ${gradient}`} />
+        <div
+          className={`absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 ${gradient}`}
+        />
         <CardContent className="relative z-10 p-5">
           <div className="flex items-center gap-4">
             <div
@@ -217,10 +220,7 @@ function NotificationCard({
       onClick={() => navigate(path)}
       className="group flex cursor-pointer items-center gap-4 rounded-xl border border-gray-100 bg-white p-4 transition-all duration-200 hover:border-gray-200 hover:shadow-md"
     >
-      <motion.div
-        className={`rounded-full p-2.5 ${badgeColor}`}
-        whileHover={{ scale: 1.1 }}
-      >
+      <motion.div className={`rounded-full p-2.5 ${badgeColor}`} whileHover={{ scale: 1.1 }}>
         <Icon className="h-5 w-5 text-white" />
       </motion.div>
       <div className="min-w-0 flex-1">
@@ -249,7 +249,14 @@ function AttendanceCard({
   icon: React.ElementType;
   label: string;
   isLoading: boolean;
-  stats: { present?: number; total_registered?: number; marked?: number; attendance_percentage?: number | null } | undefined;
+  stats:
+    | {
+        present?: number;
+        total_registered?: number;
+        marked?: number;
+        attendance_percentage?: number | null;
+      }
+    | undefined;
   iconBg: string;
   badgeBg: string;
   path: string;
@@ -294,12 +301,19 @@ function AttendanceCard({
   const displayContent = getDisplayContent();
 
   return (
-    <motion.div variants={FADE_UP} whileHover={{ y: -3 }} className="group cursor-pointer" onClick={() => navigate(path)}>
+    <motion.div
+      variants={FADE_UP}
+      whileHover={{ y: -3 }}
+      className="group cursor-pointer"
+      onClick={() => navigate(path)}
+    >
       <Card className="border border-gray-100 shadow-sm transition-all duration-200 hover:shadow-lg">
         <CardContent className="p-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`shrink-0 rounded-xl p-3 ${iconBg} transition-transform duration-300 group-hover:scale-110`}>
+              <div
+                className={`shrink-0 rounded-xl p-3 ${iconBg} transition-transform duration-300 group-hover:scale-110`}
+              >
                 <Icon className="h-6 w-6 text-white" />
               </div>
               <div>
@@ -308,7 +322,9 @@ function AttendanceCard({
                   <Loader2 className="mt-1 h-5 w-5 animate-spin text-gray-300" />
                 ) : isHoliday || isWorkingDay === false ? (
                   <div>
-                    <p className="text-lg font-semibold text-amber-600">{displayContent.mainText}</p>
+                    <p className="text-lg font-semibold text-amber-600">
+                      {displayContent.mainText}
+                    </p>
                     <p className="text-xs text-gray-400">{displayContent.subText}</p>
                   </div>
                 ) : marked > 0 ? (
@@ -402,7 +418,7 @@ export default function AdminDashboardPage() {
         className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-teal-600 via-emerald-600 to-cyan-600 p-6 text-white shadow-2xl shadow-teal-500/20 sm:p-8"
       >
         <motion.div
-          className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"
+          className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"
           animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
           transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
         />
@@ -438,9 +454,7 @@ export default function AdminDashboardPage() {
             transition={{ delay: 0.4, duration: 0.5 }}
             className="mt-1.5 text-sm text-white/75 sm:text-base"
           >
-            {organization?.name
-              ? `Managing ${organization.name}`
-              : "Here's your school overview"}
+            {organization?.name ? `Managing ${organization.name}` : "Here's your school overview"}
           </motion.p>
 
           <motion.div
@@ -615,6 +629,14 @@ export default function AdminDashboardPage() {
             path={ROUTES.ATTENDANCE.TIMESHEET_APPROVALS}
             badgeColor="bg-gradient-to-br from-blue-500 to-indigo-600"
             delay={0.85}
+          />
+          <NotificationCard
+            icon={CreditCard}
+            label="Fee Payments"
+            description="View and manage all student fee payment transactions"
+            path={ROUTES.FEES.PAYMENTS}
+            badgeColor="bg-gradient-to-br from-emerald-500 to-teal-600"
+            delay={0.95}
           />
         </div>
       </section>
