@@ -21,7 +21,7 @@ import { View, Text, Modal, TouchableOpacity, StyleSheet, ActivityIndicator } fr
 
 type ConfirmVariant = 'danger' | 'warning' | 'info' | 'success';
 
-interface ConfirmDialogProps {
+export interface ConfirmDialogProps {
   visible: boolean;
   title: string;
   message: string;

@@ -7,7 +7,7 @@
  * - Teacher (Other): View-only access
  */
 
-import { Colors, getRoleThemeColors, Student, useDebounce, getErrorMessage } from '@educard/shared';
+import { Colors, getRoleThemeColors, Student, useDebounce } from '@educard/shared';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { GraduationCap, Upload, Plus } from 'lucide-react-native';
 import { useState, useCallback, useMemo } from 'react';
@@ -18,12 +18,11 @@ import {
   TouchableOpacity,
   StyleSheet,
   RefreshControl,
-  Alert,
   Image,
 } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 
-import { SearchBar, ListHeader, BulkUploadModal } from '@/components/common';
+import { SearchBar, ListHeader, BulkUploadModal, ConfirmDialog } from '@/components/common';
 import { EntityActions } from '@/components/common/EntityActions';
 import { LoadingState, ErrorState, EmptyState, ListFooter } from '@/components/common/ListStates';
 import {
@@ -34,7 +33,7 @@ import {
 } from '@/components/filters';
 import { getMediaUrl } from '@/constants/config';
 import { useClasses } from '@/features/classes/hooks/use-classes';
-import { useDeleteConfirm } from '@/hooks/useDeleteConfirm';
+import { useActionConfirm, useDeleteConfirm } from '@/hooks';
 import { useListScroll } from '@/hooks/useListScroll';
 import { useAuthStore } from '@/lib/auth-store';
 import { layoutStyles, cardStyles, avatarStyles, listStyles, textStyles } from '@/styles';
@@ -104,35 +103,30 @@ export function StudentList({ onBack }: StudentListProps) {
   });
 
   const deleteMutation = useDeleteStudent();
-  const confirmDelete = useDeleteConfirm<{ publicId: string; classId: string }>({
+  const { confirmDelete, dialogProps: deleteDialogProps } = useDeleteConfirm<{
+    publicId: string;
+    classId: string;
+  }>({
     entityName: 'Student',
     deleteMutation,
     onSuccess: () => void refetch(),
   });
 
   const restoreMutation = useRestoreStudent();
-  const handleReactivate = useCallback(
-    (publicId: string, classId: string | undefined, name: string) => {
-      Alert.alert('Reactivate Student', `Are you sure you want to reactivate ${name}?`, [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reactivate',
-          onPress: () => {
-            void (async () => {
-              try {
-                await restoreMutation.mutateAsync({ publicId, classId });
-                void refetch();
-                Alert.alert('Success', `${name} reactivated successfully`);
-              } catch (err) {
-                Alert.alert('Error', getErrorMessage(err, 'Failed to reactivate student'));
-              }
-            })();
-          },
-        },
-      ]);
-    },
-    [restoreMutation, refetch]
-  );
+  const { confirmAction: confirmReactivate, dialogProps: reactivateDialogProps } =
+    useActionConfirm<{
+      publicId: string;
+      classId: string | undefined;
+    }>({
+      title: 'Reactivate Student',
+      confirmText: 'Reactivate',
+      confirmVariant: 'success',
+      makeMessage: (name) => `Are you sure you want to reactivate ${name}?`,
+      runAction: ({ publicId, classId }) => restoreMutation.mutateAsync({ publicId, classId }),
+      successMessage: (name) => `${name} reactivated successfully`,
+      errorMessage: 'Failed to reactivate student',
+      onSuccess: () => void refetch(),
+    });
 
   const isDeletedView = !!filters.is_deleted;
   const students = data?.students ?? [];
@@ -256,9 +250,8 @@ export function StudentList({ onBack }: StudentListProps) {
               onReactivate={
                 isDeletedView
                   ? () =>
-                      handleReactivate(
-                        item.public_id,
-                        item.class_info?.public_id,
+                      confirmReactivate(
+                        { publicId: item.public_id, classId: item.class_info?.public_id },
                         fullName ?? 'this student'
                       )
                   : undefined
@@ -269,7 +262,7 @@ export function StudentList({ onBack }: StudentListProps) {
         </Animated.View>
       );
     },
-    [handleView, handleEdit, confirmDelete, handleReactivate, isDeletedView, isAdmin]
+    [handleView, handleEdit, confirmDelete, confirmReactivate, isDeletedView, isAdmin]
   );
 
   // Info message for class teachers
@@ -378,6 +371,9 @@ export function StudentList({ onBack }: StudentListProps) {
           }
         />
       )}
+
+      <ConfirmDialog {...deleteDialogProps} />
+      <ConfirmDialog {...reactivateDialogProps} />
     </View>
   );
 }

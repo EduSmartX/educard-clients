@@ -14,7 +14,7 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Card } from '@/components/ui/card';
+import { Card } from '@/components/ui/Card';
 import { PaymentModeBadge } from '../components/payment-mode-badge';
 import { FeeAmount } from '../components/fee-amount';
 import { useParentPaymentHistory } from '../hooks/use-fee-queries';
@@ -47,9 +47,9 @@ export default function ParentPaymentHistoryScreen() {
           <Text style={styles.emptyText}>{FEE_UI_TEXT.EMPTY_STATES.NO_PAYMENTS}</Text>
         </Card>
       ) : (
-        payments.map((payment) => (
+        payments.map((payment: FeePayment) => (
           <PaymentCard
-            key={payment.id}
+            key={payment.public_id}
             payment={payment}
             onDownloadReceipt={() => handleDownloadReceipt(payment)}
           />
@@ -73,7 +73,7 @@ function PaymentCard({ payment, onDownloadReceipt }: PaymentCardProps) {
           <Text style={styles.receiptIconText}>🧾</Text>
         </View>
         <View style={styles.paymentInfo}>
-          <Text style={styles.paymentName}>{payment.student_fee?.fee_structure?.name}</Text>
+          <Text style={styles.paymentName}>{payment.fee_structure_name}</Text>
           <PaymentModeBadge mode={payment.payment_mode} size="sm" />
         </View>
         <FeeAmount amount={payment.amount} size="lg" variant="success" />

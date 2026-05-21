@@ -97,7 +97,9 @@ export function parseError(error: unknown): NormalizedError {
   };
 
   // Handle null/undefined
-  if (!error) {return result;}
+  if (!error) {
+    return result;
+  }
 
   // Handle string errors
   if (typeof error === "string") {
@@ -187,7 +189,7 @@ export function getErrorMessage(error: unknown, fallback?: string): string {
 
   // Priority 1: non-field errors (general validation messages)
   if (normalized.nonFieldErrors.length > 0) {
-    return normalized.nonFieldErrors.join('\n');
+    return normalized.nonFieldErrors.join("\n");
   }
 
   // Priority 2: field errors - combine them for user display
@@ -197,29 +199,37 @@ export function getErrorMessage(error: unknown, fallback?: string): string {
     if (fieldErrorKeys.length === 1) {
       const msg = normalized.fieldErrors[fieldErrorKeys[0]];
       // If message is long/descriptive, use it directly
-      if (msg.length > 50 || msg.includes('.') || msg.includes('!')) {
+      if (msg.length > 50 || msg.includes(".") || msg.includes("!")) {
         return msg;
       }
       // Otherwise include field name
-      const fieldLabel = fieldErrorKeys[0].replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      const fieldLabel = fieldErrorKeys[0]
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (l) => l.toUpperCase());
       return `${fieldLabel}: ${msg}`;
     }
-    
+
     // Multiple field errors - combine them
-    return fieldErrorKeys.map(key => {
-      const msg = normalized.fieldErrors[key];
-      if (msg.length > 50 || msg.includes('.') || msg.includes('!')) {
-        return msg;
-      }
-      const fieldLabel = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-      return `${fieldLabel}: ${msg}`;
-    }).join('\n');
+    return fieldErrorKeys
+      .map((key) => {
+        const msg = normalized.fieldErrors[key];
+        if (msg.length > 50 || msg.includes(".") || msg.includes("!")) {
+          return msg;
+        }
+        const fieldLabel = key
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (l) => l.toUpperCase());
+        return `${fieldLabel}: ${msg}`;
+      })
+      .join("\n");
   }
 
   // Priority 3: message from response (but not generic "Validation error occurred")
-  if (normalized.message && 
-      normalized.message !== "Validation error occurred" && 
-      normalized.message !== "An unexpected error occurred") {
+  if (
+    normalized.message &&
+    normalized.message !== "Validation error occurred" &&
+    normalized.message !== "An unexpected error occurred"
+  ) {
     return normalized.message;
   }
 
@@ -259,13 +269,27 @@ export function getErrorTitle(error: unknown): string {
   const normalized = parseError(error);
   const code = normalized.statusCode;
 
-  if (!code) {return "Error";}
-  if (code >= 500) {return "Server Error";}
-  if (code === 404) {return "Not Found";}
-  if (code === 403) {return "Access Denied";}
-  if (code === 401) {return "Authentication Required";}
-  if (code === 400 && normalized.isValidation) {return "Validation Error";}
-  if (code >= 400) {return "Request Error";}
+  if (!code) {
+    return "Error";
+  }
+  if (code >= 500) {
+    return "Server Error";
+  }
+  if (code === 404) {
+    return "Not Found";
+  }
+  if (code === 403) {
+    return "Access Denied";
+  }
+  if (code === 401) {
+    return "Authentication Required";
+  }
+  if (code === 400 && normalized.isValidation) {
+    return "Validation Error";
+  }
+  if (code >= 400) {
+    return "Request Error";
+  }
 
   return "Error";
 }
@@ -286,69 +310,101 @@ export function extractApiError(
   fallback = "Something went wrong",
 ): string {
   const data = (err as AxiosErrorWrapper)?.response?.data;
-  if (!data) {return (err as Error)?.message || fallback;}
+  if (!data) {
+    return (err as Error)?.message || fallback;
+  }
 
   // First check for errors object (Django validation errors)
   if (data.errors && typeof data.errors === "object") {
     const errorMessages: string[] = [];
-    
+
     Object.entries(data.errors).forEach(([fieldName, value]) => {
       // Skip internal flags
-      if (fieldName === 'has_deleted_duplicate' || fieldName === 'deleted_record_id') {
+      if (
+        fieldName === "has_deleted_duplicate" ||
+        fieldName === "deleted_record_id"
+      ) {
         return;
       }
-      
+
       // Handle array of error messages
       if (Array.isArray(value) && value.length > 0) {
         // For non_field_errors, add directly
-        if (fieldName === 'non_field_errors' || fieldName === 'non_field_error') {
-          errorMessages.push(...value.filter(v => typeof v === 'string'));
+        if (
+          fieldName === "non_field_errors" ||
+          fieldName === "non_field_error"
+        ) {
+          errorMessages.push(...value.filter((v) => typeof v === "string"));
         } else {
           // For field errors, check if message is already descriptive
           const msg = value[0];
-          if (typeof msg === 'string') {
+          if (typeof msg === "string") {
             // If message is already descriptive (long sentence), use it directly
-            if (msg.length > 50 || msg.includes('.') || msg.includes('!')) {
+            if (msg.length > 50 || msg.includes(".") || msg.includes("!")) {
               errorMessages.push(msg);
             } else {
               // Convert snake_case to Title Case for short messages
-              const fieldLabel = fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+              const fieldLabel = fieldName
+                .replace(/_/g, " ")
+                .replace(/\b\w/g, (l) => l.toUpperCase());
               errorMessages.push(`${fieldLabel}: ${msg}`);
             }
           }
         }
-      } else if (typeof value === 'string') {
-        if (fieldName === 'non_field_errors' || fieldName === 'non_field_error' || fieldName === 'detail') {
+      } else if (typeof value === "string") {
+        if (
+          fieldName === "non_field_errors" ||
+          fieldName === "non_field_error" ||
+          fieldName === "detail"
+        ) {
           errorMessages.push(value);
         } else {
-          const fieldLabel = fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-          errorMessages.push(`${fieldLabel}: ${value}`);
-        }
-      } else if (typeof value === 'object' && value !== null) {
-        // Handle nested errors (e.g., student_data.email)
-        Object.entries(value as Record<string, unknown>).forEach(([nestedField, nestedValue]) => {
-          if (Array.isArray(nestedValue) && nestedValue.length > 0 && typeof nestedValue[0] === 'string') {
-            const fieldLabel = `${fieldName}.${nestedField}`.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-            errorMessages.push(`${fieldLabel}: ${nestedValue[0]}`);
+          // If message is already descriptive, use it directly without field prefix
+          if (value.length > 50 || value.includes(".") || value.includes("!")) {
+            errorMessages.push(value);
+          } else {
+            const fieldLabel = fieldName
+              .replace(/_/g, " ")
+              .replace(/\b\w/g, (l) => l.toUpperCase());
+            errorMessages.push(`${fieldLabel}: ${value}`);
           }
-        });
+        }
+      } else if (typeof value === "object" && value !== null) {
+        // Handle nested errors (e.g., student_data.email)
+        Object.entries(value as Record<string, unknown>).forEach(
+          ([nestedField, nestedValue]) => {
+            if (
+              Array.isArray(nestedValue) &&
+              nestedValue.length > 0 &&
+              typeof nestedValue[0] === "string"
+            ) {
+              const fieldLabel = `${fieldName}.${nestedField}`
+                .replace(/_/g, " ")
+                .replace(/\b\w/g, (l) => l.toUpperCase());
+              errorMessages.push(`${fieldLabel}: ${nestedValue[0]}`);
+            }
+          },
+        );
       }
     });
-    
+
     if (errorMessages.length > 0) {
-      return errorMessages.join('\n');
+      return errorMessages.join("\n");
     }
   }
 
   // Check for detail field (common in DRF errors)
-  if (data.detail && typeof data.detail === 'string') {
+  if (data.detail && typeof data.detail === "string") {
     return data.detail;
   }
 
   // Check for message field (our custom response format)
-  if (data.message && typeof data.message === 'string') {
+  if (data.message && typeof data.message === "string") {
     // Don't return generic validation message if we couldn't extract specific errors
-    if (data.message !== 'Validation error occurred' && data.message !== 'Validation error occurred.') {
+    if (
+      data.message !== "Validation error occurred" &&
+      data.message !== "Validation error occurred."
+    ) {
       return data.message;
     }
   }
@@ -360,7 +416,9 @@ export function extractApiError(
 export function isDeletedDuplicateError(error: unknown): boolean {
   const axiosError = error as AxiosErrorWrapper;
   const data = axiosError?.response?.data;
-  if (!data?.errors) {return false;}
+  if (!data?.errors) {
+    return false;
+  }
 
   const hasDuplicate = data.errors.has_deleted_duplicate;
   if (
@@ -392,16 +450,26 @@ export function getDeletedDuplicateMessage(error: unknown): string {
         "You can modify here, or go to 'View Deleted' to restore it.",
       );
 
-  if (!data?.errors) {return fallback;}
+  if (!data?.errors) {
+    return fallback;
+  }
   const errors = data.errors;
 
-  if (Array.isArray(errors.non_field_errors) && errors.non_field_errors.length > 0)
-    {return normalize(errors.non_field_errors[0] as string);}
-  if (typeof errors.non_field_errors === "string")
-    {return normalize(errors.non_field_errors);}
-  if (typeof errors.detail === "string") {return normalize(errors.detail);}
-  if (Array.isArray(errors.detail) && errors.detail.length > 0)
-    {return normalize(errors.detail[0] as string);}
+  if (
+    Array.isArray(errors.non_field_errors) &&
+    errors.non_field_errors.length > 0
+  ) {
+    return normalize(errors.non_field_errors[0] as string);
+  }
+  if (typeof errors.non_field_errors === "string") {
+    return normalize(errors.non_field_errors);
+  }
+  if (typeof errors.detail === "string") {
+    return normalize(errors.detail);
+  }
+  if (Array.isArray(errors.detail) && errors.detail.length > 0) {
+    return normalize(errors.detail[0] as string);
+  }
 
   return fallback;
 }
@@ -409,11 +477,19 @@ export function getDeletedDuplicateMessage(error: unknown): string {
 /** Extract deleted record ID from error */
 export function getDeletedRecordId(error: unknown): string | null {
   const errors = (error as AxiosErrorWrapper)?.response?.data?.errors;
-  if (!errors) {return null;}
+  if (!errors) {
+    return null;
+  }
 
-  if (typeof errors.deleted_record_id === "string") {return errors.deleted_record_id;}
-  if (Array.isArray(errors.deleted_record_id) && errors.deleted_record_id.length > 0)
-    {return errors.deleted_record_id[0] as string;}
+  if (typeof errors.deleted_record_id === "string") {
+    return errors.deleted_record_id;
+  }
+  if (
+    Array.isArray(errors.deleted_record_id) &&
+    errors.deleted_record_id.length > 0
+  ) {
+    return errors.deleted_record_id[0] as string;
+  }
 
   return null;
 }

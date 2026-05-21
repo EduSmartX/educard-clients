@@ -56,7 +56,7 @@ function RootLayoutNav() {
     const inEmployeeTabs = segments[0] === '(tabs)' && segments[1] === '(employee)';
     const inParentTabs = segments[0] === '(tabs)' && segments[1] === '(parent)';
     const inSharedScreens = segments[0] === '(shared-screens)';
-    const inModals = segments[0] === '(modals)';
+    const inModals = segments[0] === ('(modals)' as (typeof segments)[0]);
 
     if (!isAuthenticated && !inAuthGroup) {
       // Not authenticated, redirect to login

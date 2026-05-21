@@ -209,6 +209,44 @@ export const QueryKeys = {
     },
   },
 
+  // Fee Management
+  FEE: {
+    ALL: ["fee"] as const,
+    STRUCTURES: {
+      ALL: ["fee", "structures"] as const,
+      LIST: (params?: Record<string, unknown>) =>
+        ["fee", "structures", "list", params] as const,
+      INFINITE: (params?: Record<string, unknown>) =>
+        ["fee", "structures", "infinite", params] as const,
+      DETAIL: (id: string) => ["fee", "structures", "detail", id] as const,
+    },
+    STUDENT_FEES: {
+      ALL: ["fee", "student-fees"] as const,
+      LIST: (params?: Record<string, unknown>) =>
+        ["fee", "student-fees", "list", params] as const,
+      INFINITE: (params?: Record<string, unknown>) =>
+        ["fee", "student-fees", "infinite", params] as const,
+      DETAIL: (id: string) => ["fee", "student-fees", "detail", id] as const,
+    },
+    PAYMENTS: {
+      ALL: ["fee", "payments"] as const,
+      LIST: (params?: Record<string, unknown>) =>
+        ["fee", "payments", "list", params] as const,
+      INFINITE: (params?: Record<string, unknown>) =>
+        ["fee", "payments", "infinite", params] as const,
+      DETAIL: (id: string) => ["fee", "payments", "detail", id] as const,
+    },
+    DASHBOARD: ["fee", "dashboard"] as const,
+    DEFAULTERS: (params?: Record<string, unknown>) =>
+      ["fee", "defaulters", params] as const,
+    PARENT: {
+      ALL: ["fee", "parent"] as const,
+      LIST: ["fee", "parent", "list"] as const,
+      DETAIL: (id: string) => ["fee", "parent", "detail", id] as const,
+      PAYMENTS: (id: string) => ["fee", "parent", "payments", id] as const,
+    },
+  },
+
   // Core/Master data
   CORE: {
     SUBJECTS: ["core", "subjects"] as const,

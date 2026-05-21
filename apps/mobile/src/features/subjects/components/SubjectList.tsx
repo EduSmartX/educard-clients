@@ -7,22 +7,14 @@
  * - Teacher (Other): View-only access
  */
 
-import { Colors, getRoleThemeColors, useDebounce, getErrorMessage, Subject } from '@educard/shared';
+import { Colors, getRoleThemeColors, useDebounce, Subject } from '@educard/shared';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { BookOpen, Plus, Upload } from 'lucide-react-native';
 import { useState, useCallback, useMemo } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 
-import { SearchBar, ListHeader, BulkUploadModal } from '@/components/common';
+import { SearchBar, ListHeader, BulkUploadModal, ConfirmDialog } from '@/components/common';
 import { EntityActions } from '@/components/common/EntityActions';
 import { LoadingState, ErrorState, EmptyState, ListFooter } from '@/components/common/ListStates';
 import {
@@ -32,7 +24,7 @@ import {
   getSubjectFilterLabels,
 } from '@/components/filters';
 import { useClasses } from '@/features/classes/hooks/use-classes';
-import { useDeleteConfirm } from '@/hooks/useDeleteConfirm';
+import { useActionConfirm, useDeleteConfirm } from '@/hooks';
 import { useListScroll } from '@/hooks/useListScroll';
 import { useAuthStore } from '@/lib/auth-store';
 import { layoutStyles, cardStyles, listStyles, textStyles } from '@/styles';
@@ -93,34 +85,24 @@ export function SubjectList({ onBack }: SubjectListProps) {
   });
 
   const deleteMutation = useDeleteSubject();
-  const confirmDelete = useDeleteConfirm({
+  const { confirmDelete, dialogProps: deleteDialogProps } = useDeleteConfirm({
     entityName: 'Subject',
     deleteMutation,
     onSuccess: () => void refetch(),
   });
 
   const restoreMutation = useRestoreSubject();
-  const handleReactivate = useCallback(
-    (id: string, name: string) => {
-      Alert.alert('Reactivate Subject', `Are you sure you want to reactivate ${name}?`, [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reactivate',
-          onPress: () => {
-            void (async () => {
-              try {
-                await restoreMutation.mutateAsync(id);
-                void refetch();
-                Alert.alert('Success', `${name} reactivated successfully`);
-              } catch (err) {
-                Alert.alert('Error', getErrorMessage(err, 'Failed to reactivate subject'));
-              }
-            })();
-          },
-        },
-      ]);
-    },
-    [restoreMutation, refetch]
+  const { confirmAction: confirmReactivate, dialogProps: reactivateDialogProps } = useActionConfirm(
+    {
+      title: 'Reactivate Subject',
+      confirmText: 'Reactivate',
+      confirmVariant: 'success',
+      makeMessage: (name) => `Are you sure you want to reactivate ${name}?`,
+      runAction: (id: string) => restoreMutation.mutateAsync(id),
+      successMessage: (name) => `${name} reactivated successfully`,
+      errorMessage: 'Failed to reactivate subject',
+      onSuccess: () => void refetch(),
+    }
   );
 
   const isDeletedView = !!filters.is_deleted;
@@ -215,7 +197,7 @@ export function SubjectList({ onBack }: SubjectListProps) {
           onReactivate={
             isDeletedView
               ? () =>
-                  handleReactivate(
+                  confirmReactivate(
                     item.public_id,
                     item.subject_info?.name ?? item.name ?? 'this subject'
                   )
@@ -331,6 +313,9 @@ export function SubjectList({ onBack }: SubjectListProps) {
           }
         />
       )}
+
+      <ConfirmDialog {...deleteDialogProps} />
+      <ConfirmDialog {...reactivateDialogProps} />
     </View>
   );
 }

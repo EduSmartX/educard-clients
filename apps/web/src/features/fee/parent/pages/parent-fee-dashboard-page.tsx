@@ -22,7 +22,7 @@ export function ParentFeeDashboardPage() {
   const totalAmount = fees.reduce((sum, fee) => sum + fee.total_amount, 0);
   const totalPaid = fees.reduce((sum, fee) => sum + fee.amount_paid, 0);
   const totalBalance = fees.reduce((sum, fee) => sum + fee.balance, 0);
-  const overdueFees = fees.filter((fee) => fee.status === FeeStatus.OVERDUE);
+  const overdueFees = fees.filter((fee) => fee.status === FeeStatus.OVERPAID);
 
   if (isLoading) {
     return (
@@ -139,7 +139,7 @@ interface FeeCardProps {
 }
 
 function FeeCard({ fee }: FeeCardProps) {
-  const isOverdue = fee.status === FeeStatus.OVERDUE;
+  const isOverdue = fee.status === FeeStatus.OVERPAID;
   const isPaid = fee.status === FeeStatus.PAID;
 
   return (

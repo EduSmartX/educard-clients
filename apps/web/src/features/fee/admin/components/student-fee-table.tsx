@@ -12,7 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Eye, CreditCard, Bell } from 'lucide-react';
 import { FeeStatusBadge } from '../../components/fee-status-badge';
 import { FeeAmount, FeeProgress } from '../../components/fee-amount';
-import { type StudentFee, FeeStatus } from '@educard/shared';
+import { type StudentFee, type FeeStatusType, FeeStatus } from '@educard/shared';
 
 interface StudentFeeTableProps {
   data: StudentFee[];
@@ -81,7 +81,13 @@ export function StudentFeeTable({
     },
     {
       header: 'Balance',
-      accessor: (row) => <FeeAmount amount={row.balance_due} colorCode={true} />,
+      accessor: (row) => {
+        // For refunding/refunded, show refundable amount as negative
+        if (row.status === FeeStatus.REFUNDING || row.status === FeeStatus.REFUNDED) {
+          return <FeeAmount amount={-row.amount_paid} colorCode={true} />;
+        }
+        return <FeeAmount amount={row.balance_due} colorCode={true} />;
+      },
       className: 'text-right',
       headerClassName: 'text-right',
       width: 120,
@@ -124,8 +130,17 @@ export function StudentFeeTable({
     {
       header: 'Actions',
       accessor: (row) => {
-        const canRecordPayment = row.status !== FeeStatus.PAID;
-        const canSendReminder = row.status !== FeeStatus.PAID;
+        const isRefund = row.status === FeeStatus.OVERPAID || row.status === FeeStatus.REFUNDING;
+        const canRecordPayment =
+          row.status === FeeStatus.PENDING || row.status === FeeStatus.PARTIAL;
+        const canSendReminder = !(
+          [
+            FeeStatus.PAID,
+            FeeStatus.OVERPAID,
+            FeeStatus.REFUNDING,
+            FeeStatus.REFUNDED,
+          ] as FeeStatusType[]
+        ).includes(row.status);
 
         return (
           <div className="flex items-center gap-1">
@@ -147,6 +162,29 @@ export function StudentFeeTable({
                 <TooltipContent>View Details</TooltipContent>
               </Tooltip>
             </TooltipProvider>
+
+            {isRefund && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(
+                          `${ROUTES.FEES.PAYMENT_NEW_FOR_STUDENT.replace(':id', row.public_id)}?mode=refund`
+                        );
+                      }}
+                    >
+                      <CreditCard className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Issue Refund</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
 
             {canRecordPayment && (
               <TooltipProvider>

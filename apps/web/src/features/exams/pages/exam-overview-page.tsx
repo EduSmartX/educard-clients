@@ -45,7 +45,7 @@ import {
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PageHeader } from '@/components/common';
+import { PageHeader, WarningConfirmationDialog } from '@/components/common';
 import { ROUTES } from '@/constants';
 import { useExamSessions, useExams, useMarksOverview } from '../hooks/use-exams';
 import { useClasses } from '@/features/classes/hooks/use-classes';
@@ -114,6 +114,7 @@ export function ExamOverviewPage() {
   const [selectedSessionId, setSelectedSessionId] = useState<string>('');
   const [selectedClassId, setSelectedClassId] = useState<string>('');
   const [activeTab, setActiveTab] = useState<string>('overview');
+  const [pendingBulkStatus, setPendingBulkStatus] = useState<ExamStatus | null>(null);
 
   // Fetch data
   const { data: sessionsData } = useExamSessions({ page: 1, page_size: 100 });
@@ -177,24 +178,23 @@ export function ExamOverviewPage() {
       return;
     }
 
-    const statusLabel = STATUS_CONFIG[newStatus].label;
-    const examCount = filteredExams.length;
+    setPendingBulkStatus(newStatus);
+  };
 
-    const confirmed = window.confirm(
-      `Are you sure you want to mark all ${examCount} exam(s) as "${statusLabel}"?`
-    );
-
-    if (!confirmed) {
+  const confirmBulkStatusUpdate = async () => {
+    if (!selectedSessionId || !pendingBulkStatus) {
       return;
     }
 
     try {
       await bulkUpdateMutation.mutateAsync({
         sessionId: selectedSessionId,
-        status: newStatus,
+        status: pendingBulkStatus,
       });
     } catch (error) {
       console.error('Failed to bulk update exam statuses:', error);
+    } finally {
+      setPendingBulkStatus(null);
     }
   };
 
@@ -1055,6 +1055,22 @@ export function ExamOverviewPage() {
           </TabsContent>
         </Tabs>
       )}
+
+      <WarningConfirmationDialog
+        open={!!pendingBulkStatus}
+        onOpenChange={(open) => !open && setPendingBulkStatus(null)}
+        onConfirm={confirmBulkStatusUpdate}
+        title="Update Exam Status"
+        description={
+          pendingBulkStatus
+            ? `Are you sure you want to mark all ${filteredExams.length} exam(s) as "${STATUS_CONFIG[pendingBulkStatus].label}"?`
+            : ''
+        }
+        warningText="This will update all exams in the selected session/class view."
+        confirmButtonText={bulkUpdateMutation.isPending ? 'Updating...' : 'Yes, Update All'}
+        cancelButtonText="Cancel"
+        isLoading={bulkUpdateMutation.isPending}
+      />
     </div>
   );
 }

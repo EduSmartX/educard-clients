@@ -8,7 +8,7 @@ export const FeeStatus = {
   PENDING: "pending",
   PARTIAL: "partial",
   PAID: "paid",
-  OVERDUE: "overdue",
+  OVERPAID: "overpaid",
   WAIVED: "waived",
   REFUNDING: "refunding",
   REFUNDED: "refunded",
@@ -20,7 +20,7 @@ export const FeeStatusLabels: Record<FeeStatusType, string> = {
   [FeeStatus.PENDING]: "Pending",
   [FeeStatus.PARTIAL]: "Partially Paid",
   [FeeStatus.PAID]: "Fully Paid",
-  [FeeStatus.OVERDUE]: "Overdue",
+  [FeeStatus.OVERPAID]: "Overpaid",
   [FeeStatus.WAIVED]: "Waived",
   [FeeStatus.REFUNDING]: "Refund Pending",
   [FeeStatus.REFUNDED]: "Refunded",
@@ -30,7 +30,7 @@ export const FeeStatusColors: Record<FeeStatusType, string> = {
   [FeeStatus.PENDING]: "#F59E0B", // amber
   [FeeStatus.PARTIAL]: "#3B82F6", // blue
   [FeeStatus.PAID]: "#10B981", // green
-  [FeeStatus.OVERDUE]: "#EF4444", // red
+  [FeeStatus.OVERPAID]: "#EF4444", // red
   [FeeStatus.WAIVED]: "#6B7280", // gray
   [FeeStatus.REFUNDING]: "#F97316", // orange
   [FeeStatus.REFUNDED]: "#0EA5E9", // sky blue

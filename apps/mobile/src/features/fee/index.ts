@@ -1,7 +1,9 @@
 /**
- * Fee Feature - Barrel exports for Mobile
+ * Fee Feature — Barrel exports for Mobile
+ * NOTE: screens are NOT exported here to avoid require cycles.
+ * Import screens directly from their file paths.
  */
 
-export * from './components';
+export * from './api';
 export * from './hooks';
-export * from './screens';
+export * from './components';

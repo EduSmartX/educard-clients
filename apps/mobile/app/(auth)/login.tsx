@@ -8,9 +8,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
   Alert,
   StyleSheet,
   Image,
@@ -18,6 +15,7 @@ import {
   ImageSourcePropType,
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 import { getErrorMessage } from '@/api';
 import { useAuthStore } from '@/lib/auth-store';
@@ -57,153 +55,148 @@ export default function LoginScreen() {
         <Animated.View entering={FadeIn.delay(400)} style={styles.circle2} />
       </LinearGradient>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.flex}
+      <KeyboardAwareScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid
+        extraScrollHeight={20}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-            <View style={styles.logoContainer}>
-              <Image source={logoImage} style={styles.logo} resizeMode="contain" />
-            </View>
-            <Text style={styles.welcomeText}>Welcome Back!</Text>
-            <Text style={styles.subtitleText}>Sign in to continue your journey</Text>
-          </Animated.View>
+        <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
+          <View style={styles.logoContainer}>
+            <Image source={logoImage} style={styles.logo} resizeMode="contain" />
+          </View>
+          <Text style={styles.welcomeText}>Welcome Back!</Text>
+          <Text style={styles.subtitleText}>Sign in to continue your journey</Text>
+        </Animated.View>
 
-          <Animated.View entering={FadeInUp.delay(200).duration(600)} style={styles.formCard}>
-            {/* Email/Username Toggle */}
-            <View style={styles.toggleCard}>
-              <View style={styles.toggleLeft}>
-                <View
-                  style={[
-                    styles.toggleIconBox,
-                    useEmail ? styles.toggleIconActive : styles.toggleIconInactive,
-                  ]}
-                >
-                  {useEmail ? (
-                    <Mail size={18} color={Colors.primary[600]} />
-                  ) : (
-                    <User size={18} color={Colors.gray[500]} />
-                  )}
-                </View>
-                <View>
-                  <Text style={styles.toggleTitle}>
-                    {useEmail ? 'Using Email' : 'Using Username'}
-                  </Text>
-                  <Text style={styles.toggleSubtitle}>
-                    {useEmail ? 'Sign in with your email address' : 'Sign in with your username'}
-                  </Text>
-                </View>
-              </View>
-              <Switch
-                value={useEmail}
-                onValueChange={(value) => {
-                  setUseEmail(value);
-                  setUsername(''); // Clear input when switching
-                }}
-                trackColor={{ false: Colors.gray[300], true: Colors.primary[200] }}
-                thumbColor={useEmail ? Colors.primary[500] : Colors.gray[400]}
-              />
-            </View>
-
-            {/* Email/Username Input */}
-            <View style={styles.inputWrapper}>
-              <Text style={styles.inputLabel}>{useEmail ? 'Email Address' : 'Username'}</Text>
+        <Animated.View entering={FadeInUp.delay(200).duration(600)} style={styles.formCard}>
+          {/* Email/Username Toggle */}
+          <View style={styles.toggleCard}>
+            <View style={styles.toggleLeft}>
               <View
-                style={[styles.inputContainer, focusedInput === 'username' && styles.inputFocused]}
+                style={[
+                  styles.toggleIconBox,
+                  useEmail ? styles.toggleIconActive : styles.toggleIconInactive,
+                ]}
               >
                 {useEmail ? (
-                  <Mail
-                    size={20}
-                    color={focusedInput === 'username' ? Colors.primary[500] : Colors.gray[400]}
-                  />
+                  <Mail size={18} color={Colors.primary[600]} />
                 ) : (
-                  <User
-                    size={20}
-                    color={focusedInput === 'username' ? Colors.primary[500] : Colors.gray[400]}
-                  />
+                  <User size={18} color={Colors.gray[500]} />
                 )}
-                <TextInput
-                  style={styles.input}
-                  placeholder={useEmail ? 'Enter your email' : 'Enter your username'}
-                  placeholderTextColor={Colors.gray[400]}
-                  value={username}
-                  onChangeText={setUsername}
-                  keyboardType={useEmail ? 'email-address' : 'default'}
-                  autoCapitalize="none"
-                  onFocus={() => setFocusedInput('username')}
-                  onBlur={() => setFocusedInput(null)}
-                />
+              </View>
+              <View>
+                <Text style={styles.toggleTitle}>
+                  {useEmail ? 'Using Email' : 'Using Username'}
+                </Text>
+                <Text style={styles.toggleSubtitle}>
+                  {useEmail ? 'Sign in with your email address' : 'Sign in with your username'}
+                </Text>
               </View>
             </View>
+            <Switch
+              value={useEmail}
+              onValueChange={(value) => {
+                setUseEmail(value);
+                setUsername(''); // Clear input when switching
+              }}
+              trackColor={{ false: Colors.gray[300], true: Colors.primary[200] }}
+              thumbColor={useEmail ? Colors.primary[500] : Colors.gray[400]}
+            />
+          </View>
 
-            <View style={styles.inputWrapper}>
-              <Text style={styles.inputLabel}>Password</Text>
-              <View
-                style={[styles.inputContainer, focusedInput === 'password' && styles.inputFocused]}
-              >
-                <Lock
+          {/* Email/Username Input */}
+          <View style={styles.inputWrapper}>
+            <Text style={styles.inputLabel}>{useEmail ? 'Email Address' : 'Username'}</Text>
+            <View
+              style={[styles.inputContainer, focusedInput === 'username' && styles.inputFocused]}
+            >
+              {useEmail ? (
+                <Mail
                   size={20}
-                  color={focusedInput === 'password' ? Colors.primary[500] : Colors.gray[400]}
+                  color={focusedInput === 'username' ? Colors.primary[500] : Colors.gray[400]}
                 />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your password"
-                  placeholderTextColor={Colors.gray[400]}
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={!showPassword}
-                  onFocus={() => setFocusedInput('password')}
-                  onBlur={() => setFocusedInput(null)}
+              ) : (
+                <User
+                  size={20}
+                  color={focusedInput === 'username' ? Colors.primary[500] : Colors.gray[400]}
                 />
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                  {showPassword ? (
-                    <EyeOff size={20} color={Colors.gray[400]} />
-                  ) : (
-                    <Eye size={20} color={Colors.gray[400]} />
-                  )}
-                </TouchableOpacity>
-              </View>
+              )}
+              <TextInput
+                style={styles.input}
+                placeholder={useEmail ? 'Enter your email' : 'Enter your username'}
+                placeholderTextColor={Colors.gray[400]}
+                value={username}
+                onChangeText={setUsername}
+                keyboardType={useEmail ? 'email-address' : 'default'}
+                autoCapitalize="none"
+                onFocus={() => setFocusedInput('username')}
+                onBlur={() => setFocusedInput(null)}
+              />
             </View>
+          </View>
 
-            <Link href="/(auth)/forgot-password" asChild>
-              <TouchableOpacity style={styles.forgotButton}>
-                <Text style={styles.forgotText}>Forgot Password?</Text>
+          <View style={styles.inputWrapper}>
+            <Text style={styles.inputLabel}>Password</Text>
+            <View
+              style={[styles.inputContainer, focusedInput === 'password' && styles.inputFocused]}
+            >
+              <Lock
+                size={20}
+                color={focusedInput === 'password' ? Colors.primary[500] : Colors.gray[400]}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your password"
+                placeholderTextColor={Colors.gray[400]}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                onFocus={() => setFocusedInput('password')}
+                onBlur={() => setFocusedInput(null)}
+              />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                {showPassword ? (
+                  <EyeOff size={20} color={Colors.gray[400]} />
+                ) : (
+                  <Eye size={20} color={Colors.gray[400]} />
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <Link href="/(auth)/forgot-password" asChild>
+            <TouchableOpacity style={styles.forgotButton}>
+              <Text style={styles.forgotText}>Forgot Password?</Text>
+            </TouchableOpacity>
+          </Link>
+
+          <TouchableOpacity
+            onPress={() => void handleLogin()}
+            disabled={isLoading}
+            style={styles.loginButton}
+          >
+            <LinearGradient
+              colors={['#6366f1', '#8b5cf6']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.loginGradient}
+            >
+              <Text style={styles.loginButtonText}>{isLoading ? 'Signing in...' : 'Sign In'}</Text>
+              <ArrowRight size={20} color="#fff" />
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <View style={styles.signupContainer}>
+            <Text style={styles.signupText}>Don't have an account? </Text>
+            <Link href="/(auth)/signup" asChild>
+              <TouchableOpacity>
+                <Text style={styles.signupLink}>Sign Up</Text>
               </TouchableOpacity>
             </Link>
-
-            <TouchableOpacity
-              onPress={() => void handleLogin()}
-              disabled={isLoading}
-              style={styles.loginButton}
-            >
-              <LinearGradient
-                colors={['#6366f1', '#8b5cf6']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.loginGradient}
-              >
-                <Text style={styles.loginButtonText}>
-                  {isLoading ? 'Signing in...' : 'Sign In'}
-                </Text>
-                <ArrowRight size={20} color="#fff" />
-              </LinearGradient>
-            </TouchableOpacity>
-
-            <View style={styles.signupContainer}>
-              <Text style={styles.signupText}>Don't have an account? </Text>
-              <Link href="/(auth)/signup" asChild>
-                <TouchableOpacity>
-                  <Text style={styles.signupLink}>Sign Up</Text>
-                </TouchableOpacity>
-              </Link>
-            </View>
-          </Animated.View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+          </View>
+        </Animated.View>
+      </KeyboardAwareScrollView>
     </View>
   );
 }

@@ -30,7 +30,7 @@ import {
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Skeleton } from '@/components/ui/skeleton';
-import { TrendingUp, TrendingDown, IndianRupee, AlertCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, IndianRupee } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FeeStatusBadge } from '../../components/fee-status-badge';
 import { FeeAmount } from '../../components/fee-amount';
@@ -73,6 +73,7 @@ export function RecordPaymentPage() {
 
   // If `id` param → pre-load that student fee. Otherwise show a selector.
   const preloadId = id ?? searchParams.get('student_fee') ?? undefined;
+  const isRefundMode = searchParams.get('mode') === 'refund';
 
   const { data: preloadedFee, isLoading: feeLoading } = useStudentFee(preloadId);
   const { data: allFeesData } = useStudentFees(preloadId ? undefined : { page_size: 200 });
@@ -83,7 +84,7 @@ export function RecordPaymentPage() {
     resolver: zodResolver(paymentFormSchema),
     defaultValues: {
       student_fee_public_id: preloadId ?? '',
-      transaction_type: TransactionType.CREDIT,
+      transaction_type: isRefundMode ? TransactionType.DEBIT : TransactionType.CREDIT,
       amount: 0,
       payment_date: new Date().toISOString().split('T')[0],
       payment_mode: PaymentMode.CASH,
@@ -103,7 +104,11 @@ export function RecordPaymentPage() {
     if (preloadedFee) {
       const txType = form.getValues('transaction_type');
       const defaultAmount =
-        txType === TransactionType.DEBIT ? preloadedFee.amount_paid : preloadedFee.balance_due;
+        txType === TransactionType.DEBIT
+          ? preloadedFee.amount_paid > preloadedFee.final_amount
+            ? preloadedFee.amount_paid - preloadedFee.final_amount // overpaid: refund excess
+            : preloadedFee.amount_paid // refunding: refund full paid
+          : preloadedFee.balance_due;
       form.setValue('student_fee_public_id', preloadedFee.public_id);
       form.setValue('amount', defaultAmount > 0 ? defaultAmount : 0);
     }
@@ -121,7 +126,11 @@ export function RecordPaymentPage() {
   useEffect(() => {
     if (selectedFee) {
       const suggested =
-        watchedTxType === TransactionType.DEBIT ? selectedFee.amount_paid : selectedFee.balance_due;
+        watchedTxType === TransactionType.DEBIT
+          ? selectedFee.amount_paid > selectedFee.final_amount
+            ? selectedFee.amount_paid - selectedFee.final_amount // overpaid: refund excess
+            : selectedFee.amount_paid // refunding: refund full paid
+          : selectedFee.balance_due;
       form.setValue('amount', suggested > 0 ? suggested : 0);
     }
   }, [watchedTxType, selectedFee, form]);
@@ -140,6 +149,16 @@ export function RecordPaymentPage() {
     : undefined;
 
   const handleSubmit = (values: PaymentFormValues) => {
+    // Client-side max amount validation
+    if (maxAmount !== undefined && values.amount > maxAmount) {
+      form.setError('amount', {
+        message: isRefund
+          ? `Refund cannot exceed ₹${maxAmount.toLocaleString('en-IN')}`
+          : `Payment cannot exceed balance ₹${maxAmount.toLocaleString('en-IN')}`,
+      });
+      return;
+    }
+
     const payload: PaymentCreatePayload = {
       student_fee_public_id: values.student_fee_public_id,
       amount: values.amount,
@@ -223,12 +242,36 @@ export function RecordPaymentPage() {
                 <FeeAmount amount={selectedFee.amount_paid} size="lg" className="text-green-600" />
               </div>
               <div>
-                <p className="text-muted-foreground text-xs tracking-wide uppercase">Balance</p>
-                <FeeAmount
-                  amount={selectedFee.balance_due}
-                  size="lg"
-                  className={selectedFee.balance_due > 0 ? 'text-red-600' : 'text-green-600'}
-                />
+                {selectedFee.status === 'refunding' || selectedFee.status === 'refunded' ? (
+                  <>
+                    <p className="text-xs tracking-wide text-orange-600 uppercase">
+                      {selectedFee.status === 'refunded' ? 'Refunded' : 'Refundable'}
+                    </p>
+                    <FeeAmount
+                      amount={selectedFee.amount_paid}
+                      size="lg"
+                      className="text-orange-600"
+                    />
+                  </>
+                ) : selectedFee.balance_due < 0 ? (
+                  <>
+                    <p className="text-xs tracking-wide text-orange-600 uppercase">Overpaid</p>
+                    <FeeAmount
+                      amount={Math.abs(selectedFee.balance_due)}
+                      size="lg"
+                      className="text-orange-600"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <p className="text-muted-foreground text-xs tracking-wide uppercase">Balance</p>
+                    <FeeAmount
+                      amount={selectedFee.balance_due}
+                      size="lg"
+                      className={selectedFee.balance_due > 0 ? 'text-red-600' : 'text-green-600'}
+                    />
+                  </>
+                )}
               </div>
               <div className="ml-auto">
                 <FeeStatusBadge status={selectedFee.status} />
@@ -332,17 +375,7 @@ export function RecordPaymentPage() {
                 )}
               />
 
-              {/* Refund warning */}
-              {isRefund && (
-                <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>
-                    A debit will reduce the student's paid amount and increase the balance due. Max
-                    refund:{' '}
-                    <strong>₹{selectedFee?.amount_paid?.toLocaleString('en-IN') ?? '—'}</strong>
-                  </span>
-                </div>
-              )}
+              {/* Refund warning removed */}
 
               <Separator />
 

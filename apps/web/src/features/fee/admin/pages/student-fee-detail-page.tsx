@@ -12,16 +12,6 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import {
   Calendar,
   IndianRupee,
   Pencil,
@@ -37,11 +27,7 @@ import {
 import { PageHeader } from '@/components/common';
 import { FeeStatusBadge } from '../../components/fee-status-badge';
 import { useStudentFee } from '../../hooks/use-fee-queries';
-import {
-  useReviewComponentRequests,
-  useMarkStudentFeeRefunded,
-  useInitiateRefund,
-} from '../../hooks/use-fee-mutations';
+import { useReviewComponentRequests } from '../../hooks/use-fee-mutations';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StudentFeePaymentHistory } from '../components/student-fee-payment-history';
 import type { StudentFeeComponentItem, StudentFee } from '@educard/shared';
@@ -123,12 +109,6 @@ export function StudentFeeDetailPage() {
 
   const { data: studentFee, isLoading } = useStudentFee(id!);
   const reviewRequests = useReviewComponentRequests();
-  const markRefunded = useMarkStudentFeeRefunded();
-  const initiateRefund = useInitiateRefund();
-
-  // Refund confirmation dialogs
-  const [showRefundDialog, setShowRefundDialog] = useState(false);
-  const [showInitiateRefundDialog, setShowInitiateRefundDialog] = useState(false);
 
   // Per-component reject note state: { [component_public_id]: string }
   const [rejectNotes, setRejectNotes] = useState<Record<string, string>>({});
@@ -187,39 +167,34 @@ export function StudentFeeDetailPage() {
         title={studentFee.student_name}
         description={`${studentFee.class_name} • ${studentFee.fee_structure_name} • ${studentFee.academic_year}`}
         actions={[
-          ...(studentFee.status === 'refunding'
+          // Show "Refund Payment" for OVERPAID/REFUNDING statuses
+          ...(['overpaid', 'refunding'].includes(studentFee.status)
             ? [
                 {
-                  label: markRefunded.isPending ? 'Processing...' : 'Mark as Refunded',
-                  onClick: () => setShowRefundDialog(true),
+                  label: 'Refund Payment',
+                  onClick: () =>
+                    navigate(
+                      `${ROUTES.FEES.PAYMENT_NEW_FOR_STUDENT.replace(':id', id || '')}?mode=refund`
+                    ),
                   variant: 'outline' as const,
                   icon: RefreshCw,
-                  disabled: markRefunded.isPending,
                   className: 'border-orange-300 text-orange-700 hover:bg-orange-50',
                 },
               ]
             : []),
-          // Show "Initiate Refund" when student has overpaid and refund not already in progress
-          ...(studentFee.amount_paid > studentFee.final_amount &&
-          !['refunding', 'refunded'].includes(studentFee.status)
+          // Show "Record Payment" for PENDING/PARTIAL statuses
+          ...(['pending', 'partial'].includes(studentFee.status)
             ? [
                 {
-                  label: initiateRefund.isPending ? 'Processing...' : 'Initiate Refund',
-                  onClick: () => setShowInitiateRefundDialog(true),
+                  label: 'Record Payment',
+                  onClick: () =>
+                    navigate(ROUTES.FEES.PAYMENT_NEW_FOR_STUDENT.replace(':id', id || '')),
                   variant: 'outline' as const,
-                  icon: RefreshCw,
-                  disabled: initiateRefund.isPending,
-                  className: 'border-red-300 text-red-700 hover:bg-red-50',
+                  icon: CreditCard,
+                  className: 'border-green-300 text-green-700 hover:bg-green-50',
                 },
               ]
             : []),
-          {
-            label: 'Record Payment',
-            onClick: () => navigate(ROUTES.FEES.PAYMENT_NEW_FOR_STUDENT.replace(':id', id || '')),
-            variant: 'outline' as const,
-            icon: CreditCard,
-            className: 'border-green-300 text-green-700 hover:bg-green-50',
-          },
           {
             label: 'Edit',
             onClick: () => navigate(ROUTES.FEES.STUDENT_FEES_EDIT.replace(':id', id || '')),
@@ -276,7 +251,20 @@ export function StudentFeeDetailPage() {
 
         <Card>
           <CardContent className="pt-6">
-            {studentFee.balance_due < 0 ? (
+            {studentFee.status === 'refunding' || studentFee.status === 'refunded' ? (
+              <>
+                <div className="text-sm font-medium text-orange-600">
+                  {studentFee.status === 'refunded' ? 'Refunded' : 'Refundable'}
+                </div>
+                <div className="flex items-center text-2xl font-bold text-orange-600">
+                  <IndianRupee className="h-5 w-5" />
+                  {studentFee.amount_paid?.toLocaleString('en-IN')}
+                </div>
+                {studentFee.status === 'refunding' && (
+                  <div className="mt-1 text-xs text-orange-500">Full refund pending</div>
+                )}
+              </>
+            ) : studentFee.balance_due < 0 ? (
               <>
                 <div className="text-sm font-medium text-orange-600">Overpaid</div>
                 <div className="flex items-center text-2xl font-bold text-orange-600">
@@ -461,71 +449,6 @@ export function StudentFeeDetailPage() {
         studentFeePublicId={studentFee.public_id}
         paymentCount={studentFee.payment_count}
       />
-
-      {/* Mark as Refunded confirmation dialog */}
-      <AlertDialog open={showRefundDialog} onOpenChange={setShowRefundDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Refund Issued</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you have issued the refund of{' '}
-              <span className="font-semibold">
-                ₹{studentFee.amount_paid?.toLocaleString('en-IN')}
-              </span>{' '}
-              to <span className="font-semibold">{studentFee.student_name}</span>?
-              <br />
-              <br />
-              This will mark the fee as <span className="font-semibold">Refunded</span> and cannot
-              be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-orange-600 hover:bg-orange-700"
-              onClick={() => {
-                markRefunded.mutate(id!);
-                setShowRefundDialog(false);
-              }}
-            >
-              Yes, Mark as Refunded
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Initiate Refund confirmation dialog (overpayment) */}
-      <AlertDialog open={showInitiateRefundDialog} onOpenChange={setShowInitiateRefundDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Initiate Refund</AlertDialogTitle>
-            <AlertDialogDescription>
-              <span className="font-semibold">{studentFee.student_name}</span> has overpaid by{' '}
-              <span className="font-semibold text-red-600">
-                ₹{Math.abs(studentFee.balance_due).toLocaleString('en-IN')}
-              </span>{' '}
-              (Paid ₹{studentFee.amount_paid?.toLocaleString('en-IN')} vs Total ₹
-              {studentFee.final_amount?.toLocaleString('en-IN')}).
-              <br />
-              <br />
-              This will mark the fee as <span className="font-semibold">Refunding</span>. Once you
-              have processed the refund, mark it as Refunded.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700"
-              onClick={() => {
-                initiateRefund.mutate(id!);
-                setShowInitiateRefundDialog(false);
-              }}
-            >
-              Yes, Initiate Refund
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

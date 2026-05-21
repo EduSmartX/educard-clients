@@ -47,8 +47,7 @@ export function Screen({
   const wrappedContent = keyboardAvoiding ? (
     <KeyboardAvoidingView
       className="flex-1"
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       {content}
     </KeyboardAvoidingView>
