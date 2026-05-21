@@ -22,15 +22,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { TextInputField, DateInputField, GenderField, BloodGroupField } from '@/components/forms';
-import { AddressForm } from '@/components/forms/address-form';
+import { SearchableSelect } from '@/components/ui/searchable-select';
+import { ClassSelectField } from '@/components/form/class-select-field';
+import { TextInputField, DateInputField, GenderField, BloodGroupField } from '@/components/form';
+import { AddressForm } from '@/components/form/address-form';
 import { useCreateStudent, useUpdateStudent, useReactivateStudent } from '../hooks/mutations';
 import { useClasses } from '@/features/classes/hooks/use-classes';
 import type { Class } from '@/features/classes/types';
@@ -116,24 +111,49 @@ export function StudentForm({
     defaultValues: STUDENT_FORM_DEFAULT_VALUES,
   });
 
+  const supervisorEmailValue = form.watch('supervisor_email');
+
+  const supervisorOptions = useMemo(() => {
+    const options = supervisors.map((teacher) => ({
+      value: teacher.email,
+      label: `${teacher.full_name} (${teacher.email})`,
+    }));
+
+    if (supervisorEmailValue && !options.some((option) => option.value === supervisorEmailValue)) {
+      options.unshift({
+        value: supervisorEmailValue,
+        label: supervisorEmailValue,
+      });
+    }
+
+    return options;
+  }, [supervisors, supervisorEmailValue]);
+
   // Auto-fill supervisor_email when class is selected
   const classId = form.watch('class_id');
   useEffect(() => {
     if (classId && classes.length > 0) {
       const selectedClass = classes.find((c) => c.public_id === classId);
-      if (selectedClass?.class_teacher?.email) {
-        form.setValue('supervisor_email', selectedClass.class_teacher.email);
+      const classTeacher = selectedClass?.class_teacher;
+
+      const derivedClassTeacherEmail =
+        classTeacher?.email ||
+        (classTeacher?.public_id
+          ? supervisors.find((teacher) => teacher.public_id === classTeacher.public_id)?.email
+          : undefined);
+
+      if (derivedClassTeacherEmail) {
+        form.setValue('supervisor_email', derivedClassTeacherEmail, {
+          shouldValidate: true,
+        });
       } else {
-        // Clear if no class teacher assigned
         form.setValue('supervisor_email', '');
       }
     } else if (!classId) {
-      // Clear when no class selected
       form.setValue('supervisor_email', '');
     }
-  }, [classId, classes, form]);
+  }, [classId, classes, supervisors, form]);
 
-  // Prefill form with student data in edit or view mode
   useEffect(() => {
     if (initialData && (mode === 'edit' || mode === 'view')) {
       form.reset(getStudentFormValuesFromInitialData(initialData), { keepDefaultValues: false });
@@ -328,40 +348,17 @@ export function StudentForm({
               </CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FormField
+              <ClassSelectField
                 control={form.control}
                 name="class_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Class <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <Select
-                      key={`${initialData?.public_id}-${field.value}`}
-                      onValueChange={(value: string) => {
-                        field.onChange(value);
-                        field.onBlur();
-                        void form.trigger('class_id');
-                      }}
-                      defaultValue={field.value}
-                      disabled={isViewMode || mode === 'edit'}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={FormPlaceholders.SELECT_CLASS} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {classes.map((cls) => (
-                          <SelectItem key={cls.public_id} value={cls.public_id}>
-                            {cls.class_master.name} - {cls.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                label="Class *"
+                placeholder={FormPlaceholders.SELECT_CLASS}
+                classes={classes.map((cls) => ({
+                  public_id: cls.public_id,
+                  name: cls.name,
+                  master_class: cls.class_master?.name,
+                }))}
+                disabled={isViewMode || mode === 'edit'}
               />
               <FormField
                 control={form.control}
@@ -369,35 +366,23 @@ export function StudentForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Supervisor (Class Teacher)</FormLabel>
-                    <Select
-                      key={`supervisor-${field.value}`}
-                      onValueChange={(value: string) => {
-                        field.onChange(value);
-                        field.onBlur();
-                        void form.trigger('supervisor_email');
-                      }}
-                      value={field.value || ''}
-                      disabled={isViewMode || isSupervisorsLoading}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue
-                            placeholder={
-                              isSupervisorsLoading
-                                ? CommonUiText.LOADING
-                                : FormPlaceholders.SELECT_SUPERVISOR
-                            }
-                          />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {supervisors.map((teacher) => (
-                          <SelectItem key={teacher.email} value={teacher.email}>
-                            {teacher.full_name} ({teacher.email})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <SearchableSelect
+                        key={`supervisor-${field.value}`}
+                        options={supervisorOptions}
+                        value={field.value || ''}
+                        onValueChange={(value: string) => {
+                          field.onChange(value);
+                          field.onBlur();
+                          void form.trigger('supervisor_email');
+                        }}
+                        placeholder={
+                          isSupervisorsLoading ? CommonUiText.LOADING : 'Select supervisor'
+                        }
+                        searchPlaceholder="Search supervisors..."
+                        disabled={isViewMode || isSupervisorsLoading}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -568,29 +553,23 @@ export function StudentForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Relationship</FormLabel>
-                        <Select
-                          key={`${initialData?.public_id}-${field.value}`}
-                          onValueChange={(value: string) => {
-                            field.onChange(value);
-                            field.onBlur();
-                            void form.trigger('guardian_relationship');
-                          }}
-                          defaultValue={field.value}
-                          disabled={isViewMode || !isClassSelected}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={FormPlaceholders.SELECT_RELATIONSHIP} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {RELATIONSHIP_OPTIONS.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <SearchableSelect
+                            key={`${initialData?.public_id}-${field.value}`}
+                            options={RELATIONSHIP_OPTIONS.map((option) => ({
+                              value: option.value,
+                              label: option.label,
+                            }))}
+                            value={field.value}
+                            onValueChange={(value: string) => {
+                              field.onChange(value);
+                              field.onBlur();
+                              void form.trigger('guardian_relationship');
+                            }}
+                            placeholder="Select relationship"
+                            disabled={isViewMode || !isClassSelected}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}

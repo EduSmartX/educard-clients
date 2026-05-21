@@ -9,27 +9,23 @@ import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { parse, format, isWeekend, addDays } from 'date-fns';
-import { ArrowLeft, BookOpen, Link as LinkIcon, CalendarDays, CheckCircle2 } from 'lucide-react';
+import { BookOpen, Link as LinkIcon, CalendarDays, CheckCircle2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
+import { Form } from '@/components/ui/form';
 import { FormError } from '@/components/ui/form-error';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
+import { SearchableSelect } from '@/components/ui/searchable-select';
+import { ClassSelectField } from '@/components/form/class-select-field';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { ROUTES } from '@/constants/app-config';
+import { PageHeader } from '@/components/common';
 import { getSubjectColor, HOMEWORK_UI } from '@educard/shared';
 import { toast } from 'sonner';
 
@@ -107,6 +103,17 @@ export default function HomeworkCreatePage() {
   const createMutation = useCreateHomework();
   const uploadMutation = useUploadAttachment();
 
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      class_public_id: initialClassId,
+      assigned_date: initialAssignedDate,
+      due_datetime: getInitialDueDateTime(initialAssignedDate),
+      status: 'published',
+      items: [],
+    },
+  });
+
   const {
     register,
     control,
@@ -114,16 +121,7 @@ export default function HomeworkCreatePage() {
     watch,
     setValue,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      class_public_id: initialClassId,
-      assigned_date: initialAssignedDate, // The date FOR which homework is given
-      due_datetime: getInitialDueDateTime(initialAssignedDate), // Due date is next day by default
-      status: 'published', // Default to published
-      items: [],
-    },
-  });
+  } = form;
 
   const { fields, replace } = useFieldArray({ control, name: 'items' });
   const selectedClassId = watch('class_public_id');
@@ -231,377 +229,345 @@ export default function HomeworkCreatePage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold">Create Homework</h1>
-          <p className="text-muted-foreground text-sm">
-            Create homework assignments for multiple subjects at once
-          </p>
-        </div>
-      </div>
+    <Form {...form}>
+      <div className="space-y-6">
+        <PageHeader
+          title="Create Homework"
+          description="Create homework assignments for multiple subjects at once"
+          actions={[
+            {
+              label: 'Cancel',
+              onClick: () => navigate(-1),
+              variant: 'outline' as const,
+            },
+          ]}
+        />
 
-      <form
-        onSubmit={handleSubmit(onSubmit, () => {
-          toast.error(HOMEWORK_UI.FIX_FORM_ERRORS);
-        })}
-        className="space-y-6"
-      >
-        {/* Class & Date Selection */}
-        <div className="bg-card rounded-lg border p-6">
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {/* Class */}
-            <div className="space-y-2">
-              <Label>Class *</Label>
-              {isLoadingClasses ? (
-                <Skeleton className="h-10 w-full" />
-              ) : (
+        <form
+          onSubmit={handleSubmit(onSubmit, () => {
+            toast.error(HOMEWORK_UI.FIX_FORM_ERRORS);
+          })}
+          className="space-y-6"
+        >
+          {/* Class & Date Selection */}
+          <div className="bg-card rounded-lg border p-6">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="space-y-2">
+                {isLoadingClasses ? (
+                  <>
+                    <Label>Class *</Label>
+                    <Skeleton className="h-10 w-full" />
+                  </>
+                ) : (
+                  <ClassSelectField
+                    control={control}
+                    name="class_public_id"
+                    label="Class *"
+                    placeholder="Select class"
+                    classes={teacherClasses.map((cls) => ({
+                      public_id: cls.public_id,
+                      name: cls.name,
+                    }))}
+                    disabled={!!initialClassId}
+                    className={cn(
+                      errors.class_public_id ? 'border-red-500' : '',
+                      initialClassId ? 'cursor-not-allowed bg-slate-50' : ''
+                    )}
+                  />
+                )}
+                {errors.class_public_id && (
+                  <FormError message={errors.class_public_id.message} compact />
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4" />
+                  Homework For Date *
+                </Label>
                 <Controller
-                  name="class_public_id"
+                  name="assigned_date"
                   control={control}
                   render={({ field }) => (
-                    <Select
+                    <DateTimePicker
                       value={field.value}
-                      onValueChange={field.onChange}
-                      disabled={!!initialClassId}
-                    >
-                      <SelectTrigger
-                        className={cn(
-                          errors.class_public_id ? 'border-red-500' : '',
-                          initialClassId ? 'cursor-not-allowed bg-slate-50' : ''
-                        )}
-                      >
-                        <SelectValue placeholder="Select class" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {teacherClasses.map((cls) => (
-                          <SelectItem key={cls.public_id} value={cls.public_id}>
-                            <div className="flex items-center gap-2">
-                              <span>{cls.name}</span>
-                              {cls.is_class_teacher && (
-                                <Badge variant="secondary" className="text-xs">
-                                  Class Teacher
-                                </Badge>
-                              )}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      onChange={(date) => {
+                        field.onChange(date);
+                        // Auto-update due date to next day when assigned date changes
+                        if (date) {
+                          const newDueDate = addDays(date, 1);
+                          newDueDate.setHours(17, 0, 0, 0);
+                          setValue('due_datetime', newDueDate);
+                        }
+                      }}
+                      placeholder="Select date"
+                      error={!!errors.assigned_date}
+                      showTimeSelect={false}
+                      minDate={getTodayOrNextWorkingDay()}
+                      dateFormat="EEE, MMM d, yyyy"
+                    />
                   )}
                 />
-              )}
-            </div>
+                <p className="text-muted-foreground text-xs">
+                  The date for which homework is assigned
+                </p>
+                <FormError message={errors.assigned_date?.message} compact />
+              </div>
 
-            {/* Assigned Date - The date FOR which homework is given */}
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <CalendarDays className="h-4 w-4" />
-                Homework For Date *
-              </Label>
-              <Controller
-                name="assigned_date"
-                control={control}
-                render={({ field }) => (
-                  <DateTimePicker
-                    value={field.value}
-                    onChange={(date) => {
-                      field.onChange(date);
-                      // Auto-update due date to next day when assigned date changes
-                      if (date) {
-                        const newDueDate = addDays(date, 1);
-                        newDueDate.setHours(17, 0, 0, 0);
-                        setValue('due_datetime', newDueDate);
-                      }
-                    }}
-                    placeholder="Select date"
-                    error={!!errors.assigned_date}
-                    showTimeSelect={false}
-                    minDate={getTodayOrNextWorkingDay()}
-                    dateFormat="EEE, MMM d, yyyy"
-                  />
-                )}
-              />
-              <p className="text-muted-foreground text-xs">
-                The date for which homework is assigned
-              </p>
-              <FormError message={errors.assigned_date?.message} compact />
-            </div>
-
-            {/* Due Date & Time */}
-            <div className="space-y-2 lg:col-span-2">
-              <Label>Due Date & Time *</Label>
-              <Controller
-                name="due_datetime"
-                control={control}
-                render={({ field }) => (
-                  <DateTimePicker
-                    value={field.value}
-                    onChange={field.onChange}
-                    placeholder="Select due date and time"
-                    error={!!errors.due_datetime}
-                    showTimeSelect
-                    timeIntervals={15}
-                    minDate={watchedAssignedDate || new Date()}
-                  />
-                )}
-              />
-              <FormError message={errors.due_datetime?.message} compact />
-            </div>
-          </div>
-
-          {/* Status */}
-          <div className="bg-muted/50 mt-4 flex items-center justify-between rounded-lg p-4">
-            <div>
-              <Label className="text-base">Publish immediately</Label>
-              <p className="text-muted-foreground text-sm">
-                Students will be notified when homework is published
-              </p>
-            </div>
-            <Controller
-              name="status"
-              control={control}
-              render={({ field }) => (
-                <Switch
-                  checked={field.value === 'published'}
-                  onCheckedChange={(checked) => field.onChange(checked ? 'published' : 'draft')}
+              {/* Due Date & Time */}
+              <div className="space-y-2 lg:col-span-2">
+                <Label>Due Date & Time *</Label>
+                <Controller
+                  name="due_datetime"
+                  control={control}
+                  render={({ field }) => (
+                    <DateTimePicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select due date and time"
+                      error={!!errors.due_datetime}
+                      showTimeSelect
+                      timeIntervals={15}
+                      minDate={watchedAssignedDate || new Date()}
+                    />
+                  )}
                 />
-              )}
-            />
-          </div>
-        </div>
+                <FormError message={errors.due_datetime?.message} compact />
+              </div>
+            </div>
 
-        {/* Subjects */}
-        {selectedClass ? (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            {/* Status */}
+            <div className="bg-muted/50 mt-4 flex items-center justify-between rounded-lg p-4">
               <div>
-                <h2 className="text-lg font-semibold">Subjects</h2>
+                <Label className="text-base">Publish immediately</Label>
                 <p className="text-muted-foreground text-sm">
-                  {enabledCount} of {fields.length} subjects selected
+                  Students will be notified when homework is published
                 </p>
               </div>
-              {/* Hide Select All / Deselect All when subject is pre-selected */}
-              {!initialSubjectId && (
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleToggleAll(true)}
-                  >
-                    Select All
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleToggleAll(false)}
-                  >
-                    Deselect All
-                  </Button>
-                </div>
-              )}
+              <Controller
+                name="status"
+                control={control}
+                render={({ field }) => (
+                  <Switch
+                    checked={field.value === 'published'}
+                    onCheckedChange={(checked) => field.onChange(checked ? 'published' : 'draft')}
+                  />
+                )}
+              />
             </div>
+          </div>
 
+          {/* Subjects */}
+          {selectedClass ? (
             <div className="space-y-4">
-              {fields.map((field, index) => {
-                const color = getSubjectColor(field.subject_name);
-                const isEnabled = watch(`items.${index}.enabled`);
-                // Disable checkbox if a specific subject was pre-selected via URL
-                const isSubjectLocked = !!initialSubjectId;
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold">Subjects</h2>
+                  <p className="text-muted-foreground text-sm">
+                    {enabledCount} of {fields.length} subjects selected
+                  </p>
+                </div>
+                {/* Hide Select All / Deselect All when subject is pre-selected */}
+                {!initialSubjectId && (
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleToggleAll(true)}
+                    >
+                      Select All
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleToggleAll(false)}
+                    >
+                      Deselect All
+                    </Button>
+                  </div>
+                )}
+              </div>
 
-                return (
-                  <div
-                    key={field.id}
-                    className={cn(
-                      'rounded-xl border-2 transition-all',
-                      color.border,
-                      isEnabled ? 'bg-card shadow-sm' : 'bg-muted/30'
-                    )}
-                  >
-                    {/* Subject Header */}
+              <div className="space-y-4">
+                {fields.map((field, index) => {
+                  const color = getSubjectColor(field.subject_name);
+                  const isEnabled = watch(`items.${index}.enabled`);
+                  // Disable checkbox if a specific subject was pre-selected via URL
+                  const isSubjectLocked = !!initialSubjectId;
+
+                  return (
                     <div
+                      key={field.id}
                       className={cn(
-                        'flex items-center justify-between border-b px-4 py-3',
-                        color.bg
+                        'rounded-xl border-2 transition-all',
+                        color.border,
+                        isEnabled ? 'bg-card shadow-sm' : 'bg-muted/30'
                       )}
                     >
-                      <div className="flex items-center gap-3">
-                        <Controller
-                          name={`items.${index}.enabled`}
-                          control={control}
-                          render={({ field: checkField }) => (
-                            <Checkbox
-                              checked={checkField.value}
-                              onCheckedChange={checkField.onChange}
-                              className="h-5 w-5"
-                              disabled={isSubjectLocked}
-                            />
-                          )}
-                        />
-                        <div
-                          className="h-3 w-3 rounded-full"
-                          style={{ backgroundColor: color.hex }}
-                        />
-                        <div>
-                          <h3 className={cn('font-semibold', color.text)}>{field.subject_name}</h3>
-                          {field.teacher_name && (
-                            <p className="text-muted-foreground text-xs">{field.teacher_name}</p>
-                          )}
+                      {/* Subject Header */}
+                      <div
+                        className={cn(
+                          'flex items-center justify-between border-b px-4 py-3',
+                          color.bg
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Controller
+                            name={`items.${index}.enabled`}
+                            control={control}
+                            render={({ field: checkField }) => (
+                              <Checkbox
+                                checked={checkField.value}
+                                onCheckedChange={checkField.onChange}
+                                className="h-5 w-5"
+                                disabled={isSubjectLocked}
+                              />
+                            )}
+                          />
+                          <div
+                            className="h-3 w-3 rounded-full"
+                            style={{ backgroundColor: color.hex }}
+                          />
+                          <div>
+                            <h3 className={cn('font-semibold', color.text)}>
+                              {field.subject_name}
+                            </h3>
+                            {field.teacher_name && (
+                              <p className="text-muted-foreground text-xs">{field.teacher_name}</p>
+                            )}
+                          </div>
                         </div>
+                        {isEnabled && watch(`items.${index}.title`) && (
+                          <CheckCircle2 className="h-5 w-5 text-green-500" />
+                        )}
                       </div>
-                      {isEnabled && watch(`items.${index}.title`) && (
-                        <CheckCircle2 className="h-5 w-5 text-green-500" />
-                      )}
-                    </div>
 
-                    {/* Subject Form */}
-                    {isEnabled && (
-                      <div className="space-y-4 p-4">
-                        <div className="grid gap-4 sm:grid-cols-2">
-                          <div className="space-y-2 sm:col-span-2">
-                            <Label>Title *</Label>
-                            <Input
-                              placeholder={`Enter ${field.subject_name} homework title`}
-                              {...register(`items.${index}.title`)}
-                              className={errors.items?.[index]?.title ? 'border-red-500' : ''}
-                            />
-                          </div>
-
-                          <div className="space-y-2 sm:col-span-2">
-                            <Label>Description</Label>
-                            <Textarea
-                              placeholder="Brief description..."
-                              rows={2}
-                              {...register(`items.${index}.description`)}
-                            />
-                          </div>
-
-                          <div className="space-y-2 sm:col-span-2">
-                            <Label>Instructions</Label>
-                            <Textarea
-                              placeholder="Detailed instructions for students..."
-                              rows={3}
-                              {...register(`items.${index}.instructions`)}
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label>Priority</Label>
-                            <Controller
-                              name={`items.${index}.priority`}
-                              control={control}
-                              render={({ field: priorityField }) => (
-                                <Select
-                                  value={priorityField.value}
-                                  onValueChange={priorityField.onChange}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {HOMEWORK_PRIORITY_OPTIONS.map((opt) => (
-                                      <SelectItem key={opt.value} value={opt.value}>
-                                        <span className="flex items-center gap-2">
-                                          <span
-                                            className="h-2 w-2 rounded-full"
-                                            style={{ backgroundColor: opt.color }}
-                                          />
-                                          {opt.label}
-                                        </span>
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              )}
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label>Submission Type</Label>
-                            <Controller
-                              name={`items.${index}.submission_type`}
-                              control={control}
-                              render={({ field: subTypeField }) => (
-                                <Select
-                                  value={subTypeField.value}
-                                  onValueChange={subTypeField.onChange}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {SUBMISSION_TYPE_OPTIONS.map((opt) => (
-                                      <SelectItem key={opt.value} value={opt.value}>
-                                        {opt.label}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              )}
-                            />
-                          </div>
-
-                          <div className="space-y-2 sm:col-span-2">
-                            <Label>Reference Link</Label>
-                            <div className="relative">
-                              <LinkIcon className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                      {/* Subject Form */}
+                      {isEnabled && (
+                        <div className="space-y-4 p-4">
+                          <div className="grid gap-4 sm:grid-cols-2">
+                            <div className="space-y-2 sm:col-span-2">
+                              <Label>Title *</Label>
                               <Input
-                                type="url"
-                                placeholder="https://..."
-                                className="pl-9"
-                                {...register(`items.${index}.reference_link`)}
+                                placeholder={`Enter ${field.subject_name} homework title`}
+                                {...register(`items.${index}.title`)}
+                                className={errors.items?.[index]?.title ? 'border-red-500' : ''}
+                              />
+                            </div>
+
+                            <div className="space-y-2 sm:col-span-2">
+                              <Label>Description</Label>
+                              <Textarea
+                                placeholder="Brief description..."
+                                rows={2}
+                                {...register(`items.${index}.description`)}
+                              />
+                            </div>
+
+                            <div className="space-y-2 sm:col-span-2">
+                              <Label>Instructions</Label>
+                              <Textarea
+                                placeholder="Detailed instructions for students..."
+                                rows={3}
+                                {...register(`items.${index}.instructions`)}
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label>Priority</Label>
+                              <Controller
+                                name={`items.${index}.priority`}
+                                control={control}
+                                render={({ field: priorityField }) => (
+                                  <SearchableSelect
+                                    options={HOMEWORK_PRIORITY_OPTIONS.map((opt) => ({
+                                      value: opt.value,
+                                      label: opt.label,
+                                    }))}
+                                    value={priorityField.value}
+                                    onValueChange={priorityField.onChange}
+                                    placeholder="Select priority"
+                                  />
+                                )}
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label>Submission Type</Label>
+                              <Controller
+                                name={`items.${index}.submission_type`}
+                                control={control}
+                                render={({ field: subTypeField }) => (
+                                  <SearchableSelect
+                                    options={SUBMISSION_TYPE_OPTIONS.map((opt) => ({
+                                      value: opt.value,
+                                      label: opt.label,
+                                    }))}
+                                    value={subTypeField.value}
+                                    onValueChange={subTypeField.onChange}
+                                    placeholder="Select submission type"
+                                  />
+                                )}
+                              />
+                            </div>
+
+                            <div className="space-y-2 sm:col-span-2">
+                              <Label>Reference Link</Label>
+                              <div className="relative">
+                                <LinkIcon className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                                <Input
+                                  type="url"
+                                  placeholder="https://..."
+                                  className="pl-9"
+                                  {...register(`items.${index}.reference_link`)}
+                                />
+                              </div>
+                            </div>
+
+                            <div className="space-y-2 sm:col-span-2">
+                              <Label>Attachments</Label>
+                              <FileUpload
+                                files={uploadedFiles[field.subject_public_id] || []}
+                                onFilesChange={(files) => {
+                                  setUploadedFiles((prev) => ({
+                                    ...prev,
+                                    [field.subject_public_id]: files,
+                                  }));
+                                }}
+                                {...FILE_UPLOAD_PRESETS.attachments}
+                                compact
                               />
                             </div>
                           </div>
-
-                          <div className="space-y-2 sm:col-span-2">
-                            <Label>Attachments</Label>
-                            <FileUpload
-                              files={uploadedFiles[field.subject_public_id] || []}
-                              onFilesChange={(files) => {
-                                setUploadedFiles((prev) => ({
-                                  ...prev,
-                                  [field.subject_public_id]: files,
-                                }));
-                              }}
-                              {...FILE_UPLOAD_PRESETS.attachments}
-                              compact
-                            />
-                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed py-16">
-            <BookOpen className="text-muted-foreground/50 mb-4 h-12 w-12" />
-            <h3 className="text-lg font-semibold">Select a Class</h3>
-            <p className="text-muted-foreground text-sm">
-              Choose a class to see available subjects
-            </p>
-          </div>
-        )}
+          ) : (
+            <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed py-16">
+              <BookOpen className="text-muted-foreground/50 mb-4 h-12 w-12" />
+              <h3 className="text-lg font-semibold">Select a Class</h3>
+              <p className="text-muted-foreground text-sm">
+                Choose a class to see available subjects
+              </p>
+            </div>
+          )}
 
-        {/* Actions */}
-        <div className="flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={() => navigate(-1)}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isSubmitting || enabledCount === 0}>
-            {isSubmitting ? 'Creating...' : `Create ${enabledCount} Homework`}
-          </Button>
-        </div>
-      </form>
-    </div>
+          {/* Actions */}
+          <div className="flex justify-end gap-3">
+            <Button type="button" variant="outline" onClick={() => navigate(-1)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting || enabledCount === 0}>
+              {isSubmitting ? 'Creating...' : `Create ${enabledCount} Homework`}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </Form>
   );
 }

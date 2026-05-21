@@ -6,13 +6,7 @@
 import { useMemo } from 'react';
 import { Filter } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Badge } from '@/components/ui/badge';
 
 const MONTHS = [
@@ -59,7 +53,7 @@ interface AttendanceReportFiltersProps {
     last_name: string;
   }>;
   isLoadingUsers?: boolean;
-  
+
   // UI State
   collapsed?: boolean;
 }
@@ -107,8 +101,8 @@ export function AttendanceReportFilters({
 
   if (collapsed) {
     return (
-      <Card className="shadow-sm border border-[#bfd591]" style={{ backgroundColor: '#C5D89D' }}>
-        <CardContent className="pt-4 flex items-center justify-between">
+      <Card className="border border-[#bfd591] shadow-sm" style={{ backgroundColor: '#C5D89D' }}>
+        <CardContent className="flex items-center justify-between pt-4">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-gray-700" />
             <span className="text-sm font-semibold text-gray-700">Filters Applied</span>
@@ -124,9 +118,9 @@ export function AttendanceReportFilters({
   }
 
   return (
-    <Card className="shadow-sm border border-[#bfd591]" style={{ backgroundColor: '#C5D89D' }}>
+    <Card className="border border-[#bfd591] shadow-sm" style={{ backgroundColor: '#C5D89D' }}>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-base">
           <Filter className="h-4 w-4" />
           Filter Options
           {activeFiltersCount > 0 && (
@@ -137,120 +131,102 @@ export function AttendanceReportFilters({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {/* Report Type */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Report Type
-            </label>
-            <Select value={reportType} onValueChange={onReportTypeChange}>
-              <SelectTrigger className="bg-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="yearly">Yearly Report</SelectItem>
-                <SelectItem value="monthly">Monthly Report</SelectItem>
-              </SelectContent>
-            </Select>
+            <label className="mb-2 block text-sm font-semibold text-gray-700">Report Type</label>
+            <SearchableSelect
+              options={[
+                { value: 'yearly', label: 'Yearly Report' },
+                { value: 'monthly', label: 'Monthly Report' },
+              ]}
+              value={reportType}
+              onValueChange={(value) => onReportTypeChange(value as ReportType)}
+              placeholder="Select report type"
+              className="bg-white"
+            />
           </div>
 
           {/* View Type */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">View</label>
-            <Select value={viewType} onValueChange={onViewTypeChange}>
-              <SelectTrigger className="bg-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="self">Self</SelectItem>
-                <SelectItem value="staff">Staff</SelectItem>
-              </SelectContent>
-            </Select>
+            <label className="mb-2 block text-sm font-semibold text-gray-700">View</label>
+            <SearchableSelect
+              options={[
+                { value: 'self', label: 'Self' },
+                { value: 'staff', label: 'Staff' },
+              ]}
+              value={viewType}
+              onValueChange={(value) => onViewTypeChange(value as ViewType)}
+              placeholder="Select view"
+              className="bg-white"
+            />
           </div>
 
           {/* View Mode */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Display Mode
-            </label>
-            <Select value={viewMode} onValueChange={onViewModeChange}>
-              <SelectTrigger className="bg-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="grid">Grid View</SelectItem>
-                <SelectItem value="table">Table View</SelectItem>
-              </SelectContent>
-            </Select>
+            <label className="mb-2 block text-sm font-semibold text-gray-700">Display Mode</label>
+            <SearchableSelect
+              options={[
+                { value: 'grid', label: 'Grid View' },
+                { value: 'table', label: 'Table View' },
+              ]}
+              value={viewMode}
+              onValueChange={(value) => onViewModeChange(value as ViewMode)}
+              placeholder="Select view mode"
+              className="bg-white"
+            />
           </div>
 
           {/* Staff Selection */}
           {viewType === 'staff' && (
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Select Staff
-              </label>
-              <Select
+              <label className="mb-2 block text-sm font-semibold text-gray-700">Select Staff</label>
+              <SearchableSelect
+                options={manageableUsers.map((staff) => ({
+                  value: staff.public_id,
+                  label: staff.full_name || `${staff.first_name} ${staff.last_name}`,
+                }))}
                 value={selectedUser}
                 onValueChange={onUserChange}
+                placeholder="Choose staff member"
+                searchPlaceholder="Search staff..."
                 disabled={isLoadingUsers}
-              >
-                <SelectTrigger className="bg-white">
-                  <SelectValue placeholder="Choose staff member" />
-                </SelectTrigger>
-                <SelectContent>
-                  {manageableUsers.map((staff) => (
-                    <SelectItem key={staff.public_id} value={staff.public_id}>
-                      {staff.full_name ||
-                        `${staff.first_name} ${staff.last_name}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                emptyText={isLoadingUsers ? 'Loading...' : 'No staff found'}
+                className="bg-white"
+              />
             </div>
           )}
 
           {/* Year Selection */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Year</label>
-            <Select
+            <label className="mb-2 block text-sm font-semibold text-gray-700">Year</label>
+            <SearchableSelect
+              options={years.map((year) => ({
+                value: String(year),
+                label: String(year),
+              }))}
               value={String(selectedYear)}
               onValueChange={(value) => onYearChange(Number(value))}
-            >
-              <SelectTrigger className="bg-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {years.map((year) => (
-                  <SelectItem key={year} value={String(year)}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder="Select year"
+              className="bg-white"
+            />
           </div>
 
           {/* Month Selection (only for monthly report) */}
           {reportType === 'monthly' && (
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Month
-              </label>
-              <Select
+              <label className="mb-2 block text-sm font-semibold text-gray-700">Month</label>
+              <SearchableSelect
+                options={MONTHS.map((month, index) => ({
+                  value: String(index),
+                  label: month,
+                }))}
                 value={String(selectedMonth)}
                 onValueChange={(value) => onMonthChange(Number(value))}
-              >
-                <SelectTrigger className="bg-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {MONTHS.map((month, index) => (
-                    <SelectItem key={index} value={String(index)}>
-                      {month}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="Select month"
+                searchPlaceholder="Search months..."
+                className="bg-white"
+              />
             </div>
           )}
         </div>

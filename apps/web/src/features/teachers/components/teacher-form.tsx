@@ -12,10 +12,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { TextInputField, DateInputField, GenderField, BloodGroupField } from '@/components/forms';
-import { AddressForm } from '@/components/forms/address-form';
-import { OrganizationRoleField } from '@/components/forms/organization-role-field';
-import { SupervisorField } from '@/components/forms/supervisor-field';
+import { TextInputField, DateInputField, GenderField, BloodGroupField } from '@/components/form';
+import { AddressForm } from '@/components/form/address-form';
+import { OrganizationRoleField } from '@/components/form/organization-role-field';
+import { SupervisorField } from '@/components/form/supervisor-field';
 import {
   ADDRESS_TYPE,
   ErrorMessages,

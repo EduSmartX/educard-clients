@@ -23,15 +23,9 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { ErrorMessages, FormPlaceholders, SuccessMessages, ToastTitles } from '@/constants';
 import {
   Table,
@@ -281,32 +275,20 @@ export function LeaveRequestFormPageNew() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Leave Type *</FormLabel>
-                    <Select
-                      key={`${id}-${field.value}`}
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      disabled={mode === 'view'}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={FormPlaceholders.SELECT_LEAVE_TYPE} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {balances.map((balance) => (
-                          <SelectItem key={balance.public_id} value={balance.public_id}>
-                            <div className="flex items-center gap-2">
-                              <span>
-                                {balance.leave_type_name} ({balance.leave_type_code})
-                              </span>
-                              <Badge variant="outline" className="ml-2">
-                                {balance.available} available
-                              </Badge>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <SearchableSelect
+                        key={`${id}-${field.value}`}
+                        options={balances.map((balance) => ({
+                          value: balance.public_id,
+                          label: `${balance.leave_type_name} (${balance.leave_type_code}) - ${balance.available} available`,
+                        }))}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder={FormPlaceholders.SELECT_LEAVE_TYPE}
+                        searchPlaceholder="Search leave types..."
+                        disabled={mode === 'view'}
+                      />
+                    </FormControl>
                     <FormDescription>Choose from your available leave types</FormDescription>
                     <FormMessage />
                   </FormItem>

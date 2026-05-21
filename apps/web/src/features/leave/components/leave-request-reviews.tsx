@@ -24,13 +24,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { DataTable, type Column } from '@/components/ui/data-table';
 import { Combobox } from '@/components/ui/combobox';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import api from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -657,34 +651,33 @@ export function LeaveRequestReviews() {
                   {/* Review Status Filter */}
                   <div className="space-y-2">
                     <Label>Status</Label>
-                    <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                      <SelectTrigger>
-                        <SelectValue placeholder={FormPlaceholders.SELECT_STATUS} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="approved">Approved</SelectItem>
-                        <SelectItem value="rejected">Rejected</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <SearchableSelect
+                      options={[
+                        { value: 'pending', label: 'Pending' },
+                        { value: 'approved', label: 'Approved' },
+                        { value: 'rejected', label: 'Rejected' },
+                      ]}
+                      value={selectedStatus}
+                      onValueChange={setSelectedStatus}
+                      placeholder="Select status"
+                    />
                   </div>
 
                   {/* Leave Type Filter */}
                   <div className="space-y-2">
                     <Label>Leave Type</Label>
-                    <Select value={selectedLeaveType} onValueChange={setSelectedLeaveType}>
-                      <SelectTrigger>
-                        <SelectValue placeholder={FormPlaceholders.ALL_LEAVE_TYPES} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">All</SelectItem>
-                        {leaveTypes.map((type) => (
-                          <SelectItem key={type.id} value={type.name}>
-                            {type.name} ({type.code})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <SearchableSelect
+                      options={[
+                        { value: '', label: 'All' },
+                        ...leaveTypes.map((type) => ({
+                          value: type.name,
+                          label: `${type.name} (${type.code})`,
+                        })),
+                      ]}
+                      value={selectedLeaveType}
+                      onValueChange={setSelectedLeaveType}
+                      placeholder="All leave types"
+                    />
                   </div>
 
                   {/* User Filter for Staff */}

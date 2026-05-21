@@ -1,14 +1,21 @@
 /**
  * Bulk Exam Create Page
  * Create multiple exams at once for all subjects in a selected class
- * 
+ *
  * Role-based access:
  * - Admin only: Non-admins are redirected to exams list
  */
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, CalendarDays, AlertTriangle, CopyCheck, ChevronDown } from 'lucide-react';
+import {
+  ArrowLeft,
+  Loader2,
+  CalendarDays,
+  AlertTriangle,
+  CopyCheck,
+  ChevronDown,
+} from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -17,20 +24,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { DatePicker } from '@/components/ui/date-picker';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { PageHeader, FormActions, WarningConfirmationDialog } from '@/components/common';
 import {
   Table,
@@ -84,7 +80,9 @@ export function BulkExamCreatePage() {
   const [subjectRows, setSubjectRows] = useState<SubjectRow[]>([]);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [showMissingDateTimeWarning, setShowMissingDateTimeWarning] = useState(false);
-  const [pendingSubmitPayload, setPendingSubmitPayload] = useState<BulkExamCreatePayload | null>(null);
+  const [pendingSubmitPayload, setPendingSubmitPayload] = useState<BulkExamCreatePayload | null>(
+    null
+  );
 
   // Data fetching
   const { data: sessionsData, isLoading: isLoadingSessions } = useExamSessions({
@@ -154,9 +152,7 @@ export function BulkExamCreatePage() {
   useEffect(() => {
     if (classId && subjectsList.length > 0) {
       // Filter subjects for the selected class
-      const filteredSubjects = subjectsList.filter(
-        (s) => s.class_info.public_id === classId
-      );
+      const filteredSubjects = subjectsList.filter((s) => s.class_info.public_id === classId);
       setSubjectRows(
         filteredSubjects.map((subject) => ({
           subject_id: subject.public_id,
@@ -234,9 +230,13 @@ export function BulkExamCreatePage() {
   // Copy start_time/end_time from previous row
   const copyTimeFromPrevious = useCallback((index: number, field: 'start_time' | 'end_time') => {
     setSubjectRows((prev) => {
-      if (index <= 0) {return prev;}
+      if (index <= 0) {
+        return prev;
+      }
       const prevValue = prev[index - 1][field];
-      if (!prevValue) {return prev;}
+      if (!prevValue) {
+        return prev;
+      }
       const updated = [...prev];
       updated[index] = { ...updated[index], [field]: prevValue };
       return updated;
@@ -245,10 +245,10 @@ export function BulkExamCreatePage() {
 
   // Apply a time value to all selected rows
   const applyTimeToAllSelected = useCallback((field: 'start_time' | 'end_time', value: string) => {
-    if (!value) {return;}
-    setSubjectRows((prev) =>
-      prev.map((row) => (row.selected ? { ...row, [field]: value } : row))
-    );
+    if (!value) {
+      return;
+    }
+    setSubjectRows((prev) => prev.map((row) => (row.selected ? { ...row, [field]: value } : row)));
     toast.success(`Applied ${field === 'start_time' ? 'start' : 'end'} time to all selected rows`);
   }, []);
 
@@ -260,7 +260,11 @@ export function BulkExamCreatePage() {
       queryClient.invalidateQueries({ queryKey: ['exams'] });
       navigate(ROUTES.EXAMS_LIST);
     },
-    onError: (error: Error & { response?: { data?: { message?: string; errors?: Record<string, string[]> } } }) => {
+    onError: (
+      error: Error & {
+        response?: { data?: { message?: string; errors?: Record<string, string[]> } };
+      }
+    ) => {
       const respData = error.response?.data;
       if (respData?.errors) {
         const allMessages = Object.values(respData.errors).flat();
@@ -378,7 +382,11 @@ export function BulkExamCreatePage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Create Exams (Bulk)">
-        <Button variant="brandOutline" onClick={() => navigate(ROUTES.EXAMS_LIST)} className="gap-2">
+        <Button
+          variant="brandOutline"
+          onClick={() => navigate(ROUTES.EXAMS_LIST)}
+          className="gap-2"
+        >
           <ArrowLeft className="h-4 w-4" />
           Back to Exams
         </Button>
@@ -392,7 +400,7 @@ export function BulkExamCreatePage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Session & Class Selection Card */}
           <Card className="border shadow-sm">
-            <CardHeader className="border-b bg-muted/30 px-6 py-4">
+            <CardHeader className="bg-muted/30 border-b px-6 py-4">
               <CardTitle className="text-lg">Exam Session & Class</CardTitle>
             </CardHeader>
             <CardContent className="p-6">
@@ -402,18 +410,17 @@ export function BulkExamCreatePage() {
                   <Label htmlFor="session_id">
                     Exam Session <span className="text-red-500">*</span>
                   </Label>
-                  <Select value={sessionId || undefined} onValueChange={setSessionId}>
-                    <SelectTrigger className={fieldErrors.session_id ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Select session" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {sessionsList.map((session) => (
-                        <SelectItem key={session.public_id} value={session.public_id}>
-                          {session.name} ({session.academic_year})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    options={sessionsList.map((session) => ({
+                      value: session.public_id,
+                      label: `${session.name} (${session.academic_year})`,
+                    }))}
+                    value={sessionId || ''}
+                    onValueChange={setSessionId}
+                    placeholder="Select session"
+                    searchPlaceholder="Search sessions..."
+                    className={fieldErrors.session_id ? 'border-red-500' : ''}
+                  />
                   {fieldErrors.session_id && (
                     <p className="text-sm text-red-500">{fieldErrors.session_id}</p>
                   )}
@@ -439,18 +446,17 @@ export function BulkExamCreatePage() {
                   <Label htmlFor="class_id">
                     Class <span className="text-red-500">*</span>
                   </Label>
-                  <Select value={classId || undefined} onValueChange={setClassId}>
-                    <SelectTrigger className={fieldErrors.class_id ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Select class" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {classesList.map((cls) => (
-                        <SelectItem key={cls.public_id} value={cls.public_id}>
-                          {cls.class_master.name} - {cls.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    options={classesList.map((cls) => ({
+                      value: cls.public_id,
+                      label: `${cls.class_master?.name || 'Unknown'} - ${cls.name}`,
+                    }))}
+                    value={classId || ''}
+                    onValueChange={setClassId}
+                    placeholder="Select class"
+                    searchPlaceholder="Search classes..."
+                    className={fieldErrors.class_id ? 'border-red-500' : ''}
+                  />
                   {fieldErrors.class_id && (
                     <p className="text-sm text-red-500">{fieldErrors.class_id}</p>
                   )}
@@ -496,21 +502,19 @@ export function BulkExamCreatePage() {
 
           {/* Subjects Table Card */}
           <Card className="border shadow-sm">
-            <CardHeader className="border-b bg-muted/30 px-6 py-4">
+            <CardHeader className="bg-muted/30 border-b px-6 py-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">
                   Subjects {classId && `(${subjectRows.length} subjects)`}
                 </CardTitle>
                 {selectedCount > 0 && (
-                  <span className="text-sm text-muted-foreground">
-                    {selectedCount} selected
-                  </span>
+                  <span className="text-muted-foreground text-sm">{selectedCount} selected</span>
                 )}
               </div>
             </CardHeader>
             <CardContent className="p-0">
               {!classId ? (
-                <div className="flex items-center justify-center py-12 text-muted-foreground">
+                <div className="text-muted-foreground flex items-center justify-center py-12">
                   Select a class to view subjects
                 </div>
               ) : isLoadingSubjects ? (
@@ -518,7 +522,7 @@ export function BulkExamCreatePage() {
                   <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
                 </div>
               ) : subjectRows.length === 0 ? (
-                <div className="flex items-center justify-center py-12 text-muted-foreground">
+                <div className="text-muted-foreground flex items-center justify-center py-12">
                   No subjects found for this class
                 </div>
               ) : (
@@ -527,10 +531,7 @@ export function BulkExamCreatePage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-12">
-                          <Checkbox
-                            checked={selectAll}
-                            onCheckedChange={handleSelectAll}
-                          />
+                          <Checkbox checked={selectAll} onCheckedChange={handleSelectAll} />
                         </TableHead>
                         <TableHead>Subject</TableHead>
                         <TableHead className="w-28">Max Marks</TableHead>
@@ -542,7 +543,10 @@ export function BulkExamCreatePage() {
                     </TableHeader>
                     <TableBody>
                       {subjectRows.map((row, index) => (
-                        <TableRow key={row.subject_id} className={row.selected ? 'bg-muted/30' : ''}>
+                        <TableRow
+                          key={row.subject_id}
+                          className={row.selected ? 'bg-muted/30' : ''}
+                        >
                           <TableCell>
                             <Checkbox
                               checked={row.selected}
@@ -606,7 +610,7 @@ export function BulkExamCreatePage() {
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        className="h-7 w-7 shrink-0 text-muted-foreground hover:text-primary"
+                                        className="text-muted-foreground hover:text-primary h-7 w-7 shrink-0"
                                         onClick={() => copyTimeFromPrevious(index, 'start_time')}
                                       >
                                         <CopyCheck className="h-3.5 w-3.5" />
@@ -626,8 +630,10 @@ export function BulkExamCreatePage() {
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        className="h-7 w-7 shrink-0 text-muted-foreground hover:text-primary"
-                                        onClick={() => applyTimeToAllSelected('start_time', row.start_time)}
+                                        className="text-muted-foreground hover:text-primary h-7 w-7 shrink-0"
+                                        onClick={() =>
+                                          applyTimeToAllSelected('start_time', row.start_time)
+                                        }
                                       >
                                         <ChevronDown className="h-3.5 w-3.5" />
                                       </Button>
@@ -657,7 +663,7 @@ export function BulkExamCreatePage() {
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        className="h-7 w-7 shrink-0 text-muted-foreground hover:text-primary"
+                                        className="text-muted-foreground hover:text-primary h-7 w-7 shrink-0"
                                         onClick={() => copyTimeFromPrevious(index, 'end_time')}
                                       >
                                         <CopyCheck className="h-3.5 w-3.5" />
@@ -677,8 +683,10 @@ export function BulkExamCreatePage() {
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        className="h-7 w-7 shrink-0 text-muted-foreground hover:text-primary"
-                                        onClick={() => applyTimeToAllSelected('end_time', row.end_time)}
+                                        className="text-muted-foreground hover:text-primary h-7 w-7 shrink-0"
+                                        onClick={() =>
+                                          applyTimeToAllSelected('end_time', row.end_time)
+                                        }
                                       >
                                         <ChevronDown className="h-3.5 w-3.5" />
                                       </Button>

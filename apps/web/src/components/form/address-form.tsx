@@ -2,18 +2,12 @@ import * as React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { cn } from '@/lib/utils';
 import { getCurrentLocationAddress } from '@/lib/location-utils';
 import { MapPin, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { ADDRESS_TYPE_OPTIONS, CommonUiText, ErrorMessages, FormPlaceholders, SuccessMessages } from '@/constants';
+import { ADDRESS_TYPE_OPTIONS, CommonUiText, ErrorMessages, SuccessMessages } from '@/constants';
 
 interface FieldNames {
   addressType?: string;
@@ -102,14 +96,14 @@ export function AddressForm({
     <div className="space-y-4">
       {/* Section Header with Location Button */}
       {showHeader && (
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <span className="text-green-600 text-xl">📍</span>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
+              <span className="text-xl text-green-600">📍</span>
             </div>
             <div>
               <h4 className="text-base font-bold text-gray-800">Address Information</h4>
-              <p className="text-xs text-gray-600 mt-0.5">
+              <p className="mt-0.5 text-xs text-gray-600">
                 {required ? 'Provide complete address details' : 'Optional address details'}
               </p>
             </div>
@@ -122,8 +116,8 @@ export function AddressForm({
               onClick={handleUseLocation}
               disabled={isLoadingLocation}
               className={cn(
-                'flex items-center gap-2 h-9 px-3 border-2 border-blue-200 bg-white text-blue-700 hover:bg-blue-50 hover:border-blue-300 rounded-lg transition-all text-xs font-medium',
-                isLoadingLocation && 'opacity-50 cursor-not-allowed'
+                'flex h-9 items-center gap-2 rounded-lg border-2 border-blue-200 bg-white px-3 text-xs font-medium text-blue-700 transition-all hover:border-blue-300 hover:bg-blue-50',
+                isLoadingLocation && 'cursor-not-allowed opacity-50'
               )}
             >
               {isLoadingLocation ? (
@@ -147,24 +141,19 @@ export function AddressForm({
         <div className="space-y-2">
           <Label htmlFor={getFieldName('addressType')} className={labelSize}>
             Address Type
-            {required && <span className="text-red-500 ml-1">*</span>}
+            {required && <span className="ml-1 text-red-500">*</span>}
           </Label>
-          <Select
-            value={form.watch(getFieldName('addressType'))}
-            onValueChange={(value) => form.setValue(getFieldName('addressType'), value)}
+          <SearchableSelect
+            options={ADDRESS_TYPE_OPTIONS.map((option) => ({
+              value: option.value,
+              label: option.label,
+            }))}
+            value={form.watch(getFieldName('addressType')) || ''}
+            onValueChange={(value: string) => form.setValue(getFieldName('addressType'), value)}
+            placeholder="Select address type"
+            className="bg-gray-50 focus:bg-white"
             disabled={disabled}
-          >
-            <SelectTrigger className="bg-gray-50 focus:bg-white">
-              <SelectValue placeholder={FormPlaceholders.SELECT_ADDRESS_TYPE} />
-            </SelectTrigger>
-            <SelectContent>
-              {ADDRESS_TYPE_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          />
           {form.formState.errors[getFieldName('addressType')]?.message && (
             <p className="text-sm text-red-600">
               {form.formState.errors[getFieldName('addressType')]?.message as string}
@@ -194,7 +183,7 @@ export function AddressForm({
       {/* Address Line 2 */}
       <div className="space-y-2">
         <Label htmlFor={getFieldName('addressLine2')} className={labelSize}>
-          <span className="text-sm text-gray-500 font-normal">Address Line 2 (Optional)</span>
+          <span className="text-sm font-normal text-gray-500">Address Line 2 (Optional)</span>
         </Label>
         <Input
           id={getFieldName('addressLine2')}
@@ -206,11 +195,11 @@ export function AddressForm({
       </div>
 
       {/* City & State */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor={getFieldName('city')} className={labelSize}>
             City
-            {required && <span className="text-red-500 ml-1">*</span>}
+            {required && <span className="ml-1 text-red-500">*</span>}
           </Label>
           <Input
             id={getFieldName('city')}
@@ -225,7 +214,7 @@ export function AddressForm({
         <div className="space-y-2">
           <Label htmlFor={getFieldName('state')} className={labelSize}>
             State
-            {required && <span className="text-red-500 ml-1">*</span>}
+            {required && <span className="ml-1 text-red-500">*</span>}
           </Label>
           <Input
             id={getFieldName('state')}
@@ -239,11 +228,11 @@ export function AddressForm({
       </div>
 
       {/* ZIP Code & Country */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor={getFieldName('zipCode')} className={labelSize}>
             ZIP Code
-            {required && <span className="text-red-500 ml-1">*</span>}
+            {required && <span className="ml-1 text-red-500">*</span>}
           </Label>
           <Input
             id={getFieldName('zipCode')}

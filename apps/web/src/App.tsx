@@ -169,6 +169,53 @@ const HomeworkSubmissionsPage = lazy(
 );
 const SubmissionReviewPage = lazy(() => import('./features/homework/pages/submission-review-page'));
 
+// Fee Management
+const FeeDashboardPage = lazy(() =>
+  import('./features/fee/admin/pages/fee-dashboard-page').then((m) => ({
+    default: m.FeeDashboardPage,
+  }))
+);
+const FeeStructuresPage = lazy(() =>
+  import('./features/fee/admin/pages/fee-structures-page').then((m) => ({
+    default: m.FeeStructuresPage,
+  }))
+);
+const CreateFeeStructurePage = lazy(() =>
+  import('./features/fee/admin/pages/create-fee-structure-page').then((m) => ({
+    default: m.CreateFeeStructurePage,
+  }))
+);
+const EditFeeStructurePage = lazy(() =>
+  import('./features/fee/admin/pages/edit-fee-structure-page').then((m) => ({
+    default: m.EditFeeStructurePage,
+  }))
+);
+const StudentFeesPage = lazy(() =>
+  import('./features/fee/admin/pages/student-fees-page').then((m) => ({
+    default: m.StudentFeesPage,
+  }))
+);
+const StudentFeeDetailPage = lazy(() =>
+  import('./features/fee/admin/pages/student-fee-detail-page').then((m) => ({
+    default: m.StudentFeeDetailPage,
+  }))
+);
+const StudentFeeEditPage = lazy(() =>
+  import('./features/fee/admin/pages/student-fee-edit-page').then((m) => ({
+    default: m.StudentFeeEditPage,
+  }))
+);
+const FeePaymentsPage = lazy(() =>
+  import('./features/fee/admin/pages/payments-page').then((m) => ({
+    default: m.PaymentsPage,
+  }))
+);
+const RecordPaymentPage = lazy(() =>
+  import('./features/fee/admin/pages/record-payment-page').then((m) => ({
+    default: m.RecordPaymentPage,
+  }))
+);
+
 // Profile
 const ProfilePage = lazy(() => import('./features/profile/pages/profile-page'));
 
@@ -289,6 +336,18 @@ function App() {
             <Route path={ROUTES.HOMEWORK_SUBMISSION_REVIEW} element={<SubmissionReviewPage />} />
             <Route path={ROUTES.HOMEWORK_VIEW} element={<HomeworkDetailPage />} />
             <Route path={ROUTES.HOMEWORK_EDIT} element={<HomeworkFormPage />} />
+
+            {/* Fee Management */}
+            <Route path={ROUTES.FEES.DASHBOARD} element={<FeeDashboardPage />} />
+            <Route path={ROUTES.FEES.STRUCTURES} element={<FeeStructuresPage />} />
+            <Route path={ROUTES.FEES.STRUCTURES_NEW} element={<CreateFeeStructurePage />} />
+            <Route path={ROUTES.FEES.STRUCTURES_EDIT} element={<EditFeeStructurePage />} />
+            <Route path={ROUTES.FEES.STUDENT_FEES} element={<StudentFeesPage />} />
+            <Route path={ROUTES.FEES.STUDENT_FEES_VIEW} element={<StudentFeeDetailPage />} />
+            <Route path={ROUTES.FEES.STUDENT_FEES_EDIT} element={<StudentFeeEditPage />} />
+            <Route path={ROUTES.FEES.PAYMENTS} element={<FeePaymentsPage />} />
+            <Route path={ROUTES.FEES.PAYMENT_NEW} element={<RecordPaymentPage />} />
+            <Route path={ROUTES.FEES.PAYMENT_NEW_FOR_STUDENT} element={<RecordPaymentPage />} />
 
             {/* Profile */}
             <Route path={ROUTES.PROFILE} element={<ProfilePage />} />

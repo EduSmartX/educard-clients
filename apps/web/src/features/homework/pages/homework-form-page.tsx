@@ -11,7 +11,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { parse, format, addDays, isWeekend } from 'date-fns';
 import {
-  ArrowLeft,
   Link as LinkIcon,
   Loader2,
   CalendarDays,
@@ -33,17 +32,12 @@ import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { FormError } from '@/components/ui/form-error';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { FileUpload, type UploadedFile } from '@/components/ui/file-upload';
 import { cn } from '@/lib/utils';
 import { applyFieldErrors } from '@/lib/utils/error-handler';
 import { SUCCESS_MESSAGES } from '@/constants/app-config';
+import { PageHeader } from '@/components/common';
 
 import {
   useTeacherClasses,
@@ -352,20 +346,21 @@ export default function HomeworkFormPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={handleBack}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{pageTitle}</h1>
-          <p className="text-sm text-slate-500">
-            {isEditMode
-              ? 'Update the homework assignment details'
-              : 'Create a new homework assignment for your students'}
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title={pageTitle}
+        description={
+          isEditMode
+            ? 'Update the homework assignment details'
+            : 'Create a new homework assignment for your students'
+        }
+        actions={[
+          {
+            label: 'Cancel',
+            onClick: handleBack,
+            variant: 'outline' as const,
+          },
+        ]}
+      />
 
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -413,20 +408,17 @@ export default function HomeworkFormPage() {
                       name="subject_public_id"
                       control={control}
                       render={({ field }) => (
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <SelectTrigger
-                            className={cn(errors.subject_public_id && 'border-red-500')}
-                          >
-                            <SelectValue placeholder="Select subject and class" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {allSubjects.map((subject) => (
-                              <SelectItem key={subject.public_id} value={subject.public_id}>
-                                {subject.subject_name} - {subject.className}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <SearchableSelect
+                          options={allSubjects.map((subject) => ({
+                            value: subject.public_id,
+                            label: `${subject.subject_name} - ${subject.className}`,
+                          }))}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Select subject and class"
+                          searchPlaceholder="Search subjects..."
+                          className={cn(errors.subject_public_id && 'border-red-500')}
+                        />
                       )}
                     />
                     <FormError message={errors.subject_public_id?.message} compact />
@@ -624,18 +616,15 @@ export default function HomeworkFormPage() {
                     name="priority"
                     control={control}
                     render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {HOMEWORK_PRIORITY_OPTIONS.map((opt) => (
-                            <SelectItem key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <SearchableSelect
+                        options={HOMEWORK_PRIORITY_OPTIONS.map((opt) => ({
+                          value: opt.value,
+                          label: opt.label,
+                        }))}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder="Select priority"
+                      />
                     )}
                   />
                 </div>
@@ -647,18 +636,15 @@ export default function HomeworkFormPage() {
                     name="submission_type"
                     control={control}
                     render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {SUBMISSION_TYPE_OPTIONS.map((opt) => (
-                            <SelectItem key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <SearchableSelect
+                        options={SUBMISSION_TYPE_OPTIONS.map((opt) => ({
+                          value: opt.value,
+                          label: opt.label,
+                        }))}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder="Select submission type"
+                      />
                     )}
                   />
                 </div>
@@ -670,15 +656,15 @@ export default function HomeworkFormPage() {
                     name="status"
                     control={control}
                     render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="draft">Draft</SelectItem>
-                          <SelectItem value="published">Published</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <SearchableSelect
+                        options={[
+                          { value: 'draft', label: 'Draft' },
+                          { value: 'published', label: 'Published' },
+                        ]}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder="Select status"
+                      />
                     )}
                   />
                 </div>

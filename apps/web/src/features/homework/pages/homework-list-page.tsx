@@ -24,13 +24,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -39,6 +33,7 @@ import { cn } from '@/lib/utils';
 import { ROUTES } from '@/constants/app-config';
 import { getSubjectColor, type SubjectColorScheme } from '@educard/shared';
 import { useNavigateWorkingDay } from '@/features/core';
+import { PageHeader } from '@/components/common';
 
 import { useTeacherClasses, useHomeworkList } from '../hooks';
 import type { Homework, HomeworkListParams } from '../types';
@@ -248,51 +243,41 @@ export default function HomeworkListPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Homework</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Manage homework assignments for your classes
-          </p>
-        </div>
-        <Button onClick={handleCreateHomework} disabled={!selectedClass} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Create Homework
-        </Button>
-      </div>
+      <PageHeader
+        title="Homework"
+        description="Manage homework assignments for your classes"
+        actions={[
+          {
+            label: 'Create Homework',
+            onClick: handleCreateHomework,
+            variant: 'default' as const,
+            icon: Plus,
+            disabled: !selectedClass,
+          },
+        ]}
+      />
 
       {/* Date & Class Selection */}
       <div className="bg-card flex flex-col gap-4 rounded-lg border p-4 sm:flex-row sm:items-center">
-        {/* Class Selector */}
         <div className="flex-1">
           <label className="text-muted-foreground mb-1.5 block text-sm font-medium">Class</label>
           {isLoadingClasses ? (
             <Skeleton className="h-10 w-full" />
           ) : (
-            <Select value={selectedClassId} onValueChange={setSelectedClassId}>
-              <SelectTrigger className="w-full sm:w-[250px]">
-                <SelectValue placeholder="Select a class" />
-              </SelectTrigger>
-              <SelectContent>
-                {teacherClasses.map((cls) => (
-                  <SelectItem key={cls.public_id} value={cls.public_id}>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{cls.name}</span>
-                      {cls.is_class_teacher && (
-                        <Badge variant="secondary" className="text-xs">
-                          Class Teacher
-                        </Badge>
-                      )}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              options={teacherClasses.map((cls) => ({
+                value: cls.public_id,
+                label: cls.name,
+              }))}
+              value={selectedClassId}
+              onValueChange={setSelectedClassId}
+              placeholder="Select a class"
+              searchPlaceholder="Search classes..."
+              className="w-full sm:w-[250px]"
+            />
           )}
         </div>
 
-        {/* Date Navigation */}
         <div className="flex items-center gap-2">
           <label className="text-muted-foreground mb-1.5 block text-sm font-medium sm:hidden">
             Date

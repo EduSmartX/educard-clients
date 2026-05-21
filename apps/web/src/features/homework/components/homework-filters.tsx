@@ -9,13 +9,7 @@ import { Search, X, SlidersHorizontal } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Label } from '@/components/ui/label';
 
@@ -81,27 +75,22 @@ export const HomeworkFilters = memo(
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Quick Status Filter */}
-          <Select
+          <SearchableSelect
+            options={[
+              { value: 'all', label: 'All Status' },
+              ...HOMEWORK_STATUS_OPTIONS.map((opt) => ({
+                value: opt.value,
+                label: opt.label,
+              })),
+            ]}
             value={filters.status || 'all'}
             onValueChange={(value) =>
               handleFilterChange('status', value === 'all' ? undefined : (value as HomeworkStatus))
             }
-          >
-            <SelectTrigger className="w-[130px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              {HOMEWORK_STATUS_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            placeholder="Status"
+            className="w-[130px]"
+          />
 
-          {/* More Filters Popover */}
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="gap-2">
@@ -122,10 +111,16 @@ export const HomeworkFilters = memo(
                 </div>
 
                 <div className="grid gap-3">
-                  {/* Priority */}
                   <div className="grid gap-1.5">
                     <Label>Priority</Label>
-                    <Select
+                    <SearchableSelect
+                      options={[
+                        { value: 'all', label: 'All Priorities' },
+                        ...HOMEWORK_PRIORITY_OPTIONS.map((opt) => ({
+                          value: opt.value,
+                          label: opt.label,
+                        })),
+                      ]}
                       value={filters.priority || 'all'}
                       onValueChange={(value) =>
                         handleFilterChange(
@@ -133,57 +128,30 @@ export const HomeworkFilters = memo(
                           value === 'all' ? undefined : (value as HomeworkPriority)
                         )
                       }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="All Priorities" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Priorities</SelectItem>
-                        {HOMEWORK_PRIORITY_OPTIONS.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>
-                            <span className="flex items-center gap-2">
-                              <span
-                                className="h-2 w-2 rounded-full"
-                                style={{ backgroundColor: opt.color }}
-                              />
-                              {opt.label}
-                            </span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      placeholder="All Priorities"
+                    />
                   </div>
 
-                  {/* Class */}
                   {classOptions.length > 0 && (
                     <div className="grid gap-1.5">
                       <Label>Class</Label>
-                      <Select
+                      <SearchableSelect
+                        options={[{ value: 'all', label: 'All Classes' }, ...classOptions]}
                         value={filters.class_public_id || 'all'}
                         onValueChange={(value) =>
                           handleFilterChange('class_public_id', value === 'all' ? undefined : value)
                         }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="All Classes" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Classes</SelectItem>
-                          {classOptions.map((opt) => (
-                            <SelectItem key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        placeholder="All Classes"
+                        searchPlaceholder="Search classes..."
+                      />
                     </div>
                   )}
 
-                  {/* Subject */}
                   {subjectOptions.length > 0 && (
                     <div className="grid gap-1.5">
                       <Label>Subject</Label>
-                      <Select
+                      <SearchableSelect
+                        options={[{ value: 'all', label: 'All Subjects' }, ...subjectOptions]}
                         value={filters.subject_public_id || 'all'}
                         onValueChange={(value) =>
                           handleFilterChange(
@@ -191,24 +159,13 @@ export const HomeworkFilters = memo(
                             value === 'all' ? undefined : value
                           )
                         }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="All Subjects" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Subjects</SelectItem>
-                          {subjectOptions.map((opt) => (
-                            <SelectItem key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        placeholder="All Subjects"
+                        searchPlaceholder="Search subjects..."
+                      />
                     </div>
                   )}
                 </div>
 
-                {/* Clear Button */}
                 {activeFilterCount > 0 && (
                   <Button
                     variant="ghost"

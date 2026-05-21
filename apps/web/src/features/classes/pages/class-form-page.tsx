@@ -24,15 +24,9 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import {
   useCreateClass,
   useUpdateClass,
@@ -64,8 +58,12 @@ export default function ClassFormPage() {
 
   // Determine mode based on URL path
   const getMode = (): 'create' | 'edit' | 'view' => {
-    if (!id) {return 'create';}
-    if (location.pathname.endsWith('/edit')) {return 'edit';}
+    if (!id) {
+      return 'create';
+    }
+    if (location.pathname.endsWith('/edit')) {
+      return 'edit';
+    }
     return 'view';
   };
 
@@ -411,7 +409,7 @@ export default function ClassFormPage() {
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-900">Class Information</h3>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   {/* Class Master (from core) */}
                   <FormField
                     control={form.control}
@@ -423,27 +421,24 @@ export default function ClassFormPage() {
                         <FormLabel>
                           Class <span className="text-red-500">*</span>
                         </FormLabel>
-                        <Select
-                          key={`class-master-${classItem?.public_id || 'new'}-${field.value}`}
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          disabled={isPending || mode === 'view' || mode === 'edit'}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={FormPlaceholders.SELECT_CLASS} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {coreClasses?.map((coreClass) => (
-                              <SelectItem key={coreClass.id} value={coreClass.id.toString()}>
-                                {coreClass.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <SearchableSelect
+                            key={`class-master-${classItem?.public_id || 'new'}-${field.value}`}
+                            options={
+                              coreClasses?.map((coreClass) => ({
+                                value: coreClass.id.toString(),
+                                label: coreClass.name,
+                              })) || []
+                            }
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder={FormPlaceholders.SELECT_CLASS}
+                            searchPlaceholder="Search classes..."
+                            disabled={isPending || mode === 'view' || mode === 'edit'}
+                          />
+                        </FormControl>
                         {mode === 'edit' && (
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-muted-foreground text-sm">
                             Class cannot be changed after creation
                           </p>
                         )}
@@ -476,7 +471,7 @@ export default function ClassFormPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   {/* Capacity */}
                   <FormField
                     control={form.control}
@@ -509,29 +504,25 @@ export default function ClassFormPage() {
                         ref={fieldState.error && !firstErrorRef.current ? firstErrorRef : null}
                       >
                         <FormLabel>Class Teacher (Optional)</FormLabel>
-                        <Select
-                          key={`class-teacher-${classItem?.public_id || 'new'}-${field.value}`}
-                          onValueChange={(value) => {
-                            // Allow clearing the selection
-                            field.onChange(value === 'none' ? '' : value);
-                          }}
-                          value={field.value || 'none'}
-                          disabled={isPending || mode === 'view'}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={FormPlaceholders.SELECT_CLASS_TEACHER} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="none">None</SelectItem>
-                            {teachers.map((teacher) => (
-                              <SelectItem key={teacher.public_id} value={teacher.public_id}>
-                                {teacher.full_name} ({teacher.employee_id})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <SearchableSelect
+                            key={`class-teacher-${classItem?.public_id || 'new'}-${field.value}`}
+                            options={[
+                              { value: 'none', label: 'None' },
+                              ...teachers.map((teacher) => ({
+                                value: teacher.public_id,
+                                label: `${teacher.full_name} (${teacher.employee_id})`,
+                              })),
+                            ]}
+                            value={field.value || 'none'}
+                            onValueChange={(value) => {
+                              field.onChange(value === 'none' ? '' : value);
+                            }}
+                            placeholder={FormPlaceholders.SELECT_CLASS_TEACHER}
+                            searchPlaceholder="Search teachers..."
+                            disabled={isPending || mode === 'view'}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}

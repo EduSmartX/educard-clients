@@ -2,7 +2,7 @@
  * Exam Session Form Page
  * Create / Edit / View exam session
  * Solid, grounded form layout with proper structure
- * 
+ *
  * Role-based access:
  * - Admin: Full access (create, edit, view)
  * - Teacher: View only
@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { DatePicker } from '@/components/ui/date-picker';
 import { PageHeader, FormActions } from '@/components/common';
 import { ROUTES, ValidationMessages } from '@/constants';
@@ -25,13 +25,19 @@ import { useExamSession } from '../hooks/use-exams';
 import { useCreateExamSession, useUpdateExamSession } from '../hooks/mutations';
 import { useAcademicYears } from '@/features/organizations/hooks/queries';
 import { useRole } from '@/hooks/use-role';
-import { EXAM_SESSION_TYPE_OPTIONS, EXAM_SESSION_TYPE_LABELS, type ExamSessionType, type ExamSessionCreatePayload, type ExamSessionUpdatePayload } from '@educard/shared';
+import {
+  EXAM_SESSION_TYPE_OPTIONS,
+  EXAM_SESSION_TYPE_LABELS,
+  type ExamSessionType,
+  type ExamSessionCreatePayload,
+  type ExamSessionUpdatePayload,
+} from '@educard/shared';
 export function ExamSessionFormPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const { isAdmin } = useRole();
-  
+
   const isEdit = location.pathname.includes('/edit');
   const isView = !!id && !isEdit;
   const isCreate = !id;
@@ -153,7 +159,11 @@ export function ExamSessionFormPage() {
     }
   };
 
-  const title = isCreate ? 'Create Exam Session' : isEdit ? 'Edit Exam Session' : 'View Exam Session';
+  const title = isCreate
+    ? 'Create Exam Session'
+    : isEdit
+      ? 'Edit Exam Session'
+      : 'View Exam Session';
 
   if (id && isLoadingSession) {
     return (
@@ -173,7 +183,7 @@ export function ExamSessionFormPage() {
       </PageHeader>
 
       <Card className="border shadow-sm">
-        <CardHeader className="border-b bg-muted/30 px-6 py-4">
+        <CardHeader className="bg-muted/30 border-b px-6 py-4">
           <CardTitle className="text-lg">Session Details</CardTitle>
         </CardHeader>
         <CardContent className="p-6">
@@ -192,9 +202,7 @@ export function ExamSessionFormPage() {
                   disabled={isView}
                   className={fieldErrors.name ? 'border-red-500' : ''}
                 />
-                {fieldErrors.name && (
-                  <p className="text-sm text-red-500">{fieldErrors.name}</p>
-                )}
+                {fieldErrors.name && <p className="text-sm text-red-500">{fieldErrors.name}</p>}
               </div>
 
               {/* Session Type */}
@@ -204,27 +212,24 @@ export function ExamSessionFormPage() {
                 </Label>
                 {isView ? (
                   <Input
-                    value={sessionType ? EXAM_SESSION_TYPE_LABELS[sessionType as ExamSessionType] : '-'}
+                    value={
+                      sessionType ? EXAM_SESSION_TYPE_LABELS[sessionType as ExamSessionType] : '-'
+                    }
                     disabled
                     className="bg-gray-50"
                   />
                 ) : (
-                  <Select
+                  <SearchableSelect
                     key={`session-type-${sessionType || 'empty'}`}
-                    value={sessionType || undefined}
+                    options={EXAM_SESSION_TYPE_OPTIONS.map((opt) => ({
+                      value: opt.value,
+                      label: opt.label,
+                    }))}
+                    value={sessionType || ''}
                     onValueChange={(v) => setSessionType(v as ExamSessionType)}
-                  >
-                    <SelectTrigger className={fieldErrors.session_type ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {EXAM_SESSION_TYPE_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Select type"
+                    className={fieldErrors.session_type ? 'border-red-500' : ''}
+                  />
                 )}
                 {fieldErrors.session_type && (
                   <p className="text-sm text-red-500">{fieldErrors.session_type}</p>
@@ -237,28 +242,19 @@ export function ExamSessionFormPage() {
                   Academic Year <span className="text-red-500">*</span>
                 </Label>
                 {isView ? (
-                  <Input
-                    value={academicYear || '-'}
-                    disabled
-                    className="bg-gray-50"
-                  />
+                  <Input value={academicYear || '-'} disabled className="bg-gray-50" />
                 ) : (
-                  <Select
+                  <SearchableSelect
                     key={`academic-year-${academicYear || 'empty'}`}
-                    value={academicYear || undefined}
+                    options={academicYears.map((year) => ({
+                      value: year.name,
+                      label: `${year.name}${year.is_current ? ' (Current)' : ''}`,
+                    }))}
+                    value={academicYear || ''}
                     onValueChange={setAcademicYear}
-                  >
-                    <SelectTrigger className={fieldErrors.academic_year ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Select academic year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {academicYears.map((year) => (
-                        <SelectItem key={year.public_id} value={year.name}>
-                          {year.name} {year.is_current && '(Current)'}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Select academic year"
+                    className={fieldErrors.academic_year ? 'border-red-500' : ''}
+                  />
                 )}
                 {fieldErrors.academic_year && (
                   <p className="text-sm text-red-500">{fieldErrors.academic_year}</p>

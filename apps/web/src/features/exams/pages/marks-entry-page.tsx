@@ -7,7 +7,15 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, GraduationCap, CheckCircle2, XCircle, Users } from 'lucide-react';
+import {
+  ArrowLeft,
+  Save,
+  Loader2,
+  GraduationCap,
+  CheckCircle2,
+  XCircle,
+  Users,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -16,13 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { PageHeader, StudentAvatar } from '@/components/common';
 import { ROUTES, ValidationMessages } from '@/constants';
 import { useExamSessions, useExams } from '../hooks/use-exams';
@@ -81,36 +83,39 @@ export function MarksEntryPage() {
 
   // Student marks entries
   const [markEntries, setMarkEntries] = useState<StudentMarkEntry[]>([]);
-  
+
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
-  const handleMarksKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
-    const totalRows = markEntries.length;
-    let nextIndex: number | null;
+  const handleMarksKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+      const totalRows = markEntries.length;
+      let nextIndex: number | null;
 
-    switch (e.key) {
-      case 'ArrowDown':
-      case 'Enter':
-        nextIndex = index + 1 >= totalRows ? null : index + 1;
-        break;
-      case 'ArrowUp':
-        nextIndex = index - 1 < 0 ? null : index - 1;
-        break;
-      default:
-        return; // Don't prevent default for other keys
-    }
-
-    if (nextIndex !== null && tableContainerRef.current) {
-      e.preventDefault();
-      const nextInput = tableContainerRef.current.querySelector(
-        `[data-marks-row="${nextIndex}"]`
-      ) as HTMLInputElement;
-      if (nextInput) {
-        nextInput.focus();
-        nextInput.select();
+      switch (e.key) {
+        case 'ArrowDown':
+        case 'Enter':
+          nextIndex = index + 1 >= totalRows ? null : index + 1;
+          break;
+        case 'ArrowUp':
+          nextIndex = index - 1 < 0 ? null : index - 1;
+          break;
+        default:
+          return; // Don't prevent default for other keys
       }
-    }
-  }, [markEntries.length]);
+
+      if (nextIndex !== null && tableContainerRef.current) {
+        e.preventDefault();
+        const nextInput = tableContainerRef.current.querySelector(
+          `[data-marks-row="${nextIndex}"]`
+        ) as HTMLInputElement;
+        if (nextInput) {
+          nextInput.focus();
+          nextInput.select();
+        }
+      }
+    },
+    [markEntries.length]
+  );
 
   // Initialize mark entries when students are loaded
   useEffect(() => {
@@ -149,7 +154,11 @@ export function MarksEntryPage() {
     },
   });
 
-  const handleMarkChange = (index: number, field: keyof StudentMarkEntry, value: string | boolean) => {
+  const handleMarkChange = (
+    index: number,
+    field: keyof StudentMarkEntry,
+    value: string | boolean
+  ) => {
     setMarkEntries((prev) => {
       const updated = [...prev];
       updated[index] = { ...updated[index], [field]: value };
@@ -192,7 +201,9 @@ export function MarksEntryPage() {
     // Check for any validation errors
     const entriesWithErrors = validEntries.filter((e) => e.marksError);
     if (entriesWithErrors.length > 0) {
-      toast.error(`${entriesWithErrors.length} student(s) have invalid marks. Please fix errors before saving.`);
+      toast.error(
+        `${entriesWithErrors.length} student(s) have invalid marks. Please fix errors before saving.`
+      );
       return;
     }
 
@@ -226,7 +237,7 @@ export function MarksEntryPage() {
 
       {/* Selection Filters */}
       <Card className="border shadow-sm">
-        <CardHeader className="border-b bg-muted/30 px-6 py-4">
+        <CardHeader className="bg-muted/30 border-b px-6 py-4">
           <CardTitle className="text-lg">Select Exam</CardTitle>
         </CardHeader>
         <CardContent className="p-6">
@@ -234,53 +245,42 @@ export function MarksEntryPage() {
             {/* Session */}
             <div className="space-y-2">
               <Label>Exam Session</Label>
-              <Select value={selectedSessionId} onValueChange={setSelectedSessionId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select session..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {sessions.map((s) => (
-                    <SelectItem key={s.public_id} value={s.public_id}>
-                      {s.name} ({s.academic_year})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                options={sessions.map((s) => ({
+                  value: s.public_id,
+                  label: `${s.name} (${s.academic_year})`,
+                }))}
+                value={selectedSessionId}
+                onValueChange={setSelectedSessionId}
+                placeholder="Select session..."
+                searchPlaceholder="Search sessions..."
+              />
             </div>
 
             {/* Exam (Subject + Class) */}
             <div className="space-y-2">
               <Label>Exam (Subject) - Only Completed Exams</Label>
-              <Select
+              <SearchableSelect
+                options={exams
+                  .filter((e) => e.status === 'completed')
+                  .map((e) => ({
+                    value: e.public_id,
+                    label: `${e.subject_name} - ${e.class_name}`,
+                  }))}
                 value={selectedExamId}
                 onValueChange={setSelectedExamId}
                 disabled={!selectedSessionId || examsLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={examsLoading ? 'Loading...' : 'Select exam...'} />
-                </SelectTrigger>
-                <SelectContent>
-                  {exams
-                    .filter((e) => e.status === 'completed')
-                    .map((e) => (
-                      <SelectItem key={e.public_id} value={e.public_id}>
-                        {e.subject_name} - {e.class_name}
-                      </SelectItem>
-                    ))}
-                  {exams.filter((e) => e.status === 'completed').length === 0 && (
-                    <div className="px-2 py-4 text-center text-sm text-gray-500">
-                      No completed exams in this session.
-                      <br />
-                      Mark exams as "Completed" first.
-                    </div>
-                  )}
-                </SelectContent>
-              </Select>
-              {selectedSessionId && exams.length > 0 && exams.filter((e) => e.status === 'completed').length === 0 && (
-                <p className="text-xs text-amber-600">
-                  ⚠️ No completed exams found. Only completed exams allow marks entry.
-                </p>
-              )}
+                placeholder={examsLoading ? 'Loading...' : 'Select exam...'}
+                searchPlaceholder="Search exams..."
+                emptyText="No completed exams in this session. Mark exams as Completed first."
+              />
+              {selectedSessionId &&
+                exams.length > 0 &&
+                exams.filter((e) => e.status === 'completed').length === 0 && (
+                  <p className="text-xs text-amber-600">
+                    ⚠️ No completed exams found. Only completed exams allow marks entry.
+                  </p>
+                )}
             </div>
           </div>
 
@@ -297,11 +297,16 @@ export function MarksEntryPage() {
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <span className="font-medium text-gray-700">Status:</span>
-                <Badge 
-                  variant="outline" 
-                  className={selectedExam.status === 'completed' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-amber-50 text-amber-700 border-amber-200'}
+                <Badge
+                  variant="outline"
+                  className={
+                    selectedExam.status === 'completed'
+                      ? 'border-green-200 bg-green-50 text-green-700'
+                      : 'border-amber-200 bg-amber-50 text-amber-700'
+                  }
                 >
-                  {selectedExam.status.charAt(0).toUpperCase() + selectedExam.status.slice(1).replace('_', ' ')}
+                  {selectedExam.status.charAt(0).toUpperCase() +
+                    selectedExam.status.slice(1).replace('_', ' ')}
                 </Badge>
               </div>
               <div className="flex items-center gap-2 text-sm">
@@ -329,16 +334,25 @@ export function MarksEntryPage() {
       {/* Marks Table */}
       {selectedExamId && (
         <Card className="border shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between border-b bg-muted/30 px-6 py-4">
+          <CardHeader className="bg-muted/30 flex flex-row items-center justify-between border-b px-6 py-4">
             <div>
               <CardTitle className="text-lg">Student Marks</CardTitle>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="text-muted-foreground mt-1 text-sm">
                 Entered: {enteredCount} / {markEntries.length} • Absent: {absentCount}
                 <span className="ml-2 text-xs text-gray-400">• Use ↑↓ or Enter to navigate</span>
               </p>
             </div>
-            <Button variant="brand" onClick={handleSaveAll} disabled={isPending || markEntries.length === 0} className="gap-2">
-              {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            <Button
+              variant="brand"
+              onClick={handleSaveAll}
+              disabled={isPending || markEntries.length === 0}
+              className="gap-2"
+            >
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
               Save Marks
             </Button>
           </CardHeader>
@@ -353,15 +367,15 @@ export function MarksEntryPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b bg-gray-50 text-left text-sm font-medium text-gray-600">
-                      <th className="px-4 py-3 w-12">#</th>
-                      <th className="px-4 py-3 w-16">Photo</th>
-                      <th className="px-4 py-3 w-20">Roll No</th>
+                      <th className="w-12 px-4 py-3">#</th>
+                      <th className="w-16 px-4 py-3">Photo</th>
+                      <th className="w-20 px-4 py-3">Roll No</th>
                       <th className="px-4 py-3">Student Name</th>
-                      <th className="px-4 py-3 w-32">
+                      <th className="w-32 px-4 py-3">
                         Marks <span className="text-gray-400">/ {selectedExam?.max_marks}</span>
                       </th>
-                      <th className="px-4 py-3 w-20 text-center">Absent</th>
-                      <th className="px-4 py-3 w-20 text-center">Status</th>
+                      <th className="w-20 px-4 py-3 text-center">Absent</th>
+                      <th className="w-20 px-4 py-3 text-center">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -373,7 +387,7 @@ export function MarksEntryPage() {
                         <tr key={entry.student_id} className="hover:bg-gray-50/50">
                           <td className="px-4 py-3 text-sm text-gray-500">{index + 1}</td>
                           <td className="px-4 py-3">
-                            <StudentAvatar 
+                            <StudentAvatar
                               name={entry.student_name}
                               photoUrl={entry.photo_url}
                               size="md"
@@ -395,7 +409,9 @@ export function MarksEntryPage() {
                                 max={selectedExam?.max_marks || 999}
                                 step="0.5"
                                 value={entry.marks_obtained}
-                                onChange={(e) => handleMarkChange(index, 'marks_obtained', e.target.value)}
+                                onChange={(e) =>
+                                  handleMarkChange(index, 'marks_obtained', e.target.value)
+                                }
                                 onKeyDown={(e) => handleMarksKeyDown(e, index)}
                                 disabled={entry.is_absent}
                                 placeholder="0"
@@ -439,9 +455,7 @@ export function MarksEntryPage() {
             ) : (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <GraduationCap className="mb-3 h-10 w-10 text-gray-300" />
-                <p className="text-sm text-gray-500">
-                  No students found in this class.
-                </p>
+                <p className="text-sm text-gray-500">No students found in this class.</p>
               </div>
             )}
           </CardContent>

@@ -14,13 +14,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Input } from '@/components/ui/input';
 import { useOrganizationUsers } from '@/hooks/use-supervisors';
 import type { Control, FieldValues, Path } from 'react-hook-form';
@@ -77,21 +71,20 @@ export function SupervisorField<T extends FieldValues>({
                 />
               </FormControl>
             ) : (
-              // Edit/create mode: show Select dropdown
-              <Select onValueChange={field.onChange} value={(field.value as string) || ''}>
-                <FormControl>
-                  <SelectTrigger className="border-gray-300 bg-gray-50 transition-colors focus:bg-white disabled:cursor-default disabled:opacity-100">
-                    <SelectValue placeholder={isLoading ? 'Loading supervisors...' : placeholder} />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent className="max-h-[300px] overflow-y-auto">
-                  {users.map((user) => (
-                    <SelectItem key={user.public_id} value={user.email}>
-                      {user.full_name} ({user.email})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              // Edit/create mode: show searchable dropdown
+              <FormControl>
+                <SearchableSelect
+                  options={users.map((user) => ({
+                    value: user.email,
+                    label: `${user.full_name} (${user.email})`,
+                  }))}
+                  onValueChange={field.onChange}
+                  value={(field.value as string) || ''}
+                  placeholder={isLoading ? 'Loading supervisors...' : placeholder}
+                  className="border-gray-300 bg-gray-50 transition-colors focus:bg-white disabled:cursor-default disabled:opacity-100"
+                  disabled={isLoading}
+                />
+              </FormControl>
             )}
             {description && <FormDescription>{description}</FormDescription>}
             <FormMessage />

@@ -3,7 +3,17 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { Loader2, AlertCircle, Users, UserX, CheckCircle2, XCircle, Sun, Sunset, Calendar } from 'lucide-react';
+import {
+  Loader2,
+  AlertCircle,
+  Users,
+  UserX,
+  CheckCircle2,
+  XCircle,
+  Sun,
+  Sunset,
+  Calendar,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
@@ -14,16 +24,10 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import {
   useEligibleClasses,
   useComprehensiveAttendance,
@@ -233,24 +237,23 @@ export function MarkAttendanceForm() {
                       <FormLabel className="text-base font-semibold">
                         {AttendanceUiText.CLASS_LABEL}
                       </FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                        disabled={loadingClasses}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="h-11">
-                            <SelectValue placeholder={AttendanceUiText.SELECT_CLASS_PLACEHOLDER} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {eligibleClasses?.map((cls) => (
-                            <SelectItem key={cls.public_id} value={cls.public_id}>
-                              {cls.display_name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <SearchableSelect
+                          options={
+                            eligibleClasses?.map((cls) => ({
+                              value: cls.public_id,
+                              label: cls.display_name,
+                            })) || []
+                          }
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder={AttendanceUiText.SELECT_CLASS_PLACEHOLDER}
+                          searchPlaceholder="Search classes..."
+                          disabled={loadingClasses}
+                          emptyText={loadingClasses ? 'Loading...' : 'No classes found'}
+                          className="h-11"
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -301,7 +304,9 @@ export function MarkAttendanceForm() {
                               </FormControl>
                               <FormLabel className="flex cursor-pointer items-center gap-1 font-normal whitespace-nowrap">
                                 <Sun className="h-4 w-4 text-amber-500" />
-                                <span className="hidden sm:inline">{AttendanceUiText.PERIOD_MORNING}</span>
+                                <span className="hidden sm:inline">
+                                  {AttendanceUiText.PERIOD_MORNING}
+                                </span>
                               </FormLabel>
                             </FormItem>
                             <FormItem className="flex items-center space-y-0 space-x-1.5">
@@ -310,7 +315,9 @@ export function MarkAttendanceForm() {
                               </FormControl>
                               <FormLabel className="flex cursor-pointer items-center gap-1 font-normal whitespace-nowrap">
                                 <Sunset className="h-4 w-4 text-orange-500" />
-                                <span className="hidden sm:inline">{AttendanceUiText.PERIOD_AFTERNOON}</span>
+                                <span className="hidden sm:inline">
+                                  {AttendanceUiText.PERIOD_AFTERNOON}
+                                </span>
                               </FormLabel>
                             </FormItem>
                             <FormItem className="flex items-center space-y-0 space-x-1.5">
@@ -319,7 +326,9 @@ export function MarkAttendanceForm() {
                               </FormControl>
                               <FormLabel className="flex cursor-pointer items-center gap-1 font-normal whitespace-nowrap">
                                 <Calendar className="h-4 w-4 text-blue-500" />
-                                <span className="hidden sm:inline">{AttendanceUiText.PERIOD_FULL_DAY}</span>
+                                <span className="hidden sm:inline">
+                                  {AttendanceUiText.PERIOD_FULL_DAY}
+                                </span>
                               </FormLabel>
                             </FormItem>
                           </RadioGroup>

@@ -2,7 +2,7 @@
  * Exam Form Page
  * Create / Edit / View an exam (session + subject)
  * New model: Exam is linked to session and subject (class comes from subject)
- * 
+ *
  * Role-based access:
  * - Admin: Full access (create, edit, view)
  * - Teacher: View only
@@ -16,13 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Button } from '@/components/ui/button';
 import { PageHeader, FormActions, WarningConfirmationDialog } from '@/components/common';
@@ -47,7 +41,7 @@ export function ExamFormPage() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const { isAdmin } = useRole();
-  
+
   const isEdit = location.pathname.includes('/edit');
   const isView = !!id && !isEdit;
   const isCreate = !id;
@@ -62,7 +56,7 @@ export function ExamFormPage() {
   const { data: existingExam, isLoading: isLoadingExam } = useExam(id);
   const { data: sessionsData } = useExamSessions({ page: 1, page_size: 100 });
   const { data: classesData } = useClasses({ page: 1, page_size: 200 });
-  
+
   // Form state - add classId for filtering subjects
   const [sessionId, setSessionId] = useState('');
   const [classId, setClassId] = useState('');
@@ -78,15 +72,17 @@ export function ExamFormPage() {
   const [dateError, setDateError] = useState<string | undefined>();
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
   const [pendingPayload, setPendingPayload] = useState<ExamCreatePayload | null>(null);
-  
+
   // Only fetch subjects for the selected class
   const { data: subjectsData } = useSubjects(
     classId ? { page: 1, page_size: 200, class_assigned: classId } : { page: 1, page_size: 0 }
   );
-  
+
   // Fetch existing exams for duplicate detection (only when creating)
   const { data: existingExamsData } = useExams(
-    isCreate && sessionId ? { page: 1, page_size: 500, session: sessionId } : { page: 1, page_size: 0 }
+    isCreate && sessionId
+      ? { page: 1, page_size: 500, session: sessionId }
+      : { page: 1, page_size: 0 }
   );
 
   const sessionsList = useMemo(() => sessionsData?.data || [], [sessionsData]);
@@ -181,7 +177,9 @@ export function ExamFormPage() {
 
   // Check if exam already exists for this session + subject
   const checkDuplicateExam = useMemo(() => {
-    if (!isCreate || !sessionId || !subjectId) {return null;}
+    if (!isCreate || !sessionId || !subjectId) {
+      return null;
+    }
     return existingExams.find((exam) => exam.subject_public_id === subjectId);
   }, [isCreate, sessionId, subjectId, existingExams]);
 
@@ -250,14 +248,14 @@ export function ExamFormPage() {
         end_time: endTime || null,
         description: description.trim(),
       };
-      
+
       // Check for duplicate exam before creating
       if (checkDuplicateExam) {
         setPendingPayload(payload);
         setShowDuplicateWarning(true);
         return;
       }
-      
+
       createMutation.mutate(payload);
     } else if (isEdit && id) {
       const payload: ExamUpdatePayload = {
@@ -289,7 +287,11 @@ export function ExamFormPage() {
   return (
     <div className="space-y-6">
       <PageHeader title={title}>
-        <Button variant="brandOutline" onClick={() => navigate(ROUTES.EXAMS_LIST)} className="gap-2">
+        <Button
+          variant="brandOutline"
+          onClick={() => navigate(ROUTES.EXAMS_LIST)}
+          className="gap-2"
+        >
           <ArrowLeft className="h-4 w-4" />
           Back to Exams
         </Button>
@@ -298,7 +300,7 @@ export function ExamFormPage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Exam Details Card */}
         <Card className="border shadow-sm">
-          <CardHeader className="border-b bg-muted/30 px-6 py-4">
+          <CardHeader className="bg-muted/30 border-b px-6 py-4">
             <CardTitle className="text-lg">Exam Details</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
@@ -315,23 +317,19 @@ export function ExamFormPage() {
                     className="bg-gray-50"
                   />
                 ) : (
-                  <Select
+                  <SearchableSelect
                     key={`session-${sessionId || 'empty'}`}
+                    options={sessionsList.map((session) => ({
+                      value: session.public_id,
+                      label: `${session.name} (${session.academic_year})`,
+                    }))}
                     value={sessionId}
                     onValueChange={setSessionId}
                     disabled={isEdit}
-                  >
-                    <SelectTrigger className={fieldErrors.session_id ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Select session" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {sessionsList.map((session) => (
-                        <SelectItem key={session.public_id} value={session.public_id}>
-                          {session.name} ({session.academic_year})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Select session"
+                    searchPlaceholder="Search sessions..."
+                    className={fieldErrors.session_id ? 'border-red-500' : ''}
+                  />
                 )}
                 {fieldErrors.session_id && (
                   <p className="text-sm text-red-500">{fieldErrors.session_id}</p>
@@ -359,32 +357,24 @@ export function ExamFormPage() {
                   Class <span className="text-red-500">*</span>
                 </Label>
                 {isView ? (
-                  <Input
-                    value={existingExam?.class_name || '-'}
-                    disabled
-                    className="bg-gray-50"
-                  />
+                  <Input value={existingExam?.class_name || '-'} disabled className="bg-gray-50" />
                 ) : (
-                  <Select
+                  <SearchableSelect
                     key={`class-${classId || 'empty'}`}
+                    options={classesList.map((cls) => ({
+                      value: cls.public_id,
+                      label: `${cls.class_master?.name || 'Unknown'} - ${cls.name}`,
+                    }))}
                     value={classId}
                     onValueChange={(value) => {
                       setClassId(value);
-                      setSubjectId(''); // Reset subject when class changes
+                      setSubjectId('');
                     }}
                     disabled={isEdit}
-                  >
-                    <SelectTrigger className={fieldErrors.class_id ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Select class" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {classesList.map((cls) => (
-                        <SelectItem key={cls.public_id} value={cls.public_id}>
-                          {cls.class_master?.name || 'Unknown'} - {cls.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Select class"
+                    searchPlaceholder="Search classes..."
+                    className={fieldErrors.class_id ? 'border-red-500' : ''}
+                  />
                 )}
                 {fieldErrors.class_id && (
                   <p className="text-sm text-red-500">{fieldErrors.class_id}</p>
@@ -403,40 +393,35 @@ export function ExamFormPage() {
                     className="bg-gray-50"
                   />
                 ) : (
-                  <Select
+                  <SearchableSelect
                     key={`subject-${subjectId || 'empty'}`}
+                    options={subjectsList.map((subject) => ({
+                      value: subject.public_id,
+                      label: subject.subject_info.name,
+                    }))}
                     value={subjectId}
                     onValueChange={setSubjectId}
                     disabled={isEdit || !classId}
-                  >
-                    <SelectTrigger className={fieldErrors.subject_id ? 'border-red-500' : ''}>
-                      <SelectValue placeholder={classId ? "Select subject" : "Select class first"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {subjectsList.map((subject) => (
-                        <SelectItem key={subject.public_id} value={subject.public_id}>
-                          {subject.subject_info.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder={classId ? 'Select subject' : 'Select class first'}
+                    searchPlaceholder="Search subjects..."
+                    className={fieldErrors.subject_id ? 'border-red-500' : ''}
+                  />
                 )}
                 {fieldErrors.subject_id && (
                   <p className="text-sm text-red-500">{fieldErrors.subject_id}</p>
                 )}
                 {/* Duplicate warning inline */}
                 {checkDuplicateExam && (
-                  <div className="flex items-center gap-1.5 rounded-md bg-amber-50 px-2.5 py-1.5 text-xs text-amber-700 border border-amber-200">
+                  <div className="flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs text-amber-700">
                     <AlertCircle className="h-3.5 w-3.5" />
                     <span>
-                      An exam for this subject already exists in this session. Creating will replace the existing exam.
+                      An exam for this subject already exists in this session. Creating will replace
+                      the existing exam.
                     </span>
                   </div>
                 )}
                 {!isView && selectedSubject && !checkDuplicateExam && (
-                  <p className="text-xs text-gray-500">
-                    Class: {selectedSubject.class_info.name}
-                  </p>
+                  <p className="text-xs text-gray-500">Class: {selectedSubject.class_info.name}</p>
                 )}
               </div>
 
@@ -452,26 +437,19 @@ export function ExamFormPage() {
                     className="bg-gray-50"
                   />
                 ) : (
-                  <Select
+                  <SearchableSelect
                     key={`status-${status || 'empty'}`}
+                    options={EXAM_STATUS_OPTIONS.map((opt) => ({
+                      value: opt.value,
+                      label: opt.label,
+                    }))}
                     value={status}
                     onValueChange={(v) => setStatus(v as ExamStatus)}
-                  >
-                    <SelectTrigger className={fieldErrors.status ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {EXAM_STATUS_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Select status"
+                    className={fieldErrors.status ? 'border-red-500' : ''}
+                  />
                 )}
-                {fieldErrors.status && (
-                  <p className="text-sm text-red-500">{fieldErrors.status}</p>
-                )}
+                {fieldErrors.status && <p className="text-sm text-red-500">{fieldErrors.status}</p>}
               </div>
 
               {/* Max Marks */}
@@ -603,8 +581,8 @@ export function ExamFormPage() {
         title="Exam Already Exists"
         description={
           <>
-            An exam for <strong>{selectedSubject?.subject_info.name}</strong> already exists 
-            in this session.
+            An exam for <strong>{selectedSubject?.subject_info.name}</strong> already exists in this
+            session.
           </>
         }
         warningText="Do you want to edit the existing exam instead?"

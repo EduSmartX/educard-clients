@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { GENDER_ENUM, BLOOD_GROUP_ENUM } from '@/constants';
-import { createAddressSchema } from '@/components/forms/address-schema';
+import { createAddressSchema } from '@/components/form/address-schema';
 
 const nameRegex = /^[a-zA-Z\s'-]+$/;
 const alphanumericWithSymbolsRegex = /^[a-zA-Z0-9-_]+$/;
@@ -9,7 +9,6 @@ const phoneTransform = (val: string | undefined) => {
   if (!val) {
     return '';
   }
-  // Strip all non-digit characters (dashes, spaces, parens) to get clean 10 digits
   return val.replace(/\D/g, '');
 };
 

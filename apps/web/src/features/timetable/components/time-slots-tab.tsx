@@ -37,13 +37,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { toast } from 'sonner';
 import { useClassGroups, useSlots } from '../hooks/queries';
 import { useBulkSaveSlots, useClearDaySlots } from '../hooks/mutations';
@@ -323,7 +317,11 @@ function SlotRow({
         />
       </div>
       <div className="w-32">
-        <Select
+        <SearchableSelect
+          options={Object.entries(SLOT_TYPE_LABELS).map(([val, label]) => ({
+            value: val,
+            label,
+          }))}
           value={slot.slot_type}
           onValueChange={(val) => {
             const updated = { ...slot, slot_type: val as SlotType };
@@ -332,18 +330,9 @@ function SlotRow({
             }
             onChange(updated);
           }}
-        >
-          <SelectTrigger className="h-8 border-0 bg-white/70 text-xs shadow-sm">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.entries(SLOT_TYPE_LABELS).map(([val, label]) => (
-              <SelectItem key={val} value={val}>
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          placeholder="Type"
+          className="h-8 border-0 bg-white/70 text-xs shadow-sm"
+        />
       </div>
       <div className="w-28">
         <Input
@@ -651,19 +640,16 @@ function SlotEditor({
           <Copy className="h-3.5 w-3.5 text-slate-400" />
           <span className="text-xs font-medium text-slate-500">Load from:</span>
           <div className="w-44">
-            <Select onValueChange={handleCopyFrom}>
-              <SelectTrigger className="h-8 border-slate-200 bg-white text-xs shadow-sm">
-                <SelectValue placeholder="Select day…" />
-              </SelectTrigger>
-              <SelectContent>
-                {copyFromDays.map((day) => (
-                  <SelectItem key={day} value={String(day)}>
-                    {DAY_LABELS[day]}{' '}
-                    <span className="text-slate-400">({daySlotMap[day].length} slots)</span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              options={copyFromDays.map((day) => ({
+                value: String(day),
+                label: `${DAY_LABELS[day]} (${daySlotMap[day].length} slots)`,
+              }))}
+              value=""
+              onValueChange={handleCopyFrom}
+              placeholder="Select day…"
+              className="h-8 border-slate-200 bg-white text-xs shadow-sm"
+            />
           </div>
         </div>
       )}
@@ -883,19 +869,17 @@ export function TimeSlotsTab() {
       <div className="flex flex-wrap items-end gap-6">
         <div className="w-64">
           <Label className="text-xs font-medium text-slate-600">Class Group</Label>
-          <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
-            <SelectTrigger className="mt-1 border-slate-200 bg-white shadow-sm">
-              <SelectValue placeholder="Select group" />
-            </SelectTrigger>
-            <SelectContent>
-              {groups.map((g) => (
-                <SelectItem key={g.public_id} value={g.public_id}>
-                  <span className="font-medium">{g.name}</span>
-                  <span className="ml-2 text-slate-400">({g.class_count} classes)</span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            options={groups.map((g) => ({
+              value: g.public_id,
+              label: `${g.name} (${g.class_count} classes)`,
+            }))}
+            value={selectedGroupId}
+            onValueChange={setSelectedGroupId}
+            placeholder="Select group"
+            searchPlaceholder="Search groups..."
+            className="mt-1 border-slate-200 bg-white shadow-sm"
+          />
         </div>
         <DayTabs
           activeDay={activeDay}

@@ -5,13 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { PageHeader } from '@/components/common';
 import { PageLoader } from '@/components/ui/loading-spinner';
 import { useClasses } from '@/features/classes/hooks/use-classes';
@@ -57,27 +51,22 @@ export default function ClassTimetablePage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <PageHeader
-        title="Timetable"
-        description="View the weekly timetable for any class"
-      >
+      <PageHeader title="Timetable" description="View the weekly timetable for any class">
         {/* Class Selector */}
         <div className="w-full sm:w-72">
           {classesLoading ? (
             <div className="bg-muted h-10 animate-pulse rounded-md" />
           ) : (
-            <Select value={selectedClassId} onValueChange={setSelectedClassId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a class" />
-              </SelectTrigger>
-              <SelectContent>
-                {classes.map((cls) => (
-                  <SelectItem key={cls.public_id} value={cls.public_id}>
-                    {cls.class_master?.name} - {cls.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              options={classes.map((cls) => ({
+                value: cls.public_id,
+                label: `${cls.class_master?.name} - ${cls.name}`,
+              }))}
+              value={selectedClassId}
+              onValueChange={setSelectedClassId}
+              placeholder="Select a class"
+              searchPlaceholder="Search classes..."
+            />
           )}
         </div>
       </PageHeader>

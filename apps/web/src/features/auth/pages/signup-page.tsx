@@ -16,13 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import {
   ArrowLeft,
   ArrowRight,
@@ -33,8 +27,8 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { Logo } from '@/components/branding/logo';
-import { AddressForm } from '@/components/forms/address-form';
-import { PhoneInput } from '@/components/forms/phone-input';
+import { AddressForm } from '@/components/form/address-form';
+import { PhoneInput } from '@/components/form/phone-input';
 import { ORGANIZATION_TYPES, BOARD_AFFILIATIONS } from '@/constants/organization-options';
 import { AuthActionButtons } from '../components/auth-action-buttons';
 import {
@@ -130,7 +124,9 @@ export default function SignupPage() {
         setCurrentStep(2);
       } else {
         const failedEmails = response.results.filter((r) => !r.success);
-        toast.error(`${ErrorMessages.AUTH.SEND_OTP_FAILED} ${failedEmails.map((r) => r.email).join(', ')}`);
+        toast.error(
+          `${ErrorMessages.AUTH.SEND_OTP_FAILED} ${failedEmails.map((r) => r.email).join(', ')}`
+        );
       }
     } catch (error: unknown) {
       // Parse OTP validation errors
@@ -275,14 +271,14 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4 sm:p-6 lg:p-8">
       {/* Animated background elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <motion.div
-          className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-teal-400/20 to-cyan-400/20 rounded-full blur-3xl"
+          className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-gradient-to-br from-teal-400/20 to-cyan-400/20 blur-3xl"
           animate={{ scale: [1, 1.15, 1], opacity: [0.2, 0.1, 0.2] }}
           transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
         />
         <motion.div
-          className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-3xl"
+          className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-gradient-to-br from-purple-400/20 to-pink-400/20 blur-3xl"
           animate={{ scale: [1.1, 1, 1.1], opacity: [0.15, 0.08, 0.15] }}
           transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
         />
@@ -292,11 +288,11 @@ export default function SignupPage() {
         initial={{ opacity: 0, y: 30, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="relative max-w-4xl mx-auto"
+        className="relative mx-auto max-w-4xl"
       >
         {/* Modern Card with glassmorphism */}
-        <Card className="backdrop-blur-xl bg-white/80 shadow-2xl border-0 rounded-3xl overflow-hidden">
-          <CardHeader className="space-y-6 pb-8 px-6 sm:px-10 pt-10">
+        <Card className="overflow-hidden rounded-3xl border-0 bg-white/80 shadow-2xl backdrop-blur-xl">
+          <CardHeader className="space-y-6 px-6 pt-10 pb-8 sm:px-10">
             {/* Logo with animation */}
             <div className="flex items-center justify-center">
               <Logo
@@ -309,42 +305,42 @@ export default function SignupPage() {
             </div>
 
             {/* Title */}
-            <div className="text-center space-y-2">
-              <CardTitle className="text-4xl font-extrabold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+            <div className="space-y-2 text-center">
+              <CardTitle className="bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-4xl font-extrabold text-transparent">
                 Create Your Account
               </CardTitle>
-              <CardDescription className="text-lg text-gray-600 font-medium">
+              <CardDescription className="text-lg font-medium text-gray-600">
                 {SIGNUP_STEP_TITLES[currentStep - 1]}
               </CardDescription>
             </div>
 
             {/* Modern Progress Steps - Center Aligned */}
-            <div className="flex items-center justify-center max-w-2xl mx-auto px-4">
+            <div className="mx-auto flex max-w-2xl items-center justify-center px-4">
               <div className="flex items-center gap-3">
                 {[1, 2, 3, 4].map((step, idx) => (
                   <div key={step} className="flex items-center">
                     {/* Step circle */}
                     <div className="relative flex flex-col items-center">
                       <div
-                        className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500 ${
+                        className={`flex h-12 w-12 items-center justify-center rounded-full text-sm font-bold transition-all duration-500 ${
                           step < currentStep
-                            ? 'bg-gradient-to-br from-teal-500 to-cyan-600 text-white shadow-lg scale-100'
+                            ? 'scale-100 bg-gradient-to-br from-teal-500 to-cyan-600 text-white shadow-lg'
                             : step === currentStep
-                              ? 'bg-gradient-to-br from-teal-500 to-cyan-600 text-white shadow-lg scale-110 ring-4 ring-teal-100'
+                              ? 'scale-110 bg-gradient-to-br from-teal-500 to-cyan-600 text-white shadow-lg ring-4 ring-teal-100'
                               : 'bg-gray-200 text-gray-500'
                         }`}
                       >
                         {step < currentStep ? '✓' : step}
                       </div>
                       {/* Step label */}
-                      <span className="absolute -bottom-7 text-xs font-medium text-gray-600 whitespace-nowrap">
+                      <span className="absolute -bottom-7 text-xs font-medium whitespace-nowrap text-gray-600">
                         {['Emails', 'Verify', 'Details', 'Finish'][idx]}
                       </span>
                     </div>
                     {/* Connector line */}
                     {idx < 3 && (
                       <div
-                        className={`w-16 h-1 mx-2 rounded-full transition-all duration-500 ${
+                        className={`mx-2 h-1 w-16 rounded-full transition-all duration-500 ${
                           step < currentStep
                             ? 'bg-gradient-to-r from-teal-500 to-cyan-600'
                             : 'bg-gray-200'
@@ -362,8 +358,8 @@ export default function SignupPage() {
             {currentStep === 1 && (
               <form onSubmit={step1Form.handleSubmit(handleStep1Submit)} className="space-y-6">
                 {/* Section Header with Icon */}
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-3 bg-gradient-to-br from-teal-50 to-cyan-50 rounded-xl">
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="rounded-xl bg-gradient-to-br from-teal-50 to-cyan-50 p-3">
                     <Mail className="h-6 w-6 text-teal-600" />
                   </div>
                   <div>
@@ -375,13 +371,13 @@ export default function SignupPage() {
                 </div>
 
                 {/* Info Banner */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-400 rounded-xl p-4 flex gap-3">
+                <div className="flex gap-3 rounded-xl border-l-4 border-blue-400 bg-gradient-to-r from-blue-50 to-indigo-50 p-4">
                   <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <span className="text-blue-600 text-lg">💡</span>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100">
+                      <span className="text-lg text-blue-600">💡</span>
                     </div>
                   </div>
-                  <p className="text-sm text-blue-800 leading-relaxed">
+                  <p className="text-sm leading-relaxed text-blue-800">
                     We'll send verification codes to confirm these emails aren't already in use.
                   </p>
                 </div>
@@ -390,16 +386,16 @@ export default function SignupPage() {
                 <div className="space-y-2">
                   <Label
                     htmlFor="adminEmail"
-                    className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                    className="flex items-center gap-2 text-sm font-semibold text-gray-700"
                   >
-                    <span className="flex items-center justify-center w-6 h-6 bg-teal-100 rounded-full text-teal-700 text-xs font-bold">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">
                       1
                     </span>
                     Administrator Email
                     <span className="text-red-500">*</span>
                   </Label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none z-10">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-4">
                       <Mail className="h-5 w-5 text-gray-400" />
                     </div>
                     <input
@@ -407,7 +403,7 @@ export default function SignupPage() {
                       type="email"
                       placeholder={FormPlaceholders.ADMIN_EMAIL_EXAMPLE}
                       className={cn(
-                        'h-14 pl-12 text-base border-2 border-gray-200 rounded-xl focus:border-teal-400 focus:ring-4 focus:ring-teal-50 transition-all w-full',
+                        'h-14 w-full rounded-xl border-2 border-gray-200 pl-12 text-base transition-all focus:border-teal-400 focus:ring-4 focus:ring-teal-50',
                         step1Form.formState.errors.adminEmail &&
                           'border-red-500 focus:border-red-500 focus:ring-red-50'
                       )}
@@ -415,13 +411,13 @@ export default function SignupPage() {
                     />
                   </div>
                   {step1Form.formState.errors.adminEmail && (
-                    <p className="text-sm text-red-600 font-medium flex items-center gap-1.5 ml-1">
+                    <p className="ml-1 flex items-center gap-1.5 text-sm font-medium text-red-600">
                       <span className="inline-block">⚠️</span>
                       {step1Form.formState.errors.adminEmail.message}
                     </p>
                   )}
-                  <p className="text-xs text-gray-500 ml-1 flex items-center gap-1">
-                    <span className="inline-block w-1 h-1 bg-gray-400 rounded-full"></span>
+                  <p className="ml-1 flex items-center gap-1 text-xs text-gray-500">
+                    <span className="inline-block h-1 w-1 rounded-full bg-gray-400"></span>
                     Your personal admin account email
                   </p>
                 </div>
@@ -431,9 +427,9 @@ export default function SignupPage() {
                   <div className="flex items-center justify-between">
                     <Label
                       htmlFor="orgEmail"
-                      className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                      className="flex items-center gap-2 text-sm font-semibold text-gray-700"
                     >
-                      <span className="flex items-center justify-center w-6 h-6 bg-cyan-100 rounded-full text-cyan-700 text-xs font-bold">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-cyan-100 text-xs font-bold text-cyan-700">
                         2
                       </span>
                       Organization Email
@@ -458,14 +454,14 @@ export default function SignupPage() {
                       />
                       <Label
                         htmlFor="useSameEmail"
-                        className="text-xs font-medium text-gray-600 cursor-pointer"
+                        className="cursor-pointer text-xs font-medium text-gray-600"
                       >
                         Same as admin
                       </Label>
                     </div>
                   </div>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none z-10">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-4">
                       <Building2 className="h-5 w-5 text-gray-400" />
                     </div>
                     <input
@@ -473,7 +469,7 @@ export default function SignupPage() {
                       type="email"
                       placeholder={FormPlaceholders.SCHOOL_EMAIL_EXAMPLE}
                       className={cn(
-                        'h-14 pl-12 text-base border-2 rounded-xl transition-all w-full',
+                        'h-14 w-full rounded-xl border-2 pl-12 text-base transition-all',
                         useSameEmail
                           ? 'border-purple-200 bg-purple-50/50 text-gray-500'
                           : 'border-gray-200 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-50',
@@ -486,13 +482,13 @@ export default function SignupPage() {
                     />
                   </div>
                   {step1Form.formState.errors.orgEmail && !useSameEmail && (
-                    <p className="text-sm text-red-600 font-medium flex items-center gap-1.5 ml-1">
+                    <p className="ml-1 flex items-center gap-1.5 text-sm font-medium text-red-600">
                       <span className="inline-block">⚠️</span>
                       {step1Form.formState.errors.orgEmail.message}
                     </p>
                   )}
-                  <p className="text-xs text-gray-500 ml-1 flex items-center gap-1">
-                    <span className="inline-block w-1 h-1 bg-gray-400 rounded-full"></span>
+                  <p className="ml-1 flex items-center gap-1 text-xs text-gray-500">
+                    <span className="inline-block h-1 w-1 rounded-full bg-gray-400"></span>
                     {useSameEmail
                       ? 'Using same email as administrator'
                       : 'Official organization email for communication'}
@@ -514,8 +510,8 @@ export default function SignupPage() {
             {currentStep === 2 && (
               <form onSubmit={step2Form.handleSubmit(handleStep2Submit)} className="space-y-6">
                 {/* Section Header */}
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-3 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl">
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 p-3">
                     <ShieldCheck className="h-6 w-6 text-green-600" />
                   </div>
                   <div>
@@ -525,13 +521,13 @@ export default function SignupPage() {
                 </div>
 
                 {/* Info Banner */}
-                <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-400 rounded-xl p-4 flex gap-3">
+                <div className="flex gap-3 rounded-xl border-l-4 border-amber-400 bg-gradient-to-r from-amber-50 to-orange-50 p-4">
                   <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
-                      <span className="text-amber-600 text-lg">📧</span>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100">
+                      <span className="text-lg text-amber-600">📧</span>
                     </div>
                   </div>
-                  <p className="text-sm text-amber-800 leading-relaxed">
+                  <p className="text-sm leading-relaxed text-amber-800">
                     {useSameEmail
                       ? `We've sent a 6-digit verification code to ${formData.adminEmail}`
                       : `We've sent 6-digit verification codes to both email addresses. Check your inbox!`}
@@ -539,12 +535,12 @@ export default function SignupPage() {
                 </div>
 
                 {/* Admin OTP - Modern Card Style */}
-                <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 border-2 border-gray-200 rounded-2xl p-6 space-y-4">
+                <div className="space-y-4 rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100/50 p-6">
                   <Label
                     htmlFor="adminOtp"
-                    className="text-base font-bold text-gray-800 flex items-center gap-2"
+                    className="flex items-center gap-2 text-base font-bold text-gray-800"
                   >
-                    <span className="flex items-center justify-center w-7 h-7 bg-teal-500 text-white rounded-full text-sm">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-teal-500 text-sm text-white">
                       {useSameEmail ? '📧' : '👤'}
                     </span>
                     {useSameEmail ? 'Email Verification Code' : 'Administrator Email Code'}
@@ -558,7 +554,7 @@ export default function SignupPage() {
                         type="text"
                         maxLength={6}
                         placeholder={FormPlaceholders.OTP_MASK}
-                        className={`h-14 text-center text-2xl font-bold tracking-[0.5em] border-2 rounded-xl transition-all ${
+                        className={`h-14 rounded-xl border-2 text-center text-2xl font-bold tracking-[0.5em] transition-all ${
                           adminOtpVerified
                             ? 'border-green-300 bg-green-50 text-green-700'
                             : 'border-gray-300 focus:border-teal-400 focus:ring-4 focus:ring-teal-50'
@@ -576,7 +572,7 @@ export default function SignupPage() {
                       className={`h-14 min-w-[120px] rounded-xl font-semibold transition-all ${
                         adminOtpVerified
                           ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-200'
-                          : 'bg-gradient-to-r from-teal-500 to-cyan-600 text-white hover:shadow-xl hover:scale-105'
+                          : 'bg-gradient-to-r from-teal-500 to-cyan-600 text-white hover:scale-105 hover:shadow-xl'
                       }`}
                     >
                       {adminOtpVerified ? (
@@ -590,7 +586,7 @@ export default function SignupPage() {
                     </Button>
                   </div>
 
-                  <p className="text-sm text-gray-500 flex items-center gap-2">
+                  <p className="flex items-center gap-2 text-sm text-gray-500">
                     <Mail className="h-4 w-4" />
                     Sent to:{' '}
                     <span className="font-medium text-gray-700">{formData.adminEmail}</span>
@@ -599,12 +595,12 @@ export default function SignupPage() {
 
                 {/* Organization OTP - Only show if different emails */}
                 {!useSameEmail && (
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 border-2 border-gray-200 rounded-2xl p-6 space-y-4">
+                  <div className="space-y-4 rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100/50 p-6">
                     <Label
                       htmlFor="orgOtp"
-                      className="text-base font-bold text-gray-800 flex items-center gap-2"
+                      className="flex items-center gap-2 text-base font-bold text-gray-800"
                     >
-                      <span className="flex items-center justify-center w-7 h-7 bg-cyan-500 text-white rounded-full text-sm">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-cyan-500 text-sm text-white">
                         🏢
                       </span>
                       Organization Email Code
@@ -618,7 +614,7 @@ export default function SignupPage() {
                           type="text"
                           maxLength={6}
                           placeholder={FormPlaceholders.OTP_MASK}
-                          className={`h-14 text-center text-2xl font-bold tracking-[0.5em] border-2 rounded-xl transition-all ${
+                          className={`h-14 rounded-xl border-2 text-center text-2xl font-bold tracking-[0.5em] transition-all ${
                             orgOtpVerified
                               ? 'border-green-300 bg-green-50 text-green-700'
                               : 'border-gray-300 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-50'
@@ -636,7 +632,7 @@ export default function SignupPage() {
                         className={`h-14 min-w-[120px] rounded-xl font-semibold transition-all ${
                           orgOtpVerified
                             ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-200'
-                            : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:shadow-xl hover:scale-105'
+                            : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:scale-105 hover:shadow-xl'
                         }`}
                       >
                         {orgOtpVerified ? (
@@ -650,7 +646,7 @@ export default function SignupPage() {
                       </Button>
                     </div>
 
-                    <p className="text-sm text-gray-500 flex items-center gap-2">
+                    <p className="flex items-center gap-2 text-sm text-gray-500">
                       <Building2 className="h-4 w-4" />
                       Sent to:{' '}
                       <span className="font-medium text-gray-700">{formData.orgEmail}</span>
@@ -661,9 +657,9 @@ export default function SignupPage() {
                 {/* Success Message */}
                 {((useSameEmail && adminOtpVerified) ||
                   (!useSameEmail && adminOtpVerified && orgOtpVerified)) && (
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-2xl p-5 flex gap-3 animate-in fade-in slide-in-from-top-2 duration-500">
+                  <div className="animate-in fade-in slide-in-from-top-2 flex gap-3 rounded-2xl border-2 border-green-300 bg-gradient-to-r from-green-50 to-emerald-50 p-5 duration-500">
                     <div className="flex-shrink-0">
-                      <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500">
                         <CheckCircle2 className="h-6 w-6 text-white" />
                       </div>
                     </div>
@@ -671,7 +667,7 @@ export default function SignupPage() {
                       <p className="text-base font-bold text-green-800">
                         {useSameEmail ? 'Email Verified! 🎉' : 'Both Emails Verified! 🎉'}
                       </p>
-                      <p className="text-sm text-green-700 mt-1">
+                      <p className="mt-1 text-sm text-green-700">
                         You're all set! Click continue to proceed to the next step.
                       </p>
                     </div>
@@ -696,8 +692,8 @@ export default function SignupPage() {
             {currentStep === 3 && (
               <form onSubmit={step3Form.handleSubmit(handleStep3Submit)} className="space-y-6">
                 {/* Section Header with Icon */}
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-3 bg-gradient-to-br from-teal-50 to-cyan-50 rounded-xl">
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="rounded-xl bg-gradient-to-br from-teal-50 to-cyan-50 p-3">
                     <Building2 className="h-6 w-6 text-teal-600" />
                   </div>
                   <div>
@@ -710,9 +706,9 @@ export default function SignupPage() {
                 <div className="space-y-2">
                   <Label
                     htmlFor="orgName"
-                    className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                    className="flex items-center gap-2 text-sm font-semibold text-gray-700"
                   >
-                    <span className="flex items-center justify-center w-6 h-6 bg-teal-100 rounded-full text-teal-700 text-xs font-bold">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">
                       🏢
                     </span>
                     Organization Name
@@ -721,54 +717,50 @@ export default function SignupPage() {
                   <Input
                     id="orgName"
                     placeholder={FormPlaceholders.ENTER_SCHOOL_NAME}
-                    className="h-14 text-base border-2 border-gray-200 rounded-xl focus:border-teal-400 focus:ring-4 focus:ring-teal-50 transition-all"
+                    className="h-14 rounded-xl border-2 border-gray-200 text-base transition-all focus:border-teal-400 focus:ring-4 focus:ring-teal-50"
                     error={step3Form.formState.errors.orgName?.message}
                     {...step3Form.register('orgName')}
                   />
                 </div>
 
                 {/* Organization Type & Phone */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label
                       htmlFor="orgType"
-                      className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                      className="flex items-center gap-2 text-sm font-semibold text-gray-700"
                     >
-                      <span className="flex items-center justify-center w-6 h-6 bg-cyan-100 rounded-full text-cyan-700 text-xs font-bold">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-cyan-100 text-xs font-bold text-cyan-700">
                         📚
                       </span>
                       Organization Type
                       <span className="text-red-500">*</span>
                     </Label>
-                    <Select
+                    <SearchableSelect
+                      options={ORGANIZATION_TYPES.map((type) => ({
+                        value: type.value,
+                        label: type.label,
+                      }))}
                       value={step3Form.watch('orgType')}
                       onValueChange={(value: string) =>
                         step3Form.setValue('orgType', value, { shouldValidate: true })
                       }
-                    >
-                      <SelectTrigger
-                        id="orgType"
-                        className="h-14 text-base"
-                        error={step3Form.formState.errors.orgType?.message as string}
-                      >
-                        <SelectValue placeholder={FormPlaceholders.SELECT_OPTION} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {ORGANIZATION_TYPES.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      placeholder={FormPlaceholders.SELECT_OPTION}
+                      className="h-14 text-base"
+                    />
+                    {step3Form.formState.errors.orgType?.message && (
+                      <p className="text-sm text-red-600">
+                        {step3Form.formState.errors.orgType.message as string}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
                     <Label
                       htmlFor="orgPhone"
-                      className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                      className="flex items-center gap-2 text-sm font-semibold text-gray-700"
                     >
-                      <span className="flex items-center justify-center w-6 h-6 bg-purple-100 rounded-full text-purple-700 text-xs font-bold">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-100 text-xs font-bold text-purple-700">
                         📞
                       </span>
                       Phone Number
@@ -790,23 +782,23 @@ export default function SignupPage() {
                 </div>
 
                 {/* Website & Board Affiliation */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label
                       htmlFor="orgWebsite"
-                      className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                      className="flex items-center gap-2 text-sm font-semibold text-gray-700"
                     >
-                      <span className="flex items-center justify-center w-6 h-6 bg-blue-100 rounded-full text-blue-700 text-xs font-bold">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">
                         🌐
                       </span>
                       Website
-                      <span className="text-xs text-gray-500 font-normal">(Optional)</span>
+                      <span className="text-xs font-normal text-gray-500">(Optional)</span>
                     </Label>
                     <Input
                       id="orgWebsite"
                       type="url"
                       placeholder={FormPlaceholders.WEBSITE_GENERIC_EXAMPLE}
-                      className="h-14 text-base border-2 border-gray-200 rounded-xl focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition-all"
+                      className="h-14 rounded-xl border-2 border-gray-200 text-base transition-all focus:border-blue-400 focus:ring-4 focus:ring-blue-50"
                       {...step3Form.register('orgWebsite')}
                     />
                   </div>
@@ -814,49 +806,44 @@ export default function SignupPage() {
                   <div className="space-y-2">
                     <Label
                       htmlFor="boardAffiliation"
-                      className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                      className="flex items-center gap-2 text-sm font-semibold text-gray-700"
                     >
-                      <span className="flex items-center justify-center w-6 h-6 bg-indigo-100 rounded-full text-indigo-700 text-xs font-bold">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
                         🎓
                       </span>
                       Board Affiliation
-                      <span className="text-xs text-gray-500 font-normal">(Optional)</span>
+                      <span className="text-xs font-normal text-gray-500">(Optional)</span>
                     </Label>
-                    <Select
+                    <SearchableSelect
+                      options={BOARD_AFFILIATIONS.map((board) => ({
+                        value: board.value,
+                        label: board.label,
+                      }))}
                       value={step3Form.watch('boardAffiliation') || ''}
                       onValueChange={(value: string) =>
                         step3Form.setValue('boardAffiliation', value, { shouldValidate: true })
                       }
-                    >
-                      <SelectTrigger id="boardAffiliation" className="h-14 text-base">
-                        <SelectValue placeholder={FormPlaceholders.SELECT_OPTION} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {BOARD_AFFILIATIONS.map((board) => (
-                          <SelectItem key={board.value} value={board.value}>
-                            {board.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      placeholder={FormPlaceholders.SELECT_OPTION}
+                      className="h-14 text-base"
+                    />
                   </div>
                 </div>
 
                 {/* Address Toggle */}
-                <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl p-4">
+                <div className="rounded-xl border-2 border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                        <span className="text-amber-600 text-xl">📍</span>
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100">
+                        <span className="text-xl text-amber-600">📍</span>
                       </div>
                       <div>
                         <Label
                           htmlFor="includeAddress"
-                          className="text-sm font-bold text-gray-800 cursor-pointer"
+                          className="cursor-pointer text-sm font-bold text-gray-800"
                         >
                           Add Address Information
                         </Label>
-                        <p className="text-xs text-gray-600 mt-0.5">
+                        <p className="mt-0.5 text-xs text-gray-600">
                           Include your organization's physical address (optional)
                         </p>
                       </div>
@@ -890,7 +877,7 @@ export default function SignupPage() {
                 {/* Address Fields - Show when toggle is ON with smooth animation */}
                 {(includeAddress || isAddressExiting) && (
                   <div
-                    className={`pt-2 origin-top overflow-hidden ${
+                    className={`origin-top overflow-hidden pt-2 ${
                       isAddressExiting ? 'address-form-exit' : 'address-form-enter'
                     }`}
                   >
@@ -917,7 +904,7 @@ export default function SignupPage() {
             {/* Step 4: Admin Details & Password */}
             {currentStep === 4 && (
               <form onSubmit={step4Form.handleSubmit(handleStep4Submit)} className="space-y-5">
-                <div className="flex items-center gap-2 text-teal-700 mb-4">
+                <div className="mb-4 flex items-center gap-2 text-teal-700">
                   <User className="h-5 w-5" />
                   <h3 className="font-semibold">Administrator Account</h3>
                 </div>
@@ -967,19 +954,17 @@ export default function SignupPage() {
                     <Label htmlFor="gender" className="text-sm font-semibold text-gray-700">
                       Gender
                     </Label>
-                    <Select
+                    <SearchableSelect
+                      options={[
+                        { value: 'M', label: 'Male' },
+                        { value: 'F', label: 'Female' },
+                        { value: 'O', label: 'Other' },
+                      ]}
                       value={step4Form.watch('gender') || ''}
-                      onValueChange={(value) => step4Form.setValue('gender', value)}
-                    >
-                      <SelectTrigger className="h-12 border-2 border-gray-300 focus:border-teal-500">
-                        <SelectValue placeholder="Select Gender" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="M">Male</SelectItem>
-                        <SelectItem value="F">Female</SelectItem>
-                        <SelectItem value="O">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      onValueChange={(value: string) => step4Form.setValue('gender', value)}
+                      placeholder="Select Gender"
+                      className="h-12 border-2 border-gray-300 focus:border-teal-500"
+                    />
                     {step4Form.formState.errors.gender && (
                       <p className="text-sm text-red-600">
                         {step4Form.formState.errors.gender.message}
@@ -1021,7 +1006,7 @@ export default function SignupPage() {
                     type="checkbox"
                     id="notificationOptIn"
                     defaultChecked
-                    className="h-4 w-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+                    className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
                     {...step4Form.register('notificationOptIn')}
                   />
                   <Label htmlFor="notificationOptIn" className="text-sm text-gray-700">
@@ -1029,31 +1014,31 @@ export default function SignupPage() {
                   </Label>
                 </div>
 
-                <div className="bg-teal-50 border border-teal-200 rounded-lg p-5">
-                  <h4 className="font-semibold text-teal-800 mb-4 text-base">
+                <div className="rounded-lg border border-teal-200 bg-teal-50 p-5">
+                  <h4 className="mb-4 text-base font-semibold text-teal-800">
                     📋 Registration Summary
                   </h4>
-                  <div className="space-y-2.5 text-sm font-mono">
+                  <div className="space-y-2.5 font-mono text-sm">
                     <div className="flex items-center">
-                      <span className="font-semibold text-gray-700 w-48">Organization</span>
-                      <span className="text-gray-700 mx-3">:</span>
-                      <span className="text-gray-600 font-sans">{formData.orgName}</span>
+                      <span className="w-48 font-semibold text-gray-700">Organization</span>
+                      <span className="mx-3 text-gray-700">:</span>
+                      <span className="font-sans text-gray-600">{formData.orgName}</span>
                     </div>
                     <div className="flex items-center">
-                      <span className="font-semibold text-gray-700 w-48">Organization Email</span>
-                      <span className="text-gray-700 mx-3">:</span>
-                      <span className="text-gray-600 font-sans">{formData.orgEmail}</span>
+                      <span className="w-48 font-semibold text-gray-700">Organization Email</span>
+                      <span className="mx-3 text-gray-700">:</span>
+                      <span className="font-sans text-gray-600">{formData.orgEmail}</span>
                     </div>
                     <div className="flex items-center">
-                      <span className="font-semibold text-gray-700 w-48">Admin Email</span>
-                      <span className="text-gray-700 mx-3">:</span>
-                      <span className="text-gray-600 font-sans">{formData.adminEmail}</span>
+                      <span className="w-48 font-semibold text-gray-700">Admin Email</span>
+                      <span className="mx-3 text-gray-700">:</span>
+                      <span className="font-sans text-gray-600">{formData.adminEmail}</span>
                     </div>
                     {formData.city && formData.state && (
                       <div className="flex items-center">
-                        <span className="font-semibold text-gray-700 w-48">Location</span>
-                        <span className="text-gray-700 mx-3">:</span>
-                        <span className="text-gray-600 font-sans">
+                        <span className="w-48 font-semibold text-gray-700">Location</span>
+                        <span className="mx-3 text-gray-700">:</span>
+                        <span className="font-sans text-gray-600">
                           {formData.city}, {formData.state}
                         </span>
                       </div>
@@ -1076,12 +1061,12 @@ export default function SignupPage() {
               </form>
             )}
 
-            <div className="text-center mt-8 pt-6 border-t border-gray-100">
+            <div className="mt-8 border-t border-gray-100 pt-6 text-center">
               <p className="text-base text-gray-600">
                 Already have an account?{' '}
                 <a
                   href={ROUTES.AUTH.LOGIN}
-                  className="text-transparent bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text font-bold hover:from-teal-700 hover:to-cyan-700 transition-all"
+                  className="bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text font-bold text-transparent transition-all hover:from-teal-700 hover:to-cyan-700"
                 >
                   Sign in here →
                 </a>

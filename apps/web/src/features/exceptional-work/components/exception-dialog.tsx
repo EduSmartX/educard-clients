@@ -11,13 +11,7 @@ import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { fetchClasses } from '@/features/classes/api/classes-api';
@@ -52,7 +46,9 @@ export function ExceptionDialog({
   );
   const [reason, setReason] = useState(exception?.reason || '');
   const [isAllClasses, setIsAllClasses] = useState(exception?.is_applicable_to_all_classes ?? true);
-  const [isAllTeachers, setIsAllTeachers] = useState(exception?.is_applicable_to_all_teachers ?? true);
+  const [isAllTeachers, setIsAllTeachers] = useState(
+    exception?.is_applicable_to_all_teachers ?? true
+  );
   const [selectedClasses, setSelectedClasses] = useState<string[]>(exception?.classes || []);
 
   // Validation state
@@ -201,22 +197,22 @@ export function ExceptionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] h-[90vh] p-0 bg-white flex flex-col overflow-hidden">
+      <DialogContent className="flex h-[90vh] flex-col overflow-hidden bg-white p-0 sm:max-w-[700px]">
         {/* Modern Gradient Header - Fixed */}
-        <div className="bg-gradient-to-r from-purple-600 via-violet-600 to-purple-700 p-6 sm:p-8 text-white flex-shrink-0">
+        <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 via-violet-600 to-purple-700 p-6 text-white sm:p-8">
           <div className="flex items-start gap-4">
-            <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 shadow-lg">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-white/20 shadow-lg backdrop-blur-sm sm:h-14 sm:w-14">
               {isEditMode ? (
-                <AlertTriangle className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
+                <AlertTriangle className="h-6 w-6 text-white sm:h-7 sm:w-7" />
               ) : (
-                <Plus className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
+                <Plus className="h-6 w-6 text-white sm:h-7 sm:w-7" />
               )}
             </div>
-            <div className="flex-1 min-w-0">
-              <h2 className="text-xl sm:text-2xl font-bold mb-2">
+            <div className="min-w-0 flex-1">
+              <h2 className="mb-2 text-xl font-bold sm:text-2xl">
                 {isEditMode ? 'Edit Calendar Exception' : 'Add Calendar Exception'}
               </h2>
-              <p className="text-purple-100 text-sm sm:text-base">
+              <p className="text-sm text-purple-100 sm:text-base">
                 {isEditMode
                   ? 'Update the exception details below'
                   : 'Override working days or holidays for specific dates'}
@@ -226,18 +222,18 @@ export function ExceptionDialog({
         </div>
 
         {/* Form Content - Scrollable */}
-        <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 bg-white">
+        <div className="flex-1 space-y-6 overflow-y-auto bg-white p-6 sm:p-8">
           {/* Step 1: Date Picker */}
           <div className="space-y-3 pb-4">
-            <div className="flex items-start gap-3 mb-3">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 text-white flex items-center justify-center text-sm font-bold shadow-md flex-shrink-0">
+            <div className="mb-3 flex items-start gap-3">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 text-sm font-bold text-white shadow-md">
                 1
               </div>
               <div className="flex-1">
                 <Label className="text-base font-semibold">
                   Select Date <span className="text-red-500">*</span>
                 </Label>
-                <p className="text-xs text-muted-foreground mb-3">
+                <p className="text-muted-foreground mb-3 text-xs">
                   Choose the date for this exception
                 </p>
 
@@ -252,14 +248,14 @@ export function ExceptionDialog({
                     }}
                     placeholder="Select date"
                     className={cn(
-                      'w-full h-11 border-2 hover:border-purple-300 transition-colors',
+                      'h-11 w-full border-2 transition-colors hover:border-purple-300',
                       errors.date && 'border-red-500'
                     )}
                   />
                 </div>
 
                 {errors.date && (
-                  <p className="text-sm text-red-500 flex items-center gap-1 mt-2">
+                  <p className="mt-2 flex items-center gap-1 text-sm text-red-500">
                     <AlertTriangle className="h-3.5 w-3.5" />
                     {errors.date}
                   </p>
@@ -270,59 +266,42 @@ export function ExceptionDialog({
 
           {/* Step 2: Override Type */}
           <div className="space-y-3">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 text-white flex items-center justify-center text-sm font-bold shadow-md">
+            <div className="mb-3 flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 text-sm font-bold text-white shadow-md">
                 2
               </div>
               <div>
                 <Label className="text-base font-semibold">
                   Exception Type <span className="text-red-500">*</span>
                 </Label>
-                <p className="text-xs text-muted-foreground">Choose how to override this date</p>
+                <p className="text-muted-foreground text-xs">Choose how to override this date</p>
               </div>
             </div>
-            <Select
+            <SearchableSelect
+              options={[
+                { value: 'FORCE_WORKING', label: 'Force Working Day' },
+                { value: 'FORCE_HOLIDAY', label: 'Force Holiday' },
+              ]}
               value={overrideType}
               onValueChange={(value: string) => setOverrideType(value as OverrideType)}
-            >
-              <SelectTrigger className="h-11 border-2 hover:border-purple-300 transition-colors">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="FORCE_WORKING" className="py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-3 w-3 rounded-full bg-green-500 shadow-sm" />
-                    <div>
-                      <div className="font-medium">Force Working Day</div>
-                    </div>
-                  </div>
-                </SelectItem>
-                <SelectItem value="FORCE_HOLIDAY" className="py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-3 w-3 rounded-full bg-red-500 shadow-sm" />
-                    <div>
-                      <div className="font-medium">Force Holiday</div>
-                    </div>
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
+              className="h-11 border-2 transition-colors hover:border-purple-300"
+            />
           </div>
 
           {/* Step 3: Apply to All Classes Toggle */}
           <div className="space-y-3">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 text-white flex items-center justify-center text-sm font-bold shadow-md">
+            <div className="mb-3 flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 text-sm font-bold text-white shadow-md">
                 3
               </div>
               <div>
                 <Label className="text-base font-semibold">Applicable To</Label>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Choose which classes this applies to
                 </p>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row">
               <button
                 type="button"
                 onClick={() => {
@@ -337,8 +316,8 @@ export function ExceptionDialog({
                     : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50/30'
                 )}
               >
-                <div className="font-semibold text-base">All Classes</div>
-                <div className="text-xs text-muted-foreground mt-1">
+                <div className="text-base font-semibold">All Classes</div>
+                <div className="text-muted-foreground mt-1 text-xs">
                   Apply to all classes in the organization
                 </div>
               </button>
@@ -352,8 +331,8 @@ export function ExceptionDialog({
                     : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50/30'
                 )}
               >
-                <div className="font-semibold text-base">Specific Classes</div>
-                <div className="text-xs text-muted-foreground mt-1">Select specific classes</div>
+                <div className="text-base font-semibold">Specific Classes</div>
+                <div className="text-muted-foreground mt-1 text-xs">Select specific classes</div>
               </button>
             </div>
           </div>
@@ -362,14 +341,12 @@ export function ExceptionDialog({
           <div className="space-y-3 pb-4">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 text-white flex items-center justify-center text-sm font-bold shadow-md flex-shrink-0">
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 text-sm font-bold text-white shadow-md">
                   4
                 </div>
                 <div>
-                  <Label className="text-base font-semibold">
-                    Apply to All Teachers
-                  </Label>
-                  <p className="text-xs text-muted-foreground">
+                  <Label className="text-base font-semibold">Apply to All Teachers</Label>
+                  <p className="text-muted-foreground text-xs">
                     Include this exception for teacher/employee attendance
                   </p>
                 </div>
@@ -378,13 +355,13 @@ export function ExceptionDialog({
                 type="button"
                 onClick={() => setIsAllTeachers(!isAllTeachers)}
                 className={cn(
-                  'relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 flex-shrink-0',
+                  'relative inline-flex h-7 w-12 flex-shrink-0 items-center rounded-full transition-colors focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:outline-none',
                   isAllTeachers ? 'bg-purple-600' : 'bg-gray-300'
                 )}
               >
                 <span
                   className={cn(
-                    'inline-block h-5 w-5 transform rounded-full bg-white transition-transform shadow-md',
+                    'inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform',
                     isAllTeachers ? 'translate-x-6' : 'translate-x-1'
                   )}
                 />
@@ -395,92 +372,106 @@ export function ExceptionDialog({
           {/* Step 5: Class Selection (only if not all classes) */}
           {!isAllClasses && (
             <div className="space-y-3">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 text-white flex items-center justify-center text-sm font-bold shadow-md">
+              <div className="mb-3 flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 text-sm font-bold text-white shadow-md">
                   5
                 </div>
                 <div>
                   <Label className="text-base font-semibold">
                     Select Classes <span className="text-red-500">*</span>
                   </Label>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     Choose the classes for this exception
                   </p>
                 </div>
               </div>
               {isLoadingClasses ? (
-                <div className="flex items-center justify-center py-12 bg-purple-50 rounded-xl border-2 border-purple-200">
+                <div className="flex items-center justify-center rounded-xl border-2 border-purple-200 bg-purple-50 py-12">
                   <div className="text-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-purple-600 mx-auto mb-2" />
-                    <p className="text-sm text-purple-600 font-medium">Loading classes...</p>
+                    <Loader2 className="mx-auto mb-2 h-8 w-8 animate-spin text-purple-600" />
+                    <p className="text-sm font-medium text-purple-600">Loading classes...</p>
                   </div>
                 </div>
               ) : (
                 <>
                   <div
                     className={cn(
-                      'rounded-xl border-2 p-4 max-h-64 overflow-y-auto bg-gradient-to-br from-white to-purple-50/30',
+                      'max-h-64 overflow-y-auto rounded-xl border-2 bg-gradient-to-br from-white to-purple-50/30 p-4',
                       errors.classes && 'border-red-500'
                     )}
                   >
                     {classes.length === 0 ? (
-                      <div className="text-center py-8">
-                        <p className="text-sm text-muted-foreground">No classes available</p>
+                      <div className="py-8 text-center">
+                        <p className="text-muted-foreground text-sm">No classes available</p>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {classes.map((cls: { public_id: string; name: string; class_master?: { name: string } }) => {
-                          const isSelected = selectedClasses.includes(cls.public_id);
-                          return (
-                            <button
-                              key={cls.public_id}
-                              type="button"
-                              onClick={() => toggleClass(cls.public_id)}
-                              className={cn(
-                                'flex items-center gap-3 rounded-lg border-2 px-3 py-2.5 text-sm transition-all text-left shadow-sm hover:shadow-md',
-                                isSelected
-                                  ? 'border-purple-500 bg-purple-100 text-purple-900'
-                                  : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50/50 bg-white'
-                              )}
-                            >
-                              <div
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        {classes.map(
+                          (cls: {
+                            public_id: string;
+                            name: string;
+                            class_master?: { name: string } | null;
+                          }) => {
+                            const isSelected = selectedClasses.includes(cls.public_id);
+                            return (
+                              <button
+                                key={cls.public_id}
+                                type="button"
+                                onClick={() => toggleClass(cls.public_id)}
                                 className={cn(
-                                  'h-5 w-5 rounded-md border-2 flex items-center justify-center flex-shrink-0',
-                                  isSelected ? 'border-purple-600 bg-purple-600' : 'border-gray-300'
+                                  'flex items-center gap-3 rounded-lg border-2 px-3 py-2.5 text-left text-sm shadow-sm transition-all hover:shadow-md',
+                                  isSelected
+                                    ? 'border-purple-500 bg-purple-100 text-purple-900'
+                                    : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/50'
                                 )}
                               >
-                                {isSelected && <div className="h-2.5 w-2.5 rounded-sm bg-white" />}
-                              </div>
-                              <span className="flex-1 truncate">
-                                {cls.class_master?.name}-{cls.name}
-                              </span>
-                            </button>
-                          );
-                        })}
+                                <div
+                                  className={cn(
+                                    'flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2',
+                                    isSelected
+                                      ? 'border-purple-600 bg-purple-600'
+                                      : 'border-gray-300'
+                                  )}
+                                >
+                                  {isSelected && (
+                                    <div className="h-2.5 w-2.5 rounded-sm bg-white" />
+                                  )}
+                                </div>
+                                <span className="flex-1 truncate">
+                                  {cls.class_master?.name}-{cls.name}
+                                </span>
+                              </button>
+                            );
+                          }
+                        )}
                       </div>
                     )}
                   </div>
                   {selectedClasses.length > 0 && (
-                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mt-3">
-                      <p className="text-xs font-medium text-purple-900 mb-2">
+                    <div className="mt-3 rounded-lg border border-purple-200 bg-purple-50 p-3">
+                      <p className="mb-2 text-xs font-medium text-purple-900">
                         Selected Classes ({selectedClasses.length})
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {selectedClasses.map((classId) => {
                           const cls = classes.find(
-                            (c: { public_id: string; name: string; class_master?: { name: string } }) => c.public_id === classId
+                            (c: {
+                              public_id: string;
+                              name: string;
+                              class_master?: { name: string } | null;
+                            }) => c.public_id === classId
                           );
                           return cls ? (
                             <Badge
                               key={classId}
                               variant="secondary"
-                              className="gap-1.5 pr-1 bg-purple-600 text-white hover:bg-purple-700 shadow-sm"
+                              className="gap-1.5 bg-purple-600 pr-1 text-white shadow-sm hover:bg-purple-700"
                             >
                               {cls.class_master?.name}-{cls.name}
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-5 w-5 p-0 hover:bg-white/20 rounded-full"
+                                className="h-5 w-5 rounded-full p-0 hover:bg-white/20"
                                 onClick={() => toggleClass(classId)}
                               >
                                 <X className="h-3 w-3" />
@@ -492,7 +483,7 @@ export function ExceptionDialog({
                     </div>
                   )}
                   {errors.classes && (
-                    <p className="text-sm text-red-500 flex items-center gap-1 mt-2">
+                    <p className="mt-2 flex items-center gap-1 text-sm text-red-500">
                       <AlertTriangle className="h-3.5 w-3.5" />
                       {errors.classes}
                     </p>
@@ -504,15 +495,15 @@ export function ExceptionDialog({
 
           {/* Step 6: Reason */}
           <div className="space-y-3">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 text-white flex items-center justify-center text-sm font-bold shadow-md">
+            <div className="mb-3 flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 text-sm font-bold text-white shadow-md">
                 {isAllClasses ? '5' : '6'}
               </div>
               <div>
                 <Label className="text-base font-semibold">
                   Reason <span className="text-red-500">*</span>
                 </Label>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Explain why this exception is needed
                 </p>
               </div>
@@ -530,13 +521,13 @@ export function ExceptionDialog({
               rows={4}
               maxLength={500}
               className={cn(
-                'border-2 hover:border-purple-300 transition-colors resize-none',
+                'resize-none border-2 transition-colors hover:border-purple-300',
                 errors.reason && 'border-red-500'
               )}
             />
-            <div className="flex justify-between items-center text-xs">
+            <div className="flex items-center justify-between text-xs">
               {errors.reason ? (
-                <span className="text-red-500 flex items-center gap-1">
+                <span className="flex items-center gap-1 text-red-500">
                   <AlertTriangle className="h-3.5 w-3.5" />
                   {errors.reason}
                 </span>
@@ -558,14 +549,14 @@ export function ExceptionDialog({
         </div>
 
         {/* Footer Actions - Fixed at bottom */}
-        <div className="bg-gray-50 border-t border-gray-200 p-6 sm:p-8 flex-shrink-0">
-          <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
+        <div className="flex-shrink-0 border-t border-gray-200 bg-gray-50 p-6 sm:p-8">
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <Button
               type="button"
               variant="brandOutline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
-              className="w-full sm:w-auto h-11 border-2 hover:bg-gray-100 transition-colors"
+              className="h-11 w-full border-2 transition-colors hover:bg-gray-100 sm:w-auto"
             >
               Cancel
             </Button>
@@ -574,7 +565,7 @@ export function ExceptionDialog({
               variant="brand"
               onClick={handleSubmit}
               disabled={isLoading}
-              className="w-full sm:w-auto h-11 shadow-md hover:shadow-xl transition-all"
+              className="h-11 w-full shadow-md transition-all hover:shadow-xl sm:w-auto"
             >
               {isLoading ? (
                 <>

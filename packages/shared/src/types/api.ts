@@ -2,6 +2,11 @@
  * Shared Types - API
  */
 
+import type { PaginationMeta } from "./common";
+
+// Re-export for convenience
+export type { PaginationMeta };
+
 // API response wrapper
 export interface ApiResponse<T> {
   data: T;
@@ -9,12 +14,12 @@ export interface ApiResponse<T> {
   success: boolean;
 }
 
-// Paginated response
 export interface PaginatedResponse<T> {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: T[];
+  success: boolean;
+  message: string;
+  data: T[];
+  pagination: PaginationMeta;
+  code: number;
 }
 
 // API error

@@ -6,13 +6,7 @@
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { cn } from '@/lib/utils';
 
 interface FieldNames {
@@ -71,13 +65,13 @@ export function GuardianForm({
     <div className="space-y-4">
       {/* Section Header */}
       {showHeader && (
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-            <span className="text-orange-600 text-xl">👤</span>
+        <div className="mb-4 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100">
+            <span className="text-xl text-orange-600">👤</span>
           </div>
           <div>
             <h4 className="text-base font-bold text-gray-800">{title}</h4>
-            <p className="text-xs text-gray-600 mt-0.5">
+            <p className="mt-0.5 text-xs text-gray-600">
               {description ||
                 (required ? 'Required contact information' : 'Optional contact information')}
             </p>
@@ -86,13 +80,13 @@ export function GuardianForm({
       )}
 
       {/* Guardian Name & Phone */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label
             htmlFor={getFieldName('name')}
-            className={`${labelSize} font-semibold text-gray-700 flex items-center gap-2`}
+            className={`${labelSize} flex items-center gap-2 font-semibold text-gray-700`}
           >
-            <span className="flex items-center justify-center w-6 h-6 bg-orange-100 rounded-full text-orange-700 text-xs font-bold">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-orange-700">
               👤
             </span>
             Contact Name
@@ -102,7 +96,7 @@ export function GuardianForm({
             id={getFieldName('name')}
             placeholder="Full name"
             disabled={disabled}
-            className={`${inputHeight} text-base border-2 border-gray-200 rounded-xl focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition-all`}
+            className={`${inputHeight} rounded-xl border-2 border-gray-200 text-base transition-all focus:border-orange-400 focus:ring-4 focus:ring-orange-50`}
             error={form.formState.errors[getFieldName('name')]?.message as string}
             {...form.register(getFieldName('name'))}
           />
@@ -111,9 +105,9 @@ export function GuardianForm({
         <div className="space-y-2">
           <Label
             htmlFor={getFieldName('phone')}
-            className={`${labelSize} font-semibold text-gray-700 flex items-center gap-2`}
+            className={`${labelSize} flex items-center gap-2 font-semibold text-gray-700`}
           >
-            <span className="flex items-center justify-center w-6 h-6 bg-orange-100 rounded-full text-orange-700 text-xs font-bold">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-orange-700">
               📞
             </span>
             Contact Phone
@@ -124,7 +118,7 @@ export function GuardianForm({
             type="tel"
             placeholder="Phone number"
             disabled={disabled}
-            className={`${inputHeight} text-base border-2 border-gray-200 rounded-xl focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition-all`}
+            className={`${inputHeight} rounded-xl border-2 border-gray-200 text-base transition-all focus:border-orange-400 focus:ring-4 focus:ring-orange-50`}
             error={form.formState.errors[getFieldName('phone')]?.message as string}
             {...form.register(getFieldName('phone'))}
           />
@@ -132,13 +126,13 @@ export function GuardianForm({
       </div>
 
       {/* Guardian Email & Relationship */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label
             htmlFor={getFieldName('email')}
-            className={`${labelSize} font-semibold text-gray-700 flex items-center gap-2`}
+            className={`${labelSize} flex items-center gap-2 font-semibold text-gray-700`}
           >
-            <span className="flex items-center justify-center w-6 h-6 bg-orange-100 rounded-full text-orange-700 text-xs font-bold">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-orange-700">
               ✉️
             </span>
             Contact Email
@@ -149,7 +143,7 @@ export function GuardianForm({
             type="email"
             placeholder="email@example.com"
             disabled={disabled}
-            className={`${inputHeight} text-base border-2 border-gray-200 rounded-xl focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition-all`}
+            className={`${inputHeight} rounded-xl border-2 border-gray-200 text-base transition-all focus:border-orange-400 focus:ring-4 focus:ring-orange-50`}
             error={form.formState.errors[getFieldName('email')]?.message as string}
             {...form.register(getFieldName('email'))}
           />
@@ -159,39 +153,35 @@ export function GuardianForm({
           <div className="space-y-2">
             <Label
               htmlFor={getFieldName('relationship')}
-              className={`${labelSize} font-semibold text-gray-700 flex items-center gap-2`}
+              className={`${labelSize} flex items-center gap-2 font-semibold text-gray-700`}
             >
-              <span className="flex items-center justify-center w-6 h-6 bg-orange-100 rounded-full text-orange-700 text-xs font-bold">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-orange-700">
                 🤝
               </span>
               Relationship
               {required && <span className="text-red-500">*</span>}
             </Label>
-            <Select
+            <SearchableSelect
+              options={[
+                { value: 'parent', label: 'Parent' },
+                { value: 'spouse', label: 'Spouse' },
+                { value: 'sibling', label: 'Sibling' },
+                { value: 'friend', label: 'Friend' },
+                { value: 'relative', label: 'Relative' },
+                { value: 'colleague', label: 'Colleague' },
+                { value: 'other', label: 'Other' },
+              ]}
               disabled={disabled}
-              onValueChange={(value) => form.setValue(getFieldName('relationship'), value)}
-              defaultValue={form.getValues(getFieldName('relationship'))}
-            >
-              <SelectTrigger
-                className={cn(
-                  `${inputHeight} text-base border-2 border-gray-200 rounded-xl focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition-all`,
-                  form.formState.errors[getFieldName('relationship')] && 'border-red-500'
-                )}
-              >
-                <SelectValue placeholder="Select relationship" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="parent">Parent</SelectItem>
-                <SelectItem value="spouse">Spouse</SelectItem>
-                <SelectItem value="sibling">Sibling</SelectItem>
-                <SelectItem value="friend">Friend</SelectItem>
-                <SelectItem value="relative">Relative</SelectItem>
-                <SelectItem value="colleague">Colleague</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
+              onValueChange={(value: string) => form.setValue(getFieldName('relationship'), value)}
+              value={form.watch(getFieldName('relationship')) || ''}
+              placeholder="Select relationship"
+              className={cn(
+                `${inputHeight} rounded-xl border-2 border-gray-200 text-base transition-all focus:border-orange-400 focus:ring-4 focus:ring-orange-50`,
+                form.formState.errors[getFieldName('relationship')] && 'border-red-500'
+              )}
+            />
             {form.formState.errors[getFieldName('relationship')] && (
-              <p className="text-xs text-red-500 mt-1">
+              <p className="mt-1 text-xs text-red-500">
                 {form.formState.errors[getFieldName('relationship')]?.message as string}
               </p>
             )}

@@ -1,7 +1,7 @@
 /**
  * Marks Overview Page
  * Colorful, visual marks entry interface with subject color coding
- * 
+ *
  * Features:
  * - Session and Class dropdown filters
  * - Tabular format with color-coded subjects
@@ -17,13 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { PageHeader, StudentAvatar } from '@/components/common';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Badge } from '@/components/ui/badge';
 import { useExamSessions, useMarksOverview } from '../hooks/use-exams';
 import { useClasses } from '@/features/classes/hooks/use-classes';
@@ -35,12 +29,37 @@ import { toast } from 'sonner';
 // Subject color schemes (same as exam overview)
 const SUBJECT_COLORS = [
   { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-200', header: 'bg-blue-200' },
-  { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-200', header: 'bg-purple-200' },
-  { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-200', header: 'bg-green-200' },
-  { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-200', header: 'bg-yellow-200' },
+  {
+    bg: 'bg-purple-100',
+    text: 'text-purple-800',
+    border: 'border-purple-200',
+    header: 'bg-purple-200',
+  },
+  {
+    bg: 'bg-green-100',
+    text: 'text-green-800',
+    border: 'border-green-200',
+    header: 'bg-green-200',
+  },
+  {
+    bg: 'bg-yellow-100',
+    text: 'text-yellow-800',
+    border: 'border-yellow-200',
+    header: 'bg-yellow-200',
+  },
   { bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-200', header: 'bg-pink-200' },
-  { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-200', header: 'bg-indigo-200' },
-  { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-200', header: 'bg-orange-200' },
+  {
+    bg: 'bg-indigo-100',
+    text: 'text-indigo-800',
+    border: 'border-indigo-200',
+    header: 'bg-indigo-200',
+  },
+  {
+    bg: 'bg-orange-100',
+    text: 'text-orange-800',
+    border: 'border-orange-200',
+    header: 'bg-orange-200',
+  },
   { bg: 'bg-teal-100', text: 'text-teal-800', border: 'border-teal-200', header: 'bg-teal-200' },
 ];
 
@@ -64,11 +83,13 @@ export function MarksOverviewPage() {
   const { data: classesData } = useClasses({ page: 1, page_size: 200 });
 
   // Fetch marks overview only when both session and class are selected
-  const marksOverviewParams = selectedSessionId && selectedClassId
-    ? { session_id: selectedSessionId, class_id: selectedClassId }
-    : null;
-  
-  const { data: marksOverviewData, isLoading: isLoadingMarks } = useMarksOverview(marksOverviewParams);
+  const marksOverviewParams =
+    selectedSessionId && selectedClassId
+      ? { session_id: selectedSessionId, class_id: selectedClassId }
+      : null;
+
+  const { data: marksOverviewData, isLoading: isLoadingMarks } =
+    useMarksOverview(marksOverviewParams);
 
   const sessionsList = useMemo(() => sessionsData?.data || [], [sessionsData]);
   const classesList = useMemo(() => classesData?.data || [], [classesData]);
@@ -80,15 +101,23 @@ export function MarksOverviewPage() {
 
   // Helper to check if a subject is editable
   const isSubjectEditable = (subjectPublicId: string): boolean => {
-    if (!permissions) {return true;} // Default to editable if no permissions
-    if (permissions.is_admin || permissions.is_class_teacher) {return true;}
-    if (permissions.editable_subject_ids === null) {return true;} // null means all
+    if (!permissions) {
+      return true;
+    } // Default to editable if no permissions
+    if (permissions.is_admin || permissions.is_class_teacher) {
+      return true;
+    }
+    if (permissions.editable_subject_ids === null) {
+      return true;
+    } // null means all
     return permissions.editable_subject_ids.includes(subjectPublicId);
   };
 
   // Check if user can edit ANY marks
   const canEditAny = useMemo(() => {
-    if (!permissions) {return true;}
+    if (!permissions) {
+      return true;
+    }
     return permissions.can_edit;
   }, [permissions]);
 
@@ -138,7 +167,12 @@ export function MarksOverviewPage() {
   };
 
   // Handle marks change
-  const handleMarksChange = (studentId: string, examId: string, value: string, maxMarks: number) => {
+  const handleMarksChange = (
+    studentId: string,
+    examId: string,
+    value: string,
+    maxMarks: number
+  ) => {
     // Auto-convert 'a' or 'A' to 'AB' (absent)
     const upper = value.toUpperCase();
     if (upper === 'A' || upper === 'AB') {
@@ -175,7 +209,7 @@ export function MarksOverviewPage() {
 
   // Handle save - calls bulk save all API (single call for all data)
   const queryClient = useQueryClient();
-  
+
   const handleSave = async () => {
     if (!selectedSessionId || !selectedClassId || subjects.length === 0) {
       toast.error('Please select a session and class first');
@@ -189,10 +223,10 @@ export function MarksOverviewPage() {
 
       studentMarks.forEach((student) => {
         const examMarks: StudentExamMark[] = [];
-        
+
         subjects.forEach((subject) => {
           const markValue = student.marks[subject.exam_public_id];
-          
+
           // Only include if there's a value
           if (markValue !== undefined && markValue !== '') {
             const isAbsent = markValue.toUpperCase() === 'AB';
@@ -227,10 +261,10 @@ export function MarksOverviewPage() {
         class_id: selectedClassId,
         students: studentsPayload,
       });
-      
+
       // Invalidate the marks overview query to refresh data
       queryClient.invalidateQueries({ queryKey: ['marks-overview'] });
-      
+
       toast.success(result.message || `Marks saved for ${result.data.count} student(s)`);
     } catch (error) {
       toast.error('Failed to save marks');
@@ -263,7 +297,10 @@ export function MarksOverviewPage() {
 
   // Per-subject analytics
   const subjectStats = useMemo(() => {
-    const statsMap: Record<string, { absent: number; entered: number; total: number; avg: number }> = {};
+    const statsMap: Record<
+      string,
+      { absent: number; entered: number; total: number; avg: number }
+    > = {};
     subjects.forEach((subject) => {
       let absent = 0;
       let entered = 0;
@@ -289,7 +326,16 @@ export function MarksOverviewPage() {
 
   // Per-student totals
   const studentTotals = useMemo(() => {
-    const totalsMap: Record<string, { total: number; maxTotal: number; percentage: number; subjectsAttempted: number; absent: number }> = {};
+    const totalsMap: Record<
+      string,
+      {
+        total: number;
+        maxTotal: number;
+        percentage: number;
+        subjectsAttempted: number;
+        absent: number;
+      }
+    > = {};
     studentMarks.forEach((student) => {
       let total = 0;
       let maxTotal = 0;
@@ -329,78 +375,67 @@ export function MarksOverviewPage() {
           <CardTitle className="text-lg">Select Session & Class</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {/* Session Filter */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Exam Session *</label>
-              <Select
+              <SearchableSelect
                 key={`session-${selectedSessionId || 'empty'}`}
+                options={sessionsList.map((session) => ({
+                  value: session.public_id,
+                  label: `${session.name} (${session.academic_year})`,
+                }))}
                 value={selectedSessionId}
                 onValueChange={(value) => {
                   setSelectedSessionId(value);
-                  setSelectedClassId(''); // Reset class when session changes
+                  setSelectedClassId('');
                 }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select session" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sessionsList.map((session) => (
-                    <SelectItem key={session.public_id} value={session.public_id}>
-                      {session.name} ({session.academic_year})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="Select session"
+                searchPlaceholder="Search sessions..."
+              />
             </div>
 
             {/* Class Filter */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Class *</label>
-              <Select
+              <SearchableSelect
                 key={`class-${selectedClassId || 'empty'}`}
+                options={classesList.map((cls) => ({
+                  value: cls.public_id,
+                  label: `${cls.class_master?.name || 'Unknown'} - ${cls.name}`,
+                }))}
                 value={selectedClassId}
                 onValueChange={setSelectedClassId}
                 disabled={!selectedSessionId}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={selectedSessionId ? "Select class" : "Select session first"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {classesList.map((cls) => (
-                    <SelectItem key={cls.public_id} value={cls.public_id}>
-                      {cls.class_master.name} - {cls.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder={selectedSessionId ? 'Select class' : 'Select session first'}
+                searchPlaceholder="Search classes..."
+              />
             </div>
           </div>
 
           {/* Session Info */}
           {selectedSession && selectedClassId && marksOverview && (
-            <div className="p-4 rounded-lg border-2 bg-gradient-to-r from-brand-50 to-brand-100 border-brand-200">
-              <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="from-brand-50 to-brand-100 border-brand-200 rounded-lg border-2 bg-gradient-to-r p-4">
+              <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <h3 className="font-semibold text-lg">{marksOverview.session.name}</h3>
-                  <p className="text-sm text-gray-600">
-                    {marksOverview.session.session_type}
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1 font-medium">
-                    Class: {marksOverview.class_info.class_master_name} - {marksOverview.class_info.section_name}
+                  <h3 className="text-lg font-semibold">{marksOverview.session.name}</h3>
+                  <p className="text-sm text-gray-600">{marksOverview.session.session_type}</p>
+                  <p className="mt-1 text-sm font-medium text-gray-600">
+                    Class: {marksOverview.class_info.class_master_name} -{' '}
+                    {marksOverview.class_info.section_name}
                   </p>
                 </div>
                 <div className="flex gap-3">
-                  <Badge variant="outline" className="text-base px-3 py-1">
-                    <Users className="h-4 w-4 mr-1" />
+                  <Badge variant="outline" className="px-3 py-1 text-base">
+                    <Users className="mr-1 h-4 w-4" />
                     {stats.totalStudents} Students
                   </Badge>
-                  <Badge variant="outline" className="text-base px-3 py-1">
-                    <BookOpen className="h-4 w-4 mr-1" />
+                  <Badge variant="outline" className="px-3 py-1 text-base">
+                    <BookOpen className="mr-1 h-4 w-4" />
                     {stats.totalExams} Exams
                   </Badge>
-                  <Badge variant="outline" className="text-base px-3 py-1">
-                    <CheckCircle2 className="h-4 w-4 mr-1" />
+                  <Badge variant="outline" className="px-3 py-1 text-base">
+                    <CheckCircle2 className="mr-1 h-4 w-4" />
                     {stats.completionPercent}% Complete
                   </Badge>
                 </div>
@@ -415,7 +450,7 @@ export function MarksOverviewPage() {
         <Card>
           <CardContent className="py-20">
             <div className="text-center text-gray-500">
-              <AlertCircle className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+              <AlertCircle className="mx-auto mb-4 h-16 w-16 text-gray-400" />
               <p className="text-lg">Please select both Session and Class to view marks entry</p>
             </div>
           </CardContent>
@@ -424,7 +459,7 @@ export function MarksOverviewPage() {
         <Card>
           <CardContent className="py-20">
             <div className="text-center text-gray-500">
-              <Loader2 className="h-16 w-16 mx-auto mb-4 text-brand-500 animate-spin" />
+              <Loader2 className="text-brand-500 mx-auto mb-4 h-16 w-16 animate-spin" />
               <p className="text-lg">Loading marks data...</p>
             </div>
           </CardContent>
@@ -433,7 +468,7 @@ export function MarksOverviewPage() {
         <Card>
           <CardContent className="py-20">
             <div className="text-center text-gray-500">
-              <BookOpen className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+              <BookOpen className="mx-auto mb-4 h-16 w-16 text-gray-400" />
               <p className="text-lg">No exams found for this session and class</p>
             </div>
           </CardContent>
@@ -442,19 +477,19 @@ export function MarksOverviewPage() {
         <Card>
           <CardContent className="py-20">
             <div className="text-center text-gray-500">
-              <Users className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+              <Users className="mx-auto mb-4 h-16 w-16 text-gray-400" />
               <p className="text-lg">No students found in this class</p>
             </div>
           </CardContent>
         </Card>
       ) : (
         <Card className="border-2">
-          <CardHeader className="bg-gradient-to-r from-brand-50 to-brand-100 border-b-2">
+          <CardHeader className="from-brand-50 to-brand-100 border-b-2 bg-gradient-to-r">
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-xl">Marks Entry</CardTitle>
-                <p className="text-xs text-gray-500 mt-1">
-                  {canEditAny 
+                <p className="mt-1 text-xs text-gray-500">
+                  {canEditAny
                     ? 'Use Arrow keys, Tab, or Enter to navigate between cells'
                     : 'View only - You can only edit marks for subjects assigned to you'}
                 </p>
@@ -469,27 +504,30 @@ export function MarksOverviewPage() {
           </CardHeader>
           {/* View-only banner */}
           {!canEditAny && (
-            <div className="bg-blue-50 border-b border-blue-200 px-4 py-2 text-sm text-blue-700 flex items-center gap-2">
+            <div className="flex items-center gap-2 border-b border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-700">
               <AlertCircle className="h-4 w-4" />
-              <span>You are viewing marks in read-only mode. Only teachers assigned to specific subjects can edit them.</span>
+              <span>
+                You are viewing marks in read-only mode. Only teachers assigned to specific subjects
+                can edit them.
+              </span>
             </div>
           )}
           <CardContent className="p-0">
             {/* Scrollable container with max height and sticky header */}
-            <div className="overflow-auto max-h-[70vh] relative" ref={containerRef}>
+            <div className="relative max-h-[70vh] overflow-auto" ref={containerRef}>
               <table className="w-full border-collapse">
                 <thead className="sticky top-0 z-20 bg-gray-100">
                   <tr>
-                    <th className="border-2 border-gray-300 p-3 text-left font-semibold sticky left-0 top-0 bg-gray-100 z-30 min-w-[80px]">
+                    <th className="sticky top-0 left-0 z-30 min-w-[80px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold">
                       S.No
                     </th>
-                    <th className="border-2 border-gray-300 p-3 text-left font-semibold sticky left-[80px] top-0 bg-gray-100 z-30 min-w-[80px]">
+                    <th className="sticky top-0 left-[80px] z-30 min-w-[80px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold">
                       Photo
                     </th>
-                    <th className="border-2 border-gray-300 p-3 text-left font-semibold sticky left-[160px] top-0 bg-gray-100 z-30 min-w-[120px]">
+                    <th className="sticky top-0 left-[160px] z-30 min-w-[120px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold">
                       Roll No
                     </th>
-                    <th className="border-2 border-gray-300 p-3 text-left font-semibold sticky left-[280px] top-0 bg-gray-100 z-30 min-w-[200px]">
+                    <th className="sticky top-0 left-[280px] z-30 min-w-[200px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold">
                       Student Name
                     </th>
                     {subjects.map((subject) => {
@@ -497,7 +535,7 @@ export function MarksOverviewPage() {
                       return (
                         <th
                           key={subject.exam_public_id}
-                          className={`border-2 ${colors.border} p-3 text-center font-semibold ${colors.header} min-w-[150px] sticky top-0 z-20`}
+                          className={`border-2 ${colors.border} p-3 text-center font-semibold ${colors.header} sticky top-0 z-20 min-w-[150px]`}
                         >
                           <div className="space-y-1">
                             <div className={`font-bold ${colors.text}`}>{subject.subject_name}</div>
@@ -514,7 +552,7 @@ export function MarksOverviewPage() {
                       );
                     })}
                     {/* Total & Percentage columns */}
-                    <th className="border-2 border-gray-300 p-3 text-center font-semibold bg-emerald-200 min-w-[100px] sticky top-0 z-20">
+                    <th className="sticky top-0 z-20 min-w-[100px] border-2 border-gray-300 bg-emerald-200 p-3 text-center font-semibold">
                       <div className="space-y-1">
                         <div className="font-bold text-emerald-800">Total</div>
                         <div className="text-xs text-gray-600">
@@ -522,7 +560,7 @@ export function MarksOverviewPage() {
                         </div>
                       </div>
                     </th>
-                    <th className="border-2 border-gray-300 p-3 text-center font-semibold bg-amber-200 min-w-[90px] sticky top-0 z-20">
+                    <th className="sticky top-0 z-20 min-w-[90px] border-2 border-gray-300 bg-amber-200 p-3 text-center font-semibold">
                       <div className="font-bold text-amber-800">%</div>
                     </th>
                   </tr>
@@ -533,21 +571,21 @@ export function MarksOverviewPage() {
                       key={student.studentId}
                       className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
                     >
-                      <td className="border-2 border-gray-300 p-3 text-center font-medium sticky left-0 bg-inherit z-10">
+                      <td className="sticky left-0 z-10 border-2 border-gray-300 bg-inherit p-3 text-center font-medium">
                         {rowIndex + 1}
                       </td>
-                      <td className="border-2 border-gray-300 p-3 sticky left-[80px] bg-inherit z-10">
-                        <StudentAvatar 
+                      <td className="sticky left-[80px] z-10 border-2 border-gray-300 bg-inherit p-3">
+                        <StudentAvatar
                           name={student.name}
                           photoUrl={student.photo}
                           gender={student.gender}
                           size="md"
                         />
                       </td>
-                      <td className="border-2 border-gray-300 p-3 font-medium sticky left-[160px] bg-inherit z-10">
+                      <td className="sticky left-[160px] z-10 border-2 border-gray-300 bg-inherit p-3 font-medium">
                         {student.rollNumber}
                       </td>
-                      <td className="border-2 border-gray-300 p-3 font-medium sticky left-[280px] bg-inherit z-10">
+                      <td className="sticky left-[280px] z-10 border-2 border-gray-300 bg-inherit p-3 font-medium">
                         {student.name}
                       </td>
                       {subjects.map((subject, colIndex) => {
@@ -555,7 +593,11 @@ export function MarksOverviewPage() {
                         const markValue = student.marks[subject.exam_public_id] || '';
                         const numMark = parseFloat(markValue);
                         const isPassing = !isNaN(numMark) && numMark >= subject.passing_marks;
-                        const isFailing = markValue && markValue !== 'AB' && !isNaN(numMark) && numMark < subject.passing_marks;
+                        const isFailing =
+                          markValue &&
+                          markValue !== 'AB' &&
+                          !isNaN(numMark) &&
+                          numMark < subject.passing_marks;
                         const isAbsent = markValue === 'AB';
                         const editable = isSubjectEditable(subject.subject_public_id);
 
@@ -581,14 +623,14 @@ export function MarksOverviewPage() {
                               }
                               className={`text-center font-semibold ${
                                 !editable
-                                  ? 'bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed'
+                                  ? 'cursor-not-allowed border-gray-300 bg-gray-100 text-gray-500'
                                   : isAbsent
-                                  ? 'bg-gray-200 border-gray-400 text-gray-600'
-                                  : isPassing
-                                  ? 'bg-green-100 border-green-400 text-green-800'
-                                  : isFailing
-                                  ? 'bg-red-100 border-red-400 text-red-800'
-                                  : 'bg-white'
+                                    ? 'border-gray-400 bg-gray-200 text-gray-600'
+                                    : isPassing
+                                      ? 'border-green-400 bg-green-100 text-green-800'
+                                      : isFailing
+                                        ? 'border-red-400 bg-red-100 text-red-800'
+                                        : 'bg-white'
                               }`}
                               placeholder="--"
                             />
@@ -601,20 +643,35 @@ export function MarksOverviewPage() {
                         if (!t || t.subjectsAttempted === 0) {
                           return (
                             <>
-                              <td className="border-2 border-gray-300 p-3 text-center bg-emerald-50 font-medium text-gray-400">--</td>
-                              <td className="border-2 border-gray-300 p-3 text-center bg-amber-50 font-medium text-gray-400">--</td>
+                              <td className="border-2 border-gray-300 bg-emerald-50 p-3 text-center font-medium text-gray-400">
+                                --
+                              </td>
+                              <td className="border-2 border-gray-300 bg-amber-50 p-3 text-center font-medium text-gray-400">
+                                --
+                              </td>
                             </>
                           );
                         }
                         const pct = t.percentage;
-                        const pctColor = pct >= 75 ? 'text-green-700 bg-green-50' : pct >= 50 ? 'text-amber-700 bg-amber-50' : pct >= 35 ? 'text-orange-700 bg-orange-50' : 'text-red-700 bg-red-50';
+                        const pctColor =
+                          pct >= 75
+                            ? 'text-green-700 bg-green-50'
+                            : pct >= 50
+                              ? 'text-amber-700 bg-amber-50'
+                              : pct >= 35
+                                ? 'text-orange-700 bg-orange-50'
+                                : 'text-red-700 bg-red-50';
                         return (
                           <>
-                            <td className="border-2 border-gray-300 p-3 text-center bg-emerald-50 font-bold text-emerald-800">
+                            <td className="border-2 border-gray-300 bg-emerald-50 p-3 text-center font-bold text-emerald-800">
                               {t.total}
-                              <span className="text-xs font-normal text-gray-500">/{t.maxTotal}</span>
+                              <span className="text-xs font-normal text-gray-500">
+                                /{t.maxTotal}
+                              </span>
                             </td>
-                            <td className={`border-2 border-gray-300 p-3 text-center font-bold ${pctColor}`}>
+                            <td
+                              className={`border-2 border-gray-300 p-3 text-center font-bold ${pctColor}`}
+                            >
                               {pct}%
                             </td>
                           </>
@@ -626,39 +683,57 @@ export function MarksOverviewPage() {
                 {/* Analytics Footer */}
                 <tfoot>
                   <tr className="bg-gray-200 font-semibold">
-                    <td colSpan={4} className="border-2 border-gray-300 p-3 text-right sticky left-0 bg-gray-200 z-10">
+                    <td
+                      colSpan={4}
+                      className="sticky left-0 z-10 border-2 border-gray-300 bg-gray-200 p-3 text-right"
+                    >
                       📊 Analytics
                     </td>
                     {subjects.map((subject) => {
                       const st = subjectStats[subject.exam_public_id];
                       const colors = getSubjectColor(subject.subject_name);
                       return (
-                        <td key={subject.exam_public_id} className={`border-2 ${colors.border} p-2 ${colors.bg} text-center text-xs`}>
+                        <td
+                          key={subject.exam_public_id}
+                          className={`border-2 ${colors.border} p-2 ${colors.bg} text-center text-xs`}
+                        >
                           <div className="space-y-0.5">
-                            <div className="text-red-600 font-bold">AB: {st?.absent || 0}</div>
-                            <div className="text-gray-600">Entered: {st?.entered || 0}/{st?.total || 0}</div>
-                            <div className="text-blue-700 font-medium">Avg: {st?.avg || 0}</div>
+                            <div className="font-bold text-red-600">AB: {st?.absent || 0}</div>
+                            <div className="text-gray-600">
+                              Entered: {st?.entered || 0}/{st?.total || 0}
+                            </div>
+                            <div className="font-medium text-blue-700">Avg: {st?.avg || 0}</div>
                           </div>
                         </td>
                       );
                     })}
-                    <td className="border-2 border-gray-300 p-2 bg-emerald-100 text-center text-xs">
-                      <div className="text-emerald-700 font-bold">
-                        Class Avg: {(() => {
-                          const vals = Object.values(studentTotals).filter(t => t.subjectsAttempted > 0);
-                          if (vals.length === 0) {return '--';}
+                    <td className="border-2 border-gray-300 bg-emerald-100 p-2 text-center text-xs">
+                      <div className="font-bold text-emerald-700">
+                        Class Avg:{' '}
+                        {(() => {
+                          const vals = Object.values(studentTotals).filter(
+                            (t) => t.subjectsAttempted > 0
+                          );
+                          if (vals.length === 0) {
+                            return '--';
+                          }
                           const avg = vals.reduce((s, t) => s + t.total, 0) / vals.length;
                           return Math.round(avg * 100) / 100;
                         })()}
                       </div>
                     </td>
-                    <td className="border-2 border-gray-300 p-2 bg-amber-100 text-center text-xs">
-                      <div className="text-amber-700 font-bold">
-                        Avg: {(() => {
-                          const vals = Object.values(studentTotals).filter(t => t.subjectsAttempted > 0);
-                          if (vals.length === 0) {return '--';}
+                    <td className="border-2 border-gray-300 bg-amber-100 p-2 text-center text-xs">
+                      <div className="font-bold text-amber-700">
+                        Avg:{' '}
+                        {(() => {
+                          const vals = Object.values(studentTotals).filter(
+                            (t) => t.subjectsAttempted > 0
+                          );
+                          if (vals.length === 0) {
+                            return '--';
+                          }
                           const avg = vals.reduce((s, t) => s + t.percentage, 0) / vals.length;
-                          return `${Math.round(avg * 100) / 100  }%`;
+                          return `${Math.round(avg * 100) / 100}%`;
                         })()}
                       </div>
                     </td>

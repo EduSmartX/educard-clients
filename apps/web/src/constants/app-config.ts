@@ -285,6 +285,19 @@ export const ROUTES = {
   HOMEWORK_SUBMISSION_REVIEW: '/homework/:homeworkId/submissions/:submissionId/review',
   HOMEWORK_VIEW: '/homework/:id',
   HOMEWORK_EDIT: '/homework/:id/edit',
+  // Fee Management
+  FEES: {
+    DASHBOARD: '/fees',
+    STRUCTURES: '/fees/structures',
+    STRUCTURES_NEW: '/fees/structures/new',
+    STRUCTURES_EDIT: '/fees/structures/:id/edit',
+    STUDENT_FEES: '/fees/students',
+    STUDENT_FEES_VIEW: '/fees/students/:id',
+    STUDENT_FEES_EDIT: '/fees/students/:id/edit',
+    PAYMENTS: '/fees/payments',
+    PAYMENT_NEW: '/fees/payments/new',
+    PAYMENT_NEW_FOR_STUDENT: '/fees/students/:id/payment/new',
+  },
   // Role-specific routes
   ADMIN: {
     DASHBOARD: '/admin/dashboard',

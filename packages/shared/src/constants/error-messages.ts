@@ -184,6 +184,48 @@ export const ErrorMessages = {
     FETCH_FAILED: "Failed to load timetable data. Please try again.",
   },
 
+  FEE: {
+    // Fee Structure
+    STRUCTURE_CREATE_FAILED:
+      "Failed to create fee structure. Please try again.",
+    STRUCTURE_UPDATE_FAILED:
+      "Failed to update fee structure. Please try again.",
+    STRUCTURE_DELETE_FAILED:
+      "Failed to delete fee structure. Please try again.",
+    STRUCTURE_FETCH_FAILED: "Failed to load fee structures. Please try again.",
+    STRUCTURE_NOT_FOUND: "Fee structure not found.",
+    // Student Fee
+    STUDENT_FEE_CREATE_FAILED:
+      "Failed to assign fee to student. Please try again.",
+    STUDENT_FEE_UPDATE_FAILED:
+      "Failed to update student fee. Please try again.",
+    STUDENT_FEE_DELETE_FAILED:
+      "Failed to delete student fee. Please try again.",
+    STUDENT_FEE_FETCH_FAILED: "Failed to load student fees. Please try again.",
+    STUDENT_FEE_NOT_FOUND: "Student fee record not found.",
+    DUPLICATE_STUDENT_FEE:
+      "A fee record already exists for this student and fee structure.",
+    // Payment
+    PAYMENT_CREATE_FAILED: "Failed to record payment. Please try again.",
+    PAYMENT_FETCH_FAILED: "Failed to load payments. Please try again.",
+    PAYMENT_NOT_FOUND: "Payment record not found.",
+    INVALID_PAYMENT_AMOUNT: "Payment amount cannot exceed balance due.",
+    ALREADY_FULLY_PAID: "This fee is already fully paid.",
+    // Reminder
+    REMINDER_SEND_FAILED: "Failed to send reminder. Please try again.",
+    BULK_REMINDER_FAILED: "Failed to send bulk reminders. Please try again.",
+    // Dashboard
+    DASHBOARD_FETCH_FAILED: "Failed to load fee dashboard. Please try again.",
+    DEFAULTERS_FETCH_FAILED:
+      "Failed to load defaulters list. Please try again.",
+    // Validation
+    INVALID_COMPONENTS:
+      "Invalid fee components. Each component must have a valid name and amount.",
+    INVALID_DISCOUNT: "Discount percentage must be between 0 and 100.",
+    CHEQUE_DETAILS_REQUIRED:
+      "Cheque number and bank name are required for cheque payments.",
+  },
+
   AUTH: {
     PENDING_APPROVAL: "Organization pending approval.",
     ORGANIZATION_REJECTED: "Organization has been rejected.",
@@ -495,8 +537,10 @@ export const ValidationMessages = {
     SELECT_STATUS: "Please select a status.",
     SELECT_CLASS: "Please select a class.",
     SELECT_AT_LEAST_ONE_SUBJECT: "Please select at least one subject.",
-    DATE_IS_HOLIDAY: "The selected date falls on a holiday. Please select a working day.",
-    DATE_OUTSIDE_SESSION: "The exam date must be within the session date range.",
+    DATE_IS_HOLIDAY:
+      "The selected date falls on a holiday. Please select a working day.",
+    DATE_OUTSIDE_SESSION:
+      "The exam date must be within the session date range.",
     MARKS_LESS_THAN_ZERO: "Marks cannot be less than 0.",
     MARKS_EXCEED_MAX: "Marks cannot exceed the maximum marks.",
     MARKS_INVALID_RANGE: "Marks must be between 0 and maximum marks.",
@@ -690,6 +734,19 @@ export const AttendanceUiText = {
   TIMESHEET_PENDING: "Pending Review",
   TIMESHEET_APPROVED: "Approved",
   TIMESHEET_REJECTED: "Rejected",
+
+  // Fee Management
+  FEE_AMOUNT: "Enter fee amount",
+  FEE_COMPONENT_NAME: "Enter component name",
+  DISCOUNT_PERCENTAGE: "Enter discount percentage (0-100)",
+  PAYMENT_AMOUNT: "Enter payment amount",
+  UTR_NUMBER: "Enter UTR/Transaction reference",
+  CHEQUE_NUMBER: "Enter cheque number",
+  BANK_NAME: "Enter bank name",
+  REFERRAL_CODE: "Enter referral code (optional)",
+  REFERRAL_NAME: "Enter referral name (optional)",
+  DISCOUNT_REASON: "Enter reason for discount",
+  PAYMENT_REMARKS: "Add payment notes (optional)",
 } as const;
 
 /**
@@ -704,6 +761,14 @@ export const InfoMessages = {
   },
   ADMIN: {
     BULK_UPLOAD_INFO: "Upload data for any class in your organization.",
+  },
+  FEE: {
+    DISCOUNT_INFO: "Discount will be applied to the base amount.",
+    PAYMENT_CONFIRMATION:
+      "Payment confirmation will be sent to parent via email.",
+    REMINDER_INFO: "Reminder will be sent via the selected channel.",
+    OVERDUE_WARNING:
+      "This fee is overdue. Please clear the dues at the earliest.",
   },
 } as const;
 

@@ -17,13 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Switch } from '@/components/ui/switch';
 import {
   SaturdayOffPattern,
@@ -172,7 +166,7 @@ export function WorkingDayPolicyForm() {
               control={form.control}
               name="sunday_off"
               render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border p-4 bg-white shadow-sm">
+                <FormItem className="flex items-center justify-between rounded-lg border bg-white p-4 shadow-sm">
                   <div className="space-y-1">
                     <FormLabel>Sunday Off</FormLabel>
                     <FormDescription>Mark all Sundays as holidays</FormDescription>
@@ -189,23 +183,21 @@ export function WorkingDayPolicyForm() {
               control={form.control}
               name="saturday_off_pattern"
               render={({ field }) => (
-                <FormItem className="rounded-lg border p-4 bg-white shadow-sm">
+                <FormItem className="rounded-lg border bg-white p-4 shadow-sm">
                   <div className="space-y-3">
                     <FormLabel>Saturday Off Pattern</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder={FormPlaceholders.SELECT_SATURDAY_PATTERN} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Object.entries(SaturdayOffPatternLabels).map(([value, label]) => (
-                          <SelectItem key={value} value={value}>
-                            {label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <SearchableSelect
+                        options={Object.entries(SaturdayOffPatternLabels).map(([value, label]) => ({
+                          value,
+                          label,
+                        }))}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder="Select Saturday pattern"
+                        className="h-11"
+                      />
+                    </FormControl>
                     <FormDescription>
                       Choose which Saturdays should be marked as holidays
                     </FormDescription>
@@ -216,7 +208,7 @@ export function WorkingDayPolicyForm() {
             />
 
             {/* Effective Date Range */}
-            <div className="rounded-lg border p-4 bg-white shadow-sm space-y-4">
+            <div className="space-y-4 rounded-lg border bg-white p-4 shadow-sm">
               <h3 className="text-sm font-medium">Effective Period</h3>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FormField

@@ -1,7 +1,7 @@
 /**
  * Exam Sessions Page
  * Manage exam sessions (Unit Tests, Quarterly, Half Yearly, Annual)
- * 
+ *
  * Role-based access:
  * - Admin: Full CRUD (create, read, update, delete)
  * - Teacher: View only
@@ -13,21 +13,25 @@ import { ClipboardList, Plus, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { PageHeader, DeletedViewToggle, DeleteConfirmationDialog, ReactivateConfirmationDialog, HowItWorksDialog } from '@/components/common';
+import { SearchableSelect } from '@/components/ui/searchable-select';
+import {
+  PageHeader,
+  DeletedViewToggle,
+  DeleteConfirmationDialog,
+  ReactivateConfirmationDialog,
+  HowItWorksDialog,
+} from '@/components/common';
 import { ROUTES } from '@/constants';
 import { useExamSessions } from '../hooks/use-exams';
 import { useDeleteExamSession, useReactivateExamSession } from '../hooks/mutations';
 import { createExamSessionColumns } from '../components/exam-session-columns';
 import { useDeletedView } from '@/hooks/use-deleted-view';
 import { useRole } from '@/hooks/use-role';
-import { EXAM_SESSION_TYPE_OPTIONS, EXAM_SESSION_TYPE_LABELS, type ExamSession } from '@educard/shared';
+import {
+  EXAM_SESSION_TYPE_OPTIONS,
+  EXAM_SESSION_TYPE_LABELS,
+  type ExamSession,
+} from '@educard/shared';
 import { format } from 'date-fns';
 import { downloadFile } from '@/lib/utils';
 
@@ -39,9 +43,9 @@ const examSessionsHowItWorks = {
       title: 'Create an Exam Session',
       description: (
         <>
-          An exam session represents a term or examination period like "Unit Test 1",
-          "Quarterly Exam", "Half Yearly", or "Annual Exam".
-          Set the date range for when exams will be conducted.
+          An exam session represents a term or examination period like "Unit Test 1", "Quarterly
+          Exam", "Half Yearly", or "Annual Exam". Set the date range for when exams will be
+          conducted.
         </>
       ),
     },
@@ -49,8 +53,8 @@ const examSessionsHowItWorks = {
       title: 'Create Exams for Each Class',
       description: (
         <>
-          Go to <strong>Exams → Create Exams (Bulk)</strong> to add exams for all subjects
-          in a class at once. Select the session, class, and set dates/times for each subject.
+          Go to <strong>Exams → Create Exams (Bulk)</strong> to add exams for all subjects in a
+          class at once. Select the session, class, and set dates/times for each subject.
         </>
       ),
     },
@@ -58,8 +62,8 @@ const examSessionsHowItWorks = {
       title: 'Enter Exam Marks',
       description: (
         <>
-          After exams are conducted, enter marks for each student. Go to <strong>Exams →
-          View Exam</strong> to enter or edit marks.
+          After exams are conducted, enter marks for each student. Go to{' '}
+          <strong>Exams → View Exam</strong> to enter or edit marks.
         </>
       ),
     },
@@ -69,8 +73,8 @@ const examSessionsHowItWorks = {
       title: 'Bulk Creation Tip',
       description: (
         <>
-          Use <strong>Create Exams (Bulk)</strong> to quickly create exams for all subjects
-          in a class. You can copy dates and times from one subject to others.
+          Use <strong>Create Exams (Bulk)</strong> to quickly create exams for all subjects in a
+          class. You can copy dates and times from one subject to others.
         </>
       ),
     },
@@ -127,7 +131,7 @@ export function ExamSessionsPage() {
     if (!sessions.length) {
       return;
     }
-    
+
     const headers = [
       'Session Name',
       'Session Type',
@@ -163,14 +167,18 @@ export function ExamSessionsPage() {
     () =>
       createExamSessionColumns({
         onView: (s) => navigate(ROUTES.EXAM_SESSIONS_VIEW.replace(':id', s.public_id)),
-        onEdit: isAdmin ? (s) => navigate(ROUTES.EXAM_SESSIONS_EDIT.replace(':id', s.public_id)) : undefined,
-        onDelete: isAdmin ? (s) => {
-          if (showDeleted) {
-            setSessionToReactivate(s);
-          } else {
-            setSessionToDelete(s);
-          }
-        } : undefined,
+        onEdit: isAdmin
+          ? (s) => navigate(ROUTES.EXAM_SESSIONS_EDIT.replace(':id', s.public_id))
+          : undefined,
+        onDelete: isAdmin
+          ? (s) => {
+              if (showDeleted) {
+                setSessionToReactivate(s);
+              } else {
+                setSessionToDelete(s);
+              }
+            }
+          : undefined,
         isDeletedView: showDeleted,
       }),
     [navigate, showDeleted, isAdmin]
@@ -178,8 +186,8 @@ export function ExamSessionsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader 
-        title="Exam Sessions" 
+      <PageHeader
+        title="Exam Sessions"
         icon={ClipboardList}
         description="Manage exam terms like Unit Tests, Quarterly, Half Yearly, Annual exams"
       >
@@ -187,13 +195,11 @@ export function ExamSessionsPage() {
       </PageHeader>
 
       <Card className="border shadow-sm">
-        <CardHeader className="flex flex-col gap-4 border-b bg-muted/30 px-6 py-4">
+        <CardHeader className="bg-muted/30 flex flex-col gap-4 border-b px-6 py-4">
           <div className="flex flex-row items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-gray-900">All Exam Sessions</h3>
-              <p className="text-sm text-gray-500">
-                {pagination?.count || 0} session(s) found
-              </p>
+              <p className="text-sm text-gray-500">{pagination?.count || 0} session(s) found</p>
             </div>
             <div className="flex items-center gap-3">
               {/* Export Button */}
@@ -222,42 +228,38 @@ export function ExamSessionsPage() {
           </div>
           {/* Filters Row */}
           <div className="flex flex-wrap items-center gap-3">
-            <Select
-              value={sessionTypeFilter || undefined}
+            <SearchableSelect
+              options={[
+                { value: 'all', label: 'All Types' },
+                ...EXAM_SESSION_TYPE_OPTIONS.map((opt) => ({
+                  value: opt.value,
+                  label: opt.label,
+                })),
+              ]}
+              value={sessionTypeFilter || 'all'}
               onValueChange={(value) => {
                 setSessionTypeFilter(value === 'all' ? '' : value);
                 setPage(1);
               }}
-            >
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Session Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                {EXAM_SESSION_TYPE_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={academicYearFilter || undefined}
+              placeholder="Session Type"
+              searchPlaceholder="Search session types..."
+              className="w-[160px]"
+            />
+            <SearchableSelect
+              options={[
+                { value: 'all', label: 'All Years' },
+                { value: '2025-2026', label: '2025-2026' },
+                { value: '2024-2025', label: '2024-2025' },
+                { value: '2023-2024', label: '2023-2024' },
+              ]}
+              value={academicYearFilter || 'all'}
               onValueChange={(value) => {
                 setAcademicYearFilter(value === 'all' ? '' : value);
                 setPage(1);
               }}
-            >
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Academic Year" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Years</SelectItem>
-                <SelectItem value="2025-2026">2025-2026</SelectItem>
-                <SelectItem value="2024-2025">2024-2025</SelectItem>
-                <SelectItem value="2023-2024">2023-2024</SelectItem>
-              </SelectContent>
-            </Select>
+              placeholder="Academic Year"
+              className="w-[140px]"
+            />
             {(sessionTypeFilter || academicYearFilter) && (
               <Button
                 variant="ghost"
@@ -292,7 +294,10 @@ export function ExamSessionsPage() {
             }
             emptyAction={
               isAdmin && !showDeleted && sessions.length === 0
-                ? { label: 'Create Exam Session', onClick: () => navigate(ROUTES.EXAM_SESSIONS_NEW) }
+                ? {
+                    label: 'Create Exam Session',
+                    onClick: () => navigate(ROUTES.EXAM_SESSIONS_NEW),
+                  }
                 : undefined
             }
             getRowKey={(row: ExamSession) => row.public_id}
@@ -314,7 +319,9 @@ export function ExamSessionsPage() {
       <ReactivateConfirmationDialog
         open={!!sessionToReactivate}
         onOpenChange={(open) => !open && setSessionToReactivate(undefined)}
-        onConfirm={() => sessionToReactivate && reactivateMutation.mutate(sessionToReactivate.public_id)}
+        onConfirm={() =>
+          sessionToReactivate && reactivateMutation.mutate(sessionToReactivate.public_id)
+        }
         title="Restore Exam Session"
         description={`Are you sure you want to restore "${sessionToReactivate?.name}"?`}
         isReactivating={reactivateMutation.isPending}

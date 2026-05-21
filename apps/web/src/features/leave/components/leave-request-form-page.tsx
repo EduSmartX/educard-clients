@@ -30,17 +30,11 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { DatePicker } from '@/components/ui/date-picker';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { ErrorMessages, FormPlaceholders, SuccessMessages, ToastTitles } from '@/constants';
 import { getErrorMessage, applyFieldErrors } from '@/lib/utils/error-handler';
 import { getMediaUrl } from '@/lib/utils/media-utils';
@@ -392,33 +386,20 @@ export function LeaveRequestFormPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Leave Type *</FormLabel>
-                      <Select
-                        key={`${id}-${field.value}`}
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        disabled={mode === 'view'}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={FormPlaceholders.SELECT_LEAVE_TYPE} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {balances.map((balance) => (
-                            <SelectItem key={balance.public_id} value={balance.public_id}>
-                              <div className="flex w-full items-center justify-between gap-8">
-                                <span className="font-medium">{getLeaveTypeName(balance)}</span>
-                                <Badge
-                                  variant="outline"
-                                  className="ml-auto border-green-200 bg-green-50 text-green-700"
-                                >
-                                  {balance.available} available
-                                </Badge>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <SearchableSelect
+                          key={`${id}-${field.value}`}
+                          options={balances.map((balance) => ({
+                            value: balance.public_id,
+                            label: `${getLeaveTypeName(balance)} (${balance.available} available)`,
+                          }))}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder={FormPlaceholders.SELECT_LEAVE_TYPE}
+                          searchPlaceholder="Search leave types..."
+                          disabled={mode === 'view'}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

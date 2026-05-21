@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -63,6 +64,11 @@ export function GroupFormDialog({ open, onOpenChange, editGroup }: GroupFormDial
             </div>
             {editGroup ? S.EDIT_DIALOG_TITLE : S.CREATE_DIALOG_TITLE}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            {editGroup
+              ? 'Update class group details including name, description, and display order.'
+              : 'Create a new class group with name, description, and display order.'}
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div>

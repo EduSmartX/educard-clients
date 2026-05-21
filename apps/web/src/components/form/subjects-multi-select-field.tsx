@@ -5,14 +5,8 @@
  */
 
 import { Badge } from '@/components/ui/badge';
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { useCoreSubjects } from '@/features/core/hooks/use-core-subjects';
 import { X } from 'lucide-react';
 import type { Control, FieldPath, FieldValues } from 'react-hook-form';
@@ -54,9 +48,28 @@ export function SubjectsMultiSelectField<TFieldValues extends FieldValues>({
             <FormLabel>{label}</FormLabel>
             <div className="space-y-2">
               {/* Dropdown to add subjects */}
-              <Select
+              <SearchableSelect
+                options={
+                  isLoading
+                    ? [{ value: 'loading', label: 'Loading subjects...', disabled: true }]
+                    : availableSubjects.length === 0
+                      ? [
+                          {
+                            value: 'none',
+                            label:
+                              selectedSubjects.length > 0
+                                ? 'All subjects selected'
+                                : 'No subjects available',
+                            disabled: true,
+                          },
+                        ]
+                      : availableSubjects.map((subject) => ({
+                          value: subject.id.toString(),
+                          label: `${subject.name} (${subject.code})`,
+                        }))
+                }
                 value=""
-                onValueChange={(value) => {
+                onValueChange={(value: string) => {
                   if (value) {
                     const subjectId = parseInt(value);
                     if (!selectedSubjects.includes(subjectId)) {
@@ -64,44 +77,20 @@ export function SubjectsMultiSelectField<TFieldValues extends FieldValues>({
                     }
                   }
                 }}
+                placeholder={placeholder}
                 disabled={disabled || isLoading}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder={placeholder} />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {isLoading ? (
-                    <SelectItem value="loading" disabled>
-                      Loading subjects...
-                    </SelectItem>
-                  ) : availableSubjects.length === 0 ? (
-                    <SelectItem value="none" disabled>
-                      {selectedSubjects.length > 0
-                        ? 'All subjects selected'
-                        : 'No subjects available'}
-                    </SelectItem>
-                  ) : (
-                    availableSubjects.map((subject) => (
-                      <SelectItem key={subject.id} value={subject.id.toString()}>
-                        {subject.name} ({subject.code})
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+              />
 
               {/* Display selected subjects as badges */}
               {selectedSubjects.length > 0 && (
-                <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-md border">
+                <div className="flex flex-wrap gap-2 rounded-md border bg-gray-50 p-3">
                   {selectedSubjects.map((subjectId) => {
                     const subject = subjects.find((s) => s.id === subjectId);
                     return (
                       <Badge
                         key={subjectId}
                         variant="secondary"
-                        className="gap-1.5 py-1.5 px-3 text-sm"
+                        className="gap-1.5 px-3 py-1.5 text-sm"
                       >
                         <span>{subject ? `${subject.name} (${subject.code})` : subjectId}</span>
                         {!disabled && (
@@ -110,7 +99,7 @@ export function SubjectsMultiSelectField<TFieldValues extends FieldValues>({
                             onClick={() => {
                               field.onChange(selectedSubjects.filter((id) => id !== subjectId));
                             }}
-                            className="ml-1 hover:bg-gray-300 rounded-full p-0.5 transition-colors"
+                            className="ml-1 rounded-full p-0.5 transition-colors hover:bg-gray-300"
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -121,7 +110,7 @@ export function SubjectsMultiSelectField<TFieldValues extends FieldValues>({
                 </div>
               )}
 
-              {description && <p className="text-sm text-muted-foreground">{description}</p>}
+              {description && <p className="text-muted-foreground text-sm">{description}</p>}
             </div>
             <FormMessage />
           </FormItem>

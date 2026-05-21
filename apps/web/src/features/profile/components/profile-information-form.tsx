@@ -12,8 +12,8 @@ import {
   DateInputField,
   GenderField,
   TextInputField,
-} from '@/components/forms/form-fields';
-import { OrganizationRoleField } from '@/components/forms/organization-role-field';
+} from '@/components/form/form-fields';
+import { OrganizationRoleField } from '@/components/form/organization-role-field';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -56,9 +56,10 @@ export function ProfileInformationForm() {
   useEffect(() => {
     if (profile) {
       // Extract organization_role code properly
-      const organizationRoleCode = typeof profile.organization_role === 'string'
-        ? profile.organization_role
-        : profile.organization_role?.code || undefined;
+      const organizationRoleCode =
+        typeof profile.organization_role === 'string'
+          ? profile.organization_role
+          : profile.organization_role?.code || undefined;
 
       const formData = {
         first_name: profile.first_name || '',

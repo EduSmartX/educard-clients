@@ -25,6 +25,9 @@ import {
   FileText,
   BookMarked,
   ClipboardList as SubmissionsIcon,
+  IndianRupee,
+  Receipt,
+  CreditCard,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
 import { ROUTES } from '@/constants/app-config';
@@ -101,6 +104,35 @@ export const adminSidebarConfig: SidebarSection[] = [
         label: 'Submissions',
         icon: SubmissionsIcon,
         path: ROUTES.HOMEWORK_SUBMISSIONS,
+      },
+    ],
+  },
+  {
+    title: 'FEE MANAGEMENT',
+    items: [
+      {
+        id: 'fee-dashboard',
+        label: 'Fee Dashboard',
+        icon: IndianRupee,
+        path: ROUTES.FEES.DASHBOARD,
+      },
+      {
+        id: 'fee-structures',
+        label: 'Fee Structures',
+        icon: Receipt,
+        path: ROUTES.FEES.STRUCTURES,
+      },
+      {
+        id: 'student-fees',
+        label: 'Student Fees',
+        icon: Users,
+        path: ROUTES.FEES.STUDENT_FEES,
+      },
+      {
+        id: 'fee-payments',
+        label: 'Payments',
+        icon: CreditCard,
+        path: ROUTES.FEES.PAYMENTS,
       },
     ],
   },

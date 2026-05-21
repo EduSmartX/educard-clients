@@ -9,13 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Combobox } from '@/components/ui/combobox';
 import { MonthYearPicker } from '@/components/ui/month-year-picker';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { useAuth } from '@/hooks/use-auth';
 import {
   getEmployeeAttendance,
@@ -269,32 +263,31 @@ export function AttendanceReportPage() {
             {/* Report Type */}
             <div>
               <label className="mb-2 block text-sm font-semibold text-gray-700">Report Type</label>
-              <Select
+              <SearchableSelect
+                options={[
+                  { value: 'yearly', label: 'Yearly Report' },
+                  { value: 'monthly', label: 'Monthly Report' },
+                ]}
                 value={reportType}
                 onValueChange={(value) => setReportType(value as ReportType)}
-              >
-                <SelectTrigger className="bg-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="yearly">Yearly Report</SelectItem>
-                  <SelectItem value="monthly">Monthly Report</SelectItem>
-                </SelectContent>
-              </Select>
+                placeholder="Select report type"
+                className="bg-white"
+              />
             </div>
 
             {/* View Type */}
             <div>
               <label className="mb-2 block text-sm font-semibold text-gray-700">View</label>
-              <Select value={viewType} onValueChange={(value) => setViewType(value as ViewType)}>
-                <SelectTrigger className="bg-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="self">Self</SelectItem>
-                  <SelectItem value="staff">Staff</SelectItem>
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                options={[
+                  { value: 'self', label: 'Self' },
+                  { value: 'staff', label: 'Staff' },
+                ]}
+                value={viewType}
+                onValueChange={(value) => setViewType(value as ViewType)}
+                placeholder="Select view"
+                className="bg-white"
+              />
             </div>
 
             {/* Staff Selection */}

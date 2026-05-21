@@ -69,7 +69,7 @@ export function PhoneInput({
           className={cn('text-sm font-semibold text-gray-700', compact && 'text-xs')}
         >
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="ml-1 text-red-500">*</span>}
         </Label>
       )}
       <Input
@@ -80,7 +80,7 @@ export function PhoneInput({
         placeholder={placeholder}
         disabled={disabled}
         className={cn(
-          `${inputHeight} text-base border-2 border-gray-200 rounded-xl focus:border-purple-400 focus:ring-4 focus:ring-purple-50 transition-all`,
+          `${inputHeight} rounded-xl border-2 border-gray-200 text-base transition-all focus:border-purple-400 focus:ring-4 focus:ring-purple-50`,
           error && 'border-red-500 focus:border-red-500 focus:ring-red-50',
           className
         )}

@@ -7,16 +7,13 @@ import { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import {
-  ArrowLeft,
   Calendar,
   FileText,
   Link as LinkIcon,
   Download,
   ExternalLink,
   Pencil,
-  Trash2,
   AlertCircle,
-  MoreVertical,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -25,14 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { DeleteConfirmationDialog } from '@/components/common';
+import { DeleteConfirmationDialog, PageHeader } from '@/components/common';
 import { cn } from '@/lib/utils';
 import { getMediaUrl } from '@/lib/utils/media-utils';
 
@@ -43,7 +33,7 @@ import {
   useDeleteHomework,
   useReviewSubmission,
 } from '../hooks';
-import { getPriorityColor, getStatusLabel, type HomeworkSubmission } from '../types';
+import { type HomeworkSubmission } from '../types';
 
 export default function HomeworkDetailPage() {
   const { id: publicId } = useParams<{ id: string }>();
@@ -126,63 +116,18 @@ export default function HomeworkDetailPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-start gap-4">
-          <Button variant="ghost" size="icon" onClick={handleBack}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                {homework.title}
-              </h1>
-              <Badge
-                variant="outline"
-                className="border-0"
-                style={{
-                  backgroundColor: `${getPriorityColor(homework.priority)}15`,
-                  color: getPriorityColor(homework.priority),
-                }}
-              >
-                {homework.priority} priority
-              </Badge>
-              <Badge variant={isPublished ? 'default' : 'secondary'}>
-                {getStatusLabel(homework.status)}
-              </Badge>
-            </div>
-            <p className="mt-1 text-sm text-slate-500">
-              {homework.subject_name} • {homework.class_name}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={handleEdit}>
-            <Pencil className="mr-2 h-4 w-4" />
-            Edit
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleEdit}>
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-600" onClick={() => setDeleteDialogOpen(true)}>
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
+      <PageHeader
+        title={homework.title}
+        description={`${homework.subject_name} • ${homework.class_name}`}
+        actions={[
+          {
+            label: 'Edit',
+            onClick: handleEdit,
+            variant: 'outline' as const,
+            icon: Pencil,
+          },
+        ]}
+      />
 
       {/* Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>

@@ -33,14 +33,8 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import {
   ToastTitles,
   USER_ROLES,
@@ -84,8 +78,12 @@ export default function SubjectFormPage() {
 
   // Determine mode based on URL path
   const getMode = (): 'create' | 'edit' | 'view' => {
-    if (!id) {return 'create';}
-    if (location.pathname.endsWith('/edit')) {return 'edit';}
+    if (!id) {
+      return 'create';
+    }
+    if (location.pathname.endsWith('/edit')) {
+      return 'edit';
+    }
     return 'view';
   };
 
@@ -108,18 +106,19 @@ export default function SubjectFormPage() {
 
   // Fetch subject data if editing/viewing (pass isDeleted flag)
   const { data: subject } = useSubject(id, isViewingDeleted);
-  
+
   // Fetch dropdown data
   const { data: classesData } = useClasses({ page_size: 100 });
   const { data: managedClassesData } = useManagedClassesForSubjects();
   const { data: subjectMastersData } = useSubjectMasters({ page_size: 100 });
   const { data: teachersData } = useTeachers({ page_size: 100 });
-  
+
   // Filter classes based on user role
   // Teachers can only create subjects in classes they manage (where they are class teacher)
-  const availableClasses = isTeacher && managedClassesData && mode === 'create'
-    ? managedClassesData
-    : classesData?.data || [];
+  const availableClasses =
+    isTeacher && managedClassesData && mode === 'create'
+      ? managedClassesData
+      : classesData?.data || [];
 
   const form = useForm<SubjectFormData>({
     resolver: zodResolver(subjectSchema),
@@ -452,7 +451,8 @@ export default function SubjectFormPage() {
                 <Alert className="border-blue-200 bg-blue-50">
                   <Info className="h-4 w-4 text-blue-600" />
                   <AlertDescription className="text-blue-800">
-                    You can add subjects only for classes where you are assigned as the class teacher.
+                    You can add subjects only for classes where you are assigned as the class
+                    teacher.
                   </AlertDescription>
                 </Alert>
               )}
@@ -461,7 +461,7 @@ export default function SubjectFormPage() {
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-900">Subject Information</h3>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   {/* Class Dropdown */}
                   <FormField
                     control={form.control}
@@ -473,27 +473,22 @@ export default function SubjectFormPage() {
                         <FormLabel>
                           Class <span className="text-red-500">*</span>
                         </FormLabel>
-                        <Select
-                          key={`class-${subject?.public_id || 'new'}-${field.value}`}
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          disabled={isPending || mode === 'view' || mode === 'edit'}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={FormPlaceholders.SELECT_CLASS} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {classOptions.map((opt) => (
-                              <SelectItem key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <SearchableSelect
+                            key={`class-${subject?.public_id || 'new'}-${field.value}`}
+                            options={classOptions.map((opt) => ({
+                              value: opt.value,
+                              label: opt.label,
+                            }))}
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder={FormPlaceholders.SELECT_CLASS}
+                            searchPlaceholder="Search classes..."
+                            disabled={isPending || mode === 'view' || mode === 'edit'}
+                          />
+                        </FormControl>
                         {mode === 'edit' && (
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-muted-foreground text-sm">
                             Class cannot be changed after creation
                           </p>
                         )}
@@ -513,27 +508,22 @@ export default function SubjectFormPage() {
                         <FormLabel>
                           Subject Master <span className="text-red-500">*</span>
                         </FormLabel>
-                        <Select
-                          key={`subject-${subject?.public_id || 'new'}-${field.value}`}
-                          onValueChange={(value) => field.onChange(Number(value))}
-                          value={field.value?.toString() || ''}
-                          disabled={isPending || mode === 'view' || mode === 'edit'}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={FormPlaceholders.SELECT_SUBJECT} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {subjectOptions.map((opt) => (
-                              <SelectItem key={opt.value} value={opt.value.toString()}>
-                                {opt.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <SearchableSelect
+                            key={`subject-${subject?.public_id || 'new'}-${field.value}`}
+                            options={subjectOptions.map((opt) => ({
+                              value: opt.value.toString(),
+                              label: opt.label,
+                            }))}
+                            value={field.value?.toString() || ''}
+                            onValueChange={(value) => field.onChange(Number(value))}
+                            placeholder={FormPlaceholders.SELECT_SUBJECT}
+                            searchPlaceholder="Search subjects..."
+                            disabled={isPending || mode === 'view' || mode === 'edit'}
+                          />
+                        </FormControl>
                         {mode === 'edit' && (
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-muted-foreground text-sm">
                             Subject cannot be changed after creation
                           </p>
                         )}
@@ -543,7 +533,7 @@ export default function SubjectFormPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   {/* Subject Type Dropdown */}
                   <FormField
                     control={form.control}
@@ -553,24 +543,18 @@ export default function SubjectFormPage() {
                         ref={fieldState.error && !firstErrorRef.current ? firstErrorRef : null}
                       >
                         <FormLabel>Subject Type (Optional)</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value || 'core'}
-                          disabled={isPending || mode === 'view'}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select subject type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {SUBJECT_TYPE_OPTIONS.map((opt) => (
-                              <SelectItem key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <SearchableSelect
+                            options={SUBJECT_TYPE_OPTIONS.map((opt) => ({
+                              value: opt.value,
+                              label: opt.label,
+                            }))}
+                            value={field.value || 'core'}
+                            onValueChange={field.onChange}
+                            placeholder="Select subject type"
+                            disabled={isPending || mode === 'view'}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -585,29 +569,25 @@ export default function SubjectFormPage() {
                         ref={fieldState.error && !firstErrorRef.current ? firstErrorRef : null}
                       >
                         <FormLabel>Teacher (Optional)</FormLabel>
-                        <Select
-                          key={`teacher-${subject?.public_id || 'new'}-${field.value}`}
-                          onValueChange={(value) => {
-                            // Allow clearing the selection
-                            field.onChange(value === 'none' ? '' : value);
-                          }}
-                          value={field.value || 'none'}
-                          disabled={isPending || mode === 'view'}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={FormPlaceholders.SELECT_TEACHER} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="none">None</SelectItem>
-                            {teacherOptions.map((opt) => (
-                              <SelectItem key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <SearchableSelect
+                            key={`teacher-${subject?.public_id || 'new'}-${field.value}`}
+                            options={[
+                              { value: 'none', label: 'None' },
+                              ...teacherOptions.map((opt) => ({
+                                value: opt.value,
+                                label: opt.label,
+                              })),
+                            ]}
+                            value={field.value || 'none'}
+                            onValueChange={(value) => {
+                              field.onChange(value === 'none' ? '' : value);
+                            }}
+                            placeholder={FormPlaceholders.SELECT_TEACHER}
+                            searchPlaceholder="Search teachers..."
+                            disabled={isPending || mode === 'view'}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}

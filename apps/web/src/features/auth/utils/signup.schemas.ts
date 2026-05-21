@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { createAddressSchema } from '@/components/forms/address-schema';
+import { createAddressSchema } from '@/components/form/address-schema';
 import { isValidIndianPhone } from '@/lib/phone-utils';
 
 export type SignupStep = 1 | 2 | 3 | 4;
@@ -23,7 +23,9 @@ export const createStep3Schema = (includeAddress: boolean) =>
       .min(1, 'Phone number is required')
       .refine(
         (val) => {
-          if (!val || val === '+91') {return false;}
+          if (!val || val === '+91') {
+            return false;
+          }
           return isValidIndianPhone(val);
         },
         {
@@ -44,8 +46,12 @@ export const step4Schema = z
       .optional()
       .refine(
         (val) => {
-          if (!val) {return true;} // Optional field
-          if (val === '+91') {return false;}
+          if (!val) {
+            return true;
+          } // Optional field
+          if (val === '+91') {
+            return false;
+          }
           return isValidIndianPhone(val);
         },
         {

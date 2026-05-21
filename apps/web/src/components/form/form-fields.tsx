@@ -14,13 +14,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { DatePicker } from '@/components/ui/date-picker';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { useFormContext, type Control, type FieldValues, type Path } from 'react-hook-form';
 import { getValidator, type ValidationResult } from '@/lib/utils/field-validators';
 import { formatPhoneNumber, getTenDigitPhoneNumber } from '@/lib/phone-utils';
@@ -191,29 +185,21 @@ export function SelectField<T extends FieldValues>({
             <FormLabel>
               {label} {required && <span className="text-red-500">*</span>}
             </FormLabel>
-            <Select
-              key={`${name}-${selectValue || 'empty'}`}
-              onValueChange={(value) => {
-                field.onChange(value);
-                field.onBlur();
-                void form.trigger(name);
-              }}
-              value={selectValue}
-              disabled={disabled}
-            >
-              <FormControl>
-                <SelectTrigger className="border-gray-300 bg-gray-50 transition-colors focus:bg-white disabled:cursor-default disabled:opacity-100">
-                  <SelectValue placeholder={placeholder} />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent className="max-h-[300px] overflow-y-auto">
-                {options.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <FormControl>
+              <SearchableSelect
+                key={`${name}-${selectValue || 'empty'}`}
+                options={options}
+                onValueChange={(value: string) => {
+                  field.onChange(value);
+                  field.onBlur();
+                  void form.trigger(name);
+                }}
+                value={selectValue}
+                placeholder={placeholder}
+                className="border-gray-300 bg-gray-50 transition-colors focus:bg-white disabled:cursor-default disabled:opacity-100"
+                disabled={disabled}
+              />
+            </FormControl>
             {description && <FormDescription>{description}</FormDescription>}
             <FormMessage />
           </FormItem>

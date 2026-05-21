@@ -22,13 +22,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DatePicker } from '@/components/ui/date-picker';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ErrorMessages, FormPlaceholders, SuccessMessages } from '@/constants';
 import { leaveApi, type LeaveAllocationPayload } from '@/lib/api/leave-api';
@@ -413,25 +407,23 @@ export function LeaveAllocationForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-sm font-medium">Policy Type</FormLabel>
-                          <Select
-                            key={field.value}
-                            onValueChange={(value) => field.onChange(parseInt(value))}
-                            defaultValue={field.value?.toString()}
-                            disabled={isEditMode || isViewMode}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="bg-white">
-                                <SelectValue placeholder={FormPlaceholders.SELECT_LEAVE_TYPE} />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {leaveTypes?.map((type) => (
-                                <SelectItem key={type.id} value={type.id.toString()}>
-                                  {type.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <FormControl>
+                            <SearchableSelect
+                              key={field.value}
+                              options={
+                                leaveTypes?.map((type) => ({
+                                  value: type.id.toString(),
+                                  label: type.name,
+                                })) || []
+                              }
+                              value={field.value?.toString()}
+                              onValueChange={(value) => field.onChange(parseInt(value))}
+                              placeholder={FormPlaceholders.SELECT_LEAVE_TYPE}
+                              searchPlaceholder="Search leave types..."
+                              disabled={isEditMode || isViewMode}
+                              className="bg-white"
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -610,22 +602,20 @@ export function LeaveAllocationForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-sm font-medium">Apply Policy To</FormLabel>
-                          <Select
-                            key={field.value ? 'all' : 'specific'}
-                            onValueChange={(value) => field.onChange(value === 'all')}
-                            defaultValue={field.value ? 'all' : 'specific'}
-                            disabled={isViewMode}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="bg-white">
-                                <SelectValue />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="all">All Roles</SelectItem>
-                              <SelectItem value="specific">Specific Roles</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <FormControl>
+                            <SearchableSelect
+                              key={field.value ? 'all' : 'specific'}
+                              options={[
+                                { value: 'all', label: 'All Roles' },
+                                { value: 'specific', label: 'Specific Roles' },
+                              ]}
+                              value={field.value ? 'all' : 'specific'}
+                              onValueChange={(value) => field.onChange(value === 'all')}
+                              placeholder="Select policy target"
+                              disabled={isViewMode}
+                              className="bg-white"
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}

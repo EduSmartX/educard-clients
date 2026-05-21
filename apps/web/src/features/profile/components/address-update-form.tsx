@@ -10,7 +10,7 @@ import { Loader2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
-import { AddressForm } from '@/components/forms/address-form';
+import { AddressForm } from '@/components/form/address-form';
 import { useUserProfile } from '../hooks/queries';
 import { useUpdateAddress } from '../hooks/mutations';
 import { addressUpdateSchema, type AddressUpdateFormData } from '../schemas/profile-schemas';

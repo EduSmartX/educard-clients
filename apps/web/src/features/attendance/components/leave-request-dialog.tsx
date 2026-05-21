@@ -20,13 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
   calculateWorkingDays,
@@ -232,6 +226,17 @@ export function LeaveRequestDialog({
   };
 
   const selectedBalance = leaveBalances.find((lb) => lb.public_id === leaveBalanceId);
+  const selectedAvailableBalance = selectedBalance
+    ? ((selectedBalance as unknown as { available_balance?: number; available?: number })
+        .available_balance ??
+      (selectedBalance as unknown as { available?: number }).available ??
+      0)
+    : 0;
+  const selectedUsedBalance = selectedBalance
+    ? ((selectedBalance as unknown as { used_balance?: number; used?: number }).used_balance ??
+      (selectedBalance as unknown as { used?: number }).used ??
+      0)
+    : 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -263,25 +268,22 @@ export function LeaveRequestDialog({
                 </AlertDescription>
               </Alert>
             ) : (
-              <Select value={leaveBalanceId} onValueChange={setLeaveBalanceId}>
-                <SelectTrigger
-                  id="leave-type"
-                  className="h-12 border-2 border-gray-300 text-base focus:border-blue-500"
-                >
-                  <SelectValue placeholder="Select leave type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {leaveBalances.map((balance) => (
-                    <SelectItem
-                      key={balance.public_id}
-                      value={balance.public_id}
-                      className="py-3 text-base"
-                    >
-                      {balance.leave_type_name} - Available: {balance.available_balance} days
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                options={leaveBalances.map((balance) => ({
+                  value: balance.public_id,
+                  label: `${(balance as unknown as { leave_type_name?: string; leave_name?: string }).leave_type_name || (balance as unknown as { leave_name?: string }).leave_name || 'Leave'} - Available: ${
+                    (balance as unknown as { available_balance?: number; available?: number })
+                      .available_balance ??
+                    (balance as unknown as { available?: number }).available ??
+                    0
+                  } days`,
+                }))}
+                value={leaveBalanceId}
+                onValueChange={setLeaveBalanceId}
+                placeholder="Select leave type"
+                searchPlaceholder="Search leave types..."
+                className="h-12 border-2 border-gray-300 text-base focus:border-blue-500"
+              />
             )}
           </div>
 
@@ -295,13 +297,13 @@ export function LeaveRequestDialog({
                       Available Balance:
                     </span>
                     <span className="text-xl font-bold text-blue-900">
-                      {selectedBalance.available_balance} days
+                      {selectedAvailableBalance} days
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-blue-800">Used:</span>
                     <span className="text-lg font-semibold text-blue-800">
-                      {selectedBalance.used_balance} days
+                      {selectedUsedBalance} days
                     </span>
                   </div>
                 </div>
@@ -383,7 +385,7 @@ export function LeaveRequestDialog({
           ) : workingDays !== null && workingDays > 0 ? (
             <Alert
               className={
-                selectedBalance && workingDays > selectedBalance.available_balance
+                selectedBalance && workingDays > selectedAvailableBalance
                   ? 'border-2 border-red-400 bg-red-50'
                   : 'border-2 border-green-400 bg-green-50'
               }
@@ -395,9 +397,9 @@ export function LeaveRequestDialog({
                     <span className="text-base font-semibold text-green-900">Working Days:</span>
                     <span className="text-2xl font-bold text-green-900">{workingDays} days</span>
                   </div>
-                  {selectedBalance && workingDays > selectedBalance.available_balance && (
+                  {selectedBalance && workingDays > selectedAvailableBalance && (
                     <div className="mt-3 rounded border border-red-300 bg-red-100 p-3 text-base font-semibold text-red-800">
-                      ⚠ Insufficient balance! You only have {selectedBalance.available_balance} days
+                      ⚠ Insufficient balance! You only have {selectedAvailableBalance} days
                       available.
                     </div>
                   )}
@@ -449,7 +451,7 @@ export function LeaveRequestDialog({
               workingDays === null ||
               workingDays <= 0 ||
               timesheetConflict.status !== 'none' ||
-              (selectedBalance && workingDays > selectedBalance.available_balance)
+              (selectedBalance && workingDays > selectedAvailableBalance)
             }
           >
             {createMutation.isPending ? (

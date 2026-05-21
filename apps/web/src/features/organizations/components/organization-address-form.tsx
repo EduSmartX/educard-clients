@@ -11,7 +11,7 @@ import { Loader2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
-import { AddressForm } from '@/components/forms/address-form';
+import { AddressForm } from '@/components/form/address-form';
 import { useUpdateOrganizationAddress } from '../hooks/mutations';
 import type { Organization } from '../api/organization-api';
 import { STANDARD_FORM_VALIDATION_CONFIG } from '@/lib/utils/form-validation';
@@ -80,54 +80,54 @@ export function OrganizationAddressForm({ organization, isLoading }: Organizatio
       </CardHeader>
       <CardContent>
         <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <AddressForm
-            form={form}
-            required
-            showHeader={false}
-            showLocationButton={true}
-            showAddressType={false}
-            fieldNames={{
-              streetAddress: 'street_address',
-              addressLine2: 'address_line_2',
-              city: 'city',
-              state: 'state',
-              zipCode: 'zip_code',
-              country: 'country',
-            }}
-          />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <AddressForm
+              form={form}
+              required
+              showHeader={false}
+              showLocationButton={true}
+              showAddressType={false}
+              fieldNames={{
+                streetAddress: 'street_address',
+                addressLine2: 'address_line_2',
+                city: 'city',
+                state: 'state',
+                zipCode: 'zip_code',
+                country: 'country',
+              }}
+            />
 
-          <div className="flex justify-end gap-3">
-            <Button
-              type="button"
-              variant="brandOutline"
-              onClick={() => form.reset()}
-              disabled={updateMutation.isPending || !form.formState.isDirty}
-            >
-              Reset
-            </Button>
-            <Button
-              type="submit"
-              variant="brand"
-              disabled={updateMutation.isPending || !form.formState.isDirty}
-              className="shadow-lg disabled:shadow-none"
-            >
-              {updateMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Save Address
-                </>
-              )}
-            </Button>
-          </div>
-        </form>
-      </Form>
-    </CardContent>
+            <div className="flex justify-end gap-3">
+              <Button
+                type="button"
+                variant="brandOutline"
+                onClick={() => form.reset()}
+                disabled={updateMutation.isPending || !form.formState.isDirty}
+              >
+                Reset
+              </Button>
+              <Button
+                type="submit"
+                variant="brand"
+                disabled={updateMutation.isPending || !form.formState.isDirty}
+                className="shadow-lg disabled:shadow-none"
+              >
+                {updateMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Save Address
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
     </>
   );
 }

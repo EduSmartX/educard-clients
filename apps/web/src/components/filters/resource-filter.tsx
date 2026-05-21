@@ -12,13 +12,7 @@ import { Combobox } from '@/components/ui/combobox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Badge } from '@/components/ui/badge';
 
 export interface FilterField {
@@ -216,83 +210,64 @@ export function ResourceFilter({
                   {field.type === 'select' &&
                     field.options &&
                     (() => {
-                      // Automatically enable search if options exceed threshold (default 10)
                       const threshold = field.searchThreshold ?? 10;
-                      const shouldUseCombobox =
-                        field.searchable || field.options.length > threshold;
+                      const showSearchThreshold = field.searchable ? 0 : threshold;
 
-                      return shouldUseCombobox ? (
-                        <Combobox
-                          options={[{ value: 'all', label: 'All' }, ...field.options]}
+                      const options = [{ value: 'all', label: 'All' }, ...field.options];
+                      return (
+                        <SearchableSelect
+                          options={options}
                           value={(filters[field.name] as string) || 'all'}
-                          onValueChange={(value) => {
+                          onValueChange={(value: string) => {
                             handleFilterChange(field.name, value);
                           }}
                           placeholder={field.placeholder || 'Select...'}
                           searchPlaceholder={field.searchPlaceholder || 'Search...'}
                           emptyText={field.emptyText || 'No results found.'}
                           disabled={field.disabled}
+                          showSearchThreshold={showSearchThreshold}
                         />
-                      ) : (
-                        <Select
-                          key={`${field.name}-${field.options.length}-${field.disabled}`}
-                          value={(filters[field.name] as string) || 'all'}
-                          onValueChange={(value) => {
-                            handleFilterChange(field.name, value);
-                          }}
-                          disabled={field.disabled}
-                        >
-                          <SelectTrigger id={field.name}>
-                            <SelectValue placeholder={field.placeholder || 'Select...'} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All</SelectItem>
-                            {field.options.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
                       );
                     })()}
 
                   {field.type === 'multiselect' && field.options && (
                     <div className="space-y-2">
-                      <Select
-                        key={`${field.name}-${field.options.length}-${field.disabled}`}
-                        value=""
-                        onValueChange={(value) => {
-                          if (value && value !== 'all') {
-                            const currentValues = Array.isArray(filters[field.name])
-                              ? (filters[field.name] as string[])
-                              : [];
-                            if (!currentValues.includes(value)) {
-                              handleFilterChange(field.name, [...currentValues, value]);
-                            }
-                          }
-                        }}
-                        disabled={field.disabled}
-                      >
-                        <SelectTrigger id={field.name}>
-                          <SelectValue placeholder={field.placeholder || 'Select...'} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Select an option</SelectItem>
-                          {field.options
-                            .filter((opt) => {
-                              const currentValues = Array.isArray(filters[field.name])
-                                ? (filters[field.name] as string[])
-                                : [];
-                              return !currentValues.includes(opt.value);
-                            })
-                            .map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
+                      {(() => {
+                        const threshold = field.searchThreshold ?? 10;
+                        const showSearchThreshold = field.searchable ? 0 : threshold;
+
+                        return (
+                          <SearchableSelect
+                            options={[
+                              { value: 'all', label: 'Select an option', disabled: true },
+                              ...field.options
+                                .filter((opt) => {
+                                  const currentValues = Array.isArray(filters[field.name])
+                                    ? (filters[field.name] as string[])
+                                    : [];
+                                  return !currentValues.includes(opt.value);
+                                })
+                                .map((option) => ({ value: option.value, label: option.label })),
+                            ]}
+                            value={''}
+                            onValueChange={(value: string) => {
+                              if (value && value !== 'all') {
+                                const currentValues = Array.isArray(filters[field.name])
+                                  ? (filters[field.name] as string[])
+                                  : [];
+                                if (!currentValues.includes(value)) {
+                                  handleFilterChange(field.name, [...currentValues, value]);
+                                }
+                              }
+                            }}
+                            placeholder={field.placeholder || 'Select...'}
+                            searchPlaceholder={field.searchPlaceholder || 'Search...'}
+                            emptyText={field.emptyText || 'No results found.'}
+                            disabled={field.disabled}
+                            showSearchThreshold={showSearchThreshold}
+                          />
+                        );
+                      })()}
 
                       {/* Selected items as chips */}
                       {Array.isArray(filters[field.name]) &&
@@ -313,7 +288,7 @@ export function ResourceFilter({
                                           currentValues.filter((v) => v !== value)
                                         );
                                       }}
-                                      className="rounded-full p-0.5 hover:bg-muted"
+                                      className="hover:bg-muted rounded-full p-0.5"
                                     >
                                       <X className="h-3 w-3" />
                                     </button>

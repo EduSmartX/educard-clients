@@ -25,13 +25,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -42,6 +36,7 @@ import { getSubjectColor } from '@educard/shared';
 import { useTeacherClasses, useHomeworkList, useHomeworkSubmissions } from '../hooks';
 import { SubmissionTable } from '../components/submission-table';
 import type { Homework, HomeworkListParams } from '../types';
+import { PageHeader } from '@/components/common';
 
 // Helper to get previous working day (skip weekends)
 function getPreviousWorkingDay(date: Date = new Date()): Date {
@@ -362,21 +357,18 @@ export default function HomeworkSubmissionsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-            Homework Submissions
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            View and review student homework submissions
-          </p>
-        </div>
-        <Button variant="outline" onClick={handleRefresh} className="gap-2">
-          <RefreshCw className="h-4 w-4" />
-          Refresh
-        </Button>
-      </div>
+      <PageHeader
+        title="Homework Submissions"
+        description="View and review student homework submissions"
+        actions={[
+          {
+            label: 'Refresh',
+            onClick: handleRefresh,
+            variant: 'outline' as const,
+            icon: RefreshCw,
+          },
+        ]}
+      />
 
       {/* Filters */}
       <Card>
@@ -389,35 +381,25 @@ export default function HomeworkSubmissionsPage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-            {/* Class Selector */}
             <div className="flex-1">
               <label className="mb-1.5 block text-sm font-medium text-slate-700">Class</label>
               {isLoadingClasses ? (
                 <Skeleton className="h-10 w-full" />
               ) : (
-                <Select value={selectedClassId} onValueChange={handleClassChange}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a class" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {teacherClasses.map((cls) => (
-                      <SelectItem key={cls.public_id} value={cls.public_id}>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{cls.name}</span>
-                          {cls.is_class_teacher && (
-                            <Badge variant="secondary" className="text-xs">
-                              Class Teacher
-                            </Badge>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  options={teacherClasses.map((cls) => ({
+                    value: cls.public_id,
+                    label: cls.name,
+                  }))}
+                  value={selectedClassId}
+                  onValueChange={handleClassChange}
+                  placeholder="Select a class"
+                  searchPlaceholder="Search classes..."
+                  className="w-full"
+                />
               )}
             </div>
 
-            {/* Date Navigation */}
             <div className="flex-1">
               <label className="mb-1.5 block text-sm font-medium text-slate-700">
                 Homework Date
@@ -562,17 +544,18 @@ export default function HomeworkSubmissionsPage() {
                       className="w-[200px] pl-9"
                     />
                   </div>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-[140px]">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="submitted">Submitted</SelectItem>
-                      <SelectItem value="reviewed">Reviewed</SelectItem>
-                      <SelectItem value="late">Late</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    options={[
+                      { value: 'all', label: 'All Status' },
+                      { value: 'submitted', label: 'Submitted' },
+                      { value: 'reviewed', label: 'Reviewed' },
+                      { value: 'late', label: 'Late' },
+                    ]}
+                    value={statusFilter}
+                    onValueChange={setStatusFilter}
+                    placeholder="Status"
+                    className="w-[140px]"
+                  />
                 </div>
               </div>
             </CardHeader>

@@ -80,9 +80,12 @@ export const API_ENDPOINTS = {
     CLASS_LEVEL: {
       LIST: (classId: string) => `/students/classes/${classId}/students/`,
       CREATE: (classId: string) => `/students/classes/${classId}/students/`,
-      DETAIL: (classId: string, studentId: string) => `/students/classes/${classId}/students/${studentId}/`,
-      DELETE: (classId: string, studentId: string) => `/students/classes/${classId}/students/${studentId}/`,
-      ACTIVATE: (classId: string, studentId: string) => `/students/classes/${classId}/students/${studentId}/activate/`,
+      DETAIL: (classId: string, studentId: string) =>
+        `/students/classes/${classId}/students/${studentId}/`,
+      DELETE: (classId: string, studentId: string) =>
+        `/students/classes/${classId}/students/${studentId}/`,
+      ACTIVATE: (classId: string, studentId: string) =>
+        `/students/classes/${classId}/students/${studentId}/activate/`,
     },
 
     BULK_TEMPLATE: "/students/bulk/template/",
@@ -314,6 +317,54 @@ export const API_ENDPOINTS = {
       DETAIL: (id: string) => `/timetable/entries/${id}/`,
       UPDATE: (id: string) => `/timetable/entries/${id}/`,
       DELETE: (id: string) => `/timetable/entries/${id}/`,
+    },
+  },
+
+  // Fee Management
+  FEE: {
+    // Admin endpoints
+    ADMIN: {
+      STRUCTURES: {
+        LIST: "/fee/admin/structures/",
+        CREATE: "/fee/admin/structures/",
+        DETAIL: (id: string) => `/fee/admin/structures/${id}/`,
+        UPDATE: (id: string) => `/fee/admin/structures/${id}/`,
+        DELETE: (id: string) => `/fee/admin/structures/${id}/`,
+        CLASS_CHANGE_IMPACT: (id: string) =>
+          `/fee/admin/structures/${id}/class-change-impact/`,
+      },
+      STUDENT_FEES: {
+        LIST: "/fee/admin/student-fees/",
+        CREATE: "/fee/admin/student-fees/",
+        DETAIL: (id: string) => `/fee/admin/student-fees/${id}/`,
+        UPDATE: (id: string) => `/fee/admin/student-fees/${id}/`,
+        DELETE: (id: string) => `/fee/admin/student-fees/${id}/`,
+        PAYMENT_STATUS: (id: string) =>
+          `/fee/admin/student-fees/${id}/payment_status/`,
+        UPDATE_COMPONENTS: (id: string) =>
+          `/fee/admin/student-fees/${id}/update-components/`,
+        REVIEW_COMPONENT_REQUESTS: (id: string) =>
+          `/fee/admin/student-fees/${id}/review-component-requests/`,
+      },
+      PAYMENTS: {
+        LIST: "/fee/admin/payments/",
+        CREATE: "/fee/admin/payments/",
+        DETAIL: (id: string) => `/fee/admin/payments/${id}/`,
+      },
+      DASHBOARD: {
+        LIST: "/fee/admin/dashboard/",
+        DEFAULTERS: "/fee/admin/dashboard/defaulters/",
+      },
+      REMINDERS: {
+        CREATE: "/fee/admin/reminders/",
+        BULK: "/fee/admin/reminders/bulk/",
+      },
+    },
+    // Parent/Student endpoints (read-only)
+    PARENT: {
+      LIST: "/fee/parent/fees/",
+      DETAIL: (id: string) => `/fee/parent/fees/${id}/`,
+      PAYMENTS: (id: string) => `/fee/parent/fees/${id}/payments/`,
     },
   },
 } as const;

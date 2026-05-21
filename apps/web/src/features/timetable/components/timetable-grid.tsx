@@ -17,13 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { AlertTriangle, BookOpen, Clock, Coffee, Plus, User, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSubjects } from '@/features/subjects/hooks/use-subjects';
@@ -227,27 +221,18 @@ function AssignmentPopover({
                 <label className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase">
                   Subject
                 </label>
-                <Select value={selectedSubjectId} onValueChange={setSelectedSubjectId}>
-                  <SelectTrigger className="h-9 text-xs">
-                    <SelectValue placeholder="Choose a subject…" />
-                  </SelectTrigger>
-                  <SelectContent className="z-[110]" position="popper" sideOffset={4}>
-                    {subjects.length === 0 ? (
-                      <div className="px-3 py-4 text-center text-xs text-slate-400">
-                        No subjects configured for this class
-                      </div>
-                    ) : (
-                      subjects.map((sub) => (
-                        <SelectItem key={sub.public_id} value={sub.public_id}>
-                          <div className="flex items-center gap-2">
-                            <BookOpen className="h-3 w-3 text-slate-400" />
-                            <span className="font-medium">{sub.subject_info.name}</span>
-                          </div>
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  options={subjects.map((sub) => ({
+                    value: sub.public_id,
+                    label: sub.subject_info.name,
+                  }))}
+                  value={selectedSubjectId}
+                  onValueChange={setSelectedSubjectId}
+                  placeholder="Choose a subject…"
+                  searchPlaceholder="Search subjects..."
+                  emptyText="No subjects configured for this class"
+                  className="h-9 text-xs"
+                />
               </div>
 
               {selectedSubject && (

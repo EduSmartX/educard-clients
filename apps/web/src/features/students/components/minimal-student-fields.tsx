@@ -1,6 +1,6 @@
 import type { Control } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TextInputField, GenderField } from '@/components/forms';
+import { TextInputField, GenderField } from '@/components/form';
 import { FormPlaceholders } from '@/constants';
 import type { StudentFormData } from '../schemas/student-form-schema';
 
@@ -15,7 +15,7 @@ export function MinimalStudentFields({ control, disabled = false }: MinimalStude
       <CardHeader>
         <CardTitle>Basic Information (Required Fields Only)</CardTitle>
       </CardHeader>
-      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <TextInputField
           control={control}
           name="first_name"

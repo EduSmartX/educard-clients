@@ -3,13 +3,7 @@ import { HelpCircle, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Combobox } from '@/components/ui/combobox';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -48,11 +42,11 @@ export function PreferenceField({
         <TooltipProvider delayDuration={0}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <HelpCircle className="h-4 w-4 text-gray-400 hover:text-gray-600 cursor-help transition-colors" />
+              <HelpCircle className="h-4 w-4 cursor-help text-gray-400 transition-colors hover:text-gray-600" />
             </TooltipTrigger>
             <TooltipContent
               side="right"
-              className="max-w-sm bg-gray-900 text-white border-gray-700 shadow-lg"
+              className="max-w-sm border-gray-700 bg-gray-900 text-white shadow-lg"
             >
               <p className="text-sm leading-relaxed">{preference.description}</p>
             </TooltipContent>
@@ -102,12 +96,12 @@ export function PreferenceField({
       });
 
       return (
-        <div className="flex flex-col sm:flex-row sm:items-start border-b border-dotted border-gray-200 px-4 py-4 last:border-b-0 gap-3 sm:gap-0">
-          <div className="sm:w-[600px] sm:pr-8 sm:flex-shrink-0">
+        <div className="flex flex-col gap-3 border-b border-dotted border-gray-200 px-4 py-4 last:border-b-0 sm:flex-row sm:items-start sm:gap-0">
+          <div className="sm:w-[600px] sm:flex-shrink-0 sm:pr-8">
             <FieldLabel htmlFor={preference.key} />
           </div>
           <div className="flex-1">
-            <div className="flex items-center gap-2 w-full sm:max-w-md">
+            <div className="flex w-full items-center gap-2 sm:max-w-md">
               <Combobox
                 options={hourOptions}
                 value={currentHour}
@@ -115,7 +109,7 @@ export function PreferenceField({
                 placeholder="HH"
                 searchPlaceholder="Search hours..."
                 emptyText="No hour found"
-                className="h-11 bg-white border-gray-300 text-gray-900 w-24"
+                className="h-11 w-24 border-gray-300 bg-white text-gray-900"
                 disabled={disabled}
               />
               <span className="text-xl font-semibold text-gray-500">:</span>
@@ -126,12 +120,12 @@ export function PreferenceField({
                 placeholder="MM"
                 searchPlaceholder="Search minutes..."
                 emptyText="No minute found"
-                className="h-11 bg-white border-gray-300 text-gray-900 w-24"
+                className="h-11 w-24 border-gray-300 bg-white text-gray-900"
                 disabled={disabled}
               />
             </div>
             {validationError && (
-              <p className="text-sm font-medium text-red-500 mt-1">{validationError}</p>
+              <p className="mt-1 text-sm font-medium text-red-500">{validationError}</p>
             )}
           </div>
         </div>
@@ -155,8 +149,8 @@ export function PreferenceField({
       };
 
       return (
-        <div className="flex flex-col sm:flex-row sm:items-start border-b border-dotted border-gray-200 px-4 py-4 last:border-b-0 gap-3 sm:gap-0">
-          <div className="sm:w-[600px] sm:pr-8 sm:flex-shrink-0">
+        <div className="flex flex-col gap-3 border-b border-dotted border-gray-200 px-4 py-4 last:border-b-0 sm:flex-row sm:items-start sm:gap-0">
+          <div className="sm:w-[600px] sm:flex-shrink-0 sm:pr-8">
             <FieldLabel htmlFor={preference.key} />
           </div>
           <div className="flex-1">
@@ -170,12 +164,12 @@ export function PreferenceField({
               disabled={disabled}
               placeholder={isTimeField ? 'HH:MM (e.g., 14:30)' : preference.default_value}
               className={cn(
-                'h-11 bg-white border-gray-300 text-gray-900 w-full sm:max-w-md',
+                'h-11 w-full border-gray-300 bg-white text-gray-900 sm:max-w-md',
                 validationError && 'border-red-500 focus-visible:ring-red-500'
               )}
             />
             {validationError && (
-              <p className="text-sm font-medium text-red-500 mt-1">{validationError}</p>
+              <p className="mt-1 text-sm font-medium text-red-500">{validationError}</p>
             )}
           </div>
         </div>
@@ -200,8 +194,8 @@ export function PreferenceField({
       };
 
       return (
-        <div className="flex flex-col sm:flex-row sm:items-start border-b border-dotted border-gray-200 px-4 py-4 last:border-b-0 gap-3 sm:gap-0">
-          <div className="sm:w-[600px] sm:pr-8 sm:flex-shrink-0">
+        <div className="flex flex-col gap-3 border-b border-dotted border-gray-200 px-4 py-4 last:border-b-0 sm:flex-row sm:items-start sm:gap-0">
+          <div className="sm:w-[600px] sm:flex-shrink-0 sm:pr-8">
             <FieldLabel htmlFor={preference.key} />
           </div>
           <div className="flex-1">
@@ -217,12 +211,12 @@ export function PreferenceField({
               min={isDeadlineField ? '1' : undefined}
               max={isDeadlineField ? '31' : undefined}
               className={cn(
-                'h-11 bg-white border-gray-300 text-gray-900 w-full sm:max-w-md',
+                'h-11 w-full border-gray-300 bg-white text-gray-900 sm:max-w-md',
                 validationError && 'border-red-500 focus-visible:ring-red-500'
               )}
             />
             {validationError && (
-              <p className="text-sm font-medium text-red-500 mt-1">{validationError}</p>
+              <p className="mt-1 text-sm font-medium text-red-500">{validationError}</p>
             )}
           </div>
         </div>
@@ -231,8 +225,8 @@ export function PreferenceField({
 
     case 'radio': {
       return (
-        <div className="flex flex-col sm:flex-row sm:items-center border-b border-dotted border-gray-200 px-4 py-4 last:border-b-0 gap-3 sm:gap-0">
-          <div className="sm:w-[600px] sm:pr-8 sm:flex-shrink-0">
+        <div className="flex flex-col gap-3 border-b border-dotted border-gray-200 px-4 py-4 last:border-b-0 sm:flex-row sm:items-center sm:gap-0">
+          <div className="sm:w-[600px] sm:flex-shrink-0 sm:pr-8">
             <FieldLabel />
           </div>
           <div className="flex-1">
@@ -240,7 +234,7 @@ export function PreferenceField({
               value={value as string}
               onValueChange={onChange}
               disabled={disabled}
-              className="flex items-center gap-3 flex-wrap"
+              className="flex flex-wrap items-center gap-3"
             >
               {preference.applicable_values?.map((option: string) => (
                 <label
@@ -249,7 +243,7 @@ export function PreferenceField({
                   className="flex cursor-pointer items-center space-x-2 rounded-lg border-2 border-gray-200 bg-white px-6 py-3 transition-all hover:border-blue-400 hover:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50"
                 >
                   <RadioGroupItem value={option} id={`${preference.key}-${option}`} />
-                  <span className="font-medium text-sm text-gray-900">
+                  <span className="text-sm font-medium text-gray-900">
                     {(() => {
                       if (option === 'TRUE') {
                         return 'Yes';
@@ -270,26 +264,22 @@ export function PreferenceField({
 
     case 'choice': {
       return (
-        <div className="flex flex-col sm:flex-row sm:items-start border-b border-dotted border-gray-200 px-4 py-4 last:border-b-0 gap-3 sm:gap-0">
-          <div className="sm:w-[600px] sm:pr-8 sm:flex-shrink-0">
+        <div className="flex flex-col gap-3 border-b border-dotted border-gray-200 px-4 py-4 last:border-b-0 sm:flex-row sm:items-start sm:gap-0">
+          <div className="sm:w-[600px] sm:flex-shrink-0 sm:pr-8">
             <FieldLabel htmlFor={preference.key} />
           </div>
           <div className="flex-1">
-            <Select value={value as string} onValueChange={onChange} disabled={disabled}>
-              <SelectTrigger
-                id={preference.key}
-                className="h-11 bg-white border-gray-300 text-gray-900 w-full sm:max-w-md"
-              >
-                <SelectValue placeholder={FormPlaceholders.SELECT_OPTION} />
-              </SelectTrigger>
-              <SelectContent>
-                {preference.applicable_values?.map((option: string) => (
-                  <SelectItem key={option} value={option}>
-                    {option.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              options={(preference.applicable_values || []).map((option: string) => ({
+                value: option,
+                label: option.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
+              }))}
+              value={value as string}
+              onValueChange={(v) => onChange(v)}
+              disabled={disabled}
+              placeholder={FormPlaceholders.SELECT_OPTION}
+              className="h-11 w-full border-gray-300 bg-white text-gray-900 sm:max-w-md"
+            />
           </div>
         </div>
       );
@@ -298,54 +288,48 @@ export function PreferenceField({
     case 'multi-choice': {
       return (
         <div className="flex flex-col border-b border-dotted border-gray-200 px-4 py-4 last:border-b-0">
-          <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-0">
-            <div className="sm:w-[600px] sm:pr-8 sm:flex-shrink-0">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-0">
+            <div className="sm:w-[600px] sm:flex-shrink-0 sm:pr-8">
               <FieldLabel htmlFor={preference.key} />
             </div>
             <div className="flex-1">
-              <Select
+              <SearchableSelect
+                options={(preference.applicable_values || [])
+                  .filter((option: string) => !currentMultiValues.includes(option))
+                  .map((option: string) => ({
+                    value: option,
+                    label: option
+                      .replace(/_/g, ' ')
+                      .replace(/\b\w/g, (l: string) => l.toUpperCase()),
+                  }))}
                 value={multiSelectInput}
                 onValueChange={(val: string) => {
                   handleMultiSelectAdd(val);
                   setMultiSelectInput('');
                 }}
                 disabled={disabled}
-              >
-                <SelectTrigger
-                  id={preference.key}
-                  className="h-11 bg-white border-gray-300 text-gray-900 w-full sm:max-w-md"
-                >
-                  <SelectValue placeholder={FormPlaceholders.SELECT_OPTIONS} />
-                </SelectTrigger>
-                <SelectContent>
-                  {preference.applicable_values
-                    ?.filter((option: string) => !currentMultiValues.includes(option))
-                    .map((option: string) => (
-                      <SelectItem key={option} value={option}>
-                        {option.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+                placeholder={FormPlaceholders.SELECT_OPTION}
+                className="h-11 w-full border-gray-300 bg-white text-gray-900 sm:max-w-md"
+              />
             </div>
           </div>
           {currentMultiValues.length > 0 && (
-            <div className="flex flex-col sm:flex-row mt-3 gap-3 sm:gap-0">
-              <div className="hidden sm:block sm:w-[600px] sm:pr-8 sm:flex-shrink-0"></div>
+            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:gap-0">
+              <div className="hidden sm:block sm:w-[600px] sm:flex-shrink-0 sm:pr-8"></div>
               <div className="flex-1">
-                <div className="flex flex-wrap gap-2 w-full sm:max-w-md">
+                <div className="flex w-full flex-wrap gap-2 sm:max-w-md">
                   {currentMultiValues.map((val: string) => (
                     <Badge
                       key={val}
                       variant="secondary"
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-800"
+                      className="flex items-center gap-1.5 bg-blue-100 px-3 py-1.5 text-blue-800"
                     >
                       {val}
                       <button
                         type="button"
                         onClick={() => handleMultiSelectRemove(val)}
                         disabled={disabled}
-                        className="rounded-full p-0.5 hover:bg-blue-200 transition-colors"
+                        className="rounded-full p-0.5 transition-colors hover:bg-blue-200"
                       >
                         <X className="h-3 w-3" />
                       </button>

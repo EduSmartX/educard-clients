@@ -9,17 +9,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { useAddClassToGroup } from '../hooks/mutations';
 import { useClasses } from '@/features/classes/hooks/use-classes';
 import { CLASS_GROUP_STRINGS as S } from '../constants/class-group-strings';
@@ -72,6 +67,9 @@ export function AddClassDialog({
             <GraduationCap className="h-5 w-5 text-indigo-500" />
             {S.ADD_CLASS_DIALOG_TITLE}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Select an unassigned class to add it to this group.
+          </DialogDescription>
         </DialogHeader>
         <div className="py-2">
           {classesLoading ? (
@@ -81,18 +79,16 @@ export function AddClassDialog({
               <p className="text-sm font-medium text-slate-500">{S.ALL_CLASSES_ASSIGNED}</p>
             </div>
           ) : (
-            <Select value={selectedClassId} onValueChange={setSelectedClassId}>
-              <SelectTrigger>
-                <SelectValue placeholder={S.PLACEHOLDER_SELECT_CLASS} />
-              </SelectTrigger>
-              <SelectContent>
-                {availableClasses.map((cls) => (
-                  <SelectItem key={cls.public_id} value={cls.public_id}>
-                    {cls.class_master?.name} - {cls.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              options={availableClasses.map((cls) => ({
+                value: cls.public_id,
+                label: `${cls.class_master?.name || 'Unknown'} - ${cls.name}`,
+              }))}
+              value={selectedClassId}
+              onValueChange={setSelectedClassId}
+              placeholder={S.PLACEHOLDER_SELECT_CLASS}
+              searchPlaceholder="Search classes..."
+            />
           )}
         </div>
         <DialogFooter>

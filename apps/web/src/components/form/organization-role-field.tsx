@@ -14,13 +14,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Input } from '@/components/ui/input';
 import { useOrganizationRoles } from '@/hooks/use-organization-roles';
 import type { Control, ControllerRenderProps, FieldValues, Path } from 'react-hook-form';
@@ -88,24 +82,20 @@ function RoleFieldContent<T extends FieldValues>({
           />
         </FormControl>
       ) : (
-        <Select
-          onValueChange={field.onChange}
-          value={(field.value as string) || ''}
-          key={`${field.value}-${orgRoles.length}`}
-        >
-          <FormControl>
-            <SelectTrigger className="border-gray-300 bg-gray-50 transition-colors focus:bg-white disabled:cursor-default disabled:opacity-100">
-              <SelectValue placeholder={isLoading ? 'Loading roles...' : placeholder} />
-            </SelectTrigger>
-          </FormControl>
-          <SelectContent className="max-h-[300px] overflow-y-auto">
-            {orgRoles.map((role) => (
-              <SelectItem key={role.id} value={role.id.toString()}>
-                {role.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <FormControl>
+          <SearchableSelect
+            options={orgRoles.map((role) => ({
+              value: role.id.toString(),
+              label: role.name,
+            }))}
+            onValueChange={field.onChange}
+            value={(field.value as string) || ''}
+            key={`${field.value}-${orgRoles.length}`}
+            placeholder={isLoading ? 'Loading roles...' : placeholder}
+            className="border-gray-300 bg-gray-50 transition-colors focus:bg-white disabled:cursor-default disabled:opacity-100"
+            disabled={isLoading}
+          />
+        </FormControl>
       )}
       {defaultRoleCode && <FormDescription>Organization role for this user</FormDescription>}
       <FormMessage />

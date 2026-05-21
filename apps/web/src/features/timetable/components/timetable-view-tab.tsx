@@ -5,13 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Label } from '@/components/ui/label';
 import { PageLoader } from '@/components/ui/loading-spinner';
 import { useClasses } from '@/features/classes/hooks/use-classes';
@@ -57,18 +51,16 @@ export function TimetableViewTab() {
           {classesLoading ? (
             <div className="bg-muted h-10 animate-pulse rounded-md" />
           ) : (
-            <Select value={selectedClassId} onValueChange={setSelectedClassId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a class" />
-              </SelectTrigger>
-              <SelectContent>
-                {classes.map((cls) => (
-                  <SelectItem key={cls.public_id} value={cls.public_id}>
-                    {cls.class_master?.name} - {cls.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              options={classes.map((cls) => ({
+                value: cls.public_id,
+                label: `${cls.class_master?.name} - ${cls.name}`,
+              }))}
+              value={selectedClassId}
+              onValueChange={setSelectedClassId}
+              placeholder="Select a class"
+              searchPlaceholder="Search classes..."
+            />
           )}
         </div>
       </div>
