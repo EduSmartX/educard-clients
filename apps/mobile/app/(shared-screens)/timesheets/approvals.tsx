@@ -29,9 +29,8 @@ import {
   Alert,
   TextInput,
   Modal,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { apiClient } from '@/api/client';
@@ -436,9 +435,12 @@ export default function TimesheetApprovalsScreen() {
         animationType="fade"
         onRequestClose={() => setReturnModal({ visible: false, item: null })}
       >
-        <KeyboardAvoidingView
+        <KeyboardAwareScrollView
           style={styles.modalOverlay}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
+          enableOnAndroid
+          extraScrollHeight={20}
+          keyboardShouldPersistTaps="handled"
         >
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
@@ -490,7 +492,7 @@ export default function TimesheetApprovalsScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </KeyboardAvoidingView>
+        </KeyboardAwareScrollView>
       </Modal>
 
       {/* Approve Confirmation Dialog */}

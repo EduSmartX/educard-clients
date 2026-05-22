@@ -4,17 +4,8 @@
  */
 
 import { useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
@@ -23,6 +14,7 @@ import { getRoleGradient, extractApiError, getFieldErrors } from '@educard/share
 import { useCreateSubject } from '@/hooks';
 import { FormInput, FormSection, FormError } from '@/components/forms';
 import { validateForm, hasErrors, required, type FieldErrors } from '@/utils/validation';
+import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -33,6 +25,7 @@ const RULES = {
 
 export default function CreateSubjectScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
   const createMutation = useCreateSubject();
 
   const [form, setForm] = useState({
@@ -69,9 +62,8 @@ export default function CreateSubjectScreen() {
 
     createMutation.mutate(payload, {
       onSuccess: () => {
-        Alert.alert('Success', 'Subject created successfully', [
-          { text: 'OK', onPress: () => router.back() },
-        ]);
+        showToast({ type: 'success', title: 'Success', message: 'Subject created successfully' });
+        router.back();
       },
       onError: (err: unknown) => {
         // Extract field-level validation errors from API response
@@ -106,61 +98,59 @@ export default function CreateSubjectScreen() {
         </View>
       </LinearGradient>
 
-      <KeyboardAvoidingView
+      <KeyboardAwareScrollView
+        contentContainerStyle={styles.formContainer}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid
+        extraScrollHeight={20}
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView
-          contentContainerStyle={styles.formContainer}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+        <FormError message={apiError} onDismiss={() => setApiError(null)} />
+
+        <Animated.View entering={FadeInDown.delay(100)}>
+          <FormSection title="Subject Details" icon="📚">
+            <FormInput
+              label="Subject Name"
+              required
+              value={form.name}
+              onChangeText={(v) => updateField('name', v)}
+              error={errors.name}
+              placeholder="e.g. Mathematics"
+            />
+            <FormInput
+              label="Subject Code"
+              value={form.code}
+              onChangeText={(v) => updateField('code', v)}
+              placeholder="e.g. MATH101"
+              hint="Optional unique code"
+            />
+          </FormSection>
+        </Animated.View>
+
+        <TouchableOpacity
+          onPress={handleSubmit}
+          disabled={createMutation.isPending}
+          style={styles.submitBtn}
+          activeOpacity={0.8}
         >
-          <FormError message={apiError} onDismiss={() => setApiError(null)} />
-
-          <Animated.View entering={FadeInDown.delay(100)}>
-            <FormSection title="Subject Details" icon="📚">
-              <FormInput
-                label="Subject Name"
-                required
-                value={form.name}
-                onChangeText={(v) => updateField('name', v)}
-                error={errors.name}
-                placeholder="e.g. Mathematics"
-              />
-              <FormInput
-                label="Subject Code"
-                value={form.code}
-                onChangeText={(v) => updateField('code', v)}
-                placeholder="e.g. MATH101"
-                hint="Optional unique code"
-              />
-            </FormSection>
-          </Animated.View>
-
-          <TouchableOpacity
-            onPress={handleSubmit}
-            disabled={createMutation.isPending}
-            style={styles.submitBtn}
-            activeOpacity={0.8}
+          <LinearGradient
+            colors={['#7c3aed', '#4f46e5']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.submitGradient}
           >
-            <LinearGradient
-              colors={['#7c3aed', '#4f46e5']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.submitGradient}
-            >
-              {createMutation.isPending ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <>
-                  <Save size={20} color="#fff" />
-                  <Text style={styles.submitText}>Create Subject</Text>
-                </>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
+            {createMutation.isPending ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Save size={20} color="#fff" />
+                <Text style={styles.submitText}>Create Subject</Text>
+              </>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+      </KeyboardAwareScrollView>
     </View>
   );
 }

@@ -32,9 +32,7 @@ import type { CalendarException } from '../types';
 import { ExceptionDialog } from './exception-dialog';
 
 export function ExceptionalWorkManagement() {
-  // Get user role for conditional rendering
-  const { role } = useRole();
-  const isAdmin = role === 'ADMIN';
+  const { isAdmin } = useRole();
 
   // State
   const [page, setPage] = useState(1);
@@ -174,7 +172,10 @@ export function ExceptionalWorkManagement() {
       accessor: (row: CalendarException) => {
         if (row.is_applicable_to_all_teachers) {
           return (
-            <Badge variant="default" className="font-normal bg-blue-100 text-blue-700 border-blue-200">
+            <Badge
+              variant="default"
+              className="border-blue-200 bg-blue-100 font-normal text-blue-700"
+            >
               All Teachers
             </Badge>
           );
@@ -211,7 +212,7 @@ export function ExceptionalWorkManagement() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setDeletingException(row)}
-                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                  className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -221,7 +222,6 @@ export function ExceptionalWorkManagement() {
         ]
       : []),
   ];
-
 
   if (isError) {
     return (
@@ -257,7 +257,7 @@ export function ExceptionalWorkManagement() {
           <Button
             onClick={() => setShowAddDialog(true)}
             variant="brand"
-            className="shadow-sm hover:shadow-md transition-all"
+            className="shadow-sm transition-all hover:shadow-md"
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Exception
@@ -300,7 +300,7 @@ export function ExceptionalWorkManagement() {
             </div>
           </div>
 
-          <div className="mt-4 rounded-lg bg-amber-50 border border-amber-200 p-3">
+          <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
             <p className="text-sm text-amber-900">
               <span className="font-semibold">Note:</span> These exceptions override the standard
               working day policy and holiday calendar.
@@ -333,8 +333,8 @@ export function ExceptionalWorkManagement() {
 
           {/* Active filters display */}
           {Object.keys(filters).length > 0 && (
-            <div className="flex items-center gap-2 flex-wrap mt-4">
-              <span className="text-sm text-muted-foreground">Active filters:</span>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className="text-muted-foreground text-sm">Active filters:</span>
               {Object.entries(filters).map(([key, value]) => (
                 <Badge key={key} variant="secondary" className="gap-1">
                   <span className="capitalize">
@@ -348,7 +348,7 @@ export function ExceptionalWorkManagement() {
                       setFilters(newFilters);
                       setPage(1);
                     }}
-                    className="rounded-full p-0.5 hover:bg-muted"
+                    className="hover:bg-muted rounded-full p-0.5"
                   >
                     <X className="h-3 w-3" />
                   </button>

@@ -29,11 +29,6 @@ export interface Student {
     guardian_name?: string;
     guardian_phone?: string;
   };
-  emergency_contact: {
-    name: string;
-    relationship: string;
-    phone: string;
-  };
   profile_image?: string;
   status: 'active' | 'inactive' | 'graduated';
   created_at: string;
@@ -67,9 +62,6 @@ export interface StudentFormData {
   mother_phone: string;
   guardian_name?: string;
   guardian_phone?: string;
-  emergency_contact_name: string;
-  emergency_contact_relationship: string;
-  emergency_contact_phone: string;
   profile_image?: File;
   status?: 'active' | 'inactive';
 }

@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/api-client';
+import apiClient from '@/lib/api';
 import type {
   EligibleClass,
   DateValidation,
@@ -138,7 +138,7 @@ export const getEmployeeAttendance = async (params: {
   if (params.user_public_id) {
     apiParams.user = params.user_public_id;
   }
-  
+
   const response = await apiClient.get('/attendance/employee-attendance/', { params: apiParams });
   const payload = response.data?.data || response.data || {};
 

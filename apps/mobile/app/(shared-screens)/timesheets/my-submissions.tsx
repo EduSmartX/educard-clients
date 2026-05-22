@@ -47,7 +47,7 @@ import {
 import Svg, { Path } from 'react-native-svg';
 
 import { apiClient } from '@/api/client';
-
+import { useToast } from '@/lib/toast-context';
 const { width: screenWidth } = Dimensions.get('window');
 const CELL_SIZE = Math.floor((screenWidth - 40) / 7);
 const WEEKDAYS_SHORT = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -319,6 +319,7 @@ const AttendanceToggle = ({
 
 export default function MyTimesheetScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
   const queryClient = useQueryClient();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [refreshing, setRefreshing] = useState(false);
@@ -557,37 +558,45 @@ export default function MyTimesheetScreen() {
   const submitMutation = useMutation({
     mutationFn: submitTimesheetApi,
     onSuccess: () => {
-      Alert.alert('Success', 'Timesheet submitted for approval');
+      showToast({ type: 'success', title: 'Success', message: 'Timesheet submitted for approval' });
       queryClient.invalidateQueries({ queryKey: ['timesheet'] });
       setWeeks([]);
     },
     onError: (error: unknown) =>
-      Alert.alert('Error', extractApiError(error, 'Failed to submit timesheet')),
+      showToast({
+        type: 'error',
+        title: 'Error',
+        message: extractApiError(error, 'Failed to submit timesheet'),
+      }),
   });
 
   const returnToDraftMutation = useMutation({
     mutationFn: returnTimesheetToDraft,
     onSuccess: (_, variables) => {
-      Alert.alert('Success', 'Timesheet returned to draft');
+      showToast({ type: 'success', title: 'Success', message: 'Timesheet returned to draft' });
       queryClient.invalidateQueries({ queryKey: ['timesheet'] });
       setWeeks((prev) => prev.filter((w) => w.start !== variables.week_start_date));
     },
     onError: (error: unknown) =>
-      Alert.alert('Error', extractApiError(error, 'Failed to return to draft')),
+      showToast({
+        type: 'error',
+        title: 'Error',
+        message: extractApiError(error, 'Failed to return to draft'),
+      }),
   });
 
   // Daily attendance submission mutation
   const dailyAttendanceMutation = useMutation({
     mutationFn: submitDailyAttendance,
     onSuccess: () => {
-      Alert.alert('Success', 'Attendance saved successfully');
+      showToast({ type: 'success', title: 'Success', message: 'Attendance saved successfully' });
       queryClient.invalidateQueries({ queryKey: ['timesheet'] });
       setDayModalVisible(false);
       setSelectedDay(null);
     },
     onError: (error: unknown) => {
       const errorMessage = extractApiError(error, 'Failed to save attendance');
-      Alert.alert('Error', errorMessage);
+      showToast({ type: 'error', title: 'Error', message: errorMessage });
     },
   });
 

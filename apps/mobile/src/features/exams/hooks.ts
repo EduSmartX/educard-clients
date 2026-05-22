@@ -134,11 +134,11 @@ export function useCreateExam() {
   });
 }
 
-export function useUpdateExam() {
+export function useUpdateExam(userRole?: string | null) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<ExamCreatePayload> }) =>
-      updateExam(id, data),
+      updateExam(id, data, userRole),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['exams'] }),
   });
 }

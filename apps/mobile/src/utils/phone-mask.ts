@@ -1,3 +1,5 @@
+import { USER_ROLES } from '@/constants/config';
+
 /**
  * Phone Number Masking Utilities
  **/
@@ -47,7 +49,7 @@ export function canViewPhoneNumber({
   isSubordinate?: boolean;
 }): boolean {
   // Admin can see all phone numbers
-  if (userRole === 'admin') {
+  if (userRole === USER_ROLES.ADMIN) {
     return true;
   }
 

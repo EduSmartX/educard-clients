@@ -225,10 +225,7 @@ export default function HomeworkListScreen() {
   };
 
   const canAddForSubject = (_subject: SubjectHomework['subject']) => {
-    // Admin can only view, not add
-    if (isAdmin) return false;
-    // Teachers can add homework for any subject in their assigned class
-    // Backend will validate actual permissions
+    // Admin and teachers can add homework — backend validates actual permissions
     return true;
   };
 

@@ -39,3 +39,14 @@ export {
   getDayLabel,
   getSlotTypeLabel,
 } from '@educard/shared';
+
+import type { TimetableEntry as _TimetableEntry } from '@educard/shared';
+
+/** Row structure for the teacher weekly grid view */
+export interface TeacherSlotRow {
+  slotLabel: string;
+  startTime: string;
+  endTime: string;
+  slotType: string;
+  entries: Record<string, _TimetableEntry | null>;
+}

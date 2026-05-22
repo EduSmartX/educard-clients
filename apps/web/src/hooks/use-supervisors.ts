@@ -19,22 +19,13 @@ interface ApiResponse<T> {
   code: number;
 }
 
-/**
- * Fetch organization users for supervisor selection
- */
 export function useOrganizationUsers() {
   return useQuery<OrganizationUser[]>({
     queryKey: ['organization-users', 'supervisors'],
     queryFn: async () => {
-      try {
-        const response =
-          await apiClient.get<ApiResponse<OrganizationUser[]>>('/users/supervisors/');
-        // API response structure: { success, message, data: [...users], code }
-        return response.data?.data || [];
-      } catch {
-        return [];
-      }
+      const response = await apiClient.get<ApiResponse<OrganizationUser[]>>('/users/supervisors/');
+      return response.data?.data || [];
     },
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 }

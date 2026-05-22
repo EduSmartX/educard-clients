@@ -28,6 +28,7 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { SubmitButton } from '@/components/common/SubmitButton';
 import { buildClassOptions } from '@/components/filters';
 import { useClasses } from '@/features/classes';
+import { useCurrentAcademicYear } from '@/features/core';
 import { useFeeStructure, useCreateFeeStructure, useUpdateFeeStructure } from '../hooks';
 import type { FeeStructureCreatePayload, Class } from '@educard/shared';
 import { ComponentType } from '@educard/shared';
@@ -83,6 +84,9 @@ export default function FeeStructureFormScreen() {
   const { data: classesData } = useClasses({ page_size: 200 } as any);
   const classOptions = buildClassOptions((classesData?.classes ?? []) as Class[]);
 
+  // Current academic year from DB
+  const { data: currentAcademicYear } = useCurrentAcademicYear();
+
   // ── Form state ──────────────────────────────────────────────────────────────
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -104,6 +108,13 @@ export default function FeeStructureFormScreen() {
   const [showImpactConfirm, setShowImpactConfirm] = useState(false);
   const [impactMessage, setImpactMessage] = useState('');
   const [pendingPayload, setPendingPayload] = useState<FeeStructureCreatePayload | null>(null);
+
+  // Pre-fill academic year from DB (only for new structures)
+  useEffect(() => {
+    if (!isEditing && currentAcademicYear?.name) {
+      setAcademicYear(currentAcademicYear.name);
+    }
+  }, [currentAcademicYear, isEditing]);
 
   // Populate form when editing
   useEffect(() => {

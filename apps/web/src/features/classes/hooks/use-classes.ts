@@ -3,22 +3,23 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
+import { QueryKeys } from '@/constants';
 import { fetchClasses, fetchClass } from '../api/classes-api';
 import type { FetchClassesParams } from '../types';
 
 export function useClasses(params: FetchClassesParams = {}) {
   return useQuery({
-    queryKey: ['classes', params],
+    queryKey: QueryKeys.CLASSES.LIST(params as Record<string, unknown>),
     queryFn: () => fetchClasses(params),
-    staleTime: 30 * 1000, // 30 seconds — ensures fresh data on navigation
+    staleTime: 30 * 1000,
   });
 }
 
 export function useClass(publicId: string | undefined, isDeleted = false) {
   return useQuery({
-    queryKey: ['classes', publicId, isDeleted],
+    queryKey: QueryKeys.CLASSES.DETAIL(publicId ?? ''),
     queryFn: () => fetchClass(publicId!, isDeleted),
     enabled: !!publicId,
-    staleTime: 0, // Always refetch detail to pick up cross-device changes
+    staleTime: 0,
   });
 }

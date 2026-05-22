@@ -40,7 +40,7 @@ const optionalDate = () =>
     .string()
     .refine(
       (v) => !v || v === "" || /^\d{4}-\d{2}-\d{2}$/.test(v),
-      "Date must be in YYYY-MM-DD format"
+      "Date must be in YYYY-MM-DD format",
     )
     .optional()
     .or(z.literal(""));
@@ -85,7 +85,9 @@ export const teacherFullSchema = teacherQuickSchema.extend({
   experience_years: z
     .string()
     .refine((v) => {
-      if (!v || v === "") {return true;}
+      if (!v || v === "") {
+        return true;
+      }
       const n = Number(v);
       return !isNaN(n) && n >= 0 && n <= 70;
     }, "Experience must be between 0 and 70")
@@ -93,8 +95,6 @@ export const teacherFullSchema = teacherQuickSchema.extend({
     .or(z.literal("")),
   supervisor_email: optionalEmail(),
   joining_date: optionalDate(),
-  emergency_contact_name: optionalString(),
-  emergency_contact_number: phoneField("Emergency contact"),
   street_address: optionalString(),
   city: optionalString(),
   state: optionalString(),
@@ -130,8 +130,6 @@ export const studentFullSchema = studentQuickSchema.extend({
   guardian_relationship: optionalString(),
   medical_conditions: optionalString(),
   description: optionalString(),
-  emergency_contact_name: optionalString(),
-  emergency_contact_phone: phoneField("Emergency contact"),
   previous_school_name: optionalString(),
   previous_school_class: optionalString(),
   previous_school_address: optionalString(),
@@ -150,7 +148,9 @@ export const classFormSchema = z.object({
   capacity: z
     .string()
     .refine((v) => {
-      if (!v || v === "") {return true;}
+      if (!v || v === "") {
+        return true;
+      }
       const n = Number(v);
       return !isNaN(n) && n >= 1 && n <= 500;
     }, "Capacity must be between 1 and 500")
@@ -166,7 +166,10 @@ export const classFormSchema = z.object({
 export const subjectFormSchema = z.object({
   class_id: requiredString("Class"),
   subject_id: requiredString("Subject"),
-  subject_type: z.enum(["core", "elective", "language"]).optional().default("core"),
+  subject_type: z
+    .enum(["core", "elective", "language"])
+    .optional()
+    .default("core"),
   teacher_id: optionalString(),
   description: optionalString(),
 });
@@ -186,7 +189,9 @@ export function validateField<T extends z.ZodObject<z.ZodRawShape>>(
   // Get the field schema from the shape
   const shape = schema.shape as Record<string, z.ZodTypeAny>;
   const fieldSchema = shape[field];
-  if (!fieldSchema) {return undefined;}
+  if (!fieldSchema) {
+    return undefined;
+  }
 
   const result = fieldSchema.safeParse(value);
   if (!result.success) {
@@ -204,7 +209,9 @@ export function validateAllFields<T extends z.ZodObject<z.ZodRawShape>>(
   values: Record<string, unknown>,
 ): Record<string, string> {
   const result = schema.safeParse(values);
-  if (result.success) {return {};}
+  if (result.success) {
+    return {};
+  }
 
   const errors: Record<string, string> = {};
   for (const issue of result.error.issues) {

@@ -4,17 +4,8 @@
  */
 
 import { useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
@@ -34,6 +25,7 @@ import {
   numberRange,
   type FieldErrors,
 } from '@/utils/validation';
+import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -45,6 +37,7 @@ const RULES = {
 
 export default function CreateClassScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
   const createMutation = useCreateClass();
 
   const [form, setForm] = useState({
@@ -83,9 +76,8 @@ export default function CreateClassScreen() {
 
     createMutation.mutate(payload, {
       onSuccess: () => {
-        Alert.alert('Success', 'Class created successfully', [
-          { text: 'OK', onPress: () => router.back() },
-        ]);
+        showToast({ type: 'success', title: 'Success', message: 'Class created successfully' });
+        router.back();
       },
       onError: (err: unknown) => {
         // Extract field-level validation errors from API response
@@ -120,70 +112,68 @@ export default function CreateClassScreen() {
         </View>
       </LinearGradient>
 
-      <KeyboardAvoidingView
+      <KeyboardAwareScrollView
+        contentContainerStyle={styles.formContainer}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid
+        extraScrollHeight={20}
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView
-          contentContainerStyle={styles.formContainer}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+        <FormError message={apiError} onDismiss={() => setApiError(null)} />
+
+        <Animated.View entering={FadeInDown.delay(100)}>
+          <FormSection title="Class Details" icon="🏫">
+            <FormInput
+              label="Section Name"
+              required
+              value={form.name}
+              onChangeText={(v) => updateField('name', v)}
+              error={errors.name}
+              placeholder="e.g. A, B, Nehru"
+            />
+            <FormInput
+              label="Capacity"
+              value={form.capacity}
+              onChangeText={(v) => updateField('capacity', v)}
+              error={errors.capacity}
+              placeholder="e.g. 50"
+              keyboardType="numeric"
+            />
+            <FormInput
+              label="Description"
+              value={form.info}
+              onChangeText={(v) => updateField('info', v)}
+              placeholder="Optional notes about this class"
+              multiline
+              numberOfLines={3}
+            />
+          </FormSection>
+        </Animated.View>
+
+        <TouchableOpacity
+          onPress={handleSubmit}
+          disabled={createMutation.isPending}
+          style={styles.submitBtn}
+          activeOpacity={0.8}
         >
-          <FormError message={apiError} onDismiss={() => setApiError(null)} />
-
-          <Animated.View entering={FadeInDown.delay(100)}>
-            <FormSection title="Class Details" icon="🏫">
-              <FormInput
-                label="Section Name"
-                required
-                value={form.name}
-                onChangeText={(v) => updateField('name', v)}
-                error={errors.name}
-                placeholder="e.g. A, B, Nehru"
-              />
-              <FormInput
-                label="Capacity"
-                value={form.capacity}
-                onChangeText={(v) => updateField('capacity', v)}
-                error={errors.capacity}
-                placeholder="e.g. 50"
-                keyboardType="numeric"
-              />
-              <FormInput
-                label="Description"
-                value={form.info}
-                onChangeText={(v) => updateField('info', v)}
-                placeholder="Optional notes about this class"
-                multiline
-                numberOfLines={3}
-              />
-            </FormSection>
-          </Animated.View>
-
-          <TouchableOpacity
-            onPress={handleSubmit}
-            disabled={createMutation.isPending}
-            style={styles.submitBtn}
-            activeOpacity={0.8}
+          <LinearGradient
+            colors={['#7c3aed', '#4f46e5']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.submitGradient}
           >
-            <LinearGradient
-              colors={['#7c3aed', '#4f46e5']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.submitGradient}
-            >
-              {createMutation.isPending ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <>
-                  <Save size={20} color="#fff" />
-                  <Text style={styles.submitText}>Create Class</Text>
-                </>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
+            {createMutation.isPending ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Save size={20} color="#fff" />
+                <Text style={styles.submitText}>Create Class</Text>
+              </>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+      </KeyboardAwareScrollView>
     </View>
   );
 }

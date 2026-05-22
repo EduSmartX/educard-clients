@@ -16,23 +16,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Save } from 'lucide-react-native';
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { FormInput, FormSection, FormError, FormDropdown } from '@/components/forms';
 import { useClassDetail, useUpdateClass } from '@/features/classes';
 import { useCoreClasses } from '@/features/core';
 import { useTeachers } from '@/features/teachers';
+import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -40,6 +32,7 @@ type FieldErrors = Record<string, string>;
 
 export default function EditClassScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: classDetail, isLoading: detailLoading } = useClassDetail(id || '');
   const updateMutation = useUpdateClass();
@@ -120,9 +113,8 @@ export default function EditClassScreen() {
       { publicId: id, data: payload },
       {
         onSuccess: () => {
-          Alert.alert('✅ Success', 'Class updated successfully!', [
-            { text: 'OK', onPress: () => router.back() },
-          ]);
+          showToast({ type: 'success', title: 'Success', message: 'Class updated successfully!' });
+          router.back();
         },
         onError: (err: any) => {
           const { fieldErrors: fe, generalError } = parseApiErrors(err?.response?.data);
@@ -164,99 +156,97 @@ export default function EditClassScreen() {
         </View>
       </LinearGradient>
 
-      <KeyboardAvoidingView
+      <KeyboardAwareScrollView
+        contentContainerStyle={st.form}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid
+        extraScrollHeight={20}
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView
-          contentContainerStyle={st.form}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+        <FormError message={apiError} onDismiss={() => setApiError(null)} />
+
+        <Animated.View entering={FadeInDown.delay(100)}>
+          <FormSection title="Class Information" icon="🏫">
+            <FormDropdown
+              label="Class (Master)"
+              required
+              options={coreClassOpts}
+              value={form.class_master}
+              onChange={() => {}}
+              error={errors.class_master}
+              placeholder="Select class"
+              searchable
+              loading={coreLoading}
+              disabled
+            />
+            <FormInput
+              label="Section Name"
+              required
+              value={form.name}
+              onChangeText={(v) => updateField('name', v)}
+              onBlurValidate={() => blurValidate('name')}
+              error={errors.name}
+              placeholder="e.g. A, B, Nehru"
+            />
+            <FormInput
+              label="Capacity"
+              value={form.capacity}
+              onChangeText={(v) => updateField('capacity', v)}
+              onBlurValidate={() => blurValidate('capacity')}
+              error={errors.capacity}
+              placeholder="e.g. 50"
+              keyboardType="numeric"
+              maxLength={3}
+            />
+            <FormDropdown
+              label="Class Teacher"
+              options={teacherOpts}
+              value={form.class_teacher_id}
+              onChange={(v) => updateField('class_teacher_id', v)}
+              placeholder="Select class teacher"
+              searchable
+            />
+            <FormInput
+              label="Room Number"
+              value={form.room_number}
+              onChangeText={(v) => updateField('room_number', v)}
+              placeholder="e.g. Room 101"
+            />
+            <FormInput
+              label="Description"
+              value={form.info}
+              onChangeText={(v) => updateField('info', v)}
+              placeholder="Optional notes about this class"
+              multiline
+              numberOfLines={3}
+            />
+          </FormSection>
+        </Animated.View>
+
+        <TouchableOpacity
+          onPress={handleSubmit}
+          disabled={updateMutation.isPending}
+          style={st.subBtn}
+          activeOpacity={0.8}
         >
-          <FormError message={apiError} onDismiss={() => setApiError(null)} />
-
-          <Animated.View entering={FadeInDown.delay(100)}>
-            <FormSection title="Class Information" icon="🏫">
-              <FormDropdown
-                label="Class (Master)"
-                required
-                options={coreClassOpts}
-                value={form.class_master}
-                onChange={() => {}}
-                error={errors.class_master}
-                placeholder="Select class"
-                searchable
-                loading={coreLoading}
-                disabled
-              />
-              <FormInput
-                label="Section Name"
-                required
-                value={form.name}
-                onChangeText={(v) => updateField('name', v)}
-                onBlurValidate={() => blurValidate('name')}
-                error={errors.name}
-                placeholder="e.g. A, B, Nehru"
-              />
-              <FormInput
-                label="Capacity"
-                value={form.capacity}
-                onChangeText={(v) => updateField('capacity', v)}
-                onBlurValidate={() => blurValidate('capacity')}
-                error={errors.capacity}
-                placeholder="e.g. 50"
-                keyboardType="numeric"
-                maxLength={3}
-              />
-              <FormDropdown
-                label="Class Teacher"
-                options={teacherOpts}
-                value={form.class_teacher_id}
-                onChange={(v) => updateField('class_teacher_id', v)}
-                placeholder="Select class teacher"
-                searchable
-              />
-              <FormInput
-                label="Room Number"
-                value={form.room_number}
-                onChangeText={(v) => updateField('room_number', v)}
-                placeholder="e.g. Room 101"
-              />
-              <FormInput
-                label="Description"
-                value={form.info}
-                onChangeText={(v) => updateField('info', v)}
-                placeholder="Optional notes about this class"
-                multiline
-                numberOfLines={3}
-              />
-            </FormSection>
-          </Animated.View>
-
-          <TouchableOpacity
-            onPress={handleSubmit}
-            disabled={updateMutation.isPending}
-            style={st.subBtn}
-            activeOpacity={0.8}
+          <LinearGradient
+            colors={['#7c3aed', '#4f46e5']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={st.subGrad}
           >
-            <LinearGradient
-              colors={['#7c3aed', '#4f46e5']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={st.subGrad}
-            >
-              {updateMutation.isPending ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <>
-                  <Save size={20} color="#fff" />
-                  <Text style={st.subText}>Update Class</Text>
-                </>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
+            {updateMutation.isPending ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Save size={20} color="#fff" />
+                <Text style={st.subText}>Update Class</Text>
+              </>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+      </KeyboardAwareScrollView>
     </View>
   );
 }

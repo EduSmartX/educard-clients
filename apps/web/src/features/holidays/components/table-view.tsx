@@ -42,10 +42,8 @@ export function TableView({ holidays, currentDate }: TableViewProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [holidayToDelete, setHolidayToDelete] = useState<Holiday | null>(null);
 
-  // Get user role to determine if edit/delete actions should be shown
-  const { role } = useRole();
-  const isAdmin = role === 'ADMIN';
-  
+  const { isAdmin } = useRole();
+
   const today = startOfDay(new Date());
   const deleteMutation = useDeleteHoliday();
 
@@ -74,10 +72,10 @@ export function TableView({ holidays, currentDate }: TableViewProps) {
 
   if (sortedHolidays.length === 0) {
     return (
-      <div className="text-center py-16">
-        <AlertCircle className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+      <div className="py-16 text-center">
+        <AlertCircle className="mx-auto mb-4 h-16 w-16 text-gray-300" />
         <p className="text-lg font-medium text-gray-600">No holidays found</p>
-        <p className="text-sm text-gray-500 mt-1">for {format(currentDate, 'MMMM yyyy')}</p>
+        <p className="mt-1 text-sm text-gray-500">for {format(currentDate, 'MMMM yyyy')}</p>
       </div>
     );
   }
@@ -141,7 +139,7 @@ export function TableView({ holidays, currentDate }: TableViewProps) {
                   <TableCell className="text-center">
                     <Badge
                       variant="secondary"
-                      className="bg-gray-100 text-gray-700 border border-gray-300"
+                      className="border border-gray-300 bg-gray-100 text-gray-700"
                     >
                       {duration} {duration === 1 ? 'Day' : 'Days'}
                     </Badge>

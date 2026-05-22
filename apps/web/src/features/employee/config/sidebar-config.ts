@@ -18,11 +18,11 @@ import {
   GraduationCap,
   BarChart3,
   CheckSquare,
-  Clock,
   ClipboardList,
   FileText,
   BookMarked,
   ClipboardList as SubmissionsIcon,
+  Eye,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
 import { ROUTES } from '@/constants/app-config';
@@ -77,11 +77,16 @@ export const employeeSidebarConfig: SidebarSection[] = [
         icon: BookOpen,
         path: ROUTES.SUBJECTS,
       },
+    ],
+  },
+  {
+    title: 'TIMETABLE',
+    items: [
       {
-        id: 'timetable',
-        label: 'Timetable',
-        icon: Clock,
-        path: ROUTES.TIMETABLE,
+        id: 'view-timetable',
+        label: 'View Timetable',
+        icon: Eye,
+        path: ROUTES.TIMETABLE_VIEW,
       },
     ],
   },

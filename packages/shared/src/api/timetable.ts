@@ -3,7 +3,7 @@
  * Factory pattern for platform-agnostic API calls
  */
 
-import type { AxiosInstance } from 'axios';
+import type { AxiosInstance } from "axios";
 import type {
   ClassGroup,
   ClassGroupCreatePayload,
@@ -16,7 +16,7 @@ import type {
   TimetableEntryUpdatePayload,
   ClassTimetableResponse,
   MyTimetableResponse,
-} from '../types/timetable';
+} from "../types/timetable";
 
 // =============================================================================
 // Types
@@ -53,8 +53,8 @@ export interface TimetableApiConfig {
 // Endpoints
 // =============================================================================
 
-const ADMIN_BASE = '/timetable/admin';
-const EMPLOYEE_BASE = '/timetable/employee';
+const ADMIN_BASE = "/timetable/admin";
+const EMPLOYEE_BASE = "/timetable/employee";
 
 // =============================================================================
 // API Factory
@@ -69,24 +69,34 @@ export function createTimetableApi(config: TimetableApiConfig) {
     // =========================================================================
 
     async listClassGroups(): Promise<ClassGroup[]> {
-      const res = await client.get<ApiResponse<ClassGroup[]>>(`${ADMIN_BASE}/class-groups/`);
+      const res = await client.get<ApiResponse<ClassGroup[]>>(
+        `${ADMIN_BASE}/class-groups/`,
+      );
       return res.data.data;
     },
 
     async getClassGroup(publicId: string): Promise<ClassGroup> {
-      const res = await client.get<ApiResponse<ClassGroup>>(`${ADMIN_BASE}/class-groups/${publicId}/`);
+      const res = await client.get<ApiResponse<ClassGroup>>(
+        `${ADMIN_BASE}/class-groups/${publicId}/`,
+      );
       return res.data.data;
     },
 
     async createClassGroup(data: ClassGroupCreatePayload): Promise<ClassGroup> {
-      const res = await client.post<ApiResponse<ClassGroup>>(`${ADMIN_BASE}/class-groups/`, data);
+      const res = await client.post<ApiResponse<ClassGroup>>(
+        `${ADMIN_BASE}/class-groups/`,
+        data,
+      );
       return res.data.data;
     },
 
-    async updateClassGroup(publicId: string, data: ClassGroupUpdatePayload): Promise<ClassGroup> {
+    async updateClassGroup(
+      publicId: string,
+      data: ClassGroupUpdatePayload,
+    ): Promise<ClassGroup> {
       const res = await client.put<ApiResponse<ClassGroup>>(
         `${ADMIN_BASE}/class-groups/${publicId}/`,
-        data
+        data,
       );
       return res.data.data;
     },
@@ -95,14 +105,25 @@ export function createTimetableApi(config: TimetableApiConfig) {
       await client.delete(`${ADMIN_BASE}/class-groups/${publicId}/`);
     },
 
-    async addClassToGroup(groupPublicId: string, classPublicId: string): Promise<void> {
-      await client.post(`${ADMIN_BASE}/class-groups/${groupPublicId}/classes/`, {
-        class_public_id: classPublicId,
-      });
+    async addClassToGroup(
+      groupPublicId: string,
+      classPublicId: string,
+    ): Promise<void> {
+      await client.post(
+        `${ADMIN_BASE}/class-groups/${groupPublicId}/classes/`,
+        {
+          class_public_id: classPublicId,
+        },
+      );
     },
 
-    async removeClassFromGroup(groupPublicId: string, classPublicId: string): Promise<void> {
-      await client.delete(`${ADMIN_BASE}/class-groups/${groupPublicId}/classes/${classPublicId}/`);
+    async removeClassFromGroup(
+      groupPublicId: string,
+      classPublicId: string,
+    ): Promise<void> {
+      await client.delete(
+        `${ADMIN_BASE}/class-groups/${groupPublicId}/classes/${classPublicId}/`,
+      );
     },
 
     // =========================================================================
@@ -113,55 +134,78 @@ export function createTimetableApi(config: TimetableApiConfig) {
       const params = day !== undefined ? { day } : {};
       const res = await client.get<ApiResponse<TimetableSlot[]>>(
         `${ADMIN_BASE}/class-groups/${groupId}/slots/`,
-        { params }
+        { params },
       );
       return res.data.data;
     },
 
-    async createSlot(groupId: string, data: TimetableSlotCreatePayload): Promise<TimetableSlot> {
+    async createSlot(
+      groupId: string,
+      data: TimetableSlotCreatePayload,
+    ): Promise<TimetableSlot> {
       const res = await client.post<ApiResponse<TimetableSlot>>(
         `${ADMIN_BASE}/class-groups/${groupId}/slots/`,
-        data
+        data,
       );
       return res.data.data;
     },
 
-    async bulkSaveSlots(groupPublicId: string, data: BulkSlotPayload): Promise<TimetableSlot[]> {
+    async bulkSaveSlots(
+      groupPublicId: string,
+      data: BulkSlotPayload,
+    ): Promise<TimetableSlot[]> {
       const res = await client.post<ApiResponse<TimetableSlot[]>>(
         `${ADMIN_BASE}/class-groups/${groupPublicId}/slots/`,
-        data
+        data,
       );
       return res.data.data;
     },
 
     async clearDaySlots(groupPublicId: string, day: number): Promise<void> {
-      await client.delete(`${ADMIN_BASE}/class-groups/${groupPublicId}/slots/day/${day}/`);
+      await client.delete(
+        `${ADMIN_BASE}/class-groups/${groupPublicId}/slots/day/${day}/`,
+      );
     },
 
     async deleteSlot(groupId: string, slotId: string): Promise<void> {
-      await client.delete(`${ADMIN_BASE}/class-groups/${groupId}/slots/${slotId}/`);
+      await client.delete(
+        `${ADMIN_BASE}/class-groups/${groupId}/slots/${slotId}/`,
+      );
     },
 
     // =========================================================================
     // Timetable Entries
     // =========================================================================
 
-    async listEntries(params?: { class_id?: string; teacher_id?: string; day_of_week?: number }): Promise<TimetableEntry[]> {
-      const res = await client.get<ApiListResponse<TimetableEntry>>(`${ADMIN_BASE}/entries/`, { params });
+    async listEntries(params?: {
+      class_id?: string;
+      teacher_id?: string;
+      day_of_week?: number;
+    }): Promise<TimetableEntry[]> {
+      const res = await client.get<ApiListResponse<TimetableEntry>>(
+        `${ADMIN_BASE}/entries/`,
+        { params },
+      );
       return res.data.data;
     },
 
     async createEntry(
-      data: TimetableEntryCreatePayload
+      data: TimetableEntryCreatePayload,
     ): Promise<{ entry: TimetableEntry; warnings?: string[] | null }> {
-      const res = await client.post<ApiResponse<TimetableEntry>>(`${ADMIN_BASE}/entries/`, data);
+      const res = await client.post<ApiResponse<TimetableEntry>>(
+        `${ADMIN_BASE}/entries/`,
+        data,
+      );
       return { entry: res.data.data, warnings: res.data.warnings };
     },
 
-    async updateEntry(publicId: string, data: TimetableEntryUpdatePayload): Promise<TimetableEntry> {
+    async updateEntry(
+      publicId: string,
+      data: TimetableEntryUpdatePayload,
+    ): Promise<TimetableEntry> {
       const res = await client.patch<ApiResponse<TimetableEntry>>(
         `${ADMIN_BASE}/entries/${publicId}/`,
-        data
+        data,
       );
       return res.data.data;
     },
@@ -176,7 +220,7 @@ export function createTimetableApi(config: TimetableApiConfig) {
 
     async getClassTimetable(classId: string): Promise<ClassTimetableResponse> {
       const res = await client.get<ApiResponse<ClassTimetableResponse>>(
-        `${ADMIN_BASE}/class/${classId}/timetable/`
+        `${ADMIN_BASE}/class/${classId}/timetable/`,
       );
       return res.data.data;
     },
@@ -187,7 +231,16 @@ export function createTimetableApi(config: TimetableApiConfig) {
 
     async getMyTimetable(): Promise<MyTimetableResponse> {
       const res = await client.get<ApiResponse<MyTimetableResponse>>(
-        `${EMPLOYEE_BASE}/my-timetable/`
+        `${EMPLOYEE_BASE}/my-timetable/`,
+      );
+      return res.data.data;
+    },
+
+    async getTeacherTimetable(
+      teacherPublicId: string,
+    ): Promise<MyTimetableResponse> {
+      const res = await client.get<ApiResponse<MyTimetableResponse>>(
+        `${ADMIN_BASE}/teacher/${teacherPublicId}/timetable/`,
       );
       return res.data.data;
     },

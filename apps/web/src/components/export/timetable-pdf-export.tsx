@@ -9,6 +9,7 @@
  * - Can be reused for exams, schedules, etc.
  */
 
+import { formatSlotTime } from '@educard/shared';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -70,16 +71,6 @@ const BREAK_LABELS: Record<string, string> = {
   short_break: 'Short Break',
   assembly: 'Assembly',
 };
-
-function formatTime(time: string): string {
-  if (!time) {
-    return '';
-  }
-  const [h, m] = time.split(':').map(Number);
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  const hour12 = h % 12 || 12;
-  return `${hour12}:${String(m).padStart(2, '0')} ${ampm}`;
-}
 
 export function TimetablePdfExport({
   data,
@@ -185,7 +176,7 @@ function generatePrintableHTML(data: TimetableExportData, mode: 'color' | 'bw'):
           <tr class="break-row">
             <td class="time-cell break-cell" colspan="${data.activeDays.length + 1}">
               <span class="break-icon">☕</span> ${breakLabel}
-              <span class="break-time">${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}</span>
+              <span class="break-time">${formatSlotTime(slot.start_time)} – ${formatSlotTime(slot.end_time)}</span>
             </td>
           </tr>
         `;
@@ -220,8 +211,8 @@ function generatePrintableHTML(data: TimetableExportData, mode: 'color' | 'bw'):
         <tr>
           <td class="time-cell">
             <div class="slot-label">${slot.slot_label}</div>
-            <div class="slot-time">${formatTime(slot.start_time)}</div>
-            <div class="slot-time">${formatTime(slot.end_time)}</div>
+            <div class="slot-time">${formatSlotTime(slot.start_time)}</div>
+            <div class="slot-time">${formatSlotTime(slot.end_time)}</div>
           </td>
           ${cells}
         </tr>

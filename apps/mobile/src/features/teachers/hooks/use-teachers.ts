@@ -7,6 +7,7 @@ import { QueryKeys } from '@educard/shared';
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { DEFAULT_PAGE_SIZE } from '@/api/client';
+import { showToast } from '@/utils/toast';
 
 import {
   getTeachers,
@@ -89,6 +90,7 @@ export function useCreateTeacher() {
       forceCreate?: boolean;
     }) => createTeacher(data, forceCreate),
     onSuccess: () => {
+      showToast('success', 'Teacher created successfully');
       void queryClient.invalidateQueries({ queryKey: teacherKeys.all });
     },
   });
@@ -108,6 +110,7 @@ export function useUpdateTeacher() {
       data: Parameters<typeof updateTeacher>[1];
     }) => updateTeacher(publicId, data),
     onSuccess: () => {
+      showToast('success', 'Teacher updated successfully');
       void queryClient.invalidateQueries({ queryKey: teacherKeys.all });
     },
   });
@@ -121,6 +124,7 @@ export function useDeleteTeacher() {
   return useMutation({
     mutationFn: (publicId: string) => deleteTeacher(publicId),
     onSuccess: () => {
+      showToast('success', 'Teacher deleted successfully');
       void queryClient.invalidateQueries({ queryKey: teacherKeys.lists() });
     },
   });
@@ -134,6 +138,7 @@ export function useRestoreTeacher() {
   return useMutation({
     mutationFn: (publicId: string) => restoreTeacher(publicId),
     onSuccess: () => {
+      showToast('success', 'Teacher restored successfully');
       void queryClient.invalidateQueries({ queryKey: teacherKeys.lists() });
     },
   });

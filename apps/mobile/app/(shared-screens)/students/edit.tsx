@@ -35,6 +35,7 @@ import {
 import { useManagedClasses } from '@/features/classes';
 import { useStudentDetail, useUpdateStudent, studentKeys } from '@/features/students';
 import { useProfileImage } from '@/hooks/useProfileImage';
+import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -42,6 +43,7 @@ type FieldErrors = Record<string, string>;
 
 export default function EditStudentScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: student, isLoading: detailLoading, dataUpdatedAt } = useStudentDetail(id || '');
   const updateMutation = useUpdateStudent();
@@ -94,8 +96,6 @@ export default function EditStudentScreen() {
     guardian_relationship: '',
     medical_conditions: '',
     description: '',
-    emergency_contact_name: '',
-    emergency_contact_phone: '',
     previous_school_name: '',
     previous_school_class: '',
     previous_school_address: '',
@@ -130,8 +130,6 @@ export default function EditStudentScreen() {
         guardian_relationship: student.guardian_relationship ?? '',
         medical_conditions: student.medical_conditions ?? '',
         description: student.description ?? '',
-        emergency_contact_name: student.emergency_contact_name ?? '',
-        emergency_contact_phone: student.emergency_contact_phone ?? '',
         previous_school_name: student.previous_school_name ?? '',
         previous_school_class: student.previous_school_class ?? '',
         previous_school_address: student.previous_school_address ?? '',
@@ -192,9 +190,12 @@ export default function EditStudentScreen() {
       { publicId: id, data: payload },
       {
         onSuccess: () => {
-          Alert.alert('✅ Success', 'Student updated successfully!', [
-            { text: 'OK', onPress: () => router.back() },
-          ]);
+          showToast({
+            type: 'success',
+            title: 'Success',
+            message: 'Student updated successfully!',
+          });
+          router.back();
         },
         onError: (err: Error & { response?: { data?: unknown } }) => {
           const { fieldErrors: fe, generalError } = parseApiErrors(err?.response?.data);
@@ -434,25 +435,6 @@ export default function EditStudentScreen() {
               placeholder="Additional notes"
               multiline
               numberOfLines={3}
-            />
-          </FormSection>
-        </Animated.View>
-
-        <Animated.View entering={FadeInDown.delay(340)}>
-          <FormSection title="Emergency Contact" icon="🆘">
-            <FormInput
-              label="Emergency Contact Name"
-              value={form.emergency_contact_name}
-              onChangeText={(v) => updateField('emergency_contact_name', v)}
-              placeholder="Enter contact name"
-            />
-            <FormInput
-              label="Emergency Contact Phone"
-              value={form.emergency_contact_phone}
-              onChangeText={(v) => updateField('emergency_contact_phone', v)}
-              placeholder="Enter contact phone"
-              keyboardType="phone-pad"
-              maxLength={15}
             />
           </FormSection>
         </Animated.View>

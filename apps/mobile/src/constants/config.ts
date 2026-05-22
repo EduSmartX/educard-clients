@@ -90,6 +90,7 @@ export const QUERY_KEYS = {
 export const USER_ROLES = {
   ADMIN: 'admin',
   EMPLOYEE: 'employee',
+  TEACHER: 'teacher',
   PARENT: 'parent',
 } as const;
 

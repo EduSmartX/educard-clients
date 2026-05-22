@@ -115,9 +115,11 @@ export async function createExam(data: ExamCreatePayload): Promise<Exam> {
 
 export async function updateExam(
   publicId: string,
-  data: Partial<ExamCreatePayload>
+  data: Partial<ExamCreatePayload>,
+  userRole?: string | null
 ): Promise<Exam> {
-  const res = await apiClient.patch<DetailResponse<Exam>>(`${ADMIN_BASE}/exams/${publicId}/`, data);
+  const baseUrl = getBaseUrl(userRole, false);
+  const res = await apiClient.patch<DetailResponse<Exam>>(`${baseUrl}/exams/${publicId}/`, data);
   return res.data.data;
 }
 

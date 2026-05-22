@@ -152,8 +152,6 @@ export function TeacherForm({
       state: '',
       postal_code: '',
       country: '',
-      emergency_contact_name: '',
-      emergency_contact_number: '',
     },
   });
 
@@ -515,34 +513,6 @@ export function TeacherForm({
                   name="joining_date"
                   label="Date of Joining"
                   disabled={isViewMode}
-                />
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Emergency Contact */}
-          {!useQuickAdd && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Emergency Contact</CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <TextInputField
-                  control={form.control}
-                  name="emergency_contact_name"
-                  label="Emergency Contact Name"
-                  placeholder={FormPlaceholders.ENTER_CONTACT_NAME}
-                  disabled={isViewMode}
-                  validationType="name"
-                  validationOptions={{ fieldName: 'Contact name' }}
-                />
-                <TextInputField
-                  control={form.control}
-                  name="emergency_contact_number"
-                  label="Emergency Contact Phone"
-                  placeholder={FormPlaceholders.ENTER_CONTACT_PHONE}
-                  disabled={isViewMode}
-                  validationType="phone"
                 />
               </CardContent>
             </Card>

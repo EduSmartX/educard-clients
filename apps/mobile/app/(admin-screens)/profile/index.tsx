@@ -34,6 +34,7 @@ import { getMediaUrl } from '@/constants/config';
 import { useMyProfilePhoto, useUserProfile, useUpdateProfile } from '@/hooks';
 import { useProfileImage } from '@/hooks/useProfileImage';
 import { useAuthStore } from '@/lib/auth-store';
+import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -42,6 +43,7 @@ type FieldErrors = Record<string, string>;
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
   const { user } = useAuthStore();
   const { data: profilePhoto, isLoading: photoLoading, dataUpdatedAt } = useMyProfilePhoto();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
@@ -153,9 +155,8 @@ export default function ProfileScreen() {
 
     updateMutation.mutate(payload, {
       onSuccess: () => {
-        Alert.alert('Success', 'Profile updated successfully!', [
-          { text: 'OK', onPress: () => router.back() },
-        ]);
+        showToast({ type: 'success', title: 'Success', message: 'Profile updated successfully!' });
+        router.back();
       },
     });
   }, [form, validateForm, updateMutation, router]);

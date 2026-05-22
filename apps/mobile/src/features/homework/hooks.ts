@@ -37,6 +37,7 @@ import {
   fetchCalendarHomework,
   fetchTeacherClasses,
 } from './api';
+import { showToast } from '@/utils/toast';
 
 // ============== Query Keys ==============
 
@@ -111,6 +112,7 @@ export function useCreateHomework() {
   return useMutation({
     mutationFn: createHomework,
     onSuccess: () => {
+      showToast('success', 'Homework created successfully');
       queryClient.invalidateQueries({ queryKey: homeworkKeys.lists() });
       queryClient.invalidateQueries({ queryKey: homeworkKeys.dashboard() });
     },
@@ -124,6 +126,7 @@ export function useUpdateHomework() {
     mutationFn: ({ publicId, data }: { publicId: string; data: HomeworkUpdatePayload }) =>
       updateHomework(publicId, data),
     onSuccess: (_, variables) => {
+      showToast('success', 'Homework updated successfully');
       queryClient.invalidateQueries({ queryKey: homeworkKeys.detail(variables.publicId) });
       queryClient.invalidateQueries({ queryKey: homeworkKeys.lists() });
       queryClient.invalidateQueries({ queryKey: homeworkKeys.dashboard() });
@@ -137,6 +140,7 @@ export function useDeleteHomework() {
   return useMutation({
     mutationFn: deleteHomework,
     onSuccess: () => {
+      showToast('success', 'Homework deleted successfully');
       queryClient.invalidateQueries({ queryKey: homeworkKeys.lists() });
       queryClient.invalidateQueries({ queryKey: homeworkKeys.dashboard() });
     },
@@ -204,6 +208,7 @@ export function useReviewSubmission() {
       data: ReviewSubmissionPayload;
     }) => reviewSubmission(homeworkPublicId, submissionPublicId, data),
     onSuccess: (_, variables) => {
+      showToast('success', 'Submission reviewed successfully');
       queryClient.invalidateQueries({
         queryKey: homeworkKeys.submissionDetail(
           variables.homeworkPublicId,

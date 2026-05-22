@@ -36,12 +36,12 @@ function getBaseUrl(isWriteOperation = false): string {
   if (isWriteOperation) {
     return ADMIN_BASE_URL;
   }
-  
+
   // Use admin endpoint for admin users
   if (isAdminUser()) {
     return ADMIN_BASE_URL;
   }
-  
+
   return EMPLOYEE_BASE_URL;
 }
 
@@ -59,10 +59,9 @@ export async function fetchExamSessions(
   params?: ExamSessionListParams
 ): Promise<ApiListResponse<ExamSession>> {
   const baseUrl = getBaseUrl();
-  const response = await apiClient.get<ApiListResponse<ExamSession>>(
-    `${baseUrl}/sessions/`,
-    { params }
-  );
+  const response = await apiClient.get<ApiListResponse<ExamSession>>(`${baseUrl}/sessions/`, {
+    params,
+  });
   return response.data;
 }
 
@@ -119,10 +118,7 @@ export async function bulkUpdateExamStatusBySession(
 
 export async function fetchExams(params?: ExamListParams): Promise<ApiListResponse<Exam>> {
   const baseUrl = getBaseUrl();
-  const response = await apiClient.get<ApiListResponse<Exam>>(
-    `${baseUrl}/exams/`,
-    { params }
-  );
+  const response = await apiClient.get<ApiListResponse<Exam>>(`${baseUrl}/exams/`, { params });
   return response.data;
 }
 
@@ -151,8 +147,11 @@ export async function bulkCreateExams(data: BulkExamCreatePayload): Promise<Exam
 }
 
 export async function updateExam(publicId: string, data: ExamUpdatePayload): Promise<Exam> {
+  // For status-only updates, use role-based endpoint (teachers can update status)
+  const isStatusOnly = Object.keys(data).length === 1 && 'status' in data;
+  const baseUrl = isStatusOnly ? getBaseUrl(false) : ADMIN_BASE_URL;
   const response = await apiClient.patch<{ success: boolean; data: Exam }>(
-    `${ADMIN_BASE_URL}/exams/${publicId}/`,
+    `${baseUrl}/exams/${publicId}/`,
     data
   );
   return response.data.data;
@@ -196,7 +195,7 @@ export async function bulkUpsertMarks(
 
 export interface MarksOverviewSubject {
   exam_public_id: string;
-  subject_public_id: string;  // For permission checking
+  subject_public_id: string; // For permission checking
   subject_name: string;
   max_marks: number;
   passing_marks: number;
@@ -265,8 +264,8 @@ export interface MarksOverviewResponse {
     is_admin: boolean;
     is_class_teacher: boolean;
     can_edit_all_subjects: boolean;
-    can_edit: boolean;  // True if user can edit any subjects
-    editable_subject_ids: string[] | null;  // null = all subjects, [] = view-only
+    can_edit: boolean; // True if user can edit any subjects
+    editable_subject_ids: string[] | null; // null = all subjects, [] = view-only
   };
 }
 
@@ -280,10 +279,11 @@ export async function fetchMarksOverview(
 ): Promise<{ success: boolean; message: string; data: MarksOverviewResponse }> {
   // Always use employee endpoint for marks (supports both admin and teacher roles)
   const baseUrl = getMarksBaseUrl();
-  const response = await apiClient.get<{ success: boolean; message: string; data: MarksOverviewResponse }>(
-    `${baseUrl}/marks/overview/`,
-    { params }
-  );
+  const response = await apiClient.get<{
+    success: boolean;
+    message: string;
+    data: MarksOverviewResponse;
+  }>(`${baseUrl}/marks/overview/`, { params });
   return response.data;
 }
 
@@ -311,9 +311,10 @@ export async function bulkSaveAllMarks(
 ): Promise<{ success: boolean; message: string; data: { count: number } }> {
   // Always use employee endpoint for marks (supports both admin and teacher roles)
   const baseUrl = getMarksBaseUrl();
-  const response = await apiClient.post<{ success: boolean; message: string; data: { count: number } }>(
-    `${baseUrl}/marks/bulk-save-all/`,
-    data
-  );
+  const response = await apiClient.post<{
+    success: boolean;
+    message: string;
+    data: { count: number };
+  }>(`${baseUrl}/marks/bulk-save-all/`, data);
   return response.data;
 }

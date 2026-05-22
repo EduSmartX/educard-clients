@@ -31,14 +31,14 @@ import {
   profileInformationSchema,
   type ProfileInformationFormData,
 } from '../schemas/profile-schemas';
-import { CommonUiText, FormPlaceholders } from '@/constants';
+import { CommonUiText, FormPlaceholders, USER_ROLES } from '@/constants';
 
 export function ProfileInformationForm() {
   const { data: profile, isLoading } = useUserProfile();
   const updateMutation = useUpdateProfile();
 
   // Check if user is admin - only admins can edit their organization role
-  const isAdmin = profile?.role?.toLowerCase() === 'admin';
+  const isAdmin = profile?.role?.toLowerCase() === USER_ROLES.ADMIN;
 
   const form = useForm<ProfileInformationFormData>({
     resolver: zodResolver(profileInformationSchema),

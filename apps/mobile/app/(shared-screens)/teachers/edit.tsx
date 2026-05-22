@@ -36,6 +36,7 @@ import { FormMultiSelect } from '@/components/forms/FormMultiSelect';
 import { useRoleTypes, useSupervisors, useCoreSubjects } from '@/features/core';
 import { useTeacherDetail, useUpdateTeacher, teacherKeys } from '@/features/teachers';
 import { useProfileImage } from '@/hooks/useProfileImage';
+import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -43,6 +44,7 @@ type FieldErrors = Record<string, string>;
 
 export default function EditTeacherScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: teacher, isLoading: detailLoading, dataUpdatedAt } = useTeacherDetail(id || '');
   const updateMutation = useUpdateTeacher();
@@ -84,8 +86,6 @@ export default function EditTeacherScreen() {
     joining_date: '',
     supervisor_email: '',
     subjects: [] as string[],
-    emergency_contact_name: '',
-    emergency_contact_number: '',
     street_address: '',
     city: '',
     state: '',
@@ -117,8 +117,6 @@ export default function EditTeacherScreen() {
         joining_date: teacher.joining_date ?? '',
         supervisor_email: u?.supervisor?.email ?? '',
         subjects: (teacher.subjects ?? []).map((s) => s.id?.toString() ?? s.public_id),
-        emergency_contact_name: teacher.emergency_contact_name ?? '',
-        emergency_contact_number: teacher.emergency_contact_number ?? '',
         street_address: addr?.street_address ?? '',
         city: addr?.city ?? '',
         state: addr?.state ?? '',
@@ -135,8 +133,10 @@ export default function EditTeacherScreen() {
   );
   const supervisorOptions = useMemo(
     () =>
-      (supervisors ?? []).map((s) => ({ value: s.email, label: `${s.full_name} (${s.email})` })),
-    [supervisors]
+      (supervisors ?? [])
+        .filter((s) => s.email !== form.email) // Exclude self from supervisor list
+        .map((s) => ({ value: s.email, label: `${s.full_name} (${s.email})` })),
+    [supervisors, form.email]
   );
   const bloodGroupOpts = BLOOD_GROUP_OPTIONS.map((b) => ({ value: b.value, label: b.label }));
   const subjectOptions = useMemo(
@@ -190,9 +190,12 @@ export default function EditTeacherScreen() {
       { publicId: id ?? '', data: payload },
       {
         onSuccess: () => {
-          Alert.alert('✅ Success', 'Teacher updated successfully!', [
-            { text: 'OK', onPress: () => router.back() },
-          ]);
+          showToast({
+            type: 'success',
+            title: 'Success',
+            message: 'Teacher updated successfully!',
+          });
+          router.back();
         },
         onError: (err: Error & { response?: { data?: unknown } }) => {
           if (err.response?.data) {
@@ -420,27 +423,6 @@ export default function EditTeacherScreen() {
               label="Date of Joining"
               value={form.joining_date}
               onChange={(v) => updateField('joining_date', v)}
-            />
-          </FormSection>
-        </Animated.View>
-
-        <Animated.View entering={FadeInDown.delay(300)}>
-          <FormSection title="Emergency Contact" icon="🆘">
-            <FormInput
-              label="Emergency Contact Name"
-              value={form.emergency_contact_name}
-              onChangeText={(v) => updateField('emergency_contact_name', v)}
-              placeholder="Enter contact name"
-            />
-            <FormInput
-              label="Emergency Contact Phone"
-              value={form.emergency_contact_number}
-              onChangeText={(v) => updateField('emergency_contact_number', v)}
-              onBlurValidate={() => blurValidate('emergency_contact_number')}
-              error={errors.emergency_contact_number}
-              placeholder="Enter contact phone"
-              keyboardType="phone-pad"
-              maxLength={15}
             />
           </FormSection>
         </Animated.View>

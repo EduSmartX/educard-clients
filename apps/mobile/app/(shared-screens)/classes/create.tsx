@@ -17,17 +17,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Save } from 'lucide-react-native';
 import { useState, useCallback, useMemo } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { DeletedDuplicateModal } from '@/components/common/DeletedDuplicateModal';
@@ -36,6 +27,7 @@ import { useCreateClass, useRestoreClass } from '@/features/classes';
 import { useCoreClasses } from '@/features/core';
 import { useTeachers } from '@/features/teachers';
 import { useDeletedDuplicateHandler } from '@/hooks/useDeletedDuplicateHandler';
+import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
 import {
   isDeletedDuplicateError,
@@ -48,6 +40,7 @@ type FieldErrors = Record<string, string>;
 
 export default function CreateClassScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
   const createMutation = useCreateClass();
   const restoreMutation = useRestoreClass();
   const { data: coreClasses, isLoading: coreLoading } = useCoreClasses();
@@ -122,9 +115,8 @@ export default function CreateClassScreen() {
         {
           onSuccess: () => {
             duplicateHandler.closeDialog();
-            Alert.alert('Success', 'Class created successfully', [
-              { text: 'OK', onPress: () => router.back() },
-            ]);
+            showToast({ type: 'success', title: 'Success', message: 'Class created successfully' });
+            router.back();
           },
           onError: (err: any) => {
             if (isDeletedDuplicateError(err)) {
@@ -155,12 +147,19 @@ export default function CreateClassScreen() {
     restoreMutation.mutate(recordId, {
       onSuccess: () => {
         duplicateHandler.closeDialog();
-        Alert.alert('✅ Restored', 'The deleted class has been reactivated.', [
-          { text: 'OK', onPress: () => router.back() },
-        ]);
+        showToast({
+          type: 'success',
+          title: 'Restored',
+          message: 'The deleted class has been reactivated.',
+        });
+        router.back();
       },
       onError: (error: unknown) => {
-        Alert.alert('Error', getErrorMessage(error, 'Failed to reactivate. Please try again.'));
+        showToast({
+          type: 'error',
+          title: 'Error',
+          message: getErrorMessage(error, 'Failed to reactivate. Please try again.'),
+        });
       },
     });
   }, [duplicateHandler, restoreMutation, router]);
@@ -192,98 +191,96 @@ export default function CreateClassScreen() {
         </View>
       </LinearGradient>
 
-      <KeyboardAvoidingView
+      <KeyboardAwareScrollView
+        contentContainerStyle={st.form}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid
+        extraScrollHeight={20}
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView
-          contentContainerStyle={st.form}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+        <FormError message={apiError} onDismiss={() => setApiError(null)} />
+
+        <Animated.View entering={FadeInDown.delay(100)}>
+          <FormSection title="Class Information" icon="🏫">
+            <FormDropdown
+              label="Class (Master)"
+              required
+              options={coreClassOpts}
+              value={form.class_master}
+              onChange={(v) => updateField('class_master', v)}
+              error={errors.class_master}
+              placeholder="Select class"
+              searchable
+              loading={coreLoading}
+            />
+            <FormInput
+              label="Section Name"
+              required
+              value={form.name}
+              onChangeText={(v) => updateField('name', v)}
+              onBlurValidate={() => blurValidate('name')}
+              error={errors.name}
+              placeholder="e.g. A, B, Nehru"
+            />
+            <FormInput
+              label="Capacity"
+              value={form.capacity}
+              onChangeText={(v) => updateField('capacity', v)}
+              onBlurValidate={() => blurValidate('capacity')}
+              error={errors.capacity}
+              placeholder="e.g. 50"
+              keyboardType="numeric"
+              maxLength={3}
+            />
+            <FormDropdown
+              label="Class Teacher"
+              options={teacherOpts}
+              value={form.class_teacher_id}
+              onChange={(v) => updateField('class_teacher_id', v)}
+              placeholder="Select class teacher"
+              searchable
+            />
+            <FormInput
+              label="Room Number"
+              value={form.room_number}
+              onChangeText={(v) => updateField('room_number', v)}
+              placeholder="e.g. Room 101"
+            />
+            <FormInput
+              label="Description"
+              value={form.info}
+              onChangeText={(v) => updateField('info', v)}
+              placeholder="Optional notes about this class"
+              multiline
+              numberOfLines={3}
+            />
+          </FormSection>
+        </Animated.View>
+
+        <TouchableOpacity
+          onPress={handleSubmit}
+          disabled={createMutation.isPending}
+          style={st.subBtn}
+          activeOpacity={0.8}
         >
-          <FormError message={apiError} onDismiss={() => setApiError(null)} />
-
-          <Animated.View entering={FadeInDown.delay(100)}>
-            <FormSection title="Class Information" icon="🏫">
-              <FormDropdown
-                label="Class (Master)"
-                required
-                options={coreClassOpts}
-                value={form.class_master}
-                onChange={(v) => updateField('class_master', v)}
-                error={errors.class_master}
-                placeholder="Select class"
-                searchable
-                loading={coreLoading}
-              />
-              <FormInput
-                label="Section Name"
-                required
-                value={form.name}
-                onChangeText={(v) => updateField('name', v)}
-                onBlurValidate={() => blurValidate('name')}
-                error={errors.name}
-                placeholder="e.g. A, B, Nehru"
-              />
-              <FormInput
-                label="Capacity"
-                value={form.capacity}
-                onChangeText={(v) => updateField('capacity', v)}
-                onBlurValidate={() => blurValidate('capacity')}
-                error={errors.capacity}
-                placeholder="e.g. 50"
-                keyboardType="numeric"
-                maxLength={3}
-              />
-              <FormDropdown
-                label="Class Teacher"
-                options={teacherOpts}
-                value={form.class_teacher_id}
-                onChange={(v) => updateField('class_teacher_id', v)}
-                placeholder="Select class teacher"
-                searchable
-              />
-              <FormInput
-                label="Room Number"
-                value={form.room_number}
-                onChangeText={(v) => updateField('room_number', v)}
-                placeholder="e.g. Room 101"
-              />
-              <FormInput
-                label="Description"
-                value={form.info}
-                onChangeText={(v) => updateField('info', v)}
-                placeholder="Optional notes about this class"
-                multiline
-                numberOfLines={3}
-              />
-            </FormSection>
-          </Animated.View>
-
-          <TouchableOpacity
-            onPress={handleSubmit}
-            disabled={createMutation.isPending}
-            style={st.subBtn}
-            activeOpacity={0.8}
+          <LinearGradient
+            colors={['#7c3aed', '#4f46e5']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={st.subGrad}
           >
-            <LinearGradient
-              colors={['#7c3aed', '#4f46e5']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={st.subGrad}
-            >
-              {createMutation.isPending ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <>
-                  <Save size={20} color="#fff" />
-                  <Text style={st.subText}>Create Class</Text>
-                </>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
+            {createMutation.isPending ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Save size={20} color="#fff" />
+                <Text style={st.subText}>Create Class</Text>
+              </>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+      </KeyboardAwareScrollView>
 
       <DeletedDuplicateModal
         visible={duplicateHandler.isOpen}

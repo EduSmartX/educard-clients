@@ -11,6 +11,7 @@
 
 import { useMemo, useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { formatSlotTime } from '@educard/shared';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -53,13 +54,7 @@ function getInitials(name: string): string {
 interface TimetableGridProps {
   timetable: ClassTimetableResponse;
   isLoading?: boolean;
-}
-
-function formatTime(time: string): string {
-  const [h, m] = time.split(':').map(Number);
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  const hour12 = h % 12 || 12;
-  return `${hour12}:${String(m).padStart(2, '0')} ${ampm}`;
+  readOnly?: boolean;
 }
 
 function getActiveDays(days: Record<string, ClassTimetableSlot[]>): number[] {
@@ -204,7 +199,7 @@ function AssignmentPopover({
                 <div>
                   <p className="text-sm font-bold text-slate-800">{slot.label}</p>
                   <p className="text-xs text-slate-400">
-                    {formatTime(slot.start_time)} – {formatTime(slot.end_time)}
+                    {formatSlotTime(slot.start_time)} – {formatSlotTime(slot.end_time)}
                   </p>
                 </div>
                 <Button
@@ -307,8 +302,8 @@ function BreakRow({ slot, colCount }: { slot: ClassTimetableSlot; colCount: numb
     <div className="mb-1.5 grid gap-1.5" style={gridStyle(colCount)}>
       <div className="flex flex-col items-center justify-center rounded-lg bg-slate-100/80 px-1 py-2 text-center">
         <span className="text-[10px] font-medium text-slate-600">{slot.label || typeLabel}</span>
-        <span className="text-[9px] text-slate-500">{formatTime(slot.start_time)}</span>
-        <span className="text-[9px] text-slate-500">{formatTime(slot.end_time)}</span>
+        <span className="text-[9px] text-slate-500">{formatSlotTime(slot.start_time)}</span>
+        <span className="text-[9px] text-slate-500">{formatSlotTime(slot.end_time)}</span>
       </div>
       <div
         className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-amber-300 bg-amber-50/70 py-2.5"
@@ -317,7 +312,7 @@ function BreakRow({ slot, colCount }: { slot: ClassTimetableSlot; colCount: numb
         <span className="text-amber-500">{icon}</span>
         <span className="text-xs font-semibold text-amber-700">{slot.label || typeLabel}</span>
         <span className="text-[10px] text-amber-500">
-          {formatTime(slot.start_time)} – {formatTime(slot.end_time)}
+          {formatSlotTime(slot.start_time)} – {formatSlotTime(slot.end_time)}
         </span>
       </div>
     </div>
@@ -371,7 +366,7 @@ function PeriodCell({
       )}
 
       <span className={`text-[10px] font-semibold ${color.text} opacity-60`}>
-        {formatTime(slot.start_time)} – {formatTime(slot.end_time)}
+        {formatSlotTime(slot.start_time)} – {formatSlotTime(slot.end_time)}
       </span>
 
       <span className={`mt-0.5 text-sm leading-tight font-bold ${color.text}`}>
@@ -422,28 +417,14 @@ function TimetableGridSkeleton() {
   );
 }
 
-function EmptyTimetable() {
-  return (
-    <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
-        <BookOpen className="h-8 w-8 text-slate-400" />
-      </div>
-      <h3 className="text-lg font-semibold">No Timetable Configured</h3>
-      <p className="text-muted-foreground mt-1 max-w-md text-sm">
-        This class doesn&apos;t have a timetable yet. Create a class group and define time slots
-        first.
-      </p>
-    </div>
-  );
-}
-
-export function TimetableGrid({ timetable, isLoading }: TimetableGridProps) {
-  const { isAdmin } = useRole();
+export function TimetableGrid({ timetable, isLoading, readOnly }: TimetableGridProps) {
+  const { isAdmin: isAdminRole } = useRole();
+  const isAdmin = isAdminRole && !readOnly;
   const activeDays = useMemo(
     () => (timetable.days ? getActiveDays(timetable.days) : []),
     [timetable.days]
   );
-  const maxSlots = useMemo(
+  const _maxSlots = useMemo(
     () => (timetable.days ? getMaxSlots(timetable.days) : 0),
     [timetable.days]
   );
@@ -467,7 +448,58 @@ export function TimetableGrid({ timetable, isLoading }: TimetableGridProps) {
     return <TimetableGridSkeleton />;
   }
   if (!timetable.class_group || Object.keys(timetable.days).length === 0) {
-    return <EmptyTimetable />;
+    // Show empty grid with default days (Mon-Sat) and a message
+    const defaultDays = [0, 1, 2, 3, 4, 5];
+    return (
+      <Card className="overflow-hidden shadow-sm">
+        <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-gray-50 pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-xl">
+                {timetable.class ?? 'Class'} — Weekly Timetable
+              </CardTitle>
+              {timetable.class_group && (
+                <p className="text-muted-foreground mt-0.5 text-sm">
+                  Group: {timetable.class_group.name}
+                </p>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-4">
+          {/* Day headers */}
+          <div className="mb-3 grid gap-1.5" style={gridStyle(defaultDays.length)}>
+            <div className="flex items-center justify-center rounded-lg bg-gradient-to-b from-indigo-500 to-indigo-600 px-2 py-2.5">
+              <Clock className="h-3.5 w-3.5 text-white" />
+              <span className="ml-1 text-[10px] font-bold tracking-wider text-white uppercase">
+                Time
+              </span>
+            </div>
+            {defaultDays.map((day) => (
+              <div
+                key={day}
+                className="flex items-center justify-center rounded-lg bg-gradient-to-b from-indigo-500 to-indigo-600 px-2 py-2.5"
+              >
+                <span className="text-[11px] font-bold tracking-wider text-white uppercase">
+                  {DAY_SHORT_LABELS[day]}
+                </span>
+              </div>
+            ))}
+          </div>
+          {/* Empty message */}
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100">
+              <BookOpen className="h-7 w-7 text-slate-400" />
+            </div>
+            <h3 className="text-base font-semibold text-gray-700">No Timetable Configured</h3>
+            <p className="text-muted-foreground mt-1 max-w-sm text-sm">
+              This class doesn&apos;t have time slots configured yet. Set up a class group and
+              define periods in Timetable Setup.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   const refDay = activeDays.reduce(
@@ -540,7 +572,7 @@ export function TimetableGrid({ timetable, isLoading }: TimetableGridProps) {
               {totalAssigned}/{totalAssignable} assigned
             </Badge>
             <Badge variant="outline" className="border-slate-200 bg-white">
-              {maxSlots} periods/day
+              {refSlots.filter((s) => !BREAK_TYPES.has(s.slot_type)).length} periods/day
             </Badge>
             <Badge variant="outline" className="border-slate-200 bg-white">
               {activeDays.length} days/week
@@ -585,10 +617,10 @@ export function TimetableGrid({ timetable, isLoading }: TimetableGridProps) {
                 <div className="flex flex-col items-center justify-center rounded-lg bg-slate-100/80 px-1 py-2 text-center">
                   <span className="text-[11px] font-bold text-slate-700">{refSlot.label}</span>
                   <span className="mt-0.5 text-[10px] font-medium text-slate-500">
-                    {formatTime(refSlot.start_time)}
+                    {formatSlotTime(refSlot.start_time)}
                   </span>
                   <span className="text-[10px] font-medium text-slate-500">
-                    {formatTime(refSlot.end_time)}
+                    {formatSlotTime(refSlot.end_time)}
                   </span>
                 </div>
                 {activeDays.map((day) => {
@@ -621,23 +653,6 @@ export function TimetableGrid({ timetable, isLoading }: TimetableGridProps) {
             );
           })}
         </div>
-
-        {/* Subject legend */}
-        {subjectColorMap.size > 0 && (
-          <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/50 px-5 py-4">
-            <p className="mb-3 text-[11px] font-bold tracking-widest text-slate-500 uppercase">
-              Subject Colors
-            </p>
-            <div className="flex flex-wrap gap-4">
-              {Array.from(subjectColorMap.entries()).map(([name, color]) => (
-                <div key={name} className="flex items-center gap-2">
-                  <div className={`h-4 w-4 rounded-md ${color.accent} shadow-sm`} />
-                  <span className="text-sm font-medium text-slate-700">{name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   );

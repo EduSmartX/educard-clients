@@ -7,6 +7,7 @@ import type { Subject } from '@educard/shared';
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { DEFAULT_PAGE_SIZE } from '@/api/client';
+import { showToast } from '@/utils/toast';
 
 import {
   getSubjects,
@@ -85,6 +86,7 @@ export function useCreateSubject() {
     mutationFn: ({ data, forceCreate }: { data: Partial<Subject>; forceCreate?: boolean }) =>
       createSubject(data, forceCreate),
     onSuccess: () => {
+      showToast('success', 'Subject created successfully');
       void queryClient.invalidateQueries({ queryKey: subjectKeys.all });
     },
   });
@@ -96,6 +98,7 @@ export function useUpdateSubject() {
     mutationFn: ({ publicId, data }: { publicId: string; data: Partial<Subject> }) =>
       updateSubject(publicId, data),
     onSuccess: () => {
+      showToast('success', 'Subject updated successfully');
       void queryClient.invalidateQueries({ queryKey: subjectKeys.all });
     },
   });
@@ -106,6 +109,7 @@ export function useDeleteSubject() {
   return useMutation({
     mutationFn: (publicId: string) => deleteSubject(publicId),
     onSuccess: () => {
+      showToast('success', 'Subject deleted successfully');
       void queryClient.invalidateQueries({ queryKey: subjectKeys.lists() });
     },
   });
@@ -116,6 +120,7 @@ export function useRestoreSubject() {
   return useMutation({
     mutationFn: (publicId: string) => restoreSubject(publicId),
     onSuccess: () => {
+      showToast('success', 'Subject restored successfully');
       void queryClient.invalidateQueries({ queryKey: subjectKeys.all });
     },
   });

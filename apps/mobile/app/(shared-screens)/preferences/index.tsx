@@ -36,10 +36,9 @@ import {
   Alert,
   Modal,
   Pressable,
-  KeyboardAvoidingView,
-  Platform,
   Keyboard,
 } from 'react-native'; // TextInputType, NativeSyntheticEvent, NativeScrollEvent removed - unused
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import type { SaturdayOffPattern } from '@/features/holidays/api/holidays-api';
@@ -56,6 +55,7 @@ import {
   type GroupedPreference,
 } from '@/features/preferences';
 import { useAuthStore } from '@/lib/auth-store';
+import { useToast } from '@/lib/toast-context';
 import { isAdminRole } from '@/utils/role-utils';
 
 const adminGradient = getRoleGradient('admin');
@@ -131,6 +131,7 @@ const isPositiveValue = (pref: OrganizationPreference): boolean => {
 
 export default function OrgPreferencesScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
   const scrollRef = useRef<ScrollView>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
@@ -179,7 +180,11 @@ export default function OrgPreferencesScreen() {
       {
         onError: (err: unknown) => {
           // unknown instead of any
-          Alert.alert('Error', extractApiError(err, 'Failed to update preference'));
+          showToast({
+            type: 'error',
+            title: 'Error',
+            message: extractApiError(err, 'Failed to update preference'),
+          });
         },
       }
     );
@@ -521,7 +526,11 @@ export default function OrgPreferencesScreen() {
         });
       }
     } catch (e: unknown) {
-      Alert.alert('Error', extractApiError(e, 'Failed to update working day policy'));
+      showToast({
+        type: 'error',
+        title: 'Error',
+        message: extractApiError(e, 'Failed to update working day policy'),
+      });
     }
   };
 
@@ -811,11 +820,7 @@ export default function OrgPreferencesScreen() {
           <ActivityIndicator size="large" color={Colors.primary[500]} />
         </View>
       ) : (
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-        >
+        <View style={{ flex: 1 }}>
           {/* Read-only banner for teachers */}
           {!canManage && (
             <View style={styles.readOnlyBanner}>
@@ -823,13 +828,14 @@ export default function OrgPreferencesScreen() {
               <Text style={styles.readOnlyText}>View only — Contact admin to modify settings</Text>
             </View>
           )}
-          <ScrollView
-            ref={scrollRef}
+          <KeyboardAwareScrollView
             style={styles.scrollView}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
             keyboardShouldPersistTaps="handled"
+            enableOnAndroid
+            extraScrollHeight={20}
             keyboardDismissMode="interactive"
           >
             {groups.map((group, groupIdx) => {
@@ -887,8 +893,8 @@ export default function OrgPreferencesScreen() {
 
             {/* Extra space so keyboard doesn't cover last items */}
             <View style={{ height: 200 }} />
-          </ScrollView>
-        </KeyboardAvoidingView>
+          </KeyboardAwareScrollView>
+        </View>
       )}
 
       {renderDropdownModal()}

@@ -45,6 +45,7 @@ import { FormMultiSelect } from '@/components/forms/FormMultiSelect';
 import { useRoleTypes, useSupervisors, useCoreSubjects, uploadProfilePhoto } from '@/features/core';
 import { useCreateTeacher, useRestoreTeacher } from '@/features/teachers';
 import { useDeletedDuplicateHandler } from '@/hooks/useDeletedDuplicateHandler';
+import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
 import {
   isDeletedDuplicateError,
@@ -57,6 +58,7 @@ type FieldErrors = Record<string, string>;
 
 export default function CreateTeacherScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
   const createMutation = useCreateTeacher();
   const restoreMutation = useRestoreTeacher();
   const scrollRef = useRef<KeyboardAwareScrollView>(null);
@@ -91,8 +93,6 @@ export default function CreateTeacherScreen() {
     joining_date: '',
     supervisor_email: '',
     subjects: [] as string[],
-    emergency_contact_name: '',
-    emergency_contact_number: '',
     street_address: '',
     city: '',
     state: '',
@@ -171,9 +171,12 @@ export default function CreateTeacherScreen() {
             duplicateHandler.closeDialog();
             const uid = response?.data?.user?.public_id || response?.user?.public_id;
             if (photoUri && uid) uploadProfilePhoto(uid, photoUri, 'photo.jpg').catch(() => {});
-            Alert.alert('✅ Success', 'Teacher created successfully!', [
-              { text: 'OK', onPress: () => router.back() },
-            ]);
+            showToast({
+              type: 'success',
+              title: 'Success',
+              message: 'Teacher created successfully!',
+            });
+            router.back();
           },
           onError: (err: any) => {
             // Check for deleted duplicate error
@@ -207,21 +210,25 @@ export default function CreateTeacherScreen() {
   const handleReactivate = useCallback(() => {
     const recordId = duplicateHandler.pendingData?.deletedRecordId;
     if (!recordId) {
-      Alert.alert('Error', 'Could not find deleted record ID.');
+      showToast({ type: 'error', title: 'Error', message: 'Could not find deleted record ID.' });
       return;
     }
     restoreMutation.mutate(recordId, {
       onSuccess: () => {
         duplicateHandler.closeDialog();
-        Alert.alert('✅ Restored', 'The deleted teacher has been reactivated successfully.', [
-          { text: 'OK', onPress: () => router.back() },
-        ]);
+        showToast({
+          type: 'success',
+          title: 'Restored',
+          message: 'The deleted teacher has been reactivated successfully.',
+        });
+        router.back();
       },
       onError: (error: unknown) => {
-        Alert.alert(
-          'Error',
-          getErrorMessage(error, 'Failed to reactivate the teacher. Please try again.')
-        );
+        showToast({
+          type: 'error',
+          title: 'Error',
+          message: getErrorMessage(error, 'Failed to reactivate the teacher. Please try again.'),
+        });
       },
     });
   }, [duplicateHandler, restoreMutation, router]);
@@ -434,29 +441,6 @@ export default function CreateTeacherScreen() {
                 label="Date of Joining"
                 value={form.joining_date}
                 onChange={(v) => updateField('joining_date', v)}
-              />
-            </FormSection>
-          </Animated.View>
-        )}
-
-        {!quickAdd && (
-          <Animated.View entering={FadeInDown.delay(300)}>
-            <FormSection title="Emergency Contact" icon="🆘">
-              <FormInput
-                label="Emergency Contact Name"
-                value={form.emergency_contact_name}
-                onChangeText={(v) => updateField('emergency_contact_name', v)}
-                placeholder="Enter contact name"
-              />
-              <FormInput
-                label="Emergency Contact Phone"
-                value={form.emergency_contact_number}
-                onChangeText={(v) => updateField('emergency_contact_number', v)}
-                onBlurValidate={() => blurValidate('emergency_contact_number')}
-                error={errors.emergency_contact_number}
-                placeholder="Enter contact phone"
-                keyboardType="phone-pad"
-                maxLength={15}
               />
             </FormSection>
           </Animated.View>

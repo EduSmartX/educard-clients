@@ -54,7 +54,8 @@ export const TEACHER_COLUMNS: ColumnConfig[] = [
     key: 'organization_role',
     name: 'Organization Role',
     required: true,
-    description: 'Organization role name (e.g., Teacher, Head of Department, Principal). Defaults to Teacher if not provided.',
+    description:
+      'Organization role name (e.g., Teacher, Head of Department, Principal). Defaults to Teacher if not provided.',
     validator: requiredValidator(100),
   },
   {
@@ -111,22 +112,9 @@ export const TEACHER_COLUMNS: ColumnConfig[] = [
     key: 'subjects',
     name: 'Subjects (multiple selection)',
     required: false,
-    description: 'Select multiple subjects from dropdown and separate with commas (e.g., Mathematics, Science, English)',
+    description:
+      'Select multiple subjects from dropdown and separate with commas (e.g., Mathematics, Science, English)',
     // No specific validator - backend handles subject validation
-  },
-  {
-    key: 'emergency_contact_name',
-    name: 'Emergency Contact Name',
-    required: false,
-    description: 'Emergency contact person name',
-    validator: optionalTextValidator(100),
-  },
-  {
-    key: 'emergency_contact_number',
-    name: 'Emergency Contact Number',
-    required: false,
-    description: 'Emergency contact phone number',
-    validator: phoneValidator,
   },
   {
     key: 'date_of_birth',
@@ -146,7 +134,8 @@ export const TEACHER_COLUMNS: ColumnConfig[] = [
     key: 'supervisor_email',
     name: 'Supervisor Email',
     required: false,
-    description: 'Email of supervisor (any other teacher or admin). If not provided, defaults to Admin (Optional)',
+    description:
+      'Email of supervisor (any other teacher or admin). If not provided, defaults to Admin (Optional)',
     validator: supervisorEmailValidator,
   },
 ];
@@ -171,19 +160,19 @@ export const TEACHER_DUPLICATE_CHECKS: DuplicateCheckConfig[] = [
  * Get column config by field key
  */
 export function getTeacherColumnByKey(key: string): ColumnConfig | undefined {
-  return TEACHER_COLUMNS.find(col => col.key === key);
+  return TEACHER_COLUMNS.find((col) => col.key === key);
 }
 
 /**
  * Get mandatory teacher columns
  */
 export function getMandatoryTeacherColumns(): ColumnConfig[] {
-  return TEACHER_COLUMNS.filter(col => col.required);
+  return TEACHER_COLUMNS.filter((col) => col.required);
 }
 
 /**
  * Get optional teacher columns
  */
 export function getOptionalTeacherColumns(): ColumnConfig[] {
-  return TEACHER_COLUMNS.filter(col => !col.required);
+  return TEACHER_COLUMNS.filter((col) => !col.required);
 }

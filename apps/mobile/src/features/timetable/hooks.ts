@@ -14,6 +14,7 @@ import {
   fetchSlots,
   fetchClassTimetable,
   fetchMyTimetable,
+  fetchTeacherTimetable,
   createClassGroup,
   updateClassGroup,
   deleteClassGroup,
@@ -24,6 +25,7 @@ import {
   createEntry,
   deleteEntry,
 } from './api';
+import { showToast } from '@/utils/toast';
 
 export function useClassGroups() {
   return useQuery({
@@ -59,13 +61,25 @@ export function useMyTimetable() {
   });
 }
 
+export function useTeacherTimetable(teacherPublicId: string | undefined) {
+  return useQuery({
+    queryKey: ['timetable', 'teacher-timetable', teacherPublicId],
+    queryFn: () => fetchTeacherTimetable(teacherPublicId!),
+    enabled: !!teacherPublicId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 // Mutations
 
 export function useCreateClassGroup() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: ClassGroupCreatePayload) => createClassGroup(data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['timetable', 'class-groups'] }),
+    onSuccess: () => {
+      showToast('success', 'Class group created successfully');
+      void qc.invalidateQueries({ queryKey: ['timetable', 'class-groups'] });
+    },
   });
 }
 
@@ -74,7 +88,10 @@ export function useUpdateClassGroup() {
   return useMutation({
     mutationFn: ({ publicId, data }: { publicId: string; data: ClassGroupCreatePayload }) =>
       updateClassGroup(publicId, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['timetable', 'class-groups'] }),
+    onSuccess: () => {
+      showToast('success', 'Class group updated successfully');
+      void qc.invalidateQueries({ queryKey: ['timetable', 'class-groups'] });
+    },
   });
 }
 
@@ -82,7 +99,10 @@ export function useDeleteClassGroup() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (publicId: string) => deleteClassGroup(publicId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['timetable', 'class-groups'] }),
+    onSuccess: () => {
+      showToast('success', 'Class group deleted successfully');
+      void qc.invalidateQueries({ queryKey: ['timetable', 'class-groups'] });
+    },
   });
 }
 
@@ -91,7 +111,10 @@ export function useAddClassToGroup() {
   return useMutation({
     mutationFn: ({ groupId, classId }: { groupId: string; classId: string }) =>
       addClassToGroup(groupId, classId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['timetable', 'class-groups'] }),
+    onSuccess: () => {
+      showToast('success', 'Class added to group');
+      void qc.invalidateQueries({ queryKey: ['timetable', 'class-groups'] });
+    },
   });
 }
 
@@ -100,7 +123,10 @@ export function useRemoveClassFromGroup() {
   return useMutation({
     mutationFn: ({ groupId, classId }: { groupId: string; classId: string }) =>
       removeClassFromGroup(groupId, classId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['timetable', 'class-groups'] }),
+    onSuccess: () => {
+      showToast('success', 'Class removed from group');
+      void qc.invalidateQueries({ queryKey: ['timetable', 'class-groups'] });
+    },
   });
 }
 
@@ -109,6 +135,7 @@ export function useBulkSaveSlots(groupId: string) {
   return useMutation({
     mutationFn: (data: BulkSlotPayload) => bulkSaveSlots(groupId, data),
     onSuccess: () => {
+      showToast('success', 'Slots saved successfully');
       void qc.invalidateQueries({ queryKey: ['timetable', 'slots', groupId] });
       void qc.invalidateQueries({ queryKey: ['timetable', 'class-timetable'] });
     },
@@ -120,6 +147,7 @@ export function useClearDaySlots(groupId: string) {
   return useMutation({
     mutationFn: (day: number) => clearDaySlots(groupId, day),
     onSuccess: () => {
+      showToast('success', 'Day slots cleared');
       void qc.invalidateQueries({ queryKey: ['timetable', 'slots', groupId] });
       void qc.invalidateQueries({ queryKey: ['timetable', 'class-timetable'] });
     },
@@ -130,7 +158,10 @@ export function useCreateEntry() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: TimetableEntryCreatePayload) => createEntry(data),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: ['timetable', 'class-timetable'] }),
+    onSuccess: () => {
+      showToast('success', 'Timetable entry created');
+      void qc.invalidateQueries({ queryKey: ['timetable', 'class-timetable'] });
+    },
   });
 }
 
@@ -138,6 +169,9 @@ export function useDeleteEntry() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (publicId: string) => deleteEntry(publicId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['timetable', 'class-timetable'] }),
+    onSuccess: () => {
+      showToast('success', 'Timetable entry deleted');
+      void qc.invalidateQueries({ queryKey: ['timetable', 'class-timetable'] });
+    },
   });
 }

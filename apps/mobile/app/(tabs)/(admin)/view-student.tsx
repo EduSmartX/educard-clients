@@ -114,9 +114,7 @@ export default function ViewStudentScreen() {
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(400)}>
-            <Section title="Emergency & Medical" icon="🆘">
-              <Row label="Emergency Contact" value={student.emergency_contact_name} />
-              <Row label="Emergency Phone" value={student.emergency_contact_phone} />
+            <Section title="Medical" icon="�">
               <Row label="Medical Conditions" value={student.medical_conditions} />
             </Section>
           </Animated.View>

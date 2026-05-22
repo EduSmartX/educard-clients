@@ -8,22 +8,15 @@ import { EXAM_SESSION_TYPE_LABELS, type ExamSessionType } from '@educard/shared'
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Check } from 'lucide-react-native';
-import { useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { FormInput, FormDropdown, FormDatePicker } from '@/components/forms';
+import { useCurrentAcademicYear } from '@/features/core';
 import { useCreateExamSession } from '@/features/exams';
+import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -35,7 +28,9 @@ const SESSION_TYPE_OPTIONS = Object.entries(EXAM_SESSION_TYPE_LABELS).map(([valu
 
 export default function CreateExamSessionScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
   const createSession = useCreateExamSession();
+  const { data: currentAcademicYear } = useCurrentAcademicYear();
 
   const [name, setName] = useState('');
   const [sessionType, setSessionType] = useState<string>('unit_test');
@@ -43,6 +38,21 @@ export default function CreateExamSessionScreen() {
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+
+  // Pre-fill academic year and dates from DB when loaded
+  useEffect(() => {
+    if (currentAcademicYear) {
+      if (currentAcademicYear.name && !academicYear) {
+        setAcademicYear(currentAcademicYear.name);
+      }
+      if (currentAcademicYear.start_date && !startDate) {
+        setStartDate(currentAcademicYear.start_date);
+      }
+      if (currentAcademicYear.end_date && !endDate) {
+        setEndDate(currentAcademicYear.end_date);
+      }
+    }
+  }, [currentAcademicYear, academicYear, startDate, endDate]);
 
   const handleSubmit = async () => {
     if (!name.trim()) {
@@ -67,9 +77,14 @@ export default function CreateExamSessionScreen() {
         start_date: startDate || null,
         end_date: endDate || null,
       });
+      showToast({
+        type: 'success',
+        title: 'Session Created',
+        message: 'Exam session created successfully',
+      });
       router.back();
     } catch (err: any) {
-      Alert.alert('Error', extractApiError(err));
+      showToast({ type: 'error', title: 'Error', message: extractApiError(err) });
     }
   };
 
@@ -100,73 +115,74 @@ export default function CreateExamSessionScreen() {
         </View>
       </LinearGradient>
 
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      <KeyboardAwareScrollView
+        style={[st.body, { flex: 1 }]}
+        contentContainerStyle={st.bodyContent}
+        enableOnAndroid
+        extraScrollHeight={20}
+        keyboardShouldPersistTaps="handled"
       >
-        <ScrollView style={st.body} contentContainerStyle={st.bodyContent}>
-          <Animated.View entering={FadeInDown.delay(100).springify()}>
-            <View style={st.card}>
-              <FormInput
-                label="Session Name"
-                value={name}
-                onChangeText={setName}
-                placeholder="e.g., Unit Test 1 - 2024"
-                required
-              />
-              <FormDropdown
-                label="Session Type"
-                value={sessionType}
-                onChange={setSessionType}
-                options={SESSION_TYPE_OPTIONS}
-                placeholder="Select type"
-                required
-              />
-              <FormInput
-                label="Academic Year"
-                value={academicYear}
-                onChangeText={setAcademicYear}
-                placeholder="e.g., 2024-2025"
-                required
-              />
-              <FormInput
-                label="Description"
-                value={description}
-                onChangeText={setDescription}
-                placeholder="Optional description"
-                multiline
-              />
-              <FormDatePicker
-                label="Start Date"
-                value={startDate}
-                onChange={setStartDate}
-                placeholder="Select start date (optional)"
-              />
-              <FormDatePicker
-                label="End Date"
-                value={endDate}
-                onChange={setEndDate}
-                placeholder="Select end date (optional)"
-              />
-            </View>
-          </Animated.View>
+        <Animated.View entering={FadeInDown.delay(100).springify()}>
+          <View style={st.card}>
+            <FormInput
+              label="Session Name"
+              value={name}
+              onChangeText={setName}
+              placeholder="e.g., Unit Test 1 - 2024"
+              required
+            />
+            <FormDropdown
+              label="Session Type"
+              value={sessionType}
+              onChange={setSessionType}
+              options={SESSION_TYPE_OPTIONS}
+              placeholder="Select type"
+              required
+            />
+            <FormInput
+              label="Academic Year"
+              value={academicYear}
+              onChangeText={setAcademicYear}
+              placeholder="e.g., 2024-2025"
+              required
+            />
+            <FormInput
+              label="Description"
+              value={description}
+              onChangeText={setDescription}
+              placeholder="Optional description"
+              multiline
+            />
+            <FormDatePicker
+              label="Start Date"
+              value={startDate}
+              onChange={setStartDate}
+              placeholder="Select start date (optional)"
+            />
+            <FormDatePicker
+              label="End Date"
+              value={endDate}
+              onChange={setEndDate}
+              placeholder="Select end date (optional)"
+            />
+          </View>
+        </Animated.View>
 
-          <TouchableOpacity
-            style={[st.submitBtn, createSession.isPending && st.submitBtnDisabled]}
-            onPress={handleSubmit}
-            disabled={createSession.isPending}
-          >
-            {createSession.isPending ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <>
-                <Check size={18} color="#fff" />
-                <Text style={st.submitText}>Create Session</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        <TouchableOpacity
+          style={[st.submitBtn, createSession.isPending && st.submitBtnDisabled]}
+          onPress={handleSubmit}
+          disabled={createSession.isPending}
+        >
+          {createSession.isPending ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <>
+              <Check size={18} color="#fff" />
+              <Text style={st.submitText}>Create Session</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </KeyboardAwareScrollView>
     </View>
   );
 }

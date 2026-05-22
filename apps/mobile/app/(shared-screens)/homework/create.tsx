@@ -37,10 +37,9 @@ import {
   StyleSheet,
   TextInput,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { FormDatePicker, FormAttachmentPicker, type SelectedFile } from '@/components/forms';
@@ -51,6 +50,7 @@ import {
 } from '@/features/homework';
 import { useFormErrors } from '@/hooks';
 import { useAuthStore } from '@/lib/auth-store';
+import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
 import { isAdminRole } from '@/utils/role-utils';
 
@@ -69,6 +69,7 @@ function getTomorrowDate(): string {
 
 export default function CreateHomeworkScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
   const params = useLocalSearchParams<{
     class?: string;
     subject?: string;
@@ -202,9 +203,8 @@ export default function CreateHomeworkScreen() {
         if (attachments.length > 0 && data?.public_id) {
           await uploadAttachments(data.public_id);
         }
-        Alert.alert('Success', 'Homework created successfully', [
-          { text: 'OK', onPress: () => router.back() },
-        ]);
+        showToast({ type: 'success', title: 'Success', message: 'Homework created successfully' });
+        router.back();
       },
       onError: (error: unknown) => {
         handleApiError(error, 'Failed to create homework');
@@ -213,10 +213,7 @@ export default function CreateHomeworkScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={layoutStyles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={layoutStyles.container}>
       <LinearGradient colors={adminGradient} style={headerStyles.header}>
         <Animated.View
           entering={FadeIn.delay(100)}
@@ -245,7 +242,13 @@ export default function CreateHomeworkScreen() {
         </View>
       </LinearGradient>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <KeyboardAwareScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        enableOnAndroid
+        extraScrollHeight={20}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Class Display (Readonly) */}
         <Animated.View entering={FadeInDown.delay(100)} style={styles.section}>
           <Text style={styles.sectionTitle}>Class</Text>
@@ -518,7 +521,7 @@ export default function CreateHomeworkScreen() {
         </Animated.View>
 
         <View style={{ height: 100 }} />
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* Submit Button */}
       <View style={styles.footer}>
@@ -547,7 +550,7 @@ export default function CreateHomeworkScreen() {
           )}
         </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 

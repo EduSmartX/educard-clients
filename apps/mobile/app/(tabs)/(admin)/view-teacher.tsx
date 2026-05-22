@@ -122,13 +122,6 @@ export default function ViewTeacherScreen() {
               </Section>
             </Animated.View>
           )}
-
-          <Animated.View entering={FadeInDown.delay(400)}>
-            <Section title="Emergency Contact" icon="🆘">
-              <Row label="Name" value={teacher.emergency_contact_name} />
-              <Row label="Number" value={teacher.emergency_contact_number} />
-            </Section>
-          </Animated.View>
         </ScrollView>
       )}
     </View>

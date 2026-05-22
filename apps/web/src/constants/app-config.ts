@@ -278,6 +278,7 @@ export const ROUTES = {
   EXCEPTIONAL_WORK: '/exceptional-work',
   TIMETABLE: '/timetable',
   TIMETABLE_SETUP: '/timetable/setup',
+  TIMETABLE_VIEW: '/timetable/view',
   // Homework
   HOMEWORK: '/homework',
   HOMEWORK_NEW: '/homework/new',

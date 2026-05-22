@@ -4,7 +4,6 @@
 
 import { extractApiError } from '@educard/shared';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Alert } from 'react-native';
 
 import {
   getLeaveAllocations,
@@ -26,6 +25,7 @@ import {
   type LeaveReviewQueryParams,
   type CreateLeaveRequestPayload,
 } from '../api/leave-api';
+import { showToast } from '@/utils/toast';
 
 // Query Keys
 
@@ -82,6 +82,7 @@ export function useCreateLeaveAllocation() {
   return useMutation({
     mutationFn: createLeaveAllocation,
     onSuccess: () => {
+      showToast('success', 'Leave allocation created successfully');
       void qc.invalidateQueries({ queryKey: leaveKeys.allocations() });
     },
   });
@@ -98,6 +99,7 @@ export function useUpdateLeaveAllocation() {
       data: Parameters<typeof updateLeaveAllocation>[1];
     }) => updateLeaveAllocation(publicId, data),
     onSuccess: () => {
+      showToast('success', 'Leave allocation updated successfully');
       void qc.invalidateQueries({ queryKey: leaveKeys.allocations() });
     },
   });
@@ -108,6 +110,7 @@ export function useDeleteLeaveAllocation() {
   return useMutation({
     mutationFn: deleteLeaveAllocation,
     onSuccess: () => {
+      showToast('success', 'Leave allocation deleted successfully');
       void qc.invalidateQueries({ queryKey: leaveKeys.allocations() });
     },
   });
@@ -137,6 +140,7 @@ export function useApproveLeave() {
     mutationFn: ({ publicId, data }: { publicId: string; data?: { review_comments?: string } }) =>
       approveLeaveRequest(publicId, data),
     onSuccess: () => {
+      showToast('success', 'Leave request approved successfully');
       void qc.invalidateQueries({ queryKey: leaveKeys.reviews() });
     },
   });
@@ -148,6 +152,7 @@ export function useRejectLeave() {
     mutationFn: ({ publicId, data }: { publicId: string; data?: { review_comments?: string } }) =>
       rejectLeaveRequest(publicId, data),
     onSuccess: () => {
+      showToast('success', 'Leave request rejected');
       void qc.invalidateQueries({ queryKey: leaveKeys.reviews() });
     },
   });
@@ -182,11 +187,11 @@ export function useCreateLeaveRequest() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: [...leaveKeys.all, 'my-requests'] });
       void qc.invalidateQueries({ queryKey: [...leaveKeys.all, 'my-balances'] });
-      Alert.alert('Success', 'Leave request submitted successfully');
+      showToast('success', 'Leave request submitted successfully');
     },
     onError: (error: unknown) => {
       const message = extractApiError(error, 'Failed to submit leave request');
-      Alert.alert('Error', message);
+      showToast('error', message);
     },
   });
 }
@@ -198,11 +203,11 @@ export function useCancelLeaveRequest() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: [...leaveKeys.all, 'my-requests'] });
       void qc.invalidateQueries({ queryKey: [...leaveKeys.all, 'my-balances'] });
-      Alert.alert('Success', 'Leave request cancelled');
+      showToast('success', 'Leave request cancelled');
     },
     onError: (error: unknown) => {
       const message = extractApiError(error, 'Failed to cancel leave request');
-      Alert.alert('Error', message);
+      showToast('error', message);
     },
   });
 }

@@ -9,6 +9,7 @@ import {
   fetchSlots,
   fetchClassTimetable,
   fetchMyTimetable,
+  fetchTeacherTimetable,
 } from '../api/timetable-api';
 
 export const timetableKeys = {
@@ -18,6 +19,8 @@ export const timetableKeys = {
   slots: (groupId: string, day?: number) => [...timetableKeys.all, 'slots', groupId, day] as const,
   classTimetable: (classId: string) => [...timetableKeys.all, 'class-timetable', classId] as const,
   myTimetable: () => [...timetableKeys.all, 'my-timetable'] as const,
+  teacherTimetable: (teacherId: string) =>
+    [...timetableKeys.all, 'teacher-timetable', teacherId] as const,
 };
 
 export function useClassGroups() {
@@ -59,6 +62,15 @@ export function useMyTimetable() {
   return useQuery({
     queryKey: timetableKeys.myTimetable(),
     queryFn: fetchMyTimetable,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useTeacherTimetable(teacherPublicId: string | undefined) {
+  return useQuery({
+    queryKey: timetableKeys.teacherTimetable(teacherPublicId ?? ''),
+    queryFn: () => fetchTeacherTimetable(teacherPublicId!),
+    enabled: !!teacherPublicId,
     staleTime: 5 * 60 * 1000,
   });
 }

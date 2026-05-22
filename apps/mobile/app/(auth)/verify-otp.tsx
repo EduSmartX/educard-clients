@@ -6,17 +6,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import React, { useState, useRef } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Alert,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { requestPasswordResetOtp, parseApiError } from '@/api';
@@ -88,74 +79,72 @@ export default function VerifyOTPScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      <KeyboardAwareScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid
+        extraScrollHeight={20}
         style={styles.keyboardView}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
+        {/* Back Button */}
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={24} color="#1f2937" />
+        </TouchableOpacity>
+
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.iconContainer}>
+            <Ionicons name="shield-checkmark-outline" size={48} color="#10b981" />
+          </View>
+          <Text style={styles.title}>Verify OTP</Text>
+          <Text style={styles.subtitle}>
+            Enter the 6-digit code sent to{'\n'}
+            <Text style={styles.email}>{email}</Text>
+          </Text>
+        </View>
+
+        {/* OTP Input */}
+        <View style={styles.otpContainer}>
+          {otp.map((digit, index) => (
+            <TextInput
+              key={index}
+              ref={(ref: TextInput | null) => {
+                inputRefs.current[index] = ref;
+              }}
+              style={[
+                styles.otpInput,
+                digit && styles.otpInputFilled,
+                error && styles.otpInputError,
+              ]}
+              value={digit}
+              onChangeText={(value) => handleOtpChange(value, index)}
+              onKeyPress={(e) => handleKeyPress(e, index)}
+              keyboardType="number-pad"
+              maxLength={1}
+              selectTextOnFocus
+            />
+          ))}
+        </View>
+
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+        {/* Verify Button */}
+        <TouchableOpacity
+          style={[styles.verifyButton, isLoading && styles.buttonDisabled]}
+          onPress={handleVerify}
+          disabled={isLoading}
         >
-          {/* Back Button */}
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#1f2937" />
+          <Text style={styles.verifyButtonText}>{isLoading ? 'Verifying...' : 'Verify OTP'}</Text>
+        </TouchableOpacity>
+
+        {/* Resend OTP */}
+        <View style={styles.resendContainer}>
+          <Text style={styles.resendText}>Didn't receive the code? </Text>
+          <TouchableOpacity onPress={() => void handleResendOtp()}>
+            <Text style={styles.resendLink}>Resend OTP</Text>
           </TouchableOpacity>
-
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.iconContainer}>
-              <Ionicons name="shield-checkmark-outline" size={48} color="#10b981" />
-            </View>
-            <Text style={styles.title}>Verify OTP</Text>
-            <Text style={styles.subtitle}>
-              Enter the 6-digit code sent to{'\n'}
-              <Text style={styles.email}>{email}</Text>
-            </Text>
-          </View>
-
-          {/* OTP Input */}
-          <View style={styles.otpContainer}>
-            {otp.map((digit, index) => (
-              <TextInput
-                key={index}
-                ref={(ref: TextInput | null) => {
-                  inputRefs.current[index] = ref;
-                }}
-                style={[
-                  styles.otpInput,
-                  digit && styles.otpInputFilled,
-                  error && styles.otpInputError,
-                ]}
-                value={digit}
-                onChangeText={(value) => handleOtpChange(value, index)}
-                onKeyPress={(e) => handleKeyPress(e, index)}
-                keyboardType="number-pad"
-                maxLength={1}
-                selectTextOnFocus
-              />
-            ))}
-          </View>
-
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-          {/* Verify Button */}
-          <TouchableOpacity
-            style={[styles.verifyButton, isLoading && styles.buttonDisabled]}
-            onPress={handleVerify}
-            disabled={isLoading}
-          >
-            <Text style={styles.verifyButtonText}>{isLoading ? 'Verifying...' : 'Verify OTP'}</Text>
-          </TouchableOpacity>
-
-          {/* Resend OTP */}
-          <View style={styles.resendContainer}>
-            <Text style={styles.resendText}>Didn't receive the code? </Text>
-            <TouchableOpacity onPress={() => void handleResendOtp()}>
-              <Text style={styles.resendLink}>Resend OTP</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </View>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }

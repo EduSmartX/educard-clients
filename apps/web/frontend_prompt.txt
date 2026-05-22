@@ -170,8 +170,184 @@ Linking …
 Reusable Components:
 --------------------
 If your screen using any of the 
-1. DatePicker - Through same date picker and Datetiepicker ()
+1. DatePicker - Through same date picker and Datetiepicker reusable component everywhere()
 2. Multi select searchable dropdown ()
 3. Searchble Dropdown ()
 4. Errormessege wrappers ()
-5. 
+5. KeyboardAwareScrollView -- Use for all Mobile Screens for Form entries
+  
+
+
+
+
+
+for better typescript & react production project ..what prompt do we need to give for pilot
+To get production-ready TypeScript and React code from GitHub Copilot, you should move beyond simple "build a list" prompts and instead use structured instructions that enforce strict typing, accessibility, and modern patterns. 
+
+ecanarys.com
+ +1
+1. The "Senior Engineer" Component Prompt
+Use this prompt to ensure your components are scalable and meet production standards. 
+Prompt: "You are an expert React and TypeScript engineer. Create a fully typed functional component for [describe feature].
+Rules: Use React 19 and TypeScript strict mode. Define props with interfaces.
+Requirements: Include ARIA labels for accessibility, handle loading/error states, and use Tailwind CSS for styling.
+Standard: Export as default, add JSDoc with @example, and include a simple unit test using Vitest/React Testing Library."
+ 
+
+Medium
+·Stefano Alvares
+ +4
+2. Robust Custom Hook Prompt
+Production projects rely on well-isolated logic. Use this to avoid common "stale closure" bugs. 
+
+Medium
+·Amandeep Kour
+Prompt: "Write a custom React hook in TypeScript named use[Name] for [purpose].
+Rules: Follow all 'Rules of Hooks' and ensure a proper dependency array for useEffect.
+Output: Return a typed object containing { data, loading, error, refetch }. Include JSDoc for each return value."
+ 
+
+Medium
+·Amandeep Kour
+ +1
+3. Systematic Refactoring Prompt
+For improving existing codebases, use a prompt that targets specific production bottlenecks. 
+
+Medium
+·Amandeep Kour
+Prompt: "Analyze this React component for performance issues.
+Focus: Identify unnecessary re-renders, optimize expensive calculations with useMemo, and ensure all third-party library types are correctly imported.
+Task: Refactor the code to be more readable and performant while maintaining identical functionality."
+ 
+
+Medium
+·Amandeep Kour
+ +4
+Best Practices for Copilot in Production
+Use Custom Instructions: Create a .github/custom-instructions.md file (or use /.prompt.md) to define project-wide standards like your preferred styling library or naming conventions.
+Keep Context Open: Copilot performs better when relevant files (like your theme provider or global types) are open in active tabs.
+Iterate with Agents: Use the /init command or "Agent mode" in GitHub Copilot in VS Code to scaffold entire project structures rather than single files.
+Setup Commands: For a quick, modern project start, ask: "How to initiate a TypeScript Vite application with Tailwind CSS and React using npm?". 
+
+YouTube
+·Alex Rusin
+ +7
+
+
+
+
+
+20 sites
+The Complete GitHub Copilot Prompt Strategy
+Prompts are requests made to GitHub Copilot and can include questions in chat, code comments for autocompletion, or specific instr...
+
+1m
+
+YouTube
+·
+Alex Rusin
+Building a landing page with Copilot agent mode
+After you give it a prompt, agent mode streamlines complex coding tasks by autonomously iterating on its own code, identifying and...
+
+
+The GitHub Blog
+How to write better prompts for GitHub Copilot
+An example where you can try your hand at prompting GitHub Copilot to assist you in building a browser extension. * Progress over ...
+
+
+The GitHub Blog
+Show all
+Give everything in once
+To get optimal, production-grade results from GitHub Copilot instantly, paste this master system prompt into your Copilot Chat settings, your custom instructions, or directly at the start of your project chat session.
+The Ultimate Master Prompt
+text
+Act as a Principal React and TypeScript Architect. Every line of code you write must be production-ready, highly secure, scalable, and optimized for performance.
+
+Follow these strict technical standards for all generations:
+1. Framework & Language: Use React 19 and TypeScript 5+ in strict mode. Use functional components with arrow syntax. Explicitly type all component Props, event handlers, and API responses using interfaces (no 'any').
+2. Performance: Prevent unnecessary re-renders. Use 'useCallback' and 'useMemo' only where computationally justified. Implement lazy loading for heavy sub-components.
+3. State Management: Keep state local where possible. Use custom hooks to decouple business logic from the UI. Ensure 'useEffect' cleanups are handled perfectly to prevent memory leaks.
+4. UI & Accessibility: Use semantic HTML elements. Implement proper ARIA attributes, focus states, and keyboard navigation. Use Tailwind CSS for mobile-first, utility-based styling.
+5. Error Handling: Always include loading, error, and empty states. Wrap asynchronous operations in try/catch blocks with typed error responses.
+6. Documentation & Testing: Provide inline JSDoc for complex logic. Always include a companion Vitest and React Testing Library unit test suite covering success, failure, and edge cases.
+
+Apply these rules directly to the following request: [INSERT YOUR TASK HERE]
+Use code with caution.
+3 Quick Steps to Automate This
+Create a Configuration File: Save this text inside a .github/copilot-instructions.md file in your repository root so Copilot applies it to every query automatically.
+Keep Core Files Open: Open your global.d.ts, tailwind.config.js, or API client files in active IDE tabs so Copilot references your exact project context.
+Use Slash Commands: Combine this master prompt with commands like /explain to audit existing files, or /tests to instantly generate the robust test suites demanded above.
+I can help you build your project starter. If you want, tell me:
+What is the specific feature or component you need to build right now?
+Which state management tool do you use (Zustand, Redux Toolkit, Context API)?
+Do you need an API fetching layer setup (Axios, TanStack Query)?
+
+
+
+
+is that prompt fine for better code reusability , efficeincey and hook managements and statemanagements ..in react and react native with type screipt?
+The master prompt provided earlier is a solid baseline, but it has two critical gaps that will fail you in production: it relies on older boilerplate patterns that ignore React 19's native data features, and it overlooks the severe performance bottlenecks unique to React Native.
+To maximize code reusability, hook efficiency, and dual-platform state management, you need a specialized prompt that addresses these cross-platform nuances.
+The Problem With the Previous Prompt
+React 19 Obsolescence: The previous prompt still asks for manual try/catch and manual loading/error state juggling. React 19 completely automates this via Async Actions, the use hook, and useActionState.
+React Native Invisible Crashes: React Native handles computational re-renders much worse than web viewports. Heavy list rendering or improper state triggers in atomic items can drop mobile application frames to zero.
+State Drift: It doesn't explicitly force the decoupling of UI from data frameworks, which is mandatory if you intend to share hooks between React (Web) and React Native (Mobile). 
+
+Telerik.com
+ +2
+
+
+
+
+
+3 sites
+React Native Interview Prep: Redux, Performance, and Tradeoffs
+19 Feb 2026 — Ritesh Singh. Frontend Developer ★ React Native Developer ★ React Js ★ TypeScript ★ JavaScript. 2mo. Spent the last few weeks deep...
+
+
+LinkedIn
+·
+Ritesh Singh
+The Guide to New Hooks in React 19 - Telerik.com
+21 Oct 2024 — React 19 has recently emerged as a powerful evolution in the React ecosystem, bringing with it a suite of new React Hooks designed...
+
+
+Telerik.com
+React 19 `use` Hook Deep Dive — Using Promises Directly in ...
+19 Aug 2025 — When React 19 introduced the use hook, it quietly changed one of the oldest patterns in React — the way we deal with async data. N...
+
+
+DEV Community
+Give me one more time
+Here is the updated, ultimate master prompt optimized specifically to handle both React (Web) and React Native (Mobile).
+It explicitly enforces advanced code reusability, efficient hook patterns, and clean state management.
+The Ultimate React & React Native Master Prompt
+text
+Act as a Principal Architect specializing in cross-platform React, React Native, and TypeScript. Every line of code you write must be production-ready, highly reusable, efficient, and scale beautifully.
+
+Adhere strictly to these architectural standards:
+
+1. Code Reusability & Architecture:
+   - Separate UI from logic. Extract all stateful and side-effect logic into standalone custom hooks.
+   - Design components using the Single Responsibility Principle. Build highly modular, atomic components.
+   - For web/mobile parity, ensure business logic (hooks/state) is decoupled from platform-specific UI (HTML vs. View/Text).
+
+2. Advanced Hook Management:
+   - Write custom hooks that return structured, predictable states: { data, isLoading, error, actions }.
+   - Prevent memory leaks: always return cleanup functions in 'useEffect'.
+   - Avoid stale closures: properly declare all dependencies in 'useEffect', 'useCallback', and 'useMemo'.
+   - Memoize callback handlers passed to deeply nested child components using 'useCallback'.
+
+3. State Management Standards:
+   - Default to local or component-coallocated state. Use Context API *only* for low-frequency global updates (e.g., themes, auth).
+   - For high-frequency or complex global states, default to a lightweight external store pattern (e.g., Zustand style) with selector-based access to prevent unnecessary re-renders.
+   - Keep global actions isolated from state objects to maximize performance.
+
+4. Platform & Language Execution:
+   - Language: TypeScript 5+ in strict mode. Explicitly type all Props, custom hook returns, and API contracts. Zero 'any' types allowed.
+   - React (Web): Use React 19 standards, semantic HTML, and Tailwind CSS. Ensure strict ARIA compliance.
+   - React Native (Mobile): Use standard core components (View, Text, Pressable, StyleSheet). Use 'FlashList' or 'FlatList' with 'keyExtractor' and memoized 'renderItem' for long lists. Ensure layout performance via 'StyleSheet.create'.
+
+5. Robustness & Testing:
+   - Gracefully handle loading, error, and empty states. Wrap async calls in try/catch blocks with strongly typed errors.
+   - Provide clean JSDoc for custom hooks. Include a companion unit test using Vitest / React Testing Library (for Web) or React Native Testing Library (for Mobile).

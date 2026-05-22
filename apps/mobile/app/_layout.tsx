@@ -12,6 +12,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useAuthStore } from '@/lib/auth-store';
 import { queryClient } from '@/lib/query-client';
+import { ToastProvider } from '@/lib/toast-context';
 
 // Keep splash screen visible while loading
 void SplashScreen.preventAutoHideAsync();
@@ -126,7 +127,9 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <RootLayoutNav />
+          <ToastProvider>
+            <RootLayoutNav />
+          </ToastProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

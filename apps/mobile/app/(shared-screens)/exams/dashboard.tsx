@@ -4,7 +4,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any, @typescript-eslint/no-misused-promises */
 
 import { getRoleGradient } from '@educard/shared';
-import { EXAM_STATUS_LABELS, EXAM_STATUS_COLORS, type Exam } from '@educard/shared';
+import {
+  EXAM_STATUS_LABELS,
+  EXAM_STATUS_COLORS,
+  EXAM_STATUS_OPTIONS,
+  type Exam,
+  type ExamStatus,
+} from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, ChevronDown, Plus } from 'lucide-react-native';
@@ -18,18 +24,25 @@ import {
   ActivityIndicator,
   RefreshControl,
   ScrollView,
+  Modal,
+  Alert,
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { useClasses } from '@/features/classes';
 import type { Class } from '@/features/classes/types';
-import { useExams, useMarksOverview } from '@/features/exams';
+import { useExams, useMarksOverview, useUpdateExam } from '@/features/exams';
+import { useAuthStore } from '@/lib/auth-store';
+import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
 
 export default function ExamDashboardScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
+  const { user } = useAuthStore();
+  const userRole = user?.role;
   const { sessionId, sessionName } = useLocalSearchParams<{
     sessionId: string;
     sessionName: string;
@@ -38,6 +51,7 @@ export default function ExamDashboardScreen() {
   const [selectedClassId, setSelectedClassId] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'exams' | 'students'>('exams');
   const [showClassPicker, setShowClassPicker] = useState(false);
+  const [statusModalExam, setStatusModalExam] = useState<Exam | null>(null);
 
   // Fetch classes
   const { data: classesData } = useClasses({ page_size: 100 });
@@ -89,14 +103,41 @@ export default function ExamDashboardScreen() {
     void refetchFn().finally(() => setRefreshing(false));
   };
 
+  const updateExamMutation = useUpdateExam(userRole);
+
+  const handleStatusChange = (exam: Exam, newStatus: ExamStatus) => {
+    setStatusModalExam(null);
+    updateExamMutation.mutate(
+      { id: exam.public_id, data: { status: newStatus } },
+      {
+        onSuccess: () => {
+          showToast({
+            type: 'success',
+            title: 'Status Updated',
+            message: `Exam status changed to ${newStatus}`,
+          });
+        },
+        onError: (err: any) => {
+          showToast({
+            type: 'error',
+            title: 'Error',
+            message: err?.message || 'Failed to update status',
+          });
+        },
+      }
+    );
+  };
+
   const isLoading = activeTab === 'exams' ? examsLoading : marksLoading;
 
   const renderExam = ({ item, index }: { item: Exam; index: number }) => {
     const statusColor = EXAM_STATUS_COLORS[item.status] ?? EXAM_STATUS_COLORS.draft;
     const canEdit = canEditSubject(item.subject_public_id);
-    const buttonText = canEdit ? 'Enter Marks' : 'View Marks';
-    const buttonStyle = canEdit ? styles.enterMarksBtn : styles.viewMarksBtn;
-    const textStyle = canEdit ? styles.enterMarksText : styles.viewMarksText;
+    const isCompleted = item.status === 'completed';
+    const marksEnabled = isCompleted && canEdit;
+    const buttonText = marksEnabled ? 'Enter Marks' : !isCompleted ? 'Enter Marks' : 'View Marks';
+    const buttonStyle = marksEnabled ? styles.enterMarksBtn : styles.enterMarksBtnDisabled;
+    const textStyle = marksEnabled ? styles.enterMarksText : styles.enterMarksTextDisabled;
 
     return (
       <Animated.View
@@ -107,17 +148,21 @@ export default function ExamDashboardScreen() {
         <View style={styles.examCard}>
           <View style={styles.examHeader}>
             <Text style={styles.examSubject}>{item.subject_name}</Text>
-            <View style={[styles.statusBadge, { backgroundColor: statusColor.bg }]}>
+            <TouchableOpacity
+              onPress={() => setStatusModalExam(item)}
+              style={[styles.statusBadge, { backgroundColor: statusColor.bg }]}
+            >
               <Text style={[styles.statusText, { color: statusColor.text }]}>
-                {EXAM_STATUS_LABELS[item.status]}
+                {EXAM_STATUS_LABELS[item.status]} ▾
               </Text>
-            </View>
+            </TouchableOpacity>
           </View>
           <Text style={styles.examDetails}>
             Max: {item.max_marks} • Pass: {item.passing_marks} • Marks: {item.marks_count}
           </Text>
           <TouchableOpacity
             style={buttonStyle}
+            disabled={!isCompleted}
             onPress={() =>
               router.push(
                 `/(shared-screens)/exams/enter-marks?examId=${item.public_id}&sessionId=${sessionId}&classId=${selectedClassId}&subjectName=${encodeURIComponent(item.subject_name)}&className=${encodeURIComponent(fullClassName)}&maxMarks=${item.max_marks}&viewOnly=${!canEdit}` as any
@@ -329,6 +374,56 @@ export default function ExamDashboardScreen() {
           )}
         </>
       )}
+
+      {/* Status Change Modal */}
+      <Modal
+        visible={!!statusModalExam}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setStatusModalExam(null)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setStatusModalExam(null)}
+        >
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Change Status</Text>
+            <Text style={styles.modalSubtitle}>{statusModalExam?.subject_name}</Text>
+            {EXAM_STATUS_OPTIONS.map((option) => {
+              const colors = EXAM_STATUS_COLORS[option.value];
+              const isActive = option.value === statusModalExam?.status;
+              return (
+                <TouchableOpacity
+                  key={option.value}
+                  style={[styles.statusOption, isActive && styles.statusOptionActive]}
+                  onPress={() =>
+                    statusModalExam && handleStatusChange(statusModalExam, option.value)
+                  }
+                  disabled={isActive}
+                >
+                  <View style={[styles.statusDot, { backgroundColor: colors.text }]} />
+                  <Text
+                    style={[
+                      styles.statusOptionText,
+                      isActive && { fontWeight: '700', color: colors.text },
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                  {isActive && <Text style={styles.currentLabel}>Current</Text>}
+                </TouchableOpacity>
+              );
+            })}
+            <TouchableOpacity
+              style={styles.modalCancelBtn}
+              onPress={() => setStatusModalExam(null)}
+            >
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -408,15 +503,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   enterMarksText: { fontSize: 14, fontWeight: '600', color: '#fff' },
-  viewMarksBtn: {
-    backgroundColor: '#f1f5f9',
+  enterMarksBtnDisabled: {
+    backgroundColor: '#e2e8f0',
     borderRadius: 10,
     paddingVertical: 10,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
   },
-  viewMarksText: { fontSize: 14, fontWeight: '600', color: '#64748b' },
+  enterMarksTextDisabled: { fontSize: 14, fontWeight: '600', color: '#94a3b8' },
 
   studentCard: {
     backgroundColor: '#fff',
@@ -451,4 +544,41 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     marginTop: 6,
   },
+
+  // Status Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    width: '85%',
+    maxWidth: 340,
+  },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: '#1e293b', marginBottom: 4 },
+  modalSubtitle: { fontSize: 14, color: '#64748b', marginBottom: 16 },
+  statusOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    marginBottom: 4,
+  },
+  statusOptionActive: { backgroundColor: '#f8fafc' },
+  statusDot: { width: 10, height: 10, borderRadius: 5, marginRight: 12 },
+  statusOptionText: { fontSize: 15, color: '#334155', flex: 1 },
+  currentLabel: { fontSize: 11, color: '#94a3b8', fontWeight: '600' },
+  modalCancelBtn: {
+    marginTop: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  modalCancelText: { fontSize: 15, fontWeight: '600', color: '#64748b' },
 });

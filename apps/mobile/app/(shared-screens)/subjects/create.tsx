@@ -20,17 +20,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Save } from 'lucide-react-native';
 import { useState, useCallback, useMemo } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { DeletedDuplicateModal } from '@/components/common/DeletedDuplicateModal';
@@ -41,6 +32,7 @@ import { useCreateSubject, useRestoreSubject } from '@/features/subjects';
 import { useTeachers } from '@/features/teachers';
 import { useDeletedDuplicateHandler } from '@/hooks/useDeletedDuplicateHandler';
 import { useAuthStore } from '@/lib/auth-store';
+import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
 import {
   isDeletedDuplicateError,
@@ -54,6 +46,7 @@ type FieldErrors = Record<string, string>;
 
 export default function CreateSubjectScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
   const { user } = useAuthStore();
   const createMutation = useCreateSubject();
   const restoreMutation = useRestoreSubject();
@@ -135,9 +128,12 @@ export default function CreateSubjectScreen() {
         {
           onSuccess: () => {
             duplicateHandler.closeDialog();
-            Alert.alert('Success', 'Subject created successfully', [
-              { text: 'OK', onPress: () => router.back() },
-            ]);
+            showToast({
+              type: 'success',
+              title: 'Success',
+              message: 'Subject created successfully',
+            });
+            router.back();
           },
           onError: (err: unknown) => {
             if (isDeletedDuplicateError(err)) {
@@ -173,18 +169,25 @@ export default function CreateSubjectScreen() {
   const handleReactivate = useCallback(() => {
     const recordId = duplicateHandler.pendingData?.deletedRecordId;
     if (!recordId) {
-      Alert.alert('Error', 'Could not find deleted record ID.');
+      showToast({ type: 'error', title: 'Error', message: 'Could not find deleted record ID.' });
       return;
     }
     restoreMutation.mutate(recordId, {
       onSuccess: () => {
         duplicateHandler.closeDialog();
-        Alert.alert('✅ Restored', 'The deleted subject has been reactivated.', [
-          { text: 'OK', onPress: () => router.back() },
-        ]);
+        showToast({
+          type: 'success',
+          title: 'Restored',
+          message: 'The deleted subject has been reactivated.',
+        });
+        router.back();
       },
       onError: (error: unknown) => {
-        Alert.alert('Error', getErrorMessage(error, 'Failed to reactivate. Please try again.'));
+        showToast({
+          type: 'error',
+          title: 'Error',
+          message: getErrorMessage(error, 'Failed to reactivate. Please try again.'),
+        });
       },
     });
   }, [duplicateHandler, restoreMutation, router]);
@@ -216,106 +219,104 @@ export default function CreateSubjectScreen() {
         </View>
       </LinearGradient>
 
-      <KeyboardAvoidingView
+      <KeyboardAwareScrollView
+        contentContainerStyle={st.form}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid
+        extraScrollHeight={20}
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView
-          contentContainerStyle={st.form}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          <FormError message={apiError} onDismiss={() => setApiError(null)} />
+        <FormError message={apiError} onDismiss={() => setApiError(null)} />
 
-          {/* Info banner for teachers */}
-          {isTeacher && (
-            <Animated.View entering={FadeInDown.delay(50)}>
-              <View style={st.infoBanner}>
-                <Text style={st.infoBannerText}>
-                  ℹ️ You can add subjects only for classes where you are assigned as the class
-                  teacher.
-                </Text>
-              </View>
-            </Animated.View>
-          )}
-
-          <Animated.View entering={FadeInDown.delay(100)}>
-            <FormSection title="Subject Assignment" icon="📚">
-              <FormDropdown
-                label="Class"
-                required
-                options={classOpts}
-                value={form.class_id}
-                onChange={(v) => updateField('class_id', v)}
-                error={errors.class_id}
-                placeholder="Select a class"
-                searchable
-              />
-              <FormDropdown
-                label="Subject"
-                required
-                options={subjectOpts}
-                value={form.subject_id}
-                onChange={(v) => updateField('subject_id', v)}
-                error={errors.subject_id}
-                placeholder="Select a subject"
-                searchable
-                loading={subjectsLoading}
-              />
-              <FormDropdown
-                label="Subject Type (Optional)"
-                options={SUBJECT_TYPE_OPTIONS.map((opt) => ({
-                  value: opt.value,
-                  label: opt.label,
-                }))}
-                value={form.subject_type}
-                onChange={(v) => updateField('subject_type', v)}
-                error={errors.subject_type}
-                placeholder="Select subject type"
-              />
-              <FormDropdown
-                label="Teacher"
-                options={teacherOpts}
-                value={form.teacher_id}
-                onChange={(v) => updateField('teacher_id', v)}
-                placeholder="Select a teacher (optional)"
-                searchable
-              />
-              <FormInput
-                label="Description"
-                value={form.description}
-                onChangeText={(v) => updateField('description', v)}
-                placeholder="Optional description"
-                multiline
-                numberOfLines={3}
-              />
-            </FormSection>
+        {/* Info banner for teachers */}
+        {isTeacher && (
+          <Animated.View entering={FadeInDown.delay(50)}>
+            <View style={st.infoBanner}>
+              <Text style={st.infoBannerText}>
+                ℹ️ You can add subjects only for classes where you are assigned as the class
+                teacher.
+              </Text>
+            </View>
           </Animated.View>
+        )}
 
-          <TouchableOpacity
-            onPress={handleSubmit}
-            disabled={createMutation.isPending}
-            style={st.subBtn}
-            activeOpacity={0.8}
+        <Animated.View entering={FadeInDown.delay(100)}>
+          <FormSection title="Subject Assignment" icon="📚">
+            <FormDropdown
+              label="Class"
+              required
+              options={classOpts}
+              value={form.class_id}
+              onChange={(v) => updateField('class_id', v)}
+              error={errors.class_id}
+              placeholder="Select a class"
+              searchable
+            />
+            <FormDropdown
+              label="Subject"
+              required
+              options={subjectOpts}
+              value={form.subject_id}
+              onChange={(v) => updateField('subject_id', v)}
+              error={errors.subject_id}
+              placeholder="Select a subject"
+              searchable
+              loading={subjectsLoading}
+            />
+            <FormDropdown
+              label="Subject Type (Optional)"
+              options={SUBJECT_TYPE_OPTIONS.map((opt) => ({
+                value: opt.value,
+                label: opt.label,
+              }))}
+              value={form.subject_type}
+              onChange={(v) => updateField('subject_type', v)}
+              error={errors.subject_type}
+              placeholder="Select subject type"
+            />
+            <FormDropdown
+              label="Teacher"
+              options={teacherOpts}
+              value={form.teacher_id}
+              onChange={(v) => updateField('teacher_id', v)}
+              placeholder="Select a teacher (optional)"
+              searchable
+            />
+            <FormInput
+              label="Description"
+              value={form.description}
+              onChangeText={(v) => updateField('description', v)}
+              placeholder="Optional description"
+              multiline
+              numberOfLines={3}
+            />
+          </FormSection>
+        </Animated.View>
+
+        <TouchableOpacity
+          onPress={handleSubmit}
+          disabled={createMutation.isPending}
+          style={st.subBtn}
+          activeOpacity={0.8}
+        >
+          <LinearGradient
+            colors={['#7c3aed', '#4f46e5']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={st.subGrad}
           >
-            <LinearGradient
-              colors={['#7c3aed', '#4f46e5']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={st.subGrad}
-            >
-              {createMutation.isPending ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <>
-                  <Save size={20} color="#fff" />
-                  <Text style={st.subText}>Create Subject</Text>
-                </>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
+            {createMutation.isPending ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Save size={20} color="#fff" />
+                <Text style={st.subText}>Create Subject</Text>
+              </>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+      </KeyboardAwareScrollView>
 
       <DeletedDuplicateModal
         visible={duplicateHandler.isOpen}

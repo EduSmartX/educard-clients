@@ -34,8 +34,6 @@ export interface TeacherFieldErrors extends FieldErrors {
   specialization?: string;
   experience_years?: string;
   joining_date?: string;
-  emergency_contact_name?: string;
-  emergency_contact_number?: string;
   street_address?: string;
   address_line_2?: string;
   city?: string;

@@ -4,17 +4,8 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  Modal,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-} from 'react-native';
+import { View, Text, Modal, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { X, CreditCard } from 'lucide-react-native';
 
 import { FormInput } from '@/components/forms/FormInput';
@@ -162,11 +153,7 @@ export function RecordPaymentModal({
 
   return (
     <Modal visible={visible} animationType="slide" transparent statusBarTranslucent>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.overlay}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-      >
+      <View style={styles.overlay}>
         <View style={styles.sheet}>
           {/* Handle */}
           <View style={styles.handle} />
@@ -217,10 +204,12 @@ export function RecordPaymentModal({
             </View>
           </View>
 
-          <ScrollView
+          <KeyboardAwareScrollView
             contentContainerStyle={styles.form}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            enableOnAndroid
+            extraScrollHeight={20}
           >
             <FormInput
               label="Amount (₹)"
@@ -316,9 +305,9 @@ export function RecordPaymentModal({
               isLoading={isPending}
               variant={isRefundMode ? 'warning' : 'success'}
             />
-          </ScrollView>
+          </KeyboardAwareScrollView>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }

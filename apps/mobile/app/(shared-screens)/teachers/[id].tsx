@@ -23,7 +23,6 @@ export default function TeacherDetailScreen() {
   // - Others see masked phone (e.g., 07******75)
   // Frontend just displays whatever backend returns
   const phoneDisplay = teacher?.user?.phone || '—';
-  const emergencyPhoneDisplay = teacher?.emergency_contact_number || '—';
 
   // Get profile image URL
   const profileImageUrl = getMediaUrl(teacher?.profile_photo_thumbnail);
@@ -72,13 +71,6 @@ export default function TeacherDetailScreen() {
           </DetailSection>
         </Animated.View>
       ) : null}
-
-      <Animated.View entering={FadeInDown.delay(400)}>
-        <DetailSection title="Emergency Contact" icon="🆘">
-          <DetailRow label="Name" value={teacher?.emergency_contact_name} />
-          <DetailRow label="Number" value={emergencyPhoneDisplay} />
-        </DetailSection>
-      </Animated.View>
     </DetailScreenShell>
   );
 }

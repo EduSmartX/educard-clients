@@ -9,17 +9,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Lock, Eye, EyeOff, ArrowLeft, KeyRound, CheckCircle } from 'lucide-react-native';
 import { useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Alert,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 
 import { authApi } from '@/api/auth';
@@ -134,117 +125,115 @@ export default function ChangePasswordScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient colors={['#10b981', '#059669', '#047857']} style={styles.gradientBg} />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      <KeyboardAwareScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid
+        extraScrollHeight={20}
         style={styles.flex}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* Header */}
-          <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-              <ArrowLeft size={24} color="#fff" />
-            </TouchableOpacity>
-            <View style={styles.iconGradient}>
-              <KeyRound size={36} color="#10b981" />
+        {/* Header */}
+        <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <ArrowLeft size={24} color="#fff" />
+          </TouchableOpacity>
+          <View style={styles.iconGradient}>
+            <KeyRound size={36} color="#10b981" />
+          </View>
+          <Text style={styles.headerTitle}>Change Password</Text>
+          <Text style={styles.headerSubtitle}>
+            Enter your current password and choose a new one
+          </Text>
+        </Animated.View>
+
+        {/* Form */}
+        <Animated.View entering={FadeInUp.delay(200).duration(600)} style={styles.formCard}>
+          {renderPasswordInput(
+            'Current Password',
+            oldPassword,
+            setOldPassword,
+            showOldPassword,
+            setShowOldPassword,
+            'old',
+            'Enter current password'
+          )}
+
+          {renderPasswordInput(
+            'New Password',
+            newPassword,
+            setNewPassword,
+            showNewPassword,
+            setShowNewPassword,
+            'new',
+            'Enter new password'
+          )}
+
+          {renderPasswordInput(
+            'Confirm New Password',
+            confirmPassword,
+            setConfirmPassword,
+            showConfirmPassword,
+            setShowConfirmPassword,
+            'confirm',
+            'Confirm new password'
+          )}
+
+          {/* Password Requirements */}
+          <View style={styles.requirements}>
+            <Text style={styles.requirementsTitle}>Password Requirements:</Text>
+            <View style={styles.requirementRow}>
+              <CheckCircle
+                size={14}
+                color={newPassword.length >= 8 ? Colors.success[500] : Colors.gray[300]}
+              />
+              <Text
+                style={[styles.requirementText, newPassword.length >= 8 && styles.requirementMet]}
+              >
+                At least 8 characters
+              </Text>
             </View>
-            <Text style={styles.headerTitle}>Change Password</Text>
-            <Text style={styles.headerSubtitle}>
-              Enter your current password and choose a new one
-            </Text>
-          </Animated.View>
-
-          {/* Form */}
-          <Animated.View entering={FadeInUp.delay(200).duration(600)} style={styles.formCard}>
-            {renderPasswordInput(
-              'Current Password',
-              oldPassword,
-              setOldPassword,
-              showOldPassword,
-              setShowOldPassword,
-              'old',
-              'Enter current password'
-            )}
-
-            {renderPasswordInput(
-              'New Password',
-              newPassword,
-              setNewPassword,
-              showNewPassword,
-              setShowNewPassword,
-              'new',
-              'Enter new password'
-            )}
-
-            {renderPasswordInput(
-              'Confirm New Password',
-              confirmPassword,
-              setConfirmPassword,
-              showConfirmPassword,
-              setShowConfirmPassword,
-              'confirm',
-              'Confirm new password'
-            )}
-
-            {/* Password Requirements */}
-            <View style={styles.requirements}>
-              <Text style={styles.requirementsTitle}>Password Requirements:</Text>
-              <View style={styles.requirementRow}>
-                <CheckCircle
-                  size={14}
-                  color={newPassword.length >= 8 ? Colors.success[500] : Colors.gray[300]}
-                />
-                <Text
-                  style={[styles.requirementText, newPassword.length >= 8 && styles.requirementMet]}
-                >
-                  At least 8 characters
-                </Text>
-              </View>
-              <View style={styles.requirementRow}>
-                <CheckCircle
-                  size={14}
-                  color={
-                    newPassword === confirmPassword && newPassword.length > 0
-                      ? Colors.success[500]
-                      : Colors.gray[300]
-                  }
-                />
-                <Text
-                  style={[
-                    styles.requirementText,
-                    newPassword === confirmPassword &&
-                      newPassword.length > 0 &&
-                      styles.requirementMet,
-                  ]}
-                >
-                  Passwords match
-                </Text>
-              </View>
+            <View style={styles.requirementRow}>
+              <CheckCircle
+                size={14}
+                color={
+                  newPassword === confirmPassword && newPassword.length > 0
+                    ? Colors.success[500]
+                    : Colors.gray[300]
+                }
+              />
+              <Text
+                style={[
+                  styles.requirementText,
+                  newPassword === confirmPassword &&
+                    newPassword.length > 0 &&
+                    styles.requirementMet,
+                ]}
+              >
+                Passwords match
+              </Text>
             </View>
+          </View>
 
-            {/* Submit Button */}
-            <TouchableOpacity
-              onPress={() => void handleChangePassword()}
-              disabled={isLoading}
-              style={styles.submitButton}
-            >
-              <LinearGradient colors={['#10b981', '#059669']} style={styles.submitGradient}>
-                <Text style={styles.submitButtonText}>
-                  {isLoading ? 'Changing Password...' : 'Change Password'}
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
+          {/* Submit Button */}
+          <TouchableOpacity
+            onPress={() => void handleChangePassword()}
+            disabled={isLoading}
+            style={styles.submitButton}
+          >
+            <LinearGradient colors={['#10b981', '#059669']} style={styles.submitGradient}>
+              <Text style={styles.submitButtonText}>
+                {isLoading ? 'Changing Password...' : 'Change Password'}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
 
-            {/* Back link */}
-            <TouchableOpacity onPress={() => router.back()} style={styles.backLink}>
-              <ArrowLeft size={18} color={Colors.gray[600]} />
-              <Text style={styles.backLinkText}>Back to Settings</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+          {/* Back link */}
+          <TouchableOpacity onPress={() => router.back()} style={styles.backLink}>
+            <ArrowLeft size={18} color={Colors.gray[600]} />
+            <Text style={styles.backLinkText}>Back to Settings</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </KeyboardAwareScrollView>
     </View>
   );
 }
