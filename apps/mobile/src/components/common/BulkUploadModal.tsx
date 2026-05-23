@@ -54,6 +54,91 @@ interface BulkUploadModalProps {
   customInfoMessage?: string;
 }
 
+function transformErrors(errors: unknown): BulkUploadError[] {
+  if (!errors) return [];
+
+  if (typeof errors === 'object' && !Array.isArray(errors)) {
+    return Object.entries(errors).map(([rowKey, errorData]: [string, unknown]) => {
+      const rowMatch = rowKey.match(/Row (\d+)/i);
+      const rowNumber = rowMatch ? parseInt(rowMatch[1], 10) : 0;
+
+      let errorMessage = 'Validation error';
+      let data: Record<string, unknown> | null = null;
+      if (typeof errorData === 'object' && errorData !== null) {
+        data = errorData as Record<string, unknown>;
+        const firstKey = Object.keys(data)[0];
+        errorMessage =
+          typeof data[firstKey] === 'string' ? (data[firstKey] as string) : errorMessage;
+      } else if (typeof errorData === 'string') {
+        errorMessage = errorData;
+      }
+
+      return { row: rowNumber, error: errorMessage, data };
+    });
+  }
+
+  if (Array.isArray(errors)) {
+    return errors.map((err: unknown) => {
+      const error = err as Record<string, unknown>;
+      const rowNum = (error.row_number ?? error.row) as number | undefined;
+      const errorErrors = error.errors as Record<string, string> | undefined;
+      if (rowNum !== undefined && errorErrors && typeof errorErrors === 'object') {
+        if (rowNum === 0 && errorErrors.file) {
+          return { row: 0, error: errorErrors.file, data: {} };
+        }
+        const errorKeys = Object.keys(errorErrors);
+        const firstErrorKey = errorKeys[0];
+        const errorMessage =
+          errorKeys.length > 1
+            ? `${errorKeys.length} validation errors`
+            : errorErrors[firstErrorKey] || 'Validation error';
+
+        return { row: rowNum, error: errorMessage, data: errorErrors as Record<string, unknown> };
+      }
+      return {
+        row: (error.row as number) || 0,
+        error: (error.error as string) || 'Unknown error',
+        data: (error.data as Record<string, unknown>) || {},
+      };
+    });
+  }
+
+  return [];
+}
+
+function extractUploadErrorResult(error: unknown): BulkUploadResult | null {
+  const err = error as {
+    data?: { data?: BulkUploadResult; error?: string };
+    response?: { data?: { data?: BulkUploadResult; error?: string } };
+  };
+
+  let rawResult = err?.data || err?.response?.data;
+  if (rawResult && 'data' in rawResult && typeof rawResult.data === 'object') {
+    rawResult = rawResult.data as { data?: BulkUploadResult; error?: string };
+  }
+  if (!rawResult) return null;
+
+  const topLevelError = (rawResult as { error?: string }).error;
+  if (topLevelError) {
+    return {
+      created_count: 0,
+      failed_count: 1,
+      total_rows: 0,
+      errors: [{ row: 0, error: topLevelError, data: null }],
+    };
+  }
+
+  const data = rawResult as unknown as BulkUploadResult;
+  return {
+    created_count: data.created_count ?? data.successful_count ?? 0,
+    failed_count: data.failed_count ?? 0,
+    total_rows:
+      data.total_rows ??
+      (data.created_count ?? data.successful_count ?? 0) + (data.failed_count ?? 0),
+    errors: data.errors ? transformErrors(data.errors) : [],
+  };
+}
+
 export function BulkUploadModal({
   visible,
   onClose,
@@ -78,58 +163,6 @@ export function BulkUploadModal({
     setUploadResult(null);
     onClose();
   }, [onClose]);
-
-  const transformErrors = (errors: unknown): BulkUploadError[] => {
-    if (!errors) return [];
-
-    if (typeof errors === 'object' && !Array.isArray(errors)) {
-      return Object.entries(errors).map(([rowKey, errorData]: [string, unknown]) => {
-        const rowMatch = rowKey.match(/Row (\d+)/i);
-        const rowNumber = rowMatch ? parseInt(rowMatch[1], 10) : 0;
-
-        let errorMessage = 'Validation error';
-        let data: Record<string, unknown> | null = null;
-        if (typeof errorData === 'object' && errorData !== null) {
-          data = errorData as Record<string, unknown>;
-          const firstKey = Object.keys(data)[0];
-          errorMessage =
-            typeof data[firstKey] === 'string' ? (data[firstKey] as string) : errorMessage;
-        } else if (typeof errorData === 'string') {
-          errorMessage = errorData;
-        }
-
-        return { row: rowNumber, error: errorMessage, data };
-      });
-    }
-
-    if (Array.isArray(errors)) {
-      return errors.map((err: unknown) => {
-        const error = err as Record<string, unknown>;
-        const rowNum = (error.row_number ?? error.row) as number | undefined;
-        const errorErrors = error.errors as Record<string, string> | undefined;
-        if (rowNum !== undefined && errorErrors && typeof errorErrors === 'object') {
-          if (rowNum === 0 && errorErrors.file) {
-            return { row: 0, error: errorErrors.file, data: {} };
-          }
-          const errorKeys = Object.keys(errorErrors);
-          const firstErrorKey = errorKeys[0];
-          const errorMessage =
-            errorKeys.length > 1
-              ? `${errorKeys.length} validation errors`
-              : errorErrors[firstErrorKey] || 'Validation error';
-
-          return { row: rowNum, error: errorMessage, data: errorErrors as Record<string, unknown> };
-        }
-        return {
-          row: (error.row as number) || 0,
-          error: (error.error as string) || 'Unknown error',
-          data: (error.data as Record<string, unknown>) || {},
-        };
-      });
-    }
-
-    return [];
-  };
 
   const handleDownloadTemplate = async () => {
     setIsDownloading(true);
@@ -201,19 +234,12 @@ export function BulkUploadModal({
       const response = await uploadFile(selectedFile.uri, selectedFile.name);
       const result = response.data;
 
+      // Normalize result
       if (result.successful_count !== undefined && result.created_count === undefined) {
         result.created_count = result.successful_count;
       }
-
-      if (result.total_rows === undefined) {
-        result.total_rows = (result.created_count || 0) + (result.failed_count || 0);
-      }
-
-      if (result.errors) {
-        result.errors = transformErrors(result.errors);
-      } else {
-        result.errors = [];
-      }
+      result.total_rows ??= (result.created_count || 0) + (result.failed_count || 0);
+      result.errors = result.errors ? transformErrors(result.errors) : [];
 
       setUploadResult(result);
 
@@ -229,34 +255,9 @@ export function BulkUploadModal({
         onUploadSuccess?.(result);
       }
     } catch (error) {
-      const err = error as {
-        data?: { data?: BulkUploadResult; error?: string };
-        response?: { data?: { data?: BulkUploadResult; error?: string } };
-      };
-
-      let rawResult = err?.data || err?.response?.data;
-      if (rawResult && 'data' in rawResult && typeof rawResult.data === 'object') {
-        rawResult = rawResult.data as { data?: BulkUploadResult; error?: string };
-      }
-
-      if (rawResult) {
-        const topLevelError = (rawResult as { error?: string }).error;
-        const result: BulkUploadResult = { failed_count: 0, errors: [] };
-
-        if (topLevelError) {
-          result.errors = [{ row: 0, error: topLevelError, data: null }];
-          result.failed_count = 1;
-          result.created_count = 0;
-          result.total_rows = 0;
-        } else {
-          const data = rawResult as unknown as BulkUploadResult;
-          result.created_count = data.created_count ?? data.successful_count ?? 0;
-          result.failed_count = data.failed_count ?? 0;
-          result.total_rows = data.total_rows ?? (result.created_count ?? 0) + result.failed_count;
-          result.errors = data.errors ? transformErrors(data.errors) : [];
-        }
-
-        setUploadResult(result);
+      const errorResult = extractUploadErrorResult(error);
+      if (errorResult) {
+        setUploadResult(errorResult);
       } else {
         const errorMessage = (error as Error)?.message || 'Failed to upload file';
         Alert.alert('Error', errorMessage);

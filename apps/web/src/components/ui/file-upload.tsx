@@ -112,36 +112,27 @@ export const FileUpload = memo(
           errors[rejected.file.name] = error.message;
         });
 
-        // Validate accepted files
+        // Validate and create UploadedFile entries
         const validatedFiles: UploadedFile[] = [];
         for (const file of acceptedFiles) {
-          let validationError: string | null = null;
-
-          // Custom validation
-          if (validator) {
-            validationError = await validator(file);
-          }
-
+          const validationError = validator ? await validator(file) : null;
           if (validationError) {
             errors[file.name] = validationError;
-          } else {
-            const uploadedFile: UploadedFile = {
-              id: createFileId(),
-              file,
-              name: file.name,
-              size: file.size,
-              type: file.type,
-              status: uploadMode === 'instant' ? 'uploading' : 'pending',
-              progress: uploadMode === 'instant' ? 0 : undefined,
-            };
-
-            // Create preview for images
-            if (file.type.startsWith('image/') && showPreview) {
-              uploadedFile.preview = URL.createObjectURL(file);
-            }
-
-            validatedFiles.push(uploadedFile);
+            continue;
           }
+
+          const uploadedFile: UploadedFile = {
+            id: createFileId(),
+            file,
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            status: uploadMode === 'instant' ? 'uploading' : 'pending',
+            progress: uploadMode === 'instant' ? 0 : undefined,
+            ...(file.type.startsWith('image/') &&
+              showPreview && { preview: URL.createObjectURL(file) }),
+          };
+          validatedFiles.push(uploadedFile);
         }
 
         setValidationErrors(errors);
@@ -155,7 +146,6 @@ export const FileUpload = memo(
           for (const uploadedFile of validatedFiles) {
             try {
               await onUpload(uploadedFile.file);
-              // Update status inline to avoid dependency cycle
               onFilesChange((currentFiles) =>
                 currentFiles.map((f) =>
                   f.id === uploadedFile.id ? { ...f, status: 'success' as const, progress: 100 } : f

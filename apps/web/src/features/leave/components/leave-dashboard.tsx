@@ -50,6 +50,19 @@ interface UserInfo {
   profile_image?: string;
 }
 
+function parseLeaveBalances(rawBalances: unknown): LeaveBalanceSummary[] {
+  if (Array.isArray(rawBalances)) {
+    return rawBalances as LeaveBalanceSummary[];
+  }
+  if (rawBalances && typeof rawBalances === 'object' && 'balances' in (rawBalances as object)) {
+    const ob = rawBalances as { balances?: unknown };
+    if (Array.isArray(ob.balances)) {
+      return ob.balances as LeaveBalanceSummary[];
+    }
+  }
+  return [];
+}
+
 export function LeaveDashboard() {
   const navigate = useNavigate();
   const { userId } = useParams<{ userId?: string }>();
@@ -116,19 +129,7 @@ export function LeaveDashboard() {
   const refetchRequests = isViewingOtherUser ? refetchUserRequests : refetchMyRequests;
 
   const rawBalances = balancesData?.data as unknown;
-  let balances: LeaveBalanceSummary[] = [];
-  if (Array.isArray(rawBalances)) {
-    balances = rawBalances as LeaveBalanceSummary[];
-  } else if (
-    rawBalances &&
-    typeof rawBalances === 'object' &&
-    'balances' in (rawBalances as object)
-  ) {
-    const ob = rawBalances as { balances?: unknown };
-    if (Array.isArray(ob.balances)) {
-      balances = ob.balances as LeaveBalanceSummary[];
-    }
-  }
+  const balances = parseLeaveBalances(rawBalances);
   const requests = Array.isArray(requestsData?.data) ? requestsData.data : [];
   const pagination = requestsData?.pagination;
 
