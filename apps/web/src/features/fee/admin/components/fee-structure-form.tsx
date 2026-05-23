@@ -85,7 +85,7 @@ export function FeeStructureForm({
     const componentsObj: FeeComponent = {};
     initialData.components.forEach(
       (comp: { name: string; amount: string | number; component_type?: ComponentType }) => {
-        componentsObj[comp.name] = parseFloat(String(comp.amount));
+        componentsObj[comp.name] = Number.parseFloat(String(comp.amount));
       }
     );
     return componentsObj;
@@ -112,7 +112,7 @@ export function FeeStructureForm({
     defaultValues: {
       name: initialData?.name ?? '',
       description: initialData?.description ?? '',
-      total_amount: parseFloat(String(initialData?.total_amount ?? 0)),
+      total_amount: Number.parseFloat(String(initialData?.total_amount ?? 0)),
       due_date: initialData?.due_date ?? '',
       academic_year: initialData?.academic_year ?? defaultAcademicYear ?? '',
       class_public_ids: initialData?.class_public_ids ?? [],

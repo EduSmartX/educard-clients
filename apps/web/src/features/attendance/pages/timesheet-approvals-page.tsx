@@ -252,7 +252,7 @@ export default function TimesheetApprovalsPage() {
         accessor: (row) => {
           const percentage =
             typeof row.attendance_percentage === 'string'
-              ? parseFloat(row.attendance_percentage)
+              ? Number.parseFloat(row.attendance_percentage)
               : row.attendance_percentage;
           const colorClass =
             percentage >= 75

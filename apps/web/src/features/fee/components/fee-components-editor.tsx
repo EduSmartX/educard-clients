@@ -53,9 +53,9 @@ export function FeeComponentsEditor({
 
   const handleAddComponent = () => {
     const name = newComponentName.trim();
-    const amount = parseFloat(newComponentAmount);
+    const amount = Number.parseFloat(newComponentAmount);
 
-    if (!name || isNaN(amount) || amount <= 0) {
+    if (!name || Number.isNaN(amount) || amount <= 0) {
       return;
     }
 
@@ -87,8 +87,8 @@ export function FeeComponentsEditor({
   };
 
   const handleUpdateAmount = (componentName: string, amount: string) => {
-    const numAmount = parseFloat(amount);
-    if (isNaN(numAmount) || numAmount < 0) {
+    const numAmount = Number.parseFloat(amount);
+    if (Number.isNaN(numAmount) || numAmount < 0) {
       return;
     }
 

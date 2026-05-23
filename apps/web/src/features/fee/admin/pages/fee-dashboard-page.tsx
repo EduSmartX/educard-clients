@@ -26,7 +26,7 @@ import { ROUTES } from '@/constants/app-config';
 
 // Format currency
 const formatCurrency = (amount: number | string | undefined) => {
-  const num = typeof amount === 'string' ? parseFloat(amount) : (amount ?? 0);
+  const num = typeof amount === 'string' ? Number.parseFloat(amount) : (amount ?? 0);
   if (num >= 10000000) {
     return `₹${(num / 10000000).toFixed(2)} Cr`;
   } else if (num >= 100000) {

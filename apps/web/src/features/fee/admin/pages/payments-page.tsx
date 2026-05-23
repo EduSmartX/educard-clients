@@ -23,7 +23,7 @@ import { type PaymentModeType, PAYMENT_MODE_OPTIONS } from '@educard/shared';
 
 // Format currency with Indian abbreviations: K, L, Cr
 const formatCurrency = (amount: number | string | undefined) => {
-  const num = typeof amount === 'string' ? parseFloat(amount) : (amount ?? 0);
+  const num = typeof amount === 'string' ? Number.parseFloat(amount) : (amount ?? 0);
   if (num >= 10000000) {
     return `₹${(num / 10000000).toFixed(2)} Cr`;
   }
@@ -135,10 +135,10 @@ export function PaymentsPage() {
   const paymentsArray = paymentsData?.data ?? [];
   const totalGrossCollected = paymentsArray
     .filter((p) => p.transaction_type !== 'debit')
-    .reduce((sum, p) => sum + (parseFloat(String(p.amount)) || 0), 0);
+    .reduce((sum, p) => sum + (Number.parseFloat(String(p.amount)) || 0), 0);
   const totalRefunded = paymentsArray
     .filter((p) => p.transaction_type === 'debit')
-    .reduce((sum, p) => sum + (parseFloat(String(p.amount)) || 0), 0);
+    .reduce((sum, p) => sum + (Number.parseFloat(String(p.amount)) || 0), 0);
   const totalCollected = totalGrossCollected - totalRefunded; // net
   const paymentCount = paymentsData?.pagination?.count ?? paymentsArray.length;
 

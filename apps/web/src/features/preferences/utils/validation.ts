@@ -23,8 +23,8 @@ export function validateTimeFormat(time: string): string | null {
  */
 export function validateDeadlineDay(day: string): string | null {
   if (!day) {return null;}
-  const dayNum = parseInt(day, 10);
-  if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) {
+  const dayNum = Number.parseInt(day, 10);
+  if (Number.isNaN(dayNum) || dayNum < 1 || dayNum > 31) {
     return 'Please enter a day between 1 and 31';
   }
   return null;

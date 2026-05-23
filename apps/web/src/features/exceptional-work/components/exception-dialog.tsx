@@ -84,24 +84,14 @@ export function ExceptionDialog({
 
   // Reset form when dialog closes or exception changes
   useEffect(() => {
-    if (open) {
-      if (exception) {
-        setDate(new Date(exception.date));
-        setOverrideType(exception.override_type);
-        setReason(exception.reason);
-        setIsAllClasses(exception.is_applicable_to_all_classes);
-        setIsAllTeachers(exception.is_applicable_to_all_teachers);
-        setSelectedClasses(exception.classes || []);
-      } else {
-        setDate(undefined);
-        setOverrideType('FORCE_WORKING');
-        setReason('');
-        setIsAllClasses(true);
-        setIsAllTeachers(true);
-        setSelectedClasses([]);
-      }
-      setErrors({});
-    }
+    if (!open) return;
+    setDate(exception ? new Date(exception.date) : undefined);
+    setOverrideType(exception?.override_type || 'FORCE_WORKING');
+    setReason(exception?.reason || '');
+    setIsAllClasses(exception?.is_applicable_to_all_classes ?? true);
+    setIsAllTeachers(exception?.is_applicable_to_all_teachers ?? true);
+    setSelectedClasses(exception?.classes || []);
+    setErrors({});
   }, [open, exception]);
 
   // Create mutation

@@ -77,12 +77,9 @@ export default function HomeworkListPage() {
 
   const selectedClass = useMemo(() => {
     if (selectedClassId) {
-      return teacherClasses.find((c) => c.public_id === selectedClassId) || null;
+      return teacherClasses.find((c) => c.public_id === selectedClassId) ?? null;
     }
-    if (teacherClasses.length > 0) {
-      return teacherClasses[0];
-    }
-    return null;
+    return teacherClasses[0] ?? null;
   }, [selectedClassId, teacherClasses]);
 
   // Set initial class from teacher classes if not already set
@@ -182,6 +179,9 @@ export default function HomeworkListPage() {
   const handleNextDay = useCallback(async () => {
     if (!canNavigateNext) return;
 
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + 7);
+
     try {
       const result = await navigateWorkingDay({
         date: format(selectedDate, 'yyyy-MM-dd'),
@@ -189,17 +189,11 @@ export default function HomeworkListPage() {
         class_id: selectedClassId || undefined,
       });
       const resultDate = new Date(result.date);
-      const maxDate = new Date();
-      maxDate.setDate(maxDate.getDate() + 7);
-      if (resultDate <= maxDate) {
-        setSelectedDate(resultDate);
-      }
+      if (resultDate <= maxDate) setSelectedDate(resultDate);
     } catch {
-      setSelectedDate((prev) => {
-        const newDate = new Date(prev);
-        newDate.setDate(newDate.getDate() + 1);
-        return newDate;
-      });
+      const newDate = new Date(selectedDate);
+      newDate.setDate(newDate.getDate() + 1);
+      if (newDate <= maxDate) setSelectedDate(newDate);
     }
   }, [selectedDate, selectedClassId, navigateWorkingDay, canNavigateNext]);
 

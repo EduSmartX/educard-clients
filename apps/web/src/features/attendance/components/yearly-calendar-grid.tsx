@@ -219,7 +219,7 @@ export function YearlyCalendarGrid({
       const checkDate = new Date(actualYear, month - 1, day);
       const isWeekendResult = isWeekend(checkDate, data.working_day_policy);
 
-      if (!isNaN(checkDate.getTime()) && isWeekendResult) {
+      if (!Number.isNaN(checkDate.getTime()) && isWeekendResult) {
         return 'W';
       }
     } catch {
