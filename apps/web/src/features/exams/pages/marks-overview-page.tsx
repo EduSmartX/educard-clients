@@ -72,6 +72,32 @@ interface StudentMarkEntry {
   marks: Record<string, string>; // examId -> marks value (string for input)
 }
 
+function getMarkInputStyle({
+  editable,
+  isAbsent,
+  isPassing,
+  isFailing,
+}: {
+  editable: boolean;
+  isAbsent: boolean;
+  isPassing: boolean;
+  isFailing: boolean;
+}): string {
+  if (!editable) {
+    return 'cursor-not-allowed border-gray-300 bg-gray-100 text-gray-500';
+  }
+  if (isAbsent) {
+    return 'border-gray-400 bg-gray-200 text-gray-600';
+  }
+  if (isPassing) {
+    return 'border-green-400 bg-green-100 text-green-800';
+  }
+  if (isFailing) {
+    return 'border-red-400 bg-red-100 text-red-800';
+  }
+  return 'bg-white';
+}
+
 export function MarksOverviewPage() {
   const [selectedSessionId, setSelectedSessionId] = useState<string>('');
   const [selectedClassId, setSelectedClassId] = useState<string>('');
@@ -621,17 +647,7 @@ export function MarksOverviewPage() {
                                   subject.max_marks
                                 )
                               }
-                              className={`text-center font-semibold ${
-                                !editable
-                                  ? 'cursor-not-allowed border-gray-300 bg-gray-100 text-gray-500'
-                                  : isAbsent
-                                    ? 'border-gray-400 bg-gray-200 text-gray-600'
-                                    : isPassing
-                                      ? 'border-green-400 bg-green-100 text-green-800'
-                                      : isFailing
-                                        ? 'border-red-400 bg-red-100 text-red-800'
-                                        : 'bg-white'
-                              }`}
+                              className={`text-center font-semibold ${getMarkInputStyle({ editable, isAbsent, isPassing, isFailing: !!isFailing })}`}
                               placeholder="--"
                             />
                           </td>
