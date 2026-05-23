@@ -137,6 +137,61 @@ type WeekBlock = {
   reviewComments?: string | null; // Added to show rejection reason
 };
 
+function getSubmitButtonColor(status: WeekBlock['submissionStatus']): string {
+  if (status === TimesheetStatus.SUBMITTED || status === TimesheetStatus.APPROVED) {
+    return 'cursor-not-allowed bg-gray-400';
+  }
+  if (status === TimesheetStatus.RETURNED) {
+    return 'bg-orange-600 text-white hover:bg-orange-700';
+  }
+  if (status === TimesheetStatus.REJECTED) {
+    return 'bg-red-600 text-white hover:bg-red-700';
+  }
+  return 'bg-blue-600 text-white hover:bg-blue-700';
+}
+
+function SubmitButtonContent({
+  isPending,
+  status,
+}: {
+  isPending: boolean;
+  status: WeekBlock['submissionStatus'];
+}) {
+  if (isPending) {
+    return <Loader2 className="h-4 w-4 animate-spin" />;
+  }
+  if (status === TimesheetStatus.SUBMITTED) {
+    return (
+      <>
+        <Check className="h-4 w-4 sm:mr-1.5" />
+        <span className="hidden sm:inline">Submitted</span>
+      </>
+    );
+  }
+  if (status === TimesheetStatus.APPROVED) {
+    return (
+      <>
+        <Check className="h-4 w-4 sm:mr-1.5" />
+        <span className="hidden sm:inline">Approved</span>
+      </>
+    );
+  }
+  if (status === TimesheetStatus.RETURNED || status === TimesheetStatus.REJECTED) {
+    return (
+      <>
+        <RotateCcw className="h-4 w-4 sm:mr-1.5" />
+        <span className="hidden sm:inline">Resubmit</span>
+      </>
+    );
+  }
+  return (
+    <>
+      <FileText className="h-4 w-4 sm:mr-1.5" />
+      <span className="hidden sm:inline">Submit</span>
+    </>
+  );
+}
+
 export function EmployeeTimesheetSubmitPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -625,45 +680,12 @@ export function EmployeeTimesheetSubmitPage() {
                     week.submissionStatus === TimesheetStatus.SUBMITTED ||
                     week.submissionStatus === TimesheetStatus.APPROVED
                   }
-                  className={`h-8 px-2 text-xs font-semibold sm:h-9 sm:px-4 sm:text-sm ${
-                    week.submissionStatus === TimesheetStatus.SUBMITTED ||
-                    week.submissionStatus === TimesheetStatus.APPROVED
-                      ? 'cursor-not-allowed bg-gray-400'
-                      : week.submissionStatus === TimesheetStatus.RETURNED
-                        ? 'bg-orange-600 text-white hover:bg-orange-700'
-                        : week.submissionStatus === TimesheetStatus.REJECTED
-                          ? 'bg-red-600 text-white hover:bg-red-700'
-                          : 'bg-blue-600 text-white hover:bg-blue-700'
-                  }`}
+                  className={`h-8 px-2 text-xs font-semibold sm:h-9 sm:px-4 sm:text-sm ${getSubmitButtonColor(week.submissionStatus)}`}
                 >
-                  {submitMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : week.submissionStatus === TimesheetStatus.SUBMITTED ? (
-                    <>
-                      <Check className="h-4 w-4 sm:mr-1.5" />
-                      <span className="hidden sm:inline">Submitted</span>
-                    </>
-                  ) : week.submissionStatus === TimesheetStatus.APPROVED ? (
-                    <>
-                      <Check className="h-4 w-4 sm:mr-1.5" />
-                      <span className="hidden sm:inline">Approved</span>
-                    </>
-                  ) : week.submissionStatus === TimesheetStatus.RETURNED ? (
-                    <>
-                      <RotateCcw className="h-4 w-4 sm:mr-1.5" />
-                      <span className="hidden sm:inline">Resubmit</span>
-                    </>
-                  ) : week.submissionStatus === TimesheetStatus.REJECTED ? (
-                    <>
-                      <RotateCcw className="h-4 w-4 sm:mr-1.5" />
-                      <span className="hidden sm:inline">Resubmit</span>
-                    </>
-                  ) : (
-                    <>
-                      <FileText className="h-4 w-4 sm:mr-1.5" />
-                      <span className="hidden sm:inline">Submit</span>
-                    </>
-                  )}
+                  <SubmitButtonContent
+                    isPending={submitMutation.isPending}
+                    status={week.submissionStatus}
+                  />
                 </Button>
               </div>
             </CardHeader>

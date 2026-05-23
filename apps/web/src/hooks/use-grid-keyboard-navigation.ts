@@ -32,32 +32,6 @@ interface UseGridKeyboardNavigationOptions {
   onPositionChange?: (position: GridPosition) => void;
 }
 
-/**
- * Hook to enable keyboard navigation in a grid of inputs
- *
- * @example
- * ```tsx
- * const { containerRef, handleKeyDown, getCellId } = useGridKeyboardNavigation({
- *   rows: students.length,
- *   cols: subjects.length,
- * });
- *
- * return (
- *   <div ref={containerRef}>
- *     {students.map((student, rowIndex) => (
- *       subjects.map((subject, colIndex) => (
- *         <input
- *           key={getCellId(rowIndex, colIndex)}
- *           data-row={rowIndex}
- *           data-col={colIndex}
- *           onKeyDown={handleKeyDown}
- *         />
- *       ))
- *     ))}
- *   </div>
- * );
- * ```
- */
 export function useGridKeyboardNavigation({
   rows,
   cols,

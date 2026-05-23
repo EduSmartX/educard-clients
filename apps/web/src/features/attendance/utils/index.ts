@@ -3,3 +3,4 @@
  */
 
 export * from './attendance-helpers';
+export * from './get-day-status';
