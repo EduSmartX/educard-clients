@@ -57,6 +57,37 @@ function toDateKey(date: Date): string {
   return format(date, 'yyyy-MM-dd');
 }
 
+function isSaturdayOffForReport(date: Date, pattern: string): boolean {
+  if (pattern === 'ALL') {
+    return true;
+  }
+  if (pattern !== 'SECOND_ONLY' && pattern !== 'SECOND_AND_FOURTH') {
+    return false;
+  }
+  const weekOfMonth = Math.ceil(date.getDate() / 7);
+  if (pattern === 'SECOND_ONLY') {
+    return weekOfMonth === 2;
+  }
+  return weekOfMonth === 2 || weekOfMonth === 4;
+}
+
+function isWeekendForReport(
+  date: Date,
+  policy: { sunday_off: boolean; saturday_off_pattern: string } | null
+): boolean {
+  if (!policy) {
+    return false;
+  }
+  const dayOfWeek = date.getDay();
+  if (dayOfWeek === 0 && policy.sunday_off) {
+    return true;
+  }
+  if (dayOfWeek === 6) {
+    return isSaturdayOffForReport(date, policy.saturday_off_pattern);
+  }
+  return false;
+}
+
 export function AttendanceReportPage() {
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -717,46 +748,15 @@ export function AttendanceReportPage() {
                           statusLabel = 'Weekend';
                         }
                         // Check if it's a weekend based on working day policy
-                        else if (monthlyDetailData.working_day_policy) {
-                          const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
-                          let isWeekend = false;
-
-                          // Check Sunday
-                          if (dayOfWeek === 0 && monthlyDetailData.working_day_policy.sunday_off) {
-                            isWeekend = true;
-                          }
-
-                          // Check Saturday based on pattern
-                          if (dayOfWeek === 6) {
-                            const { saturday_off_pattern } = monthlyDetailData.working_day_policy;
-                            if (saturday_off_pattern === 'ALL') {
-                              isWeekend = true;
-                            } else if (
-                              saturday_off_pattern === 'SECOND_ONLY' ||
-                              saturday_off_pattern === 'SECOND_AND_FOURTH'
-                            ) {
-                              const weekOfMonth = Math.ceil(date.getDate() / 7);
-                              if (saturday_off_pattern === 'SECOND_ONLY' && weekOfMonth === 2) {
-                                isWeekend = true;
-                              } else if (
-                                saturday_off_pattern === 'SECOND_AND_FOURTH' &&
-                                (weekOfMonth === 2 || weekOfMonth === 4)
-                              ) {
-                                isWeekend = true;
-                              }
-                            }
-                          }
-
-                          if (isWeekend) {
-                            bgColor = 'bg-purple-50 border-purple-300';
-                            textColor = 'text-purple-900';
-                            icon = (
-                              <div className="mx-auto flex h-5 w-5 items-center justify-center rounded-full bg-purple-500 text-[10px] font-bold text-white">
-                                H
-                              </div>
-                            );
-                            statusLabel = 'Weekend';
-                          }
+                        else if (isWeekendForReport(date, monthlyDetailData.working_day_policy)) {
+                          bgColor = 'bg-purple-50 border-purple-300';
+                          textColor = 'text-purple-900';
+                          icon = (
+                            <div className="mx-auto flex h-5 w-5 items-center justify-center rounded-full bg-purple-500 text-[10px] font-bold text-white">
+                              H
+                            </div>
+                          );
+                          statusLabel = 'Weekend';
                         }
 
                         // Check for approved leave

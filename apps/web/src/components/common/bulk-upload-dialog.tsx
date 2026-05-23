@@ -239,6 +239,67 @@ export function BulkUploadDialog({
     return [];
   };
 
+  // Normalize result from a successful response
+  const normalizeSuccessResult = (result: BulkUploadResult): BulkUploadResult => {
+    if (result.successful_count !== undefined && result.created_count === undefined) {
+      result.created_count = result.successful_count;
+    }
+    if (result.total_rows === undefined) {
+      result.total_rows = (result.created_count || 0) + (result.failed_count || 0);
+    }
+    if (result.errors) {
+      result.errors = transformErrors(result.errors);
+    } else {
+      result.errors = [];
+    }
+    return result;
+  };
+
+  // Handle error response and extract result
+  const extractErrorResult = (error: unknown): BulkUploadResult | null => {
+    const err = error as {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data?: any;
+      response?: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        data?: any;
+      };
+    };
+
+    let rawResult = err?.data || err?.response?.data;
+    if (rawResult && 'data' in rawResult && typeof rawResult.data === 'object') {
+      rawResult = rawResult.data;
+    }
+    if (!rawResult) {
+      return null;
+    }
+
+    const topLevelError = rawResult.error;
+    if (topLevelError) {
+      toast.error(topLevelError);
+      return {
+        created_count: 0,
+        failed_count: 1,
+        total_rows: 0,
+        errors: [{ row: 0, error: topLevelError, data: null }],
+      };
+    }
+
+    const result: BulkUploadResult = {
+      created_count: rawResult.created_count ?? rawResult.successful_count ?? 0,
+      failed_count: rawResult.failed_count ?? 0,
+      total_rows:
+        rawResult.total_rows ??
+        (rawResult.created_count ?? rawResult.successful_count ?? 0) +
+          (rawResult.failed_count ?? 0),
+      errors: rawResult.errors ? transformErrors(rawResult.errors) : [],
+    };
+
+    const message = result.failed_count > 0 ? 'Upload failed with errors' : 'Upload failed';
+    toast.error(message);
+    return result;
+  };
+
   // Upload handler
   const handleUpload = async () => {
     if (!selectedFile) {
@@ -283,22 +344,7 @@ export function BulkUploadDialog({
 
     try {
       const response = await uploadFile(selectedFile);
-      const result = response.data;
-
-      // Normalize the result format
-      if (result.successful_count !== undefined && result.created_count === undefined) {
-        result.created_count = result.successful_count;
-      }
-
-      if (result.total_rows === undefined) {
-        result.total_rows = (result.created_count || 0) + (result.failed_count || 0);
-      }
-
-      if (result.errors) {
-        result.errors = transformErrors(result.errors);
-      } else if (result.errors === null) {
-        result.errors = [];
-      }
+      const result = normalizeSuccessResult(response.data);
 
       setUploadResult(result);
 
@@ -328,63 +374,8 @@ export function BulkUploadDialog({
         onUploadSuccess(result);
       }
     } catch (error) {
-      const err = error as {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        data?: any;
-        response?: {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          data?: any;
-        };
-      };
-
-      // Try to get result from different response structures
-      let rawResult = err?.data || err?.response?.data;
-
-      // Handle BulkUploadResponse wrapper (with nested data)
-      if (rawResult && 'data' in rawResult && typeof rawResult.data === 'object') {
-        rawResult = rawResult.data;
-      }
-
-      if (rawResult) {
-        // Check for top-level error message (like "Excel file is empty")
-        const topLevelError = rawResult.error;
-
-        const result: BulkUploadResult = {
-          failed_count: 0,
-          errors: [],
-        };
-
-        if (topLevelError) {
-          // Create a file-level error (row 0) for top-level errors
-          result.errors = [
-            {
-              row: 0,
-              error: topLevelError,
-              data: null,
-            },
-          ];
-          result.failed_count = 1;
-          result.created_count = 0;
-          result.total_rows = 0;
-          toast.error(topLevelError);
-        } else {
-          // Normalize the result format
-          result.created_count = rawResult.created_count ?? rawResult.successful_count ?? 0;
-          result.failed_count = rawResult.failed_count ?? 0;
-          result.total_rows =
-            rawResult.total_rows ?? (result.created_count ?? 0) + result.failed_count;
-
-          if (rawResult.errors) {
-            result.errors = transformErrors(rawResult.errors);
-          } else {
-            result.errors = [];
-          }
-
-          const failedCount = result.failed_count;
-          const message = failedCount > 0 ? 'Upload failed with errors' : 'Upload failed';
-          toast.error(message);
-        }
-
+      const result = extractErrorResult(error);
+      if (result) {
         setUploadResult(result);
       } else {
         const errorMessage = (error as Error)?.message || 'Failed to upload file';

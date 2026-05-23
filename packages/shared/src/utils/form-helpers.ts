@@ -44,6 +44,32 @@ function parseNestedFieldErrors(
   }
 }
 
+const SKIP_KEYS = new Set(["success", "code", "message"]);
+
+function processSingleField(
+  key: string,
+  value: unknown,
+  fieldMap: Record<string, string>,
+  fieldErrors: Record<string, string>,
+): void {
+  if (SKIP_KEYS.has(key)) return;
+
+  if (Array.isArray(value)) {
+    const mapped = fieldMap[key] || key;
+    fieldErrors[mapped] = value[0];
+  } else if (typeof value === "object" && value !== null) {
+    parseNestedFieldErrors(
+      key,
+      value as Record<string, unknown>,
+      fieldMap,
+      fieldErrors,
+    );
+  } else if (typeof value === "string") {
+    const mapped = fieldMap[key] || key;
+    fieldErrors[mapped] = value;
+  }
+}
+
 /**
  * Parse API error response into a flat field→message errors object.
  * Handles nested backend error formats like `{ user: { email: ["..."] } }`.
@@ -70,26 +96,7 @@ export function parseApiErrors(
   const fieldErrors: Record<string, string> = {};
 
   for (const [key, value] of Object.entries(data)) {
-    if (key === "success" || key === "code" || key === "message") {
-      continue;
-    }
-
-    if (Array.isArray(value)) {
-      // Direct field error: { employee_id: ["This field is required."] }
-      const mapped = fieldMap[key] || key;
-      fieldErrors[mapped] = value[0];
-    } else if (typeof value === "object" && value !== null) {
-      // Nested object: { user: { email: ["..."], phone: ["..."] } }
-      parseNestedFieldErrors(
-        key,
-        value as Record<string, unknown>,
-        fieldMap,
-        fieldErrors,
-      );
-    } else if (typeof value === "string") {
-      const mapped = fieldMap[key] || key;
-      fieldErrors[mapped] = value;
-    }
+    processSingleField(key, value, fieldMap, fieldErrors);
   }
 
   if (Object.keys(fieldErrors).length > 0) {
