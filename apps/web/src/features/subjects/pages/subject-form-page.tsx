@@ -211,7 +211,6 @@ export default function SubjectFormPage() {
 
   const deleteMutation = useDeleteSubject({
     onSuccess: () => {
-      toast.success(SuccessMessages.SUBJECT.DELETE_SUCCESS);
       // Navigation happens before mutation is called
     },
     onError: (error: Error) => {
@@ -221,7 +220,6 @@ export default function SubjectFormPage() {
 
   const reactivateMutation = useReactivateSubject({
     onSuccess: () => {
-      toast.success(SuccessMessages.SUBJECT.REACTIVATE_SUCCESS);
       // Navigation already happened before mutation was called
     },
     onError: (error: Error) => {

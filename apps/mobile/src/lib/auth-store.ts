@@ -125,7 +125,6 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
 
   // Logout
   logout: async () => {
-    // Clear all React Query cache to prevent stale data from previous user
     clearQueryCache();
 
     // Set state atomically to prevent multiple re-renders

@@ -19,7 +19,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Save, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
@@ -36,7 +36,6 @@ import { FormMultiSelect } from '@/components/forms/FormMultiSelect';
 import { useRoleTypes, useSupervisors, useCoreSubjects } from '@/features/core';
 import { useTeacherDetail, useUpdateTeacher, teacherKeys } from '@/features/teachers';
 import { useProfileImage } from '@/hooks/useProfileImage';
-import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -44,7 +43,6 @@ type FieldErrors = Record<string, string>;
 
 export default function EditTeacherScreen() {
   const router = useRouter();
-  const { showToast } = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: teacher, isLoading: detailLoading, dataUpdatedAt } = useTeacherDetail(id || '');
   const updateMutation = useUpdateTeacher();
@@ -134,7 +132,7 @@ export default function EditTeacherScreen() {
   const supervisorOptions = useMemo(
     () =>
       (supervisors ?? [])
-        .filter((s) => s.email !== form.email) // Exclude self from supervisor list
+        .filter((s) => s.email !== form.email)
         .map((s) => ({ value: s.email, label: `${s.full_name} (${s.email})` })),
     [supervisors, form.email]
   );
@@ -172,6 +170,7 @@ export default function EditTeacherScreen() {
   );
 
   const handleSubmit = useCallback(() => {
+    if (updateMutation.isPending) return; // Prevent double-tap
     setApiError(null);
     const fieldErrors = validateAllFields(teacherFullSchema, form);
     setErrors(fieldErrors);
@@ -190,11 +189,6 @@ export default function EditTeacherScreen() {
       { publicId: id ?? '', data: payload },
       {
         onSuccess: () => {
-          showToast({
-            type: 'success',
-            title: 'Success',
-            message: 'Teacher updated successfully!',
-          });
           router.back();
         },
         onError: (err: Error & { response?: { data?: unknown } }) => {
@@ -407,6 +401,7 @@ export default function EditTeacherScreen() {
               placeholder="Select supervisor"
               searchable
               loading={supervisorsLoading}
+              error={errors.supervisor_email}
             />
 
             {/* Subjects Multi-Select */}

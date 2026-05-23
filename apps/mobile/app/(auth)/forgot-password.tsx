@@ -4,8 +4,8 @@ import { useRouter } from 'expo-router';
 import { Mail, ArrowLeft, Send, KeyRound } from 'lucide-react-native'; // Removed unused: CheckCircle, RefreshCw, Lock, Eye, EyeOff
 import { useState, useCallback, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated'; // Removed unused: FadeIn
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated'; // Removed unused: FadeIn
 
 import { authApi } from '@/api/auth';
 // import { otpApi } from '@/api/otp'; // Commented - unused for now

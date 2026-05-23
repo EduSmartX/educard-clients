@@ -16,7 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Save } from 'lucide-react-native';
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
@@ -24,7 +24,6 @@ import { FormInput, FormSection, FormError, FormDropdown } from '@/components/fo
 import { useClassDetail, useUpdateClass } from '@/features/classes';
 import { useCoreClasses } from '@/features/core';
 import { useTeachers } from '@/features/teachers';
-import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -32,7 +31,6 @@ type FieldErrors = Record<string, string>;
 
 export default function EditClassScreen() {
   const router = useRouter();
-  const { showToast } = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: classDetail, isLoading: detailLoading } = useClassDetail(id || '');
   const updateMutation = useUpdateClass();
@@ -113,7 +111,6 @@ export default function EditClassScreen() {
       { publicId: id, data: payload },
       {
         onSuccess: () => {
-          showToast({ type: 'success', title: 'Success', message: 'Class updated successfully!' });
           router.back();
         },
         onError: (err: any) => {

@@ -10,7 +10,7 @@ import {
   type FieldErrors,
   type MutationOptions,
 } from '@/lib/utils/mutation-utils';
-import { ErrorMessages, QueryKeys, SuccessMessages } from '@/constants';
+import { ErrorMessages, QueryKeys } from '@/constants';
 import type { CreateClassPayload, UpdateClassPayload } from '../types';
 import {
   createClass,
@@ -41,9 +41,9 @@ export function useCreateClass(options?: MutationOptions<ClassFieldErrors>) {
       payload: CreateClassPayload;
       forceCreate?: boolean;
     }) => createClass(payload, forceCreate),
-    onSuccess: () => {
+    onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: QueryKeys.CLASSES.ALL });
-      toast.success(SuccessMessages.CLASS.CREATE_SUCCESS);
+      toast.success(response.message);
       options?.onSuccess?.();
     },
     onError: (error: Error) => {
@@ -57,11 +57,11 @@ export function useReactivateClass(options?: MutationOptions<ClassFieldErrors>) 
 
   return useMutation({
     mutationFn: (publicId: string) => reactivateClass(publicId),
-    onSuccess: () => {
+    onSuccess: (response) => {
       queryClient.invalidateQueries({
         queryKey: QueryKeys.CLASSES.ALL,
       });
-      toast.success(SuccessMessages.CLASS.REACTIVATE_SUCCESS);
+      toast.success(response.message);
       options?.onSuccess?.();
     },
     onError: (error: Error) => {
@@ -76,9 +76,9 @@ export function useUpdateClass(options?: MutationOptions<ClassFieldErrors>) {
   return useMutation({
     mutationFn: ({ publicId, payload }: { publicId: string; payload: UpdateClassPayload }) =>
       updateClass(publicId, payload),
-    onSuccess: () => {
+    onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: QueryKeys.CLASSES.ALL });
-      toast.success(SuccessMessages.CLASS.UPDATE_SUCCESS);
+      toast.success(response.message);
       options?.onSuccess?.();
     },
     onError: (error: Error) => {
@@ -92,10 +92,10 @@ export function useDeleteClass(options?: MutationOptions<ClassFieldErrors>) {
 
   return useMutation({
     mutationFn: (publicId: string) => deleteClass(publicId),
-    onSuccess: (_data, publicId) => {
+    onSuccess: (response, publicId) => {
       queryClient.removeQueries({ queryKey: ['classes', publicId] });
       queryClient.invalidateQueries({ queryKey: QueryKeys.CLASSES.ALL });
-      toast.success(SuccessMessages.CLASS.DELETE_SUCCESS);
+      toast.success(response?.message || 'Class deleted successfully');
       options?.onSuccess?.();
     },
     onError: (error: Error) => {
@@ -117,7 +117,7 @@ export function useBulkUploadClasses(options?: MutationOptions<ClassFieldErrors>
           duration: 6000,
         });
       } else {
-        toast.success(SuccessMessages.CLASS.BULK_UPLOAD_SUCCESS);
+        toast.success('Classes uploaded successfully');
       }
       options?.onSuccess?.();
     },

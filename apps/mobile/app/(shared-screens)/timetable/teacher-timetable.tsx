@@ -42,7 +42,7 @@ const gradient = getRoleGradient('admin');
 export default function TeacherTimetableScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
+  const _isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
 
   const [selectedTeacherId, setSelectedTeacherId] = useState<string>('');
   const [selectedDay, setSelectedDay] = useState<number>(() => {
@@ -104,7 +104,11 @@ export default function TeacherTimetableScreen() {
 
   // Unique subjects for legend
   const subjects = useMemo(() => {
-    return [...new Set(dayEntries.filter((e) => e.subject_name).map((e) => e.subject_name!))];
+    return [
+      ...new Set(
+        dayEntries.map((e) => e.subject_name).filter((name): name is string => Boolean(name))
+      ),
+    ];
   }, [dayEntries]);
 
   const onRefresh = async () => {
@@ -131,7 +135,9 @@ export default function TeacherTimetableScreen() {
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.contentContainer}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />
+        }
       >
         {/* Teacher Dropdown */}
         <View style={styles.dropdownSection}>

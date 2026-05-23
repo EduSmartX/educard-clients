@@ -3,6 +3,9 @@
  * Shows payment history for parent's child
  */
 
+import type { FeePayment } from '@educard/shared';
+import { FEE_UI_TEXT } from '@educard/shared';
+import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
 import {
   View,
@@ -13,19 +16,18 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+
 import { Card } from '@/components/ui/Card';
-import { PaymentModeBadge } from '../components/payment-mode-badge';
+
 import { FeeAmount } from '../components/fee-amount';
+import { PaymentModeBadge } from '../components/payment-mode-badge';
 import { useParentPaymentHistory } from '../hooks/use-fee-queries';
-import type { FeePayment } from '@educard/shared';
-import { FEE_UI_TEXT } from '@educard/shared';
 
 export default function ParentPaymentHistoryScreen() {
-  const router = useRouter();
+  const _router = useRouter();
   const { data: paymentsData, isLoading, refetch } = useParentPaymentHistory();
 
-  const payments = paymentsData?.results ?? [];
+  const payments = paymentsData ?? [];
 
   const handleDownloadReceipt = useCallback((payment: FeePayment) => {
     // TODO: Implement receipt download
@@ -35,7 +37,7 @@ export default function ParentPaymentHistoryScreen() {
   return (
     <ScrollView
       style={styles.container}
-      refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} />}
+      refreshControl={<RefreshControl refreshing={isLoading} onRefresh={() => void refetch()} />}
     >
       {/* Header */}
       <Text style={styles.headerTitle}>{FEE_UI_TEXT.PAGE_TITLES.PAYMENT_HISTORY}</Text>

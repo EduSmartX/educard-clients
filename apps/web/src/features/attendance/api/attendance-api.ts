@@ -325,10 +325,14 @@ export const checkTimesheetStatus = async (params: {
 export const returnTimesheetToDraft = async (params: {
   week_start_date: string;
   week_end_date: string;
-}): Promise<void> => {
-  await apiClient.delete('/attendance/timesheet-submission/return_to_draft/', {
-    params,
-  });
+}): Promise<{ message: string }> => {
+  const response = await apiClient.delete<{ message: string }>(
+    '/attendance/timesheet-submission/return_to_draft/',
+    {
+      params,
+    }
+  );
+  return response.data;
 };
 
 // Get list of timesheet submissions
@@ -373,12 +377,12 @@ export const reviewTimesheet = async (
     submission_status: 'APPROVED' | 'RETURNED' | 'REJECTED';
     review_comments?: string;
   }
-): Promise<{ submission: TimesheetSubmission }> => {
+): Promise<{ submission: TimesheetSubmission; message?: string }> => {
   const response = await apiClient.post(
     `/attendance/timesheet-submission/${submissionId}/review/`,
     payload
   );
-  return response.data.data || response.data;
+  return { ...(response.data.data || response.data), message: response.data.message };
 };
 
 // Monthly attendance summary (NEW - backend calculated)

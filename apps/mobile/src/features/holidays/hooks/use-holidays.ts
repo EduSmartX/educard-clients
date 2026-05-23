@@ -4,6 +4,9 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
+import { handleMutationError, type MutationOptions } from '@/lib/mutation-utils';
+import { showToast } from '@/utils/toast';
+
 import {
   getHolidays,
   getHolidayById,
@@ -41,32 +44,47 @@ export function useHolidayDetail(id: string) {
   });
 }
 
-export function useCreateHoliday() {
+export function useCreateHoliday(options?: MutationOptions) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: createHoliday,
     onSuccess: () => {
+      showToast('success', 'Holiday created successfully');
       void qc.invalidateQueries({ queryKey: holidayKeys.all });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to create holiday', options?.onError);
     },
   });
 }
 
-export function useUpdateHoliday() {
+export function useUpdateHoliday(options?: MutationOptions) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Holiday> }) => updateHoliday(id, data),
     onSuccess: () => {
+      showToast('success', 'Holiday updated successfully');
       void qc.invalidateQueries({ queryKey: holidayKeys.all });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to update holiday', options?.onError);
     },
   });
 }
 
-export function useDeleteHoliday() {
+export function useDeleteHoliday(options?: MutationOptions) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: deleteHoliday,
     onSuccess: () => {
+      showToast('success', 'Holiday deleted successfully');
       void qc.invalidateQueries({ queryKey: holidayKeys.all });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to delete holiday', options?.onError);
     },
   });
 }
@@ -79,23 +97,33 @@ export function useWorkingDayPolicy() {
   });
 }
 
-export function useCreateWorkingDayPolicy() {
+export function useCreateWorkingDayPolicy(options?: MutationOptions) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: createWorkingDayPolicy,
     onSuccess: () => {
+      showToast('success', 'Working day policy created successfully');
       void qc.invalidateQueries({ queryKey: holidayKeys.workingDayPolicy() });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to create working day policy', options?.onError);
     },
   });
 }
 
-export function useUpdateWorkingDayPolicy() {
+export function useUpdateWorkingDayPolicy(options?: MutationOptions) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<WorkingDayPolicy> }) =>
       updateWorkingDayPolicy(id, data),
     onSuccess: () => {
+      showToast('success', 'Working day policy updated successfully');
       void qc.invalidateQueries({ queryKey: holidayKeys.workingDayPolicy() });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to update working day policy', options?.onError);
     },
   });
 }

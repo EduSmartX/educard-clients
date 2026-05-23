@@ -3,9 +3,9 @@
  * List, search, create, edit, delete fee structures
  */
 
+import type { FeeStructure, FeeStructureFilters } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useAndroidBack } from '@/hooks';
 import {
   ChevronLeft,
   Plus,
@@ -39,8 +39,9 @@ import {
   buildClassOptions,
 } from '@/components/filters';
 import { useClasses } from '@/features/classes';
+import { useAndroidBack } from '@/hooks';
+
 import { useFeeStructures, useDeleteFeeStructure } from '../hooks';
-import type { FeeStructure, FeeStructureFilters } from '@educard/shared';
 
 // ─── Card ─────────────────────────────────────────────────────────────────────
 
@@ -137,6 +138,7 @@ const StructureCard = React.memo(
     </TouchableOpacity>
   )
 );
+StructureCard.displayName = 'StructureCard';
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
@@ -150,8 +152,8 @@ export default function FeeStructuresScreen() {
 
   const scrollY = useRef(0);
 
-  const { data: classesData } = useClasses({ page_size: 200 } as any);
-  const classOptions = buildClassOptions((classesData?.classes ?? []) as any[]);
+  const { data: classesData } = useClasses({ page_size: 200 });
+  const classOptions = buildClassOptions(classesData?.classes ?? []);
   const filterFields = buildFeeStructureFilterFields(classOptions);
 
   const apiFilters: FeeStructureFilters = {
@@ -193,7 +195,7 @@ export default function FeeStructuresScreen() {
 
   const handleEdit = useCallback(
     (id: string) => {
-      router.push({ pathname: '/(tabs)/(admin)/fee-structure-form' as any, params: { id } });
+      router.push({ pathname: '/(tabs)/(admin)/fee-structure-form', params: { id } });
     },
     [router]
   );
@@ -205,7 +207,7 @@ export default function FeeStructuresScreen() {
   const handlePress = useCallback(
     (id: string) => {
       router.push({
-        pathname: '/(tabs)/(admin)/fee-student-fees' as any,
+        pathname: '/(tabs)/(admin)/fee-student-fees',
         params: { fee_structure_public_id: id },
       });
     },
@@ -214,7 +216,7 @@ export default function FeeStructuresScreen() {
 
   const handleViewDetail = useCallback(
     (id: string) => {
-      router.push({ pathname: '/(tabs)/(admin)/fee-structure-detail' as any, params: { id } });
+      router.push({ pathname: '/(tabs)/(admin)/fee-structure-detail', params: { id } });
     },
     [router]
   );
@@ -245,7 +247,7 @@ export default function FeeStructuresScreen() {
           </View>
           <TouchableOpacity
             style={styles.addBtn}
-            onPress={() => router.push('/(tabs)/(admin)/fee-structure-form' as any)}
+            onPress={() => router.push('/(tabs)/(admin)/fee-structure-form')}
           >
             <Plus size={20} color="#fff" />
           </TouchableOpacity>

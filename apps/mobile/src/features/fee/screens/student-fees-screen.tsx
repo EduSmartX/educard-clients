@@ -4,13 +4,13 @@
  * Supports recording payments per student
  */
 
+import { FeeStatusOptions, FeeStatus } from '@educard/shared';
+import type { StudentFee, FeeStatusType, ReminderChannelType } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useAndroidBack } from '@/hooks';
 import {
   ChevronLeft,
   Users,
-  IndianRupee,
   AlertTriangle,
   Bell,
   CreditCard,
@@ -33,15 +33,14 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { EmptyState, ErrorState, LoadingState, ListFooter } from '@/components/common/ListStates';
 import { SearchBar } from '@/components/common/SearchBar';
-import { FormDropdown } from '@/components/forms/FormDropdown';
 import { ClassFilterDropdown } from '@/components/filters';
-import { FeeStatusBadge } from '../components/fee-status-badge';
-import { useStudentFees, useSendFeeReminder } from '../hooks';
-import type { StudentFee, FeeStatusType } from '@educard/shared';
-import { FeeStatusOptions, FeeStatus } from '@educard/shared';
+import { FormDropdown } from '@/components/forms/FormDropdown';
 import { RecordPaymentModal } from '@/features/fee/components/record-payment-modal';
 import { SendReminderModal } from '@/features/fee/components/send-reminder-modal';
-import type { ReminderChannelType } from '@educard/shared';
+import { useAndroidBack } from '@/hooks';
+
+import { FeeStatusBadge } from '../components/fee-status-badge';
+import { useStudentFees, useSendFeeReminder } from '../hooks';
 
 const STATUS_OPTIONS = [{ value: '', label: 'All Statuses' }, ...FeeStatusOptions];
 
@@ -61,7 +60,7 @@ const StudentFeeCard = React.memo(
     const isRefunded = item.status === FeeStatus.REFUNDED;
     const isOverpaid = item.status === FeeStatus.OVERPAID;
     const isRefundFlow = isRefunding || isRefunded;
-    const showRefundAction = isRefunding || isOverpaid;
+    const _showRefundAction = isRefunding || isOverpaid;
 
     const pctColor =
       item.paid_percentage >= 100
@@ -205,6 +204,7 @@ const StudentFeeCard = React.memo(
     );
   }
 );
+StudentFeeCard.displayName = 'StudentFeeCard';
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
@@ -293,7 +293,7 @@ export default function StudentFeesScreen() {
   const handleViewDetail = useCallback(
     (id: string) => {
       router.push({
-        pathname: '/(tabs)/(admin)/fee-student-detail' as any,
+        pathname: '/(tabs)/(admin)/fee-student-detail',
         params: { id },
       });
     },
@@ -303,7 +303,7 @@ export default function StudentFeesScreen() {
   const handleEdit = useCallback(
     (id: string) => {
       router.push({
-        pathname: '/(tabs)/(admin)/fee-student-edit' as any,
+        pathname: '/(tabs)/(admin)/fee-student-edit',
         params: { id },
       });
     },
@@ -332,7 +332,7 @@ export default function StudentFeesScreen() {
           </View>
           <TouchableOpacity
             style={styles.addBtn}
-            onPress={() => router.push('/(tabs)/(admin)/fee-assign-student' as any)}
+            onPress={() => router.push('/(tabs)/(admin)/fee-assign-student')}
           >
             <Plus size={20} color="#fff" />
           </TouchableOpacity>

@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ROUTES } from '@/constants/app-config';
-import { ErrorMessages, SuccessMessages } from '@/constants';
+import { ErrorMessages } from '@/constants';
 import { useTeachers } from '../hooks/use-teachers';
 import { useDeleteTeacher, useReactivateTeacher } from '../hooks/mutations';
 import { TeachersList } from './teachers-list';
@@ -62,7 +62,6 @@ export function TeachersManagement({ viewMode = 'admin' }: TeachersManagementPro
   // Delete mutation
   const deleteMutation = useDeleteTeacher({
     onSuccess: () => {
-      toast.success(SuccessMessages.TEACHER.DELETE_SUCCESS);
       setTeacherToDelete(null);
     },
     onError: (error: Error) => {
@@ -73,7 +72,6 @@ export function TeachersManagement({ viewMode = 'admin' }: TeachersManagementPro
   // Reactivate mutation
   const reactivateMutation = useReactivateTeacher({
     onSuccess: () => {
-      toast.success(SuccessMessages.TEACHER.REACTIVATE_SUCCESS);
       setTeacherToReactivate(null);
     },
     onError: (error: Error) => {

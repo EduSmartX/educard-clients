@@ -123,7 +123,6 @@ export function StudentList({ onBack }: StudentListProps) {
       confirmVariant: 'success',
       makeMessage: (name) => `Are you sure you want to reactivate ${name}?`,
       runAction: ({ publicId, classId }) => restoreMutation.mutateAsync({ publicId, classId }),
-      successMessage: (name) => `${name} reactivated successfully`,
       errorMessage: 'Failed to reactivate student',
       onSuccess: () => void refetch(),
     });

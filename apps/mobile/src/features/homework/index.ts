@@ -6,7 +6,7 @@
 export * from './api';
 
 // React Query hooks
-export * from './hooks';
+export * from './use-homework';
 
 // Re-export types and constants from shared package
 export type {

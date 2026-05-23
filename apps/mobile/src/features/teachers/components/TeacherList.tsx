@@ -117,7 +117,6 @@ export function TeacherList({ onBack }: TeacherListProps) {
       confirmVariant: 'success',
       makeMessage: (name) => `Are you sure you want to reactivate ${name}?`,
       runAction: (id: string) => restoreMutation.mutateAsync(id),
-      successMessage: (name) => `${name} reactivated successfully`,
       errorMessage: 'Failed to reactivate teacher',
       onSuccess: () => void refetch(),
     }

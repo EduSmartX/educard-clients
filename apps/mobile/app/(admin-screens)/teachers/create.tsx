@@ -19,15 +19,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Save, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { useState, useCallback, useMemo, useRef } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  Switch,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Switch } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
@@ -115,7 +107,7 @@ export default function CreateTeacherScreen() {
   );
   const bloodGroupOpts = BLOOD_GROUP_OPTIONS.map((b) => ({ value: b.value, label: b.label }));
   const subjectOptions = useMemo(
-    () => (coreSubjects || []).map((s: any) => ({ value: s.id.toString(), label: s.name })),
+    () => (coreSubjects || []).map((s) => ({ value: s.id.toString(), label: s.name })),
     [coreSubjects]
   );
 
@@ -171,11 +163,6 @@ export default function CreateTeacherScreen() {
             duplicateHandler.closeDialog();
             const uid = response?.data?.user?.public_id || response?.user?.public_id;
             if (photoUri && uid) uploadProfilePhoto(uid, photoUri, 'photo.jpg').catch(() => {});
-            showToast({
-              type: 'success',
-              title: 'Success',
-              message: 'Teacher created successfully!',
-            });
             router.back();
           },
           onError: (err: any) => {
@@ -231,7 +218,7 @@ export default function CreateTeacherScreen() {
         });
       },
     });
-  }, [duplicateHandler, restoreMutation, router]);
+  }, [duplicateHandler, restoreMutation, router, showToast]);
 
   const handleForceCreate = useCallback(() => {
     const payload = duplicateHandler.pendingData?.payload;

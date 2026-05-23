@@ -3,9 +3,9 @@
  * Overview of collection stats, recent payments, quick actions
  */
 
+import type { FeePaymentListItem } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useAndroidBack } from '@/hooks';
 import {
   IndianRupee,
   TrendingUp,
@@ -28,11 +28,11 @@ import {
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import type { FeePaymentListItem } from '@educard/shared';
-
 import { HeaderProfileButton } from '@/components/common';
-import { useFeeDashboard, usePayments } from '../hooks';
+import { useAndroidBack } from '@/hooks';
+
 import { FeeStatusBadge, PaymentModeBadge } from '../components';
+import { useFeeDashboard, usePayments } from '../hooks';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -62,6 +62,7 @@ const StatCard = React.memo(({ label, value, sub, gradient, icon }: StatCardProp
     <Text style={styles.statSub}>{sub}</Text>
   </LinearGradient>
 ));
+StatCard.displayName = 'StatCard';
 
 interface QuickActionProps {
   label: string;
@@ -78,6 +79,7 @@ const QuickAction = React.memo(({ label, icon, gradient, onPress }: QuickActionP
     <Text style={styles.quickActionLabel}>{label}</Text>
   </TouchableOpacity>
 ));
+QuickAction.displayName = 'QuickAction';
 
 // ─── screen ──────────────────────────────────────────────────────────────────
 
@@ -177,31 +179,31 @@ export default function FeeDashboardScreen() {
                   label="Fee Structures"
                   gradient={['#0f766e', '#14b8a6']}
                   icon={<List size={20} color="#fff" />}
-                  onPress={() => router.push('/(tabs)/(admin)/fee-structures' as any)}
+                  onPress={() => router.push('/(tabs)/(admin)/fee-structures')}
                 />
                 <QuickAction
                   label="New Structure"
                   gradient={['#059669', '#10b981']}
                   icon={<Plus size={20} color="#fff" />}
-                  onPress={() => router.push('/(tabs)/(admin)/fee-structure-form' as any)}
+                  onPress={() => router.push('/(tabs)/(admin)/fee-structure-form')}
                 />
                 <QuickAction
                   label="Student Fees"
                   gradient={['#7c3aed', '#a78bfa']}
                   icon={<Users size={20} color="#fff" />}
-                  onPress={() => router.push('/(tabs)/(admin)/fee-student-fees' as any)}
+                  onPress={() => router.push('/(tabs)/(admin)/fee-student-fees')}
                 />
                 <QuickAction
                   label="All Payments"
                   gradient={['#d97706', '#f59e0b']}
                   icon={<TrendingUp size={20} color="#fff" />}
-                  onPress={() => router.push('/(tabs)/(admin)/fee-payments' as any)}
+                  onPress={() => router.push('/(tabs)/(admin)/fee-payments')}
                 />
                 <QuickAction
                   label="Assign Fee"
                   gradient={['#e11d48', '#fb7185']}
                   icon={<IndianRupee size={20} color="#fff" />}
-                  onPress={() => router.push('/(tabs)/(admin)/fee-assign-student' as any)}
+                  onPress={() => router.push('/(tabs)/(admin)/fee-assign-student')}
                 />
               </View>
             </Animated.View>
@@ -210,9 +212,7 @@ export default function FeeDashboardScreen() {
             <Animated.View entering={FadeInDown.delay(250)} style={styles.section}>
               <View style={styles.sectionRow}>
                 <Text style={styles.sectionTitle}>Recent Payments</Text>
-                <TouchableOpacity
-                  onPress={() => router.push('/(tabs)/(admin)/fee-payments' as any)}
-                >
+                <TouchableOpacity onPress={() => router.push('/(tabs)/(admin)/fee-payments')}>
                   <Text style={styles.seeAll}>See all</Text>
                 </TouchableOpacity>
               </View>
@@ -228,7 +228,7 @@ export default function FeeDashboardScreen() {
                     style={styles.paymentRow}
                     onPress={() =>
                       router.push({
-                        pathname: '/(tabs)/(admin)/fee-payments' as any,
+                        pathname: '/(tabs)/(admin)/fee-payments',
                         params: { highlight: p.public_id },
                       })
                     }

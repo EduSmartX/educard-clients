@@ -7,20 +7,21 @@
 
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useAndroidBack } from '@/hooks';
 import { ChevronLeft, UserPlus } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { FormDropdown } from '@/components/forms/FormDropdown';
-import { ClassFilterDropdown } from '@/components/filters';
-import { FormInput } from '@/components/forms/FormInput';
 import { SubmitButton } from '@/components/common/SubmitButton';
-import { useFeeStructures, useCreateStudentFee, useEligibleStudents } from '../hooks';
+import { ClassFilterDropdown } from '@/components/filters';
+import { FormDropdown } from '@/components/forms/FormDropdown';
+import { FormInput } from '@/components/forms/FormInput';
+import { useAndroidBack } from '@/hooks';
 import { extractApiError } from '@/utils/api-error';
 import { showToast } from '@/utils/toast';
+
+import { useFeeStructures, useCreateStudentFee, useEligibleStudents } from '../hooks';
 
 export default function FeeAssignStudentScreen() {
   const router = useRouter();
@@ -105,7 +106,7 @@ export default function FeeAssignStudentScreen() {
       {
         onSuccess: () => {
           showToast('success', 'Fee assigned successfully');
-          router.push('/(tabs)/(admin)/fee-student-fees' as any);
+          router.push('/(tabs)/(admin)/fee-student-fees');
         },
         onError: (err) => {
           Alert.alert('Error', extractApiError(err));

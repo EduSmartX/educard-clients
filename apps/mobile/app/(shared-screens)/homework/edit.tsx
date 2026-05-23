@@ -21,7 +21,12 @@ import {
   extractApiError,
   getFieldErrors,
 } from '@educard/shared';
-import type { HomeworkUpdatePayload } from '@educard/shared';
+import type {
+  HomeworkUpdatePayload,
+  HomeworkStatus,
+  HomeworkPriority,
+  SubmissionType,
+} from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Save, BookOpen, Clock, Link, AlertCircle } from 'lucide-react-native';
@@ -141,7 +146,7 @@ export default function EditHomeworkScreen() {
           uri: file.uri,
           name: file.name,
           type: file.type,
-        } as any);
+        } as unknown as Blob);
 
         await uploadMutation.mutateAsync({ publicId: homeworkId, formData });
       }
@@ -166,25 +171,19 @@ export default function EditHomeworkScreen() {
       description: description.trim() || undefined,
       instructions: instructions.trim() || undefined,
       due_datetime: dueDateTime,
-      status: status as any,
-      priority: priority as any,
-      submission_type: submissionType as any,
+      status: status as HomeworkStatus,
+      priority: priority as HomeworkPriority,
+      submission_type: submissionType as SubmissionType,
       reference_link: referenceLink.trim() || undefined,
     };
-
-    console.log('[EditHomework] Submitting update:', {
-      homeworkId: homework.public_id,
-      payload,
-    });
 
     updateMutation.mutate(
       { publicId: homework.public_id, data: payload },
       {
-        onSuccess: async () => {
-          console.log('[EditHomework] Update successful');
+        onSuccess: () => {
           // Upload new attachments if any
           if (attachments.length > 0) {
-            await uploadAttachments(homework.public_id);
+            void uploadAttachments(homework.public_id);
           }
           showToast({
             type: 'success',
@@ -492,7 +491,7 @@ export default function EditHomeworkScreen() {
             styles.submitBtn,
             (!canSave || updateMutation.isPending || isUploading) && styles.submitBtnDisabled,
           ]}
-          onPress={handleSubmit}
+          onPress={() => void handleSubmit()}
           disabled={!canSave || updateMutation.isPending || isUploading}
         >
           {updateMutation.isPending || isUploading ? (

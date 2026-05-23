@@ -25,7 +25,6 @@ import {
   RefreshControl,
   ScrollView,
   Modal,
-  Alert,
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 

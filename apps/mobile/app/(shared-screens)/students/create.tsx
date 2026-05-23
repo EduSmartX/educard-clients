@@ -21,15 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Save, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { useState, useCallback, useMemo } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  Switch,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Switch } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
@@ -175,11 +167,6 @@ export default function CreateStudentScreen() {
             if (photoUri && uid) {
               void uploadProfilePhoto(uid, photoUri, 'photo.jpg').catch(() => {});
             }
-            showToast({
-              type: 'success',
-              title: 'Success',
-              message: 'Student created successfully',
-            });
             router.back();
           },
           onError: (err: unknown) => {
@@ -237,7 +224,7 @@ export default function CreateStudentScreen() {
         });
       },
     });
-  }, [duplicateHandler, restoreMutation, router]);
+  }, [duplicateHandler, restoreMutation, router, showToast]);
 
   const handleForceCreate = useCallback(() => {
     const payload = duplicateHandler.pendingData?.payload;

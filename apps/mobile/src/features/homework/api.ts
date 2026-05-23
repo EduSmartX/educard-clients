@@ -7,7 +7,6 @@
 import type {
   Homework,
   HomeworkDetail,
-  HomeworkSubmission,
   HomeworkSubmissionDetail,
   HomeworkDashboardStats,
   CalendarHomework,
@@ -24,12 +23,6 @@ import type {
 import { apiClient } from '@/api/client';
 
 const BASE_URL = '/homework';
-
-interface ListResponse<T> {
-  success: boolean;
-  data: T[];
-  pagination?: { total_count: number; page: number; page_size: number; total_pages: number };
-}
 
 interface DetailResponse<T> {
   success: boolean;

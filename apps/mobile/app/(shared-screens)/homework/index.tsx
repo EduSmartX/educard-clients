@@ -24,7 +24,7 @@ import {
 } from '@educard/shared';
 import type { Homework, HomeworkStatus } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import {
   ChevronLeft,
   ChevronRight,
@@ -38,6 +38,8 @@ import {
   Eye,
   ChevronDown,
   X,
+  Pencil,
+  Trash2,
 } from 'lucide-react-native';
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
@@ -55,10 +57,8 @@ import {
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { useNavigateWorkingDay } from '@/features/calendar';
-import { useTeacherClasses, useHomeworkList } from '@/features/homework';
-import { useAuthStore } from '@/lib/auth-store';
+import { useTeacherClasses, useHomeworkList, useDeleteHomework } from '@/features/homework';
 import { headerStyles, layoutStyles } from '@/styles';
-import { isAdminRole } from '@/utils/role-utils';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -88,8 +88,6 @@ interface SubjectHomework {
 
 export default function HomeworkListScreen() {
   const router = useRouter();
-  const { user } = useAuthStore();
-  const isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
 
   const [refreshing, setRefreshing] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // Start with today
@@ -170,12 +168,8 @@ export default function HomeworkListScreen() {
       });
       setSelectedDate(new Date(result.date));
     } catch {
-      // Fallback to simple previous day if API fails
-      setSelectedDate((prev) => {
-        const newDate = new Date(prev);
-        newDate.setDate(newDate.getDate() - 1);
-        return newDate;
-      });
+      // Don't fallback to simple day change - stay on current date
+      // to avoid landing on holidays/non-working days
     }
   }, [selectedDate, selectedClassId, navigateWorkingDay]);
 
@@ -197,12 +191,8 @@ export default function HomeworkListScreen() {
         setSelectedDate(resultDate);
       }
     } catch {
-      // Fallback to simple next day if API fails
-      setSelectedDate((prev) => {
-        const newDate = new Date(prev);
-        newDate.setDate(newDate.getDate() + 1);
-        return newDate;
-      });
+      // Don't fallback to simple day change - stay on current date
+      // to avoid landing on holidays/non-working days
     }
   }, [selectedDate, selectedClassId, navigateWorkingDay, canNavigateNext]);
 
@@ -213,15 +203,24 @@ export default function HomeworkListScreen() {
     if (subjectId) {
       url += `&subject=${subjectId}`;
     }
-    router.push(url as any);
+    router.push(url as Href);
   };
 
   const handleViewHomework = (homework: Homework) => {
-    router.push(`/(shared-screens)/homework/${homework.public_id}` as any);
+    router.push(`/(shared-screens)/homework/${homework.public_id}` as Href);
+  };
+
+  const handleEditHomework = (homework: Homework) => {
+    router.push(`/(shared-screens)/homework/edit?id=${homework.public_id}` as Href);
+  };
+
+  const deleteMutation = useDeleteHomework();
+  const handleDeleteHomework = (homework: Homework) => {
+    deleteMutation.mutate(homework.public_id);
   };
 
   const handleViewSubmissions = (homework: Homework) => {
-    router.push(`/(shared-screens)/homework/submissions?homework_id=${homework.public_id}` as any);
+    router.push(`/(shared-screens)/homework/submissions?homework_id=${homework.public_id}` as Href);
   };
 
   const canAddForSubject = (_subject: SubjectHomework['subject']) => {
@@ -321,15 +320,29 @@ export default function HomeworkListScreen() {
                   <Text style={styles.actionBtnText}>View</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.actionBtn, styles.submissionsBtn]}
-                  onPress={() => handleViewSubmissions(homework)}
+                  style={styles.actionBtn}
+                  onPress={() => handleEditHomework(homework)}
                 >
-                  <FileText size={14} color="#fff" />
-                  <Text style={[styles.actionBtnText, { color: '#fff' }]}>
-                    Submissions ({homework.submission_stats.submitted})
-                  </Text>
+                  <Pencil size={14} color="#f59e0b" />
+                  <Text style={[styles.actionBtnText, { color: '#f59e0b' }]}>Edit</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={() => handleDeleteHomework(homework)}
+                >
+                  <Trash2 size={14} color="#ef4444" />
+                  <Text style={[styles.actionBtnText, { color: '#ef4444' }]}>Delete</Text>
                 </TouchableOpacity>
               </View>
+              <TouchableOpacity
+                style={[styles.actionBtn, styles.submissionsBtn, { marginTop: 8 }]}
+                onPress={() => handleViewSubmissions(homework)}
+              >
+                <FileText size={14} color="#fff" />
+                <Text style={[styles.actionBtnText, { color: '#fff' }]}>
+                  Submissions ({homework.submission_stats.submitted})
+                </Text>
+              </TouchableOpacity>
             </View>
           ) : (
             /* No homework yet */
@@ -471,7 +484,7 @@ export default function HomeworkListScreen() {
       <View style={styles.dateNav}>
         <TouchableOpacity
           style={[styles.dateNavBtn, isNavigating && styles.dateNavBtnDisabled]}
-          onPress={handlePrevDay}
+          onPress={() => void handlePrevDay()}
           disabled={isNavigating}
         >
           {isNavigating ? (
@@ -499,7 +512,7 @@ export default function HomeworkListScreen() {
             styles.dateNavBtn,
             (isNavigating || !canNavigateNext) && styles.dateNavBtnDisabled,
           ]}
-          onPress={handleNextDay}
+          onPress={() => void handleNextDay()}
           disabled={isNavigating || !canNavigateNext}
         >
           {isNavigating ? (

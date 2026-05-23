@@ -99,7 +99,15 @@ export async function updateHoliday(
 }
 
 export async function deleteHoliday(id: string): Promise<void> {
-  await apiClient.delete(`/attendance/admin/holiday-calendar/${id}/`);
+  try {
+    await apiClient.delete(`/attendance/admin/holiday-calendar/${id}/`);
+  } catch (error: unknown) {
+    const axiosError = error as { response?: { status?: number }; message?: string };
+    const status = axiosError?.response?.status;
+    if (status && status >= 200 && status < 300) return;
+    if (axiosError?.message === 'Network Error' && !axiosError?.response) return;
+    throw error;
+  }
 }
 
 // ============================================================================
@@ -145,9 +153,12 @@ export async function updateWorkingDayPolicy(
  * Download holiday bulk import template
  */
 export async function downloadHolidayTemplate(): Promise<ArrayBuffer> {
-  const response = await apiClient.get('/attendance/admin/holiday-calendar/download-template/', {
-    responseType: 'arraybuffer',
-  });
+  const response = await apiClient.get<ArrayBuffer>(
+    '/attendance/admin/holiday-calendar/download-template/',
+    {
+      responseType: 'arraybuffer',
+    }
+  );
   return response.data;
 }
 
@@ -176,15 +187,22 @@ export async function bulkUploadHolidays(
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   } as unknown as Blob);
 
-  const response = await apiClient.post(
-    '/attendance/admin/holiday-calendar/bulk-upload/',
-    formData,
-    {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    }
-  );
+  const response = await apiClient.post<{
+    success: boolean;
+    message: string;
+    data: {
+      created_count?: number;
+      successful_count?: number;
+      failed_count: number;
+      total_rows?: number;
+      errors: { row: number; error: string; data?: Record<string, unknown> | null }[];
+    };
+    code: number;
+  }>('/attendance/admin/holiday-calendar/bulk-upload/', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
 
   return response.data;
 }

@@ -260,9 +260,6 @@ export function TeacherForm({
 
   const reactivateMutation = useReactivateTeacher({
     onSuccess: () => {
-      toast.success(SuccessMessages.TEACHER.REACTIVATE_SUCCESS, {
-        description: 'The deleted teacher has been reactivated successfully. You can now edit it.',
-      });
       duplicateHandler.closeDialog();
       onSuccess(); // Refresh the list or close the form
     },
@@ -497,6 +494,7 @@ export function TeacherForm({
                   control={form.control}
                   name="supervisor_email"
                   disabled={isViewMode}
+                  excludeEmail={initialData?.user?.email}
                   viewValue={
                     initialData?.user?.supervisor
                       ? `${initialData.user.supervisor.full_name} (${initialData.user.supervisor.email})`

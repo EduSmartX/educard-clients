@@ -12,6 +12,7 @@ const adminTheme = getRoleThemeColors('admin');
 
 // Common Layout Styles
 export const layoutStyles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: Theme.colors.background.primary },
   container: { flex: 1, backgroundColor: Theme.colors.background.primary },
   centered: { alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row', alignItems: 'center' },
@@ -83,6 +84,7 @@ export const avatarStyles = StyleSheet.create({
 // Header Styles (Gradient Headers)
 export const headerStyles = StyleSheet.create({
   header: { paddingTop: 44, paddingBottom: 16, paddingHorizontal: 16, overflow: 'hidden' },
+  gradient: { paddingTop: 44, paddingBottom: 16, paddingHorizontal: 16, overflow: 'hidden' },
   circle1: {
     position: 'absolute',
     top: -40,
@@ -103,6 +105,7 @@ export const headerStyles = StyleSheet.create({
   },
   content: { zIndex: 1 },
   topRow: { flexDirection: 'row', alignItems: 'center' },
+  titleRow: { flexDirection: 'row', alignItems: 'center' },
   backBtn: {
     width: 36,
     height: 36,

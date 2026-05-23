@@ -13,7 +13,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ActivityIndicator,
   Switch,
   Modal,
@@ -152,7 +151,7 @@ export default function CreateLeaveAllocationScreen() {
         setApiError(extractApiError(err, 'Failed to create leave allocation'));
       },
     });
-  }, [form, validate, createMutation, router]);
+  }, [form, validate, createMutation, router, showToast]);
 
   const isSaving = createMutation.isPending;
 

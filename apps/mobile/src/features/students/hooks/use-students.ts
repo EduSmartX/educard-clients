@@ -7,6 +7,8 @@ import type { Student } from '@educard/shared';
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { DEFAULT_PAGE_SIZE } from '@/api/client';
+import { handleMutationError, type MutationOptions } from '@/lib/mutation-utils';
+import { showToast } from '@/utils/toast';
 
 import {
   getStudents,
@@ -16,6 +18,7 @@ import {
   deleteStudent,
   restoreStudent,
   type StudentQueryParams,
+  type StudentDetailResponse,
 } from '../api/students-api';
 
 export const studentKeys = {
@@ -59,7 +62,7 @@ export function useStudents(params?: Omit<StudentQueryParams, 'page'>) {
 }
 
 export function useStudentDetail(publicId: string, isDeleted?: boolean) {
-  return useQuery({
+  return useQuery<StudentDetailResponse, Error, Student>({
     queryKey: [...studentKeys.detail(publicId), isDeleted],
     queryFn: () => getStudentById(publicId, isDeleted),
     select: (response) => response.data,
@@ -67,46 +70,66 @@ export function useStudentDetail(publicId: string, isDeleted?: boolean) {
   });
 }
 
-export function useCreateStudent() {
+export function useCreateStudent(options?: MutationOptions) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ data, forceCreate }: { data: Partial<Student>; forceCreate?: boolean }) =>
-      createStudent(data, forceCreate),
-    onSuccess: () => {
+    mutationFn: ({ data, forceCreate }: { data: Record<string, unknown>; forceCreate?: boolean }) =>
+      createStudent(data as Partial<Student> & { class_id: string }, forceCreate),
+    onSuccess: (response) => {
+      showToast('success', response.message || 'Student created successfully');
       void queryClient.invalidateQueries({ queryKey: studentKeys.all });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to create student', options?.onError);
     },
   });
 }
 
-export function useUpdateStudent() {
+export function useUpdateStudent(options?: MutationOptions) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ publicId, data }: { publicId: string; data: Partial<Student> }) =>
       updateStudent(publicId, data),
-    onSuccess: () => {
+    onSuccess: (response) => {
+      showToast('success', response.message || 'Student updated successfully');
       void queryClient.invalidateQueries({ queryKey: studentKeys.all });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to update student', options?.onError);
     },
   });
 }
 
-export function useDeleteStudent() {
+export function useDeleteStudent(options?: MutationOptions) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ publicId, classId }: { publicId: string; classId: string }) =>
       deleteStudent(publicId, classId),
-    onSuccess: () => {
+    onSuccess: (response) => {
+      showToast('success', response?.message || 'Student deleted successfully');
       void queryClient.invalidateQueries({ queryKey: studentKeys.lists() });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to delete student', options?.onError);
     },
   });
 }
 
-export function useRestoreStudent() {
+export function useRestoreStudent(options?: MutationOptions) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ publicId, classId }: { publicId: string; classId?: string }) =>
       restoreStudent(publicId, classId),
-    onSuccess: () => {
+    onSuccess: (response) => {
+      showToast('success', response.message || 'Student restored successfully');
       void queryClient.invalidateQueries({ queryKey: studentKeys.all });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to restore student', options?.onError);
     },
   });
 }

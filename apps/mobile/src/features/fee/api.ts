@@ -23,11 +23,12 @@ import type {
   SendReminderPayload,
   BulkReminderPayload,
   ReminderResult,
+  PaginatedResponse,
+  ApiResponse,
 } from '@educard/shared';
-import type { PaginatedResponse, ApiResponse } from '@educard/shared';
+import { API_ENDPOINTS } from '@educard/shared';
 
 import { apiClient } from '@/api/client';
-import { API_ENDPOINTS } from '@educard/shared';
 
 // ─── Fee Structure ────────────────────────────────────────────────────────────
 

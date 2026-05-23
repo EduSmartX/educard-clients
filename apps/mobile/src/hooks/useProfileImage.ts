@@ -136,7 +136,7 @@ export function useProfileImage({
         const isSelfUpload = userPublicId === user?.public_id;
         const uploadUrl = isSelfUpload
           ? API_ENDPOINTS.ATTACHMENTS.MY_PHOTO_UPLOAD
-          : API_ENDPOINTS.ATTACHMENTS.USER_PHOTO_UPLOAD(userPublicId!);
+          : API_ENDPOINTS.ATTACHMENTS.USER_PHOTO_UPLOAD(userPublicId ?? '');
 
         const response = await apiClient.post<UploadResponse>(uploadUrl, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
@@ -158,7 +158,7 @@ export function useProfileImage({
         setIsUploading(false);
       }
     }
-  }, [userPublicId, onSuccess, invalidateProfilePhoto]);
+  }, [userPublicId, onSuccess, invalidateProfilePhoto, user?.public_id]);
 
   return { pickAndUpload, isUploading, localUri, invalidateProfilePhoto };
 }

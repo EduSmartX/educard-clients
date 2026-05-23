@@ -148,7 +148,7 @@ export default function ProfileScreen() {
         router.back();
       },
     });
-  }, [form, validateForm, updateMutation, router]);
+  }, [form, validateForm, updateMutation, router, showToast]);
 
   const isLoading = profileLoading || photoLoading;
   const isSaving = updateMutation.isPending;

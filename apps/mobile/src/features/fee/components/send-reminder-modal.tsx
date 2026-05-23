@@ -3,15 +3,15 @@
  * Allows admin to select notification channel before sending fee reminder
  */
 
-import React, { useState } from 'react';
-import { View, Text, Modal, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
-import { Bell, Mail, MessageSquare, Phone, X } from 'lucide-react-native';
 import {
   ReminderChannel,
   REMINDER_CHANNEL_OPTIONS,
   type ReminderChannelType,
   type StudentFee,
 } from '@educard/shared';
+import { Bell, Mail, MessageSquare, Phone, X } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { View, Text, Modal, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 
 interface SendReminderModalProps {
   visible: boolean;

@@ -6,8 +6,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { DetailScreenShell, DetailSection, DetailRow, ChipRow } from '@/components/detail';
-import { useTeacherDetail } from '@/features/teachers';
 import { getMediaUrl } from '@/constants/config';
+import { useTeacherDetail } from '@/features/teachers';
 
 export default function TeacherDetailScreen() {
   const { id, is_deleted } = useLocalSearchParams<{ id: string; is_deleted?: string }>();

@@ -49,7 +49,7 @@ export function useActionConfirm<T = string>({
       try {
         await runAction(target.data);
         if (successMessage) {
-          showToast('info', successMessage(target.displayName));
+          showToast('success', successMessage(target.displayName));
         }
         onSuccess?.();
         setTarget(null);

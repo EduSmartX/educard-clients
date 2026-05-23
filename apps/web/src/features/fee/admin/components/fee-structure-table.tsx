@@ -9,6 +9,7 @@ import { DataTable, type Column } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DeleteConfirmationDialog, WarningConfirmationDialog } from '@/components/common';
 import { FeeAmount } from '../../components/fee-amount';
 import { useDeleteFeeStructure } from '../../hooks/use-fee-mutations';
@@ -67,24 +68,22 @@ export function FeeStructureTable({ data, isLoading }: FeeStructureTableProps) {
             </Badge>
           ))}
           {row.class_names.length > 2 && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge variant="outline" className="hover:bg-muted cursor-pointer text-xs">
-                    +{row.class_names.length - 2} more
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs">
-                  <div className="space-y-1">
-                    {row.class_names.slice(2).map((cls, idx) => (
-                      <div key={idx} className="text-xs">
-                        {cls}
-                      </div>
-                    ))}
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Badge variant="outline" className="hover:bg-muted cursor-pointer text-xs">
+                  +{row.class_names.length - 2} more
+                </Badge>
+              </PopoverTrigger>
+              <PopoverContent side="bottom" className="w-auto max-w-xs p-3">
+                <div className="space-y-1">
+                  {row.class_names.slice(2).map((cls, idx) => (
+                    <div key={idx} className="text-xs">
+                      {cls}
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
           )}
         </div>
       ),

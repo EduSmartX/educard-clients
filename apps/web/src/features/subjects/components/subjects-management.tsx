@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { DeleteConfirmationDialog, ReactivateConfirmationDialog } from '@/components/common';
-import { ErrorMessages, SuccessMessages } from '@/constants';
+import { ErrorMessages } from '@/constants';
 import { useSubjects } from '../hooks/use-subjects';
 import { useDeleteSubject, useReactivateSubject } from '../hooks/mutations';
 import { SubjectsList } from './index';
@@ -50,7 +50,6 @@ export function SubjectsManagement() {
   // Delete mutation
   const deleteMutation = useDeleteSubject({
     onSuccess: () => {
-      toast.success(SuccessMessages.SUBJECT.DELETE_SUCCESS);
       setSubjectToDelete(undefined);
     },
     onError: () => {
@@ -61,7 +60,6 @@ export function SubjectsManagement() {
   // Reactivate mutation
   const reactivateMutation = useReactivateSubject({
     onSuccess: () => {
-      toast.success(SuccessMessages.SUBJECT.REACTIVATE_SUCCESS);
       setSubjectToReactivate(undefined);
     },
     onError: () => {

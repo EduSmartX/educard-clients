@@ -18,7 +18,7 @@ import {
   HOMEWORK_UI,
   extractApiError,
 } from '@educard/shared';
-import type { HomeworkSubmissionDetail, SubmissionStatus } from '@educard/shared';
+import type { SubmissionStatus } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
@@ -325,7 +325,7 @@ export default function ReviewScreen() {
               <TouchableOpacity
                 key={attachment.public_id}
                 style={styles.attachmentCard}
-                onPress={() => handleOpenAttachment(attachment.url)}
+                onPress={() => void handleOpenAttachment(attachment.url)}
               >
                 <Paperclip size={16} color={Colors.gray[400]} />
                 <View style={styles.attachmentInfo}>

@@ -28,6 +28,8 @@ interface SupervisorFieldProps<T extends FieldValues> {
   description?: string;
   /** Display text for view/disabled mode (e.g., "Allen Williams") */
   viewValue?: string;
+  /** Email to exclude from the dropdown (e.g., the current user's own email) */
+  excludeEmail?: string;
 }
 
 /**
@@ -43,15 +45,17 @@ export function SupervisorField<T extends FieldValues>({
   disabled = false,
   description = 'Optional: Assign a supervisor for this user',
   viewValue,
+  excludeEmail,
 }: SupervisorFieldProps<T>) {
   const { data: users = [], isLoading } = useOrganizationUsers();
+  const filteredUsers = excludeEmail ? users.filter((u) => u.email !== excludeEmail) : users;
 
   return (
     <FormField
       control={control}
       name={name}
       render={({ field }) => {
-        const matchedUser = users.find((u) => u.email === (field.value as string));
+        const matchedUser = filteredUsers.find((u) => u.email === (field.value as string));
         const resolvedDisplayValue =
           viewValue ||
           (matchedUser ? `${matchedUser.full_name} (${matchedUser.email})` : '') ||
@@ -74,7 +78,7 @@ export function SupervisorField<T extends FieldValues>({
               // Edit/create mode: show searchable dropdown
               <FormControl>
                 <SearchableSelect
-                  options={users.map((user) => ({
+                  options={filteredUsers.map((user) => ({
                     value: user.email,
                     label: `${user.full_name} (${user.email})`,
                   }))}

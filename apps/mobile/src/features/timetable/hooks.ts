@@ -9,6 +9,8 @@ import type {
 } from '@educard/shared';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
+import { showToast } from '@/utils/toast';
+
 import {
   fetchClassGroups,
   fetchSlots,
@@ -25,7 +27,6 @@ import {
   createEntry,
   deleteEntry,
 } from './api';
-import { showToast } from '@/utils/toast';
 
 export function useClassGroups() {
   return useQuery({
@@ -64,7 +65,7 @@ export function useMyTimetable() {
 export function useTeacherTimetable(teacherPublicId: string | undefined) {
   return useQuery({
     queryKey: ['timetable', 'teacher-timetable', teacherPublicId],
-    queryFn: () => fetchTeacherTimetable(teacherPublicId!),
+    queryFn: () => fetchTeacherTimetable(teacherPublicId ?? ''),
     enabled: !!teacherPublicId,
     staleTime: 5 * 60 * 1000,
   });

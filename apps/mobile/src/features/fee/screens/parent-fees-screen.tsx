@@ -3,29 +3,23 @@
  * Shows parent's child fee details
  */
 
-import React, { useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  RefreshControl,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { Card } from '@/components/ui/Card';
-import { FeeStatusBadge } from '../components/fee-status-badge';
-import { FeeAmount, FeeProgress } from '../components/fee-amount';
-import { useParentStudentFees } from '../hooks/use-fee-queries';
 import type { StudentFee } from '@educard/shared';
 import { FeeStatus, FEE_UI_TEXT } from '@educard/shared';
+import { useRouter, type Href } from 'expo-router';
+import React, { useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
+
+import { Card } from '@/components/ui/Card';
+
+import { FeeAmount, FeeProgress } from '../components/fee-amount';
+import { FeeStatusBadge } from '../components/fee-status-badge';
+import { useParentStudentFees } from '../hooks/use-fee-queries';
 
 export default function ParentFeesScreen() {
   const router = useRouter();
   const { data: feesData, isLoading, refetch } = useParentStudentFees();
 
-  const fees = feesData?.results ?? [];
+  const fees = feesData?.data ?? [];
 
   // Calculate totals
   const totalAmount = fees.reduce((sum: number, fee: StudentFee) => sum + fee.final_amount, 0);
@@ -35,26 +29,26 @@ export default function ParentFeesScreen() {
 
   const handleFeePress = useCallback(
     (fee: StudentFee) => {
-      router.push(`/(shared-screens)/fees/${fee.public_id}` as any);
+      router.push(`/(shared-screens)/fees/${fee.public_id}` as Href);
     },
     [router]
   );
 
   const handlePayPress = useCallback(
     (fee: StudentFee) => {
-      router.push(`/(shared-screens)/fees/${fee.public_id}/pay` as any);
+      router.push(`/(shared-screens)/fees/${fee.public_id}/pay` as Href);
     },
     [router]
   );
 
   const handleViewPayments = useCallback(() => {
-    router.push('/(shared-screens)/fees/payments' as any);
+    router.push('/(shared-screens)/fees/payments' as Href);
   }, [router]);
 
   return (
     <ScrollView
       style={styles.container}
-      refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} />}
+      refreshControl={<RefreshControl refreshing={isLoading} onRefresh={() => void refetch()} />}
     >
       {/* Summary Cards */}
       <View style={styles.summaryRow}>

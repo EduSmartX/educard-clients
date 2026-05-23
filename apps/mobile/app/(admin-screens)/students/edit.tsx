@@ -35,7 +35,6 @@ import {
 import { useManagedClasses } from '@/features/classes';
 import { useStudentDetail, useUpdateStudent, studentKeys } from '@/features/students';
 import { useProfileImage } from '@/hooks/useProfileImage';
-import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -43,7 +42,6 @@ type FieldErrors = Record<string, string>;
 
 export default function EditStudentScreen() {
   const router = useRouter();
-  const { showToast } = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: student, isLoading: detailLoading, dataUpdatedAt } = useStudentDetail(id || '');
   const updateMutation = useUpdateStudent();
@@ -190,11 +188,6 @@ export default function EditStudentScreen() {
       { publicId: id, data: payload },
       {
         onSuccess: () => {
-          showToast({
-            type: 'success',
-            title: 'Success',
-            message: 'Student updated successfully!',
-          });
           router.back();
         },
         onError: (err: Error & { response?: { data?: unknown } }) => {

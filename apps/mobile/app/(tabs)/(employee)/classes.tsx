@@ -38,8 +38,14 @@ interface EligibleClass {
 }
 
 const getEligibleClasses = async (): Promise<EligibleClass[]> => {
-  const response = await apiClient.get('/classes/employee/eligible/');
-  return response.data.data || response.data;
+  const response = await apiClient.get<{ data: EligibleClass[] } | EligibleClass[]>(
+    '/classes/employee/eligible/'
+  );
+  const result = response.data;
+  if ('data' in result && Array.isArray(result.data)) {
+    return result.data;
+  }
+  return result as EligibleClass[];
 };
 
 function ClassCard({

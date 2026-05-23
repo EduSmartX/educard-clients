@@ -5,9 +5,9 @@
  * This hook intercepts the hardware back press and navigates to the correct parent.
  */
 
+import { useRouter, type Href } from 'expo-router';
 import { useEffect } from 'react';
 import { BackHandler, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
 
 /**
  * @param parentRoute - The route to navigate to when Android back is pressed
@@ -22,7 +22,7 @@ export function useAndroidBack(parentRoute: string) {
       if (router.canGoBack()) {
         router.back();
       } else {
-        router.navigate(parentRoute as any);
+        router.navigate(parentRoute as Href);
       }
       return true; // Prevent default behavior
     });

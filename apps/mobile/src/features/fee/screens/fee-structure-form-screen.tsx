@@ -3,9 +3,10 @@
  * Create / Edit fee structure with fee components
  */
 
+import type { FeeStructureCreatePayload, Class } from '@educard/shared';
+import { ComponentType } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useAndroidBack } from '@/hooks';
 import { ChevronLeft, Plus, Trash2, IndianRupee, AlertTriangle } from 'lucide-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -17,23 +18,23 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { FormInput } from '@/components/forms/FormInput';
-import { FormDatePicker } from '@/components/forms/FormDatePicker';
-import { FormDropdown } from '@/components/forms/FormDropdown';
-import { FormMultiSelect } from '@/components/forms/FormMultiSelect';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { SubmitButton } from '@/components/common/SubmitButton';
 import { buildClassOptions } from '@/components/filters';
+import { FormDatePicker } from '@/components/forms/FormDatePicker';
+import { FormDropdown } from '@/components/forms/FormDropdown';
+import { FormInput } from '@/components/forms/FormInput';
+import { FormMultiSelect } from '@/components/forms/FormMultiSelect';
 import { useClasses } from '@/features/classes';
 import { useCurrentAcademicYear } from '@/features/core';
-import { useFeeStructure, useCreateFeeStructure, useUpdateFeeStructure } from '../hooks';
-import type { FeeStructureCreatePayload, Class } from '@educard/shared';
-import { ComponentType } from '@educard/shared';
+import { useAndroidBack } from '@/hooks';
 import { extractApiError } from '@/utils/api-error';
+
 import { fetchClassChangeImpact } from '../api';
+import { useFeeStructure, useCreateFeeStructure, useUpdateFeeStructure } from '../hooks';
 
 // ─── component type options ────────────────────────────────────────────────
 
@@ -81,7 +82,7 @@ export default function FeeStructureFormScreen() {
   const { data: existing, isLoading: isLoadingStructure } = useFeeStructure(id ?? '');
 
   // Classes for multi-select
-  const { data: classesData } = useClasses({ page_size: 200 } as any);
+  const { data: classesData } = useClasses({ page_size: 200 });
   const classOptions = buildClassOptions((classesData?.classes ?? []) as Class[]);
 
   // Current academic year from DB
@@ -198,7 +199,7 @@ export default function FeeStructureFormScreen() {
       };
       updateStructure(
         { id, data: payload },
-        { onSuccess: () => router.push('/(tabs)/(admin)/fee-structures' as any), onError }
+        { onSuccess: () => router.push('/(tabs)/(admin)/fee-structures'), onError }
       );
     },
     [id, router, updateStructure]
@@ -248,7 +249,7 @@ export default function FeeStructureFormScreen() {
         const amountChanged = Math.abs(oldAmount - newAmount) > 0.001;
 
         const normalizeComponents = (
-          list: Array<{ name: string; amount: number | string; component_type?: string }>
+          list: { name: string; amount: number | string; component_type?: string }[]
         ) =>
           [...list]
             .sort((a, b) => a.name.localeCompare(b.name))
@@ -351,7 +352,7 @@ export default function FeeStructureFormScreen() {
       void runImpactCheck();
     } else {
       createStructure(payload, {
-        onSuccess: () => router.push('/(tabs)/(admin)/fee-structures' as any),
+        onSuccess: () => router.push('/(tabs)/(admin)/fee-structures'),
         onError,
       });
     }
@@ -369,7 +370,6 @@ export default function FeeStructureFormScreen() {
     existing,
     classOptions,
     persistUpdate,
-    updateStructure,
     createStructure,
     router,
   ]);

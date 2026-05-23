@@ -27,10 +27,7 @@ import { AttendanceUiText } from '@/constants';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
-import {
-  getClassAttendanceSummary,
-  type ClassAttendanceSummaryItem,
-} from '../api/attendance-api';
+import { getClassAttendanceSummary, type ClassAttendanceSummaryItem } from '../api/attendance-api';
 
 // Define columns for the DataTable
 const getAttendanceSummaryColumns = (): Column<ClassAttendanceSummaryItem>[] => [
@@ -48,7 +45,7 @@ const getAttendanceSummaryColumns = (): Column<ClassAttendanceSummaryItem>[] => 
       row.class_teacher ? (
         <div>
           <p className="text-sm font-medium">{row.class_teacher.full_name}</p>
-          <p className="text-xs text-muted-foreground">{row.class_teacher.email}</p>
+          <p className="text-muted-foreground text-xs">{row.class_teacher.email}</p>
         </div>
       ) : (
         <span className="text-muted-foreground text-sm italic">Not assigned</span>
@@ -60,9 +57,7 @@ const getAttendanceSummaryColumns = (): Column<ClassAttendanceSummaryItem>[] => 
   },
   {
     header: 'Total',
-    accessor: (row) => (
-      <span className="font-medium">{row.total_students}</span>
-    ),
+    accessor: (row) => <span className="font-medium">{row.total_students}</span>,
     sortable: true,
     sortKey: 'total_students',
     width: 80,
@@ -73,9 +68,7 @@ const getAttendanceSummaryColumns = (): Column<ClassAttendanceSummaryItem>[] => 
   {
     header: 'Marked',
     accessor: (row) => (
-      <span className={cn('font-medium', row.marked > 0 && 'text-blue-600')}>
-        {row.marked}
-      </span>
+      <span className={cn('font-medium', row.marked > 0 && 'text-blue-600')}>{row.marked}</span>
     ),
     sortable: true,
     sortKey: 'marked',
@@ -131,9 +124,7 @@ const getAttendanceSummaryColumns = (): Column<ClassAttendanceSummaryItem>[] => 
   },
   {
     header: 'Unmarked',
-    accessor: (row) => (
-      <span className="text-muted-foreground">{row.unmarked}</span>
-    ),
+    accessor: (row) => <span className="text-muted-foreground">{row.unmarked}</span>,
     sortable: true,
     sortKey: 'unmarked',
     width: 100,
@@ -145,18 +136,12 @@ const getAttendanceSummaryColumns = (): Column<ClassAttendanceSummaryItem>[] => 
     header: 'Status',
     accessor: (row) =>
       row.submission_status === 'submitted' ? (
-        <Badge
-          variant="outline"
-          className="bg-green-50 text-green-700 border-green-200 gap-1"
-        >
+        <Badge variant="outline" className="gap-1 border-green-200 bg-green-50 text-green-700">
           <CheckCircle2 className="h-3 w-3" />
           Submitted
         </Badge>
       ) : (
-        <Badge
-          variant="outline"
-          className="bg-orange-50 text-orange-700 border-orange-200 gap-1"
-        >
+        <Badge variant="outline" className="gap-1 border-orange-200 bg-orange-50 text-orange-700">
           <AlertCircle className="h-3 w-3" />
           Pending
         </Badge>
@@ -198,7 +183,9 @@ export function AttendanceSummaryPage() {
 
   const handleNextDay = () => {
     const today = new Date();
-    if (selectedDate >= today) {return;}
+    if (selectedDate >= today) {
+      return;
+    }
     setSelectedDate((prev) => {
       const newDate = new Date(prev);
       newDate.setDate(newDate.getDate() + 1);
@@ -213,9 +200,8 @@ export function AttendanceSummaryPage() {
   const handleNotifyPending = () => {
     // Get all pending classes with class teachers
     const pendingWithTeachers =
-      summaryData?.classes.filter(
-        (c) => c.submission_status === 'pending' && c.class_teacher
-      ) || [];
+      summaryData?.classes.filter((c) => c.submission_status === 'pending' && c.class_teacher) ||
+      [];
 
     if (pendingWithTeachers.length === 0) {
       toast.info('No pending classes with assigned class teachers to notify.');
@@ -240,7 +226,7 @@ export function AttendanceSummaryPage() {
     : 0;
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="container mx-auto space-y-6 py-6">
       <PageHeader
         title={AttendanceUiText.SUMMARY_PAGE_TITLE}
         description={AttendanceUiText.SUMMARY_PAGE_DESC}
@@ -253,23 +239,16 @@ export function AttendanceSummaryPage() {
           <Button variant="outline" size="icon" onClick={handlePrevDay}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <div className="flex items-center gap-2 px-4 py-2 bg-muted rounded-lg">
-            <CalendarDays className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">
-              {format(selectedDate, 'EEEE, MMMM d, yyyy')}
-            </span>
+          <div className="bg-muted flex items-center gap-2 rounded-lg px-4 py-2">
+            <CalendarDays className="text-muted-foreground h-4 w-4" />
+            <span className="font-medium">{format(selectedDate, 'EEEE, MMMM d, yyyy')}</span>
             {isToday && (
               <Badge variant="secondary" className="ml-2">
                 Today
               </Badge>
             )}
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleNextDay}
-            disabled={isToday}
-          >
+          <Button variant="outline" size="icon" onClick={handleNextDay} disabled={isToday}>
             <ChevronRight className="h-4 w-4" />
           </Button>
           {!isToday && (
@@ -283,27 +262,32 @@ export function AttendanceSummaryPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => refetch()}
+            onClick={() => refetch().then(() => toast.success('Attendance summary refreshed'))}
             disabled={isRefetching}
           >
-            <RefreshCw
-              className={cn('h-4 w-4 mr-2', isRefetching && 'animate-spin')}
-            />
+            <RefreshCw className={cn('mr-2 h-4 w-4', isRefetching && 'animate-spin')} />
             Refresh
           </Button>
-          {summaryData && summaryData.summary.classes_pending > 0 && summaryData.is_working_day && !summaryData.is_holiday && (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={handleNotifyPending}
-              className="bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={!summaryData.can_send_notifications}
-              title={summaryData.can_send_notifications ? 'Send notification to pending teachers' : 'Only admins can send notifications'}
-            >
-              <Mail className="h-4 w-4 mr-2" />
-              Notify Pending ({summaryData.summary.classes_pending})
-            </Button>
-          )}
+          {summaryData &&
+            summaryData.summary.classes_pending > 0 &&
+            summaryData.is_working_day &&
+            !summaryData.is_holiday && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleNotifyPending}
+                className="bg-orange-600 hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={!summaryData.can_send_notifications}
+                title={
+                  summaryData.can_send_notifications
+                    ? 'Send notification to pending teachers'
+                    : 'Only admins can send notifications'
+                }
+              >
+                <Mail className="mr-2 h-4 w-4" />
+                Notify Pending ({summaryData.summary.classes_pending})
+              </Button>
+            )}
         </div>
       </div>
 
@@ -341,7 +325,7 @@ export function AttendanceSummaryPage() {
           {[...Array(4)].map((_, i) => (
             <Card key={i}>
               <CardContent className="py-4">
-                <Skeleton className="h-8 w-20 mb-2" />
+                <Skeleton className="mb-2 h-8 w-20" />
                 <Skeleton className="h-4 w-32" />
               </CardContent>
             </Card>
@@ -349,59 +333,55 @@ export function AttendanceSummaryPage() {
         </div>
       ) : summaryData ? (
         <div className="grid gap-4 md:grid-cols-4">
-          <Card className="bg-gradient-to-br from-slate-50 to-slate-100 border-slate-200">
+          <Card className="border-slate-200 bg-gradient-to-br from-slate-50 to-slate-100">
             <CardContent className="py-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-3xl font-bold text-slate-700">
                     {summaryData.summary.total_classes}
                   </p>
-                  <p className="text-sm text-slate-500 font-medium">Total Classes</p>
+                  <p className="text-sm font-medium text-slate-500">Total Classes</p>
                 </div>
-                <div className="p-3 bg-slate-200/50 rounded-xl">
+                <div className="rounded-xl bg-slate-200/50 p-3">
                   <Users className="h-6 w-6 text-slate-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-green-50 to-emerald-100 border-green-200">
+          <Card className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-100">
             <CardContent className="py-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-3xl font-bold text-green-700">
                     {summaryData.summary.classes_submitted}
                   </p>
-                  <p className="text-sm text-green-600 font-medium">
-                    Classes Submitted
-                  </p>
+                  <p className="text-sm font-medium text-green-600">Classes Submitted</p>
                 </div>
-                <div className="p-3 bg-green-200/50 rounded-xl">
+                <div className="rounded-xl bg-green-200/50 p-3">
                   <CheckCircle2 className="h-6 w-6 text-green-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-orange-50 to-amber-100 border-orange-200">
+          <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-amber-100">
             <CardContent className="py-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-3xl font-bold text-orange-700">
                     {summaryData.summary.classes_pending}
                   </p>
-                  <p className="text-sm text-orange-600 font-medium">
-                    Classes Pending
-                  </p>
+                  <p className="text-sm font-medium text-orange-600">Classes Pending</p>
                 </div>
-                <div className="p-3 bg-orange-200/50 rounded-xl">
+                <div className="rounded-xl bg-orange-200/50 p-3">
                   <AlertCircle className="h-6 w-6 text-orange-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-blue-50 to-indigo-100 border-blue-200">
+          <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-100">
             <CardContent className="py-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -411,9 +391,7 @@ export function AttendanceSummaryPage() {
                       / {summaryData.summary.total_students}
                     </span>
                   </p>
-                  <p className="text-sm text-blue-600 font-medium">
-                    Students Marked
-                  </p>
+                  <p className="text-sm font-medium text-blue-600">Students Marked</p>
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <div className="w-16">
@@ -428,11 +406,10 @@ export function AttendanceSummaryPage() {
                       className="h-2"
                     />
                   </div>
-                  <span className="text-xs text-blue-500 font-medium">
+                  <span className="text-xs font-medium text-blue-500">
                     {summaryData.summary.total_students > 0
                       ? Math.round(
-                          (summaryData.summary.total_marked /
-                            summaryData.summary.total_students) *
+                          (summaryData.summary.total_marked / summaryData.summary.total_students) *
                             100
                         )
                       : 0}
@@ -449,7 +426,7 @@ export function AttendanceSummaryPage() {
       {summaryData && !isLoading && (
         <Card className="border-slate-200">
           <CardContent className="py-4">
-            <div className="flex items-center justify-between mb-2">
+            <div className="mb-2 flex items-center justify-between">
               <span className="text-sm font-medium text-slate-600">
                 Attendance Submission Progress
               </span>
@@ -463,13 +440,11 @@ export function AttendanceSummaryPage() {
       )}
 
       {/* Class-wise DataTable - Only show on working days */}
-      {summaryData && (summaryData.is_working_day && !summaryData.is_holiday) ? (
+      {summaryData && summaryData.is_working_day && !summaryData.is_holiday ? (
         <Card>
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-slate-800">
-                Class-wise Attendance Status
-              </h3>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-800">Class-wise Attendance Status</h3>
               {summaryData && (
                 <Badge variant="secondary" className="text-xs">
                   {summaryData.classes.length} classes
@@ -490,15 +465,13 @@ export function AttendanceSummaryPage() {
       ) : summaryData && (!summaryData.is_working_day || summaryData.is_holiday) ? (
         <Card className="border-slate-200">
           <CardContent className="py-12">
-            <div className="flex flex-col items-center justify-center text-center gap-3">
-              <div className="p-4 bg-slate-100 rounded-full">
+            <div className="flex flex-col items-center justify-center gap-3 text-center">
+              <div className="rounded-full bg-slate-100 p-4">
                 <CalendarDays className="h-8 w-8 text-slate-400" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-slate-700">
-                  No Attendance Required
-                </h3>
-                <p className="text-sm text-slate-500 mt-1">
+                <h3 className="text-lg font-semibold text-slate-700">No Attendance Required</h3>
+                <p className="mt-1 text-sm text-slate-500">
                   {summaryData.is_holiday
                     ? `${summaryData.holiday_name || 'Holiday'} - Attendance is not required on holidays.`
                     : `${format(selectedDate, 'EEEE')} is not a working day. No attendance tracking needed.`}
@@ -510,10 +483,8 @@ export function AttendanceSummaryPage() {
       ) : !summaryData && !isLoading ? (
         <Card>
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-slate-800">
-                Class-wise Attendance Status
-              </h3>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-800">Class-wise Attendance Status</h3>
             </div>
             <DataTable
               columns={columns}
@@ -529,10 +500,8 @@ export function AttendanceSummaryPage() {
       ) : isLoading ? (
         <Card>
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-slate-800">
-                Class-wise Attendance Status
-              </h3>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-800">Class-wise Attendance Status</h3>
             </div>
             <DataTable
               columns={columns}

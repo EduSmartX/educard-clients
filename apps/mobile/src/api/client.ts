@@ -8,8 +8,8 @@ import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 
 import { API_CONFIG, STORAGE_KEYS } from '@/constants/config';
-import { clearQueryCache } from '@/lib/query-client';
 import { useAuthStore } from '@/lib/auth-store';
+import { clearQueryCache } from '@/lib/query-client';
 // Use shared error handler
 export {
   parseApiError,
@@ -121,7 +121,6 @@ apiClient.interceptors.response.use(
 async function forceLogout(): Promise<void> {
   isHandling401 = false;
 
-  // Clear all React Query cache to prevent stale data from previous user
   clearQueryCache();
 
   try {

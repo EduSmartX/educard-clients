@@ -163,6 +163,21 @@ export function parseError(error: unknown): NormalizedError {
       result.nonFieldErrors = flattened.nonFieldErrors;
     }
 
+    // Handle top-level DRF validation errors (no wrapper "errors" key)
+    // e.g. { "non_field_errors": ["..."], "name": ["This field is required."] }
+    if (!errorData.errors && !errorData.detail) {
+      const rawObj = errorData as Record<string, unknown>;
+      const hasArrayValues = Object.values(rawObj).some(
+        (v) => Array.isArray(v) && v.length > 0 && typeof v[0] === "string",
+      );
+      if (hasArrayValues) {
+        result.isValidation = true;
+        const flattened = flattenErrors(rawObj as Record<string, ErrorValue>);
+        result.fieldErrors = flattened.fieldErrors;
+        result.nonFieldErrors = flattened.nonFieldErrors;
+      }
+    }
+
     // If we have validation errors but no message, set a better default
     if (
       result.isValidation &&
@@ -314,7 +329,21 @@ export function extractApiError(
     return (err as Error)?.message || fallback;
   }
 
-  // First check for errors object (Django validation errors)
+  // Priority 1: Backend sends a specific "message" field for all error responses
+  // This is the primary source of truth from our backend
+  if (data.message && typeof data.message === "string") {
+    const genericMessages = [
+      "Validation error occurred",
+      "Validation error occurred.",
+      "Please check your input and try again.",
+      "An unexpected error occurred. Please try again.",
+    ];
+    if (!genericMessages.includes(data.message)) {
+      return data.message;
+    }
+  }
+
+  // Priority 2: Extract from errors object (field-level details)
   if (data.errors && typeof data.errors === "object") {
     const errorMessages: string[] = [];
 
@@ -393,20 +422,66 @@ export function extractApiError(
     }
   }
 
+  // Check for top-level DRF validation errors (non_field_errors directly in data)
+  const rawData = data as Record<string, unknown>;
+  if (rawData.non_field_errors) {
+    if (
+      Array.isArray(rawData.non_field_errors) &&
+      rawData.non_field_errors.length > 0
+    ) {
+      return rawData.non_field_errors
+        .filter((v: unknown) => typeof v === "string")
+        .join("\n");
+    }
+    if (typeof rawData.non_field_errors === "string") {
+      return rawData.non_field_errors;
+    }
+  }
+
+  // Check for top-level field errors (DRF returns {field_name: ["error"]} directly)
+  if (!data.errors && !data.detail && !data.message) {
+    const topLevelErrors: string[] = [];
+    Object.entries(rawData).forEach(([fieldName, value]) => {
+      if (
+        fieldName === "has_deleted_duplicate" ||
+        fieldName === "deleted_record_id"
+      )
+        return;
+      if (
+        fieldName === "success" ||
+        fieldName === "code" ||
+        fieldName === "data" ||
+        fieldName === "message"
+      )
+        return;
+      if (
+        Array.isArray(value) &&
+        value.length > 0 &&
+        typeof value[0] === "string"
+      ) {
+        if (
+          fieldName === "non_field_errors" ||
+          fieldName === "non_field_error"
+        ) {
+          topLevelErrors.push(...(value as string[]));
+        } else {
+          const fieldLabel = fieldName
+            .replace(/_/g, " ")
+            .replace(/\b\w/g, (l) => l.toUpperCase());
+          topLevelErrors.push(`${fieldLabel}: ${value[0]}`);
+        }
+      } else if (typeof value === "string" && fieldName !== "status_code") {
+        topLevelErrors.push(value);
+      }
+    });
+    if (topLevelErrors.length > 0) {
+      return topLevelErrors.join("\n");
+    }
+  }
+
   // Check for detail field (common in DRF errors)
   if (data.detail && typeof data.detail === "string") {
     return data.detail;
-  }
-
-  // Check for message field (our custom response format)
-  if (data.message && typeof data.message === "string") {
-    // Don't return generic validation message if we couldn't extract specific errors
-    if (
-      data.message !== "Validation error occurred" &&
-      data.message !== "Validation error occurred."
-    ) {
-      return data.message;
-    }
   }
 
   return fallback;

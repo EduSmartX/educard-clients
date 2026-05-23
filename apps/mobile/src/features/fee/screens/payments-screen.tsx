@@ -3,9 +3,10 @@
  * All payments with filters + analytics summary
  */
 
+import type { FeePayment, PaymentModeType, TransactionTypeValue } from '@educard/shared';
+import { TransactionType } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useAndroidBack } from '@/hooks';
 import {
   ChevronLeft,
   TrendingUp,
@@ -37,10 +38,10 @@ import {
   type PaymentFiltersState,
 } from '@/components/filters';
 import { FormDatePicker } from '@/components/forms/FormDatePicker';
+import { useAndroidBack } from '@/hooks';
+
 import { PaymentModeBadge } from '../components/payment-mode-badge';
 import { usePayments, useFeeDashboard } from '../hooks';
-import type { FeePayment, PaymentModeType, TransactionTypeValue } from '@educard/shared';
-import { TransactionType } from '@educard/shared';
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 
@@ -107,6 +108,7 @@ const PaymentCard = React.memo(({ item, index }: PaymentCardProps) => {
     </Animated.View>
   );
 });
+PaymentCard.displayName = 'PaymentCard';
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 

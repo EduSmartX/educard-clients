@@ -43,6 +43,14 @@ export interface ApiDetailResponse<T> {
   data: T;
 }
 
+/** Response for operations that only need the message (update, delete, etc.) */
+export interface ApiMessageResponse {
+  success: boolean;
+  message: string;
+  code?: number;
+  data?: unknown;
+}
+
 export interface ApiErrorResponse {
   success: false;
   message: string;

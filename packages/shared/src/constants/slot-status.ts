@@ -17,8 +17,12 @@ export function getSlotStatus(startTime: string, endTime: string): SlotStatus {
   const nowMins = now.getHours() * 60 + now.getMinutes();
   const startMins = sh * 60 + sm;
   const endMins = eh * 60 + em;
-  if (nowMins >= startMins && nowMins < endMins) return SLOT_STATUS.CURRENT;
-  if (nowMins < startMins) return SLOT_STATUS.UPCOMING;
+  if (nowMins >= startMins && nowMins < endMins) {
+    return SLOT_STATUS.CURRENT;
+  }
+  if (nowMins < startMins) {
+    return SLOT_STATUS.UPCOMING;
+  }
   return SLOT_STATUS.PAST;
 }
 
@@ -34,7 +38,9 @@ export function getCurrentDayIndex(): number {
  * Format a "HH:MM" or "HH:MM:SS" time string into 12-hour format (e.g. "9:30 AM").
  */
 export function formatSlotTime(time: string): string {
-  if (!time) return "";
+  if (!time) {
+    return "";
+  }
   const [h, m] = time.split(":").map(Number);
   const ampm = h >= 12 ? "PM" : "AM";
   const hour12 = h % 12 || 12;

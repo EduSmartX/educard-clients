@@ -3,7 +3,6 @@
  * React Query hooks for all fee management operations
  */
 
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { QueryKeys, FeeMessages } from '@educard/shared';
 import type {
   FeeStructureCreatePayload,
@@ -19,8 +18,10 @@ import type {
   SendReminderPayload,
   BulkReminderPayload,
 } from '@educard/shared';
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { showToast } from '@/utils/toast';
+
 import {
   fetchFeeStructures,
   fetchFeeStructure,

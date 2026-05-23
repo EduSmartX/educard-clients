@@ -13,7 +13,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ActivityIndicator,
   Switch,
   Modal,
@@ -171,7 +170,7 @@ export default function EditLeaveAllocationScreen() {
         },
       }
     );
-  }, [form, validate, updateMutation, id, router]);
+  }, [form, validate, updateMutation, id, router, showToast]);
 
   const isSaving = updateMutation.isPending;
 

@@ -24,7 +24,12 @@ import {
   SUBMISSION_TYPE_OPTIONS,
   getSubjectColor,
 } from '@educard/shared';
-import type { HomeworkCreatePayload } from '@educard/shared';
+import type {
+  HomeworkCreatePayload,
+  HomeworkStatus,
+  HomeworkPriority,
+  SubmissionType,
+} from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Save, BookOpen, Clock, Link, AlertCircle } from 'lucide-react-native';
@@ -77,7 +82,7 @@ export default function CreateHomeworkScreen() {
   }>();
 
   const { user } = useAuthStore();
-  const isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
+  const _isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
 
   const { data: teacherClasses = [], isLoading: classesLoading } = useTeacherClasses();
   const createMutation = useCreateHomework();
@@ -116,7 +121,7 @@ export default function CreateHomeworkScreen() {
     if (params.date && assignedDate === getTodayDate()) {
       setAssignedDate(params.date);
     }
-  }, [params]);
+  }, [params, selectedSubject, assignedDate]);
 
   const selectedClassData = useMemo(
     () => teacherClasses.find((c) => c.public_id === selectedClass),
@@ -151,7 +156,7 @@ export default function CreateHomeworkScreen() {
           uri: file.uri,
           name: file.name,
           type: file.type,
-        } as any);
+        } as unknown as Blob);
 
         await uploadMutation.mutateAsync({ publicId: homeworkId, formData });
       }
@@ -191,17 +196,17 @@ export default function CreateHomeworkScreen() {
       subject_public_id: selectedSubject,
       due_datetime: dueDateTime,
       assigned_date: assignedDate,
-      status: status as any,
-      priority: priority as any,
-      submission_type: submissionType as any,
+      status: status as HomeworkStatus,
+      priority: priority as HomeworkPriority,
+      submission_type: submissionType as SubmissionType,
       reference_link: referenceLink.trim() || undefined,
     };
 
     createMutation.mutate(payload, {
-      onSuccess: async (data) => {
+      onSuccess: (data) => {
         // Upload attachments if any
         if (attachments.length > 0 && data?.public_id) {
-          await uploadAttachments(data.public_id);
+          void uploadAttachments(data.public_id);
         }
         showToast({ type: 'success', title: 'Success', message: 'Homework created successfully' });
         router.back();
@@ -530,7 +535,7 @@ export default function CreateHomeworkScreen() {
             styles.submitBtn,
             (!canCreate || createMutation.isPending || isUploading) && styles.submitBtnDisabled,
           ]}
-          onPress={handleSubmit}
+          onPress={() => void handleSubmit()}
           disabled={!canCreate || createMutation.isPending || isUploading}
         >
           {createMutation.isPending || isUploading ? (

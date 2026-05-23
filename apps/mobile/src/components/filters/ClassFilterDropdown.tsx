@@ -23,7 +23,7 @@ export function getClassLabel(cls: Partial<ClassLike> & { name?: string }): stri
   return masterName || sectionName || 'Class';
 }
 
-export function buildClassOptions(classes: Array<Partial<ClassLike>>): ClassOption[] {
+export function buildClassOptions(classes: Partial<ClassLike>[]): ClassOption[] {
   return classes
     .filter((cls): cls is Partial<ClassLike> & { public_id: string } => !!cls.public_id)
     .map((cls) => ({
@@ -57,9 +57,9 @@ export function ClassFilterDropdown({
   allOptionLabel = 'All Classes',
   pageSize = 200,
 }: ClassFilterDropdownProps) {
-  const { data: classesData, isLoading } = useClasses({ page_size: pageSize } as any);
+  const { data: classesData, isLoading } = useClasses({ page_size: pageSize });
 
-  const classOptions = buildClassOptions((classesData?.classes ?? []) as Array<Partial<ClassLike>>);
+  const classOptions = buildClassOptions(classesData?.classes ?? []);
   const options = includeAllOption
     ? [{ value: '', label: allOptionLabel }, ...classOptions]
     : classOptions;

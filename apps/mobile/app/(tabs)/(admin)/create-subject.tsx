@@ -3,19 +3,19 @@
  * Form to add a new subject with validation
  */
 
-import { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { ChevronLeft, Save } from 'lucide-react-native';
 import { getRoleGradient, extractApiError, getFieldErrors } from '@educard/shared';
-import { useCreateSubject } from '@/hooks';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import { ChevronLeft, Save } from 'lucide-react-native';
+import { useState, useCallback } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+
 import { FormInput, FormSection, FormError } from '@/components/forms';
-import { validateForm, hasErrors, required, type FieldErrors } from '@/utils/validation';
-import { useToast } from '@/lib/toast-context';
+import { useCreateSubject } from '@/features/subjects';
 import { headerStyles, layoutStyles } from '@/styles';
+import { validateForm, hasErrors, required, type FieldErrors } from '@/utils/validation';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -25,7 +25,6 @@ const RULES = {
 
 export default function CreateSubjectScreen() {
   const router = useRouter();
-  const { showToast } = useToast();
   const createMutation = useCreateSubject();
 
   const [form, setForm] = useState({
@@ -55,28 +54,27 @@ export default function CreateSubjectScreen() {
     setErrors(fieldErrors);
     if (hasErrors(fieldErrors)) return;
 
-    const payload: any = {
+    const payload = {
       name: form.name.trim(),
       code: form.code.trim() || undefined,
     };
 
-    createMutation.mutate(payload, {
-      onSuccess: () => {
-        showToast({ type: 'success', title: 'Success', message: 'Subject created successfully' });
-        router.back();
-      },
-      onError: (err: unknown) => {
-        // Extract field-level validation errors from API response
-        const fieldErrors = getFieldErrors(err);
-        if (Object.keys(fieldErrors).length > 0) {
-          setErrors((prev) => ({ ...prev, ...fieldErrors }));
-          // Inline field errors are sufficient - no banner needed
-          return;
-        }
-        // Show banner only for non-field errors (server errors, network issues, etc.)
-        setApiError(extractApiError(err, 'Failed to create subject.'));
-      },
-    });
+    createMutation.mutate(
+      { data: payload },
+      {
+        onSuccess: () => {
+          router.back();
+        },
+        onError: (err: unknown) => {
+          const fieldErrors = getFieldErrors(err);
+          if (Object.keys(fieldErrors).length > 0) {
+            setErrors((prev) => ({ ...prev, ...fieldErrors }));
+            return;
+          }
+          setApiError(extractApiError(err, 'Failed to create subject.'));
+        },
+      }
+    );
   }, [form, createMutation, router]);
 
   return (

@@ -84,7 +84,6 @@ export function ClassList({ onBack }: ClassListProps) {
       confirmVariant: 'success',
       makeMessage: (name) => `Are you sure you want to reactivate ${name}?`,
       runAction: (id: string) => restoreMutation.mutateAsync(id),
-      successMessage: (name) => `${name} reactivated successfully`,
       errorMessage: 'Failed to reactivate class',
       onSuccess: () => void refetch(),
     }

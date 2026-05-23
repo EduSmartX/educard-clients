@@ -3,9 +3,9 @@
  * Lets admin edit discount/referral fields and optional fee-component selections.
  */
 
+import type { StudentFeeComponentItem } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useAndroidBack } from '@/hooks';
 import { ChevronLeft, Lock, Save, Settings } from 'lucide-react-native';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
@@ -17,15 +17,16 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { ErrorState, LoadingState } from '@/components/common/ListStates';
 import { SubmitButton } from '@/components/common/SubmitButton';
 import { FormInput } from '@/components/forms/FormInput';
-import { showToast } from '@/utils/toast';
+import { useAndroidBack } from '@/hooks';
 import { extractApiError } from '@/utils/api-error';
-import type { StudentFeeComponentItem } from '@educard/shared';
+import { showToast } from '@/utils/toast';
+
 import { useStudentFee, useUpdateStudentFee, useUpdateStudentFeeComponents } from '../hooks';
 
 type ComponentSelection = {
@@ -135,7 +136,7 @@ export default function StudentFeeEditScreen() {
         onSuccess: () => {
           showToast('success', 'Fee components updated successfully');
           router.push({
-            pathname: '/(tabs)/(admin)/fee-student-detail' as any,
+            pathname: '/(tabs)/(admin)/fee-student-detail',
             params: { id },
           });
         },

@@ -115,17 +115,20 @@ export default function CreateClassScreen() {
         {
           onSuccess: () => {
             duplicateHandler.closeDialog();
-            showToast({ type: 'success', title: 'Success', message: 'Class created successfully' });
             router.back();
           },
-          onError: (err: any) => {
+          onError: (err: unknown) => {
             if (isDeletedDuplicateError(err)) {
               const msg = getDeletedDuplicateMessage(err);
               const recordId = getDeletedRecordId(err);
               duplicateHandler.openDialog(msg, { payload, deletedRecordId: recordId });
               return;
             }
-            const { fieldErrors: fe, generalError } = parseApiErrors(err?.response?.data);
+            const apiErr = err as {
+              response?: { data?: Record<string, unknown> };
+              message?: string;
+            };
+            const { fieldErrors: fe, generalError } = parseApiErrors(apiErr?.response?.data);
             if (Object.keys(fe).length > 0) {
               setErrors(fe);
               return;
@@ -162,7 +165,7 @@ export default function CreateClassScreen() {
         });
       },
     });
-  }, [duplicateHandler, restoreMutation, router]);
+  }, [duplicateHandler, restoreMutation, router, showToast]);
 
   const handleForceCreate = useCallback(() => {
     const payload = duplicateHandler.pendingData?.payload;

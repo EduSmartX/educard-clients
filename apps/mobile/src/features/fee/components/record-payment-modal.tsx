@@ -3,19 +3,26 @@
  * Bottom sheet modal to record a payment for a student fee
  */
 
+import {
+  PaymentMode,
+  PaymentModeOptions,
+  TransactionType,
+  type PaymentModeType,
+  type StudentFee,
+  type PaymentCreatePayload,
+} from '@educard/shared';
+import { X, CreditCard } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, Modal, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { X, CreditCard } from 'lucide-react-native';
 
-import { FormInput } from '@/components/forms/FormInput';
+import { SubmitButton } from '@/components/common/SubmitButton';
 import { FormDatePicker } from '@/components/forms/FormDatePicker';
 import { FormDropdown } from '@/components/forms/FormDropdown';
-import { SubmitButton } from '@/components/common/SubmitButton';
-import { useRecordPayment } from '../hooks';
-import type { StudentFee, PaymentCreatePayload } from '@educard/shared';
-import { PaymentMode, PaymentModeOptions, TransactionType } from '@educard/shared';
+import { FormInput } from '@/components/forms/FormInput';
 import { extractApiError } from '@/utils/api-error';
+
+import { useRecordPayment } from '../hooks';
 
 interface RecordPaymentModalProps {
   studentFee: StudentFee;
@@ -82,7 +89,7 @@ export function RecordPaymentModal({
     setErrors({});
   }, [visible, studentFee, mode, today]);
 
-  const validate = (): boolean => {
+  const validate = useCallback((): boolean => {
     const e: FormErrors = {};
     const amt = Number(amount);
     if (!amount || isNaN(amt) || amt <= 0) {
@@ -96,7 +103,14 @@ export function RecordPaymentModal({
     if (!paymentDate) e.payment_date = 'Select payment date';
     setErrors(e);
     return Object.keys(e).length === 0;
-  };
+  }, [
+    amount,
+    isRefundMode,
+    studentFee.balance_due,
+    studentFee.amount_paid,
+    paymentMode,
+    paymentDate,
+  ]);
 
   const handleSubmit = useCallback(() => {
     if (!validate()) return;
@@ -105,7 +119,7 @@ export function RecordPaymentModal({
       student_fee_public_id: studentFee.public_id,
       amount: Number(amount),
       transaction_type: isRefundMode ? TransactionType.DEBIT : TransactionType.CREDIT,
-      payment_mode: paymentMode as any,
+      payment_mode: paymentMode as PaymentModeType,
       payment_date: paymentDate,
       utr_number: utrNumber || undefined,
       transaction_id: transactionId || undefined,
@@ -142,9 +156,9 @@ export function RecordPaymentModal({
     isRefundMode,
   ]);
 
-  const showUtr = UTR_REQUIRED_MODES.includes(paymentMode as any);
-  const showCard = CARD_MODES.includes(paymentMode as any);
-  const showCheque = CHEQUE_MODES.includes(paymentMode as any);
+  const showUtr = (UTR_REQUIRED_MODES as readonly string[]).includes(paymentMode);
+  const showCard = (CARD_MODES as readonly string[]).includes(paymentMode);
+  const showCheque = (CHEQUE_MODES as readonly string[]).includes(paymentMode);
   const showUpi = paymentMode === PaymentMode.UPI;
   const actionLabel = useMemo(
     () => (isRefundMode ? 'Record Refund' : 'Record Payment'),

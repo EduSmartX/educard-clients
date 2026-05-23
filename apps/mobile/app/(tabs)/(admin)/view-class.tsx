@@ -2,6 +2,10 @@
  * View Class Screen
  */
 
+import { getRoleGradient } from '@educard/shared';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { ChevronLeft } from 'lucide-react-native';
 import {
   View,
   Text,
@@ -10,12 +14,9 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { ChevronLeft } from 'lucide-react-native';
-import { getRoleGradient } from '@educard/shared';
-import { useClassDetail } from '@/hooks';
+
+import { useClassDetail } from '@/features/classes';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');

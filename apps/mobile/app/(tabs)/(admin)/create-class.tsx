@@ -3,21 +3,18 @@
  * Form to add a new class/section with validation
  */
 
-import { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { useRouter } from 'expo-router';
+import { getRoleGradient, extractApiError, getFieldErrors } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { useRouter } from 'expo-router';
 import { ChevronLeft, Save } from 'lucide-react-native';
-import {
-  getRoleGradient,
-  getRoleThemeColors,
-  extractApiError,
-  getFieldErrors,
-} from '@educard/shared';
-import { useCreateClass } from '@/hooks';
+import { useState, useCallback } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+
 import { FormInput, FormSection, FormError } from '@/components/forms';
+import { useCreateClass } from '@/features/classes';
+import { headerStyles, layoutStyles } from '@/styles';
 import {
   validateForm,
   hasErrors,
@@ -25,8 +22,6 @@ import {
   numberRange,
   type FieldErrors,
 } from '@/utils/validation';
-import { useToast } from '@/lib/toast-context';
-import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -37,7 +32,6 @@ const RULES = {
 
 export default function CreateClassScreen() {
   const router = useRouter();
-  const { showToast } = useToast();
   const createMutation = useCreateClass();
 
   const [form, setForm] = useState({
@@ -68,29 +62,30 @@ export default function CreateClassScreen() {
     setErrors(fieldErrors);
     if (hasErrors(fieldErrors)) return;
 
-    const payload: any = {
+    const payload = {
       name: form.name.trim(),
       capacity: form.capacity ? Number(form.capacity) : undefined,
       info: form.info.trim() || undefined,
     };
 
-    createMutation.mutate(payload, {
-      onSuccess: () => {
-        showToast({ type: 'success', title: 'Success', message: 'Class created successfully' });
-        router.back();
-      },
-      onError: (err: unknown) => {
-        // Extract field-level validation errors from API response
-        const fieldErrors = getFieldErrors(err);
-        if (Object.keys(fieldErrors).length > 0) {
-          setErrors((prev) => ({ ...prev, ...fieldErrors }));
-          // Inline field errors are sufficient - no banner needed
-          return;
-        }
-        // Show banner only for non-field errors (server errors, network issues, etc.)
-        setApiError(extractApiError(err, 'Failed to create class.'));
-      },
-    });
+    createMutation.mutate(
+      { data: payload },
+      {
+        onSuccess: () => {
+          router.back();
+        },
+        onError: (err: unknown) => {
+          // Extract field-level validation errors from API response
+          const fieldErrors = getFieldErrors(err);
+          if (Object.keys(fieldErrors).length > 0) {
+            setErrors((prev) => ({ ...prev, ...fieldErrors }));
+            return;
+          }
+          // Show banner for non-field errors (server errors, network issues, etc.)
+          setApiError(extractApiError(err, 'Failed to create class.'));
+        },
+      }
+    );
   }, [form, createMutation, router]);
 
   return (

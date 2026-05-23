@@ -20,7 +20,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Save } from 'lucide-react-native';
 import { useState, useCallback, useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
@@ -128,11 +128,6 @@ export default function CreateSubjectScreen() {
         {
           onSuccess: () => {
             duplicateHandler.closeDialog();
-            showToast({
-              type: 'success',
-              title: 'Success',
-              message: 'Subject created successfully',
-            });
             router.back();
           },
           onError: (err: unknown) => {
@@ -190,7 +185,7 @@ export default function CreateSubjectScreen() {
         });
       },
     });
-  }, [duplicateHandler, restoreMutation, router]);
+  }, [duplicateHandler, restoreMutation, router, showToast]);
 
   const handleForceCreate = useCallback(() => {
     const payload = duplicateHandler.pendingData?.payload;

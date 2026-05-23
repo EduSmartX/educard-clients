@@ -1,11 +1,12 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useAndroidBack } from '@/hooks';
 import { ChevronLeft, FileText, Calendar, Users, IndianRupee, Layers } from 'lucide-react-native';
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
 
 import { ErrorState, LoadingState } from '@/components/common/ListStates';
+import { useAndroidBack } from '@/hooks';
+
 import { useFeeStructure } from '../hooks';
 
 export default function FeeStructureDetailScreen() {
@@ -134,7 +135,7 @@ export default function FeeStructureDetailScreen() {
             style={[styles.actionBtn, { backgroundColor: '#eff6ff' }]}
             onPress={() =>
               router.push({
-                pathname: '/(tabs)/(admin)/fee-structure-form' as any,
+                pathname: '/(tabs)/(admin)/fee-structure-form',
                 params: { id: structure.public_id },
               })
             }
@@ -147,7 +148,7 @@ export default function FeeStructureDetailScreen() {
             style={[styles.actionBtn, { backgroundColor: '#f0fdf4' }]}
             onPress={() =>
               router.push({
-                pathname: '/(tabs)/(admin)/fee-student-fees' as any,
+                pathname: '/(tabs)/(admin)/fee-student-fees',
                 params: { fee_structure_public_id: structure.public_id },
               })
             }

@@ -10,7 +10,7 @@ import {
   type FieldErrors,
   type MutationOptions,
 } from '@/lib/utils/mutation-utils';
-import { ErrorMessages, QueryKeys, SuccessMessages } from '@/constants';
+import { ErrorMessages, QueryKeys } from '@/constants';
 import type { CreateTeacherPayload, UpdateTeacherPayload } from '../types';
 import {
   createTeacher,
@@ -58,7 +58,6 @@ export function useCreateTeacher(options?: MutationOptions<TeacherFieldErrors>) 
     }) => createTeacher(payload, forceCreate),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QueryKeys.TEACHERS.ALL });
-      toast.success(SuccessMessages.TEACHER.CREATE_SUCCESS);
       options?.onSuccess?.();
     },
     onError: (error: Error) => {
@@ -72,9 +71,9 @@ export function useReactivateTeacher(options?: MutationOptions<TeacherFieldError
 
   return useMutation({
     mutationFn: (publicId: string) => reactivateTeacher(publicId),
-    onSuccess: () => {
+    onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: QueryKeys.TEACHERS.ALL });
-      toast.success(SuccessMessages.TEACHER.REACTIVATE_SUCCESS);
+      toast.success(response.message);
       options?.onSuccess?.();
     },
     onError: (error: Error) => {
@@ -91,7 +90,6 @@ export function useUpdateTeacher(options?: MutationOptions<TeacherFieldErrors>) 
       updateTeacher(publicId, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QueryKeys.TEACHERS.ALL });
-      toast.success(SuccessMessages.TEACHER.UPDATE_SUCCESS);
       options?.onSuccess?.();
     },
     onError: (error: Error) => {
@@ -105,10 +103,10 @@ export function useDeleteTeacher(options?: MutationOptions<TeacherFieldErrors>) 
 
   return useMutation({
     mutationFn: (publicId: string) => deleteTeacher(publicId),
-    onSuccess: (_data, publicId) => {
+    onSuccess: (response, publicId) => {
       queryClient.removeQueries({ queryKey: ['teachers', publicId] });
       queryClient.invalidateQueries({ queryKey: QueryKeys.TEACHERS.ALL });
-      toast.success(SuccessMessages.TEACHER.DELETE_SUCCESS);
+      toast.success(response?.message || 'Teacher deleted successfully');
       options?.onSuccess?.();
     },
     onError: (error: Error) => {
@@ -130,7 +128,7 @@ export function useBulkUploadTeachers(options?: MutationOptions<TeacherFieldErro
           duration: 6000,
         });
       } else {
-        toast.success(SuccessMessages.TEACHER.BULK_UPLOAD_SUCCESS);
+        toast.success('Teachers uploaded successfully');
       }
       options?.onSuccess?.();
     },

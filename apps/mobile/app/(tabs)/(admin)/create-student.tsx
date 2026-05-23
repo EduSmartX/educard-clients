@@ -3,22 +3,23 @@
  * Form to add a new student with validation
  */
 
-import { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { ChevronLeft, Save } from 'lucide-react-native';
 import {
-  Colors,
   getRoleGradient,
   getRoleThemeColors,
   extractApiError,
   getFieldErrors,
 } from '@educard/shared';
-import { useCreateStudent } from '@/hooks';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import { ChevronLeft, Save } from 'lucide-react-native';
+import { useState, useCallback } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+
 import { FormInput, FormSelect, FormSection, FormError } from '@/components/forms';
+import { useCreateStudent } from '@/features/students';
+import { headerStyles, layoutStyles } from '@/styles';
 import {
   validateForm,
   hasErrors,
@@ -28,10 +29,8 @@ import {
   phone,
   type FieldErrors,
 } from '@/utils/validation';
-import { useToast } from '@/lib/toast-context';
-import { headerStyles, layoutStyles } from '@/styles';
 
-const adminTheme = getRoleThemeColors('admin');
+const _adminTheme = getRoleThemeColors('admin');
 const adminGradient = getRoleGradient('admin');
 
 const GENDER_CHIPS = [
@@ -51,7 +50,6 @@ const RULES = {
 
 export default function CreateStudentScreen() {
   const router = useRouter();
-  const { showToast } = useToast();
   const createMutation = useCreateStudent();
 
   const [form, setForm] = useState({
@@ -111,30 +109,27 @@ export default function CreateStudentScreen() {
       medical_conditions: form.medical_conditions.trim() || undefined,
     };
 
-    createMutation.mutate(payload, {
-      onSuccess: () => {
-        showToast({ type: 'success', title: 'Success', message: 'Student created successfully' });
-        router.back();
-      },
-      onError: (err: unknown) => {
-        // Extract field-level validation errors from API response
-        const fieldErrors = getFieldErrors(err);
-        if (Object.keys(fieldErrors).length > 0) {
-          // Map backend field names to form field names (e.g., user.email -> email)
-          const mappedErrors: FieldErrors = {};
-          Object.entries(fieldErrors).forEach(([key, message]) => {
-            const fieldName = key.startsWith('user.') ? key.replace('user.', '') : key;
-            mappedErrors[fieldName] = message;
-          });
-          setErrors((prev) => ({ ...prev, ...mappedErrors }));
-          // Inline field errors are sufficient - no banner needed
-          return;
-        }
-        // Show banner only for non-field errors (server errors, network issues, etc.)
-        const msg = extractApiError(err, 'Failed to create student. Please check your input.');
-        setApiError(msg);
-      },
-    });
+    createMutation.mutate(
+      { data: payload },
+      {
+        onSuccess: () => {
+          router.back();
+        },
+        onError: (err: unknown) => {
+          const fieldErrors = getFieldErrors(err);
+          if (Object.keys(fieldErrors).length > 0) {
+            const mappedErrors: FieldErrors = {};
+            Object.entries(fieldErrors).forEach(([key, message]) => {
+              const fieldName = key.startsWith('user.') ? key.replace('user.', '') : key;
+              mappedErrors[fieldName] = message;
+            });
+            setErrors((prev) => ({ ...prev, ...mappedErrors }));
+            return;
+          }
+          setApiError(extractApiError(err, 'Failed to create student.'));
+        },
+      }
+    );
   }, [form, createMutation, router]);
 
   return (

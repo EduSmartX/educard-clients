@@ -16,7 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Save } from 'lucide-react-native';
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
@@ -25,7 +25,6 @@ import { useManagedClasses } from '@/features/classes';
 import { useCoreSubjects } from '@/features/core';
 import { useSubjectDetail, useUpdateSubject } from '@/features/subjects';
 import { useTeachers } from '@/features/teachers';
-import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -33,7 +32,6 @@ type FieldErrors = Record<string, string>;
 
 export default function EditSubjectScreen() {
   const router = useRouter();
-  const { showToast } = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: subject, isLoading: detailLoading } = useSubjectDetail(id || '');
   const updateMutation = useUpdateSubject();
@@ -80,11 +78,9 @@ export default function EditSubjectScreen() {
           subject.class_assigned?.public_id ||
           subject.class_id ||
           '',
-        subject_id:
-          subject.subject_info?.id?.toString() ||
-          subject.subject_master?.id?.toString() ||
-          subject.subject_id ||
-          '',
+        subject_id: String(
+          subject.subject_info?.id ?? subject.subject_master?.id ?? subject.subject_id ?? ''
+        ),
         subject_type: (subject.subject_type as 'core' | 'elective' | 'language') || 'core',
         teacher_id:
           subject.teacher_info?.public_id || subject.teacher?.public_id || subject.teacher_id || '',
@@ -131,11 +127,6 @@ export default function EditSubjectScreen() {
       { publicId: id, data: payload },
       {
         onSuccess: () => {
-          showToast({
-            type: 'success',
-            title: 'Success',
-            message: 'Subject updated successfully!',
-          });
           router.back();
         },
         onError: (err: any) => {

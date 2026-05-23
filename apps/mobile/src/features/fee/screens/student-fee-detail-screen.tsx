@@ -7,9 +7,9 @@ import { FeeProgress } from '../components/fee-amount';
 import { useStudentFee, usePayments, useSendFeeReminder } from '../hooks';* Full breakdown of a student's fee: components, payment history, actions
  */
 
+import { FeeStatus, type ReminderChannelType } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useAndroidBack } from '@/hooks';
 import {
   ChevronLeft,
   CreditCard,
@@ -29,12 +29,12 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { ErrorState, LoadingState } from '@/components/common/ListStates';
 import { RecordPaymentModal } from '@/features/fee/components/record-payment-modal';
 import { SendReminderModal } from '@/features/fee/components/send-reminder-modal';
+import { useAndroidBack } from '@/hooks';
+
+import { FeeProgress } from '../components/fee-amount';
 import { FeeStatusBadge } from '../components/fee-status-badge';
 import { PaymentModeBadge } from '../components/payment-mode-badge';
-import { FeeProgress } from '../components/fee-amount';
 import { useStudentFee, usePayments, useSendFeeReminder } from '../hooks';
-import { showToast } from '@/utils/toast';
-import { FeeStatus, type ReminderChannelType } from '@educard/shared';
 
 // ─── Component Row ────────────────────────────────────────────────────────────
 
@@ -132,7 +132,7 @@ export default function StudentFeeDetailScreen() {
               style={styles.editBtn}
               onPress={() =>
                 router.push({
-                  pathname: '/(tabs)/(admin)/fee-student-edit' as any,
+                  pathname: '/(tabs)/(admin)/fee-student-edit',
                   params: { id: fee.public_id },
                 })
               }

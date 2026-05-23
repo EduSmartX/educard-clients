@@ -5,9 +5,10 @@
  *        showToast({ type: 'success', title: 'Created!', message: 'Exam created successfully' });
  */
 
-import React, { createContext, useContext, useCallback, useState } from 'react';
+import React, { createContext, useContext, useCallback, useEffect, useState } from 'react';
 
 import { ToastContainer, type ToastData, type ToastType } from '@/components/common/Toast';
+import { subscribeToToasts } from '@/utils/toast';
 
 interface ToastInput {
   type: ToastType;
@@ -38,6 +39,20 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     const toast: ToastData = { id, ...input };
     setToasts((prev) => [...prev.slice(-2), toast]); // Keep max 3
   }, []);
+
+  // Bridge: listen to showToast() calls from non-component code (hooks/services)
+  useEffect(() => {
+    const unsubscribe = subscribeToToasts((type, message) => {
+      const titles: Record<string, string> = {
+        success: 'Success',
+        error: 'Error',
+        warning: 'Warning',
+        info: 'Info',
+      };
+      showToast({ type, title: titles[type] || 'Notice', message });
+    });
+    return unsubscribe;
+  }, [showToast]);
 
   const dismissToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));

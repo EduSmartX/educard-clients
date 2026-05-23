@@ -44,7 +44,7 @@ import {
 } from '@/lib/utils/error-handler';
 import { useDeletedDuplicateHandler } from '@/hooks/use-deleted-duplicate-handler';
 import { classFormSchema, type ClassFormData } from '../schemas/class-form-schema';
-import { ErrorMessages, FormPlaceholders, SuccessMessages } from '@/constants';
+import { ErrorMessages, FormPlaceholders } from '@/constants';
 import { STANDARD_FORM_VALIDATION_CONFIG } from '@/lib/utils/form-validation';
 
 export default function ClassFormPage() {
@@ -169,7 +169,6 @@ export default function ClassFormPage() {
   // Mutations
   const createMutation = useCreateClass({
     onSuccess: () => {
-      toast.success(SuccessMessages.CLASS.CREATE_SUCCESS);
       navigate(ROUTES.CLASSES);
     },
     onError: handleFormErrors,
@@ -177,7 +176,6 @@ export default function ClassFormPage() {
 
   const updateMutation = useUpdateClass({
     onSuccess: () => {
-      toast.success(SuccessMessages.CLASS.UPDATE_SUCCESS);
       navigate(ROUTES.CLASSES);
     },
     onError: handleFormErrors,
@@ -185,21 +183,13 @@ export default function ClassFormPage() {
 
   const deleteMutation = useDeleteClass({
     onSuccess: () => {
-      toast.success(SuccessMessages.CLASS.DELETE_SUCCESS);
       // Navigation happens before mutation is called
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || ErrorMessages.CLASS.DELETE_FAILED);
     },
   });
 
   const reactivateMutation = useReactivateClass({
     onSuccess: () => {
-      toast.success(SuccessMessages.CLASS.REACTIVATE_SUCCESS);
       // Navigation already happened before mutation was called
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || ErrorMessages.CLASS.REACTIVATE_FAILED);
     },
   });
 

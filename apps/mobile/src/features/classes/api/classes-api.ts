@@ -7,7 +7,13 @@
  */
 
 // import { API_ENDPOINTS } from '@educard/shared'; // unused - keeping for future reference
-import type { Class, ApiListResponse, ApiDetailResponse } from '@educard/shared';
+import type {
+  Class,
+  ClassDetail,
+  ApiListResponse,
+  ApiDetailResponse,
+  ApiMessageResponse,
+} from '@educard/shared';
 
 import { apiClient } from '@/api/client';
 import { isAdminRole } from '@/utils/role-utils';
@@ -18,7 +24,7 @@ const ADMIN_BASE_URL = '/classes/admin/';
 const EMPLOYEE_BASE_URL = '/classes/employee/';
 
 export type ClassListResponse = ApiListResponse<Class>;
-export type ClassDetailResponse = ApiDetailResponse<Class>;
+export type ClassDetailResponse = ApiDetailResponse<ClassDetail>;
 
 export interface ClassQueryParams {
   search?: string;
@@ -81,9 +87,13 @@ export async function createClass(
   return response.data;
 }
 
-export async function updateClass(publicId: string, data: Partial<Class>): Promise<void> {
+export async function updateClass(
+  publicId: string,
+  data: Partial<Class>
+): Promise<ApiMessageResponse> {
   // Always use admin endpoint for update
-  await apiClient.patch(`${ADMIN_BASE_URL}${publicId}/`, data);
+  const response = await apiClient.patch<ApiMessageResponse>(`${ADMIN_BASE_URL}${publicId}/`, data);
+  return response.data;
 }
 
 export async function deleteClass(publicId: string): Promise<void> {
@@ -111,7 +121,7 @@ export async function restoreClass(publicId: string): Promise<ClassDetailRespons
  * Download class bulk import template
  */
 export async function downloadClassTemplate(): Promise<ArrayBuffer> {
-  const response = await apiClient.get(`${ADMIN_BASE_URL}download-template/`, {
+  const response = await apiClient.get<ArrayBuffer>(`${ADMIN_BASE_URL}download-template/`, {
     responseType: 'arraybuffer',
   });
   return response.data;
@@ -142,7 +152,18 @@ export async function bulkUploadClasses(
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   } as unknown as Blob);
 
-  const response = await apiClient.post(`${ADMIN_BASE_URL}bulk-upload/`, formData, {
+  const response = await apiClient.post<{
+    success: boolean;
+    message: string;
+    data: {
+      created_count?: number;
+      successful_count?: number;
+      failed_count: number;
+      total_rows?: number;
+      errors: { row: number; error: string; data?: Record<string, unknown> | null }[];
+    };
+    code: number;
+  }>(`${ADMIN_BASE_URL}bulk-upload/`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },

@@ -32,8 +32,7 @@ export function useAttendanceDisplay(attendanceStats: DashboardAttendanceStats |
     }
 
     // Working day - show attendance percentage
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const percentage = attendanceStats.overall_attendance_percentage as any;
+    const percentage: unknown = attendanceStats.overall_attendance_percentage;
 
     // Handle null, undefined, or non-numeric values
     if (percentage === null || percentage === undefined) {

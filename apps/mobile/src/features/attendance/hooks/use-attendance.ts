@@ -1,6 +1,7 @@
-import { extractApiError } from '@educard/shared';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Alert } from 'react-native';
+
+import { handleMutationError, type MutationOptions } from '@/lib/mutation-utils';
+import { showToast } from '@/utils/toast';
 
 import {
   getDashboardAttendanceStats,
@@ -74,13 +75,14 @@ export function useComprehensiveAttendance(classId: string, date: string, enable
 }
 
 // Hook to bulk mark attendance
-export function useBulkMarkAttendance() {
+// Hook to bulk mark attendance
+export function useBulkMarkAttendance(options?: MutationOptions) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ classId, payload }: { classId: string; payload: BulkAttendancePayload }) =>
       bulkMarkAttendance(classId, payload),
-    onSuccess: (_data, variables) => {
+    onSuccess: (response, variables) => {
       // Invalidate comprehensive attendance query
       void queryClient.invalidateQueries({
         queryKey: attendanceKeys.comprehensiveAttendance(variables.classId, variables.payload.date),
@@ -89,11 +91,11 @@ export function useBulkMarkAttendance() {
         queryKey: attendanceKeys.dashboard(),
       });
 
-      Alert.alert('Success', `Attendance saved for ${variables.payload.date}`);
+      showToast('success', response.message || 'Attendance saved successfully');
+      options?.onSuccess?.();
     },
     onError: (error: unknown) => {
-      const errorMessage = extractApiError(error, 'Failed to save attendance');
-      Alert.alert('Error', errorMessage);
+      handleMutationError(error, 'Failed to save attendance', options?.onError);
     },
   });
 }
@@ -121,23 +123,23 @@ export function useTimesheetStatus(fromDate: string, toDate: string, enabled = t
 }
 
 // Hook to submit timesheet
-export function useSubmitTimesheet() {
+export function useSubmitTimesheet(options?: MutationOptions) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (payload: SubmitTimesheetPayload) => submitTimesheet(payload),
-    onSuccess: (_data, _variables) => {
+    onSuccess: (response, _variables) => {
       void queryClient.invalidateQueries({
         queryKey: [...attendanceKeys.all, 'my-attendance'],
       });
       void queryClient.invalidateQueries({
         queryKey: [...attendanceKeys.all, 'timesheet-status'],
       });
-      Alert.alert('Success', 'Timesheet submitted for approval');
+      showToast('success', response.message || 'Timesheet submitted successfully');
+      options?.onSuccess?.();
     },
     onError: (error: unknown) => {
-      const errorMessage = extractApiError(error, 'Failed to submit timesheet');
-      Alert.alert('Error', errorMessage);
+      handleMutationError(error, 'Failed to submit timesheet', options?.onError);
     },
   });
 }
@@ -149,18 +151,17 @@ export function useReturnTimesheetToDraft() {
   return useMutation({
     mutationFn: ({ fromDate, toDate }: { fromDate: string; toDate: string }) =>
       returnTimesheetToDraft(fromDate, toDate),
-    onSuccess: () => {
+    onSuccess: (response) => {
       void queryClient.invalidateQueries({
         queryKey: [...attendanceKeys.all, 'my-attendance'],
       });
       void queryClient.invalidateQueries({
         queryKey: [...attendanceKeys.all, 'timesheet-status'],
       });
-      Alert.alert('Success', 'Timesheet returned to draft');
+      showToast('success', response.message || 'Timesheet returned to draft');
     },
     onError: (error: unknown) => {
-      const errorMessage = extractApiError(error, 'Failed to return timesheet to draft');
-      Alert.alert('Error', errorMessage);
+      handleMutationError(error, 'Failed to return timesheet to draft');
     },
   });
 }

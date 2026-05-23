@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { DeleteConfirmationDialog, ReactivateConfirmationDialog } from '@/components/common';
-import { ErrorMessages, SuccessMessages } from '@/constants';
+import { ErrorMessages } from '@/constants';
 import { useClasses } from '../hooks/use-classes';
 import { useDeleteClass, useReactivateClass } from '../hooks/mutations';
 import { ClassesList } from './classes-list';
@@ -53,7 +53,6 @@ export function ClassesManagement({ viewMode = 'admin' }: ClassesManagementProps
   // Delete mutation
   const deleteMutation = useDeleteClass({
     onSuccess: () => {
-      toast.success(SuccessMessages.CLASS.DELETE_SUCCESS);
       setClassToDelete(undefined);
     },
     onError: (error: Error) => {
@@ -64,7 +63,6 @@ export function ClassesManagement({ viewMode = 'admin' }: ClassesManagementProps
   // Reactivate mutation
   const reactivateMutation = useReactivateClass({
     onSuccess: () => {
-      toast.success(SuccessMessages.CLASS.REACTIVATE_SUCCESS);
       setClassToReactivate(undefined);
     },
     onError: (error: Error) => {
