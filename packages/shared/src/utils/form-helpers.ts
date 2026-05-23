@@ -26,6 +26,24 @@ const DEFAULT_FIELD_MAP: Record<string, string> = {
   "user.organization_role": "organization_role",
 };
 
+/** Extract errors from a nested object (e.g. { user: { email: ["..."] } }) */
+function parseNestedFieldErrors(
+  parentKey: string,
+  nestedObj: Record<string, unknown>,
+  fieldMap: Record<string, string>,
+  fieldErrors: Record<string, string>,
+): void {
+  for (const [subKey, subValue] of Object.entries(nestedObj)) {
+    const compositeKey = `${parentKey}.${subKey}`;
+    const mapped = fieldMap[compositeKey] || subKey;
+    if (Array.isArray(subValue)) {
+      fieldErrors[mapped] = subValue[0];
+    } else if (typeof subValue === "string") {
+      fieldErrors[mapped] = subValue;
+    }
+  }
+}
+
 /**
  * Parse API error response into a flat field→message errors object.
  * Handles nested backend error formats like `{ user: { email: ["..."] } }`.
@@ -62,17 +80,12 @@ export function parseApiErrors(
       fieldErrors[mapped] = value[0];
     } else if (typeof value === "object" && value !== null) {
       // Nested object: { user: { email: ["..."], phone: ["..."] } }
-      for (const [subKey, subValue] of Object.entries(
+      parseNestedFieldErrors(
+        key,
         value as Record<string, unknown>,
-      )) {
-        const compositeKey = `${key}.${subKey}`;
-        const mapped = fieldMap[compositeKey] || subKey;
-        if (Array.isArray(subValue)) {
-          fieldErrors[mapped] = subValue[0];
-        } else if (typeof subValue === "string") {
-          fieldErrors[mapped] = subValue;
-        }
-      }
+        fieldMap,
+        fieldErrors,
+      );
     } else if (typeof value === "string") {
       const mapped = fieldMap[key] || key;
       fieldErrors[mapped] = value;

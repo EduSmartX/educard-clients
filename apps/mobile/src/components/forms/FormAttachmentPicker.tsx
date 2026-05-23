@@ -71,6 +71,35 @@ export function FormAttachmentPicker({
 }: FormAttachmentPickerProps) {
   const [isLoading, setIsLoading] = useState(false);
 
+  const validateAndCollectFiles = useCallback(
+    (assets: DocumentPicker.DocumentPickerAsset[]) => {
+      const validFiles: SelectedFile[] = [];
+      const errors: string[] = [];
+
+      for (const asset of assets) {
+        if (asset.size && asset.size > maxFileSize) {
+          errors.push(`${asset.name} exceeds ${formatFileSize(maxFileSize)} limit`);
+          continue;
+        }
+
+        if (files.length + validFiles.length >= maxFiles) {
+          errors.push(`Maximum ${maxFiles} files allowed`);
+          break;
+        }
+
+        validFiles.push({
+          uri: asset.uri,
+          name: asset.name,
+          type: asset.mimeType || 'application/octet-stream',
+          size: asset.size,
+        });
+      }
+
+      return { validFiles, errors };
+    },
+    [files.length, maxFiles, maxFileSize]
+  );
+
   const handlePickAttachment = useCallback(async () => {
     if (disabled) return;
 
@@ -87,36 +116,16 @@ export function FormAttachmentPicker({
         copyToCacheDirectory: true,
       });
 
-      if (!result.canceled && result.assets) {
-        const validFiles: SelectedFile[] = [];
-        const errors: string[] = [];
+      if (result.canceled || !result.assets) return;
 
-        for (const asset of result.assets) {
-          if (asset.size && asset.size > maxFileSize) {
-            errors.push(`${asset.name} exceeds ${formatFileSize(maxFileSize)} limit`);
-            continue;
-          }
+      const { validFiles, errors } = validateAndCollectFiles(result.assets);
 
-          if (files.length + validFiles.length >= maxFiles) {
-            errors.push(`Maximum ${maxFiles} files allowed`);
-            break;
-          }
+      if (validFiles.length > 0) {
+        onChange([...files, ...validFiles]);
+      }
 
-          validFiles.push({
-            uri: asset.uri,
-            name: asset.name,
-            type: asset.mimeType || 'application/octet-stream',
-            size: asset.size,
-          });
-        }
-
-        if (validFiles.length > 0) {
-          onChange([...files, ...validFiles]);
-        }
-
-        if (errors.length > 0) {
-          Alert.alert('Some files skipped', errors.join('\n'));
-        }
+      if (errors.length > 0) {
+        Alert.alert('Some files skipped', errors.join('\n'));
       }
     } catch (error) {
       console.error('Error picking document:', error);
@@ -124,7 +133,7 @@ export function FormAttachmentPicker({
     } finally {
       setIsLoading(false);
     }
-  }, [files, onChange, maxFiles, maxFileSize, allowedTypes, multiple, disabled]);
+  }, [files, onChange, maxFiles, allowedTypes, multiple, disabled, validateAndCollectFiles]);
 
   const handleRemoveFile = useCallback(
     (index: number) => {

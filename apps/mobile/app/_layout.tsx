@@ -17,6 +17,46 @@ import { ToastProvider } from '@/lib/toast-context';
 // Keep splash screen visible while loading
 void SplashScreen.preventAutoHideAsync();
 
+type AppSegments = ReturnType<typeof useSegments>;
+
+/** Determine the correct dashboard route for a user's role */
+function getDashboardRoute(role: string | undefined): string {
+  const normalized = role?.toLowerCase();
+  if (normalized === 'teacher' || normalized === 'employee') {
+    return '/(tabs)/(employee)/dashboard';
+  }
+  if (normalized === 'parent') {
+    return '/(tabs)/(parent)/dashboard';
+  }
+  return '/(tabs)/(admin)/dashboard';
+}
+
+/** Check if the user needs to be redirected based on role and current segments */
+function shouldRedirectAuthenticated(segments: AppSegments, role: string | undefined): boolean {
+  const inAuthGroup = segments[0] === '(auth)';
+  const inSharedScreens = segments[0] === '(shared-screens)';
+  const inModals = segments[0] === ('(modals)' as (typeof segments)[0]);
+
+  // Allow shared screens and modals for all authenticated users
+  if (inSharedScreens || inModals) return false;
+
+  const normalized = role?.toLowerCase();
+  const isAdmin = normalized === 'admin';
+  const isTeacher = normalized === 'teacher' || normalized === 'employee';
+  const isParent = normalized === 'parent';
+
+  const inAdminTabs = segments[0] === '(tabs)' && segments[1] === '(admin)';
+  const inEmployeeTabs = segments[0] === '(tabs)' && segments[1] === '(employee)';
+  const inParentTabs = segments[0] === '(tabs)' && segments[1] === '(parent)';
+
+  return (
+    inAuthGroup ||
+    (isAdmin && !inAdminTabs) ||
+    (isTeacher && !inEmployeeTabs) ||
+    (isParent && !inParentTabs)
+  );
+}
+
 function RootLayoutNav() {
   const router = useRouter();
   const segments = useSegments();
@@ -53,56 +93,19 @@ function RootLayoutNav() {
     if (isNavigating.current) return;
 
     const inAuthGroup = segments[0] === '(auth)';
-    const inAdminTabs = segments[0] === '(tabs)' && segments[1] === '(admin)';
-    const inEmployeeTabs = segments[0] === '(tabs)' && segments[1] === '(employee)';
-    const inParentTabs = segments[0] === '(tabs)' && segments[1] === '(parent)';
-    const inSharedScreens = segments[0] === '(shared-screens)';
-    const inModals = segments[0] === ('(modals)' as (typeof segments)[0]);
 
     if (!isAuthenticated && !inAuthGroup) {
-      // Not authenticated, redirect to login
       isNavigating.current = true;
       router.replace('/(auth)/login');
-      // Reset navigation lock after a short delay
       setTimeout(() => {
         isNavigating.current = false;
       }, 500);
-    } else if (isAuthenticated) {
-      // Get normalized role
-      const role = user?.role?.toLowerCase();
-      const isAdmin = role === 'admin';
-      const isTeacher = role === 'teacher' || role === 'employee';
-      const isParent = role === 'parent';
-
-      // Allow shared screens and modals for all authenticated users
-      if (inSharedScreens || inModals) {
-        return; // Don't redirect - user is in a valid shared screen
-      }
-
-      // Check if user is in wrong dashboard for their role
-      const needsRedirect =
-        inAuthGroup ||
-        (isAdmin && !inAdminTabs) ||
-        (isTeacher && !inEmployeeTabs) ||
-        (isParent && !inParentTabs);
-
-      if (needsRedirect) {
-        isNavigating.current = true;
-        if (isAdmin) {
-          router.replace('/(tabs)/(admin)/dashboard');
-        } else if (isTeacher) {
-          router.replace('/(tabs)/(employee)/dashboard');
-        } else if (isParent) {
-          router.replace('/(tabs)/(parent)/dashboard');
-        } else {
-          // Default fallback
-          router.replace('/(tabs)/(admin)/dashboard');
-        }
-        // Reset navigation lock after a short delay
-        setTimeout(() => {
-          isNavigating.current = false;
-        }, 500);
-      }
+    } else if (isAuthenticated && shouldRedirectAuthenticated(segments, user?.role)) {
+      isNavigating.current = true;
+      router.replace(getDashboardRoute(user?.role) as never);
+      setTimeout(() => {
+        isNavigating.current = false;
+      }, 500);
     }
   }, [isAuthenticated, isInitialized, segments, user, router, isMounted]);
 

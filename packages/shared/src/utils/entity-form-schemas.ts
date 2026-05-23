@@ -50,8 +50,8 @@ const _genderField = () =>
     errorMap: () => ({ message: "Please select a gender" }),
   });
 
-// Ensure _genderField is available for future use
-void _genderField;
+// Export for potential future use to avoid unused variable + void operator
+export { _genderField };
 
 const requiredGender = () =>
   z
