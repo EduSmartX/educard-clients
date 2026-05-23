@@ -63,8 +63,7 @@ export function getUserRole(): UserRole | null {
 
     // Normalize to uppercase for consistency
     return role.toUpperCase() as UserRole;
-  } catch (error) {
-    console.error('Error getting user role:', error);
+  } catch {
     return null;
   }
 }

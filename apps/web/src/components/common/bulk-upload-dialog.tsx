@@ -23,6 +23,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { ErrorMessages, SuccessMessages } from '@/constants';
+import { downloadFile } from '@/lib/utils';
 
 // Generic error type for bulk uploads
 export interface BulkUploadError {
@@ -112,7 +113,7 @@ export function BulkUploadDialog({
   onUploadSuccess,
   customInfoMessage,
   validateFile,
-}: BulkUploadDialogProps) {
+}: Readonly<BulkUploadDialogProps>) {
   const [open, setOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadResult, setUploadResult] = useState<BulkUploadResult | null>(null);
@@ -135,14 +136,7 @@ export function BulkUploadDialog({
     setIsDownloading(true);
     try {
       const blob = await downloadTemplate();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = templateFileName;
-      document.body.appendChild(link);
-      link.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(link);
+      downloadFile(blob, templateFileName);
       toast.success(SuccessMessages.FILES.TEMPLATE_DOWNLOADED);
     } catch (error) {
       const err = error as Error;
@@ -173,16 +167,15 @@ export function BulkUploadDialog({
 
     if (typeof errors === 'object' && !Array.isArray(errors)) {
       return Object.entries(errors).map(([rowKey, errorData]: [string, unknown]) => {
-        const rowMatch = rowKey.match(/Row (\d+)/i);
-        const rowNumber = rowMatch ? parseInt(rowMatch[1], 10) : 0;
+        const rowMatch = /Row (\d+)/i.exec(rowKey);
+        const rowNumber = rowMatch ? Number.parseInt(rowMatch[1], 10) : 0;
 
         let errorMessage = 'Validation error';
         let data: Record<string, unknown> | null = null;
         if (typeof errorData === 'object' && errorData !== null) {
           data = errorData as Record<string, unknown>;
           const firstKey = Object.keys(data)[0];
-          errorMessage =
-            typeof data[firstKey] === 'string' ? (data[firstKey] as string) : errorMessage;
+          errorMessage = typeof data[firstKey] === 'string' ? data[firstKey] : errorMessage;
         } else if (typeof errorData === 'string') {
           errorMessage = errorData;
         }
@@ -239,7 +232,93 @@ export function BulkUploadDialog({
     return [];
   };
 
+  // Normalize result from a successful response
+  const normalizeSuccessResult = (result: BulkUploadResult): BulkUploadResult => {
+    if (result.successful_count !== undefined && result.created_count === undefined) {
+      result.created_count = result.successful_count;
+    }
+    result.total_rows ??= (result.created_count || 0) + (result.failed_count || 0);
+    if (result.errors) {
+      result.errors = transformErrors(result.errors);
+    } else {
+      result.errors = [];
+    }
+    return result;
+  };
+
+  // Handle error response and extract result
+  const extractErrorResult = (error: unknown): BulkUploadResult | null => {
+    const err = error as {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data?: any;
+      response?: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        data?: any;
+      };
+    };
+
+    let rawResult = err?.data || err?.response?.data;
+    if (rawResult && 'data' in rawResult && typeof rawResult.data === 'object') {
+      rawResult = rawResult.data;
+    }
+    if (!rawResult) {
+      return null;
+    }
+
+    const topLevelError = rawResult.error;
+    if (topLevelError) {
+      toast.error(topLevelError);
+      return {
+        created_count: 0,
+        failed_count: 1,
+        total_rows: 0,
+        errors: [{ row: 0, error: topLevelError, data: null }],
+      };
+    }
+
+    const result: BulkUploadResult = {
+      created_count: rawResult.created_count ?? rawResult.successful_count ?? 0,
+      failed_count: rawResult.failed_count ?? 0,
+      total_rows:
+        rawResult.total_rows ??
+        (rawResult.created_count ?? rawResult.successful_count ?? 0) +
+          (rawResult.failed_count ?? 0),
+      errors: rawResult.errors ? transformErrors(rawResult.errors) : [],
+    };
+
+    const message = result.failed_count > 0 ? 'Upload failed with errors' : 'Upload failed';
+    toast.error(message);
+    return result;
+  };
+
   // Upload handler
+  const runClientValidation = async (file: File): Promise<BulkUploadResult | null> => {
+    if (!validateFile) {
+      return null;
+    }
+    try {
+      const validationResult = await validateFile(file);
+      if (!validationResult.isValid) {
+        const clientErrors: BulkUploadError[] = validationResult.errors.map((error) => ({
+          row: error.row,
+          error: `${error.field}: ${error.message}`,
+          data: { field: error.field },
+        }));
+        return {
+          created_count: 0,
+          failed_count: validationResult.errors.length,
+          total_rows: validationResult.errors.length,
+          errors: clientErrors,
+        };
+      }
+      return null;
+    } catch (validationError) {
+      const errorMessage = (validationError as Error)?.message || 'Failed to validate file';
+      toast.error(errorMessage);
+      return { created_count: 0, failed_count: -1, total_rows: 0, errors: [] };
+    }
+  };
+
   const handleUpload = async () => {
     if (!selectedFile) {
       toast.error(ErrorMessages.FILE_NOT_SELECTED);
@@ -250,55 +329,22 @@ export function BulkUploadDialog({
     setIsUploading(true);
 
     // Run client-side validation if provided
-    if (validateFile) {
-      try {
-        const validationResult = await validateFile(selectedFile);
-        if (!validationResult.isValid) {
-          // Convert validation errors to BulkUploadResult format
-          const clientErrors: BulkUploadError[] = validationResult.errors.map((error) => ({
-            row: error.row,
-            error: `${error.field}: ${error.message}`,
-            data: { field: error.field },
-          }));
-
-          const result: BulkUploadResult = {
-            created_count: 0,
-            failed_count: validationResult.errors.length,
-            total_rows: validationResult.errors.length,
-            errors: clientErrors,
-          };
-
-          setUploadResult(result);
-          setIsUploading(false);
-          toast.error(`Validation failed: ${validationResult.errors.length} error(s) found`);
-          return;
-        }
-      } catch (validationError) {
-        const errorMessage = (validationError as Error)?.message || 'Failed to validate file';
-        toast.error(errorMessage);
+    const validationFailure = await runClientValidation(selectedFile);
+    if (validationFailure) {
+      if (validationFailure.failed_count === -1) {
+        // Validation threw an error
         setIsUploading(false);
         return;
       }
+      setUploadResult(validationFailure);
+      setIsUploading(false);
+      toast.error(`Validation failed: ${validationFailure.failed_count} error(s) found`);
+      return;
     }
 
     try {
       const response = await uploadFile(selectedFile);
-      const result = response.data;
-
-      // Normalize the result format
-      if (result.successful_count !== undefined && result.created_count === undefined) {
-        result.created_count = result.successful_count;
-      }
-
-      if (result.total_rows === undefined) {
-        result.total_rows = (result.created_count || 0) + (result.failed_count || 0);
-      }
-
-      if (result.errors) {
-        result.errors = transformErrors(result.errors);
-      } else if (result.errors === null) {
-        result.errors = [];
-      }
+      const result = normalizeSuccessResult(response.data);
 
       setUploadResult(result);
 
@@ -312,9 +358,10 @@ export function BulkUploadDialog({
       // Show success/partial success toast
       const createdCount = result.created_count ?? 0;
       const failedCount = result.failed_count ?? 0;
+      const pluralSuffix = createdCount > 1 ? 's' : '';
       const message =
         failedCount === 0
-          ? `${createdCount} record${createdCount > 1 ? 's' : ''} uploaded successfully`
+          ? `${createdCount} record${pluralSuffix} uploaded successfully`
           : `Created: ${createdCount}, Failed: ${failedCount}`;
 
       if (failedCount === 0) {
@@ -328,63 +375,8 @@ export function BulkUploadDialog({
         onUploadSuccess(result);
       }
     } catch (error) {
-      const err = error as {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        data?: any;
-        response?: {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          data?: any;
-        };
-      };
-
-      // Try to get result from different response structures
-      let rawResult = err?.data || err?.response?.data;
-
-      // Handle BulkUploadResponse wrapper (with nested data)
-      if (rawResult && 'data' in rawResult && typeof rawResult.data === 'object') {
-        rawResult = rawResult.data;
-      }
-
-      if (rawResult) {
-        // Check for top-level error message (like "Excel file is empty")
-        const topLevelError = rawResult.error;
-
-        const result: BulkUploadResult = {
-          failed_count: 0,
-          errors: [],
-        };
-
-        if (topLevelError) {
-          // Create a file-level error (row 0) for top-level errors
-          result.errors = [
-            {
-              row: 0,
-              error: topLevelError,
-              data: null,
-            },
-          ];
-          result.failed_count = 1;
-          result.created_count = 0;
-          result.total_rows = 0;
-          toast.error(topLevelError);
-        } else {
-          // Normalize the result format
-          result.created_count = rawResult.created_count ?? rawResult.successful_count ?? 0;
-          result.failed_count = rawResult.failed_count ?? 0;
-          result.total_rows =
-            rawResult.total_rows ?? (result.created_count ?? 0) + result.failed_count;
-
-          if (rawResult.errors) {
-            result.errors = transformErrors(rawResult.errors);
-          } else {
-            result.errors = [];
-          }
-
-          const failedCount = result.failed_count;
-          const message = failedCount > 0 ? 'Upload failed with errors' : 'Upload failed';
-          toast.error(message);
-        }
-
+      const result = extractErrorResult(error);
+      if (result) {
         setUploadResult(result);
       } else {
         const errorMessage = (error as Error)?.message || 'Failed to upload file';
@@ -577,9 +569,9 @@ export function BulkUploadDialog({
                   Errors ({uploadResult.errors.length})
                 </h3>
                 <div className="max-h-60 space-y-2 overflow-y-auto">
-                  {uploadResult.errors.map((error, index) => (
+                  {uploadResult.errors.map((error) => (
                     <div
-                      key={index}
+                      key={`row-${error.row}-${error.error}`}
                       className="rounded-lg border border-red-200 bg-white p-3 shadow-sm"
                     >
                       <div className="flex items-start gap-2">
@@ -597,7 +589,7 @@ export function BulkUploadDialog({
                                 {Object.entries(error.data).map(([key, value]) => (
                                   <div key={key}>
                                     <span className="font-semibold capitalize">
-                                      {key.replace(/_/g, ' ')}:
+                                      {key.replaceAll('_', ' ')}:
                                     </span>{' '}
                                     {String(value)}
                                   </div>

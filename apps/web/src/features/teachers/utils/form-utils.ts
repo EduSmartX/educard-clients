@@ -103,39 +103,18 @@ export function transformFormToUpdatePayload(values: TeacherFormValues): UpdateT
     values.postal_code ||
     values.country;
 
-  const payload: UpdateTeacherPayload = {
-    employee_id: values.employee_id,
-    user: {
-      email: values.email,
-      first_name: values.first_name,
-      last_name: values.last_name,
-      gender: values.gender,
-    },
-  };
-
-  if (payload.user && values.organization_role) {
-    payload.user.organization_role = parseInt(values.organization_role);
-  }
-
-  if (payload.user) {
-    if (values.phone) {
-      payload.user.phone = values.phone;
-    }
-
-    if (values.blood_group) {
-      payload.user.blood_group = values.blood_group;
-    }
-
-    if (values.date_of_birth) {
-      payload.user.date_of_birth = values.date_of_birth;
-    }
-
-    if (values.supervisor_email) {
-      payload.user.supervisor_email = values.supervisor_email;
-    }
-
-    if (hasAddress) {
-      payload.user.address = {
+  const user: UpdateTeacherPayload['user'] = {
+    email: values.email,
+    first_name: values.first_name,
+    last_name: values.last_name,
+    gender: values.gender,
+    ...(values.organization_role && { organization_role: parseInt(values.organization_role) }),
+    ...(values.phone && { phone: values.phone }),
+    ...(values.blood_group && { blood_group: values.blood_group }),
+    ...(values.date_of_birth && { date_of_birth: values.date_of_birth }),
+    ...(values.supervisor_email && { supervisor_email: values.supervisor_email }),
+    ...(hasAddress && {
+      address: {
         address_type: ADDRESS_TYPE.USER_CURRENT,
         street_address: values.street_address || '',
         address_line_2: values.address_line_2 || '',
@@ -143,35 +122,20 @@ export function transformFormToUpdatePayload(values: TeacherFormValues): UpdateT
         state: values.state || '',
         zip_code: values.postal_code || '',
         country: values.country || '',
-      };
-    }
-  }
+      },
+    }),
+  };
 
-  if (values.designation) {
-    payload.designation = values.designation;
-  }
-
-  if (values.highest_qualification) {
-    payload.highest_qualification = values.highest_qualification;
-  }
-
-  if (values.specialization) {
-    payload.specialization = values.specialization;
-  }
-
-  if (values.experience_years !== undefined) {
-    payload.experience_years = values.experience_years;
-  }
-
-  if (values.joining_date) {
-    payload.joining_date = values.joining_date;
-  }
-
-  if (values.subjects && values.subjects.length > 0) {
-    payload.subjects = values.subjects;
-  }
-
-  return payload;
+  return {
+    employee_id: values.employee_id,
+    user,
+    ...(values.designation && { designation: values.designation }),
+    ...(values.highest_qualification && { highest_qualification: values.highest_qualification }),
+    ...(values.specialization && { specialization: values.specialization }),
+    ...(values.experience_years !== undefined && { experience_years: values.experience_years }),
+    ...(values.joining_date && { joining_date: values.joining_date }),
+    ...(values.subjects && values.subjects.length > 0 && { subjects: values.subjects }),
+  };
 }
 
 /**

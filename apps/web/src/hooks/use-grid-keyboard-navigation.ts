@@ -1,9 +1,9 @@
 /**
  * Grid Keyboard Navigation Hook
- * 
+ *
  * Enables arrow key navigation between input cells in a grid/table layout.
  * Works with marks entry, timetable, and other tabular input forms.
- * 
+ *
  * Features:
  * - Arrow keys (↑↓←→) to move between cells
  * - Tab to move right, Shift+Tab to move left
@@ -32,32 +32,6 @@ interface UseGridKeyboardNavigationOptions {
   onPositionChange?: (position: GridPosition) => void;
 }
 
-/**
- * Hook to enable keyboard navigation in a grid of inputs
- * 
- * @example
- * ```tsx
- * const { containerRef, handleKeyDown, getCellId } = useGridKeyboardNavigation({
- *   rows: students.length,
- *   cols: subjects.length,
- * });
- * 
- * return (
- *   <div ref={containerRef}>
- *     {students.map((student, rowIndex) => (
- *       subjects.map((subject, colIndex) => (
- *         <input
- *           key={getCellId(rowIndex, colIndex)}
- *           data-row={rowIndex}
- *           data-col={colIndex}
- *           onKeyDown={handleKeyDown}
- *         />
- *       ))
- *     ))}
- *   </div>
- * );
- * ```
- */
 export function useGridKeyboardNavigation({
   rows,
   cols,
@@ -77,191 +51,179 @@ export function useGridKeyboardNavigation({
   /**
    * Find and focus the input at the given position
    */
-  const focusCell = useCallback((row: number, col: number): boolean => {
-    if (!containerRef.current) {
-      return false;
-    }
-    
-    // Try to find by data attributes first (most reliable)
-    const cell = containerRef.current.querySelector(
-      `[data-row="${row}"][data-col="${col}"]`
-    ) as HTMLElement;
-    
-    if (cell) {
-      // If it's an input, focus it directly
-      if (cell.tagName === 'INPUT' || cell.tagName === 'TEXTAREA') {
-        cell.focus();
-        // Select all text for easy replacement
-        if ('select' in cell && typeof cell.select === 'function') {
-          (cell as HTMLInputElement).select();
-        }
-      } else {
-        // Otherwise, find the input inside
-        const input = cell.querySelector(inputSelector) as HTMLElement;
-        if (input) {
-          input.focus();
-          if ('select' in input && typeof input.select === 'function') {
-            (input as HTMLInputElement).select();
+  const focusCell = useCallback(
+    (row: number, col: number): boolean => {
+      if (!containerRef.current) {
+        return false;
+      }
+
+      // Try to find by data attributes first (most reliable)
+      const cell = containerRef.current.querySelector(
+        `[data-row="${row}"][data-col="${col}"]`
+      ) as HTMLElement;
+
+      if (cell) {
+        // If it's an input, focus it directly
+        if (cell.tagName === 'INPUT' || cell.tagName === 'TEXTAREA') {
+          cell.focus();
+          // Select all text for easy replacement
+          if ('select' in cell && typeof cell.select === 'function') {
+            (cell as HTMLInputElement).select();
+          }
+        } else {
+          // Otherwise, find the input inside
+          const input = cell.querySelector(inputSelector) as HTMLElement;
+          if (input) {
+            input.focus();
+            if ('select' in input && typeof input.select === 'function') {
+              (input as HTMLInputElement).select();
+            }
           }
         }
+
+        onPositionChange?.({ row, col });
+        return true;
       }
-      
-      onPositionChange?.({ row, col });
-      return true;
-    }
-    
-    return false;
-  }, [inputSelector, onPositionChange]);
+
+      return false;
+    },
+    [inputSelector, onPositionChange]
+  );
 
   /**
    * Calculate the next position based on direction
    */
-  const getNextPosition = useCallback((
-    currentRow: number,
-    currentCol: number,
-    direction: 'up' | 'down' | 'left' | 'right' | 'home' | 'end' | 'tableStart' | 'tableEnd'
-  ): GridPosition | null => {
-    let nextRow = currentRow;
-    let nextCol = currentCol;
-
-    switch (direction) {
-      case 'up':
-        nextRow = currentRow - 1;
-        if (nextRow < 0) {
-          if (wrap) {
-            nextRow = rows - 1;
-          } else {
+  const getNextPosition = useCallback(
+    (
+      currentRow: number,
+      currentCol: number,
+      direction: 'up' | 'down' | 'left' | 'right' | 'home' | 'end' | 'tableStart' | 'tableEnd'
+    ): GridPosition | null => {
+      switch (direction) {
+        case 'up': {
+          const nextRow = currentRow - 1;
+          if (nextRow >= 0) {
+            return { row: nextRow, col: currentCol };
+          }
+          return wrap ? { row: rows - 1, col: currentCol } : null;
+        }
+        case 'down': {
+          const nextRow = currentRow + 1;
+          if (nextRow < rows) {
+            return { row: nextRow, col: currentCol };
+          }
+          return wrap ? { row: 0, col: currentCol } : null;
+        }
+        case 'left': {
+          const nextCol = currentCol - 1;
+          if (nextCol >= 0) {
+            return { row: currentRow, col: nextCol };
+          }
+          if (!wrap) {
             return null;
           }
+          return currentRow > 0
+            ? { row: currentRow - 1, col: cols - 1 }
+            : { row: rows - 1, col: cols - 1 };
         }
-        break;
-      case 'down':
-        nextRow = currentRow + 1;
-        if (nextRow >= rows) {
-          if (wrap) {
-            nextRow = 0;
-          } else {
+        case 'right': {
+          const nextCol = currentCol + 1;
+          if (nextCol < cols) {
+            return { row: currentRow, col: nextCol };
+          }
+          if (!wrap) {
             return null;
           }
+          return currentRow < rows - 1 ? { row: currentRow + 1, col: 0 } : { row: 0, col: 0 };
         }
-        break;
-      case 'left':
-        nextCol = currentCol - 1;
-        if (nextCol < 0) {
-          if (wrap && currentRow > 0) {
-            nextCol = cols - 1;
-            nextRow = currentRow - 1;
-          } else if (wrap) {
-            nextCol = cols - 1;
-            nextRow = rows - 1;
-          } else {
-            return null;
-          }
-        }
-        break;
-      case 'right':
-        nextCol = currentCol + 1;
-        if (nextCol >= cols) {
-          if (wrap && currentRow < rows - 1) {
-            nextCol = 0;
-            nextRow = currentRow + 1;
-          } else if (wrap) {
-            nextCol = 0;
-            nextRow = 0;
-          } else {
-            return null;
-          }
-        }
-        break;
-      case 'home':
-        nextCol = 0;
-        break;
-      case 'end':
-        nextCol = cols - 1;
-        break;
-      case 'tableStart':
-        nextRow = 0;
-        nextCol = 0;
-        break;
-      case 'tableEnd':
-        nextRow = rows - 1;
-        nextCol = cols - 1;
-        break;
-    }
-
-    return { row: nextRow, col: nextCol };
-  }, [rows, cols, wrap]);
+        case 'home':
+          return { row: currentRow, col: 0 };
+        case 'end':
+          return { row: currentRow, col: cols - 1 };
+        case 'tableStart':
+          return { row: 0, col: 0 };
+        case 'tableEnd':
+          return { row: rows - 1, col: cols - 1 };
+      }
+    },
+    [rows, cols, wrap]
+  );
 
   /**
    * Handle keyboard events on input cells
    */
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    const target = e.target as HTMLElement;
-    
-    // Get current position from data attributes
-    const rowAttr = target.getAttribute('data-row') ?? target.closest('[data-row]')?.getAttribute('data-row');
-    const colAttr = target.getAttribute('data-col') ?? target.closest('[data-col]')?.getAttribute('data-col');
-    
-    if (rowAttr === null || rowAttr === undefined || colAttr === null || colAttr === undefined) {
-      return;
-    }
-    
-    const currentRow = parseInt(rowAttr, 10);
-    const currentCol = parseInt(colAttr, 10);
-    
-    if (isNaN(currentRow) || isNaN(currentCol)) {
-      return;
-    }
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      const target = e.target as HTMLElement;
 
-    let direction: 'up' | 'down' | 'left' | 'right' | 'home' | 'end' | 'tableStart' | 'tableEnd';
+      // Get current position from data attributes
+      const rowAttr =
+        target.getAttribute('data-row') ?? target.closest('[data-row]')?.getAttribute('data-row');
+      const colAttr =
+        target.getAttribute('data-col') ?? target.closest('[data-col]')?.getAttribute('data-col');
 
-    switch (e.key) {
-      case 'ArrowUp':
-        direction = 'up';
-        break;
-      case 'ArrowDown':
-      case 'Enter':
-        direction = 'down';
-        break;
-      case 'ArrowLeft':
-        // Only navigate if at the start of input or input is empty
-        if (target.tagName === 'INPUT') {
-          const input = target as HTMLInputElement;
-          if (input.selectionStart !== 0 && input.value.length > 0) {
-            return; // Let default cursor movement happen
+      if (rowAttr === null || rowAttr === undefined || colAttr === null || colAttr === undefined) {
+        return;
+      }
+
+      const currentRow = parseInt(rowAttr, 10);
+      const currentCol = parseInt(colAttr, 10);
+
+      if (isNaN(currentRow) || isNaN(currentCol)) {
+        return;
+      }
+
+      let direction: 'up' | 'down' | 'left' | 'right' | 'home' | 'end' | 'tableStart' | 'tableEnd';
+
+      switch (e.key) {
+        case 'ArrowUp':
+          direction = 'up';
+          break;
+        case 'ArrowDown':
+        case 'Enter':
+          direction = 'down';
+          break;
+        case 'ArrowLeft':
+          // Only navigate if at the start of input or input is empty
+          if (target.tagName === 'INPUT') {
+            const input = target as HTMLInputElement;
+            if (input.selectionStart !== 0 && input.value.length > 0) {
+              return; // Let default cursor movement happen
+            }
           }
-        }
-        direction = 'left';
-        break;
-      case 'ArrowRight':
-        // Only navigate if at the end of input or input is empty
-        if (target.tagName === 'INPUT') {
-          const input = target as HTMLInputElement;
-          if (input.selectionEnd !== input.value.length && input.value.length > 0) {
-            return; // Let default cursor movement happen
+          direction = 'left';
+          break;
+        case 'ArrowRight':
+          // Only navigate if at the end of input or input is empty
+          if (target.tagName === 'INPUT') {
+            const input = target as HTMLInputElement;
+            if (input.selectionEnd !== input.value.length && input.value.length > 0) {
+              return; // Let default cursor movement happen
+            }
           }
-        }
-        direction = 'right';
-        break;
-      case 'Tab':
-        // Use Tab for navigation
-        direction = e.shiftKey ? 'left' : 'right';
-        break;
-      case 'Home':
-        direction = e.ctrlKey ? 'tableStart' : 'home';
-        break;
-      case 'End':
-        direction = e.ctrlKey ? 'tableEnd' : 'end';
-        break;
-      default:
-        return; // Don't prevent default for other keys
-    }
+          direction = 'right';
+          break;
+        case 'Tab':
+          // Use Tab for navigation
+          direction = e.shiftKey ? 'left' : 'right';
+          break;
+        case 'Home':
+          direction = e.ctrlKey ? 'tableStart' : 'home';
+          break;
+        case 'End':
+          direction = e.ctrlKey ? 'tableEnd' : 'end';
+          break;
+        default:
+          return; // Don't prevent default for other keys
+      }
 
-    const nextPos = getNextPosition(currentRow, currentCol, direction);
-    if (nextPos && focusCell(nextPos.row, nextPos.col)) {
-      e.preventDefault();
-    }
-  }, [getNextPosition, focusCell]);
+      const nextPos = getNextPosition(currentRow, currentCol, direction);
+      if (nextPos && focusCell(nextPos.row, nextPos.col)) {
+        e.preventDefault();
+      }
+    },
+    [getNextPosition, focusCell]
+  );
 
   /**
    * Focus the first cell when needed
@@ -273,9 +235,12 @@ export function useGridKeyboardNavigation({
   /**
    * Focus a specific cell
    */
-  const focusCellAt = useCallback((row: number, col: number) => {
-    focusCell(row, col);
-  }, [focusCell]);
+  const focusCellAt = useCallback(
+    (row: number, col: number) => {
+      focusCell(row, col);
+    },
+    [focusCell]
+  );
 
   return {
     /** Ref to attach to the container element */

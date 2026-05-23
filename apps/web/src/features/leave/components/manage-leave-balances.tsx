@@ -98,6 +98,48 @@ interface LeaveAllocationForUser {
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
+function getStudentSelectPlaceholder(userRole: string, selectedClass: string): string {
+  if (userRole === 'staff') {
+    return 'Select a staff member';
+  }
+  if (selectedClass) {
+    return 'Select a student';
+  }
+  return 'First select a class';
+}
+
+/** Normalize different API user shapes into a consistent format */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function normalizeUserDetails(rawUser: Record<string, any> | undefined) {
+  if (!rawUser) {
+    return undefined;
+  }
+
+  const userInfo = rawUser.user_info || rawUser;
+  const fullName =
+    userInfo.full_name ||
+    userInfo.name ||
+    `${userInfo.first_name || ''} ${userInfo.last_name || ''}`.trim() ||
+    undefined;
+
+  const organizationRole =
+    rawUser.organization_role ||
+    userInfo.organization_role ||
+    rawUser.role_display ||
+    userInfo.role_display ||
+    undefined;
+
+  return {
+    public_id: userInfo.public_id,
+    full_name: fullName,
+    email: userInfo.email,
+    role: rawUser.role || userInfo.role,
+    organization_role: organizationRole,
+    phone: userInfo.phone,
+    gender: userInfo.gender,
+  };
+}
+
 export default function ManageLeaveBalances() {
   const { user: currentUser } = useAuth();
 
@@ -367,36 +409,8 @@ export default function ManageLeaveBalances() {
     if (!rawUserDetails) {
       return undefined;
     }
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const user = rawUserDetails as Record<string, any>;
-
-    // Handle student nested user_info structure
-    const userInfo = user.user_info || user;
-
-    const fullName =
-      userInfo.full_name ||
-      userInfo.name ||
-      `${userInfo.first_name || ''} ${userInfo.last_name || ''}`.trim() ||
-      undefined;
-
-    const organizationRole =
-      user.organization_role ||
-      userInfo.organization_role ||
-      user.role_display ||
-      userInfo.role_display ||
-      undefined;
-
-    return {
-      public_id: userInfo.public_id,
-      full_name: fullName,
-      email: userInfo.email,
-
-      role: user.role || userInfo.role,
-      organization_role: organizationRole,
-      phone: userInfo.phone,
-      gender: userInfo.gender,
-    };
+    return normalizeUserDetails(rawUserDetails as Record<string, any>);
   }, [rawUserDetails]);
 
   // Get allocated leave type names from user's balances
@@ -408,15 +422,15 @@ export default function ManageLeaveBalances() {
     .map((allocation) => ({
       public_id: allocation.public_id,
       leave_type_name: allocation.leave_type_name,
-      leave_type_code: allocation.leave_type_name.match(/\(([^)]+)\)/)?.[1] || 'N/A',
+      leave_type_code: /\(([^)]+)\)/.exec(allocation.leave_type_name)?.[1] || 'N/A',
       display_name: allocation.leave_type_name,
-      total_days: parseFloat(allocation.total_days),
-      max_carry_forward_days: parseFloat(allocation.max_carry_forward_days),
+      total_days: Number.parseFloat(allocation.total_days),
+      max_carry_forward_days: Number.parseFloat(allocation.max_carry_forward_days),
     }));
 
   const pieChartData = userBalances.map((balance, index: number) => ({
     name: getLeaveTypeName(balance),
-    value: parseFloat(balance.total_allocated) || 0,
+    value: Number.parseFloat(balance.total_allocated) || 0,
     color: COLORS[index % COLORS.length],
   }));
 
@@ -467,7 +481,7 @@ export default function ManageLeaveBalances() {
       accessor: (row: LeaveBalance) => (
         <div className="text-center">
           <div className="text-lg font-semibold text-gray-900">
-            {parseFloat(row.total_allocated).toFixed(1)}
+            {Number.parseFloat(row.total_allocated).toFixed(1)}
           </div>
           <div className="text-muted-foreground text-xs">days</div>
         </div>
@@ -489,7 +503,7 @@ export default function ManageLeaveBalances() {
       accessor: (row: LeaveBalance) => (
         <div className="text-center">
           <div className="text-lg font-semibold text-green-600">
-            {parseFloat(row.carried_forward).toFixed(1)}
+            {Number.parseFloat(row.carried_forward).toFixed(1)}
           </div>
           <div className="text-muted-foreground text-xs">days</div>
         </div>
@@ -587,7 +601,7 @@ export default function ManageLeaveBalances() {
           typeof selectedUserDetails?.organization_role === 'object'
             ? selectedUserDetails?.organization_role?.name
             : selectedUserDetails?.organization_role;
-        const roleLabel = userOrgRole || 'this user\'s role';
+        const roleLabel = userOrgRole || "this user's role";
 
         toast.warning('No leave allocations available', {
           description: isAdmin
@@ -645,7 +659,7 @@ export default function ManageLeaveBalances() {
       )}
 
       {/* Show context info if teacher has permissions (not for admins) */}
-      {!isAdmin && !isLoadingContext && teacherContext && teacherContext.can_manage_balances && (
+      {!isAdmin && !isLoadingContext && teacherContext?.can_manage_balances && (
         <Alert className="border-green-200 bg-green-50">
           <Info className="h-4 w-4 text-green-600" />
           <AlertDescription className="text-green-900">
@@ -671,7 +685,7 @@ export default function ManageLeaveBalances() {
       )}
 
       {/* Only show content if admin OR teacher has management permissions */}
-      {(isAdmin || (!isLoadingContext && teacherContext && teacherContext.can_manage_balances)) && (
+      {(isAdmin || (!isLoadingContext && teacherContext?.can_manage_balances)) && (
         <>
           <Card>
             <CardContent className="pt-6">
@@ -767,13 +781,7 @@ export default function ManageLeaveBalances() {
                               description: student.user_info.email || student.admission_number,
                             }))
                       }
-                      placeholder={
-                        userRole === 'staff'
-                          ? 'Select a staff member'
-                          : selectedClass
-                            ? 'Select a student'
-                            : 'First select a class'
-                      }
+                      placeholder={getStudentSelectPlaceholder(userRole, selectedClass)}
                       emptyText={
                         userRole === 'staff' ? 'No staff members found' : 'No students found'
                       }
@@ -801,6 +809,12 @@ export default function ManageLeaveBalances() {
                   <CardContent>
                     <div className="overflow-hidden rounded-lg border">
                       <table className="w-full">
+                        <thead className="sr-only">
+                          <tr>
+                            <th>Field</th>
+                            <th>Value</th>
+                          </tr>
+                        </thead>
                         <tbody className="divide-y">
                           <tr className="hover:bg-muted/50 transition-colors">
                             <td className="text-muted-foreground w-40 px-4 py-3 text-sm font-medium">
@@ -895,11 +909,8 @@ export default function ManageLeaveBalances() {
                                 }}
                               >
                                 {pieChartData.map(
-                                  (
-                                    entry: { name: string; value: number; color: string },
-                                    index: number
-                                  ) => (
-                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                  (entry: { name: string; value: number; color: string }) => (
+                                    <Cell key={`cell-${entry.name}`} fill={entry.color} />
                                   )
                                 )}
                                 <RechartsLabel
@@ -919,12 +930,9 @@ export default function ManageLeaveBalances() {
                             Legend
                           </div>
                           {pieChartData.map(
-                            (
-                              entry: { name: string; value: number; color: string },
-                              index: number
-                            ) => (
+                            (entry: { name: string; value: number; color: string }) => (
                               <div
-                                key={index}
+                                key={entry.name}
                                 className="bg-card hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
                               >
                                 <div className="flex items-center gap-3">

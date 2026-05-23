@@ -37,6 +37,27 @@ export function TimetableViewTab() {
 
   const classes: Class[] = classesData?.data ?? [];
 
+  const renderTimetableContent = () => {
+    if (timetableLoading) {
+      return <PageLoader />;
+    }
+    if (isError) {
+      return (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="text-destructive mb-3 text-5xl">⚠️</div>
+          <h3 className="text-lg font-semibold">Error Loading Timetable</h3>
+          <p className="text-muted-foreground mt-1 text-sm">
+            {(error as Error)?.message || 'Something went wrong.'}
+          </p>
+        </div>
+      );
+    }
+    if (timetable) {
+      return <TimetableGrid timetable={timetable} />;
+    }
+    return null;
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -66,7 +87,9 @@ export function TimetableViewTab() {
       </div>
 
       {/* Timetable */}
-      {!selectedClassId ? (
+      {selectedClassId ? (
+        renderTimetableContent()
+      ) : (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="text-muted-foreground mb-3 text-5xl">📚</div>
           <h3 className="text-lg font-semibold">Select a Class</h3>
@@ -74,19 +97,7 @@ export function TimetableViewTab() {
             Choose a class from the dropdown above to view its timetable.
           </p>
         </div>
-      ) : timetableLoading ? (
-        <PageLoader />
-      ) : isError ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="text-destructive mb-3 text-5xl">⚠️</div>
-          <h3 className="text-lg font-semibold">Error Loading Timetable</h3>
-          <p className="text-muted-foreground mt-1 text-sm">
-            {(error as Error)?.message || 'Something went wrong.'}
-          </p>
-        </div>
-      ) : timetable ? (
-        <TimetableGrid timetable={timetable} />
-      ) : null}
+      )}
     </div>
   );
 }

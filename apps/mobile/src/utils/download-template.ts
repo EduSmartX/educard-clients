@@ -60,9 +60,8 @@ export async function downloadAndSaveTemplate(
           message: `Template saved to Downloads folder: ${fileName}`,
           filePath: asset.uri,
         };
-      } catch (mediaError) {
-        console.warn('MediaLibrary save failed, falling back to share:', mediaError);
-        // Fallback to sharing
+      } catch {
+        // MediaLibrary save failed, fallback to sharing
         return await shareFile(cacheFile.uri, fileName);
       }
     } else {
@@ -70,7 +69,6 @@ export async function downloadAndSaveTemplate(
       return await shareFile(cacheFile.uri, fileName);
     }
   } catch (error) {
-    console.error('Download template error:', error);
     return {
       success: false,
       message: error instanceof Error ? error.message : 'Failed to download template',

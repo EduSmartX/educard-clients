@@ -150,8 +150,7 @@ export default function EditHomeworkScreen() {
 
         await uploadMutation.mutateAsync({ publicId: homeworkId, formData });
       }
-    } catch (error) {
-      console.error('Error uploading attachments:', error);
+    } catch {
       Alert.alert('Warning', 'Homework updated but some attachments failed to upload');
     } finally {
       setIsUploading(false);

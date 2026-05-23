@@ -73,13 +73,30 @@ export function DataTable<T>({
   const startXRef = useRef<number>(0);
   const startWidthRef = useRef<number>(0);
 
+  // Extract and normalize a value for sorting
+  const getSortValue = (row: T, column: Column<T>): string | number => {
+    let value: unknown;
+    if (typeof column.accessor === 'function') {
+      const sortKey = column.sortKey as keyof T;
+      value = sortKey ? row[sortKey] : '';
+    } else {
+      value = row[column.accessor];
+    }
+    if (value === null || value === undefined) {
+      return '';
+    }
+    if (typeof value === 'string') {
+      return value.toLowerCase();
+    }
+    return value as string | number;
+  };
+
   // Client-side sorting: Sort data based on selected column and direction
   const sortedData = [...data].sort((rowA, rowB) => {
     if (!sortField) {
       return 0;
     }
 
-    // Find the column configuration
     const column = columns.find(
       (col) => (col.sortKey || col.header.toLowerCase().replace(/\s+/g, '_')) === sortField
     );
@@ -88,38 +105,8 @@ export function DataTable<T>({
       return 0;
     }
 
-    let aValue: unknown;
-    let bValue: unknown;
-
-    // Get values based on accessor
-    if (typeof column.accessor === 'function') {
-      // For function accessors, use sortKey if provided
-      const sortKey = column.sortKey as keyof T;
-      aValue = sortKey ? rowA[sortKey] : '';
-      bValue = sortKey ? rowB[sortKey] : '';
-    } else {
-      aValue = rowA[column.accessor];
-      bValue = rowB[column.accessor];
-    }
-
-    // Handle null/undefined
-    if (aValue === null || aValue === undefined) {
-      aValue = '';
-    }
-    if (bValue === null || bValue === undefined) {
-      bValue = '';
-    }
-
-    // Convert to lowercase for string comparison
-    if (typeof aValue === 'string') {
-      aValue = aValue.toLowerCase();
-    }
-    if (typeof bValue === 'string') {
-      bValue = bValue.toLowerCase();
-    }
-
-    const normalizedA = aValue as string | number;
-    const normalizedB = bValue as string | number;
+    const normalizedA = getSortValue(rowA, column);
+    const normalizedB = getSortValue(rowB, column);
 
     if (normalizedA < normalizedB) {
       return sortDirection === 'asc' ? -1 : 1;

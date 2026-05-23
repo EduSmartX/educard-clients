@@ -68,7 +68,7 @@ export function LeaveRequestReviewDialog({
   onClose,
   onSubmit,
   isPending,
-}: LeaveRequestReviewDialogProps) {
+}: Readonly<LeaveRequestReviewDialogProps>) {
   const form = useForm<ReviewFormData>({
     resolver: zodResolver(reviewSchema),
     defaultValues: {
@@ -92,24 +92,32 @@ export function LeaveRequestReviewDialog({
 
   const isViewMode = !action;
 
+  function getDialogTitle(): string {
+    if (isViewMode) {
+      return 'Leave Request Details';
+    }
+    if (action === 'approve') {
+      return 'Approve Leave Request';
+    }
+    return 'Reject Leave Request';
+  }
+
+  function getDialogDescription(): string {
+    if (isViewMode) {
+      return 'Review the leave request details below';
+    }
+    if (action === 'approve') {
+      return 'Provide comments for approving this leave request';
+    }
+    return 'Provide reason for rejecting this leave request';
+  }
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl bg-white">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-gray-900">
-            {isViewMode
-              ? 'Leave Request Details'
-              : action === 'approve'
-                ? 'Approve Leave Request'
-                : 'Reject Leave Request'}
-          </DialogTitle>
-          <DialogDescription className="text-gray-600">
-            {isViewMode
-              ? 'Review the leave request details below'
-              : action === 'approve'
-                ? 'Provide comments for approving this leave request'
-                : 'Provide reason for rejecting this leave request'}
-          </DialogDescription>
+          <DialogTitle className="text-2xl font-bold text-gray-900">{getDialogTitle()}</DialogTitle>
+          <DialogDescription className="text-gray-600">{getDialogDescription()}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -161,7 +169,7 @@ export function LeaveRequestReviewDialog({
 
           {/* Reason */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Reason for Leave</label>
+            <span className="text-sm font-medium text-gray-700">Reason for Leave</span>
             <div className="rounded-lg border border-purple-200 bg-purple-50 p-4 text-sm leading-relaxed whitespace-pre-wrap text-purple-900">
               {request.reason}
             </div>
@@ -170,7 +178,7 @@ export function LeaveRequestReviewDialog({
           {/* Attachment */}
           {request.attachment_url && (
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Supporting Document</label>
+              <span className="text-sm font-medium text-gray-700">Supporting Document</span>
               <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2">
                 <FileText className="h-4 w-4 shrink-0 text-green-600" />
                 <span className="flex-1 truncate text-sm text-green-800">

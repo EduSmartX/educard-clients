@@ -87,6 +87,126 @@ function flattenErrors(
   return result;
 }
 
+/** Extract status code from error data */
+function extractStatusCode(
+  axiosError: AxiosErrorWrapper,
+  errorData: BackendErrorResponse,
+): number | undefined {
+  if (axiosError.response?.status) {
+    return axiosError.response.status;
+  }
+  return errorData.code;
+}
+
+/** Check if errors object has only a detail string and extract it */
+function extractDetailFromErrors(
+  errors: Record<string, ErrorValue>,
+): { detail: string; isOnlyDetail: boolean } | null {
+  if (!("detail" in errors) || typeof errors.detail !== "string") {
+    return null;
+  }
+  return {
+    detail: errors.detail,
+    isOnlyDetail: Object.keys(errors).length === 1,
+  };
+}
+
+/** Parse DRF-style top-level validation errors (no wrapper "errors" key) */
+function parseDrfTopLevelErrors(
+  errorData: BackendErrorResponse,
+  result: NormalizedError,
+): void {
+  if (errorData.errors || errorData.detail) {
+    return;
+  }
+  const rawObj = errorData as Record<string, unknown>;
+  const hasArrayValues = Object.values(rawObj).some(
+    (v) => Array.isArray(v) && v.length > 0 && typeof v[0] === "string",
+  );
+  if (!hasArrayValues) {
+    return;
+  }
+  result.isValidation = true;
+  const flattened = flattenErrors(rawObj as Record<string, ErrorValue>);
+  result.fieldErrors = flattened.fieldErrors;
+  result.nonFieldErrors = flattened.nonFieldErrors;
+}
+
+/** Parse structured errors from backend response */
+function parseStructuredErrors(
+  errorData: BackendErrorResponse,
+  result: NormalizedError,
+): boolean {
+  if (!errorData.errors || typeof errorData.errors !== "object") {
+    return false;
+  }
+
+  const errorsObj = errorData.errors as Record<string, ErrorValue>;
+  const detailResult = extractDetailFromErrors(errorsObj);
+  if (detailResult) {
+    result.message = detailResult.detail;
+    if (detailResult.isOnlyDetail) {
+      return true; // signal early return
+    }
+  }
+
+  result.isValidation = true;
+  const flattened = flattenErrors(errorData.errors);
+  result.fieldErrors = flattened.fieldErrors;
+  result.nonFieldErrors = flattened.nonFieldErrors;
+  return false;
+}
+
+/** Apply default messages for validation/failed cases */
+function applyDefaultMessages(
+  errorData: BackendErrorResponse,
+  result: NormalizedError,
+): void {
+  const isDefaultMessage = result.message === "An unexpected error occurred";
+
+  if (result.isValidation && isDefaultMessage) {
+    result.message = "Validation error occurred";
+  }
+
+  if (errorData.success === false && isDefaultMessage) {
+    result.message = "Request failed";
+  }
+}
+
+/** Parse object-shaped errors (axios response or backend error) */
+function parseObjectError(
+  error: object,
+  result: NormalizedError,
+): NormalizedError {
+  const possibleAxiosError = error as AxiosErrorWrapper;
+  const possibleBackendError = error as BackendErrorResponse;
+
+  const errorData = possibleAxiosError.response?.data || possibleBackendError;
+
+  result.statusCode = extractStatusCode(possibleAxiosError, errorData);
+  result.message = errorData.message || errorData.detail || result.message;
+
+  // Simple detail-only error
+  if (errorData.detail && !errorData.errors) {
+    result.message = errorData.detail;
+    return result;
+  }
+
+  // Structured errors from backend
+  const shouldReturn = parseStructuredErrors(errorData, result);
+  if (shouldReturn) {
+    return result;
+  }
+
+  // Top-level DRF validation errors
+  parseDrfTopLevelErrors(errorData, result);
+
+  // Apply sensible defaults
+  applyDefaultMessages(errorData, result);
+
+  return result;
+}
+
 /** Parse any error into normalized structure */
 export function parseError(error: unknown): NormalizedError {
   const result: NormalizedError = {
@@ -96,20 +216,16 @@ export function parseError(error: unknown): NormalizedError {
     isValidation: false,
   };
 
-  // Handle null/undefined
   if (!error) {
     return result;
   }
 
-  // Handle string errors
   if (typeof error === "string") {
     result.message = error;
     return result;
   }
 
-  // Handle Error instances
   if (error instanceof Error) {
-    // Check if it's an axios error with response data
     if ("response" in error && typeof error === "object") {
       const axiosError = error as AxiosErrorWrapper;
       if (axiosError.response?.data) {
@@ -120,79 +236,8 @@ export function parseError(error: unknown): NormalizedError {
     return result;
   }
 
-  // Handle object errors (axios response or backend error)
   if (typeof error === "object") {
-    const possibleAxiosError = error as AxiosErrorWrapper;
-    const possibleBackendError = error as BackendErrorResponse;
-
-    // If it has response.data, it's an axios wrapper
-    const errorData = possibleAxiosError.response?.data || possibleBackendError;
-
-    // Get status code
-    if (possibleAxiosError.response?.status) {
-      result.statusCode = possibleAxiosError.response.status;
-    } else if (errorData.code) {
-      result.statusCode = errorData.code;
-    }
-
-    // Extract main message
-    result.message = errorData.message || errorData.detail || result.message;
-
-    // Check for simple detail-only errors
-    if (errorData.detail && !errorData.errors) {
-      result.message = errorData.detail;
-      return result;
-    }
-
-    // Check if errors object contains a detail field
-    if (errorData.errors && typeof errorData.errors === "object") {
-      const errorsObj = errorData.errors as Record<string, ErrorValue>;
-      if ("detail" in errorsObj && typeof errorsObj.detail === "string") {
-        result.message = errorsObj.detail;
-        if (Object.keys(errorsObj).length === 1) {
-          return result;
-        }
-      }
-    }
-
-    // Parse errors object (supports nested structures)
-    if (errorData.errors && typeof errorData.errors === "object") {
-      result.isValidation = true;
-      const flattened = flattenErrors(errorData.errors);
-      result.fieldErrors = flattened.fieldErrors;
-      result.nonFieldErrors = flattened.nonFieldErrors;
-    }
-
-    // Handle top-level DRF validation errors (no wrapper "errors" key)
-    // e.g. { "non_field_errors": ["..."], "name": ["This field is required."] }
-    if (!errorData.errors && !errorData.detail) {
-      const rawObj = errorData as Record<string, unknown>;
-      const hasArrayValues = Object.values(rawObj).some(
-        (v) => Array.isArray(v) && v.length > 0 && typeof v[0] === "string",
-      );
-      if (hasArrayValues) {
-        result.isValidation = true;
-        const flattened = flattenErrors(rawObj as Record<string, ErrorValue>);
-        result.fieldErrors = flattened.fieldErrors;
-        result.nonFieldErrors = flattened.nonFieldErrors;
-      }
-    }
-
-    // If we have validation errors but no message, set a better default
-    if (
-      result.isValidation &&
-      result.message === "An unexpected error occurred"
-    ) {
-      result.message = "Validation error occurred";
-    }
-
-    // Special case: If success=false but no other message
-    if (
-      errorData.success === false &&
-      result.message === "An unexpected error occurred"
-    ) {
-      result.message = "Request failed";
-    }
+    return parseObjectError(error, result);
   }
 
   return result;

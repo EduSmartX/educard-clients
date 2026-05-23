@@ -104,7 +104,7 @@ export function LeaveRequestFormPageNew() {
           leave_balance: request.leave_balance_public_id,
           start_date: request.start_date,
           end_date: request.end_date,
-          number_of_days: parseFloat(request.number_of_days.toString()),
+          number_of_days: Number.parseFloat(request.number_of_days.toString()),
           reason: request.reason,
         },
         { keepDefaultValues: false }
@@ -232,12 +232,17 @@ export function LeaveRequestFormPageNew() {
     );
   }
 
-  const title =
-    mode === 'create'
-      ? 'Apply Leave'
-      : mode === 'edit'
-        ? 'Edit Leave Request'
-        : 'Leave Request Details';
+  const getTitle = () => {
+    if (mode === 'create') {
+      return 'Apply Leave';
+    }
+    if (mode === 'edit') {
+      return 'Edit Leave Request';
+    }
+    return 'Leave Request Details';
+  };
+
+  const title = getTitle();
 
   return (
     <div className="space-y-6">
@@ -561,7 +566,7 @@ export function LeaveRequestFormPageNew() {
               {/* Attachment (View mode only) */}
               {mode === 'view' && request?.attachment_url && (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Supporting Document</label>
+                  <span className="text-sm font-medium">Supporting Document</span>
                   <div className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-3 py-2">
                     <FileText className="h-4 w-4 shrink-0 text-green-600" />
                     <span className="flex-1 truncate text-sm text-green-800">
@@ -583,7 +588,7 @@ export function LeaveRequestFormPageNew() {
               {/* Status (View mode only) */}
               {mode === 'view' && request && (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Status</label>
+                  <span className="text-sm font-medium">Status</span>
                   <div>
                     <Badge className={LEAVE_STATUS_CONFIG[request.status].className}>
                       {LEAVE_STATUS_CONFIG[request.status].label}

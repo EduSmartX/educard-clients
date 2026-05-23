@@ -26,11 +26,16 @@ import {
 } from 'lucide-react';
 import { PageHeader } from '@/components/common';
 import { FeeStatusBadge } from '../../components/fee-status-badge';
+import {
+  FeeStatus,
+  ComponentApprovalStatus,
+  type StudentFeeComponentItem,
+  type StudentFee,
+} from '@educard/shared';
 import { useStudentFee } from '../../hooks/use-fee-queries';
 import { useReviewComponentRequests } from '../../hooks/use-fee-mutations';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StudentFeePaymentHistory } from '../components/student-fee-payment-history';
-import type { StudentFeeComponentItem, StudentFee } from '@educard/shared';
 
 // ─── Inline helper component ──────────────────────────────────────────────────
 
@@ -114,7 +119,7 @@ export function StudentFeeDetailPage() {
   const [rejectNotes, setRejectNotes] = useState<Record<string, string>>({});
 
   const pendingComponents = (studentFee?.components ?? []).filter(
-    (c: StudentFeeComponentItem) => c.approval_status === 'pending'
+    (c: StudentFeeComponentItem) => c.approval_status === ComponentApprovalStatus.PENDING
   );
 
   const handleApprove = (componentPublicId: string) => {
@@ -168,7 +173,7 @@ export function StudentFeeDetailPage() {
         description={`${studentFee.class_name} • ${studentFee.fee_structure_name} • ${studentFee.academic_year}`}
         actions={[
           // Show "Refund Payment" for OVERPAID/REFUNDING statuses
-          ...(['overpaid', 'refunding'].includes(studentFee.status)
+          ...(([FeeStatus.OVERPAID, FeeStatus.REFUNDING] as string[]).includes(studentFee.status)
             ? [
                 {
                   label: 'Refund Payment',
@@ -183,7 +188,7 @@ export function StudentFeeDetailPage() {
               ]
             : []),
           // Show "Record Payment" for PENDING/PARTIAL statuses
-          ...(['pending', 'partial'].includes(studentFee.status)
+          ...(([FeeStatus.PENDING, FeeStatus.PARTIAL] as string[]).includes(studentFee.status)
             ? [
                 {
                   label: 'Record Payment',
@@ -251,16 +256,17 @@ export function StudentFeeDetailPage() {
 
         <Card>
           <CardContent className="pt-6">
-            {studentFee.status === 'refunding' || studentFee.status === 'refunded' ? (
+            {studentFee.status === FeeStatus.REFUNDING ||
+            studentFee.status === FeeStatus.REFUNDED ? (
               <>
                 <div className="text-sm font-medium text-orange-600">
-                  {studentFee.status === 'refunded' ? 'Refunded' : 'Refundable'}
+                  {studentFee.status === FeeStatus.REFUNDED ? 'Refunded' : 'Refundable'}
                 </div>
                 <div className="flex items-center text-2xl font-bold text-orange-600">
                   <IndianRupee className="h-5 w-5" />
                   {studentFee.amount_paid?.toLocaleString('en-IN')}
                 </div>
-                {studentFee.status === 'refunding' && (
+                {studentFee.status === FeeStatus.REFUNDING && (
                   <div className="mt-1 text-xs text-orange-500">Full refund pending</div>
                 )}
               </>
@@ -423,12 +429,12 @@ export function StudentFeeDetailPage() {
                     >
                       {component.is_selected ? 'Selected' : 'Not Selected'}
                     </Badge>
-                    {component.approval_status === 'pending' && (
+                    {component.approval_status === ComponentApprovalStatus.PENDING && (
                       <Badge variant="outline" className="border-amber-400 text-xs text-amber-700">
                         Pending Review
                       </Badge>
                     )}
-                    {component.approval_status === 'rejected' && (
+                    {component.approval_status === ComponentApprovalStatus.REJECTED && (
                       <Badge variant="outline" className="border-red-400 text-xs text-red-700">
                         Rejected
                       </Badge>

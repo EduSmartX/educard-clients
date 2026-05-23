@@ -41,6 +41,7 @@ import {
   PAYMENT_MODE_OPTIONS,
   TransactionType,
   TRANSACTION_TYPE_OPTIONS,
+  FeeStatus,
   type PaymentCreatePayload,
 } from '@educard/shared';
 
@@ -242,36 +243,49 @@ export function RecordPaymentPage() {
                 <FeeAmount amount={selectedFee.amount_paid} size="lg" className="text-green-600" />
               </div>
               <div>
-                {selectedFee.status === 'refunding' || selectedFee.status === 'refunded' ? (
-                  <>
-                    <p className="text-xs tracking-wide text-orange-600 uppercase">
-                      {selectedFee.status === 'refunded' ? 'Refunded' : 'Refundable'}
-                    </p>
-                    <FeeAmount
-                      amount={selectedFee.amount_paid}
-                      size="lg"
-                      className="text-orange-600"
-                    />
-                  </>
-                ) : selectedFee.balance_due < 0 ? (
-                  <>
-                    <p className="text-xs tracking-wide text-orange-600 uppercase">Overpaid</p>
-                    <FeeAmount
-                      amount={Math.abs(selectedFee.balance_due)}
-                      size="lg"
-                      className="text-orange-600"
-                    />
-                  </>
-                ) : (
-                  <>
-                    <p className="text-muted-foreground text-xs tracking-wide uppercase">Balance</p>
-                    <FeeAmount
-                      amount={selectedFee.balance_due}
-                      size="lg"
-                      className={selectedFee.balance_due > 0 ? 'text-red-600' : 'text-green-600'}
-                    />
-                  </>
-                )}
+                {(() => {
+                  if (
+                    selectedFee.status === FeeStatus.REFUNDING ||
+                    selectedFee.status === FeeStatus.REFUNDED
+                  ) {
+                    return (
+                      <>
+                        <p className="text-xs tracking-wide text-orange-600 uppercase">
+                          {selectedFee.status === FeeStatus.REFUNDED ? 'Refunded' : 'Refundable'}
+                        </p>
+                        <FeeAmount
+                          amount={selectedFee.amount_paid}
+                          size="lg"
+                          className="text-orange-600"
+                        />
+                      </>
+                    );
+                  }
+                  if (selectedFee.balance_due < 0) {
+                    return (
+                      <>
+                        <p className="text-xs tracking-wide text-orange-600 uppercase">Overpaid</p>
+                        <FeeAmount
+                          amount={Math.abs(selectedFee.balance_due)}
+                          size="lg"
+                          className="text-orange-600"
+                        />
+                      </>
+                    );
+                  }
+                  return (
+                    <>
+                      <p className="text-muted-foreground text-xs tracking-wide uppercase">
+                        Balance
+                      </p>
+                      <FeeAmount
+                        amount={selectedFee.balance_due}
+                        size="lg"
+                        className={selectedFee.balance_due > 0 ? 'text-red-600' : 'text-green-600'}
+                      />
+                    </>
+                  );
+                })()}
               </div>
               <div className="ml-auto">
                 <FeeStatusBadge status={selectedFee.status} />

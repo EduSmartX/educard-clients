@@ -20,8 +20,10 @@ export function formatNumber(num: number): string {
  * Truncate text with ellipsis
  */
 export function truncate(str: string, length: number): string {
-  if (str.length <= length) {return str;}
-  return `${str.slice(0, length)  }...`;
+  if (str.length <= length) {
+    return str;
+  }
+  return `${str.slice(0, length)}...`;
 }
 
 /**
@@ -47,10 +49,18 @@ export function sleep(ms: number): Promise<void> {
  * Check if value is empty
  */
 export function isEmpty(value: unknown): boolean {
-  if (value === null || value === undefined) {return true;}
-  if (typeof value === 'string') {return value.trim().length === 0;}
-  if (Array.isArray(value)) {return value.length === 0;}
-  if (typeof value === 'object') {return Object.keys(value).length === 0;}
+  if (value === null || value === undefined) {
+    return true;
+  }
+  if (typeof value === 'string') {
+    return value.trim().length === 0;
+  }
+  if (Array.isArray(value)) {
+    return value.length === 0;
+  }
+  if (typeof value === 'object') {
+    return Object.keys(value).length === 0;
+  }
   return false;
 }
 
@@ -112,32 +122,34 @@ export async function copyToClipboard(text: string): Promise<boolean> {
  * Download file
  */
 export function downloadFile(blob: Blob, filename: string): void {
-  const url = window.URL.createObjectURL(blob);
+  const url = globalThis.URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
   link.download = filename;
   document.body.appendChild(link);
   link.click();
-  document.body.removeChild(link);
-  window.URL.revokeObjectURL(url);
+  link.remove();
+  globalThis.URL.revokeObjectURL(url);
 }
 
 /**
  * Format file size
  */
 export function formatFileSize(bytes: number): string {
-  if (bytes === 0) {return '0 Bytes';}
+  if (bytes === 0) {
+    return '0 Bytes';
+  }
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100  } ${  sizes[i]}`;
+  return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${sizes[i]}`;
 }
 
 /**
  * Generate random ID
  */
 export function generateId(): string {
-  return Math.random().toString(36).substring(2, 9);
+  return crypto.randomUUID().slice(0, 9);
 }
 
 /**

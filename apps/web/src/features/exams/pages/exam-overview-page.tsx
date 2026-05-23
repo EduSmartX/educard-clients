@@ -100,6 +100,38 @@ const STATUS_CONFIG: Record<
   },
 };
 
+// Insight type style mapping
+const INSIGHT_STYLES = {
+  success: {
+    container: 'border-green-200 bg-green-50',
+    iconColor: 'text-green-600',
+    titleColor: 'text-green-800',
+    descColor: 'text-green-700',
+    Icon: CheckCircle2,
+  },
+  warning: {
+    container: 'border-yellow-200 bg-yellow-50',
+    iconColor: 'text-yellow-600',
+    titleColor: 'text-yellow-800',
+    descColor: 'text-yellow-700',
+    Icon: AlertCircle,
+  },
+  alert: {
+    container: 'border-red-200 bg-red-50',
+    iconColor: 'text-red-600',
+    titleColor: 'text-red-800',
+    descColor: 'text-red-700',
+    Icon: XCircle,
+  },
+  info: {
+    container: 'border-blue-200 bg-blue-50',
+    iconColor: 'text-blue-600',
+    titleColor: 'text-blue-800',
+    descColor: 'text-blue-700',
+    Icon: TrendingUp,
+  },
+} as const;
+
 // Chart colors
 const CHART_COLORS = {
   passed: '#22c55e',
@@ -167,8 +199,8 @@ export function ExamOverviewPage() {
         id: examId,
         status: newStatus,
       });
-    } catch (error) {
-      console.error('Failed to update exam status:', error);
+    } catch {
+      // Error handled by mutation's onError callback
     }
   };
 
@@ -191,8 +223,8 @@ export function ExamOverviewPage() {
         sessionId: selectedSessionId,
         status: pendingBulkStatus,
       });
-    } catch (error) {
-      console.error('Failed to bulk update exam statuses:', error);
+    } catch {
+      // Error handled by mutation's onError callback
     } finally {
       setPendingBulkStatus(null);
     }
@@ -815,72 +847,30 @@ export function ExamOverviewPage() {
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                        {aiInsights.map((insight, index) => (
-                          <div
-                            key={index}
-                            className={`rounded-lg border p-4 ${
-                              insight.type === 'success'
-                                ? 'border-green-200 bg-green-50'
-                                : insight.type === 'warning'
-                                  ? 'border-yellow-200 bg-yellow-50'
-                                  : insight.type === 'alert'
-                                    ? 'border-red-200 bg-red-50'
-                                    : 'border-blue-200 bg-blue-50'
-                            }`}
-                          >
-                            <div className="flex items-start gap-3">
-                              <div
-                                className={`mt-0.5 ${
-                                  insight.type === 'success'
-                                    ? 'text-green-600'
-                                    : insight.type === 'warning'
-                                      ? 'text-yellow-600'
-                                      : insight.type === 'alert'
-                                        ? 'text-red-600'
-                                        : 'text-blue-600'
-                                }`}
-                              >
-                                {insight.type === 'success' ? (
-                                  <CheckCircle2 className="h-5 w-5" />
-                                ) : insight.type === 'warning' ? (
-                                  <AlertCircle className="h-5 w-5" />
-                                ) : insight.type === 'alert' ? (
-                                  <XCircle className="h-5 w-5" />
-                                ) : (
-                                  <TrendingUp className="h-5 w-5" />
-                                )}
-                              </div>
-                              <div>
-                                <p
-                                  className={`text-sm font-semibold ${
-                                    insight.type === 'success'
-                                      ? 'text-green-800'
-                                      : insight.type === 'warning'
-                                        ? 'text-yellow-800'
-                                        : insight.type === 'alert'
-                                          ? 'text-red-800'
-                                          : 'text-blue-800'
-                                  }`}
-                                >
-                                  {insight.title}
-                                </p>
-                                <p
-                                  className={`mt-1 text-xs ${
-                                    insight.type === 'success'
-                                      ? 'text-green-700'
-                                      : insight.type === 'warning'
-                                        ? 'text-yellow-700'
-                                        : insight.type === 'alert'
-                                          ? 'text-red-700'
-                                          : 'text-blue-700'
-                                  }`}
-                                >
-                                  {insight.description}
-                                </p>
+                        {aiInsights.map((insight, index) => {
+                          const styles = INSIGHT_STYLES[insight.type];
+                          const { Icon } = styles;
+                          return (
+                            <div
+                              key={index}
+                              className={`rounded-lg border p-4 ${styles.container}`}
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className={`mt-0.5 ${styles.iconColor}`}>
+                                  <Icon className="h-5 w-5" />
+                                </div>
+                                <div>
+                                  <p className={`text-sm font-semibold ${styles.titleColor}`}>
+                                    {insight.title}
+                                  </p>
+                                  <p className={`mt-1 text-xs ${styles.descColor}`}>
+                                    {insight.description}
+                                  </p>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </CardContent>
                   </Card>

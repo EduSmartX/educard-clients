@@ -36,7 +36,7 @@ interface TableViewProps {
   currentDate: Date;
 }
 
-export function TableView({ holidays, currentDate }: TableViewProps) {
+export function TableView({ holidays, currentDate }: Readonly<TableViewProps>) {
   const [editingHoliday, setEditingHoliday] = useState<Holiday | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);

@@ -38,6 +38,26 @@ function ByClassView() {
 
   const classes: Class[] = classesData?.data ?? [];
 
+  const renderTimetableContent = () => {
+    if (timetableLoading) {
+      return <PageLoader />;
+    }
+    if (isError) {
+      return (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="text-destructive mb-3 text-5xl">⚠️</div>
+          <h3 className="text-lg font-semibold">Error Loading Timetable</h3>
+          <p className="text-muted-foreground mt-1 text-sm">
+            {(error as Error)?.message || 'Something went wrong.'}
+          </p>
+        </div>
+      );
+    }
+    if (timetable) {
+      return <TimetableGrid timetable={timetable} readOnly />;
+    }
+    return null;
+  };
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-4">
@@ -59,7 +79,9 @@ function ByClassView() {
         </div>
       </div>
 
-      {!selectedClassId ? (
+      {selectedClassId ? (
+        renderTimetableContent()
+      ) : (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="text-muted-foreground mb-3 text-5xl">📚</div>
           <h3 className="text-lg font-semibold">Select a Class</h3>
@@ -67,19 +89,7 @@ function ByClassView() {
             Choose a class from the dropdown above to view its timetable.
           </p>
         </div>
-      ) : timetableLoading ? (
-        <PageLoader />
-      ) : isError ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="text-destructive mb-3 text-5xl">⚠️</div>
-          <h3 className="text-lg font-semibold">Error Loading Timetable</h3>
-          <p className="text-muted-foreground mt-1 text-sm">
-            {(error as Error)?.message || 'Something went wrong.'}
-          </p>
-        </div>
-      ) : timetable ? (
-        <TimetableGrid timetable={timetable} readOnly />
-      ) : null}
+      )}
     </div>
   );
 }
@@ -217,127 +227,123 @@ function ByTeacherView() {
       {isLoading && <PageLoader />}
 
       {!isLoading && timetableData && slotRows.length > 0 && (
-        <>
-          <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div
-              className="grid min-w-[700px]"
-              style={{
-                gridTemplateColumns: `90px repeat(${availableDays.length}, minmax(0, 1fr))`,
-              }}
-            >
-              {/* Header row */}
-              <div className="sticky top-0 z-10 flex items-center justify-center border-b border-gray-200 bg-gray-50 p-3">
-                <span className="text-xs font-semibold text-gray-500 uppercase">Time</span>
-              </div>
-              {availableDays.map((day) => (
+        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div
+            className="grid min-w-[700px]"
+            style={{
+              gridTemplateColumns: `90px repeat(${availableDays.length}, minmax(0, 1fr))`,
+            }}
+          >
+            {/* Header row */}
+            <div className="sticky top-0 z-10 flex items-center justify-center border-b border-gray-200 bg-gray-50 p-3">
+              <span className="text-xs font-semibold text-gray-500 uppercase">Time</span>
+            </div>
+            {availableDays.map((day) => (
+              <div
+                key={day}
+                className={cn(
+                  'sticky top-0 z-10 border-b border-l border-gray-200 p-3 text-center',
+                  day === todayIndex ? 'bg-indigo-50' : 'bg-gray-50'
+                )}
+              >
                 <div
-                  key={day}
                   className={cn(
-                    'sticky top-0 z-10 border-b border-l border-gray-200 p-3 text-center',
-                    day === todayIndex ? 'bg-indigo-50' : 'bg-gray-50'
+                    'text-sm font-semibold',
+                    day === todayIndex ? 'text-indigo-700' : 'text-gray-700'
                   )}
                 >
+                  {DAY_LABELS[day] ?? `Day ${day}`}
+                </div>
+                {day === todayIndex && (
+                  <span className="mt-0.5 inline-block rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-medium text-indigo-500">
+                    Today
+                  </span>
+                )}
+              </div>
+            ))}
+
+            {slotRows.map((row, rowIndex) => {
+              const isBreak = row.slotType === 'short_break' || row.slotType === 'long_break';
+
+              return (
+                <Fragment key={`row-${row.startTime}`}>
                   <div
                     className={cn(
-                      'text-sm font-semibold',
-                      day === todayIndex ? 'text-indigo-700' : 'text-gray-700'
+                      'flex flex-col items-center justify-center border-b border-gray-100 p-2',
+                      isBreak ? 'bg-amber-50/50' : 'bg-white'
                     )}
                   >
-                    {DAY_LABELS[day] ?? `Day ${day}`}
-                  </div>
-                  {day === todayIndex && (
-                    <span className="mt-0.5 inline-block rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-medium text-indigo-500">
-                      Today
+                    <span className="text-xs font-semibold text-gray-700">
+                      {formatSlotTime(row.startTime)}
                     </span>
-                  )}
-                </div>
-              ))}
+                    <span className="text-[10px] text-gray-400">{formatSlotTime(row.endTime)}</span>
+                    {row.slotLabel && (
+                      <span className="mt-0.5 text-[10px] text-gray-400">{row.slotLabel}</span>
+                    )}
+                  </div>
 
-              {slotRows.map((row, rowIndex) => {
-                const isBreak = row.slotType === 'short_break' || row.slotType === 'long_break';
+                  {availableDays.map((day) => {
+                    const entry = row.entries[String(day)];
 
-                return (
-                  <Fragment key={`row-${rowIndex}`}>
-                    <div
-                      className={cn(
-                        'flex flex-col items-center justify-center border-b border-gray-100 p-2',
-                        isBreak ? 'bg-amber-50/50' : 'bg-white'
-                      )}
-                    >
-                      <span className="text-xs font-semibold text-gray-700">
-                        {formatSlotTime(row.startTime)}
-                      </span>
-                      <span className="text-[10px] text-gray-400">
-                        {formatSlotTime(row.endTime)}
-                      </span>
-                      {row.slotLabel && (
-                        <span className="mt-0.5 text-[10px] text-gray-400">{row.slotLabel}</span>
-                      )}
-                    </div>
+                    if (isBreak) {
+                      return (
+                        <div
+                          key={`${rowIndex}-${day}`}
+                          className="flex items-center justify-center border-b border-l border-gray-100 bg-amber-50/50 p-2"
+                        >
+                          <span className="text-xs font-medium text-amber-600">
+                            ☕ {row.slotLabel || 'Break'}
+                          </span>
+                        </div>
+                      );
+                    }
 
-                    {availableDays.map((day) => {
-                      const entry = row.entries[String(day)];
-
-                      if (isBreak) {
-                        return (
-                          <div
-                            key={`${rowIndex}-${day}`}
-                            className="flex items-center justify-center border-b border-l border-gray-100 bg-amber-50/50 p-2"
-                          >
-                            <span className="text-xs font-medium text-amber-600">
-                              ☕ {row.slotLabel || 'Break'}
-                            </span>
-                          </div>
-                        );
-                      }
-
-                      if (!entry) {
-                        return (
-                          <div
-                            key={`${rowIndex}-${day}`}
-                            className={cn(
-                              'flex items-center justify-center border-b border-l border-gray-100 p-2',
-                              day === todayIndex ? 'bg-indigo-50/30' : 'bg-gray-50/30'
-                            )}
-                          >
-                            <span className="text-xs text-gray-400 italic">Leisure</span>
-                          </div>
-                        );
-                      }
-
-                      const periodColor =
-                        PERIOD_PASTEL_COLORS[rowIndex % PERIOD_PASTEL_COLORS.length];
+                    if (!entry) {
                       return (
                         <div
                           key={`${rowIndex}-${day}`}
                           className={cn(
-                            'border-b border-l border-gray-100 p-1.5',
-                            day === todayIndex ? 'bg-indigo-50/20' : ''
+                            'flex items-center justify-center border-b border-l border-gray-100 p-2',
+                            day === todayIndex ? 'bg-indigo-50/30' : 'bg-gray-50/30'
                           )}
                         >
-                          <div
-                            className={cn(
-                              'h-full rounded-lg border-l-3 p-2',
-                              periodColor.bg,
-                              periodColor.border
-                            )}
-                          >
-                            <div className={cn('truncate text-xs font-semibold', periodColor.text)}>
-                              {entry.subject_name || 'Unassigned'}
-                            </div>
-                            <div className={cn('mt-0.5 truncate text-[11px]', periodColor.sub)}>
-                              {entry.class_name}
-                            </div>
-                          </div>
+                          <span className="text-xs text-gray-400 italic">Leisure</span>
                         </div>
                       );
-                    })}
-                  </Fragment>
-                );
-              })}
-            </div>
+                    }
+
+                    const periodColor =
+                      PERIOD_PASTEL_COLORS[rowIndex % PERIOD_PASTEL_COLORS.length];
+                    return (
+                      <div
+                        key={`${rowIndex}-${day}`}
+                        className={cn(
+                          'border-b border-l border-gray-100 p-1.5',
+                          day === todayIndex ? 'bg-indigo-50/20' : ''
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            'h-full rounded-lg border-l-3 p-2',
+                            periodColor.bg,
+                            periodColor.border
+                          )}
+                        >
+                          <div className={cn('truncate text-xs font-semibold', periodColor.text)}>
+                            {entry.subject_name || 'Unassigned'}
+                          </div>
+                          <div className={cn('mt-0.5 truncate text-[11px]', periodColor.sub)}>
+                            {entry.class_name}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </Fragment>
+              );
+            })}
           </div>
-        </>
+        </div>
       )}
 
       {!isLoading && timetableData && slotRows.length === 0 && (

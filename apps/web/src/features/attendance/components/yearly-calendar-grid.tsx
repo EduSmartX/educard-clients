@@ -9,8 +9,18 @@ interface YearlyCalendarGridProps {
 }
 
 const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
 // Helper to check if date is a weekend based on working day policy
@@ -42,7 +52,10 @@ function isWeekend(
 
       if (pattern === 'SECOND_ONLY' && saturdayNumber === 2) {
         return true;
-      } else if (pattern === 'SECOND_AND_FOURTH' && (saturdayNumber === 2 || saturdayNumber === 4)) {
+      } else if (
+        pattern === 'SECOND_AND_FOURTH' &&
+        (saturdayNumber === 2 || saturdayNumber === 4)
+      ) {
         return true;
       }
     }
@@ -73,8 +86,8 @@ function getCellColor(status: 'P' | 'HP' | 'A' | 'L' | 'H' | 'W' | '-' | null): 
   }
 }
 
-export function YearlyCalendarGrid({ 
-  userId, 
+export function YearlyCalendarGrid({
+  userId,
   year = new Date().getFullYear(),
   academicYearName,
 }: YearlyCalendarGridProps) {
@@ -91,8 +104,8 @@ export function YearlyCalendarGrid({
           <CardTitle>Academic Year Attendance Report - {academicYearName || year}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <div className="flex h-64 items-center justify-center">
+            <div className="border-primary h-8 w-8 animate-spin rounded-full border-b-2"></div>
           </div>
         </CardContent>
       </Card>
@@ -106,9 +119,7 @@ export function YearlyCalendarGrid({
           <CardTitle>Academic Year Attendance Report - {academicYearName || year}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center text-red-600 py-8">
-            Error loading calendar data
-          </div>
+          <div className="py-8 text-center text-red-600">Error loading calendar data</div>
         </CardContent>
       </Card>
     );
@@ -124,12 +135,12 @@ export function YearlyCalendarGrid({
 
   // Determine month order based on academic year
   let monthOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; // Default: Jan-Dec
-  
+
   if (academicYear) {
     // Parse academic year start month from start_date
     const startDate = new Date(academicYear.start_date);
     const startMonth = startDate.getMonth(); // 0-11
-    
+
     // Reorder months starting from academic year start month
     monthOrder = [];
     for (let i = 0; i < 12; i++) {
@@ -139,14 +150,14 @@ export function YearlyCalendarGrid({
 
   // Create a map for quick lookup: month-day -> status
   const statusMap = new Map<string, 'P' | 'HP' | 'A' | 'L' | 'H' | 'W' | '-' | null>();
-  data.calendar_data.forEach(item => {
+  data.calendar_data.forEach((item) => {
     const key = `${item.month}-${item.day}`;
     statusMap.set(key, item.status as 'P' | 'HP' | 'A' | 'L' | 'H' | 'W' | null);
   });
 
   // Create holiday set for quick lookup
   const holidayDates = new Set<string>();
-  (data.holidays || []).forEach(holiday => {
+  (data.holidays || []).forEach((holiday) => {
     const start = new Date(holiday.start_date);
     const end = new Date(holiday.end_date);
     let current = start;
@@ -158,15 +169,19 @@ export function YearlyCalendarGrid({
 
   // Create exception map
   const exceptionMap = new Map<string, string>();
-  (data.calendar_exceptions || []).forEach(exc => {
+  (data.calendar_exceptions || []).forEach((exc) => {
     const excDate = new Date(exc.date);
     exceptionMap.set(`${excDate.getMonth() + 1}-${excDate.getDate()}`, exc.type);
   });
 
   // Helper to determine status for a date without attendance record
-  const getStatusForDate = (month: number, day: number, currentYear: number): 'H' | 'W' | '-' | null => {
+  const getStatusForDate = (
+    month: number,
+    day: number,
+    currentYear: number
+  ): 'H' | 'W' | '-' | null => {
     const key = `${month}-${day}`;
-    
+
     // Determine the correct year for this month based on academic year
     // If academic year starts in May (month 5), then May-Dec use startYear, Jan-Apr use startYear+1
     let actualYear = currentYear;
@@ -174,7 +189,7 @@ export function YearlyCalendarGrid({
       const startDate = new Date(academicYear.start_date);
       const startMonth = startDate.getMonth() + 1; // 1-12
       const startYear = startDate.getFullYear();
-      
+
       // If month is >= start month, use start year, else use start year + 1
       if (month >= startMonth) {
         actualYear = startYear;
@@ -182,7 +197,7 @@ export function YearlyCalendarGrid({
         actualYear = startYear + 1;
       }
     }
-    
+
     // Check exception first (exceptions override everything)
     const exception = exceptionMap.get(key);
     if (exception === 'FORCE_HOLIDAY') {
@@ -192,23 +207,18 @@ export function YearlyCalendarGrid({
       // Force working day without attendance should show null (future) or handled by backend (past)
       return null;
     }
-    
+
     // Check if it's a holiday
     if (holidayDates.has(key)) {
       return 'H';
     }
-    
+
     // Check if it's a weekend (backend no longer sends weekends, so we calculate here)
     try {
       // Create date for checking (use correct year based on academic year)
       const checkDate = new Date(actualYear, month - 1, day);
       const isWeekendResult = isWeekend(checkDate, data.working_day_policy);
-      
-      // Debug for May 4 and 11
-      if (month === 5 && (day === 4 || day === 11)) {
-        console.warn(`May ${day} - Date object:`, checkDate, 'Day of week:', checkDate.getDay(), 'isWeekend result:', isWeekendResult);
-      }
-      
+
       if (!isNaN(checkDate.getTime()) && isWeekendResult) {
         return 'W';
       }
@@ -216,7 +226,7 @@ export function YearlyCalendarGrid({
       // Invalid date (e.g., Feb 30), return dash
       return '-';
     }
-    
+
     // For future dates, return null (no display)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -228,7 +238,7 @@ export function YearlyCalendarGrid({
     } catch {
       return '-';
     }
-    
+
     // Past working day without data should show '-' (backend should have sent this as 'A')
     // This is a fallback for any edge cases
     return '-';
@@ -246,7 +256,7 @@ export function YearlyCalendarGrid({
           </CardTitle>
           <div className="text-sm font-normal text-gray-600">{displayYear}</div>
         </div>
-        <div className="flex flex-wrap gap-4 mt-2 text-sm">
+        <div className="mt-2 flex flex-wrap gap-4 text-sm">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-green-700">Present: P</span>
             <span className="text-xs font-semibold text-yellow-700">Half Day: HP</span>
@@ -262,13 +272,13 @@ export function YearlyCalendarGrid({
           <table className="w-full border-collapse text-xs">
             <thead>
               <tr className="bg-blue-100">
-                <th className="border border-gray-300 p-2 text-center font-semibold sticky left-0 bg-blue-100 z-10 min-w-[60px]">
+                <th className="sticky left-0 z-10 min-w-[60px] border border-gray-300 bg-blue-100 p-2 text-center font-semibold">
                   Date / Month
                 </th>
                 {monthOrder.map((monthIndex) => (
                   <th
                     key={monthIndex}
-                    className="border border-gray-300 p-2 text-center font-semibold min-w-[90px]"
+                    className="min-w-[90px] border border-gray-300 p-2 text-center font-semibold"
                   >
                     {MONTHS[monthIndex]}
                   </th>
@@ -280,20 +290,20 @@ export function YearlyCalendarGrid({
                 const day = dayIndex + 1;
                 return (
                   <tr key={day} className="hover:bg-gray-50">
-                    <td className="border border-gray-300 p-2 text-center font-semibold sticky left-0 bg-gray-50 z-10">
+                    <td className="sticky left-0 z-10 border border-gray-300 bg-gray-50 p-2 text-center font-semibold">
                       {day}
                     </td>
                     {monthOrder.map((monthIndex) => {
                       const month = monthIndex + 1;
                       const key = `${month}-${day}`;
                       let status = statusMap.get(key);
-                      
+
                       // If no status from backend, determine it using metadata
                       // Backend now excludes weekends, so we calculate them here
                       if (status === undefined || status === null) {
                         status = getStatusForDate(month, day, year);
                       }
-                      
+
                       const cellColor = getCellColor(status);
 
                       return (

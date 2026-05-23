@@ -440,20 +440,18 @@ export function AttendanceSummaryPage() {
       )}
 
       {/* Class-wise DataTable - Only show on working days */}
-      {summaryData && summaryData.is_working_day && !summaryData.is_holiday ? (
+      {summaryData && summaryData.is_working_day && !summaryData.is_holiday && (
         <Card>
           <CardContent className="pt-6">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-slate-800">Class-wise Attendance Status</h3>
-              {summaryData && (
-                <Badge variant="secondary" className="text-xs">
-                  {summaryData.classes.length} classes
-                </Badge>
-              )}
+              <Badge variant="secondary" className="text-xs">
+                {summaryData.classes.length} classes
+              </Badge>
             </div>
             <DataTable
               columns={columns}
-              data={summaryData?.classes || []}
+              data={summaryData.classes}
               isLoading={isLoading}
               emptyMessage="No classes found for this organization."
               getRowKey={(row) => row.public_id}
@@ -462,7 +460,9 @@ export function AttendanceSummaryPage() {
             />
           </CardContent>
         </Card>
-      ) : summaryData && (!summaryData.is_working_day || summaryData.is_holiday) ? (
+      )}
+
+      {summaryData && (!summaryData.is_working_day || summaryData.is_holiday) && (
         <Card className="border-slate-200">
           <CardContent className="py-12">
             <div className="flex flex-col items-center justify-center gap-3 text-center">
@@ -480,7 +480,9 @@ export function AttendanceSummaryPage() {
             </div>
           </CardContent>
         </Card>
-      ) : !summaryData && !isLoading ? (
+      )}
+
+      {!summaryData && !isLoading && (
         <Card>
           <CardContent className="pt-6">
             <div className="mb-4 flex items-center justify-between">
@@ -489,7 +491,7 @@ export function AttendanceSummaryPage() {
             <DataTable
               columns={columns}
               data={[]}
-              isLoading={isLoading}
+              isLoading={false}
               emptyMessage="No classes found for this organization."
               getRowKey={(row) => row.public_id}
               maxHeight="600px"
@@ -497,7 +499,9 @@ export function AttendanceSummaryPage() {
             />
           </CardContent>
         </Card>
-      ) : isLoading ? (
+      )}
+
+      {!summaryData && isLoading && (
         <Card>
           <CardContent className="pt-6">
             <div className="mb-4 flex items-center justify-between">
@@ -514,7 +518,7 @@ export function AttendanceSummaryPage() {
             />
           </CardContent>
         </Card>
-      ) : null}
+      )}
     </div>
   );
 }

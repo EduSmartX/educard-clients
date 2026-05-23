@@ -71,6 +71,35 @@ export function FormAttachmentPicker({
 }: FormAttachmentPickerProps) {
   const [isLoading, setIsLoading] = useState(false);
 
+  const validateAndCollectFiles = useCallback(
+    (assets: DocumentPicker.DocumentPickerAsset[]) => {
+      const validFiles: SelectedFile[] = [];
+      const errors: string[] = [];
+
+      for (const asset of assets) {
+        if (asset.size && asset.size > maxFileSize) {
+          errors.push(`${asset.name} exceeds ${formatFileSize(maxFileSize)} limit`);
+          continue;
+        }
+
+        if (files.length + validFiles.length >= maxFiles) {
+          errors.push(`Maximum ${maxFiles} files allowed`);
+          break;
+        }
+
+        validFiles.push({
+          uri: asset.uri,
+          name: asset.name,
+          type: asset.mimeType || 'application/octet-stream',
+          size: asset.size,
+        });
+      }
+
+      return { validFiles, errors };
+    },
+    [files.length, maxFiles, maxFileSize]
+  );
+
   const handlePickAttachment = useCallback(async () => {
     if (disabled) return;
 
@@ -87,44 +116,23 @@ export function FormAttachmentPicker({
         copyToCacheDirectory: true,
       });
 
-      if (!result.canceled && result.assets) {
-        const validFiles: SelectedFile[] = [];
-        const errors: string[] = [];
+      if (result.canceled || !result.assets) return;
 
-        for (const asset of result.assets) {
-          if (asset.size && asset.size > maxFileSize) {
-            errors.push(`${asset.name} exceeds ${formatFileSize(maxFileSize)} limit`);
-            continue;
-          }
+      const { validFiles, errors } = validateAndCollectFiles(result.assets);
 
-          if (files.length + validFiles.length >= maxFiles) {
-            errors.push(`Maximum ${maxFiles} files allowed`);
-            break;
-          }
-
-          validFiles.push({
-            uri: asset.uri,
-            name: asset.name,
-            type: asset.mimeType || 'application/octet-stream',
-            size: asset.size,
-          });
-        }
-
-        if (validFiles.length > 0) {
-          onChange([...files, ...validFiles]);
-        }
-
-        if (errors.length > 0) {
-          Alert.alert('Some files skipped', errors.join('\n'));
-        }
+      if (validFiles.length > 0) {
+        onChange([...files, ...validFiles]);
       }
-    } catch (error) {
-      console.error('Error picking document:', error);
+
+      if (errors.length > 0) {
+        Alert.alert('Some files skipped', errors.join('\n'));
+      }
+    } catch {
       Alert.alert('Error', 'Failed to pick document');
     } finally {
       setIsLoading(false);
     }
-  }, [files, onChange, maxFiles, maxFileSize, allowedTypes, multiple, disabled]);
+  }, [files, onChange, maxFiles, allowedTypes, multiple, disabled, validateAndCollectFiles]);
 
   const handleRemoveFile = useCallback(
     (index: number) => {
@@ -137,7 +145,7 @@ export function FormAttachmentPicker({
 
   return (
     <View style={styles.container}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {!!label && <Text style={styles.label}>{label}</Text>}
 
       <TouchableOpacity
         style={[styles.addButton, !canAddMore && styles.addButtonDisabled]}
@@ -159,11 +167,11 @@ export function FormAttachmentPicker({
       {files.length > 0 && (
         <View style={styles.fileList}>
           {files.map((file, index) => {
-            const FileIcon = getFileIcon(file.type);
+            const Icon = getFileIcon(file.type);
             return (
               <View key={`${file.name}-${index}`} style={styles.fileItem}>
                 <View style={styles.fileIcon}>
-                  <FileIcon size={20} color={Colors.primary[500]} />
+                  <Icon size={20} color={Colors.primary[500]} />
                 </View>
                 <View style={styles.fileInfo}>
                   <Text style={styles.fileName} numberOfLines={1}>
@@ -192,7 +200,7 @@ export function FormAttachmentPicker({
         </Text>
       )}
 
-      {hint && <Text style={styles.hint}>{hint}</Text>}
+      {!!hint && <Text style={styles.hint}>{hint}</Text>}
     </View>
   );
 }

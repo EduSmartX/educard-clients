@@ -32,12 +32,76 @@ import {
 import { HolidayFormDialog } from './holiday-form-dialog';
 import { DateActionDialog } from './date-action-dialog';
 
+interface DayColorInfo {
+  isSunday: boolean;
+  isSaturday: boolean;
+  hasSecondSatHoliday: boolean;
+  hasSaturdayHoliday: boolean;
+  hasSundayHoliday: boolean;
+}
+
+function getDayCellBg(
+  colors: ReturnType<typeof getHolidayTypeColor> | null,
+  isCurrentMonth: boolean,
+  isToday: boolean,
+  info: DayColorInfo
+): string {
+  if (colors && isCurrentMonth && !isToday) {
+    return colors.bg;
+  }
+  if (!colors && isCurrentMonth && info.isSunday && info.hasSundayHoliday) {
+    return 'bg-red-50';
+  }
+  if (!colors && isCurrentMonth && info.isSaturday && info.hasSecondSatHoliday) {
+    return 'bg-indigo-50';
+  }
+  if (
+    !colors &&
+    isCurrentMonth &&
+    info.isSaturday &&
+    info.hasSaturdayHoliday &&
+    !info.hasSecondSatHoliday
+  ) {
+    return 'bg-blue-50';
+  }
+  return '';
+}
+
+function getDateNumberColor(isCurrentMonth: boolean, isToday: boolean, info: DayColorInfo): string {
+  if (isToday) {
+    return 'text-blue-700 text-base';
+  }
+  if (!isCurrentMonth) {
+    return 'text-gray-400';
+  }
+  if (isCurrentMonth && info.isSunday && info.hasSundayHoliday) {
+    return 'text-red-600';
+  }
+  if (isCurrentMonth && info.isSaturday && info.hasSecondSatHoliday) {
+    return 'text-indigo-600 font-bold';
+  }
+  if (isCurrentMonth && info.isSaturday && info.hasSaturdayHoliday && !info.hasSecondSatHoliday) {
+    return 'text-blue-600';
+  }
+  return '';
+}
+
+function getDayTitle(day: { isCurrentMonth: boolean; holidays: unknown[] }): string {
+  if (!day.isCurrentMonth) {
+    return '';
+  }
+  if (day.holidays.length > 0) {
+    return 'Click to manage holidays';
+  }
+  return 'Click to add holiday';
+}
+
 interface CalendarViewProps {
   currentDate: Date;
   holidays: Holiday[];
 }
 
-export function CalendarView({ currentDate, holidays }: CalendarViewProps) {
+export function CalendarView({ currentDate, holidays }: Readonly<CalendarViewProps>) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedDateHolidays, setSelectedDateHolidays] = useState<Holiday[]>([]);
   const [showDateDialog, setShowDateDialog] = useState(false);
@@ -115,7 +179,7 @@ export function CalendarView({ currentDate, holidays }: CalendarViewProps) {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Calendar Grid */}
         <div className="lg:col-span-2">
           <div className="overflow-hidden rounded-xl border-2 border-blue-100 shadow-lg">
@@ -124,7 +188,7 @@ export function CalendarView({ currentDate, holidays }: CalendarViewProps) {
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
                 <div
                   key={day}
-                  className="border-r border-white/20 last:border-r-0 px-2 py-3 text-center text-sm font-semibold text-white"
+                  className="border-r border-white/20 px-2 py-3 text-center text-sm font-semibold text-white last:border-r-0"
                 >
                   {day}
                 </div>
@@ -133,39 +197,36 @@ export function CalendarView({ currentDate, holidays }: CalendarViewProps) {
 
             {/* Calendar Days */}
             <div className="grid grid-cols-7 bg-white">
-              {calendarDays.map((day, index) => {
+              {calendarDays.map((day) => {
                 const primaryHoliday = day.holidays[0];
                 const colors = primaryHoliday
                   ? getHolidayTypeColor(primaryHoliday.holiday_type)
                   : null;
                 const nonWeekendHolidays = filterNonWeekendHolidays(day.holidays);
-                
+
                 // Check for weekend days
-                const isSunday = day.date.getDay() === 0;
-                const isSaturday = day.date.getDay() === 6;
-                const hasSecondSatHoliday = day.holidays.some(h => h.holiday_type === 'SECOND_SATURDAY');
-                const hasSaturdayHoliday = day.holidays.some(h => h.holiday_type === 'SATURDAY');
-                const hasSundayHoliday = day.holidays.some(h => h.holiday_type === 'SUNDAY');
+                const dayColorInfo: DayColorInfo = {
+                  isSunday: day.date.getDay() === 0,
+                  isSaturday: day.date.getDay() === 6,
+                  hasSecondSatHoliday: day.holidays.some(
+                    (h) => h.holiday_type === 'SECOND_SATURDAY'
+                  ),
+                  hasSaturdayHoliday: day.holidays.some((h) => h.holiday_type === 'SATURDAY'),
+                  hasSundayHoliday: day.holidays.some((h) => h.holiday_type === 'SUNDAY'),
+                };
 
                 return (
                   <div
-                    key={index}
+                    key={day.date.toISOString()}
                     role="button"
                     tabIndex={day.isCurrentMonth ? 0 : -1}
                     className={cn(
-                      'min-h-[80px] sm:min-h-[100px] border-r border-b cursor-pointer transition-all duration-200',
+                      'min-h-[80px] cursor-pointer border-r border-b transition-all duration-200 sm:min-h-[100px]',
                       'hover:shadow-inner hover:ring-2 hover:ring-blue-300',
                       !day.isCurrentMonth &&
-                        'bg-gray-50/50 text-gray-400 cursor-default hover:shadow-none hover:ring-0',
+                        'cursor-default bg-gray-50/50 text-gray-400 hover:shadow-none hover:ring-0',
                       day.isToday && 'ring-2 ring-blue-500 ring-inset',
-                      // Apply holiday colors
-                      colors && day.isCurrentMonth && !day.isToday && colors.bg,
-                      // Sunday coloring (light red/pink)
-                      !colors && day.isCurrentMonth && isSunday && hasSundayHoliday && 'bg-red-50',
-                      // Second Saturday coloring (indigo)
-                      !colors && day.isCurrentMonth && isSaturday && hasSecondSatHoliday && 'bg-indigo-50',
-                      // Regular Saturday coloring (light blue)
-                      !colors && day.isCurrentMonth && isSaturday && hasSaturdayHoliday && !hasSecondSatHoliday && 'bg-blue-50',
+                      getDayCellBg(colors, day.isCurrentMonth, day.isToday, dayColorInfo),
                       'last:border-r-0'
                     )}
                     onClick={() => handleDateClick(day)}
@@ -175,43 +236,32 @@ export function CalendarView({ currentDate, holidays }: CalendarViewProps) {
                         handleDateClick(day);
                       }
                     }}
-                    title={
-                      day.isCurrentMonth
-                        ? day.holidays.length > 0
-                          ? 'Click to manage holidays'
-                          : 'Click to add holiday'
-                        : ''
-                    }
+                    title={getDayTitle(day)}
                   >
                     <div className="p-2">
                       {/* Date Number */}
                       <div
                         className={cn(
                           'mb-1 text-sm font-semibold',
-                          day.isToday && 'text-blue-700 text-base',
-                          !day.isToday && !day.isCurrentMonth && 'text-gray-400',
-                          // Sunday date color
-                          day.isCurrentMonth && !day.isToday && isSunday && hasSundayHoliday && 'text-red-600',
-                          // Second Saturday date color
-                          day.isCurrentMonth && !day.isToday && isSaturday && hasSecondSatHoliday && 'text-indigo-600 font-bold',
-                          // Regular Saturday date color
-                          day.isCurrentMonth && !day.isToday && isSaturday && hasSaturdayHoliday && !hasSecondSatHoliday && 'text-blue-600'
+                          getDateNumberColor(day.isCurrentMonth, day.isToday, dayColorInfo)
                         )}
                       >
                         {format(day.date, 'd')}
                       </div>
 
                       {/* Weekend Badge */}
-                      {day.isCurrentMonth && hasSecondSatHoliday && (
-                        <div className="mb-1 truncate rounded-md px-1.5 py-0.5 text-[10px] leading-tight font-medium bg-indigo-100 text-indigo-700 border border-indigo-200 shadow-sm">
+                      {day.isCurrentMonth && dayColorInfo.hasSecondSatHoliday && (
+                        <div className="mb-1 truncate rounded-md border border-indigo-200 bg-indigo-100 px-1.5 py-0.5 text-[10px] leading-tight font-medium text-indigo-700 shadow-sm">
                           2nd Sat
                         </div>
                       )}
-                      {day.isCurrentMonth && hasSaturdayHoliday && !hasSecondSatHoliday && (
-                        <div className="mb-1 truncate rounded-md px-1.5 py-0.5 text-[10px] leading-tight font-medium bg-blue-100 text-blue-700 border border-blue-200 shadow-sm">
-                          Saturday
-                        </div>
-                      )}
+                      {day.isCurrentMonth &&
+                        dayColorInfo.hasSaturdayHoliday &&
+                        !dayColorInfo.hasSecondSatHoliday && (
+                          <div className="mb-1 truncate rounded-md border border-blue-200 bg-blue-100 px-1.5 py-0.5 text-[10px] leading-tight font-medium text-blue-700 shadow-sm">
+                            Saturday
+                          </div>
+                        )}
 
                       {/* Holidays */}
                       {day.holidays.length > 0 && day.isCurrentMonth && (
@@ -225,7 +275,7 @@ export function CalendarView({ currentDate, holidays }: CalendarViewProps) {
                               <div
                                 key={holiday.public_id}
                                 className={cn(
-                                  'truncate rounded-md px-1.5 py-0.5 text-[10px] leading-tight font-medium border shadow-sm',
+                                  'truncate rounded-md border px-1.5 py-0.5 text-[10px] leading-tight font-medium shadow-sm',
                                   holidayColors.text,
                                   holidayColors.border,
                                   holidayColors.badge
@@ -237,7 +287,7 @@ export function CalendarView({ currentDate, holidays }: CalendarViewProps) {
                             );
                           })}
                           {nonWeekendHolidays.length > 2 && (
-                            <div className="text-[9px] text-gray-600 font-medium px-1">
+                            <div className="px-1 text-[9px] font-medium text-gray-600">
                               +{nonWeekendHolidays.length - 2} more
                             </div>
                           )}
@@ -253,9 +303,9 @@ export function CalendarView({ currentDate, holidays }: CalendarViewProps) {
 
         {/* Upcoming Holidays Sidebar */}
         <div className="lg:col-span-1">
-          <Card className="shadow-lg border-2 border-blue-100">
-            <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
-              <CardTitle className="text-base flex items-center gap-2 text-blue-900">
+          <Card className="border-2 border-blue-100 shadow-lg">
+            <CardHeader className="border-b border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 pb-3">
+              <CardTitle className="flex items-center gap-2 text-base text-blue-900">
                 <CalendarIcon className="h-4 w-4" />
                 Upcoming Holidays
               </CardTitle>
@@ -264,8 +314,8 @@ export function CalendarView({ currentDate, holidays }: CalendarViewProps) {
               {/* Ongoing Holidays Section */}
               {ongoingHolidays.length > 0 && (
                 <div className="mb-4">
-                  <h4 className="text-xs font-semibold text-green-700 uppercase tracking-wide mb-3 flex items-center gap-1">
-                    <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                  <h4 className="mb-3 flex items-center gap-1 text-xs font-semibold tracking-wide text-green-700 uppercase">
+                    <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-green-500"></span>
                     Ongoing Now
                   </h4>
                   <div className="space-y-3">
@@ -277,18 +327,18 @@ export function CalendarView({ currentDate, holidays }: CalendarViewProps) {
                           key={holiday.public_id}
                           className="rounded-lg border-2 border-green-200 bg-green-50 p-3 shadow-sm"
                         >
-                          <div className="flex items-start gap-2 mb-2">
+                          <div className="mb-2 flex items-start gap-2">
                             <div
                               className={cn(
-                                'h-2 w-2 rounded-full mt-1.5 flex-shrink-0 shadow-sm',
+                                'mt-1.5 h-2 w-2 flex-shrink-0 rounded-full shadow-sm',
                                 colors.badge
                               )}
                             />
-                            <span className="text-sm font-semibold text-gray-900 flex-1">
+                            <span className="flex-1 text-sm font-semibold text-gray-900">
                               {holiday.description}
                             </span>
                           </div>
-                          <div className="text-xs text-gray-600 mb-2">
+                          <div className="mb-2 text-xs text-gray-600">
                             {format(parseISO(holiday.start_date), 'MMM dd, yyyy')}
                             {duration > 1 &&
                               ` - ${format(parseISO(holiday.end_date), 'MMM dd, yyyy')}`}
@@ -296,12 +346,12 @@ export function CalendarView({ currentDate, holidays }: CalendarViewProps) {
                           <div className="flex items-center gap-2">
                             <Badge
                               variant="secondary"
-                              className="text-xs px-2 py-0 bg-gray-100 text-gray-700 border border-gray-300"
+                              className="border border-gray-300 bg-gray-100 px-2 py-0 text-xs text-gray-700"
                             >
                               {duration} {duration === 1 ? 'Day' : 'Days'}
                             </Badge>
                             <Badge
-                              className={cn(colors.badge, 'text-xs px-2 py-0 border-0 shadow-sm')}
+                              className={cn(colors.badge, 'border-0 px-2 py-0 text-xs shadow-sm')}
                             >
                               {formatHolidayType(holiday.holiday_type)}
                             </Badge>
@@ -310,7 +360,7 @@ export function CalendarView({ currentDate, holidays }: CalendarViewProps) {
                       );
                     })}
                   </div>
-                  <div className="border-t border-gray-200 my-4"></div>
+                  <div className="my-4 border-t border-gray-200"></div>
                 </div>
               )}
 
@@ -323,20 +373,20 @@ export function CalendarView({ currentDate, holidays }: CalendarViewProps) {
                     return (
                       <div
                         key={holiday.public_id}
-                        className="rounded-lg border-2 border-gray-200 bg-white p-3 hover:shadow-md hover:border-blue-200 transition-all duration-200"
+                        className="rounded-lg border-2 border-gray-200 bg-white p-3 transition-all duration-200 hover:border-blue-200 hover:shadow-md"
                       >
-                        <div className="flex items-start gap-2 mb-2">
+                        <div className="mb-2 flex items-start gap-2">
                           <div
                             className={cn(
-                              'h-2 w-2 rounded-full mt-1.5 flex-shrink-0 shadow-sm',
+                              'mt-1.5 h-2 w-2 flex-shrink-0 rounded-full shadow-sm',
                               colors.badge
                             )}
                           />
-                          <span className="text-sm font-semibold text-gray-900 flex-1">
+                          <span className="flex-1 text-sm font-semibold text-gray-900">
                             {holiday.description}
                           </span>
                         </div>
-                        <div className="text-xs text-gray-600 mb-2">
+                        <div className="mb-2 text-xs text-gray-600">
                           {format(parseISO(holiday.start_date), 'MMM dd, yyyy')}
                           {duration > 1 &&
                             ` - ${format(parseISO(holiday.end_date), 'MMM dd, yyyy')}`}
@@ -344,12 +394,12 @@ export function CalendarView({ currentDate, holidays }: CalendarViewProps) {
                         <div className="flex items-center gap-2">
                           <Badge
                             variant="secondary"
-                            className="text-xs px-2 py-0 bg-gray-100 text-gray-700 border border-gray-300"
+                            className="border border-gray-300 bg-gray-100 px-2 py-0 text-xs text-gray-700"
                           >
                             {duration} {duration === 1 ? 'Day' : 'Days'}
                           </Badge>
                           <Badge
-                            className={cn(colors.badge, 'text-xs px-2 py-0 border-0 shadow-sm')}
+                            className={cn(colors.badge, 'border-0 px-2 py-0 text-xs shadow-sm')}
                           >
                             {formatHolidayType(holiday.holiday_type)}
                           </Badge>
@@ -360,8 +410,8 @@ export function CalendarView({ currentDate, holidays }: CalendarViewProps) {
                 </div>
               ) : (
                 !ongoingHolidays.length && (
-                  <div className="text-center py-8">
-                    <CalendarIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                  <div className="py-8 text-center">
+                    <CalendarIcon className="mx-auto mb-3 h-12 w-12 text-gray-300" />
                     <p className="text-sm text-gray-500">No upcoming holidays</p>
                   </div>
                 )
@@ -372,32 +422,32 @@ export function CalendarView({ currentDate, holidays }: CalendarViewProps) {
       </div>
 
       {/* Legend */}
-      <Card className="shadow-md border border-gray-100">
-        <CardContent className="py-3 px-4">
+      <Card className="border border-gray-100 shadow-md">
+        <CardContent className="px-4 py-3">
           <div className="flex flex-wrap items-center gap-4 text-xs">
             <span className="font-semibold text-gray-600">Legend:</span>
             <div className="flex items-center gap-1.5">
-              <div className="w-4 h-4 rounded bg-red-50 border border-red-200" />
+              <div className="h-4 w-4 rounded border border-red-200 bg-red-50" />
               <span className="text-gray-600">Sunday</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-4 h-4 rounded bg-indigo-50 border border-indigo-200" />
+              <div className="h-4 w-4 rounded border border-indigo-200 bg-indigo-50" />
               <span className="text-gray-600">2nd Saturday</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-4 h-4 rounded bg-blue-50 border border-blue-200" />
+              <div className="h-4 w-4 rounded border border-blue-200 bg-blue-50" />
               <span className="text-gray-600">Saturday</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-4 h-4 rounded bg-red-100 border border-red-300" />
+              <div className="h-4 w-4 rounded border border-red-300 bg-red-100" />
               <span className="text-gray-600">National Holiday</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-4 h-4 rounded bg-orange-100 border border-orange-300" />
+              <div className="h-4 w-4 rounded border border-orange-300 bg-orange-100" />
               <span className="text-gray-600">Festival</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-4 h-4 rounded bg-green-100 border border-green-300" />
+              <div className="h-4 w-4 rounded border border-green-300 bg-green-100" />
               <span className="text-gray-600">Organization</span>
             </div>
           </div>

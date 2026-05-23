@@ -80,7 +80,7 @@ export function StudentForm({
   isLoading: isLoadingData,
   onSuccess,
   onCancel,
-}: StudentFormProps) {
+}: Readonly<StudentFormProps>) {
   const [useQuickAdd, setUseQuickAdd] = useState(false);
   const [isAddressExpanded, setIsAddressExpanded] = useState(false);
   const [isPreviousSchoolExpanded, setIsPreviousSchoolExpanded] = useState(false);

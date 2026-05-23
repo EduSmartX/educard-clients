@@ -41,7 +41,6 @@ export function useAttendanceDisplay(attendanceStats: DashboardAttendanceStats |
 
     // If percentage is a string (API bug), return N/A
     if (typeof percentage === 'string') {
-      console.warn('[useAttendanceDisplay] Attendance percentage is a string:', percentage);
       return 'N/A';
     }
 

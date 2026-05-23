@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 import { Button } from './button';
-import { cn } from '@/lib/utils';
+import { cn, formatFileSize } from '@/lib/utils';
 
 export interface UploadedFile {
   id: string;
@@ -54,16 +54,6 @@ export interface FileUploadProps {
   className?: string;
 }
 
-const formatFileSize = (bytes: number): string => {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
-  }
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-};
-
 const getFileIcon = (type: string) => {
   if (type.startsWith('image/')) {
     return ImageIcon;
@@ -77,7 +67,7 @@ const getFileIcon = (type: string) => {
   return File;
 };
 
-const createFileId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+const createFileId = () => `${Date.now()}-${crypto.randomUUID().slice(0, 9)}`;
 
 export const FileUpload = memo(
   ({
@@ -112,36 +102,27 @@ export const FileUpload = memo(
           errors[rejected.file.name] = error.message;
         });
 
-        // Validate accepted files
+        // Validate and create UploadedFile entries
         const validatedFiles: UploadedFile[] = [];
         for (const file of acceptedFiles) {
-          let validationError: string | null = null;
-
-          // Custom validation
-          if (validator) {
-            validationError = await validator(file);
-          }
-
+          const validationError = validator ? await validator(file) : null;
           if (validationError) {
             errors[file.name] = validationError;
-          } else {
-            const uploadedFile: UploadedFile = {
-              id: createFileId(),
-              file,
-              name: file.name,
-              size: file.size,
-              type: file.type,
-              status: uploadMode === 'instant' ? 'uploading' : 'pending',
-              progress: uploadMode === 'instant' ? 0 : undefined,
-            };
-
-            // Create preview for images
-            if (file.type.startsWith('image/') && showPreview) {
-              uploadedFile.preview = URL.createObjectURL(file);
-            }
-
-            validatedFiles.push(uploadedFile);
+            continue;
           }
+
+          const uploadedFile: UploadedFile = {
+            id: createFileId(),
+            file,
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            status: uploadMode === 'instant' ? 'uploading' : 'pending',
+            progress: uploadMode === 'instant' ? 0 : undefined,
+            ...(file.type.startsWith('image/') &&
+              showPreview && { preview: URL.createObjectURL(file) }),
+          };
+          validatedFiles.push(uploadedFile);
         }
 
         setValidationErrors(errors);
@@ -155,7 +136,6 @@ export const FileUpload = memo(
           for (const uploadedFile of validatedFiles) {
             try {
               await onUpload(uploadedFile.file);
-              // Update status inline to avoid dependency cycle
               onFilesChange((currentFiles) =>
                 currentFiles.map((f) =>
                   f.id === uploadedFile.id ? { ...f, status: 'success' as const, progress: 100 } : f

@@ -63,6 +63,52 @@ function toDateKey(date: Date): string {
   return format(date, 'yyyy-MM-dd');
 }
 
+function getAttendanceState(
+  date: Date,
+  attendanceByDate: Map<string, AttendanceRecord>,
+  key: string
+): DayState {
+  const attendance = attendanceByDate.get(key);
+  if (attendance) {
+    return attendance.morning_present && attendance.afternoon_present ? 'present' : 'absent';
+  }
+  if (isBefore(date, new Date()) && !isSameDay(date, new Date())) {
+    return 'absent';
+  }
+  return 'none';
+}
+
+function isSaturdayOff(date: Date, pattern: string): boolean {
+  if (pattern === 'ALL') {
+    return true;
+  }
+  if (pattern !== 'SECOND_ONLY' && pattern !== 'SECOND_AND_FOURTH') {
+    return false;
+  }
+  const weekOfMonth = Math.ceil(date.getDate() / 7);
+  if (pattern === 'SECOND_ONLY') {
+    return weekOfMonth === 2;
+  }
+  return weekOfMonth === 2 || weekOfMonth === 4;
+}
+
+function isWeekendHoliday(
+  date: Date,
+  workingDayPolicy: { sunday_off: boolean; saturday_off_pattern: string } | null
+): boolean {
+  if (!workingDayPolicy) {
+    return false;
+  }
+  const dayOfWeek = date.getDay();
+  if (dayOfWeek === 0 && workingDayPolicy.sunday_off) {
+    return true;
+  }
+  if (dayOfWeek === 6) {
+    return isSaturdayOff(date, workingDayPolicy.saturday_off_pattern);
+  }
+  return false;
+}
+
 function getDayState(
   date: Date,
   attendanceByDate: Map<string, AttendanceRecord>,
@@ -77,14 +123,7 @@ function getDayState(
 
   // Check for force working day exception (overrides holiday/weekend)
   if (exception?.type === 'force_working' || exception?.type === 'FORCE_WORKING') {
-    const attendance = attendanceByDate.get(key);
-    if (attendance) {
-      return attendance.morning_present && attendance.afternoon_present ? 'present' : 'absent';
-    }
-    if (isBefore(date, new Date()) && !isSameDay(date, new Date())) {
-      return 'absent';
-    }
-    return 'none';
+    return getAttendanceState(date, attendanceByDate, key);
   }
 
   // Check for force holiday exception
@@ -98,34 +137,8 @@ function getDayState(
   }
 
   // Check if it's a weekend based on working day policy
-  if (workingDayPolicy) {
-    const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
-
-    // Check Sunday
-    if (dayOfWeek === 0 && workingDayPolicy.sunday_off) {
-      return 'holiday';
-    }
-
-    // Check Saturday based on pattern
-    if (dayOfWeek === 6) {
-      const { saturday_off_pattern } = workingDayPolicy;
-      if (saturday_off_pattern === 'ALL') {
-        return 'holiday';
-      } else if (
-        saturday_off_pattern === 'SECOND_ONLY' ||
-        saturday_off_pattern === 'SECOND_AND_FOURTH'
-      ) {
-        const weekOfMonth = Math.ceil(date.getDate() / 7);
-        if (saturday_off_pattern === 'SECOND_ONLY' && weekOfMonth === 2) {
-          return 'holiday';
-        } else if (
-          saturday_off_pattern === 'SECOND_AND_FOURTH' &&
-          (weekOfMonth === 2 || weekOfMonth === 4)
-        ) {
-          return 'holiday';
-        }
-      }
-    }
+  if (isWeekendHoliday(date, workingDayPolicy)) {
+    return 'holiday';
   }
 
   if (leaveInfo?.status === 'approved') {
@@ -135,16 +148,51 @@ function getDayState(
     return 'leave-pending';
   }
 
-  const attendance = attendanceByDate.get(key);
-  if (attendance) {
-    return attendance.morning_present && attendance.afternoon_present ? 'present' : 'absent';
-  }
+  return getAttendanceState(date, attendanceByDate, key);
+}
 
-  if (isBefore(date, new Date()) && !isSameDay(date, new Date())) {
-    return 'absent';
+function getMobileStateBgColor(mobileState: DayState): string {
+  switch (mobileState) {
+    case 'present':
+      return 'bg-green-500 text-white';
+    case 'absent':
+      return 'bg-red-500 text-white';
+    case 'leave-approved':
+      return 'bg-orange-500 text-white';
+    case 'leave-pending':
+      return 'bg-yellow-500 text-white';
+    case 'holiday':
+      return 'bg-purple-500 text-white';
+    default:
+      return 'bg-gray-100 text-gray-700';
   }
+}
 
-  return 'none';
+function getHolidayLabels(
+  holidayInfo: { type: string; name: string; description?: string } | undefined
+): { shortLabel: string; fullDescription: string } {
+  if (!holidayInfo) {
+    return { shortLabel: 'Holiday', fullDescription: 'Holiday' };
+  }
+  switch (holidayInfo.type) {
+    case 'weekend':
+      return { shortLabel: 'Weekend', fullDescription: holidayInfo.description || 'Weekend' };
+    case 'official_holiday':
+      return {
+        shortLabel:
+          holidayInfo.name.length > 12
+            ? `${holidayInfo.name.substring(0, 10)}..`
+            : holidayInfo.name,
+        fullDescription: holidayInfo.description || holidayInfo.name,
+      };
+    case 'force_holiday':
+      return {
+        shortLabel: 'Special',
+        fullDescription: holidayInfo.description || 'Special Holiday',
+      };
+    default:
+      return { shortLabel: 'Holiday', fullDescription: 'Holiday' };
+  }
 }
 
 function stateStyles(state: DayState) {
@@ -586,26 +634,7 @@ export function EmployeeTimesheetPage() {
                         );
                       }
                       if (state === 'holiday') {
-                        // Create a short label for display
-                        let shortLabel = 'Holiday';
-                        let fullDescription = 'Holiday';
-
-                        if (holidayInfo) {
-                          if (holidayInfo.type === 'weekend') {
-                            shortLabel = 'Weekend';
-                            fullDescription = holidayInfo.description || 'Weekend';
-                          } else if (holidayInfo.type === 'official_holiday') {
-                            // Use the holiday name, truncated if needed
-                            shortLabel =
-                              holidayInfo.name.length > 12
-                                ? `${holidayInfo.name.substring(0, 10)}..`
-                                : holidayInfo.name;
-                            fullDescription = holidayInfo.description || holidayInfo.name;
-                          } else if (holidayInfo.type === 'force_holiday') {
-                            shortLabel = 'Special';
-                            fullDescription = holidayInfo.description || 'Special Holiday';
-                          }
-                        }
+                        const { shortLabel, fullDescription } = getHolidayLabels(holidayInfo);
 
                         return (
                           <Tooltip>
@@ -671,18 +700,7 @@ export function EmployeeTimesheetPage() {
                         <div className="flex h-full w-full items-center justify-center sm:hidden">
                           {(() => {
                             const mobileState = state;
-                            const bgColor =
-                              mobileState === 'present'
-                                ? 'bg-green-500 text-white'
-                                : mobileState === 'absent'
-                                  ? 'bg-red-500 text-white'
-                                  : mobileState === 'leave-approved'
-                                    ? 'bg-orange-500 text-white'
-                                    : mobileState === 'leave-pending'
-                                      ? 'bg-yellow-500 text-white'
-                                      : mobileState === 'holiday'
-                                        ? 'bg-purple-500 text-white'
-                                        : 'bg-gray-100 text-gray-700';
+                            const bgColor = getMobileStateBgColor(mobileState);
 
                             if (mobileState === 'holiday') {
                               return (
