@@ -1,5 +1,5 @@
 /**
- * FormDropdown - Modal picker for selecting from a list
+ * FormDropdown - Reusable searchable modal picker for selecting from a list
  * Used for class master, blood group, class teacher, etc.
  */
 
@@ -33,7 +33,7 @@ export function FormDropdown({
   error,
   required,
   placeholder = 'Select...',
-  searchable = false,
+  searchable = true,
   disabled,
   loading,
 }: FormDropdownProps) {

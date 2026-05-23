@@ -229,9 +229,6 @@ export function StudentForm({
 
   const reactivateMutation = useReactivateStudent({
     onSuccess: () => {
-      toast.success(SuccessMessages.STUDENT.REACTIVATE_SUCCESS, {
-        description: 'The deleted student has been reactivated successfully.',
-      });
       duplicateHandler.closeDialog();
       onSuccess();
     },

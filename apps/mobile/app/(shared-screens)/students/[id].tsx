@@ -50,15 +50,23 @@ export default function StudentDetailScreen() {
         <DetailSection title="Guardian" icon="👨‍👩‍👦">
           <DetailRow label="Name" value={student?.guardian_name} />
           <DetailRow label="Phone" value={student?.guardian_phone} />
-          <DetailRow label="Email" value={student?.guardian_email} />
           <DetailRow label="Relationship" value={student?.guardian_relationship} />
         </DetailSection>
       </Animated.View>
 
       <Animated.View entering={FadeInDown.delay(400)}>
-        <DetailSection title="Emergency & Medical" icon="🆘">
-          <DetailRow label="Emergency Contact" value={student?.emergency_contact_name} />
-          <DetailRow label="Emergency Phone" value={student?.emergency_contact_phone} />
+        <DetailSection title="Address" icon="📍">
+          <DetailRow label="Street" value={student?.user_info?.address?.street_address} />
+          <DetailRow label="Address Line 2" value={student?.user_info?.address?.address_line_2} />
+          <DetailRow label="City" value={student?.user_info?.address?.city} />
+          <DetailRow label="State" value={student?.user_info?.address?.state} />
+          <DetailRow label="Zip Code" value={student?.user_info?.address?.zip_code} />
+          <DetailRow label="Country" value={student?.user_info?.address?.country} />
+        </DetailSection>
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(500)}>
+        <DetailSection title="Medical" icon="🏥">
           <DetailRow label="Medical Conditions" value={student?.medical_conditions} />
         </DetailSection>
       </Animated.View>

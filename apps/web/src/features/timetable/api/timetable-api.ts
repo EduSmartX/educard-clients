@@ -133,3 +133,10 @@ export async function fetchMyTimetable(): Promise<MyTimetableResponse> {
   );
   return response.data.data;
 }
+
+export async function fetchTeacherTimetable(teacherPublicId: string): Promise<MyTimetableResponse> {
+  const response = await api.get<ApiResponse<MyTimetableResponse>>(
+    `${EMPLOYEE_BASE}/teacher/${teacherPublicId}/timetable/`
+  );
+  return response.data.data;
+}

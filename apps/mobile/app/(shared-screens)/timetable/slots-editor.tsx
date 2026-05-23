@@ -36,6 +36,7 @@ import {
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { useSlots, useBulkSaveSlots, useClearDaySlots } from '@/features/timetable';
+import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles, bodyStyles, emptyStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -58,7 +59,30 @@ function toInputTime(apiTime: string): string {
 }
 function toApiTime(inputTime: string): string {
   if (!inputTime) return '';
-  return inputTime.length === 5 ? `${inputTime}:00` : inputTime;
+  // Normalize: ensure HH:MM:SS format
+  const normalized = normalizeTime(inputTime);
+  return normalized.length === 5 ? `${normalized}:00` : normalized;
+}
+
+/** Normalize a time string to HH:MM (zero-padded 24h) */
+function normalizeTime(t: string): string {
+  if (!t) return '';
+  const cleaned = t.trim().replace(/[^\d:]/g, '');
+  const parts = cleaned.split(':');
+  if (parts.length < 2) return cleaned;
+  const h = parts[0].padStart(2, '0');
+  const m = (parts[1] || '00').padStart(2, '0');
+  return `${h}:${m}`;
+}
+
+/** Compare two HH:MM time strings numerically */
+function timeIsAfter(end: string, start: string): boolean {
+  const toMinutes = (t: string): number => {
+    const n = normalizeTime(t);
+    const [h, m] = n.split(':').map(Number);
+    return (h || 0) * 60 + (m || 0);
+  };
+  return toMinutes(end) > toMinutes(start);
 }
 function formatTimeDisplay(t: string): string {
   if (!t) return '';
@@ -96,6 +120,7 @@ function buildDaySlotMap(allSlots: TimetableSlot[]): Record<number, BulkSlotItem
 }
 export default function TimeSlotsEditorScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
   const { groupId, groupName } = useLocalSearchParams<{ groupId: string; groupName: string }>();
   const decodedName = decodeURIComponent(groupName || 'Group');
   const [activeDay, setActiveDay] = useState(0); // Mon
@@ -166,7 +191,20 @@ export default function TimeSlotsEditorScreen() {
     ]);
   };
   const updateSlot = (idx: number, field: keyof BulkSlotItem, value: string | number) => {
-    setSlots((prev) => prev.map((s, i) => (i === idx ? { ...s, [field]: value } : s)));
+    // Auto-format time fields: insert colon after 2 digits
+    let finalValue = value;
+    if ((field === 'start_time' || field === 'end_time') && typeof value === 'string') {
+      // Remove non-digit/colon chars
+      let cleaned = value.replace(/[^\d:]/g, '');
+      // Auto-insert colon: "10" -> "10:", "1030" -> "10:30"
+      if (cleaned.length === 3 && !cleaned.includes(':')) {
+        cleaned = `${cleaned.slice(0, 2)}:${cleaned.slice(2)}`;
+      } else if (cleaned.length === 4 && !cleaned.includes(':')) {
+        cleaned = `${cleaned.slice(0, 2)}:${cleaned.slice(2)}`;
+      }
+      finalValue = cleaned.slice(0, 5); // max HH:MM
+    }
+    setSlots((prev) => prev.map((s, i) => (i === idx ? { ...s, [field]: finalValue } : s)));
   };
   const removeSlot = (idx: number) => {
     setSlots((prev) => prev.filter((_, i) => i !== idx));
@@ -190,7 +228,7 @@ export default function TimeSlotsEditorScreen() {
         Alert.alert('Error', `Slot "${s.label}" must have start and end times`);
         return;
       }
-      if (s.end_time <= s.start_time) {
+      if (!timeIsAfter(s.end_time, s.start_time)) {
         Alert.alert('Error', `Slot "${s.label}": end time must be after start time`);
         return;
       }
@@ -200,20 +238,21 @@ export default function TimeSlotsEditorScreen() {
         days_of_week: saveToDays,
         slots: slots.map((s) => ({
           ...s,
-          start_time: toApiTime(s.start_time),
-          end_time: toApiTime(s.end_time),
+          start_time: toApiTime(normalizeTime(s.start_time)),
+          end_time: toApiTime(normalizeTime(s.end_time)),
         })),
       },
       {
         onSuccess: () => {
-          Alert.alert(
-            'Saved',
-            `Slots saved for ${saveToDays.map((d) => DAY_SHORT_LABELS[d]).join(', ')}`
-          );
+          showToast({
+            type: 'success',
+            title: 'Saved',
+            message: `Slots saved for ${saveToDays.map((d) => DAY_SHORT_LABELS[d]).join(', ')}`,
+          });
           void refetch();
         },
         onError: (err: unknown) => {
-          Alert.alert('Error', extractApiError(err));
+          showToast({ type: 'error', title: 'Error', message: extractApiError(err) });
         },
       }
     );
@@ -230,7 +269,8 @@ export default function TimeSlotsEditorScreen() {
               setSlots([]);
               void refetch();
             },
-            onError: (err: unknown) => Alert.alert('Error', extractApiError(err)),
+            onError: (err: unknown) =>
+              showToast({ type: 'error', title: 'Error', message: extractApiError(err) }),
           });
         },
       },

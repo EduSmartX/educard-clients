@@ -26,7 +26,7 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 
-import { PageHeader } from '@/components/common';
+import { PageHeader, WarningConfirmationDialog } from '@/components/common';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -146,6 +146,7 @@ export function EmployeeTimesheetSubmitPage() {
   const [addingWeek, setAddingWeek] = useState(false);
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
   const [selectedDateForLeave, setSelectedDateForLeave] = useState<Date | null>(null);
+  const [weekPendingReturnToDraft, setWeekPendingReturnToDraft] = useState<WeekBlock | null>(null);
 
   // Detect if we're on the employee route to use the correct paths
   const isEmployeeRoute = location.pathname.startsWith('/employee');
@@ -455,24 +456,26 @@ export function EmployeeTimesheetSubmitPage() {
   };
 
   const returnToDraft = async (week: WeekBlock) => {
-    if (
-      !confirm(
-        'This will delete all attendance records and timesheet submission for this week. Are you sure?'
-      )
-    ) {
+    setWeekPendingReturnToDraft(week);
+  };
+
+  const confirmReturnToDraft = async () => {
+    if (!weekPendingReturnToDraft) {
       return;
     }
 
     try {
       await returnToDraftMutation.mutateAsync({
-        week_start_date: week.start,
-        week_end_date: week.end,
+        week_start_date: weekPendingReturnToDraft.start,
+        week_end_date: weekPendingReturnToDraft.end,
       });
 
       // Remove week from view after successful return to draft
-      removeWeek(week.id);
+      removeWeek(weekPendingReturnToDraft.id);
     } catch {
       // Error already handled by mutation
+    } finally {
+      setWeekPendingReturnToDraft(null);
     }
   };
 
@@ -859,6 +862,20 @@ export function EmployeeTimesheetSubmitPage() {
           onOpenChange={setLeaveDialogOpen}
           selectedDate={selectedDateForLeave}
           onSuccess={handleLeaveSuccess}
+        />
+
+        <WarningConfirmationDialog
+          open={!!weekPendingReturnToDraft}
+          onOpenChange={(open) => !open && setWeekPendingReturnToDraft(null)}
+          onConfirm={confirmReturnToDraft}
+          title="Return Week to Draft"
+          description="This will delete all attendance records and timesheet submission for this week."
+          warningText="This action cannot be undone."
+          confirmButtonText={
+            returnToDraftMutation.isPending ? 'Processing...' : 'Yes, Return to Draft'
+          }
+          cancelButtonText="Cancel"
+          isLoading={returnToDraftMutation.isPending}
         />
       </div>
     </TooltipProvider>

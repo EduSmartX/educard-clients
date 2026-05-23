@@ -52,7 +52,9 @@ export function parseApiErrors(
   const fieldErrors: Record<string, string> = {};
 
   for (const [key, value] of Object.entries(data)) {
-    if (key === "success" || key === "code" || key === "message") { continue; }
+    if (key === "success" || key === "code" || key === "message") {
+      continue;
+    }
 
     if (Array.isArray(value)) {
       // Direct field error: { employee_id: ["This field is required."] }
@@ -83,9 +85,10 @@ export function parseApiErrors(
 
   const message = data.message;
   const detail = data.detail;
-  const generalError = (typeof message === "string" ? message : null) || 
-                       (typeof detail === "string" ? detail : null) || 
-                       "Operation failed.";
+  const generalError =
+    (typeof message === "string" ? message : null) ||
+    (typeof detail === "string" ? detail : null) ||
+    "Operation failed.";
 
   return {
     fieldErrors: {},
@@ -97,7 +100,9 @@ export function parseApiErrors(
  * Strip empty strings, null, undefined from an object (shallow).
  * Useful for building API payloads where empty optional fields should be omitted.
  */
-export function stripEmpty<T extends Record<string, unknown>>(obj: T): Partial<T> {
+export function stripEmpty<T extends Record<string, unknown>>(
+  obj: T,
+): Partial<T> {
   const result: Partial<T> = {};
   for (const [key, val] of Object.entries(obj)) {
     if (val !== "" && val !== null && val !== undefined) {
@@ -147,8 +152,6 @@ export function buildTeacherPayload(
           ? Number(form.experience_years)
           : undefined,
         joining_date: form.joining_date || undefined,
-        emergency_contact_name: safeTrim(form.emergency_contact_name),
-        emergency_contact_number: safeTrim(form.emergency_contact_number),
       }),
     );
 
@@ -208,8 +211,6 @@ export function buildStudentPayload(
         guardian_relationship: form.guardian_relationship || undefined,
         medical_conditions: safeTrim(form.medical_conditions),
         description: safeTrim(form.description),
-        emergency_contact_name: safeTrim(form.emergency_contact_name),
-        emergency_contact_phone: safeTrim(form.emergency_contact_phone),
         previous_school_name: safeTrim(form.previous_school_name),
         previous_school_class: safeTrim(form.previous_school_class),
         previous_school_address: safeTrim(form.previous_school_address),

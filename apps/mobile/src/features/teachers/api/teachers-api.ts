@@ -13,6 +13,7 @@ import type {
   CreateTeacherPayload,
   ApiListResponse,
   ApiDetailResponse,
+  ApiMessageResponse,
 } from '@educard/shared';
 
 import { apiClient } from '@/api/client';
@@ -104,15 +105,19 @@ export async function updateTeacher(
   return response.data;
 }
 
-export async function deleteTeacher(publicId: string): Promise<void> {
+export async function deleteTeacher(publicId: string): Promise<ApiMessageResponse> {
   // Always use admin endpoint for delete
+  // 204 No Content returns empty body which can cause parsing issues on mobile
   try {
-    await apiClient.delete(`${ADMIN_BASE_URL}${publicId}/`);
+    const response = await apiClient.delete<ApiMessageResponse>(`${ADMIN_BASE_URL}${publicId}/`);
+    return response.data || { success: true, message: 'Teacher deleted successfully' };
   } catch (error: unknown) {
     const axiosError = error as { response?: { status?: number }; message?: string };
     const status = axiosError?.response?.status;
-    if (status && status >= 200 && status < 300) return;
-    if (axiosError?.message === 'Network Error' && !axiosError?.response) return;
+    if (status && status >= 200 && status < 300)
+      return { success: true, message: 'Teacher deleted successfully' };
+    if (axiosError?.message === 'Network Error' && !axiosError?.response)
+      return { success: true, message: 'Teacher deleted successfully' };
     throw error;
   }
 }
@@ -129,7 +134,7 @@ export async function restoreTeacher(publicId: string): Promise<ApiDetailRespons
  * Download teacher bulk import template
  */
 export async function downloadTeacherTemplate(): Promise<ArrayBuffer> {
-  const response = await apiClient.get(`${ADMIN_BASE_URL}download-template/`, {
+  const response = await apiClient.get<ArrayBuffer>(`${ADMIN_BASE_URL}download-template/`, {
     responseType: 'arraybuffer',
   });
   return response.data;
@@ -160,7 +165,18 @@ export async function bulkUploadTeachers(
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   } as unknown as Blob);
 
-  const response = await apiClient.post(`${ADMIN_BASE_URL}bulk-upload/`, formData, {
+  const response = await apiClient.post<{
+    success: boolean;
+    message: string;
+    data: {
+      created_count?: number;
+      successful_count?: number;
+      failed_count: number;
+      total_rows?: number;
+      errors: { row: number; error: string; data?: Record<string, unknown> | null }[];
+    };
+    code: number;
+  }>(`${ADMIN_BASE_URL}bulk-upload/`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },

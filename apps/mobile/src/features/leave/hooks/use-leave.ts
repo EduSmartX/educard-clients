@@ -2,9 +2,10 @@
  * Leave Management Hooks
  */
 
-import { extractApiError } from '@educard/shared';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Alert } from 'react-native';
+
+import { handleMutationError, type MutationOptions } from '@/lib/mutation-utils';
+import { showToast } from '@/utils/toast';
 
 import {
   getLeaveAllocations,
@@ -77,17 +78,22 @@ export function useLeaveAllocationDetail(publicId: string) {
   });
 }
 
-export function useCreateLeaveAllocation() {
+export function useCreateLeaveAllocation(options?: MutationOptions) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: createLeaveAllocation,
     onSuccess: () => {
+      showToast('success', 'Leave allocation created successfully');
       void qc.invalidateQueries({ queryKey: leaveKeys.allocations() });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to create leave allocation', options?.onError);
     },
   });
 }
 
-export function useUpdateLeaveAllocation() {
+export function useUpdateLeaveAllocation(options?: MutationOptions) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -98,17 +104,27 @@ export function useUpdateLeaveAllocation() {
       data: Parameters<typeof updateLeaveAllocation>[1];
     }) => updateLeaveAllocation(publicId, data),
     onSuccess: () => {
+      showToast('success', 'Leave allocation updated successfully');
       void qc.invalidateQueries({ queryKey: leaveKeys.allocations() });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to update leave allocation', options?.onError);
     },
   });
 }
 
-export function useDeleteLeaveAllocation() {
+export function useDeleteLeaveAllocation(options?: MutationOptions) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: deleteLeaveAllocation,
     onSuccess: () => {
+      showToast('success', 'Leave allocation deleted successfully');
       void qc.invalidateQueries({ queryKey: leaveKeys.allocations() });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to delete leave allocation', options?.onError);
     },
   });
 }
@@ -131,24 +147,34 @@ export function useLeaveReviewDetail(publicId: string) {
   });
 }
 
-export function useApproveLeave() {
+export function useApproveLeave(options?: MutationOptions) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ publicId, data }: { publicId: string; data?: { review_comments?: string } }) =>
       approveLeaveRequest(publicId, data),
     onSuccess: () => {
+      showToast('success', 'Leave request approved successfully');
       void qc.invalidateQueries({ queryKey: leaveKeys.reviews() });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to approve leave request', options?.onError);
     },
   });
 }
 
-export function useRejectLeave() {
+export function useRejectLeave(options?: MutationOptions) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ publicId, data }: { publicId: string; data?: { review_comments?: string } }) =>
       rejectLeaveRequest(publicId, data),
     onSuccess: () => {
+      showToast('success', 'Leave request rejected');
       void qc.invalidateQueries({ queryKey: leaveKeys.reviews() });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to reject leave request', options?.onError);
     },
   });
 }
@@ -175,34 +201,34 @@ export function useMyLeaveRequests(params?: {
   });
 }
 
-export function useCreateLeaveRequest() {
+export function useCreateLeaveRequest(options?: MutationOptions) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateLeaveRequestPayload) => createLeaveRequest(data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: [...leaveKeys.all, 'my-requests'] });
       void qc.invalidateQueries({ queryKey: [...leaveKeys.all, 'my-balances'] });
-      Alert.alert('Success', 'Leave request submitted successfully');
+      showToast('success', 'Leave request submitted successfully');
+      options?.onSuccess?.();
     },
     onError: (error: unknown) => {
-      const message = extractApiError(error, 'Failed to submit leave request');
-      Alert.alert('Error', message);
+      handleMutationError(error, 'Failed to submit leave request', options?.onError);
     },
   });
 }
 
-export function useCancelLeaveRequest() {
+export function useCancelLeaveRequest(options?: MutationOptions) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (publicId: string) => cancelMyLeaveRequest(publicId),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: [...leaveKeys.all, 'my-requests'] });
       void qc.invalidateQueries({ queryKey: [...leaveKeys.all, 'my-balances'] });
-      Alert.alert('Success', 'Leave request cancelled');
+      showToast('success', 'Leave request cancelled');
+      options?.onSuccess?.();
     },
     onError: (error: unknown) => {
-      const message = extractApiError(error, 'Failed to cancel leave request');
-      Alert.alert('Error', message);
+      handleMutationError(error, 'Failed to cancel leave request', options?.onError);
     },
   });
 }

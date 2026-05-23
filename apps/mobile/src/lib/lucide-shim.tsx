@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /**
  * Drop-in replacement for lucide-react-native
  * Uses @expo/vector-icons (Ionicons/MaterialIcons) instead of react-native-svg

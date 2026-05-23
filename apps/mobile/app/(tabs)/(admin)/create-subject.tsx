@@ -3,27 +3,19 @@
  * Form to add a new subject with validation
  */
 
-import { useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { ChevronLeft, Save } from 'lucide-react-native';
 import { getRoleGradient, extractApiError, getFieldErrors } from '@educard/shared';
-import { useCreateSubject } from '@/hooks';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import { ChevronLeft, Save } from 'lucide-react-native';
+import { useState, useCallback } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+
 import { FormInput, FormSection, FormError } from '@/components/forms';
-import { validateForm, hasErrors, required, type FieldErrors } from '@/utils/validation';
+import { useCreateSubject } from '@/features/subjects';
 import { headerStyles, layoutStyles } from '@/styles';
+import { validateForm, hasErrors, required, type FieldErrors } from '@/utils/validation';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -62,29 +54,27 @@ export default function CreateSubjectScreen() {
     setErrors(fieldErrors);
     if (hasErrors(fieldErrors)) return;
 
-    const payload: any = {
+    const payload = {
       name: form.name.trim(),
       code: form.code.trim() || undefined,
     };
 
-    createMutation.mutate(payload, {
-      onSuccess: () => {
-        Alert.alert('Success', 'Subject created successfully', [
-          { text: 'OK', onPress: () => router.back() },
-        ]);
-      },
-      onError: (err: unknown) => {
-        // Extract field-level validation errors from API response
-        const fieldErrors = getFieldErrors(err);
-        if (Object.keys(fieldErrors).length > 0) {
-          setErrors((prev) => ({ ...prev, ...fieldErrors }));
-          // Inline field errors are sufficient - no banner needed
-          return;
-        }
-        // Show banner only for non-field errors (server errors, network issues, etc.)
-        setApiError(extractApiError(err, 'Failed to create subject.'));
-      },
-    });
+    createMutation.mutate(
+      { data: payload },
+      {
+        onSuccess: () => {
+          router.back();
+        },
+        onError: (err: unknown) => {
+          const fieldErrors = getFieldErrors(err);
+          if (Object.keys(fieldErrors).length > 0) {
+            setErrors((prev) => ({ ...prev, ...fieldErrors }));
+            return;
+          }
+          setApiError(extractApiError(err, 'Failed to create subject.'));
+        },
+      }
+    );
   }, [form, createMutation, router]);
 
   return (
@@ -106,61 +96,59 @@ export default function CreateSubjectScreen() {
         </View>
       </LinearGradient>
 
-      <KeyboardAvoidingView
+      <KeyboardAwareScrollView
+        contentContainerStyle={styles.formContainer}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid
+        extraScrollHeight={20}
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView
-          contentContainerStyle={styles.formContainer}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+        <FormError message={apiError} onDismiss={() => setApiError(null)} />
+
+        <Animated.View entering={FadeInDown.delay(100)}>
+          <FormSection title="Subject Details" icon="📚">
+            <FormInput
+              label="Subject Name"
+              required
+              value={form.name}
+              onChangeText={(v) => updateField('name', v)}
+              error={errors.name}
+              placeholder="e.g. Mathematics"
+            />
+            <FormInput
+              label="Subject Code"
+              value={form.code}
+              onChangeText={(v) => updateField('code', v)}
+              placeholder="e.g. MATH101"
+              hint="Optional unique code"
+            />
+          </FormSection>
+        </Animated.View>
+
+        <TouchableOpacity
+          onPress={handleSubmit}
+          disabled={createMutation.isPending}
+          style={styles.submitBtn}
+          activeOpacity={0.8}
         >
-          <FormError message={apiError} onDismiss={() => setApiError(null)} />
-
-          <Animated.View entering={FadeInDown.delay(100)}>
-            <FormSection title="Subject Details" icon="📚">
-              <FormInput
-                label="Subject Name"
-                required
-                value={form.name}
-                onChangeText={(v) => updateField('name', v)}
-                error={errors.name}
-                placeholder="e.g. Mathematics"
-              />
-              <FormInput
-                label="Subject Code"
-                value={form.code}
-                onChangeText={(v) => updateField('code', v)}
-                placeholder="e.g. MATH101"
-                hint="Optional unique code"
-              />
-            </FormSection>
-          </Animated.View>
-
-          <TouchableOpacity
-            onPress={handleSubmit}
-            disabled={createMutation.isPending}
-            style={styles.submitBtn}
-            activeOpacity={0.8}
+          <LinearGradient
+            colors={['#7c3aed', '#4f46e5']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.submitGradient}
           >
-            <LinearGradient
-              colors={['#7c3aed', '#4f46e5']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.submitGradient}
-            >
-              {createMutation.isPending ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <>
-                  <Save size={20} color="#fff" />
-                  <Text style={styles.submitText}>Create Subject</Text>
-                </>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
+            {createMutation.isPending ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Save size={20} color="#fff" />
+                <Text style={styles.submitText}>Create Subject</Text>
+              </>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+      </KeyboardAwareScrollView>
     </View>
   );
 }

@@ -7,6 +7,8 @@ import type { Subject } from '@educard/shared';
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { DEFAULT_PAGE_SIZE } from '@/api/client';
+import { handleMutationError, type MutationOptions } from '@/lib/mutation-utils';
+import { showToast } from '@/utils/toast';
 
 import {
   getSubjects,
@@ -69,54 +71,74 @@ export function useSubjectsByClass(classId: string) {
 }
 
 export function useSubjectDetail(publicId: string, isDeleted?: boolean) {
-  return useQuery({
+  return useQuery<Subject>({
     queryKey: [...subjectKeys.detail(publicId), isDeleted],
     queryFn: async () => {
       const response = await getSubjectById(publicId, isDeleted);
-      return response.data; // Extract the Subject from ApiDetailResponse<Subject>
+      return response.data;
     },
     enabled: !!publicId,
   });
 }
 
-export function useCreateSubject() {
+export function useCreateSubject(options?: MutationOptions) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ data, forceCreate }: { data: Partial<Subject>; forceCreate?: boolean }) =>
       createSubject(data, forceCreate),
-    onSuccess: () => {
+    onSuccess: (response) => {
+      showToast('success', response.message || 'Subject created successfully');
       void queryClient.invalidateQueries({ queryKey: subjectKeys.all });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to create subject', options?.onError);
     },
   });
 }
 
-export function useUpdateSubject() {
+export function useUpdateSubject(options?: MutationOptions) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ publicId, data }: { publicId: string; data: Partial<Subject> }) =>
       updateSubject(publicId, data),
-    onSuccess: () => {
+    onSuccess: (response) => {
+      showToast('success', response.message || 'Subject updated successfully');
       void queryClient.invalidateQueries({ queryKey: subjectKeys.all });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to update subject', options?.onError);
     },
   });
 }
 
-export function useDeleteSubject() {
+export function useDeleteSubject(options?: MutationOptions) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (publicId: string) => deleteSubject(publicId),
-    onSuccess: () => {
+    onSuccess: (response) => {
+      showToast('success', response?.message || 'Subject deleted successfully');
       void queryClient.invalidateQueries({ queryKey: subjectKeys.lists() });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to delete subject', options?.onError);
     },
   });
 }
 
-export function useRestoreSubject() {
+export function useRestoreSubject(options?: MutationOptions) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (publicId: string) => restoreSubject(publicId),
-    onSuccess: () => {
+    onSuccess: (response) => {
+      showToast('success', response.message || 'Subject restored successfully');
       void queryClient.invalidateQueries({ queryKey: subjectKeys.all });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to restore subject', options?.onError);
     },
   });
 }

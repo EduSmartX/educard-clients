@@ -7,6 +7,7 @@ import { create } from 'zustand';
 
 import { login as apiLogin, logout as apiLogout, signup as apiSignup, checkAuth } from '@/api/auth';
 import { STORAGE_KEYS } from '@/constants/config';
+import { clearQueryCache } from '@/lib/query-client';
 import type { User, LoginCredentials, SignupData, AuthTokens } from '@/types/user';
 
 interface AuthState {
@@ -124,6 +125,8 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
 
   // Logout
   logout: async () => {
+    clearQueryCache();
+
     // Set state atomically to prevent multiple re-renders
     set({
       user: null,

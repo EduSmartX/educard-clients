@@ -4,7 +4,7 @@
  * Provides hooks for working day navigation and info
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 
 import {
   navigateWorkingDay,

@@ -3,9 +3,9 @@
  * Handles both client-side validation and server-side API errors
  */
 
+import { extractApiError, getFieldErrors } from '@educard/shared';
 import { useState, useCallback } from 'react';
 import { Alert } from 'react-native';
-import { extractApiError, getFieldErrors } from '@educard/shared';
 
 export type FormErrors = Record<string, string>;
 

@@ -7,22 +7,19 @@ import { Colors, getRoleGradient, extractApiError, LeaveType, RoleType } from '@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Save, ChevronDown, Check } from 'lucide-react-native';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
   Switch,
   Modal,
   Pressable,
   FlatList,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { SubmitButton } from '@/components/common';
@@ -33,8 +30,9 @@ import {
   FormDropdown,
   FormDatePicker,
 } from '@/components/forms';
-import { useLeaveTypes, useRoleTypes } from '@/features/core';
+import { useLeaveTypes, useRoleTypes, useCurrentAcademicYear } from '@/features/core';
 import { useCreateLeaveAllocation } from '@/features/leave';
+import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -42,9 +40,11 @@ type FieldErrors = Record<string, string>;
 
 export default function CreateLeaveAllocationScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
   const createMutation = useCreateLeaveAllocation();
   const { data: leaveTypes, isLoading: leaveTypesLoading } = useLeaveTypes();
   const { data: roleTypes } = useRoleTypes();
+  const { data: currentAcademicYear } = useCurrentAcademicYear();
 
   const [rolesModalVisible, setRolesModalVisible] = useState(false);
   const [form, setForm] = useState({
@@ -60,6 +60,17 @@ export default function CreateLeaveAllocationScreen() {
   });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [apiError, setApiError] = useState<string | null>(null);
+
+  // Pre-fill effective dates from current academic year
+  useEffect(() => {
+    if (currentAcademicYear) {
+      setForm((prev) => ({
+        ...prev,
+        effective_from: prev.effective_from || currentAcademicYear.start_date,
+        effective_to: prev.effective_to || currentAcademicYear.end_date,
+      }));
+    }
+  }, [currentAcademicYear]);
 
   const leaveTypeOpts = useMemo(
     () =>
@@ -129,15 +140,18 @@ export default function CreateLeaveAllocationScreen() {
 
     createMutation.mutate(payload, {
       onSuccess: () => {
-        Alert.alert('Success', 'Leave allocation created successfully.', [
-          { text: 'OK', onPress: () => router.back() },
-        ]);
+        showToast({
+          type: 'success',
+          title: 'Success',
+          message: 'Leave allocation created successfully.',
+        });
+        router.back();
       },
       onError: (err: unknown) => {
         setApiError(extractApiError(err, 'Failed to create leave allocation'));
       },
     });
-  }, [form, validate, createMutation, router]);
+  }, [form, validate, createMutation, router, showToast]);
 
   const isSaving = createMutation.isPending;
 
@@ -178,138 +192,136 @@ export default function CreateLeaveAllocationScreen() {
         </View>
       </LinearGradient>
 
-      <KeyboardAvoidingView
+      <KeyboardAwareScrollView
+        contentContainerStyle={styles.form}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid
+        extraScrollHeight={20}
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView
-          contentContainerStyle={styles.form}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          <FormError message={apiError} onDismiss={() => setApiError(null)} />
+        <FormError message={apiError} onDismiss={() => setApiError(null)} />
 
-          <Animated.View entering={FadeInDown.delay(80)}>
-            <FormSection title="Leave Type" icon="📋">
-              <FormDropdown
-                label="Leave Type"
-                required
-                options={leaveTypeOpts}
-                value={form.leave_type}
-                onChange={(v) => updateField('leave_type', v)}
-                error={errors.leave_type}
-                placeholder="Select leave type"
-                searchable
-                loading={leaveTypesLoading}
-              />
-              <FormInput
-                label="Policy Name"
-                value={form.name}
-                onChangeText={(v) => updateField('name', v)}
-                error={errors.name}
-                placeholder="e.g. Casual Leave - Teaching Staff"
-              />
-              <FormInput
-                label="Description"
-                value={form.description}
-                onChangeText={(v) => updateField('description', v)}
-                placeholder="Optional description"
-                multiline
-              />
-            </FormSection>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(120)}>
-            <FormSection title="Days Configuration" icon="📅">
-              <FormInput
-                label="Total Days"
-                required
-                value={form.total_days}
-                onChangeText={(v) => updateField('total_days', v)}
-                error={errors.total_days}
-                placeholder="e.g. 12"
-                keyboardType="numeric"
-              />
-              <FormInput
-                label="Max Carry Forward Days"
-                value={form.max_carry_forward_days}
-                onChangeText={(v) => updateField('max_carry_forward_days', v)}
-                placeholder="e.g. 5"
-                keyboardType="numeric"
-              />
-            </FormSection>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(160)}>
-            <FormSection title="Role Assignment" icon="👥">
-              <View style={styles.switchRow}>
-                <Text style={styles.switchLabel}>Applies to all roles</Text>
-                <Switch
-                  value={form.applies_to_all_roles}
-                  onValueChange={(v) => updateField('applies_to_all_roles', v)}
-                  trackColor={{ false: '#e2e8f0', true: '#c4b5fd' }}
-                  thumbColor={form.applies_to_all_roles ? '#7c3aed' : '#94a3b8'}
-                />
-              </View>
-              {!form.applies_to_all_roles && (
-                <>
-                  <TouchableOpacity
-                    style={styles.roleDropdown}
-                    onPress={() => setRolesModalVisible(true)}
-                  >
-                    <Text
-                      style={[
-                        styles.roleDropdownText,
-                        !selectedRoleNames && styles.roleDropdownPlaceholder,
-                      ]}
-                      numberOfLines={2}
-                    >
-                      {selectedRoleNames || 'Select roles...'}
-                    </Text>
-                    <ChevronDown size={20} color={Colors.gray[400]} />
-                  </TouchableOpacity>
-                  {form.roles.length > 0 && (
-                    <Text style={styles.selectedCount}>
-                      {form.roles.length} role{form.roles.length > 1 ? 's' : ''} selected
-                    </Text>
-                  )}
-                  {errors.roles && <Text style={styles.errorText}>{errors.roles}</Text>}
-                </>
-              )}
-            </FormSection>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(200)}>
-            <FormSection title="Effective Period" icon="⏰">
-              <FormDatePicker
-                label="Effective From"
-                required
-                value={form.effective_from}
-                onChange={(v) => updateField('effective_from', v)}
-                error={errors.effective_from}
-                placeholder="Select start date"
-              />
-              <FormDatePicker
-                label="Effective To"
-                value={form.effective_to}
-                onChange={(v) => updateField('effective_to', v)}
-                placeholder="Select end date (optional)"
-              />
-            </FormSection>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(240)}>
-            <SubmitButton
-              label="Create Allocation"
-              onPress={handleSubmit}
-              isLoading={isSaving}
-              icon={Save}
+        <Animated.View entering={FadeInDown.delay(80)}>
+          <FormSection title="Leave Type" icon="📋">
+            <FormDropdown
+              label="Leave Type"
+              required
+              options={leaveTypeOpts}
+              value={form.leave_type}
+              onChange={(v) => updateField('leave_type', v)}
+              error={errors.leave_type}
+              placeholder="Select leave type"
+              searchable
+              loading={leaveTypesLoading}
             />
-          </Animated.View>
+            <FormInput
+              label="Policy Name"
+              value={form.name}
+              onChangeText={(v) => updateField('name', v)}
+              error={errors.name}
+              placeholder="e.g. Casual Leave - Teaching Staff"
+            />
+            <FormInput
+              label="Description"
+              value={form.description}
+              onChangeText={(v) => updateField('description', v)}
+              placeholder="Optional description"
+              multiline
+            />
+          </FormSection>
+        </Animated.View>
 
-          <View style={{ height: 40 }} />
-        </ScrollView>
-      </KeyboardAvoidingView>
+        <Animated.View entering={FadeInDown.delay(120)}>
+          <FormSection title="Days Configuration" icon="📅">
+            <FormInput
+              label="Total Days"
+              required
+              value={form.total_days}
+              onChangeText={(v) => updateField('total_days', v)}
+              error={errors.total_days}
+              placeholder="e.g. 12"
+              keyboardType="numeric"
+            />
+            <FormInput
+              label="Max Carry Forward Days"
+              value={form.max_carry_forward_days}
+              onChangeText={(v) => updateField('max_carry_forward_days', v)}
+              placeholder="e.g. 5"
+              keyboardType="numeric"
+            />
+          </FormSection>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(160)}>
+          <FormSection title="Role Assignment" icon="👥">
+            <View style={styles.switchRow}>
+              <Text style={styles.switchLabel}>Applies to all roles</Text>
+              <Switch
+                value={form.applies_to_all_roles}
+                onValueChange={(v) => updateField('applies_to_all_roles', v)}
+                trackColor={{ false: '#e2e8f0', true: '#c4b5fd' }}
+                thumbColor={form.applies_to_all_roles ? '#7c3aed' : '#94a3b8'}
+              />
+            </View>
+            {!form.applies_to_all_roles && (
+              <>
+                <TouchableOpacity
+                  style={styles.roleDropdown}
+                  onPress={() => setRolesModalVisible(true)}
+                >
+                  <Text
+                    style={[
+                      styles.roleDropdownText,
+                      !selectedRoleNames && styles.roleDropdownPlaceholder,
+                    ]}
+                    numberOfLines={2}
+                  >
+                    {selectedRoleNames || 'Select roles...'}
+                  </Text>
+                  <ChevronDown size={20} color={Colors.gray[400]} />
+                </TouchableOpacity>
+                {form.roles.length > 0 && (
+                  <Text style={styles.selectedCount}>
+                    {form.roles.length} role{form.roles.length > 1 ? 's' : ''} selected
+                  </Text>
+                )}
+                {errors.roles && <Text style={styles.errorText}>{errors.roles}</Text>}
+              </>
+            )}
+          </FormSection>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(200)}>
+          <FormSection title="Effective Period" icon="⏰">
+            <FormDatePicker
+              label="Effective From"
+              required
+              value={form.effective_from}
+              onChange={(v) => updateField('effective_from', v)}
+              error={errors.effective_from}
+              placeholder="Select start date"
+            />
+            <FormDatePicker
+              label="Effective To"
+              value={form.effective_to}
+              onChange={(v) => updateField('effective_to', v)}
+              placeholder="Select end date (optional)"
+            />
+          </FormSection>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(240)}>
+          <SubmitButton
+            label="Create Allocation"
+            onPress={handleSubmit}
+            isLoading={isSaving}
+            icon={Save}
+          />
+        </Animated.View>
+
+        <View style={{ height: 40 }} />
+      </KeyboardAwareScrollView>
 
       {/* Roles Multi-Select Modal */}
       <Modal

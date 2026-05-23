@@ -2,6 +2,10 @@
  * View Student Screen
  */
 
+import { getRoleGradient } from '@educard/shared';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { ChevronLeft } from 'lucide-react-native';
 import {
   View,
   Text,
@@ -10,12 +14,9 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { ChevronLeft } from 'lucide-react-native';
-import { getRoleGradient } from '@educard/shared';
-import { useStudentDetail } from '@/hooks';
+
+import { useStudentDetail } from '@/features/students';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -114,9 +115,7 @@ export default function ViewStudentScreen() {
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(400)}>
-            <Section title="Emergency & Medical" icon="🆘">
-              <Row label="Emergency Contact" value={student.emergency_contact_name} />
-              <Row label="Emergency Phone" value={student.emergency_contact_phone} />
+            <Section title="Medical" icon="�">
               <Row label="Medical Conditions" value={student.medical_conditions} />
             </Section>
           </Animated.View>

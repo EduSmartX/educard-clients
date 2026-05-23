@@ -83,14 +83,6 @@ export function transformFormToCreatePayload(values: TeacherFormValues): CreateT
     payload.joining_date = values.joining_date;
   }
 
-  if (values.emergency_contact_name) {
-    payload.emergency_contact_name = values.emergency_contact_name;
-  }
-
-  if (values.emergency_contact_number) {
-    payload.emergency_contact_number = values.emergency_contact_number;
-  }
-
   if (values.subjects && values.subjects.length > 0) {
     payload.subjects = values.subjects;
   }
@@ -175,14 +167,6 @@ export function transformFormToUpdatePayload(values: TeacherFormValues): UpdateT
     payload.joining_date = values.joining_date;
   }
 
-  if (values.emergency_contact_name) {
-    payload.emergency_contact_name = values.emergency_contact_name;
-  }
-
-  if (values.emergency_contact_number) {
-    payload.emergency_contact_number = values.emergency_contact_number;
-  }
-
   if (values.subjects && values.subjects.length > 0) {
     payload.subjects = values.subjects;
   }
@@ -216,8 +200,6 @@ export function transformTeacherToForm(teacher: TeacherDetail): Partial<TeacherF
     specialization: teacher.specialization || '',
     experience_years: teacher.experience_years || undefined,
     joining_date: teacher.joining_date || '',
-    emergency_contact_name: teacher.emergency_contact_name || '',
-    emergency_contact_number: getTenDigitPhoneNumber(teacher.emergency_contact_number || ''),
     street_address: teacher.user?.address?.street_address || '',
     address_line_2: teacher.user?.address?.address_line_2 || '',
     city: teacher.user?.address?.city || '',

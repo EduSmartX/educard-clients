@@ -46,7 +46,7 @@ import {
 } from '@/features/attendance/api/attendance-api';
 import { useReviewTimesheet } from '@/features/attendance/hooks/mutations/use-review-timesheet';
 import { TimesheetStatusBadge, AttendanceCountBadge } from '@/features/attendance/components';
-import { apiClient } from '@/lib/api-client';
+import apiClient from '@/lib/api';
 
 interface ManageableUser {
   public_id: string;

@@ -3,7 +3,12 @@
  */
 
 import { API_ENDPOINTS } from '@educard/shared';
-import type { Student, ApiListResponse, ApiDetailResponse } from '@educard/shared';
+import type {
+  Student,
+  ApiListResponse,
+  ApiDetailResponse,
+  ApiMessageResponse,
+} from '@educard/shared';
 
 import { apiClient } from '@/api/client';
 
@@ -58,21 +63,34 @@ export async function createStudent(
   return response.data;
 }
 
-export async function updateStudent(publicId: string, data: Partial<Student>): Promise<void> {
-  await apiClient.patch(API_ENDPOINTS.STUDENTS.PATCH(publicId), data);
+export async function updateStudent(
+  publicId: string,
+  data: Partial<Student>
+): Promise<ApiMessageResponse> {
+  const response = await apiClient.patch<ApiMessageResponse>(
+    API_ENDPOINTS.STUDENTS.PATCH(publicId),
+    data
+  );
+  return response.data;
 }
 
-export async function deleteStudent(publicId: string, classId?: string): Promise<void> {
+export async function deleteStudent(
+  publicId: string,
+  classId?: string
+): Promise<ApiMessageResponse> {
+  const url = classId
+    ? API_ENDPOINTS.STUDENTS.CLASS_LEVEL.DELETE(classId, publicId)
+    : API_ENDPOINTS.STUDENTS.DELETE(publicId);
   try {
-    const url = classId
-      ? API_ENDPOINTS.STUDENTS.CLASS_LEVEL.DELETE(classId, publicId)
-      : API_ENDPOINTS.STUDENTS.DELETE(publicId);
-    await apiClient.delete(url);
+    const response = await apiClient.delete<ApiMessageResponse>(url);
+    return response.data || { success: true, message: 'Student deleted successfully' };
   } catch (error: unknown) {
     const axiosError = error as { response?: { status?: number }; message?: string };
     const status = axiosError?.response?.status;
-    if (status && status >= 200 && status < 300) return;
-    if (axiosError?.message === 'Network Error' && !axiosError?.response) return;
+    if (status && status >= 200 && status < 300)
+      return { success: true, message: 'Student deleted successfully' };
+    if (axiosError?.message === 'Network Error' && !axiosError?.response)
+      return { success: true, message: 'Student deleted successfully' };
     throw error;
   }
 }
@@ -136,7 +154,18 @@ export async function bulkUploadStudents(
   } as unknown as Blob);
 
   const params = minimalFields ? { minimal_fields: 'true' } : {};
-  const response = await apiClient.post('/students/bulk-operations/bulk_upload/', formData, {
+  const response = await apiClient.post<{
+    success: boolean;
+    message: string;
+    data: {
+      created_count?: number;
+      successful_count?: number;
+      failed_count: number;
+      total_rows?: number;
+      errors: { row: number; error: string; data?: Record<string, unknown> | null }[];
+    };
+    code: number;
+  }>('/students/bulk-operations/bulk_upload/', formData, {
     params,
     headers: {
       'Content-Type': 'multipart/form-data',

@@ -339,6 +339,7 @@ export const API_ENDPOINTS = {
         DETAIL: (id: string) => `/fee/admin/student-fees/${id}/`,
         UPDATE: (id: string) => `/fee/admin/student-fees/${id}/`,
         DELETE: (id: string) => `/fee/admin/student-fees/${id}/`,
+        ELIGIBLE_STUDENTS: "/fee/admin/student-fees/eligible-students/",
         PAYMENT_STATUS: (id: string) =>
           `/fee/admin/student-fees/${id}/payment_status/`,
         UPDATE_COMPONENTS: (id: string) =>

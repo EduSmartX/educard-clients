@@ -164,20 +164,6 @@ export const studentFormSchema = z
       .max(100, 'Relationship must not exceed 100 characters')
       .or(z.literal('')),
 
-    // Emergency Contact (Optional)
-    emergency_contact_name: z
-      .string()
-      .max(255, 'Emergency contact name must not exceed 255 characters')
-      .or(z.literal('')),
-
-    emergency_contact_phone: z
-      .string()
-      .transform(phoneTransform)
-      .refine((val) => val === '' || /^\d{10}$/.test(val), {
-        message: 'Emergency contact phone must be exactly 10 digits',
-      })
-      .or(z.literal('')),
-
     // Medical & Additional Info (Optional)
     medical_conditions: z
       .string()

@@ -3,6 +3,10 @@
  * Displays full teacher detail fetched by public_id
  */
 
+import { getRoleGradient } from '@educard/shared';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { ChevronLeft } from 'lucide-react-native';
 import {
   View,
   Text,
@@ -11,12 +15,10 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { ChevronLeft, User, Briefcase, Phone } from 'lucide-react-native';
-import { getRoleGradient } from '@educard/shared';
-import { useTeacherDetail } from '@/hooks';
+
+import { ProfileAvatar } from '@/components/common/ProfileAvatar';
+import { useTeacherDetail } from '@/features/teachers';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -84,6 +86,21 @@ export default function ViewTeacherScreen() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+          {/* Avatar */}
+          <Animated.View
+            entering={FadeInDown.delay(50)}
+            style={{ alignItems: 'center', marginBottom: 16 }}
+          >
+            <ProfileAvatar
+              name={teacher.user?.full_name}
+              imageUri={teacher.profile_photo_thumbnail}
+              size={90}
+            />
+            <Text style={{ fontSize: 18, fontWeight: '700', color: '#1e293b', marginTop: 10 }}>
+              {teacher.user?.full_name}
+            </Text>
+          </Animated.View>
+
           <Animated.View entering={FadeInDown.delay(100)}>
             <Section title="Personal Info" icon="👤">
               <Row label="Full Name" value={teacher.user?.full_name} />
@@ -122,13 +139,6 @@ export default function ViewTeacherScreen() {
               </Section>
             </Animated.View>
           )}
-
-          <Animated.View entering={FadeInDown.delay(400)}>
-            <Section title="Emergency Contact" icon="🆘">
-              <Row label="Name" value={teacher.emergency_contact_name} />
-              <Row label="Number" value={teacher.emergency_contact_number} />
-            </Section>
-          </Animated.View>
         </ScrollView>
       )}
     </View>

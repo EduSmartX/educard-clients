@@ -329,6 +329,8 @@ export interface FeeStructureFilters {
   academic_year?: string;
   is_active?: boolean;
   class_public_id?: string;
+  page?: number;
+  page_size?: number;
 }
 
 export interface StudentFeeFilters {

@@ -13,13 +13,11 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
   Alert,
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 
 import { authApi } from '@/api/auth';
@@ -140,121 +138,117 @@ export default function ChangeEmailScreen() {
         </Animated.View>
       </LinearGradient>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      <KeyboardAwareScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid
+        extraScrollHeight={20}
         style={styles.content}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* Current Email Display */}
-          <Animated.View entering={FadeInDown.delay(100)} style={styles.currentEmailCard}>
-            <Text style={styles.currentEmailLabel}>Current Email</Text>
-            <Text style={styles.currentEmailValue}>{user?.email || 'Not set'}</Text>
-          </Animated.View>
+        {/* Current Email Display */}
+        <Animated.View entering={FadeInDown.delay(100)} style={styles.currentEmailCard}>
+          <Text style={styles.currentEmailLabel}>Current Email</Text>
+          <Text style={styles.currentEmailValue}>{user?.email || 'Not set'}</Text>
+        </Animated.View>
 
-          {/* New Email Input */}
-          <Animated.View entering={FadeInDown.delay(200)} style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>New Email Address</Text>
-            <View style={[styles.inputContainer, focusedInput === 'email' && styles.inputFocused]}>
-              <Mail size={20} color={focusedInput === 'email' ? '#10b981' : '#9ca3af'} />
-              <TextInput
-                style={styles.input}
-                placeholder="Enter new email"
-                placeholderTextColor="#9ca3af"
-                value={newEmail}
-                onChangeText={setNewEmail}
-                onFocus={() => setFocusedInput('email')}
-                onBlur={() => setFocusedInput(null)}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-                editable={!isOtpSent}
-              />
-            </View>
-          </Animated.View>
+        {/* New Email Input */}
+        <Animated.View entering={FadeInDown.delay(200)} style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>New Email Address</Text>
+          <View style={[styles.inputContainer, focusedInput === 'email' && styles.inputFocused]}>
+            <Mail size={20} color={focusedInput === 'email' ? '#10b981' : '#9ca3af'} />
+            <TextInput
+              style={styles.input}
+              placeholder="Enter new email"
+              placeholderTextColor="#9ca3af"
+              value={newEmail}
+              onChangeText={setNewEmail}
+              onFocus={() => setFocusedInput('email')}
+              onBlur={() => setFocusedInput(null)}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+              editable={!isOtpSent}
+            />
+          </View>
+        </Animated.View>
 
-          {/* Send OTP Button */}
-          {!isOtpSent && (
+        {/* Send OTP Button */}
+        {!isOtpSent && (
+          <Animated.View entering={FadeInDown.delay(300)}>
+            <TouchableOpacity
+              style={[styles.sendOtpButton, isSendingOtp && styles.buttonDisabled]}
+              onPress={() => void handleSendOtp()}
+              disabled={isSendingOtp}
+            >
+              {isSendingOtp ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <>
+                  <Send size={20} color="#fff" />
+                  <Text style={styles.sendOtpText}>Send Verification Code</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </Animated.View>
+        )}
+
+        {/* OTP Input (shown after OTP is sent) */}
+        {isOtpSent && (
+          <>
+            <Animated.View entering={FadeInDown.delay(100)} style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Verification Code</Text>
+              <View style={[styles.inputContainer, focusedInput === 'otp' && styles.inputFocused]}>
+                <KeyRound size={20} color={focusedInput === 'otp' ? '#10b981' : '#9ca3af'} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter 6-digit code"
+                  placeholderTextColor="#9ca3af"
+                  value={otp}
+                  onChangeText={setOtp}
+                  onFocus={() => setFocusedInput('otp')}
+                  onBlur={() => setFocusedInput(null)}
+                  keyboardType="number-pad"
+                  maxLength={6}
+                />
+              </View>
+              <Text style={styles.otpHint}>Enter the code sent to {newEmail}</Text>
+            </Animated.View>
+
+            {/* Resend OTP */}
+            <Animated.View entering={FadeInDown.delay(200)} style={styles.resendContainer}>
+              {countdown > 0 ? (
+                <Text style={styles.countdownText}>
+                  Resend code in {Math.floor(countdown / 60)}:
+                  {String(countdown % 60).padStart(2, '0')}
+                </Text>
+              ) : (
+                <TouchableOpacity onPress={() => void handleSendOtp()} disabled={isSendingOtp}>
+                  <Text style={styles.resendText}>Resend Code</Text>
+                </TouchableOpacity>
+              )}
+            </Animated.View>
+
+            {/* Update Button */}
             <Animated.View entering={FadeInDown.delay(300)}>
               <TouchableOpacity
-                style={[styles.sendOtpButton, isSendingOtp && styles.buttonDisabled]}
-                onPress={() => void handleSendOtp()}
-                disabled={isSendingOtp}
+                style={[styles.updateButton, isUpdating && styles.buttonDisabled]}
+                onPress={() => void handleUpdateEmail()}
+                disabled={isUpdating}
               >
-                {isSendingOtp ? (
+                {isUpdating ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
                   <>
-                    <Send size={20} color="#fff" />
-                    <Text style={styles.sendOtpText}>Send Verification Code</Text>
+                    <CheckCircle size={20} color="#fff" />
+                    <Text style={styles.updateButtonText}>Update Email</Text>
                   </>
                 )}
               </TouchableOpacity>
             </Animated.View>
-          )}
-
-          {/* OTP Input (shown after OTP is sent) */}
-          {isOtpSent && (
-            <>
-              <Animated.View entering={FadeInDown.delay(100)} style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Verification Code</Text>
-                <View
-                  style={[styles.inputContainer, focusedInput === 'otp' && styles.inputFocused]}
-                >
-                  <KeyRound size={20} color={focusedInput === 'otp' ? '#10b981' : '#9ca3af'} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter 6-digit code"
-                    placeholderTextColor="#9ca3af"
-                    value={otp}
-                    onChangeText={setOtp}
-                    onFocus={() => setFocusedInput('otp')}
-                    onBlur={() => setFocusedInput(null)}
-                    keyboardType="number-pad"
-                    maxLength={6}
-                  />
-                </View>
-                <Text style={styles.otpHint}>Enter the code sent to {newEmail}</Text>
-              </Animated.View>
-
-              {/* Resend OTP */}
-              <Animated.View entering={FadeInDown.delay(200)} style={styles.resendContainer}>
-                {countdown > 0 ? (
-                  <Text style={styles.countdownText}>
-                    Resend code in {Math.floor(countdown / 60)}:
-                    {String(countdown % 60).padStart(2, '0')}
-                  </Text>
-                ) : (
-                  <TouchableOpacity onPress={() => void handleSendOtp()} disabled={isSendingOtp}>
-                    <Text style={styles.resendText}>Resend Code</Text>
-                  </TouchableOpacity>
-                )}
-              </Animated.View>
-
-              {/* Update Button */}
-              <Animated.View entering={FadeInDown.delay(300)}>
-                <TouchableOpacity
-                  style={[styles.updateButton, isUpdating && styles.buttonDisabled]}
-                  onPress={() => void handleUpdateEmail()}
-                  disabled={isUpdating}
-                >
-                  {isUpdating ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <>
-                      <CheckCircle size={20} color="#fff" />
-                      <Text style={styles.updateButtonText}>Update Email</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              </Animated.View>
-            </>
-          )}
-        </ScrollView>
-      </KeyboardAvoidingView>
+          </>
+        )}
+      </KeyboardAwareScrollView>
     </View>
   );
 }

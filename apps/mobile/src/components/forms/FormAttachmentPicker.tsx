@@ -8,7 +8,7 @@ import { Colors } from '@educard/shared';
 import * as DocumentPicker from 'expo-document-picker';
 // NOTE: Using aliased imports as Paperclip and File may not resolve correctly
 import { PaperclipIcon, X, FileTextIcon, ImageIcon, FileIcon } from 'lucide-react-native';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 
 export interface SelectedFile {
@@ -70,12 +70,6 @@ export function FormAttachmentPicker({
   multiple = true,
 }: FormAttachmentPickerProps) {
   const [isLoading, setIsLoading] = useState(false);
-
-  // DEBUG: Log when component mounts
-  useEffect(() => {
-    console.log('[FormAttachmentPicker] Component mounted');
-    console.log('[FormAttachmentPicker] Props - files:', files?.length, 'disabled:', disabled);
-  }, []);
 
   const handlePickAttachment = useCallback(async () => {
     if (disabled) return;
@@ -147,7 +141,7 @@ export function FormAttachmentPicker({
 
       <TouchableOpacity
         style={[styles.addButton, !canAddMore && styles.addButtonDisabled]}
-        onPress={handlePickAttachment}
+        onPress={() => void handlePickAttachment()}
         disabled={!canAddMore || isLoading}
       >
         {isLoading ? (

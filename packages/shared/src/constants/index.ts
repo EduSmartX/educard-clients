@@ -30,3 +30,4 @@ export * from "./homework-constants";
 export * from "./leave-colors";
 export * from "./subject-constants";
 export * from "./subject-colors";
+export * from "./slot-status";

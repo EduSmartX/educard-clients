@@ -1,0 +1,39 @@
+/**
+ * Toast utility — event-based bridge to the ToastProvider.
+ * Used in non-component code (hooks, services) where React context isn't available.
+ * The ToastProvider subscribes to these events and renders the beautiful toast UI.
+ */
+
+type ToastType = 'success' | 'error' | 'info' | 'warning';
+type ToastListener = (type: ToastType, message: string) => void;
+
+const listeners: Set<ToastListener> = new Set();
+
+// Deduplication: prevent same toast showing twice within 1 second
+let lastToastKey = '';
+let lastToastTime = 0;
+
+export function showToast(type: ToastType, message: string): void {
+  const key = `${type}:${message}`;
+  const now = Date.now();
+  if (key === lastToastKey && now - lastToastTime < 1000) {
+    return; // Duplicate — skip
+  }
+  lastToastKey = key;
+  lastToastTime = now;
+
+  if (listeners.size > 0) {
+    listeners.forEach((listener) => listener(type, message));
+  } else {
+    // Fallback if ToastProvider hasn't mounted yet
+    // eslint-disable-next-line no-console
+    console.log(`[Toast:${type}] ${message}`);
+  }
+}
+
+export function subscribeToToasts(listener: ToastListener): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}

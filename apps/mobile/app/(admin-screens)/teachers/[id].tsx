@@ -6,8 +6,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { DetailScreenShell, DetailSection, DetailRow, ChipRow } from '@/components/detail';
-import { useTeacherDetail } from '@/features/teachers';
 import { getMediaUrl } from '@/constants/config';
+import { useTeacherDetail } from '@/features/teachers';
 
 export default function TeacherDetailScreen() {
   const { id, is_deleted } = useLocalSearchParams<{ id: string; is_deleted?: string }>();
@@ -17,7 +17,6 @@ export default function TeacherDetailScreen() {
 
   // The backend handles phone masking based on permissions
   const phoneDisplay = teacher?.user?.phone || '—';
-  const emergencyPhoneDisplay = teacher?.emergency_contact_number || '—';
 
   // Get profile image URL
   const profileImageUrl = getMediaUrl(teacher?.profile_photo_thumbnail);
@@ -66,13 +65,6 @@ export default function TeacherDetailScreen() {
           </DetailSection>
         </Animated.View>
       ) : null}
-
-      <Animated.View entering={FadeInDown.delay(400)}>
-        <DetailSection title="Emergency Contact" icon="🆘">
-          <DetailRow label="Name" value={teacher?.emergency_contact_name} />
-          <DetailRow label="Number" value={emergencyPhoneDisplay} />
-        </DetailSection>
-      </Animated.View>
     </DetailScreenShell>
   );
 }

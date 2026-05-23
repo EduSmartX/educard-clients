@@ -30,9 +30,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
   StyleSheet,
   Image,
   ActivityIndicator,
@@ -40,6 +37,7 @@ import {
   Modal,
   FlatList,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 
 import { sendOtps, verifyOtp, parseApiError, registerOrganization } from '@/api';
@@ -1099,39 +1097,36 @@ export default function SignupScreen() {
     <View style={styles.container}>
       <LinearGradient colors={['#f0fdfa', '#ecfeff', '#f5f3ff']} style={StyleSheet.absoluteFill} />
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.flex}
+      <KeyboardAwareScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid
+        extraScrollHeight={20}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* Header with Logo */}
-          <Animated.View entering={FadeInDown.delay(100).duration(500)} style={styles.header}>
-            <TouchableOpacity onPress={goBack} style={styles.backButton}>
-              <ArrowLeft size={24} color={Colors.gray[600]} />
-            </TouchableOpacity>
+        {/* Header with Logo */}
+        <Animated.View entering={FadeInDown.delay(100).duration(500)} style={styles.header}>
+          <TouchableOpacity onPress={goBack} style={styles.backButton}>
+            <ArrowLeft size={24} color={Colors.gray[600]} />
+          </TouchableOpacity>
 
-            <View style={styles.logoContainer}>
-              <Image source={logoImage} style={styles.logo} resizeMode="contain" />
-            </View>
+          <View style={styles.logoContainer}>
+            <Image source={logoImage} style={styles.logo} resizeMode="contain" />
+          </View>
 
-            <Text style={styles.title}>Create Your Account</Text>
-            <Text style={styles.subtitle}>{SIGNUP_STEP_TITLES[currentStep - 1]}</Text>
-          </Animated.View>
+          <Text style={styles.title}>Create Your Account</Text>
+          <Text style={styles.subtitle}>{SIGNUP_STEP_TITLES[currentStep - 1]}</Text>
+        </Animated.View>
 
-          {/* Progress Steps */}
-          <Animated.View entering={FadeInDown.delay(200).duration(500)}>
-            <ProgressSteps />
-          </Animated.View>
+        {/* Progress Steps */}
+        <Animated.View entering={FadeInDown.delay(200).duration(500)}>
+          <ProgressSteps />
+        </Animated.View>
 
-          {/* Form Card */}
-          <Animated.View entering={FadeInUp.delay(300).duration(500)} style={styles.formCard}>
-            {renderStepContent()}
-          </Animated.View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        {/* Form Card */}
+        <Animated.View entering={FadeInUp.delay(300).duration(500)} style={styles.formCard}>
+          {renderStepContent()}
+        </Animated.View>
+      </KeyboardAwareScrollView>
       <modal.ModalComponent />
     </View>
   );

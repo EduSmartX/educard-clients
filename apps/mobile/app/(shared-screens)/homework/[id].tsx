@@ -13,16 +13,13 @@ import {
   getRoleGradient,
   HOMEWORK_PRIORITY_COLORS,
   getStatusLabel,
-  getSubmissionStatusLabel,
   HOMEWORK_UI,
 } from '@educard/shared';
-import type { HomeworkDetail } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   ChevronLeft,
   Edit,
-  Trash2,
   Calendar,
   Clock,
   Users,
@@ -33,7 +30,7 @@ import {
   AlertCircle,
   ExternalLink,
 } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import {
   View,
   Text,
@@ -41,13 +38,11 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   Linking,
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { ConfirmDialog } from '@/components/common';
-import { useHomeworkDetail, useDeleteHomework } from '@/features/homework';
+import { useHomeworkDetail } from '@/features/homework';
 import { useAuthStore } from '@/lib/auth-store';
 import { headerStyles, layoutStyles } from '@/styles';
 import { isAdminRole } from '@/utils/role-utils';
@@ -60,10 +55,7 @@ export default function HomeworkDetailScreen() {
   const { user } = useAuthStore();
   const isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
 
-  const [deleteTarget, setDeleteTarget] = useState<HomeworkDetail | null>(null);
-
   const { data: homework, isLoading, error } = useHomeworkDetail(id ?? '');
-  const deleteMutation = useDeleteHomework();
 
   // Check if current user is a teacher (can potentially edit)
   const isTeacher = useMemo(() => {
@@ -111,30 +103,11 @@ export default function HomeworkDetailScreen() {
     });
   };
 
-  const handleDelete = () => {
-    if (!homework) return;
-    setDeleteTarget(homework);
-  };
-
-  const confirmDelete = () => {
-    if (!deleteTarget) return;
-    deleteMutation.mutate(deleteTarget.public_id, {
-      onSuccess: () => {
-        setDeleteTarget(null);
-        router.back();
-      },
-      onError: () => {
-        setDeleteTarget(null);
-        Alert.alert('Error', 'Failed to delete homework');
-      },
-    });
-  };
-
   const handleOpenLink = async (url: string) => {
     try {
       await Linking.openURL(url);
     } catch {
-      Alert.alert('Error', 'Could not open link');
+      // silently fail
     }
   };
 
@@ -196,9 +169,6 @@ export default function HomeworkDetailScreen() {
                   }
                 >
                   <Edit size={18} color="#fff" />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.headerBtn} onPress={handleDelete}>
-                  <Trash2 size={18} color="#fff" />
                 </TouchableOpacity>
               </View>
             )}
@@ -313,7 +283,7 @@ export default function HomeworkDetailScreen() {
             <Text style={styles.sectionTitle}>Reference</Text>
             <TouchableOpacity
               style={styles.linkCard}
-              onPress={() => handleOpenLink(homework.reference_link)}
+              onPress={() => void handleOpenLink(homework.reference_link)}
             >
               <Link size={16} color={Colors.primary[500]} />
               <Text style={styles.linkText} numberOfLines={1}>
@@ -334,7 +304,7 @@ export default function HomeworkDetailScreen() {
               <TouchableOpacity
                 key={attachment.public_id}
                 style={styles.attachmentCard}
-                onPress={() => handleOpenLink(attachment.url)}
+                onPress={() => void handleOpenLink(attachment.url)}
               >
                 <Paperclip size={16} color={Colors.gray[400]} />
                 <View style={styles.attachmentInfo}>
@@ -364,28 +334,6 @@ export default function HomeworkDetailScreen() {
 
         <View style={{ height: 100 }} />
       </ScrollView>
-
-      {/* Edit FAB */}
-      {canEdit && (
-        <TouchableOpacity
-          style={styles.editFab}
-          onPress={() => router.push(`/(shared-screens)/homework/edit?id=${homework.public_id}`)}
-        >
-          <Edit size={22} color="#fff" />
-        </TouchableOpacity>
-      )}
-
-      {/* Delete Confirmation */}
-      <ConfirmDialog
-        visible={!!deleteTarget}
-        title="Delete Homework"
-        message={`Are you sure you want to delete "${deleteTarget?.title}"? This action cannot be undone.`}
-        confirmText="Delete"
-        confirmVariant="danger"
-        onConfirm={confirmDelete}
-        onCancel={() => setDeleteTarget(null)}
-        isLoading={deleteMutation.isPending}
-      />
     </View>
   );
 }

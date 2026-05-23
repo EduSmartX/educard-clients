@@ -20,7 +20,7 @@ import {
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { FormDropdown, FormInput } from '@/components/forms';
+import { FormDropdown } from '@/components/forms';
 import { useSubjectsByClass } from '@/features/subjects';
 import { useCreateEntry, useDeleteEntry } from '@/features/timetable';
 import { headerStyles, layoutStyles } from '@/styles';
@@ -48,20 +48,17 @@ export default function AssignEntryScreen() {
   }>();
 
   const [selectedSubjectId, setSelectedSubjectId] = useState(existingSubjectId ?? '');
-  const [room, setRoom] = useState('');
-  const [notes, setNotes] = useState('');
 
   const createEntry = useCreateEntry();
   const deleteEntry = useDeleteEntry();
 
-  // Fetch subjects for this class (filtered at backend using class_assigned filter)
+  // Fetch subjects assigned to this class
   const { data: subjectsData } = useSubjectsByClass(classId);
 
   const subjectOptions = useMemo(() => {
     const subjects = subjectsData?.data ?? [];
-    // Map to dropdown options
-    return subjects.map((s: { public_id: string; name: string }) => ({
-      label: s.name,
+    return subjects.map((s) => ({
+      label: s.subject_info?.name ?? 'Unknown',
       value: s.public_id,
     }));
   }, [subjectsData]);
@@ -81,8 +78,6 @@ export default function AssignEntryScreen() {
         day_of_week: parseInt(dayOfWeek, 10),
         class_public_id: classId,
         subject_public_id: selectedSubjectId,
-        room: room.trim() || undefined,
-        notes: notes.trim() || undefined,
       });
       if (result.warnings?.length) {
         Alert.alert('Warning', result.warnings.join('\n'), [
@@ -159,19 +154,6 @@ export default function AssignEntryScreen() {
               options={subjectOptions}
               placeholder="Select a subject"
               required
-            />
-            <FormInput
-              label="Room"
-              value={room}
-              onChangeText={setRoom}
-              placeholder="e.g., Room 101 (optional)"
-            />
-            <FormInput
-              label="Notes"
-              value={notes}
-              onChangeText={setNotes}
-              placeholder="Optional notes"
-              multiline
             />
           </View>
         </Animated.View>

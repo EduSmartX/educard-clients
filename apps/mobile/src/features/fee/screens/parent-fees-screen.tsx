@@ -3,58 +3,52 @@
  * Shows parent's child fee details
  */
 
-import React, { useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  RefreshControl,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { Card } from '@/components/ui/card';
-import { FeeStatusBadge } from '../components/fee-status-badge';
-import { FeeAmount, FeeProgress } from '../components/fee-amount';
-import { useParentStudentFees } from '../hooks/use-fee-queries';
 import type { StudentFee } from '@educard/shared';
 import { FeeStatus, FEE_UI_TEXT } from '@educard/shared';
+import { useRouter, type Href } from 'expo-router';
+import React, { useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
+
+import { Card } from '@/components/ui/Card';
+
+import { FeeAmount, FeeProgress } from '../components/fee-amount';
+import { FeeStatusBadge } from '../components/fee-status-badge';
+import { useParentStudentFees } from '../hooks/use-fee-queries';
 
 export default function ParentFeesScreen() {
   const router = useRouter();
   const { data: feesData, isLoading, refetch } = useParentStudentFees();
 
-  const fees = feesData?.results ?? [];
+  const fees = feesData?.data ?? [];
 
   // Calculate totals
-  const totalAmount = fees.reduce((sum, fee) => sum + fee.total_amount, 0);
-  const totalPaid = fees.reduce((sum, fee) => sum + fee.amount_paid, 0);
-  const totalBalance = fees.reduce((sum, fee) => sum + fee.balance, 0);
-  const overdueFees = fees.filter((fee) => fee.status === FeeStatus.OVERDUE);
+  const totalAmount = fees.reduce((sum: number, fee: StudentFee) => sum + fee.final_amount, 0);
+  const totalPaid = fees.reduce((sum: number, fee: StudentFee) => sum + fee.amount_paid, 0);
+  const totalBalance = fees.reduce((sum: number, fee: StudentFee) => sum + fee.balance_due, 0);
+  const overdueFees = fees.filter((fee: StudentFee) => fee.is_overdue);
 
   const handleFeePress = useCallback(
     (fee: StudentFee) => {
-      router.push(`/parent/fees/${fee.id}`);
+      router.push(`/(shared-screens)/fees/${fee.public_id}` as Href);
     },
     [router]
   );
 
   const handlePayPress = useCallback(
     (fee: StudentFee) => {
-      router.push(`/parent/fees/${fee.id}/pay`);
+      router.push(`/(shared-screens)/fees/${fee.public_id}/pay` as Href);
     },
     [router]
   );
 
   const handleViewPayments = useCallback(() => {
-    router.push('/parent/fees/payments');
+    router.push('/(shared-screens)/fees/payments' as Href);
   }, [router]);
 
   return (
     <ScrollView
       style={styles.container}
-      refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} />}
+      refreshControl={<RefreshControl refreshing={isLoading} onRefresh={() => void refetch()} />}
     >
       {/* Summary Cards */}
       <View style={styles.summaryRow}>
@@ -109,9 +103,9 @@ export default function ParentFeesScreen() {
           <Text style={styles.emptyText}>{FEE_UI_TEXT.EMPTY_STATES.NO_FEES}</Text>
         </Card>
       ) : (
-        fees.map((fee) => (
+        fees.map((fee: StudentFee) => (
           <FeeCard
-            key={fee.id}
+            key={fee.public_id}
             fee={fee}
             onPress={() => handleFeePress(fee)}
             onPayPress={() => handlePayPress(fee)}
@@ -129,7 +123,7 @@ interface FeeCardProps {
 }
 
 function FeeCard({ fee, onPress, onPayPress }: FeeCardProps) {
-  const isOverdue = fee.status === FeeStatus.OVERDUE;
+  const isOverdue = fee.is_overdue;
   const isPaid = fee.status === FeeStatus.PAID;
 
   return (
@@ -138,9 +132,9 @@ function FeeCard({ fee, onPress, onPayPress }: FeeCardProps) {
         {/* Header */}
         <View style={styles.feeHeader}>
           <View>
-            <Text style={styles.feeName}>{fee.fee_structure?.name}</Text>
+            <Text style={styles.feeName}>{fee.fee_structure_name}</Text>
             <Text style={styles.feeSubtext}>
-              {fee.fee_structure?.academic_year} • {fee.student_class?.name}
+              {fee.academic_year} • {fee.class_name}
             </Text>
           </View>
           <FeeStatusBadge status={fee.status} />
@@ -150,7 +144,7 @@ function FeeCard({ fee, onPress, onPayPress }: FeeCardProps) {
         <View style={styles.amountsRow}>
           <View style={styles.amountItem}>
             <Text style={styles.amountLabel}>Total</Text>
-            <FeeAmount amount={fee.total_amount} size="sm" />
+            <FeeAmount amount={fee.final_amount} size="sm" />
           </View>
           <View style={styles.amountItem}>
             <Text style={styles.amountLabel}>Paid</Text>
@@ -159,9 +153,9 @@ function FeeCard({ fee, onPress, onPayPress }: FeeCardProps) {
           <View style={styles.amountItem}>
             <Text style={styles.amountLabel}>Balance</Text>
             <FeeAmount
-              amount={fee.balance}
+              amount={fee.balance_due}
               size="sm"
-              variant={fee.balance > 0 ? 'danger' : 'default'}
+              variant={fee.balance_due > 0 ? 'danger' : 'default'}
             />
           </View>
         </View>
@@ -169,7 +163,7 @@ function FeeCard({ fee, onPress, onPayPress }: FeeCardProps) {
         {/* Progress */}
         <FeeProgress
           amountPaid={fee.amount_paid}
-          totalAmount={fee.total_amount}
+          totalAmount={fee.final_amount}
           paidPercentage={fee.paid_percentage ?? 0}
           showLabels={false}
         />

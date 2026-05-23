@@ -103,25 +103,27 @@ export function BulkUploadModal({
     }
 
     if (Array.isArray(errors)) {
-      return errors.map((error) => {
-        const rowNum = error.row_number ?? error.row;
-        if (rowNum !== undefined && error.errors && typeof error.errors === 'object') {
-          if (rowNum === 0 && error.errors.file) {
-            return { row: 0, error: error.errors.file, data: {} };
+      return errors.map((err: unknown) => {
+        const error = err as Record<string, unknown>;
+        const rowNum = (error.row_number ?? error.row) as number | undefined;
+        const errorErrors = error.errors as Record<string, string> | undefined;
+        if (rowNum !== undefined && errorErrors && typeof errorErrors === 'object') {
+          if (rowNum === 0 && errorErrors.file) {
+            return { row: 0, error: errorErrors.file, data: {} };
           }
-          const errorKeys = Object.keys(error.errors);
+          const errorKeys = Object.keys(errorErrors);
           const firstErrorKey = errorKeys[0];
           const errorMessage =
             errorKeys.length > 1
               ? `${errorKeys.length} validation errors`
-              : error.errors[firstErrorKey] || 'Validation error';
+              : errorErrors[firstErrorKey] || 'Validation error';
 
-          return { row: rowNum, error: errorMessage, data: error.errors };
+          return { row: rowNum, error: errorMessage, data: errorErrors as Record<string, unknown> };
         }
         return {
-          row: error.row || 0,
-          error: error.error || 'Unknown error',
-          data: error.data || {},
+          row: (error.row as number) || 0,
+          error: (error.error as string) || 'Unknown error',
+          data: (error.data as Record<string, unknown>) || {},
         };
       });
     }
@@ -319,7 +321,7 @@ export function BulkUploadModal({
               </Text>
               <TouchableOpacity
                 style={[styles.actionButton, styles.downloadButton]}
-                onPress={handleDownloadTemplate}
+                onPress={() => void handleDownloadTemplate()}
                 disabled={isDownloading}
               >
                 {isDownloading ? (
@@ -345,7 +347,7 @@ export function BulkUploadModal({
 
               <TouchableOpacity
                 style={styles.fileSelectArea}
-                onPress={handleSelectFile}
+                onPress={() => void handleSelectFile()}
                 activeOpacity={0.7}
               >
                 <Text style={styles.fileIcon}>📊</Text>
@@ -466,7 +468,7 @@ export function BulkUploadModal({
                 styles.uploadButton,
                 (!selectedFile || isUploading) && styles.uploadButtonDisabled,
               ]}
-              onPress={handleUpload}
+              onPress={() => void handleUpload()}
               disabled={!selectedFile || isUploading}
             >
               {isUploading ? (

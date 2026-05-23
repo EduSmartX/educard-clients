@@ -19,6 +19,7 @@ import {
   ExternalLink,
   Search,
   Loader2,
+  X,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -35,7 +36,7 @@ import { getSubjectColor, type SubjectColorScheme } from '@educard/shared';
 import { useNavigateWorkingDay } from '@/features/core';
 import { PageHeader } from '@/components/common';
 
-import { useTeacherClasses, useHomeworkList } from '../hooks';
+import { useTeacherClasses, useHomeworkList, useDeleteHomework } from '../hooks';
 import type { Homework, HomeworkListParams } from '../types';
 
 // Helper to get yesterday's date (fallback when API fails)
@@ -232,6 +233,14 @@ export default function HomeworkListPage() {
       );
     },
     [navigate, selectedClass]
+  );
+
+  const deleteHomework = useDeleteHomework();
+  const handleDeleteHomework = useCallback(
+    (publicId: string) => {
+      deleteHomework.mutate(publicId);
+    },
+    [deleteHomework]
   );
 
   const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
@@ -436,6 +445,7 @@ export default function HomeworkListPage() {
                   color={color}
                   onView={handleViewHomework}
                   onAdd={() => handleAddSubjectHomework(subject.public_id)}
+                  onDelete={handleDeleteHomework}
                 />
               ))}
             </div>
@@ -470,21 +480,36 @@ interface SubjectCardProps {
   color: SubjectColorScheme;
   onView: (homework: Homework) => void;
   onAdd: () => void;
+  onDelete: (publicId: string) => void;
 }
 
-function SubjectCard({ subject, homework, color, onView, onAdd }: SubjectCardProps) {
+function SubjectCard({ subject, homework, color, onView, onAdd, onDelete }: SubjectCardProps) {
   const hasHomework = !!homework;
 
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-xl border-2 transition-all duration-200',
+        'group relative rounded-xl border-2 transition-all duration-200',
         color.border,
         hasHomework ? 'hover:shadow-lg' : 'hover:border-dashed'
       )}
     >
+      {/* Delete button - shown on hover like timetable */}
+      {hasHomework && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(homework.public_id);
+          }}
+          className="absolute -top-2 -right-2 z-10 hidden h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white shadow-sm transition-all group-hover:flex hover:bg-red-600"
+          title="Delete homework"
+        >
+          <X className="h-3 w-3" />
+        </button>
+      )}
+
       {/* Color accent bar */}
-      <div className="h-2" style={{ backgroundColor: color.hex }} />
+      <div className="h-2 rounded-t-[10px]" style={{ backgroundColor: color.hex }} />
 
       <div className="p-4">
         {/* Subject Header */}

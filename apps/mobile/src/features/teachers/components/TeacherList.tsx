@@ -6,13 +6,7 @@
  * - Teacher: View-only access (No Add, Edit, Delete buttons)
  */
 
-import {
-  Colors,
-  getRoleGradient,
-  getRoleThemeColors,
-  Teacher,
-  getErrorMessage,
-} from '@educard/shared';
+import { Colors, getRoleGradient, getRoleThemeColors, Teacher } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
@@ -33,14 +27,13 @@ import {
   StyleSheet,
   Image,
   RefreshControl,
-  Alert,
   ActivityIndicator,
   type NativeSyntheticEvent,
   type NativeScrollEvent,
 } from 'react-native';
 import Animated, { FadeIn, FadeInRight } from 'react-native-reanimated';
 
-import { SearchBar } from '@/components/common';
+import { SearchBar, ConfirmDialog } from '@/components/common';
 import { BulkUploadModal } from '@/components/common/BulkUploadModal';
 import { EntityActions } from '@/components/common/EntityActions';
 import {
@@ -50,7 +43,7 @@ import {
   getTeacherFilterLabels,
 } from '@/components/filters';
 import { getMediaUrl } from '@/constants/config';
-import { useDeleteConfirm } from '@/hooks/useDeleteConfirm';
+import { useActionConfirm, useDeleteConfirm } from '@/hooks';
 import { useAuthStore } from '@/lib/auth-store';
 import { layoutStyles, headerStyles, stateStyles, listStyles } from '@/styles';
 import { isAdminRole } from '@/utils/role-utils';
@@ -110,34 +103,23 @@ export function TeacherList({ onBack }: TeacherListProps) {
   });
 
   const deleteMutation = useDeleteTeacher();
-  const confirmDelete = useDeleteConfirm({
+  const { confirmDelete, dialogProps: deleteDialogProps } = useDeleteConfirm({
     entityName: 'Teacher',
     deleteMutation,
     onSuccess: () => void refetch(),
   });
 
   const restoreMutation = useRestoreTeacher();
-  const handleReactivate = useCallback(
-    (id: string, name: string) => {
-      Alert.alert('Reactivate Teacher', `Are you sure you want to reactivate ${name}?`, [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reactivate',
-          onPress: () => {
-            void (async () => {
-              try {
-                await restoreMutation.mutateAsync(id);
-                void refetch();
-                Alert.alert('Success', `${name} reactivated successfully`);
-              } catch (err) {
-                Alert.alert('Error', getErrorMessage(err, 'Failed to reactivate teacher'));
-              }
-            })();
-          },
-        },
-      ]);
-    },
-    [restoreMutation, refetch]
+  const { confirmAction: confirmReactivate, dialogProps: reactivateDialogProps } = useActionConfirm(
+    {
+      title: 'Reactivate Teacher',
+      confirmText: 'Reactivate',
+      confirmVariant: 'success',
+      makeMessage: (name) => `Are you sure you want to reactivate ${name}?`,
+      runAction: (id: string) => restoreMutation.mutateAsync(id),
+      errorMessage: 'Failed to reactivate teacher',
+      onSuccess: () => void refetch(),
+    }
   );
 
   const isDeletedView = filters.is_deleted === true;
@@ -269,7 +251,7 @@ export function TeacherList({ onBack }: TeacherListProps) {
           }
           onReactivate={
             isDeletedView && canManage
-              ? () => handleReactivate(item.public_id, item.full_name || 'this teacher')
+              ? () => confirmReactivate(item.public_id, item.full_name || 'this teacher')
               : undefined
           }
           canManage={canManage}
@@ -407,6 +389,9 @@ export function TeacherList({ onBack }: TeacherListProps) {
           }
         />
       )}
+
+      <ConfirmDialog {...deleteDialogProps} />
+      <ConfirmDialog {...reactivateDialogProps} />
     </View>
   );
 }

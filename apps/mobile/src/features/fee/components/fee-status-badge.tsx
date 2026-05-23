@@ -3,10 +3,10 @@
  * Displays fee status with appropriate styling
  */
 
+import type { FeeStatusType } from '@educard/shared';
+import { FeeStatusLabels, FeeStatusColors } from '@educard/shared';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import type { FeeStatusType } from '@educard/shared';
-import { FeeStatus, FeeStatusLabels, FeeStatusColors } from '@educard/shared';
 
 interface FeeStatusBadgeProps {
   status: FeeStatusType;

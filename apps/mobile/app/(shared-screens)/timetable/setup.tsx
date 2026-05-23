@@ -205,12 +205,13 @@ export default function TimetableSetupScreen() {
             </View>
             <View style={st.headerActions}>
               <TouchableOpacity
-                style={st.headerIconBtn}
+                style={st.headerLabelBtn}
                 onPress={() =>
                   router.push('/(shared-screens)/timetable' as Parameters<typeof router.push>[0])
                 }
               >
-                <Calendar size={20} color="#fff" />
+                <Calendar size={16} color="#fff" />
+                <Text style={st.headerLabelText}>Assign Subjects</Text>
               </TouchableOpacity>
               <TouchableOpacity style={st.addBtn} onPress={openCreateGroup}>
                 <Plus size={20} color="#fff" />
@@ -311,18 +312,6 @@ export default function TimetableSetupScreen() {
                     ) : null}
                   </View>
                   <View style={st.groupActions}>
-                    <TouchableOpacity
-                      style={st.iconBtn}
-                      onPress={() =>
-                        router.push(
-                          `/(shared-screens)/timetable/slots-editor?groupId=${group.public_id}&groupName=${encodeURIComponent(group.name)}` as Parameters<
-                            typeof router.push
-                          >[0]
-                        )
-                      }
-                    >
-                      <Clock size={16} color="#7c3aed" />
-                    </TouchableOpacity>
                     <TouchableOpacity style={st.iconBtn} onPress={() => openEditGroup(group)}>
                       <Pencil size={16} color="#64748b" />
                     </TouchableOpacity>
@@ -380,13 +369,29 @@ export default function TimetableSetupScreen() {
                       </TouchableOpacity>
                     </View>
                   ) : (
-                    <TouchableOpacity
-                      style={st.addClassBtn}
-                      onPress={() => setAddingToGroupId(group.public_id)}
-                    >
-                      <Plus size={14} color="#7c3aed" />
-                      <Text style={st.addClassText}>Add Class</Text>
-                    </TouchableOpacity>
+                    <View style={st.bottomActions}>
+                      <TouchableOpacity
+                        style={st.addClassBtn}
+                        onPress={() => setAddingToGroupId(group.public_id)}
+                      >
+                        <Plus size={14} color="#7c3aed" />
+                        <Text style={st.addClassText}>Add Class</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={st.timeslotsBtn}
+                        onPress={() =>
+                          router.push(
+                            `/(shared-screens)/timetable/slots-editor?groupId=${group.public_id}&groupName=${encodeURIComponent(group.name)}` as Parameters<
+                              typeof router.push
+                            >[0]
+                          )
+                        }
+                      >
+                        <Clock size={14} color="#0d9488" />
+                        <Text style={st.timeslotsText}>Timeslots</Text>
+                      </TouchableOpacity>
+                    </View>
                   )}
                 </View>
               </View>
@@ -411,6 +416,20 @@ const st = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  headerLabelBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+  },
+  headerLabelText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#fff',
   },
   addBtn: {
     width: 40,
@@ -538,7 +557,19 @@ const st = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     paddingVertical: 8,
-    marginTop: 4,
   },
   addClassText: { fontSize: 13, fontWeight: '600', color: '#7c3aed' },
+  bottomActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 4,
+  },
+  timeslotsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 8,
+  },
+  timeslotsText: { fontSize: 13, fontWeight: '600', color: '#0d9488' },
 });

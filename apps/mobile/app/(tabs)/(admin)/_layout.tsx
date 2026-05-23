@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const _adminTheme = getRoleThemeColors('admin'); // prefixed _ - unused for now
 
 // Icon props type
-type IconProps = { size: number; color: string };
+type IconProps = { size: number; color: string; strokeWidth?: number };
 
 const GradientIcon = ({
   Icon,
@@ -133,6 +133,16 @@ export default function AdminTabLayout() {
       <Tabs.Screen name="view-student" options={{ href: null }} />
       <Tabs.Screen name="view-subject" options={{ href: null }} />
       <Tabs.Screen name="view-teacher" options={{ href: null }} />
+      {/* Fee Management screens */}
+      <Tabs.Screen name="fee-dashboard" options={{ href: null }} />
+      <Tabs.Screen name="fee-structures" options={{ href: null }} />
+      <Tabs.Screen name="fee-structure-detail" options={{ href: null }} />
+      <Tabs.Screen name="fee-structure-form" options={{ href: null }} />
+      <Tabs.Screen name="fee-student-fees" options={{ href: null }} />
+      <Tabs.Screen name="fee-student-detail" options={{ href: null }} />
+      <Tabs.Screen name="fee-student-edit" options={{ href: null }} />
+      <Tabs.Screen name="fee-payments" options={{ href: null }} />
+      <Tabs.Screen name="fee-assign-student" options={{ href: null }} />
     </Tabs>
   );
 }

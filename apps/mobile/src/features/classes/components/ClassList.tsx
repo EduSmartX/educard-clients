@@ -6,22 +6,14 @@
  * - Teacher: View-only access (No Add, Edit, Delete buttons)
  */
 
-import { Colors, getRoleThemeColors, Class, useDebounce, getErrorMessage } from '@educard/shared';
+import { Colors, getRoleThemeColors, Class, useDebounce } from '@educard/shared';
 import { useRouter } from 'expo-router';
 import { Plus, School, GraduationCap, BookOpen, Upload } from 'lucide-react-native';
 import { useState, useCallback, useMemo } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 
-import { SearchBar, ListHeader, BulkUploadModal } from '@/components/common';
+import { SearchBar, ListHeader, BulkUploadModal, ConfirmDialog } from '@/components/common';
 import { EntityActions } from '@/components/common/EntityActions';
 import { LoadingState, ErrorState, EmptyState, ListFooter } from '@/components/common/ListStates';
 import {
@@ -30,7 +22,7 @@ import {
   CLASS_FILTER_FIELDS,
   getClassFilterLabels,
 } from '@/components/filters';
-import { useDeleteConfirm } from '@/hooks/useDeleteConfirm';
+import { useActionConfirm, useDeleteConfirm } from '@/hooks';
 import { useListScroll } from '@/hooks/useListScroll';
 import { useAuthStore } from '@/lib/auth-store';
 import { layoutStyles, listStyles } from '@/styles';
@@ -78,34 +70,23 @@ export function ClassList({ onBack }: ClassListProps) {
   } = useClasses({ search: debouncedSearch || undefined, ...filters });
 
   const deleteMutation = useDeleteClass();
-  const confirmDelete = useDeleteConfirm({
+  const { confirmDelete, dialogProps: deleteDialogProps } = useDeleteConfirm({
     entityName: 'Class',
     deleteMutation,
     onSuccess: () => void refetch(),
   });
 
   const restoreMutation = useRestoreClass();
-  const handleReactivate = useCallback(
-    (id: string, name: string) => {
-      Alert.alert('Reactivate Class', `Are you sure you want to reactivate ${name}?`, [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reactivate',
-          onPress: () => {
-            void restoreMutation
-              .mutateAsync(id)
-              .then(() => {
-                void refetch();
-                Alert.alert('Success', `${name} reactivated successfully`);
-              })
-              .catch((err: unknown) => {
-                Alert.alert('Error', getErrorMessage(err, 'Failed to reactivate class'));
-              });
-          },
-        },
-      ]);
-    },
-    [restoreMutation, refetch]
+  const { confirmAction: confirmReactivate, dialogProps: reactivateDialogProps } = useActionConfirm(
+    {
+      title: 'Reactivate Class',
+      confirmText: 'Reactivate',
+      confirmVariant: 'success',
+      makeMessage: (name) => `Are you sure you want to reactivate ${name}?`,
+      runAction: (id: string) => restoreMutation.mutateAsync(id),
+      errorMessage: 'Failed to reactivate class',
+      onSuccess: () => void refetch(),
+    }
   );
 
   const isDeletedView = !!filters.is_deleted;
@@ -232,7 +213,7 @@ export function ClassList({ onBack }: ClassListProps) {
           }
           onReactivate={
             isDeletedView && canManage
-              ? () => handleReactivate(item.public_id, getClassDisplayName(item))
+              ? () => confirmReactivate(item.public_id, getClassDisplayName(item))
               : undefined
           }
           canManage={canManage}
@@ -342,6 +323,9 @@ export function ClassList({ onBack }: ClassListProps) {
           }
         />
       )}
+
+      <ConfirmDialog {...deleteDialogProps} />
+      <ConfirmDialog {...reactivateDialogProps} />
     </View>
   );
 }

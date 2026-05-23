@@ -3,6 +3,9 @@
 // API error extraction
 export { extractApiError } from './api-error';
 
+// Time formatting
+export { formatTime } from './format-time';
+
 // Role-based utilities
 export {
   isAdminRole,

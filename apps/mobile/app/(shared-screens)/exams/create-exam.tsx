@@ -11,23 +11,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Check } from 'lucide-react-native';
 import { useState, useMemo, useEffect } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { FormInput, FormDropdown, FormDatePicker } from '@/components/forms';
 import { useClasses } from '@/features/classes';
 import { useCreateExam, useExamSessions } from '@/features/exams';
 import { useSubjectsByClass } from '@/features/subjects';
+import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -41,6 +33,7 @@ export default function CreateExamScreen() {
   const router = useRouter();
   const { sessionId: preSelectedSessionId } = useLocalSearchParams<{ sessionId?: string }>();
   const createExam = useCreateExam();
+  const { showToast } = useToast();
 
   // Fetch data
   const { data: sessionsData } = useExamSessions({ page_size: 100 });
@@ -120,9 +113,10 @@ export default function CreateExamScreen() {
         end_time: endTime || null,
         description: description.trim() || undefined,
       });
+      showToast({ type: 'success', title: 'Exam Created', message: 'Exam created successfully' });
       router.back();
     } catch (err: any) {
-      Alert.alert('Error', extractApiError(err));
+      showToast({ type: 'error', title: 'Error', message: extractApiError(err) });
     }
   };
 
@@ -153,123 +147,124 @@ export default function CreateExamScreen() {
         </View>
       </LinearGradient>
 
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      <KeyboardAwareScrollView
+        style={[st.body, { flex: 1 }]}
+        contentContainerStyle={st.bodyContent}
+        enableOnAndroid
+        extraScrollHeight={20}
+        keyboardShouldPersistTaps="handled"
       >
-        <ScrollView style={st.body} contentContainerStyle={st.bodyContent}>
-          <Animated.View entering={FadeInDown.delay(100).springify()}>
-            <View style={st.card}>
-              <FormDropdown
-                label="Exam Session"
-                value={sessionId}
-                onChange={setSessionId}
-                options={sessionOptions}
-                placeholder="Select session"
-                required
-              />
-              <FormDropdown
-                label="Class"
-                value={classId}
-                onChange={setClassId}
-                options={classOptions}
-                placeholder="Select class first"
-                required
-                searchable
-              />
-              <FormDropdown
-                label="Subject"
-                value={subjectId}
-                onChange={setSubjectId}
-                options={subjectOptions}
-                placeholder={
-                  classId
-                    ? subjectsLoading
-                      ? 'Loading subjects...'
-                      : 'Select subject'
-                    : 'Select class first'
-                }
-                required
-                disabled={!classId}
-                searchable
-              />
-              <FormDropdown
-                label="Status"
-                value={status}
-                onChange={setStatus}
-                options={STATUS_OPTIONS}
-                placeholder="Select status"
-              />
-              <View style={st.row}>
-                <View style={{ flex: 1 }}>
-                  <FormInput
-                    label="Max Marks"
-                    value={maxMarks}
-                    onChangeText={setMaxMarks}
-                    keyboardType="numeric"
-                    placeholder="100"
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <FormInput
-                    label="Passing Marks"
-                    value={passingMarks}
-                    onChangeText={setPassingMarks}
-                    keyboardType="numeric"
-                    placeholder="35"
-                  />
-                </View>
+        <Animated.View entering={FadeInDown.delay(100).springify()}>
+          <View style={st.card}>
+            <FormDropdown
+              label="Exam Session"
+              value={sessionId}
+              onChange={setSessionId}
+              options={sessionOptions}
+              placeholder="Select session"
+              required
+            />
+            <FormDropdown
+              label="Class"
+              value={classId}
+              onChange={setClassId}
+              options={classOptions}
+              placeholder="Select class first"
+              required
+              searchable
+            />
+            <FormDropdown
+              label="Subject"
+              value={subjectId}
+              onChange={setSubjectId}
+              options={subjectOptions}
+              placeholder={
+                classId
+                  ? subjectsLoading
+                    ? 'Loading subjects...'
+                    : 'Select subject'
+                  : 'Select class first'
+              }
+              required
+              disabled={!classId}
+              searchable
+            />
+            <FormDropdown
+              label="Status"
+              value={status}
+              onChange={setStatus}
+              options={STATUS_OPTIONS}
+              placeholder="Select status"
+            />
+            <View style={st.row}>
+              <View style={{ flex: 1 }}>
+                <FormInput
+                  label="Max Marks"
+                  value={maxMarks}
+                  onChangeText={setMaxMarks}
+                  keyboardType="numeric"
+                  placeholder="100"
+                />
               </View>
-              <FormDatePicker
-                label="Exam Date"
-                value={examDate}
-                onChange={setExamDate}
-                placeholder="Select exam date (optional)"
-              />
-              <View style={st.row}>
-                <View style={{ flex: 1 }}>
-                  <FormInput
-                    label="Start Time"
-                    value={startTime}
-                    onChangeText={setStartTime}
-                    placeholder="09:00 (optional)"
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <FormInput
-                    label="End Time"
-                    value={endTime}
-                    onChangeText={setEndTime}
-                    placeholder="11:00 (optional)"
-                  />
-                </View>
+              <View style={{ flex: 1 }}>
+                <FormInput
+                  label="Passing Marks"
+                  value={passingMarks}
+                  onChangeText={setPassingMarks}
+                  keyboardType="numeric"
+                  placeholder="35"
+                />
               </View>
-              <FormInput
-                label="Description"
-                value={description}
-                onChangeText={setDescription}
-                placeholder="Optional description"
-                multiline
-              />
             </View>
-          </Animated.View>
+            <FormDatePicker
+              label="Exam Date"
+              value={examDate}
+              onChange={setExamDate}
+              placeholder="Select exam date (optional)"
+            />
+            <View style={st.row}>
+              <View style={{ flex: 1 }}>
+                <FormInput
+                  label="Start Time"
+                  value={startTime}
+                  onChangeText={setStartTime}
+                  placeholder="09:00 (optional)"
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <FormInput
+                  label="End Time"
+                  value={endTime}
+                  onChangeText={setEndTime}
+                  placeholder="11:00 (optional)"
+                />
+              </View>
+            </View>
+            <FormInput
+              label="Description"
+              value={description}
+              onChangeText={setDescription}
+              placeholder="Optional description"
+              multiline
+            />
+          </View>
+        </Animated.View>
 
-          <TouchableOpacity
-            style={[st.submitBtn, createExam.isPending && st.submitBtnDisabled]}
-            onPress={handleSubmit}
-            disabled={createExam.isPending}
-          >
-            {createExam.isPending ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <>
-                <Check size={18} color="#fff" />
-                <Text style={st.submitText}>Create Exam</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        <TouchableOpacity
+          style={[st.submitBtn, createExam.isPending && st.submitBtnDisabled]}
+          onPress={handleSubmit}
+          disabled={createExam.isPending}
+        >
+          {createExam.isPending ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <>
+              <Check size={18} color="#fff" />
+              <Text style={st.submitText}>Create Exam</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </KeyboardAwareScrollView>
     </View>
   );
 }

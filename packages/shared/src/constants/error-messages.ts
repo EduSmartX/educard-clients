@@ -701,6 +701,7 @@ export const AttendanceUiText = {
   ATTENDANCE_SUBMITTED: "Attendance submitted successfully",
   ATTENDANCE_UPDATED: "Attendance updated successfully",
   ALREADY_MARKED: "Attendance already marked for this date",
+  EDIT_ATTENDANCE: "Edit Attendance",
 
   // Summary labels
   TOTAL_STUDENTS: "Total Students",

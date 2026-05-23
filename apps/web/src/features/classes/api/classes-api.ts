@@ -30,7 +30,7 @@ function getBaseUrl(isWriteOperation = false): string {
   if (isWriteOperation) {
     return ADMIN_BASE_URL;
   }
-  
+
   // Read operations: use employee endpoint for non-admins, admin endpoint for admins
   return isAdminUser() ? ADMIN_BASE_URL : EMPLOYEE_BASE_URL;
 }
@@ -39,7 +39,7 @@ export async function fetchClasses(
   params: FetchClassesParams = {}
 ): Promise<PaginatedResponse<Class>> {
   const baseUrl = getBaseUrl(false); // Read operation
-  
+
   // Add is_deleted=false by default if not explicitly provided
   const queryParams = {
     is_deleted: false,
@@ -59,37 +59,44 @@ export async function fetchClass(publicId: string, isDeleted = false): Promise<C
   const baseUrl = getBaseUrl(false); // Read operation
   const params = isDeleted ? { is_deleted: 'true' } : {};
   const response = await api.get<ClassResponse>(`${baseUrl}${publicId}/`, { params });
-  
+
   // Ensure we return valid data or throw an error
   if (!response.data.data) {
     throw new Error('Class data not found');
   }
-  
+
   return response.data.data;
 }
 
-export async function createClass(data: CreateClassPayload, forceCreate?: boolean): Promise<Class> {
+export async function createClass(
+  data: CreateClassPayload,
+  forceCreate?: boolean
+): Promise<ClassResponse> {
   const baseUrl = getBaseUrl(true); // Write operation
   const params = forceCreate ? { force_create: 'true' } : {};
   const response = await api.post<ClassResponse>(baseUrl, data, { params });
-  return response.data.data;
+  return response.data;
 }
 
-export async function updateClass(publicId: string, data: UpdateClassPayload): Promise<Class> {
+export async function updateClass(
+  publicId: string,
+  data: UpdateClassPayload
+): Promise<ClassResponse> {
   const baseUrl = getBaseUrl(true); // Write operation
   const response = await api.put<ClassResponse>(`${baseUrl}${publicId}/`, data);
-  return response.data.data;
+  return response.data;
 }
 
-export async function deleteClass(publicId: string): Promise<void> {
+export async function deleteClass(publicId: string): Promise<ClassResponse> {
   const baseUrl = getBaseUrl(true); // Write operation
-  await api.delete(`${baseUrl}${publicId}/`);
+  const response = await api.delete<ClassResponse>(`${baseUrl}${publicId}/`);
+  return response.data;
 }
 
-export async function reactivateClass(publicId: string): Promise<Class> {
+export async function reactivateClass(publicId: string): Promise<ClassResponse> {
   const baseUrl = getBaseUrl(true); // Write operation
   const response = await api.post<ClassResponse>(`${baseUrl}${publicId}/activate/`);
-  return response.data.data;
+  return response.data;
 }
 
 export async function bulkUploadClasses(file: File): Promise<ClassBulkUploadResponse['data']> {

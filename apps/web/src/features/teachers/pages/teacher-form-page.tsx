@@ -13,7 +13,7 @@ import {
   ReactivateConfirmationDialog,
 } from '@/components/common';
 import { ROUTES } from '@/constants/app-config';
-import { ErrorMessages, SuccessMessages, ToastTitles } from '@/constants';
+import { ErrorMessages, ToastTitles } from '@/constants';
 import { useTeacher } from '../hooks/use-teachers';
 import { useDeleteTeacher, useReactivateTeacher } from '../hooks/mutations';
 import { TeacherForm } from '../components/teacher-form';
@@ -39,8 +39,12 @@ export default function TeacherFormPage() {
 
   // Determine mode based on URL path
   const getMode = (): 'create' | 'edit' | 'view' => {
-    if (!id) {return 'create';}
-    if (location.pathname.endsWith('/edit')) {return 'edit';}
+    if (!id) {
+      return 'create';
+    }
+    if (location.pathname.endsWith('/edit')) {
+      return 'edit';
+    }
     return 'view';
   };
 
@@ -76,23 +80,14 @@ export default function TeacherFormPage() {
   // Delete mutation
   const deleteMutation = useDeleteTeacher({
     onSuccess: () => {
-      toast.success(SuccessMessages.TEACHER.DELETE_SUCCESS);
-      // Navigate immediately to avoid refetching deleted resource
       navigate(ROUTES.TEACHERS, { replace: true });
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || ErrorMessages.TEACHER.DELETE_FAILED);
     },
   });
 
   // Reactivate mutation
   const reactivateMutation = useReactivateTeacher({
     onSuccess: () => {
-      toast.success(SuccessMessages.TEACHER.REACTIVATE_SUCCESS);
       navigate(ROUTES.TEACHERS, { replace: true });
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || ErrorMessages.TEACHER.REACTIVATE_FAILED);
     },
   });
 
@@ -151,12 +146,12 @@ export default function TeacherFormPage() {
             },
           ]}
         />
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center space-y-4">
-            <AlertCircle className="h-12 w-12 text-red-500 mx-auto" />
+        <div className="flex min-h-[400px] items-center justify-center">
+          <div className="space-y-4 text-center">
+            <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
             <div>
-              <p className="text-red-600 font-medium">Invalid teacher ID</p>
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="font-medium text-red-600">Invalid teacher ID</p>
+              <p className="mt-2 text-sm text-gray-500">
                 The teacher you're looking for doesn't exist or the ID is invalid.
               </p>
             </div>

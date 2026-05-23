@@ -16,17 +16,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Save } from 'lucide-react-native';
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { FormInput, FormSection, FormError, FormDropdown } from '@/components/forms';
@@ -87,11 +78,9 @@ export default function EditSubjectScreen() {
           subject.class_assigned?.public_id ||
           subject.class_id ||
           '',
-        subject_id:
-          subject.subject_info?.id?.toString() ||
-          subject.subject_master?.id?.toString() ||
-          subject.subject_id ||
-          '',
+        subject_id: String(
+          subject.subject_info?.id ?? subject.subject_master?.id ?? subject.subject_id ?? ''
+        ),
         subject_type: (subject.subject_type as 'core' | 'elective' | 'language') || 'core',
         teacher_id:
           subject.teacher_info?.public_id || subject.teacher?.public_id || subject.teacher_id || '',
@@ -138,9 +127,7 @@ export default function EditSubjectScreen() {
       { publicId: id, data: payload },
       {
         onSuccess: () => {
-          Alert.alert('✅ Success', 'Subject updated successfully!', [
-            { text: 'OK', onPress: () => router.back() },
-          ]);
+          router.back();
         },
         onError: (err: any) => {
           const { fieldErrors: fe, generalError } = parseApiErrors(err?.response?.data);
@@ -182,94 +169,92 @@ export default function EditSubjectScreen() {
         </View>
       </LinearGradient>
 
-      <KeyboardAvoidingView
+      <KeyboardAwareScrollView
+        contentContainerStyle={st.form}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid
+        extraScrollHeight={20}
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView
-          contentContainerStyle={st.form}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+        <FormError message={apiError} onDismiss={() => setApiError(null)} />
+
+        <Animated.View entering={FadeInDown.delay(100)}>
+          <FormSection title="Subject Assignment" icon="📚">
+            <FormDropdown
+              label="Class"
+              required
+              options={classOpts}
+              value={form.class_id}
+              onChange={(v) => updateField('class_id', v)}
+              error={errors.class_id}
+              placeholder="Select a class"
+              searchable
+            />
+            <FormDropdown
+              label="Subject"
+              required
+              options={subjectOpts}
+              value={form.subject_id}
+              onChange={(v) => updateField('subject_id', v)}
+              error={errors.subject_id}
+              placeholder="Select a subject"
+              searchable
+              loading={subjectsLoading}
+            />
+            <FormDropdown
+              label="Subject Type (Optional)"
+              options={SUBJECT_TYPE_OPTIONS.map((opt) => ({
+                value: opt.value,
+                label: opt.label,
+              }))}
+              value={form.subject_type}
+              onChange={(v) => updateField('subject_type', v)}
+              error={errors.subject_type}
+              placeholder="Select subject type"
+            />
+            <FormDropdown
+              label="Teacher"
+              options={teacherOpts}
+              value={form.teacher_id}
+              onChange={(v) => updateField('teacher_id', v)}
+              placeholder="Select a teacher (optional)"
+              searchable
+            />
+            <FormInput
+              label="Description"
+              value={form.description}
+              onChangeText={(v) => updateField('description', v)}
+              placeholder="Optional description"
+              multiline
+              numberOfLines={3}
+            />
+          </FormSection>
+        </Animated.View>
+
+        <TouchableOpacity
+          onPress={handleSubmit}
+          disabled={updateMutation.isPending}
+          style={st.subBtn}
+          activeOpacity={0.8}
         >
-          <FormError message={apiError} onDismiss={() => setApiError(null)} />
-
-          <Animated.View entering={FadeInDown.delay(100)}>
-            <FormSection title="Subject Assignment" icon="📚">
-              <FormDropdown
-                label="Class"
-                required
-                options={classOpts}
-                value={form.class_id}
-                onChange={(v) => updateField('class_id', v)}
-                error={errors.class_id}
-                placeholder="Select a class"
-                searchable
-              />
-              <FormDropdown
-                label="Subject"
-                required
-                options={subjectOpts}
-                value={form.subject_id}
-                onChange={(v) => updateField('subject_id', v)}
-                error={errors.subject_id}
-                placeholder="Select a subject"
-                searchable
-                loading={subjectsLoading}
-              />
-              <FormDropdown
-                label="Subject Type (Optional)"
-                options={SUBJECT_TYPE_OPTIONS.map((opt) => ({
-                  value: opt.value,
-                  label: opt.label,
-                }))}
-                value={form.subject_type}
-                onChange={(v) => updateField('subject_type', v)}
-                error={errors.subject_type}
-                placeholder="Select subject type"
-              />
-              <FormDropdown
-                label="Teacher"
-                options={teacherOpts}
-                value={form.teacher_id}
-                onChange={(v) => updateField('teacher_id', v)}
-                placeholder="Select a teacher (optional)"
-                searchable
-              />
-              <FormInput
-                label="Description"
-                value={form.description}
-                onChangeText={(v) => updateField('description', v)}
-                placeholder="Optional description"
-                multiline
-                numberOfLines={3}
-              />
-            </FormSection>
-          </Animated.View>
-
-          <TouchableOpacity
-            onPress={handleSubmit}
-            disabled={updateMutation.isPending}
-            style={st.subBtn}
-            activeOpacity={0.8}
+          <LinearGradient
+            colors={['#7c3aed', '#4f46e5']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={st.subGrad}
           >
-            <LinearGradient
-              colors={['#7c3aed', '#4f46e5']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={st.subGrad}
-            >
-              {updateMutation.isPending ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <>
-                  <Save size={20} color="#fff" />
-                  <Text style={st.subText}>Update Subject</Text>
-                </>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
+            {updateMutation.isPending ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Save size={20} color="#fff" />
+                <Text style={st.subText}>Update Subject</Text>
+              </>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+      </KeyboardAwareScrollView>
     </View>
   );
 }

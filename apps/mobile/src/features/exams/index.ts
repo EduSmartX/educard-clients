@@ -20,5 +20,5 @@ export {
   EXAM_STATUS_COLORS,
 } from '@educard/shared';
 
-export * from './hooks';
+export * from './use-exams';
 export * from './api';

@@ -11,16 +11,14 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
   TextInput,
   Modal,
   FlatList,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { SubmitButton } from '@/components/common';
@@ -327,132 +325,127 @@ export default function ApplyLeaveScreen() {
         </View>
       </LinearGradient>
 
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      <KeyboardAwareScrollView
+        style={[styles.formScroll, { flex: 1 }]}
+        contentContainerStyle={styles.formContainer}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid
+        extraScrollHeight={20}
       >
-        <ScrollView
-          style={styles.formScroll}
-          contentContainerStyle={styles.formContainer}
-          keyboardShouldPersistTaps="handled"
-        >
-          {balancesLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={accentColor} />
-              <Text style={styles.loadingText}>Loading leave balances...</Text>
-            </View>
-          ) : (
-            <View>
-              {apiError && (
-                <View style={styles.errorBanner}>
-                  <Text style={styles.errorBannerText}>{apiError}</Text>
+        {balancesLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={accentColor} />
+            <Text style={styles.loadingText}>Loading leave balances...</Text>
+          </View>
+        ) : (
+          <View>
+            {apiError && (
+              <View style={styles.errorBanner}>
+                <Text style={styles.errorBannerText}>{apiError}</Text>
+              </View>
+            )}
+
+            {/* Leave Type Selection */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>LEAVE TYPE</Text>
+              <TouchableOpacity
+                style={[styles.selectField, errors.leave_balance && styles.fieldError]}
+                onPress={() => setShowLeaveTypePicker(true)}
+                activeOpacity={0.7}
+              >
+                <Calendar size={20} color="#94a3b8" />
+                <Text style={[styles.selectText, !form.leave_balance && styles.placeholderText]}>
+                  {selectedBalance ? getLeaveTypeName(selectedBalance) : 'Select Leave Type'}
+                </Text>
+                <ChevronDown size={20} color="#94a3b8" />
+              </TouchableOpacity>
+              {errors.leave_balance && <Text style={styles.errorText}>{errors.leave_balance}</Text>}
+
+              {selectedBalance && (
+                <View style={styles.balanceInfo}>
+                  <Text style={styles.balanceLabel}>Available Balance:</Text>
+                  <Text style={[styles.balanceValue, { color: accentColor }]}>
+                    {selectedBalance.available} / {selectedBalance.total_allocated} days
+                  </Text>
                 </View>
               )}
+            </View>
 
-              {/* Leave Type Selection */}
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>LEAVE TYPE</Text>
-                <TouchableOpacity
-                  style={[styles.selectField, errors.leave_balance && styles.fieldError]}
-                  onPress={() => setShowLeaveTypePicker(true)}
-                  activeOpacity={0.7}
-                >
-                  <Calendar size={20} color="#94a3b8" />
-                  <Text style={[styles.selectText, !form.leave_balance && styles.placeholderText]}>
-                    {selectedBalance ? getLeaveTypeName(selectedBalance) : 'Select Leave Type'}
-                  </Text>
-                  <ChevronDown size={20} color="#94a3b8" />
-                </TouchableOpacity>
-                {errors.leave_balance && (
-                  <Text style={styles.errorText}>{errors.leave_balance}</Text>
-                )}
-
-                {selectedBalance && (
-                  <View style={styles.balanceInfo}>
-                    <Text style={styles.balanceLabel}>Available Balance:</Text>
-                    <Text style={[styles.balanceValue, { color: accentColor }]}>
-                      {selectedBalance.available} / {selectedBalance.total_allocated} days
-                    </Text>
-                  </View>
-                )}
-              </View>
-
-              {/* Date Selection - Using reusable FormDatePicker */}
-              <View style={styles.section}>
-                <View style={styles.dateRow}>
-                  <View key="start-date-field" style={styles.dateField}>
-                    <FormDatePicker
-                      label="START DATE"
-                      value={form.start_date}
-                      onChange={(date) => {
-                        updateField('start_date', date);
-                        // Auto-set end date if not set
-                        if (!form.end_date && date) {
-                          updateField('end_date', date);
-                        }
-                      }}
-                      error={errors.start_date}
-                      placeholder="Select"
-                      minYear={new Date().getFullYear()}
-                      required
-                    />
-                  </View>
-
-                  <View key="end-date-field" style={styles.dateField}>
-                    <FormDatePicker
-                      label="END DATE"
-                      value={form.end_date}
-                      onChange={(date) => updateField('end_date', date)}
-                      error={errors.end_date}
-                      placeholder="Select"
-                      minYear={new Date().getFullYear()}
-                      required
-                    />
-                  </View>
+            {/* Date Selection - Using reusable FormDatePicker */}
+            <View style={styles.section}>
+              <View style={styles.dateRow}>
+                <View key="start-date-field" style={styles.dateField}>
+                  <FormDatePicker
+                    label="START DATE"
+                    value={form.start_date}
+                    onChange={(date) => {
+                      updateField('start_date', date);
+                      // Auto-set end date if not set
+                      if (!form.end_date && date) {
+                        updateField('end_date', date);
+                      }
+                    }}
+                    error={errors.start_date}
+                    placeholder="Select"
+                    minYear={new Date().getFullYear()}
+                    required
+                  />
                 </View>
 
-                {calculatedDays !== null && (
-                  <View
-                    style={[styles.daysCalculated, { backgroundColor: employeeTheme.accentLight }]}
-                  >
-                    <Text style={[styles.daysLabel, { color: employeeTheme.accentDark }]}>
-                      Working Days:
-                    </Text>
-                    <Text style={[styles.daysValue, { color: employeeTheme.accent }]}>
-                      {calculatedDays} days
-                    </Text>
-                  </View>
-                )}
+                <View key="end-date-field" style={styles.dateField}>
+                  <FormDatePicker
+                    label="END DATE"
+                    value={form.end_date}
+                    onChange={(date) => updateField('end_date', date)}
+                    error={errors.end_date}
+                    placeholder="Select"
+                    minYear={new Date().getFullYear()}
+                    required
+                  />
+                </View>
               </View>
 
-              {/* Reason */}
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>REASON</Text>
-                <TextInput
-                  style={[styles.textArea, errors.reason && styles.fieldError]}
-                  value={form.reason}
-                  onChangeText={(text) => updateField('reason', text)}
-                  placeholder="Enter reason for leave..."
-                  placeholderTextColor="#94a3b8"
-                  multiline
-                  numberOfLines={4}
-                  textAlignVertical="top"
-                />
-                {errors.reason && <Text style={styles.errorText}>{errors.reason}</Text>}
-              </View>
-
-              {/* Submit Button - Using reusable SubmitButton component */}
-              <SubmitButton
-                label="Submit Request"
-                onPress={handleSubmit}
-                isLoading={isSaving}
-                icon={Send}
-                color={accentColor}
-              />
+              {calculatedDays !== null && (
+                <View
+                  style={[styles.daysCalculated, { backgroundColor: employeeTheme.accentLight }]}
+                >
+                  <Text style={[styles.daysLabel, { color: employeeTheme.accentDark }]}>
+                    Working Days:
+                  </Text>
+                  <Text style={[styles.daysValue, { color: employeeTheme.accent }]}>
+                    {calculatedDays} days
+                  </Text>
+                </View>
+              )}
             </View>
-          )}
-        </ScrollView>
-      </KeyboardAvoidingView>
+
+            {/* Reason */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>REASON</Text>
+              <TextInput
+                style={[styles.textArea, errors.reason && styles.fieldError]}
+                value={form.reason}
+                onChangeText={(text) => updateField('reason', text)}
+                placeholder="Enter reason for leave..."
+                placeholderTextColor="#94a3b8"
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+              />
+              {errors.reason && <Text style={styles.errorText}>{errors.reason}</Text>}
+            </View>
+
+            {/* Submit Button - Using reusable SubmitButton component */}
+            <SubmitButton
+              label="Submit Request"
+              onPress={handleSubmit}
+              isLoading={isSaving}
+              icon={Send}
+              color={accentColor}
+            />
+          </View>
+        )}
+      </KeyboardAwareScrollView>
 
       {/* Leave Type Picker Modal */}
       <LeaveTypePickerModal

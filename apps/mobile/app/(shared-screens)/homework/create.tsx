@@ -24,7 +24,12 @@ import {
   SUBMISSION_TYPE_OPTIONS,
   getSubjectColor,
 } from '@educard/shared';
-import type { HomeworkCreatePayload } from '@educard/shared';
+import type {
+  HomeworkCreatePayload,
+  HomeworkStatus,
+  HomeworkPriority,
+  SubmissionType,
+} from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Save, BookOpen, Clock, Link, AlertCircle } from 'lucide-react-native';
@@ -37,10 +42,9 @@ import {
   StyleSheet,
   TextInput,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { FormDatePicker, FormAttachmentPicker, type SelectedFile } from '@/components/forms';
@@ -51,6 +55,7 @@ import {
 } from '@/features/homework';
 import { useFormErrors } from '@/hooks';
 import { useAuthStore } from '@/lib/auth-store';
+import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
 import { isAdminRole } from '@/utils/role-utils';
 
@@ -69,6 +74,7 @@ function getTomorrowDate(): string {
 
 export default function CreateHomeworkScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
   const params = useLocalSearchParams<{
     class?: string;
     subject?: string;
@@ -76,7 +82,7 @@ export default function CreateHomeworkScreen() {
   }>();
 
   const { user } = useAuthStore();
-  const isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
+  const _isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
 
   const { data: teacherClasses = [], isLoading: classesLoading } = useTeacherClasses();
   const createMutation = useCreateHomework();
@@ -115,7 +121,7 @@ export default function CreateHomeworkScreen() {
     if (params.date && assignedDate === getTodayDate()) {
       setAssignedDate(params.date);
     }
-  }, [params]);
+  }, [params, selectedSubject, assignedDate]);
 
   const selectedClassData = useMemo(
     () => teacherClasses.find((c) => c.public_id === selectedClass),
@@ -150,7 +156,7 @@ export default function CreateHomeworkScreen() {
           uri: file.uri,
           name: file.name,
           type: file.type,
-        } as any);
+        } as unknown as Blob);
 
         await uploadMutation.mutateAsync({ publicId: homeworkId, formData });
       }
@@ -190,21 +196,20 @@ export default function CreateHomeworkScreen() {
       subject_public_id: selectedSubject,
       due_datetime: dueDateTime,
       assigned_date: assignedDate,
-      status: status as any,
-      priority: priority as any,
-      submission_type: submissionType as any,
+      status: status as HomeworkStatus,
+      priority: priority as HomeworkPriority,
+      submission_type: submissionType as SubmissionType,
       reference_link: referenceLink.trim() || undefined,
     };
 
     createMutation.mutate(payload, {
-      onSuccess: async (data) => {
+      onSuccess: (data) => {
         // Upload attachments if any
         if (attachments.length > 0 && data?.public_id) {
-          await uploadAttachments(data.public_id);
+          void uploadAttachments(data.public_id);
         }
-        Alert.alert('Success', 'Homework created successfully', [
-          { text: 'OK', onPress: () => router.back() },
-        ]);
+        showToast({ type: 'success', title: 'Success', message: 'Homework created successfully' });
+        router.back();
       },
       onError: (error: unknown) => {
         handleApiError(error, 'Failed to create homework');
@@ -213,10 +218,7 @@ export default function CreateHomeworkScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={layoutStyles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={layoutStyles.container}>
       <LinearGradient colors={adminGradient} style={headerStyles.header}>
         <Animated.View
           entering={FadeIn.delay(100)}
@@ -245,7 +247,13 @@ export default function CreateHomeworkScreen() {
         </View>
       </LinearGradient>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <KeyboardAwareScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        enableOnAndroid
+        extraScrollHeight={20}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Class Display (Readonly) */}
         <Animated.View entering={FadeInDown.delay(100)} style={styles.section}>
           <Text style={styles.sectionTitle}>Class</Text>
@@ -518,7 +526,7 @@ export default function CreateHomeworkScreen() {
         </Animated.View>
 
         <View style={{ height: 100 }} />
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* Submit Button */}
       <View style={styles.footer}>
@@ -527,7 +535,7 @@ export default function CreateHomeworkScreen() {
             styles.submitBtn,
             (!canCreate || createMutation.isPending || isUploading) && styles.submitBtnDisabled,
           ]}
-          onPress={handleSubmit}
+          onPress={() => void handleSubmit()}
           disabled={!canCreate || createMutation.isPending || isUploading}
         >
           {createMutation.isPending || isUploading ? (
@@ -547,7 +555,7 @@ export default function CreateHomeworkScreen() {
           )}
         </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 

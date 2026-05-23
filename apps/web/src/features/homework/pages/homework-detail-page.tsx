@@ -6,6 +6,7 @@
 import { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 import {
   Calendar,
   FileText,
@@ -65,6 +66,7 @@ export default function HomeworkDetailPage() {
   const handleDelete = async () => {
     if (publicId) {
       await deleteMutation.mutateAsync(publicId);
+      toast.success('Homework deleted successfully');
       navigate('/homework');
     }
   };

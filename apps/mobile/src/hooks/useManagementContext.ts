@@ -4,6 +4,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { apiClient } from '@/api/client';
+import { USER_ROLES } from '@/constants/config';
 import { useAuthStore } from '@/lib/auth-store';
 
 export interface TeacherManagementContext {
@@ -31,7 +32,7 @@ interface ApiResponse {
 
 export function useTeacherManagementContext() {
   const { user } = useAuthStore();
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.role === USER_ROLES.ADMIN;
 
   return useQuery({
     queryKey: ['teacher-management-context'],
@@ -53,7 +54,7 @@ export function useIsSubordinateOf(targetUserPublicId?: string) {
   const { data: context, isLoading } = useTeacherManagementContext();
   const { user } = useAuthStore();
 
-  if (user?.role === 'admin') {
+  if (user?.role === USER_ROLES.ADMIN) {
     return { isSubordinate: true, isLoading: false }; // Admin can see everything
   }
 
@@ -74,7 +75,7 @@ export function useIsClassTeacherFor(studentClassPublicId?: string) {
   const { data: context, isLoading } = useTeacherManagementContext();
   const { user } = useAuthStore();
 
-  if (user?.role === 'admin') {
+  if (user?.role === USER_ROLES.ADMIN) {
     return { isClassTeacher: true, isLoading: false }; // Admin can see everything
   }
 

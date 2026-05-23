@@ -25,6 +25,7 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { useBulkUpsertMarks, useExamMarks } from '@/features/exams';
 import { useStudents } from '@/features/students';
+import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -40,6 +41,7 @@ interface StudentMark {
 
 export default function EnterMarksScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
   const {
     examId,
     sessionId,
@@ -182,11 +184,14 @@ export default function EnterMarksScreen() {
         exam_id: examId,
         marks,
       });
-      Alert.alert('Success', `Saved marks for ${marks.length} students`, [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
+      showToast({
+        type: 'success',
+        title: 'Success',
+        message: `Saved marks for ${marks.length} students`,
+      });
+      router.back();
     } catch (err: any) {
-      Alert.alert('Error', extractApiError(err));
+      showToast({ type: 'error', title: 'Error', message: extractApiError(err) });
     }
   };
 

@@ -29,15 +29,16 @@ import {
   Alert,
   TextInput,
   Modal,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { apiClient } from '@/api/client';
 import { ConfirmDialog } from '@/components/common';
 import { FormDatePicker } from '@/components/forms/FormDatePicker';
+import { handleMutationError } from '@/lib/mutation-utils';
 import { headerStyles, layoutStyles } from '@/styles';
+import { showToast } from '@/utils/toast';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -138,12 +139,17 @@ export default function TimesheetApprovalsScreen() {
     }) => {
       const res = await apiClient.post(`/attendance/timesheet-submission/${publicId}/review/`, {
         submission_status: submissionStatus,
-        review_comments: reviewComments ?? '', // ?? instead of ||
+        review_comments: reviewComments ?? '',
       });
-      return res.data as unknown; // type assertion to fix unsafe return
+      return res.data as { message?: string; data?: unknown };
     },
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['timesheets'] }); // void for floating promise
+    onSuccess: (response) => {
+      const message = response?.message || 'Timesheet reviewed successfully';
+      showToast('success', message);
+      void qc.invalidateQueries({ queryKey: ['timesheets'] });
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to review timesheet');
     },
   });
 
@@ -436,9 +442,12 @@ export default function TimesheetApprovalsScreen() {
         animationType="fade"
         onRequestClose={() => setReturnModal({ visible: false, item: null })}
       >
-        <KeyboardAvoidingView
-          style={styles.modalOverlay}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        <KeyboardAwareScrollView
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }}
+          contentContainerStyle={styles.modalOverlay}
+          enableOnAndroid
+          extraScrollHeight={20}
+          keyboardShouldPersistTaps="handled"
         >
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
@@ -490,7 +499,7 @@ export default function TimesheetApprovalsScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </KeyboardAvoidingView>
+        </KeyboardAwareScrollView>
       </Modal>
 
       {/* Approve Confirmation Dialog */}
@@ -671,7 +680,7 @@ const styles = StyleSheet.create({
   },
   clearFiltersBtnText: { fontSize: 13, fontWeight: '600', color: '#7c3aed' },
   modalOverlay: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',

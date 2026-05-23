@@ -3,10 +3,10 @@
  * Displays payment mode with appropriate styling
  */
 
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
 import type { PaymentModeType } from '@educard/shared';
 import { PaymentMode, PaymentModeLabels } from '@educard/shared';
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 
 interface PaymentModeBadgeProps {
   mode: PaymentModeType;

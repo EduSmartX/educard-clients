@@ -50,6 +50,7 @@ import { apiClient } from '@/api/client';
 import { FAB, ConfirmDialog } from '@/components/common';
 import { useClasses } from '@/features/classes';
 import { useAuthStore } from '@/lib/auth-store';
+import { useToast } from '@/lib/toast-context';
 import { isAdminRole } from '@/utils/role-utils';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -212,6 +213,7 @@ function CreateExceptionModal({
   onClose: () => void;
   onSuccess: () => void;
 }) {
+  const { showToast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [overrideType, setOverrideType] = useState<'FORCE_WORKING' | 'FORCE_HOLIDAY'>(
@@ -228,14 +230,14 @@ function CreateExceptionModal({
   const createMutation = useMutation({
     mutationFn: createCalendarException,
     onSuccess: () => {
-      Alert.alert('Success', 'Exception created successfully');
+      showToast({ type: 'success', title: 'Success', message: 'Exception created successfully' });
       resetForm();
       onSuccess();
       onClose();
     },
     onError: (error: unknown) => {
       const message = extractApiError(error, 'Failed to create exception');
-      Alert.alert('Error', message);
+      showToast({ type: 'error', title: 'Error', message });
     },
   });
 

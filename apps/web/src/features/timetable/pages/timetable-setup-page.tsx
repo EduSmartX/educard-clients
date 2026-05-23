@@ -8,12 +8,7 @@
  */
 
 import { useState } from 'react';
-import {
-  Users,
-  Clock,
-  Calendar,
-  ChevronRight,
-} from 'lucide-react';
+import { Users, Clock, Calendar, ChevronRight } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PageHeader, HowItWorksDialog } from '@/components/common';
 import { ClassGroupsTab } from '../components/class-groups-tab';
@@ -45,14 +40,14 @@ const STEPS = [
   },
   {
     id: 'view',
-    label: 'View Timetable',
+    label: 'Add Timetable',
     icon: Calendar,
     color: 'from-violet-500 to-pink-500',
     bgColor: 'bg-violet-50',
     textColor: 'text-violet-700',
     borderColor: 'border-violet-200',
     ringColor: 'ring-violet-400',
-    description: 'Preview & assign teachers/subjects',
+    description: 'Assign teachers/subjects to slots',
   },
 ] as const;
 
@@ -64,9 +59,8 @@ const timetableHowItWorks = {
       title: 'Create Class Groups',
       description: (
         <>
-          Group classes that share the same period structure. E.g., "Primary"
-          (1st–5th), "Senior" (9th–10th). Classes in the same group have the same
-          timings.
+          Group classes that share the same period structure. E.g., "Primary" (1st–5th), "Senior"
+          (9th–10th). Classes in the same group have the same timings.
         </>
       ),
       color: 'green' as const,
@@ -84,8 +78,8 @@ const timetableHowItWorks = {
       title: 'Assign Teachers & Subjects',
       description: (
         <>
-          In the View Timetable tab, select a class and assign teachers/subjects to each
-          period. Each class gets its own assignments even within the same group.
+          In the Add Timetable tab, select a class and assign teachers/subjects to each period. Each
+          class gets its own assignments even within the same group.
         </>
       ),
     },
@@ -95,8 +89,8 @@ const timetableHowItWorks = {
       title: 'Teacher Conflict Prevention',
       description: (
         <>
-          The system automatically prevents assigning the same teacher to two classes at the
-          same time. If a conflict is detected, the assignment will be rejected.
+          The system automatically prevents assigning the same teacher to two classes at the same
+          time. If a conflict is detected, the assignment will be rejected.
         </>
       ),
     },
@@ -129,41 +123,41 @@ export default function TimetableSetupPage() {
       {/* Step indicator */}
       <div className="flex items-center gap-3 overflow-x-auto">
         {STEPS.map((step, idx) => {
-            const isActive = step.id === activeTab;
-            const Icon = step.icon;
-            return (
-              <div key={step.id} className="flex items-center gap-3">
-                {idx > 0 && <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />}
-                <button
-                  type="button"
-                  onClick={() => setActiveTab(step.id)}
-                  className={`flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
+          const isActive = step.id === activeTab;
+          const Icon = step.icon;
+          return (
+            <div key={step.id} className="flex items-center gap-3">
+              {idx > 0 && <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />}
+              <button
+                type="button"
+                onClick={() => setActiveTab(step.id)}
+                className={`flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
+                  isActive
+                    ? `${step.bgColor} ${step.textColor} ring-2 ${step.ringColor} shadow-sm`
+                    : 'text-slate-500 hover:bg-slate-50'
+                }`}
+              >
+                <div
+                  className={`flex h-8 w-8 items-center justify-center rounded-lg ${
                     isActive
-                      ? `${step.bgColor} ${step.textColor} ring-2 ${step.ringColor} shadow-sm`
-                      : 'text-slate-500 hover:bg-slate-50'
+                      ? `bg-gradient-to-br ${step.color} text-white shadow-sm`
+                      : 'bg-slate-100 text-slate-400'
                   }`}
                 >
-                  <div
-                    className={`flex h-8 w-8 items-center justify-center rounded-lg ${
-                      isActive
-                        ? `bg-gradient-to-br ${step.color} text-white shadow-sm`
-                        : 'bg-slate-100 text-slate-400'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
+                  <Icon className="h-4 w-4" />
+                </div>
+                <div className="hidden text-left sm:block">
+                  <div className="text-xs leading-none font-bold">{step.label}</div>
+                  <div className="mt-0.5 text-[10px] font-normal opacity-70">
+                    {step.description}
                   </div>
-                  <div className="hidden text-left sm:block">
-                    <div className="text-xs leading-none font-bold">{step.label}</div>
-                    <div className="mt-0.5 text-[10px] font-normal opacity-70">
-                      {step.description}
-                    </div>
-                  </div>
-                  <span className="sm:hidden">{step.label}</span>
-                </button>
-              </div>
-            );
-          })}
-        </div>
+                </div>
+                <span className="sm:hidden">{step.label}</span>
+              </button>
+            </div>
+          );
+        })}
+      </div>
 
       {/* Tab Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-0">

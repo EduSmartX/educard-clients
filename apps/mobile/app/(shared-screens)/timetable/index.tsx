@@ -13,7 +13,7 @@ import {
 } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ChevronLeft, Clock, BookOpen, User, Settings } from 'lucide-react-native';
+import { ChevronLeft, Clock, BookOpen, User, Settings, Plus } from 'lucide-react-native';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import {
   View,
@@ -222,16 +222,18 @@ export default function TimetableScreen() {
             {canManage && (
               <TouchableOpacity
                 style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 12,
-                  backgroundColor: 'rgba(255,255,255,0.2)',
+                  flexDirection: 'row',
                   alignItems: 'center',
-                  justifyContent: 'center',
+                  gap: 6,
+                  paddingHorizontal: 14,
+                  paddingVertical: 8,
+                  borderRadius: 20,
+                  backgroundColor: 'rgba(255,255,255,0.2)',
                 }}
                 onPress={() => router.push('/(shared-screens)/timetable/setup')}
               >
-                <Settings size={20} color="#fff" />
+                <Plus size={16} color="#fff" />
+                <Text style={{ fontSize: 13, fontWeight: '600', color: '#fff' }}>Setup</Text>
               </TouchableOpacity>
             )}
           </View>

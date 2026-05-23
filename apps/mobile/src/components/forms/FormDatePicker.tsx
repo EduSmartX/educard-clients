@@ -293,7 +293,7 @@ export function FormDatePicker({
             )}
 
             {mode === 'year' && (
-              <FlatList
+              <FlatList<number>
                 ref={yearListRef}
                 data={years}
                 keyExtractor={(item) => String(item)}

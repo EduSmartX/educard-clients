@@ -84,11 +84,11 @@ export async function fetchTeacher(publicId: string, isDeleted?: boolean): Promi
 export async function createTeacher(
   data: CreateTeacherPayload,
   forceCreate?: boolean
-): Promise<TeacherDetail> {
+): Promise<ApiResponse<TeacherDetail>> {
   const baseUrl = getBaseUrl(true); // Write operation
   const params = forceCreate ? { force_create: 'true' } : {};
   const response = await api.post<ApiResponse<TeacherDetail>>(baseUrl, data, { params });
-  return response.data.data;
+  return response.data;
 }
 
 /**
@@ -97,18 +97,19 @@ export async function createTeacher(
 export async function updateTeacher(
   publicId: string,
   data: UpdateTeacherPayload
-): Promise<TeacherDetail> {
+): Promise<ApiResponse<TeacherDetail>> {
   const baseUrl = getBaseUrl(true); // Write operation
   const response = await api.put<ApiResponse<TeacherDetail>>(`${baseUrl}${publicId}/`, data);
-  return response.data.data;
+  return response.data;
 }
 
 /**
  * Delete a teacher (soft delete)
  */
-export async function deleteTeacher(publicId: string): Promise<void> {
+export async function deleteTeacher(publicId: string): Promise<ApiResponse<null>> {
   const baseUrl = getBaseUrl(true); // Write operation
-  await api.delete(`${baseUrl}${publicId}/`);
+  const response = await api.delete<ApiResponse<null>>(`${baseUrl}${publicId}/`);
+  return response.data;
 }
 
 /**
@@ -142,10 +143,10 @@ export async function downloadTeacherTemplate(): Promise<Blob> {
 /**
  * Activate a deactivated teacher
  */
-export async function reactivateTeacher(publicId: string): Promise<Teacher> {
+export async function reactivateTeacher(publicId: string): Promise<ApiResponse<Teacher>> {
   const baseUrl = getBaseUrl(true); // Write operation
   const response = await api.post<ApiResponse<Teacher>>(`${baseUrl}${publicId}/activate/`);
-  return response.data.data;
+  return response.data;
 }
 
 /**

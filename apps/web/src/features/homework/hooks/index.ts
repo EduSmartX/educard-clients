@@ -91,7 +91,6 @@ export function useCreateHomework() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: homeworkKeys.lists() });
       queryClient.invalidateQueries({ queryKey: homeworkKeys.dashboard() });
-      toast.success(HOMEWORK_UI.HOMEWORK_CREATED);
     },
     onError: (error: Error) => {
       toast.error(error.message || HOMEWORK_UI.FAILED_TO_CREATE);
@@ -108,7 +107,6 @@ export function useUpdateHomework() {
     onSuccess: (_, { publicId }) => {
       queryClient.invalidateQueries({ queryKey: homeworkKeys.lists() });
       queryClient.invalidateQueries({ queryKey: homeworkKeys.detail(publicId) });
-      toast.success(HOMEWORK_UI.HOMEWORK_UPDATED);
     },
     onError: (error: Error) => {
       toast.error(error.message || HOMEWORK_UI.FAILED_TO_UPDATE);
@@ -122,9 +120,9 @@ export function useDeleteHomework() {
   return useMutation({
     mutationFn: (publicId: string) => homeworkApi.deleteHomework(publicId),
     onSuccess: () => {
+      toast.success('Homework deleted successfully');
       queryClient.invalidateQueries({ queryKey: homeworkKeys.lists() });
       queryClient.invalidateQueries({ queryKey: homeworkKeys.dashboard() });
-      toast.success(HOMEWORK_UI.HOMEWORK_DELETED);
     },
     onError: (error: Error) => {
       toast.error(error.message || HOMEWORK_UI.FAILED_TO_DELETE);

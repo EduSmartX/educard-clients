@@ -28,6 +28,7 @@ import {
   IndianRupee,
   Receipt,
   CreditCard,
+  Eye,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
 import { ROUTES } from '@/constants/app-config';
@@ -82,11 +83,22 @@ export const adminSidebarConfig: SidebarSection[] = [
         icon: BookOpen,
         path: ROUTES.SUBJECTS,
       },
+    ],
+  },
+  {
+    title: 'TIMETABLE',
+    items: [
       {
-        id: 'timetable',
-        label: 'Timetable',
+        id: 'timetable-setup',
+        label: 'Timetable Setup',
         icon: Clock,
         path: ROUTES.TIMETABLE_SETUP,
+      },
+      {
+        id: 'view-timetable',
+        label: 'View Timetable',
+        icon: Eye,
+        path: ROUTES.TIMETABLE_VIEW,
       },
     ],
   },

@@ -12,6 +12,7 @@ import {
   CalendarCheck,
   AlertTriangle,
   SlidersHorizontal,
+  IndianRupee,
   LucideIcon,
   Shield,
 } from 'lucide-react-native';
@@ -69,6 +70,14 @@ const adminItems: AdminItem[] = [
     icon: AlertTriangle,
     gradient: ['#0891b2', '#22d3ee'],
     route: '/(shared-screens)/exceptional-work',
+  },
+  {
+    id: 'fee-management',
+    title: 'Fee Management',
+    subtitle: 'Collect & track fees',
+    icon: IndianRupee,
+    gradient: ['#059669', '#10b981'],
+    route: '/(tabs)/(admin)/fee-dashboard',
   },
   {
     id: 'preferences',

@@ -9,6 +9,7 @@ import * as SecureStore from 'expo-secure-store';
 
 import { API_CONFIG, STORAGE_KEYS } from '@/constants/config';
 import { useAuthStore } from '@/lib/auth-store';
+import { clearQueryCache } from '@/lib/query-client';
 // Use shared error handler
 export {
   parseApiError,
@@ -119,6 +120,8 @@ apiClient.interceptors.response.use(
 // Helper to force logout - clears tokens and auth store state
 async function forceLogout(): Promise<void> {
   isHandling401 = false;
+
+  clearQueryCache();
 
   try {
     // Clear stored tokens

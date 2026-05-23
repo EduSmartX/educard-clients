@@ -36,9 +36,8 @@ import {
   Alert,
   Modal,
   ScrollView,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { ConfirmDialog, BulkUploadModal } from '@/components/common';
@@ -55,6 +54,7 @@ import {
   type CreateHolidayPayload,
 } from '@/features/holidays';
 import { useAuthStore } from '@/lib/auth-store';
+import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
 import { isAdminRole } from '@/utils/role-utils';
 
@@ -129,6 +129,7 @@ const MONTHS = [
 
 export default function HolidayCalendarScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
   const { user } = useAuthStore();
   const [refreshing, setRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState<'calendar' | 'table'>('calendar');
@@ -350,7 +351,11 @@ export default function HolidayCalendarScreen() {
         },
         onError: (error: unknown) => {
           setDeleteTarget(null);
-          Alert.alert('Error', extractApiError(error, 'Failed to delete holiday'));
+          showToast({
+            type: 'error',
+            title: 'Error',
+            message: extractApiError(error, 'Failed to delete holiday'),
+          });
         },
       });
     }
@@ -377,7 +382,11 @@ export default function HolidayCalendarScreen() {
             refetch();
           },
           onError: (error: unknown) =>
-            Alert.alert('Error', extractApiError(error, 'Failed to update holiday')),
+            showToast({
+              type: 'error',
+              title: 'Error',
+              message: extractApiError(error, 'Failed to update holiday'),
+            }),
         }
       );
     } else {
@@ -387,7 +396,11 @@ export default function HolidayCalendarScreen() {
           refetch();
         },
         onError: (error: unknown) =>
-          Alert.alert('Error', extractApiError(error, 'Failed to create holiday')),
+          showToast({
+            type: 'error',
+            title: 'Error',
+            message: extractApiError(error, 'Failed to create holiday'),
+          }),
       });
     }
   };
@@ -865,9 +878,12 @@ export default function HolidayCalendarScreen() {
         animationType="slide"
         onRequestClose={() => setFormModal({ visible: false, editing: null })}
       >
-        <KeyboardAvoidingView
+        <KeyboardAwareScrollView
           style={styles.formOverlay}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
+          enableOnAndroid
+          extraScrollHeight={20}
+          keyboardShouldPersistTaps="handled"
         >
           <View style={styles.formCard}>
             <View style={styles.formHeader}>
@@ -887,7 +903,7 @@ export default function HolidayCalendarScreen() {
               </TouchableOpacity>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 400 }}>
+            <View style={{ maxHeight: 400 }}>
               <FormInput
                 label="Holiday Name"
                 required
@@ -916,7 +932,7 @@ export default function HolidayCalendarScreen() {
                 onChange={(v) => setFormData((p) => ({ ...p, end_date: v }))}
                 placeholder="Same as start (optional)"
               />
-            </ScrollView>
+            </View>
 
             <View style={styles.formActions}>
               <TouchableOpacity
@@ -938,7 +954,7 @@ export default function HolidayCalendarScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </KeyboardAvoidingView>
+        </KeyboardAwareScrollView>
       </Modal>
 
       {/* Delete Confirmation Dialog */}

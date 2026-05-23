@@ -10,7 +10,12 @@
  */
 
 // import { API_ENDPOINTS } from '@educard/shared'; // unused - keeping for future reference
-import type { Subject, ApiListResponse, ApiDetailResponse } from '@educard/shared';
+import type {
+  Subject,
+  ApiListResponse,
+  ApiDetailResponse,
+  ApiMessageResponse,
+} from '@educard/shared';
 
 import { apiClient } from '@/api/client';
 
@@ -59,18 +64,25 @@ export async function createSubject(
   return response.data;
 }
 
-export async function updateSubject(publicId: string, data: Partial<Subject>): Promise<void> {
-  await apiClient.patch(`${BASE_URL}${publicId}/`, data);
+export async function updateSubject(
+  publicId: string,
+  data: Partial<Subject>
+): Promise<ApiMessageResponse> {
+  const response = await apiClient.patch<ApiMessageResponse>(`${BASE_URL}${publicId}/`, data);
+  return response.data;
 }
 
-export async function deleteSubject(publicId: string): Promise<void> {
+export async function deleteSubject(publicId: string): Promise<ApiMessageResponse> {
   try {
-    await apiClient.delete(`${BASE_URL}${publicId}/`);
+    const response = await apiClient.delete<ApiMessageResponse>(`${BASE_URL}${publicId}/`);
+    return response.data || { success: true, message: 'Subject deleted successfully' };
   } catch (error: unknown) {
     const axiosError = error as { response?: { status?: number }; message?: string };
     const status = axiosError?.response?.status;
-    if (status && status >= 200 && status < 300) return;
-    if (axiosError?.message === 'Network Error' && !axiosError?.response) return;
+    if (status && status >= 200 && status < 300)
+      return { success: true, message: 'Subject deleted successfully' };
+    if (axiosError?.message === 'Network Error' && !axiosError?.response)
+      return { success: true, message: 'Subject deleted successfully' };
     throw error;
   }
 }
@@ -82,7 +94,7 @@ export async function restoreSubject(publicId: string): Promise<SubjectDetailRes
 
 export async function getSubjectsByClass(classId: string): Promise<SubjectListResponse> {
   const response = await apiClient.get<SubjectListResponse>(BASE_URL, {
-    params: { class_assigned: classId },
+    params: { class_assigned: classId, page_size: 100 },
   });
   return response.data;
 }
@@ -130,7 +142,18 @@ export async function bulkUploadSubjects(
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   } as unknown as Blob);
 
-  const response = await apiClient.post(`${BASE_URL}bulk-upload/`, formData, {
+  const response = await apiClient.post<{
+    success: boolean;
+    message: string;
+    data: {
+      created_count?: number;
+      successful_count?: number;
+      failed_count: number;
+      total_rows?: number;
+      errors: { row: number; error: string; data?: Record<string, unknown> | null }[];
+    };
+    code: number;
+  }>(`${BASE_URL}bulk-upload/`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },

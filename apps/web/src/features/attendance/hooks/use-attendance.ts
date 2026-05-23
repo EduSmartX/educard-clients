@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { ErrorMessages, SuccessMessages, ToastTitles } from '@/constants';
+import { ErrorMessages, SuccessMessages } from '@/constants';
+import { handleMutationError, type MutationOptions } from '@/lib/utils/mutation-utils';
 import {
   getEligibleClasses,
   validateAttendanceDate,
@@ -49,31 +50,24 @@ export const useValidateDate = (classId: string, date: string, enabled = true) =
 };
 
 // Hook to bulk mark attendance
-export const useBulkMarkAttendance = () => {
+export const useBulkMarkAttendance = (options?: MutationOptions) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ classId, payload }: { classId: string; payload: BulkAttendancePayload }) =>
       bulkMarkAttendance(classId, payload),
-    onSuccess: (_data, variables) => {
-      // Invalidate comprehensive attendance query
+    onSuccess: (response, variables) => {
       queryClient.invalidateQueries({
         queryKey: attendanceKeys.comprehensiveAttendance(variables.classId, variables.payload.date),
       });
 
-      toast.success(SuccessMessages.ATTENDANCE.MARK_SUCCESS, {
-        description: `Attendance has been saved for ${variables.payload.date}`,
-      });
+      // Show success message from API response
+      const message = response?.message || SuccessMessages.ATTENDANCE.MARK_SUCCESS;
+      toast.success(message);
+      options?.onSuccess?.();
     },
-    onError: (error: unknown) => {
-      // Safely extract message from unknown error object
-      const err = error as { response?: { data?: { message?: string } }; message?: string };
-      const errorMessage =
-        err?.response?.data?.message || err?.message || ErrorMessages.ATTENDANCE.MARK_FAILED;
-
-      toast.error(ToastTitles.ERROR, {
-        description: errorMessage,
-      });
+    onError: (error: Error) => {
+      handleMutationError(error, ErrorMessages.ATTENDANCE.MARK_FAILED, options?.onError);
     },
   });
 };

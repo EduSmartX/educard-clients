@@ -1,5 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-misused-promises, @typescript-eslint/no-floating-promises, @typescript-eslint/prefer-nullish-coalescing */ import { extractApiError } from '@educard/shared';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-misused-promises, @typescript-eslint/no-floating-promises, @typescript-eslint/prefer-nullish-coalescing */ import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query';
 import {
   format,
   startOfMonth,
@@ -47,7 +50,8 @@ import {
 import Svg, { Path } from 'react-native-svg';
 
 import { apiClient } from '@/api/client';
-
+import { handleMutationError } from '@/lib/mutation-utils';
+import { useToast } from '@/lib/toast-context';
 const { width: screenWidth } = Dimensions.get('window');
 const CELL_SIZE = Math.floor((screenWidth - 40) / 7);
 const WEEKDAYS_SHORT = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -136,10 +140,16 @@ const getEmployeeAttendance = async (
   fromDate: string,
   toDate: string
 ): Promise<EmployeeAttendanceResponse> => {
-  const response = await apiClient.get('/attendance/employee-attendance/', {
+  const response = await apiClient.get<
+    { data: EmployeeAttendanceResponse } | EmployeeAttendanceResponse
+  >('/attendance/employee-attendance/', {
     params: { from_date: fromDate, to_date: toDate },
   });
-  return response.data.data || response.data;
+  const result = response.data;
+  if ('data' in result && result.data) {
+    return result.data as EmployeeAttendanceResponse;
+  }
+  return result as EmployeeAttendanceResponse;
 };
 
 // Correct endpoint: /attendance/timesheet-submission/check_status/
@@ -147,10 +157,17 @@ const checkTimesheetStatus = async (
   weekStart: string,
   weekEnd: string
 ): Promise<TimesheetStatusResponse> => {
-  const response = await apiClient.get('/attendance/timesheet-submission/check_status/', {
-    params: { week_start_date: weekStart, week_end_date: weekEnd },
-  });
-  return response.data.data || response.data;
+  const response = await apiClient.get<{ data: TimesheetStatusResponse } | TimesheetStatusResponse>(
+    '/attendance/timesheet-submission/check_status/',
+    {
+      params: { week_start_date: weekStart, week_end_date: weekEnd },
+    }
+  );
+  const result = response.data;
+  if ('data' in result && result.data) {
+    return result.data as TimesheetStatusResponse;
+  }
+  return result as TimesheetStatusResponse;
 };
 
 // Correct endpoint: /attendance/employee-attendance/bulk_submit/ with submit_timesheet=true
@@ -159,8 +176,11 @@ const submitTimesheetApi = async (payload: {
   submit_timesheet: boolean;
   week_start_date: string;
   week_end_date: string;
-}) => {
-  const response = await apiClient.post('/attendance/employee-attendance/bulk_submit/', payload);
+}): Promise<{ message?: string }> => {
+  const response = await apiClient.post<{ message?: string }>(
+    '/attendance/employee-attendance/bulk_submit/',
+    payload
+  );
   return response.data;
 };
 
@@ -168,10 +188,13 @@ const submitTimesheetApi = async (payload: {
 const returnTimesheetToDraft = async (payload: {
   week_start_date: string;
   week_end_date: string;
-}) => {
-  const response = await apiClient.delete('/attendance/timesheet-submission/return_to_draft/', {
-    params: payload,
-  });
+}): Promise<{ message?: string }> => {
+  const response = await apiClient.delete<{ message?: string }>(
+    '/attendance/timesheet-submission/return_to_draft/',
+    {
+      params: payload,
+    }
+  );
   return response.data;
 };
 
@@ -183,8 +206,11 @@ const submitDailyAttendance = async (payload: {
     afternoon_present: boolean;
     attendance_status: string;
   }[];
-}) => {
-  const response = await apiClient.post('/attendance/employee-attendance/bulk_submit/', payload);
+}): Promise<{ message?: string }> => {
+  const response = await apiClient.post<{ message?: string }>(
+    '/attendance/employee-attendance/bulk_submit/',
+    payload
+  );
   return response.data;
 };
 
@@ -319,6 +345,7 @@ const AttendanceToggle = ({
 
 export default function MyTimesheetScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
   const queryClient = useQueryClient();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [refreshing, setRefreshing] = useState(false);
@@ -374,7 +401,10 @@ export default function MyTimesheetScreen() {
     return map;
   }, [attendanceData]);
 
-  const holidayDescriptions = attendanceData?.holiday_descriptions || {};
+  const holidayDescriptions = useMemo(
+    () => attendanceData?.holiday_descriptions || {},
+    [attendanceData]
+  );
   const workingDayPolicy = attendanceData?.working_day_policy || null;
   const monthDays = useMemo(
     () => eachDayOfInterval({ start: monthStart, end: monthEnd }),
@@ -556,130 +586,146 @@ export default function MyTimesheetScreen() {
 
   const submitMutation = useMutation({
     mutationFn: submitTimesheetApi,
-    onSuccess: () => {
-      Alert.alert('Success', 'Timesheet submitted for approval');
+    onSuccess: (response) => {
+      showToast({
+        type: 'success',
+        title: 'Success',
+        message: response?.message || 'Timesheet submitted for approval',
+      });
       queryClient.invalidateQueries({ queryKey: ['timesheet'] });
       setWeeks([]);
     },
-    onError: (error: unknown) =>
-      Alert.alert('Error', extractApiError(error, 'Failed to submit timesheet')),
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to submit timesheet');
+    },
   });
 
   const returnToDraftMutation = useMutation({
     mutationFn: returnTimesheetToDraft,
-    onSuccess: (_, variables) => {
-      Alert.alert('Success', 'Timesheet returned to draft');
+    onSuccess: (response, variables) => {
+      showToast({
+        type: 'success',
+        title: 'Success',
+        message: response?.message || 'Timesheet returned to draft',
+      });
       queryClient.invalidateQueries({ queryKey: ['timesheet'] });
       setWeeks((prev) => prev.filter((w) => w.start !== variables.week_start_date));
     },
-    onError: (error: unknown) =>
-      Alert.alert('Error', extractApiError(error, 'Failed to return to draft')),
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to return to draft');
+    },
   });
 
   // Daily attendance submission mutation
   const dailyAttendanceMutation = useMutation({
     mutationFn: submitDailyAttendance,
-    onSuccess: () => {
-      Alert.alert('Success', 'Attendance saved successfully');
+    onSuccess: (response) => {
+      showToast({
+        type: 'success',
+        title: 'Success',
+        message: response?.message || 'Attendance saved successfully',
+      });
       queryClient.invalidateQueries({ queryKey: ['timesheet'] });
       setDayModalVisible(false);
       setSelectedDay(null);
     },
     onError: (error: unknown) => {
-      const errorMessage = extractApiError(error, 'Failed to save attendance');
-      Alert.alert('Error', errorMessage);
+      handleMutationError(error, 'Failed to save attendance');
     },
   });
 
   // Handle clicking on a calendar day
-  const handleDayClick = async (date: Date, state: DayState) => {
-    const dateKey = toDateKey(date);
-    const record = attendanceByDate.get(dateKey);
+  const handleDayClick = useCallback(
+    async (date: Date, state: DayState) => {
+      const dateKey = toDateKey(date);
+      const record = attendanceByDate.get(dateKey);
 
-    // Don't allow clicking on future dates or holidays
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const clickedDate = new Date(date);
-    clickedDate.setHours(0, 0, 0, 0);
+      // Don't allow clicking on future dates or holidays
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const clickedDate = new Date(date);
+      clickedDate.setHours(0, 0, 0, 0);
 
-    if (clickedDate > today) {
-      Alert.alert('Cannot Edit', 'Cannot submit attendance for future dates.');
-      return;
-    }
-
-    if (state === 'holiday') {
-      Alert.alert('Holiday', 'This is a holiday. No attendance required.');
-      return;
-    }
-
-    if (state === 'leave-approved' || state === 'leave-pending') {
-      Alert.alert('On Leave', 'You are on leave for this date.');
-      return;
-    }
-
-    // Check if attendance is already submitted/approved
-    if (record) {
-      const status = record.approval_status?.toLowerCase();
-      if (status === 'approved') {
-        Alert.alert('Cannot Edit', 'This date has been approved and cannot be modified.');
+      if (clickedDate > today) {
+        Alert.alert('Cannot Edit', 'Cannot submit attendance for future dates.');
         return;
       }
-      if (status === 'submitted' || status === 'pending') {
-        Alert.alert(
-          'Cannot Edit',
-          'This date has been submitted for approval. Wait for approval or return to draft.'
+
+      if (state === 'holiday') {
+        Alert.alert('Holiday', 'This is a holiday. No attendance required.');
+        return;
+      }
+
+      if (state === 'leave-approved' || state === 'leave-pending') {
+        Alert.alert('On Leave', 'You are on leave for this date.');
+        return;
+      }
+
+      // Check if attendance is already submitted/approved
+      if (record) {
+        const status = record.approval_status?.toLowerCase();
+        if (status === 'approved') {
+          Alert.alert('Cannot Edit', 'This date has been approved and cannot be modified.');
+          return;
+        }
+        if (status === 'submitted' || status === 'pending') {
+          Alert.alert(
+            'Cannot Edit',
+            'This date has been submitted for approval. Wait for approval or return to draft.'
+          );
+          return;
+        }
+      }
+
+      // Check if timesheet for this week is already submitted/approved
+      setCheckingWeekStatus(true);
+      const weekStart = startOfWeek(date, { weekStartsOn: 0 });
+      const weekEnd = endOfWeek(date, { weekStartsOn: 0 });
+
+      try {
+        const statusResponse = await checkTimesheetStatus(
+          format(weekStart, 'yyyy-MM-dd'),
+          format(weekEnd, 'yyyy-MM-dd')
         );
-        return;
+        const timesheetStatus = statusResponse.submission?.submission_status || null;
+        setWeekTimesheetStatus(timesheetStatus);
+
+        if (timesheetStatus === 'APPROVED') {
+          Alert.alert(
+            'Cannot Edit',
+            'The timesheet for this week has been approved. You cannot modify attendance.'
+          );
+          setCheckingWeekStatus(false);
+          return;
+        }
+
+        if (timesheetStatus === 'SUBMITTED') {
+          Alert.alert(
+            'Cannot Edit',
+            'The timesheet for this week is pending approval. Return to draft to modify.'
+          );
+          setCheckingWeekStatus(false);
+          return;
+        }
+      } catch {
+        // No submission exists - that's fine, allow editing
+        setWeekTimesheetStatus(null);
       }
-    }
+      setCheckingWeekStatus(false);
 
-    // Check if timesheet for this week is already submitted/approved
-    setCheckingWeekStatus(true);
-    const weekStart = startOfWeek(date, { weekStartsOn: 0 });
-    const weekEnd = endOfWeek(date, { weekStartsOn: 0 });
-
-    try {
-      const statusResponse = await checkTimesheetStatus(
-        format(weekStart, 'yyyy-MM-dd'),
-        format(weekEnd, 'yyyy-MM-dd')
-      );
-      const timesheetStatus = statusResponse.submission?.submission_status || null;
-      setWeekTimesheetStatus(timesheetStatus);
-
-      if (timesheetStatus === 'APPROVED') {
-        Alert.alert(
-          'Cannot Edit',
-          'The timesheet for this week has been approved. You cannot modify attendance.'
-        );
-        setCheckingWeekStatus(false);
-        return;
+      // Set the selected day and pre-fill attendance values
+      setSelectedDay(date);
+      if (record) {
+        setDayMorningPresent(record.morning_present ?? defaultPresent);
+        setDayAfternoonPresent(record.afternoon_present ?? defaultPresent);
+      } else {
+        setDayMorningPresent(defaultPresent);
+        setDayAfternoonPresent(defaultPresent);
       }
-
-      if (timesheetStatus === 'SUBMITTED') {
-        Alert.alert(
-          'Cannot Edit',
-          'The timesheet for this week is pending approval. Return to draft to modify.'
-        );
-        setCheckingWeekStatus(false);
-        return;
-      }
-    } catch {
-      // No submission exists - that's fine, allow editing
-      setWeekTimesheetStatus(null);
-    }
-    setCheckingWeekStatus(false);
-
-    // Set the selected day and pre-fill attendance values
-    setSelectedDay(date);
-    if (record) {
-      setDayMorningPresent(record.morning_present ?? defaultPresent);
-      setDayAfternoonPresent(record.afternoon_present ?? defaultPresent);
-    } else {
-      setDayMorningPresent(defaultPresent);
-      setDayAfternoonPresent(defaultPresent);
-    }
-    setDayModalVisible(true);
-  };
+      setDayModalVisible(true);
+    },
+    [attendanceByDate, defaultPresent]
+  );
 
   // Submit daily attendance
   const handleSubmitDayAttendance = () => {

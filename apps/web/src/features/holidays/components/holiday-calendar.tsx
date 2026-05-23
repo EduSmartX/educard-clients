@@ -36,12 +36,9 @@ import { HolidayFormDialog } from './holiday-form-dialog';
 export function HolidayCalendar() {
   const [viewMode, setViewMode] = useState<ViewMode>('calendar');
   const [currentDate, setCurrentDate] = useState(new Date());
-  
-  // Get user role to determine permissions
-  const { role } = useRole();
-  const isAdmin = role === 'ADMIN';
 
-  // Calculate date range for fetching
+  const { isAdmin } = useRole();
+
   const { fetchFromDate, fetchToDate } = useMemo(() => {
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(currentDate);
@@ -133,8 +130,8 @@ export function HolidayCalendar() {
       </PageHeader>
 
       {/* Main Card */}
-      <Card className="shadow-lg border-0">
-        <CardHeader className="pb-4 border-b bg-gradient-to-r from-emerald-50 to-teal-50">
+      <Card className="border-0 shadow-lg">
+        <CardHeader className="border-b bg-gradient-to-r from-emerald-50 to-teal-50 pb-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             {/* Current Month Display */}
             <div className="flex items-center gap-3">
@@ -150,7 +147,7 @@ export function HolidayCalendar() {
               <Tabs
                 value={viewMode}
                 onValueChange={(v: string) => setViewMode(v as ViewMode)}
-                className="bg-white rounded-lg shadow-sm"
+                className="rounded-lg bg-white shadow-sm"
               >
                 <TabsList className="h-10">
                   <TabsTrigger value="calendar" className="gap-2">
@@ -166,7 +163,7 @@ export function HolidayCalendar() {
 
               {/* Date Navigation */}
               {viewMode !== 'bulk-upload' && (
-                <div className="flex items-center gap-2 bg-white rounded-lg shadow-sm p-1">
+                <div className="flex items-center gap-2 rounded-lg bg-white p-1 shadow-sm">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -214,8 +211,8 @@ export function HolidayCalendar() {
           {/* Loading State */}
           {isLoading && (
             <div className="flex items-center justify-center py-20">
-              <div className="text-center space-y-4">
-                <Loader2 className="h-10 w-10 animate-spin text-emerald-600 mx-auto" />
+              <div className="space-y-4 text-center">
+                <Loader2 className="mx-auto h-10 w-10 animate-spin text-emerald-600" />
                 <p className="text-sm text-gray-500">Loading calendar...</p>
               </div>
             </div>

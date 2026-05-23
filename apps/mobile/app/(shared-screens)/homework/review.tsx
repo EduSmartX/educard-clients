@@ -18,7 +18,7 @@ import {
   HOMEWORK_UI,
   extractApiError,
 } from '@educard/shared';
-import type { HomeworkSubmissionDetail, SubmissionStatus } from '@educard/shared';
+import type { SubmissionStatus } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
@@ -37,16 +37,14 @@ import { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
   Alert,
   TextInput,
   Linking,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import {
@@ -57,6 +55,7 @@ import {
 } from '@/features/homework';
 import { useUserProfile } from '@/hooks';
 import { useAuthStore } from '@/lib/auth-store';
+import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
 import { isAdminRole } from '@/utils/role-utils';
 
@@ -64,6 +63,7 @@ const adminGradient = getRoleGradient('admin');
 
 export default function ReviewScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
   const { homework_id, submission_id, index, total } = useLocalSearchParams<{
     homework_id: string;
     submission_id: string;
@@ -143,13 +143,17 @@ export default function ReviewScreen() {
       {
         onSuccess: () => {
           setIsSubmitting(false);
-          Alert.alert('Success', 'Review submitted successfully');
+          showToast({
+            type: 'success',
+            title: 'Success',
+            message: 'Review submitted successfully',
+          });
           void refetch();
         },
         onError: (error: unknown) => {
           setIsSubmitting(false);
           const message = extractApiError(error, 'Failed to submit review');
-          Alert.alert('Error', message);
+          showToast({ type: 'error', title: 'Error', message });
         },
       }
     );
@@ -198,10 +202,7 @@ export default function ReviewScreen() {
   const statusColor = SUBMISSION_STATUS_COLORS[submission.status as SubmissionStatus];
 
   return (
-    <KeyboardAvoidingView
-      style={layoutStyles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={layoutStyles.container}>
       <LinearGradient colors={adminGradient} style={headerStyles.header}>
         <Animated.View
           entering={FadeIn.delay(100)}
@@ -257,7 +258,13 @@ export default function ReviewScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <KeyboardAwareScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        enableOnAndroid
+        extraScrollHeight={20}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Student Info Card */}
         <Animated.View entering={FadeInDown.delay(100)} style={styles.studentCard}>
           <View style={styles.studentAvatar}>
@@ -318,7 +325,7 @@ export default function ReviewScreen() {
               <TouchableOpacity
                 key={attachment.public_id}
                 style={styles.attachmentCard}
-                onPress={() => handleOpenAttachment(attachment.url)}
+                onPress={() => void handleOpenAttachment(attachment.url)}
               >
                 <Paperclip size={16} color={Colors.gray[400]} />
                 <View style={styles.attachmentInfo}>
@@ -387,7 +394,7 @@ export default function ReviewScreen() {
         )}
 
         <View style={{ height: 100 }} />
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* Submit Button */}
       {canSubmitReview && (
@@ -428,7 +435,7 @@ export default function ReviewScreen() {
           </TouchableOpacity>
         </View>
       )}
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 

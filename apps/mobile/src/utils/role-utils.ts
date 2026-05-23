@@ -34,7 +34,7 @@ export async function getUserRole(): Promise<string | null> {
  */
 export async function isAdminUser(): Promise<boolean> {
   const role = await getUserRole();
-  return role === USER_ROLES.ADMIN || role === 'admin';
+  return role === USER_ROLES.ADMIN;
 }
 
 /**
@@ -42,7 +42,7 @@ export async function isAdminUser(): Promise<boolean> {
  */
 export async function isTeacherUser(): Promise<boolean> {
   const role = await getUserRole();
-  return role === USER_ROLES.EMPLOYEE || role === 'teacher' || role === 'employee';
+  return role === USER_ROLES.EMPLOYEE || role === USER_ROLES.TEACHER;
 }
 
 /**
@@ -50,8 +50,7 @@ export async function isTeacherUser(): Promise<boolean> {
  */
 export function isAdminRole(role?: string | null): boolean {
   if (!role) return false;
-  const normalizedRole = role.toLowerCase();
-  return ['admin', 'super_admin', 'organization_admin'].includes(normalizedRole);
+  return role.toLowerCase() === USER_ROLES.ADMIN;
 }
 
 /**
@@ -60,7 +59,7 @@ export function isAdminRole(role?: string | null): boolean {
 export function isTeacherRole(role?: string | null): boolean {
   if (!role) return false;
   const normalizedRole = role.toLowerCase();
-  return normalizedRole === 'teacher' || normalizedRole === 'employee';
+  return normalizedRole === USER_ROLES.EMPLOYEE || normalizedRole === USER_ROLES.TEACHER;
 }
 
 /**

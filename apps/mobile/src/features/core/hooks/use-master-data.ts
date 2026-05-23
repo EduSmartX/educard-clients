@@ -13,6 +13,7 @@ import {
   getDepartments,
   getSupervisors,
   getLeaveTypes,
+  getCurrentAcademicYear,
 } from '../api/master-api';
 
 /** Long staleTime for reference data that rarely changes */
@@ -68,6 +69,15 @@ export function useLeaveTypes() {
   return useQuery({
     queryKey: QueryKeys.CORE.LEAVE_TYPES,
     queryFn: getLeaveTypes,
+    staleTime: MASTER_STALE,
+    gcTime: MASTER_GC,
+  });
+}
+
+export function useCurrentAcademicYear() {
+  return useQuery({
+    queryKey: ['current-academic-year'],
+    queryFn: getCurrentAcademicYear,
     staleTime: MASTER_STALE,
     gcTime: MASTER_GC,
   });

@@ -21,7 +21,12 @@ import {
   extractApiError,
   getFieldErrors,
 } from '@educard/shared';
-import type { HomeworkUpdatePayload } from '@educard/shared';
+import type {
+  HomeworkUpdatePayload,
+  HomeworkStatus,
+  HomeworkPriority,
+  SubmissionType,
+} from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Save, BookOpen, Clock, Link, AlertCircle } from 'lucide-react-native';
@@ -29,15 +34,13 @@ import { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   StyleSheet,
   TextInput,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { FormDatePicker, FormAttachmentPicker, type SelectedFile } from '@/components/forms';
@@ -47,12 +50,14 @@ import {
   useUploadHomeworkAttachment,
 } from '@/features/homework';
 import { useAuthStore } from '@/lib/auth-store';
+import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
 
 export default function EditHomeworkScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const { user } = useAuthStore();
@@ -141,7 +146,7 @@ export default function EditHomeworkScreen() {
           uri: file.uri,
           name: file.name,
           type: file.type,
-        } as any);
+        } as unknown as Blob);
 
         await uploadMutation.mutateAsync({ publicId: homeworkId, formData });
       }
@@ -166,43 +171,42 @@ export default function EditHomeworkScreen() {
       description: description.trim() || undefined,
       instructions: instructions.trim() || undefined,
       due_datetime: dueDateTime,
-      status: status as any,
-      priority: priority as any,
-      submission_type: submissionType as any,
+      status: status as HomeworkStatus,
+      priority: priority as HomeworkPriority,
+      submission_type: submissionType as SubmissionType,
       reference_link: referenceLink.trim() || undefined,
     };
-
-    console.log('[EditHomework] Submitting update:', {
-      homeworkId: homework.public_id,
-      payload,
-    });
 
     updateMutation.mutate(
       { publicId: homework.public_id, data: payload },
       {
-        onSuccess: async () => {
-          console.log('[EditHomework] Update successful');
+        onSuccess: () => {
           // Upload new attachments if any
           if (attachments.length > 0) {
-            await uploadAttachments(homework.public_id);
+            void uploadAttachments(homework.public_id);
           }
-          Alert.alert('Success', 'Homework updated successfully', [
-            { text: 'OK', onPress: () => router.back() },
-          ]);
+          showToast({
+            type: 'success',
+            title: 'Success',
+            message: 'Homework updated successfully',
+          });
+          router.back();
         },
         onError: (error: unknown) => {
           // Extract field-level validation errors from API response
           const fieldErrors = getFieldErrors(error);
           if (Object.keys(fieldErrors).length > 0) {
-            // Display first field error as alert (mobile doesn't have inline field errors in this form)
             const firstField = Object.keys(fieldErrors)[0];
             const message = fieldErrors[firstField];
-            Alert.alert('Validation Error', `${firstField.replace(/_/g, ' ')}: ${message}`);
+            showToast({
+              type: 'error',
+              title: 'Validation Error',
+              message: `${firstField.replace(/_/g, ' ')}: ${message}`,
+            });
             return;
           }
-          // Show alert only for non-field errors (server errors, network issues, etc.)
           const message = extractApiError(error, 'Failed to update homework');
-          Alert.alert('Error', message);
+          showToast({ type: 'error', title: 'Error', message });
         },
       }
     );
@@ -241,10 +245,7 @@ export default function EditHomeworkScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={layoutStyles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={layoutStyles.container}>
       <LinearGradient colors={adminGradient} style={headerStyles.header}>
         <Animated.View
           entering={FadeIn.delay(100)}
@@ -271,7 +272,13 @@ export default function EditHomeworkScreen() {
         </View>
       </LinearGradient>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <KeyboardAwareScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        enableOnAndroid
+        extraScrollHeight={20}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Class & Subject Display (Readonly) */}
         <Animated.View entering={FadeInDown.delay(100)} style={styles.section}>
           <Text style={styles.sectionTitle}>Class & Subject</Text>
@@ -475,7 +482,7 @@ export default function EditHomeworkScreen() {
         </Animated.View>
 
         <View style={{ height: 100 }} />
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* Submit Button */}
       <View style={styles.footer}>
@@ -484,7 +491,7 @@ export default function EditHomeworkScreen() {
             styles.submitBtn,
             (!canSave || updateMutation.isPending || isUploading) && styles.submitBtnDisabled,
           ]}
-          onPress={handleSubmit}
+          onPress={() => void handleSubmit()}
           disabled={!canSave || updateMutation.isPending || isUploading}
         >
           {updateMutation.isPending || isUploading ? (
@@ -502,7 +509,7 @@ export default function EditHomeworkScreen() {
           )}
         </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 

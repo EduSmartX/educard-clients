@@ -36,6 +36,7 @@ export const fetchClassGroups = timetableApi.listClassGroups;
 export const fetchSlots = timetableApi.listSlots;
 export const fetchClassTimetable = timetableApi.getClassTimetable;
 export const fetchMyTimetable = timetableApi.getMyTimetable;
+export const fetchTeacherTimetable = timetableApi.getTeacherTimetable;
 export const createClassGroup = timetableApi.createClassGroup;
 export const updateClassGroup = timetableApi.updateClassGroup;
 export const deleteClassGroup = timetableApi.deleteClassGroup;

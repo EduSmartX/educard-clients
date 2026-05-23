@@ -29,9 +29,8 @@ import {
   Alert,
   TextInput,
   Modal,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { ConfirmDialog } from '@/components/common';
@@ -380,9 +379,12 @@ export default function LeaveApprovalsScreen() {
         animationType="fade"
         onRequestClose={() => setRejectModal({ visible: false, item: null })}
       >
-        <KeyboardAvoidingView
+        <KeyboardAwareScrollView
           style={styles.modalOverlay}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
+          enableOnAndroid
+          extraScrollHeight={20}
+          keyboardShouldPersistTaps="handled"
         >
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
@@ -434,7 +436,7 @@ export default function LeaveApprovalsScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </KeyboardAvoidingView>
+        </KeyboardAwareScrollView>
       </Modal>
 
       {/* Approve Confirmation Dialog */}

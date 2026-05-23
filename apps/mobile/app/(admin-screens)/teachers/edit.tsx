@@ -19,7 +19,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Save, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
@@ -84,8 +84,6 @@ export default function EditTeacherScreen() {
     joining_date: '',
     supervisor_email: '',
     subjects: [] as string[],
-    emergency_contact_name: '',
-    emergency_contact_number: '',
     street_address: '',
     city: '',
     state: '',
@@ -117,8 +115,6 @@ export default function EditTeacherScreen() {
         joining_date: teacher.joining_date ?? '',
         supervisor_email: u?.supervisor?.email ?? '',
         subjects: (teacher.subjects ?? []).map((s) => s.id?.toString() ?? s.public_id),
-        emergency_contact_name: teacher.emergency_contact_name ?? '',
-        emergency_contact_number: teacher.emergency_contact_number ?? '',
         street_address: addr?.street_address ?? '',
         city: addr?.city ?? '',
         state: addr?.state ?? '',
@@ -135,8 +131,10 @@ export default function EditTeacherScreen() {
   );
   const supervisorOptions = useMemo(
     () =>
-      (supervisors ?? []).map((s) => ({ value: s.email, label: `${s.full_name} (${s.email})` })),
-    [supervisors]
+      (supervisors ?? [])
+        .filter((s) => s.email !== form.email)
+        .map((s) => ({ value: s.email, label: `${s.full_name} (${s.email})` })),
+    [supervisors, form.email]
   );
   const bloodGroupOpts = BLOOD_GROUP_OPTIONS.map((b) => ({ value: b.value, label: b.label }));
   const subjectOptions = useMemo(
@@ -172,6 +170,7 @@ export default function EditTeacherScreen() {
   );
 
   const handleSubmit = useCallback(() => {
+    if (updateMutation.isPending) return; // Prevent double-tap
     setApiError(null);
     const fieldErrors = validateAllFields(teacherFullSchema, form);
     setErrors(fieldErrors);
@@ -190,9 +189,7 @@ export default function EditTeacherScreen() {
       { publicId: id ?? '', data: payload },
       {
         onSuccess: () => {
-          Alert.alert('✅ Success', 'Teacher updated successfully!', [
-            { text: 'OK', onPress: () => router.back() },
-          ]);
+          router.back();
         },
         onError: (err: Error & { response?: { data?: unknown } }) => {
           if (err.response?.data) {
@@ -404,6 +401,7 @@ export default function EditTeacherScreen() {
               placeholder="Select supervisor"
               searchable
               loading={supervisorsLoading}
+              error={errors.supervisor_email}
             />
 
             {/* Subjects Multi-Select */}
@@ -420,27 +418,6 @@ export default function EditTeacherScreen() {
               label="Date of Joining"
               value={form.joining_date}
               onChange={(v) => updateField('joining_date', v)}
-            />
-          </FormSection>
-        </Animated.View>
-
-        <Animated.View entering={FadeInDown.delay(300)}>
-          <FormSection title="Emergency Contact" icon="🆘">
-            <FormInput
-              label="Emergency Contact Name"
-              value={form.emergency_contact_name}
-              onChangeText={(v) => updateField('emergency_contact_name', v)}
-              placeholder="Enter contact name"
-            />
-            <FormInput
-              label="Emergency Contact Phone"
-              value={form.emergency_contact_number}
-              onChangeText={(v) => updateField('emergency_contact_number', v)}
-              onBlurValidate={() => blurValidate('emergency_contact_number')}
-              error={errors.emergency_contact_number}
-              placeholder="Enter contact phone"
-              keyboardType="phone-pad"
-              maxLength={15}
             />
           </FormSection>
         </Animated.View>

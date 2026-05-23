@@ -67,10 +67,6 @@ export const teacherFormSchema = z
     // Subjects (array of subject IDs - integers from core subjects)
     subjects: z.array(z.number()).optional(),
 
-    // Emergency contact
-    emergency_contact_name: textSchema('Emergency contact name', { maxLength: 100 }),
-    emergency_contact_number: phoneSchema(false),
-
     // Address fields
     address_type: z
       .enum([

@@ -9,20 +9,13 @@ import { DataTable, type Column } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DeleteConfirmationDialog, WarningConfirmationDialog } from '@/components/common';
 import { FeeAmount } from '../../components/fee-amount';
+import { useDeleteFeeStructure } from '../../hooks/use-fee-mutations';
 import type { FeeStructureListItem } from '@educard/shared';
 import { format } from 'date-fns';
-import { Eye, Pencil, Trash2, Users, AlertTriangle } from 'lucide-react';
+import { Eye, Pencil, Trash2, Users } from 'lucide-react';
 import { ROUTES } from '@/constants/app-config';
 
 interface FeeStructureTableProps {
@@ -33,12 +26,22 @@ interface FeeStructureTableProps {
 export function FeeStructureTable({ data, isLoading }: FeeStructureTableProps) {
   const navigate = useNavigate();
   const [editConfirmId, setEditConfirmId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<FeeStructureListItem | null>(null);
+  const deleteFeeStructure = useDeleteFeeStructure();
 
   const handleEditConfirm = () => {
     if (editConfirmId) {
       navigate(`${ROUTES.FEES.STRUCTURES}/${editConfirmId}/edit`);
       setEditConfirmId(null);
     }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) {
+      return;
+    }
+    await deleteFeeStructure.mutateAsync(deleteTarget.public_id);
+    setDeleteTarget(null);
   };
 
   const columns: Column<FeeStructureListItem>[] = [
@@ -65,24 +68,22 @@ export function FeeStructureTable({ data, isLoading }: FeeStructureTableProps) {
             </Badge>
           ))}
           {row.class_names.length > 2 && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge variant="outline" className="hover:bg-muted cursor-pointer text-xs">
-                    +{row.class_names.length - 2} more
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs">
-                  <div className="space-y-1">
-                    {row.class_names.slice(2).map((cls, idx) => (
-                      <div key={idx} className="text-xs">
-                        {cls}
-                      </div>
-                    ))}
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Badge variant="outline" className="hover:bg-muted cursor-pointer text-xs">
+                  +{row.class_names.length - 2} more
+                </Badge>
+              </PopoverTrigger>
+              <PopoverContent side="bottom" className="w-auto max-w-xs p-3">
+                <div className="space-y-1">
+                  {row.class_names.slice(2).map((cls, idx) => (
+                    <div key={idx} className="text-xs">
+                      {cls}
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
           )}
         </div>
       ),
@@ -171,13 +172,14 @@ export function FeeStructureTable({ data, isLoading }: FeeStructureTableProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 cursor-not-allowed text-gray-400"
-                  disabled
+                  className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-700"
+                  onClick={() => setDeleteTarget(row)}
+                  disabled={deleteFeeStructure.isPending}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Delete is disabled</TooltipContent>
+              <TooltipContent>Delete Fee Structure</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
@@ -203,49 +205,51 @@ export function FeeStructureTable({ data, isLoading }: FeeStructureTableProps) {
       />
 
       {/* Edit Confirmation Dialog */}
-      <AlertDialog open={!!editConfirmId} onOpenChange={(open) => !open && setEditConfirmId(null)}>
-        <AlertDialogContent className="border-amber-200 bg-white">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-500" />
-              Edit Fee Structure
-            </AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-3">
-                <span className="text-foreground block font-medium">
-                  Editing this fee structure may impact student fees. Here's what can happen:
-                </span>
-                <div className="space-y-1.5 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm">
-                  <p>
-                    📋 <strong>Changing components or amount</strong> → All student fees will be
-                    recalculated. Paid amounts stay intact, only balance due changes.
-                  </p>
-                  <p>
-                    ➕ <strong>Adding new classes</strong> → Fee will be automatically assigned to
-                    all students in those classes.
-                  </p>
-                  <p>
-                    ➖ <strong>Removing classes</strong> → Unpaid records will be deleted. Paid
-                    records will be marked "Cancelled" for refund review.
-                  </p>
-                </div>
-                <span className="block text-sm font-medium text-amber-700">
-                  You'll see a detailed impact summary before final confirmation.
-                </span>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleEditConfirm}
-              className="bg-amber-600 hover:bg-amber-700"
-            >
-              Continue to Edit
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <WarningConfirmationDialog
+        open={!!editConfirmId}
+        onOpenChange={(open) => !open && setEditConfirmId(null)}
+        onConfirm={handleEditConfirm}
+        title="Edit Fee Structure"
+        confirmButtonText="Continue to Edit"
+        cancelButtonText="Cancel"
+        description={
+          <div className="space-y-3">
+            <span className="text-foreground block font-medium">
+              Editing this fee structure may impact student fees. Here's what can happen:
+            </span>
+            <div className="space-y-1.5 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm">
+              <p>
+                📋 <strong>Changing components or amount</strong> → All student fees will be
+                recalculated. Paid amounts stay intact, only balance due changes.
+              </p>
+              <p>
+                ➕ <strong>Adding new classes</strong> → Fee will be automatically assigned to all
+                students in those classes.
+              </p>
+              <p>
+                ➖ <strong>Removing classes</strong> → Unpaid records will be deleted. Paid records
+                will be marked "Cancelled" for refund review.
+              </p>
+            </div>
+            <span className="block text-sm font-medium text-amber-700">
+              You'll see a detailed impact summary before final confirmation.
+            </span>
+          </div>
+        }
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Fee Structure"
+        itemName={deleteTarget?.name}
+        description={`You are deleting ${deleteTarget?.name ?? 'this fee structure'}. ${deleteTarget?.student_count ?? 0} student fee records are going to be deleted for this fee structure. This action cannot be undone.`}
+        isDeleting={deleteFeeStructure.isPending}
+        deleteButtonText="Delete Fee Structure"
+        cancelButtonText="Cancel"
+      />
     </>
   );
 }

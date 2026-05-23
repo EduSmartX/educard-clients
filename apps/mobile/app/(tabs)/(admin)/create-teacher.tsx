@@ -3,32 +3,23 @@
  * Form to add a new teacher with validation
  */
 
-import { useState, useCallback } from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { ChevronLeft, Save } from 'lucide-react-native';
-import {
-  Colors,
   getRoleGradient,
   getRoleThemeColors,
   extractApiError,
   getFieldErrors,
 } from '@educard/shared';
-import { useCreateTeacher } from '@/hooks';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import { ChevronLeft, Save } from 'lucide-react-native';
+import { useState, useCallback } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+
 import { FormInput, FormSelect, FormSection, FormError } from '@/components/forms';
-import { GENDER_OPTIONS } from '@/constants';
+import { useCreateTeacher } from '@/features/teachers';
+import { headerStyles, layoutStyles } from '@/styles';
 import {
   validateForm,
   hasErrors,
@@ -38,9 +29,8 @@ import {
   phone,
   type FieldErrors,
 } from '@/utils/validation';
-import { headerStyles, layoutStyles } from '@/styles';
 
-const adminTheme = getRoleThemeColors('admin');
+const _adminTheme = getRoleThemeColors('admin');
 const adminGradient = getRoleGradient('admin');
 
 const GENDER_CHIPS = [
@@ -73,8 +63,6 @@ export default function CreateTeacherScreen() {
     designation: '',
     specialization: '',
     experience_years: '',
-    emergency_contact_name: '',
-    emergency_contact_number: '',
   });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [apiError, setApiError] = useState<string | null>(null);
@@ -106,8 +94,6 @@ export default function CreateTeacherScreen() {
       designation: form.designation.trim() || undefined,
       specialization: form.specialization.trim() || undefined,
       experience_years: form.experience_years ? Number(form.experience_years) : undefined,
-      emergency_contact_name: form.emergency_contact_name.trim() || undefined,
-      emergency_contact_number: form.emergency_contact_number.trim() || undefined,
       user: {
         first_name: form.first_name.trim(),
         last_name: form.last_name.trim(),
@@ -117,31 +103,27 @@ export default function CreateTeacherScreen() {
       },
     };
 
-    createMutation.mutate(payload as any, {
-      onSuccess: () => {
-        Alert.alert('Success', 'Teacher created successfully', [
-          { text: 'OK', onPress: () => router.back() },
-        ]);
-      },
-      onError: (err: unknown) => {
-        // Extract field-level validation errors from API response
-        const fieldErrors = getFieldErrors(err);
-        if (Object.keys(fieldErrors).length > 0) {
-          // Map backend field names to form field names (e.g., user.email -> email)
-          const mappedErrors: FieldErrors = {};
-          Object.entries(fieldErrors).forEach(([key, message]) => {
-            const fieldName = key.startsWith('user.') ? key.replace('user.', '') : key;
-            mappedErrors[fieldName] = message;
-          });
-          setErrors((prev) => ({ ...prev, ...mappedErrors }));
-          // Inline field errors are sufficient - no banner needed
-          return;
-        }
-        // Show banner only for non-field errors (server errors, network issues, etc.)
-        const msg = extractApiError(err, 'Failed to create teacher. Please check your input.');
-        setApiError(msg);
-      },
-    });
+    createMutation.mutate(
+      { data: payload },
+      {
+        onSuccess: () => {
+          router.back();
+        },
+        onError: (err: unknown) => {
+          const fieldErrors = getFieldErrors(err);
+          if (Object.keys(fieldErrors).length > 0) {
+            const mappedErrors: FieldErrors = {};
+            Object.entries(fieldErrors).forEach(([key, message]) => {
+              const fieldName = key.startsWith('user.') ? key.replace('user.', '') : key;
+              mappedErrors[fieldName] = message;
+            });
+            setErrors((prev) => ({ ...prev, ...mappedErrors }));
+            return;
+          }
+          setApiError(extractApiError(err, 'Failed to create teacher.'));
+        },
+      }
+    );
   }, [form, createMutation, router]);
 
   return (
@@ -164,145 +146,123 @@ export default function CreateTeacherScreen() {
         </View>
       </LinearGradient>
 
-      <KeyboardAvoidingView
+      <KeyboardAwareScrollView
+        contentContainerStyle={styles.formContainer}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid
+        extraScrollHeight={20}
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView
-          contentContainerStyle={styles.formContainer}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+        <FormError message={apiError} onDismiss={() => setApiError(null)} />
+
+        {/* Personal Info */}
+        <Animated.View entering={FadeInDown.delay(100)}>
+          <FormSection title="Personal Information" icon="👤">
+            <FormInput
+              label="First Name"
+              required
+              value={form.first_name}
+              onChangeText={(v) => updateField('first_name', v)}
+              error={errors.first_name}
+              placeholder="e.g. John"
+              autoCapitalize="words"
+            />
+            <FormInput
+              label="Last Name"
+              required
+              value={form.last_name}
+              onChangeText={(v) => updateField('last_name', v)}
+              error={errors.last_name}
+              placeholder="e.g. Smith"
+              autoCapitalize="words"
+            />
+            <FormInput
+              label="Email"
+              required
+              value={form.email}
+              onChangeText={(v) => updateField('email', v)}
+              error={errors.email}
+              placeholder="e.g. john@school.com"
+              keyboardType="email-address"
+            />
+            <FormInput
+              label="Phone"
+              value={form.phone}
+              onChangeText={(v) => updateField('phone', v)}
+              error={errors.phone}
+              placeholder="e.g. 9876543210"
+              keyboardType="phone-pad"
+              hint="10-15 digits"
+            />
+            <FormSelect
+              label="Gender"
+              required
+              options={GENDER_CHIPS}
+              value={form.gender}
+              onChange={(v) => updateField('gender', v)}
+              error={errors.gender}
+            />
+          </FormSection>
+        </Animated.View>
+
+        {/* Employment Info */}
+        <Animated.View entering={FadeInDown.delay(200)}>
+          <FormSection title="Employment Details" icon="💼">
+            <FormInput
+              label="Employee ID"
+              required
+              value={form.employee_id}
+              onChangeText={(v) => updateField('employee_id', v)}
+              error={errors.employee_id}
+              placeholder="e.g. EMP001"
+            />
+            <FormInput
+              label="Designation"
+              value={form.designation}
+              onChangeText={(v) => updateField('designation', v)}
+              placeholder="e.g. Senior Teacher"
+            />
+            <FormInput
+              label="Specialization"
+              value={form.specialization}
+              onChangeText={(v) => updateField('specialization', v)}
+              placeholder="e.g. Mathematics"
+            />
+            <FormInput
+              label="Experience (years)"
+              value={form.experience_years}
+              onChangeText={(v) => updateField('experience_years', v)}
+              placeholder="e.g. 5"
+              keyboardType="numeric"
+            />
+          </FormSection>
+        </Animated.View>
+
+        {/* Submit */}
+        <TouchableOpacity
+          onPress={handleSubmit}
+          disabled={createMutation.isPending}
+          style={styles.submitBtn}
+          activeOpacity={0.8}
         >
-          <FormError message={apiError} onDismiss={() => setApiError(null)} />
-
-          {/* Personal Info */}
-          <Animated.View entering={FadeInDown.delay(100)}>
-            <FormSection title="Personal Information" icon="👤">
-              <FormInput
-                label="First Name"
-                required
-                value={form.first_name}
-                onChangeText={(v) => updateField('first_name', v)}
-                error={errors.first_name}
-                placeholder="e.g. John"
-                autoCapitalize="words"
-              />
-              <FormInput
-                label="Last Name"
-                required
-                value={form.last_name}
-                onChangeText={(v) => updateField('last_name', v)}
-                error={errors.last_name}
-                placeholder="e.g. Smith"
-                autoCapitalize="words"
-              />
-              <FormInput
-                label="Email"
-                required
-                value={form.email}
-                onChangeText={(v) => updateField('email', v)}
-                error={errors.email}
-                placeholder="e.g. john@school.com"
-                keyboardType="email-address"
-              />
-              <FormInput
-                label="Phone"
-                value={form.phone}
-                onChangeText={(v) => updateField('phone', v)}
-                error={errors.phone}
-                placeholder="e.g. 9876543210"
-                keyboardType="phone-pad"
-                hint="10-15 digits"
-              />
-              <FormSelect
-                label="Gender"
-                required
-                options={GENDER_CHIPS}
-                value={form.gender}
-                onChange={(v) => updateField('gender', v)}
-                error={errors.gender}
-              />
-            </FormSection>
-          </Animated.View>
-
-          {/* Employment Info */}
-          <Animated.View entering={FadeInDown.delay(200)}>
-            <FormSection title="Employment Details" icon="💼">
-              <FormInput
-                label="Employee ID"
-                required
-                value={form.employee_id}
-                onChangeText={(v) => updateField('employee_id', v)}
-                error={errors.employee_id}
-                placeholder="e.g. EMP001"
-              />
-              <FormInput
-                label="Designation"
-                value={form.designation}
-                onChangeText={(v) => updateField('designation', v)}
-                placeholder="e.g. Senior Teacher"
-              />
-              <FormInput
-                label="Specialization"
-                value={form.specialization}
-                onChangeText={(v) => updateField('specialization', v)}
-                placeholder="e.g. Mathematics"
-              />
-              <FormInput
-                label="Experience (years)"
-                value={form.experience_years}
-                onChangeText={(v) => updateField('experience_years', v)}
-                placeholder="e.g. 5"
-                keyboardType="numeric"
-              />
-            </FormSection>
-          </Animated.View>
-
-          {/* Emergency Contact */}
-          <Animated.View entering={FadeInDown.delay(300)}>
-            <FormSection title="Emergency Contact" icon="🚨">
-              <FormInput
-                label="Contact Name"
-                value={form.emergency_contact_name}
-                onChangeText={(v) => updateField('emergency_contact_name', v)}
-                placeholder="e.g. Jane Smith"
-                autoCapitalize="words"
-              />
-              <FormInput
-                label="Contact Phone"
-                value={form.emergency_contact_number}
-                onChangeText={(v) => updateField('emergency_contact_number', v)}
-                placeholder="e.g. 9876543210"
-                keyboardType="phone-pad"
-              />
-            </FormSection>
-          </Animated.View>
-
-          {/* Submit */}
-          <TouchableOpacity
-            onPress={handleSubmit}
-            disabled={createMutation.isPending}
-            style={styles.submitBtn}
-            activeOpacity={0.8}
+          <LinearGradient
+            colors={['#7c3aed', '#4f46e5']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.submitGradient}
           >
-            <LinearGradient
-              colors={['#7c3aed', '#4f46e5']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.submitGradient}
-            >
-              {createMutation.isPending ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <>
-                  <Save size={20} color="#fff" />
-                  <Text style={styles.submitText}>Create Teacher</Text>
-                </>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
+            {createMutation.isPending ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Save size={20} color="#fff" />
+                <Text style={styles.submitText}>Create Teacher</Text>
+              </>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+      </KeyboardAwareScrollView>
     </View>
   );
 }

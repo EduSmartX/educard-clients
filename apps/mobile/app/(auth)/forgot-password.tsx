@@ -3,17 +3,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Mail, ArrowLeft, Send, KeyRound } from 'lucide-react-native'; // Removed unused: CheckCircle, RefreshCw, Lock, Eye, EyeOff
 import { useState, useCallback, useRef } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Alert,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated'; // Removed unused: FadeIn
 
 import { authApi } from '@/api/auth';
@@ -138,64 +129,59 @@ export default function ForgotPasswordScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient colors={['#f97316', '#ea580c', '#dc2626']} style={styles.gradientBg} />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.flex}
+      <KeyboardAwareScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid
+        extraScrollHeight={20}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-              <ArrowLeft size={24} color="#fff" />
-            </TouchableOpacity>
-            <View style={styles.iconGradient}>
-              <KeyRound size={36} color="#f97316" />
+        <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <ArrowLeft size={24} color="#fff" />
+          </TouchableOpacity>
+          <View style={styles.iconGradient}>
+            <KeyRound size={36} color="#f97316" />
+          </View>
+          <Text style={styles.headerTitle}>Forgot Password?</Text>
+          <Text style={styles.headerSubtitle}>Enter your email to reset</Text>
+        </Animated.View>
+        <Animated.View entering={FadeInUp.delay(200).duration(600)} style={styles.formCard}>
+          <View style={styles.inputWrapper}>
+            <Text style={styles.inputLabel}>Email Address</Text>
+            <View style={[styles.inputContainer, focusedInput === 'email' && styles.inputFocused]}>
+              <Mail
+                size={20}
+                color={focusedInput === 'email' ? Colors.primary[500] : Colors.gray[400]}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your email"
+                placeholderTextColor={Colors.gray[400]}
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                onFocus={() => setFocusedInput('email')}
+                onBlur={() => setFocusedInput(null)}
+              />
             </View>
-            <Text style={styles.headerTitle}>Forgot Password?</Text>
-            <Text style={styles.headerSubtitle}>Enter your email to reset</Text>
-          </Animated.View>
-          <Animated.View entering={FadeInUp.delay(200).duration(600)} style={styles.formCard}>
-            <View style={styles.inputWrapper}>
-              <Text style={styles.inputLabel}>Email Address</Text>
-              <View
-                style={[styles.inputContainer, focusedInput === 'email' && styles.inputFocused]}
-              >
-                <Mail
-                  size={20}
-                  color={focusedInput === 'email' ? Colors.primary[500] : Colors.gray[400]}
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your email"
-                  placeholderTextColor={Colors.gray[400]}
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  onFocus={() => setFocusedInput('email')}
-                  onBlur={() => setFocusedInput(null)}
-                />
-              </View>
-            </View>
-            <TouchableOpacity
-              onPress={() => void handleSendOTP()} // void for async handler
-              disabled={isLoading}
-              style={styles.sendButton}
-            >
-              <LinearGradient colors={['#f97316', '#ea580c']} style={styles.sendGradient}>
-                <Send size={20} color="#fff" />
-                <Text style={styles.sendButtonText}>{isLoading ? 'Sending...' : 'Send OTP'}</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backLink}>
-              <ArrowLeft size={18} color={Colors.gray[600]} />
-              <Text style={styles.backLinkText}>Back to Login</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+          </View>
+          <TouchableOpacity
+            onPress={() => void handleSendOTP()} // void for async handler
+            disabled={isLoading}
+            style={styles.sendButton}
+          >
+            <LinearGradient colors={['#f97316', '#ea580c']} style={styles.sendGradient}>
+              <Send size={20} color="#fff" />
+              <Text style={styles.sendButtonText}>{isLoading ? 'Sending...' : 'Send OTP'}</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backLink}>
+            <ArrowLeft size={18} color={Colors.gray[600]} />
+            <Text style={styles.backLinkText}>Back to Login</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </KeyboardAwareScrollView>
     </View>
   );
 }
