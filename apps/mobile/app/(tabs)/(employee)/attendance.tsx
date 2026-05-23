@@ -283,12 +283,12 @@ export default function EmployeeAttendanceScreen() {
                         {myTodayRecord.status}
                       </Text>
                     </View>
-                    {myTodayRecord.check_in_time && (
+                    {!!myTodayRecord.check_in_time && (
                       <View style={styles.timeInfo}>
                         <Clock size={12} color="#6b7280" />
                         <Text style={styles.timeText}>
                           In: {myTodayRecord.check_in_time.slice(0, 5)}
-                          {myTodayRecord.check_out_time &&
+                          {!!myTodayRecord.check_out_time &&
                             ` • Out: ${myTodayRecord.check_out_time.slice(0, 5)}`}
                         </Text>
                       </View>

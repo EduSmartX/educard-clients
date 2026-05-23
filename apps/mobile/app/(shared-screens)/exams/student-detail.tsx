@@ -178,13 +178,13 @@ export default function StudentDetailScreen() {
             <Text style={s.infoLabel}>Admission No:</Text>
             <Text style={s.infoValue}>{student.admission_number}</Text>
           </View>
-          {student.roll_number && (
+          {!!student.roll_number && (
             <View style={s.infoRow}>
               <Text style={s.infoLabel}>Roll No:</Text>
               <Text style={s.infoValue}>{student.roll_number}</Text>
             </View>
           )}
-          {student.summary && (
+          {!!student.summary && (
             <>
               <View style={s.infoRow}>
                 <Text style={s.infoLabel}>Total:</Text>
@@ -274,7 +274,7 @@ export default function StudentDetailScreen() {
         </Animated.View>
 
         {/* Total Bar */}
-        {student.summary && (
+        {!!student.summary && (
           <Animated.View entering={FadeInDown.delay(400).springify()} style={s.totalCard}>
             <Text style={s.totalTitle}>Overall Performance</Text>
             <MarksBar

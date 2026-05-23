@@ -96,7 +96,7 @@ export default function ViewClassScreen() {
             </Section>
           </Animated.View>
 
-          {cls.class_teacher && (
+          {!!cls.class_teacher && (
             <Animated.View entering={FadeInDown.delay(200)}>
               <Section title="Class Teacher" icon="👨‍🏫">
                 <Row label="Name" value={cls.class_teacher.full_name} />

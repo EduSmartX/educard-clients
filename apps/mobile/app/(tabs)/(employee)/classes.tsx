@@ -65,7 +65,7 @@ function ClassCard({
         </View>
         <View style={styles.classInfo}>
           <Text style={styles.className}>{classData.display_name}</Text>
-          {classData.grade_level && (
+          {!!classData.grade_level && (
             <Text style={styles.classGrade}>Grade {classData.grade_level}</Text>
           )}
         </View>
@@ -76,7 +76,7 @@ function ClassCard({
           <GraduationCap size={16} color="#6b7280" />
           <Text style={styles.statText}>{studentCount} Students</Text>
         </View>
-        {classData.class_teacher && (
+        {!!classData.class_teacher && (
           <View style={styles.statItem}>
             <Users size={16} color="#6b7280" />
             <Text style={styles.statText}>

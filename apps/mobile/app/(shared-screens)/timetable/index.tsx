@@ -181,7 +181,7 @@ export default function TimetableScreen() {
                   {slot.subject_name ?? 'No subject assigned'}
                 </Text>
               </View>
-              {slot.teacher_name && (
+              {!!slot.teacher_name && (
                 <View style={styles.slotRow}>
                   <User size={14} color="#64748b" />
                   <Text style={styles.slotTeacher}>{slot.teacher_name}</Text>

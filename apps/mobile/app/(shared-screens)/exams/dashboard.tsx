@@ -134,7 +134,7 @@ export default function ExamDashboardScreen() {
     const canEdit = canEditSubject(item.subject_public_id);
     const isCompleted = item.status === 'completed';
     const marksEnabled = isCompleted && canEdit;
-    const buttonText = marksEnabled ? 'Enter Marks' : !isCompleted ? 'Enter Marks' : 'View Marks';
+    const buttonText = marksEnabled || !isCompleted ? 'Enter Marks' : 'View Marks';
     const buttonStyle = marksEnabled ? styles.enterMarksBtn : styles.enterMarksBtnDisabled;
     const textStyle = marksEnabled ? styles.enterMarksText : styles.enterMarksTextDisabled;
 
@@ -202,7 +202,7 @@ export default function ExamDashboardScreen() {
               </Text>
             </View>
           </View>
-          {item.summary && (
+          {!!item.summary && (
             <View style={styles.studentStats}>
               <Text style={styles.statItem}>
                 Total: {item.summary.total_obtained}/{item.summary.total_max}

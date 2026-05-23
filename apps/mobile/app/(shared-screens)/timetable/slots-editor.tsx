@@ -556,7 +556,7 @@ export default function TimeSlotsEditorScreen() {
                           maxLength={5}
                         />
                       </View>
-                      {slot.start_time && slot.end_time && (
+                      {!!slot.start_time && !!slot.end_time && (
                         <Text style={[st.timePreview, { color: colors.text }]}>
                           {formatTimeDisplay(slot.start_time)} – {formatTimeDisplay(slot.end_time)}
                         </Text>

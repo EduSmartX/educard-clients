@@ -233,17 +233,19 @@ const isWorkingDay = (
   const dayOfWeek = getDay(date);
   if (!workingDayPolicy) return dayOfWeek >= 1 && dayOfWeek <= 5;
   if (dayOfWeek === 0) return !workingDayPolicy.sunday_off;
-  if (dayOfWeek === 6) {
-    const pattern = workingDayPolicy.saturday_off_pattern;
-    if (pattern === 'NONE') return true;
-    if (pattern === 'ALL') return false;
-    const saturdayOfMonth = Math.ceil(date.getDate() / 7);
-    if (pattern === 'FIRST_AND_THIRD') return saturdayOfMonth !== 1 && saturdayOfMonth !== 3;
-    if (pattern === 'SECOND_AND_FOURTH') return saturdayOfMonth !== 2 && saturdayOfMonth !== 4;
-    return true;
-  }
+  if (dayOfWeek === 6) return isSaturdayWorking(date, workingDayPolicy.saturday_off_pattern);
   return true;
 };
+
+/** Determine if a Saturday is a working day based on pattern */
+function isSaturdayWorking(date: Date, pattern: string): boolean {
+  if (pattern === 'NONE') return true;
+  if (pattern === 'ALL') return false;
+  const saturdayOfMonth = Math.ceil(date.getDate() / 7);
+  if (pattern === 'FIRST_AND_THIRD') return saturdayOfMonth !== 1 && saturdayOfMonth !== 3;
+  if (pattern === 'SECOND_AND_FOURTH') return saturdayOfMonth !== 2 && saturdayOfMonth !== 4;
+  return true;
+}
 
 const getDayState = (
   date: Date,
@@ -259,27 +261,25 @@ const getDayState = (
   checkDate.setHours(0, 0, 0, 0);
 
   if (checkDate > today) return 'future';
-
-  const holidayInfo = holidaySet.has(dateKey);
-  if (holidayInfo || !isWorkingDay(date, workingDayPolicy, holidaySet, exceptionsMap))
+  if (holidaySet.has(dateKey) || !isWorkingDay(date, workingDayPolicy, holidaySet, exceptionsMap))
     return 'holiday';
 
   const record = attendanceByDate.get(dateKey);
-  if (record?.is_leave) {
-    const status = record.leave_status;
-    if (status === 'pending') return 'leave-pending';
-    return 'leave-approved';
-  }
+  if (record) return getStateFromRecord(record);
 
-  if (record) {
-    if (record.morning_present && record.afternoon_present) return 'present';
-    if (record.morning_present || record.afternoon_present) return 'half_day';
-    if (record.morning_present === false && record.afternoon_present === false) return 'absent';
-  }
-
-  if (isBefore(checkDate, today) && !isSameDay(checkDate, today)) return 'absent';
-  return 'none';
+  return isBefore(checkDate, today) && !isSameDay(checkDate, today) ? 'absent' : 'none';
 };
+
+/** Derive day state from an attendance record */
+function getStateFromRecord(record: AttendanceRecord): DayState {
+  if (record.is_leave) {
+    return record.leave_status === 'pending' ? 'leave-pending' : 'leave-approved';
+  }
+  if (record.morning_present && record.afternoon_present) return 'present';
+  if (record.morning_present || record.afternoon_present) return 'half_day';
+  if (record.morning_present === false && record.afternoon_present === false) return 'absent';
+  return 'none';
+}
 
 const stateColors: Record<DayState, { bg: string; border: string; text: string }> = {
   present: { bg: '#dcfce7', border: '#86efac', text: '#166534' },
@@ -575,13 +575,16 @@ export default function MyTimesheetScreen() {
     field: 'morning_present' | 'afternoon_present'
   ) => {
     setWeeks((prev) =>
-      prev.map((week) => {
-        if (week.id !== weekId) return week;
-        const updatedRows = week.rows.map((row) =>
-          row.date === date ? { ...row, [field]: !row[field] } : row
-        );
-        return { ...week, rows: updatedRows };
-      })
+      prev.map((week) =>
+        week.id !== weekId
+          ? week
+          : {
+              ...week,
+              rows: week.rows.map((row) =>
+                row.date === date ? { ...row, [field]: !row[field] } : row
+              ),
+            }
+      )
     );
   };
 
@@ -1031,7 +1034,7 @@ export default function MyTimesheetScreen() {
                       <Text style={{ fontSize: 10, color: '#1e40af', fontWeight: '600' }}>
                         {week.reviewedByName}
                       </Text>
-                      {week.reviewedAt && (
+                      {!!week.reviewedAt && (
                         <Text style={{ fontSize: 10, color: '#64748b' }}>
                           {' on '}
                           {format(parseISO(week.reviewedAt), 'dd MMM yyyy')}

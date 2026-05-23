@@ -51,6 +51,37 @@ const ACADEMIC_YEAR_OPTIONS = (() => {
   }));
 })();
 
+/** Build impact message lines from class change impact response */
+function buildImpactLines(impact: {
+  students_will_be_assigned: number;
+  unpaid_fees_will_be_deleted: number;
+  paid_fees_will_be_cancelled: number;
+  total_paid_amount_affected: number | string;
+}): string[] {
+  const lines: string[] = [];
+  if (impact.students_will_be_assigned > 0) {
+    lines.push(
+      `• ${impact.students_will_be_assigned} student fee record(s) will be auto-assigned in newly linked classes.`
+    );
+  }
+  if (impact.unpaid_fees_will_be_deleted > 0) {
+    lines.push(
+      `• ${impact.unpaid_fees_will_be_deleted} unpaid student fee record(s) will be deleted.`
+    );
+  }
+  if (impact.paid_fees_will_be_cancelled > 0) {
+    lines.push(
+      `• ${impact.paid_fees_will_be_cancelled} paid/partial records will be marked as Cancelled.`
+    );
+  }
+  if (Number(impact.total_paid_amount_affected) > 0) {
+    lines.push(
+      `• ₹${Number(impact.total_paid_amount_affected).toLocaleString('en-IN')} already collected may need refund handling.`
+    );
+  }
+  return lines;
+}
+
 /** Normalize fee components for comparison */
 function normalizeComponents(
   list: { name: string; amount: number | string; component_type?: string }[]
@@ -308,26 +339,7 @@ export default function FeeStructureFormScreen() {
 
             try {
               const impact = await fetchClassChangeImpact(id, nextClassIds);
-              if (impact.students_will_be_assigned > 0) {
-                lines.push(
-                  `• ${impact.students_will_be_assigned} student fee record(s) will be auto-assigned in newly linked classes.`
-                );
-              }
-              if (impact.unpaid_fees_will_be_deleted > 0) {
-                lines.push(
-                  `• ${impact.unpaid_fees_will_be_deleted} unpaid student fee record(s) will be deleted.`
-                );
-              }
-              if (impact.paid_fees_will_be_cancelled > 0) {
-                lines.push(
-                  `• ${impact.paid_fees_will_be_cancelled} paid/partial records will be marked as Cancelled.`
-                );
-              }
-              if (Number(impact.total_paid_amount_affected) > 0) {
-                lines.push(
-                  `• ₹${Number(impact.total_paid_amount_affected).toLocaleString('en-IN')} already collected may need refund handling.`
-                );
-              }
+              lines.push(...buildImpactLines(impact));
             } catch {
               lines.push(
                 '• Could not fetch class change impact preview. Update will still proceed if confirmed.'

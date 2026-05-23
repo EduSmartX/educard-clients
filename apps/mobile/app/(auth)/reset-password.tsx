@@ -64,19 +64,12 @@ export default function ResetPasswordScreen() {
 
   const getPasswordStrength = () => {
     if (password.length === 0) return null;
-    if (password.length < 6) return { label: 'Weak', color: '#ef4444' };
-    if (password.length < 10) return { label: 'Medium', color: '#f59e0b' };
-    return { label: 'Strong', color: '#10b981' };
+    if (password.length < 6) return { label: 'Weak', color: '#ef4444', width: '33%' as const };
+    if (password.length < 10) return { label: 'Medium', color: '#f59e0b', width: '66%' as const };
+    return { label: 'Strong', color: '#10b981', width: '100%' as const };
   };
 
   const strength = getPasswordStrength();
-  const strengthWidth = strength
-    ? strength.label === 'Weak'
-      ? '33%'
-      : strength.label === 'Medium'
-        ? '66%'
-        : '100%'
-    : '0%';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -143,7 +136,7 @@ export default function ResetPasswordScreen() {
                     style={[
                       styles.strengthFill,
                       {
-                        width: strengthWidth,
+                        width: strength.width,
                         backgroundColor: strength.color,
                       },
                     ]}

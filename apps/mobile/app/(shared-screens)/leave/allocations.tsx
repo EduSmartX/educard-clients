@@ -434,7 +434,7 @@ export default function LeaveAllocationsScreen() {
                 .map((r) => r.trim())
                 .filter(Boolean)
                 .map((role, i) => (
-                  <View key={i} style={styles.modalRoleChip}>
+                  <View key={`role-${role}-${i}`} style={styles.modalRoleChip}>
                     <View style={styles.modalRoleDot} />
                     <Text style={styles.modalRoleText}>{role}</Text>
                   </View>

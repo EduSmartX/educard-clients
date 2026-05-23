@@ -303,7 +303,7 @@ export default function TimesheetApprovalsScreen() {
                   {item.submission_status === 'APPROVED' ? '✓ Approved by: ' : '✗ Rejected by: '}
                 </Text>
                 <Text style={styles.reviewerName}>{item.reviewed_by_name}</Text>
-                {item.reviewed_at && (
+                {!!item.reviewed_at && (
                   <Text style={styles.reviewerDate}>
                     {' '}
                     on {formatDate(item.reviewed_at.split('T')[0])}

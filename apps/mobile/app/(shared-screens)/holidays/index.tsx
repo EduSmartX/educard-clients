@@ -487,7 +487,7 @@ export default function HolidayCalendarScreen() {
           {calendarDays.map((item, idx) => {
             if (!item.date || !item.isCurrentMonth) {
               return (
-                <View key={idx} style={styles.calCellEmpty}>
+                <View key={`empty-${idx}`} style={styles.calCellEmpty}>
                   <Text style={styles.calCellEmptyText}>{item.day || ''}</Text>
                 </View>
               );
@@ -504,7 +504,7 @@ export default function HolidayCalendarScreen() {
 
             return (
               <TouchableOpacity
-                key={idx}
+                key={`day-${item.day}`}
                 style={[
                   styles.calCell,
                   today && styles.calCellToday,

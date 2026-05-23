@@ -169,7 +169,7 @@ export default function SubmissionsScreen() {
                 <Clock size={14} color={Colors.gray[400]} />
                 <Text style={styles.detailText}>{formatDate(item.submitted_at)}</Text>
               </View>
-              {item.is_late && (
+              {!!item.is_late && (
                 <View style={styles.lateBadge}>
                   <AlertTriangle size={12} color="#dc2626" />
                   <Text style={styles.lateText}>{HOMEWORK_UI.LATE}</Text>

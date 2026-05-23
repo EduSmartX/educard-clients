@@ -262,7 +262,7 @@ export default function CreateHomeworkScreen() {
             <View style={styles.readonlyField}>
               <BookOpen size={18} color={Colors.primary[500]} />
               <Text style={styles.readonlyText}>{selectedClassData.name}</Text>
-              {selectedClassData.is_class_teacher && (
+              {!!selectedClassData.is_class_teacher && (
                 <View style={styles.ctBadge}>
                   <Text style={styles.ctText}>Class Teacher</Text>
                 </View>
@@ -319,7 +319,7 @@ export default function CreateHomeworkScreen() {
                 );
               })}
             </ScrollView>
-            {errors.subject && (
+            {!!errors.subject && (
               <View style={styles.errorRow}>
                 <AlertCircle size={13} color="#ef4444" />
                 <Text style={styles.errorText}>{errors.subject}</Text>
@@ -347,7 +347,7 @@ export default function CreateHomeworkScreen() {
               maxLength={255}
             />
           </View>
-          {errors.title && (
+          {!!errors.title && (
             <View style={styles.errorRow}>
               <AlertCircle size={13} color="#ef4444" />
               <Text style={styles.errorText}>{errors.title}</Text>
@@ -486,7 +486,7 @@ export default function CreateHomeworkScreen() {
               autoCapitalize="none"
             />
           </View>
-          {errors.reference_link && (
+          {!!errors.reference_link && (
             <View style={styles.errorRow}>
               <AlertCircle size={13} color="#ef4444" />
               <Text style={styles.fieldErrorText}>{errors.reference_link}</Text>

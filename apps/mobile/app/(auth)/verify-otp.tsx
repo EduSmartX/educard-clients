@@ -107,7 +107,7 @@ export default function VerifyOTPScreen() {
         <View style={styles.otpContainer}>
           {otp.map((digit, index) => (
             <TextInput
-              key={index}
+              key={`otp-${index}`}
               ref={(ref: TextInput | null) => {
                 inputRefs.current[index] = ref;
               }}

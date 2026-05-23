@@ -40,6 +40,54 @@ interface LeaveRequestDialogProps {
   onSuccess?: () => void;
 }
 
+type ConflictStatus = 'none' | 'partial' | 'all_blocked';
+
+interface TimesheetConflictResult {
+  status: ConflictStatus;
+  blockedDates: string[];
+  freeCount: number;
+  totalDays: number;
+}
+
+/** Compute timesheet conflict for leave dates */
+function computeTimesheetConflict(
+  startDate: Date | null,
+  endDate: Date | null,
+  timesheetResults: TimesheetSubmission[] | undefined
+): TimesheetConflictResult {
+  const empty: TimesheetConflictResult = { status: 'none', blockedDates: [], freeCount: 0, totalDays: 0 };
+  if (!startDate || !endDate || !timesheetResults) return empty;
+
+  const lockedSheets = timesheetResults.filter(
+    (ts) => ts.submission_status === 'SUBMITTED' || ts.submission_status === 'APPROVED'
+  );
+  if (lockedSheets.length === 0) return empty;
+
+  const lockedDateSet = new Set<string>();
+  for (const ts of lockedSheets) {
+    eachDayOfInterval({ start: parseISO(ts.week_start_date), end: parseISO(ts.week_end_date) }).forEach((d) =>
+      lockedDateSet.add(format(d, 'yyyy-MM-dd'))
+    );
+  }
+
+  const leaveDays = eachDayOfInterval({ start: startDate, end: endDate });
+  const blockedDates: string[] = [];
+  let freeCount = 0;
+  for (const day of leaveDays) {
+    const key = format(day, 'yyyy-MM-dd');
+    if (lockedDateSet.has(key)) {
+      blockedDates.push(key);
+    } else {
+      freeCount++;
+    }
+  }
+
+  const totalDays = leaveDays.length;
+  if (blockedDates.length === totalDays) return { status: 'all_blocked', blockedDates, freeCount, totalDays };
+  if (blockedDates.length > 0) return { status: 'partial', blockedDates, freeCount, totalDays };
+  return empty;
+}
+
 export function LeaveRequestDialog({
   open,
   onOpenChange,
@@ -110,53 +158,10 @@ export function LeaveRequestDialog({
   });
 
   // Compute which leave dates are blocked by submitted/approved timesheets
-  const timesheetConflict = useMemo(() => {
-    if (!startDate || !endDate || !timesheetData?.results) {
-      return { status: 'none' as const, blockedDates: [] as string[], freeCount: 0, totalDays: 0 };
-    }
-
-    const lockedSheets = timesheetData.results.filter(
-      (ts: TimesheetSubmission) =>
-        ts.submission_status === 'SUBMITTED' || ts.submission_status === 'APPROVED'
-    );
-
-    if (lockedSheets.length === 0) {
-      return { status: 'none' as const, blockedDates: [] as string[], freeCount: 0, totalDays: 0 };
-    }
-
-    // Build a set of all dates covered by locked timesheets
-    const lockedDateSet = new Set<string>();
-    for (const ts of lockedSheets) {
-      const wsStart = parseISO(ts.week_start_date);
-      const wsEnd = parseISO(ts.week_end_date);
-      eachDayOfInterval({ start: wsStart, end: wsEnd }).forEach((d) =>
-        lockedDateSet.add(format(d, 'yyyy-MM-dd'))
-      );
-    }
-
-    // Check which requested leave dates fall within locked ranges
-    const leaveDays = eachDayOfInterval({ start: startDate, end: endDate });
-    const blockedDates: string[] = [];
-    let freeCount = 0;
-    for (const day of leaveDays) {
-      const key = format(day, 'yyyy-MM-dd');
-      if (lockedDateSet.has(key)) {
-        blockedDates.push(key);
-      } else {
-        freeCount++;
-      }
-    }
-
-    const totalDays = leaveDays.length;
-
-    if (blockedDates.length === totalDays) {
-      return { status: 'all_blocked' as const, blockedDates, freeCount, totalDays };
-    }
-    if (blockedDates.length > 0) {
-      return { status: 'partial' as const, blockedDates, freeCount, totalDays };
-    }
-    return { status: 'none' as const, blockedDates, freeCount, totalDays };
-  }, [startDate, endDate, timesheetData]);
+  const timesheetConflict = useMemo(
+    () => computeTimesheetConflict(startDate, endDate, timesheetData?.results),
+    [startDate, endDate, timesheetData]
+  );
 
   // Reset form when dialog opens with selected date
   useEffect(() => {

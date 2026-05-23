@@ -269,7 +269,7 @@ export default function TeacherTimetableScreen() {
                     <View style={styles.periodMeta}>
                       <BookOpen size={12} color="#9ca3af" />
                       <Text style={styles.periodClass}>{entry.class_name}</Text>
-                      {entry.room && (
+                      {!!entry.room && (
                         <>
                           <MapPin size={12} color="#9ca3af" />
                           <Text style={styles.periodClass}>{entry.room}</Text>

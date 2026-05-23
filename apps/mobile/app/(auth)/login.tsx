@@ -48,6 +48,13 @@ export default function LoginScreen() {
     }
   }, [username, password, login, router]);
 
+  const inputIcon = useEmail ? Mail : User;
+  const InputIcon = inputIcon;
+  const inputLabel = useEmail ? 'Email Address' : 'Username';
+  const inputPlaceholder = useEmail ? 'Enter your email' : 'Enter your username';
+  const toggleTitle = useEmail ? 'Using Email' : 'Using Username';
+  const toggleSubtitle = useEmail ? 'Sign in with your email address' : 'Sign in with your username';
+
   return (
     <View style={styles.container}>
       <LinearGradient colors={['#6366f1', '#8b5cf6', '#a855f7']} style={styles.gradientBg}>
@@ -79,18 +86,14 @@ export default function LoginScreen() {
                   useEmail ? styles.toggleIconActive : styles.toggleIconInactive,
                 ]}
               >
-                {useEmail ? (
-                  <Mail size={18} color={Colors.primary[600]} />
-                ) : (
-                  <User size={18} color={Colors.gray[500]} />
-                )}
+                <InputIcon size={18} color={useEmail ? Colors.primary[600] : Colors.gray[500]} />
               </View>
               <View>
                 <Text style={styles.toggleTitle}>
-                  {useEmail ? 'Using Email' : 'Using Username'}
+                  {toggleTitle}
                 </Text>
                 <Text style={styles.toggleSubtitle}>
-                  {useEmail ? 'Sign in with your email address' : 'Sign in with your username'}
+                  {toggleSubtitle}
                 </Text>
               </View>
             </View>
@@ -107,7 +110,7 @@ export default function LoginScreen() {
 
           {/* Email/Username Input */}
           <View style={styles.inputWrapper}>
-            <Text style={styles.inputLabel}>{useEmail ? 'Email Address' : 'Username'}</Text>
+            <Text style={styles.inputLabel}>{inputLabel}</Text>
             <View
               style={[styles.inputContainer, focusedInput === 'username' && styles.inputFocused]}
             >
@@ -124,7 +127,7 @@ export default function LoginScreen() {
               )}
               <TextInput
                 style={styles.input}
-                placeholder={useEmail ? 'Enter your email' : 'Enter your username'}
+                placeholder={inputPlaceholder}
                 placeholderTextColor={Colors.gray[400]}
                 value={username}
                 onChangeText={setUsername}

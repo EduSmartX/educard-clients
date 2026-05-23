@@ -294,7 +294,7 @@ export default function ReviewScreen() {
                   Submitted: {formatDate(submission.submitted_at)}
                 </Text>
               </View>
-              {submission.is_late && (
+              {!!submission.is_late && (
                 <View style={styles.lateBadge}>
                   <AlertTriangle size={12} color="#dc2626" />
                   <Text style={styles.lateText}>{HOMEWORK_UI.LATE}</Text>
@@ -305,7 +305,7 @@ export default function ReviewScreen() {
         )}
 
         {/* Student Notes */}
-        {submission.notes && (
+        {!!submission.notes && (
           <Animated.View entering={FadeInDown.delay(200)} style={styles.section}>
             <Text style={styles.sectionTitle}>{HOMEWORK_UI.STUDENT_NOTES}</Text>
             <View style={styles.notesCard}>
@@ -349,7 +349,7 @@ export default function ReviewScreen() {
                 <Text style={styles.reviewedText}>
                   {HOMEWORK_UI.REVIEWED_BY} {submission.reviewed_by_name}
                 </Text>
-                {submission.reviewed_at && (
+                {!!submission.reviewed_at && (
                   <Text style={styles.reviewedDate}>{formatDate(submission.reviewed_at)}</Text>
                 )}
               </View>

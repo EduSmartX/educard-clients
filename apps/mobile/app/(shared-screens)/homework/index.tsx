@@ -249,11 +249,11 @@ export default function HomeworkListScreen() {
             </View>
             <View style={styles.subjectInfo}>
               <Text style={[styles.subjectName, { color: color.hex }]}>{subject.subject_name}</Text>
-              {subject.teacher_name && (
+              {!!subject.teacher_name && (
                 <Text style={styles.teacherName}>{subject.teacher_name}</Text>
               )}
             </View>
-            {subject.is_teacher && (
+            {!!subject.is_teacher && (
               <View style={[styles.teacherBadge, { backgroundColor: color.bg }]}>
                 <Text style={[styles.teacherBadgeText, { color: color.hex }]}>You</Text>
               </View>
@@ -464,7 +464,7 @@ export default function HomeworkListScreen() {
                     >
                       {cls.name}
                     </Text>
-                    {cls.is_class_teacher && (
+                    {!!cls.is_class_teacher && (
                       <View style={[styles.ctBadge, { marginLeft: 8 }]}>
                         <Text style={styles.ctBadgeText}>Class Teacher</Text>
                       </View>

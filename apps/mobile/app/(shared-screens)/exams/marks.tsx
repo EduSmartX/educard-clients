@@ -232,7 +232,7 @@ export default function MarksScreen() {
                       {student.roll_number ? ` · Roll: ${student.roll_number}` : ''}
                     </Text>
                   </View>
-                  {student.summary && (
+                  {!!student.summary && (
                     <View
                       style={[
                         s.passBadge,
@@ -283,7 +283,7 @@ export default function MarksScreen() {
                 )}
 
                 {/* Total summary bar */}
-                {student.summary && (
+                {!!student.summary && (
                   <View style={s.summarySection}>
                     <View style={s.summaryBarRow}>
                       <Text style={s.summaryLabel}>Total</Text>

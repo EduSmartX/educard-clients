@@ -158,7 +158,7 @@ export default function HelpSupportScreen() {
           <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
           <View style={styles.faqContainer}>
             {FAQ_DATA.map((faq, index) => (
-              <Animated.View key={index} entering={FadeInDown.delay(250 + index * 50)}>
+              <Animated.View key={faq.question} entering={FadeInDown.delay(250 + index * 50)}>
                 <TouchableOpacity
                   style={[styles.faqItem, expandedIndex === index && styles.faqItemExpanded]}
                   onPress={() => toggleFAQ(index)}

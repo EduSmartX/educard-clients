@@ -440,7 +440,7 @@ export default function EditHomeworkScreen() {
             </Text>
             <View style={styles.existingAttachments}>
               {homework.attachments.map((att, idx) => (
-                <View key={idx} style={styles.existingAttachment}>
+                <View key={att.file_name || `att-${idx}`} style={styles.existingAttachment}>
                   <Text style={styles.existingAttachmentText} numberOfLines={1}>
                     {att.file_name || `Attachment ${idx + 1}`}
                   </Text>

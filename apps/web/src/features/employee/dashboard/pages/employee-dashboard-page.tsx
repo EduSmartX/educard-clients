@@ -106,6 +106,15 @@ const DONUT_SEGMENTS = [
   { key: 'holidays', label: 'Holiday', color: '#a855f7', dotClass: 'bg-purple-500', borderClass: 'border-purple-200', bgClass: 'bg-purple-50', textClass: 'text-purple-700', boldClass: 'text-purple-800' },
 ] as const;
 
+/** Format time string (HH:MM) to 12-hour format */
+function formatTime(timeStr: string): string {
+  if (!timeStr) return '';
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const displayHours = hours % 12 || 12;
+  return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+}
+
 export default function EmployeeDashboardPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -168,16 +177,6 @@ export default function EmployeeDashboardPage() {
   const pendingTimesheets = useMemo(() => {
     return timesheetData?.results?.length || 0;
   }, [timesheetData]);
-
-  const formatTime = (timeStr: string): string => {
-    if (!timeStr) {
-      return '';
-    }
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    const period = hours >= 12 ? 'PM' : 'AM';
-    const displayHours = hours % 12 || 12;
-    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
-  };
 
   const attendanceStats = useMemo(() => {
     const stats = attendanceData?.stats || {};

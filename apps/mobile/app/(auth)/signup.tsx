@@ -656,7 +656,7 @@ export default function SignupScreen() {
               onBlur={() => setFocusedInput(null)}
             />
           </View>
-          {errors.orgName && (
+          {!!errors.orgName && (
             <View style={styles.errorRow}>
               <AlertCircle size={14} color="#ef4444" />
               <Text style={styles.errorText}>{errors.orgName}</Text>
@@ -676,7 +676,7 @@ export default function SignupScreen() {
             </Text>
             <ChevronDown size={20} color={Colors.gray[400]} />
           </TouchableOpacity>
-          {errors.orgType && (
+          {!!errors.orgType && (
             <View style={styles.errorRow}>
               <AlertCircle size={14} color="#ef4444" />
               <Text style={styles.errorText}>{errors.orgType}</Text>
@@ -725,7 +725,7 @@ export default function SignupScreen() {
               onBlur={() => setFocusedInput(null)}
             />
           </View>
-          {errors.orgPhone && (
+          {!!errors.orgPhone && (
             <View style={styles.errorRow}>
               <AlertCircle size={14} color="#ef4444" />
               <Text style={styles.errorText}>{errors.orgPhone}</Text>
@@ -866,7 +866,7 @@ export default function SignupScreen() {
               onBlur={() => setFocusedInput(null)}
             />
           </View>
-          {errors.firstName && (
+          {!!errors.firstName && (
             <View style={styles.errorRow}>
               <AlertCircle size={12} color="#ef4444" />
               <Text style={styles.errorTextSmall}>{errors.firstName}</Text>
@@ -897,7 +897,7 @@ export default function SignupScreen() {
               onBlur={() => setFocusedInput(null)}
             />
           </View>
-          {errors.lastName && (
+          {!!errors.lastName && (
             <View style={styles.errorRow}>
               <AlertCircle size={12} color="#ef4444" />
               <Text style={styles.errorTextSmall}>{errors.lastName}</Text>
@@ -933,7 +933,7 @@ export default function SignupScreen() {
             onBlur={() => setFocusedInput(null)}
           />
         </View>
-        {errors.phoneNumber && (
+        {!!errors.phoneNumber && (
           <View style={styles.errorRow}>
             <AlertCircle size={14} color="#ef4444" />
             <Text style={styles.errorText}>{errors.phoneNumber}</Text>
@@ -973,7 +973,7 @@ export default function SignupScreen() {
             )}
           </TouchableOpacity>
         </View>
-        {errors.password && (
+        {!!errors.password && (
           <View style={styles.errorRow}>
             <AlertCircle size={14} color="#ef4444" />
             <Text style={styles.errorText}>{errors.password}</Text>
@@ -1016,7 +1016,7 @@ export default function SignupScreen() {
             )}
           </TouchableOpacity>
         </View>
-        {errors.confirmPassword && (
+        {!!errors.confirmPassword && (
           <View style={styles.errorRow}>
             <AlertCircle size={14} color="#ef4444" />
             <Text style={styles.errorText}>{errors.confirmPassword}</Text>

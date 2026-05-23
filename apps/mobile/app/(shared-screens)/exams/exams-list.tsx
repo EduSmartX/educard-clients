@@ -93,7 +93,7 @@ export default function ExamsListScreen() {
               <Calendar size={14} color="#64748b" />
               <Text style={styles.detailText}>{formatDate(item.date)}</Text>
             </View>
-            {item.start_time && (
+            {!!item.start_time && (
               <View style={styles.detailItem}>
                 <Clock size={14} color="#64748b" />
                 <Text style={styles.detailText}>

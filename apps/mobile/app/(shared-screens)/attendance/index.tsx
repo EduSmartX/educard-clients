@@ -395,6 +395,44 @@ function SummaryTab() {
     );
   }
 
+  // Pre-compute day status text and badge style to avoid nested ternaries
+  const dayStatusText = data?.is_holiday
+    ? data.holiday_name || 'Holiday'
+    : data?.is_working_day
+      ? 'Working Day'
+      : 'Non-Working Day';
+
+  const dayBadgeStyle = data?.is_holiday
+    ? styles.holidayBadge
+    : data?.is_working_day
+      ? styles.workingBadge
+      : styles.nonWorkingBadge;
+
+  const renderDayBadgeContent = () => {
+    if (data?.is_holiday) {
+      return (
+        <>
+          <Calendar size={14} color="#d97706" />
+          <Text style={styles.holidayBadgeText}>Holiday</Text>
+        </>
+      );
+    }
+    if (data?.is_working_day) {
+      return (
+        <>
+          <CheckCircle2 size={14} color="#16a34a" />
+          <Text style={styles.workingBadgeText}>Working Day</Text>
+        </>
+      );
+    }
+    return (
+      <>
+        <XCircle size={14} color="#6b7280" />
+        <Text style={styles.nonWorkingBadgeText}>Non-Working</Text>
+      </>
+    );
+  };
+
   return (
     <ScrollView
       contentContainerStyle={styles.tabContent}
@@ -440,40 +478,17 @@ function SummaryTab() {
           <View>
             <Text style={styles.dateLabel}>{isToday ? "Today's Status" : 'Day Status'}</Text>
             <Text style={styles.dateValue}>
-              {data?.is_holiday
-                ? data.holiday_name || 'Holiday'
-                : data?.is_working_day
-                  ? 'Working Day'
-                  : 'Non-Working Day'}
+              {dayStatusText}
             </Text>
           </View>
         </View>
         <View
           style={[
             styles.statusBadge,
-            data?.is_holiday
-              ? styles.holidayBadge
-              : data?.is_working_day
-                ? styles.workingBadge
-                : styles.nonWorkingBadge,
+            dayBadgeStyle,
           ]}
         >
-          {data?.is_holiday ? (
-            <>
-              <Calendar size={14} color="#d97706" />
-              <Text style={styles.holidayBadgeText}>Holiday</Text>
-            </>
-          ) : data?.is_working_day ? (
-            <>
-              <CheckCircle2 size={14} color="#16a34a" />
-              <Text style={styles.workingBadgeText}>Working Day</Text>
-            </>
-          ) : (
-            <>
-              <XCircle size={14} color="#6b7280" />
-              <Text style={styles.nonWorkingBadgeText}>Non-Working</Text>
-            </>
-          )}
+          {renderDayBadgeContent()}
         </View>
       </View>
 
@@ -587,6 +602,84 @@ function SummaryTab() {
   );
 }
 
+type StudentRecord = NonNullable<AttendanceReportData['student_wise']>[number];
+
+/** Compute attendance insights from report data */
+function computeAttendanceInsights(
+  activeReportData: AttendanceReportData | undefined,
+  displayStudents: StudentRecord[]
+) {
+  if (!activeReportData || !displayStudents || displayStudents.length === 0) {
+    return null;
+  }
+
+  const students = displayStudents;
+  const totalStudents = students.length;
+  const totalWorkingDays = activeReportData.total_working_days;
+
+  const excellentStudents = students.filter((s) => s.percentage >= 95);
+  const goodStudents = students.filter((s) => s.percentage >= 85 && s.percentage < 95);
+  const atRiskStudents = students.filter((s) => s.percentage >= 75 && s.percentage < 85);
+  const criticalStudents = students.filter((s) => s.percentage < 75);
+
+  const perfectAttendance = students.filter((s) => s.percentage === 100);
+  const highAbsentees = students.filter((s) => s.absent >= 3).sort((a, b) => b.absent - a.absent);
+  const frequentHalfDays = students
+    .filter((s) => s.half_day >= 2)
+    .sort((a, b) => b.half_day - a.half_day);
+
+  const overallPercentage = activeReportData.attendance_percentage;
+  let classHealth: 'excellent' | 'good' | 'concern' | 'critical' = 'excellent';
+  if (overallPercentage < 75) classHealth = 'critical';
+  else if (overallPercentage < 85) classHealth = 'concern';
+  else if (overallPercentage < 95) classHealth = 'good';
+
+  return {
+    classHealth,
+    overallPercentage,
+    totalStudents,
+    totalWorkingDays,
+    excellentStudents,
+    goodStudents,
+    atRiskStudents,
+    criticalStudents,
+    perfectAttendance,
+    highAbsentees: highAbsentees.slice(0, 5),
+    frequentHalfDays: frequentHalfDays.slice(0, 3),
+    avgAbsent: activeReportData.avg_absent_days,
+    avgHalfDay: activeReportData.avg_half_days,
+    avgPresent: activeReportData.avg_present_days,
+  };
+}
+
+function getHealthColor(health: string) {
+  switch (health) {
+    case 'excellent':
+      return { bg: '#dcfce7', text: '#16a34a', icon: '#22c55e' };
+    case 'good':
+      return { bg: '#dbeafe', text: '#2563eb', icon: '#3b82f6' };
+    case 'concern':
+      return { bg: '#fef3c7', text: '#d97706', icon: '#f59e0b' };
+    case 'critical':
+      return { bg: '#fee2e2', text: '#dc2626', icon: '#ef4444' };
+    default:
+      return { bg: '#f3f4f6', text: '#6b7280', icon: '#9ca3af' };
+  }
+}
+
+function getHealthLabel(health: string) {
+  switch (health) {
+    case 'excellent':
+      return 'Excellent Attendance!';
+    case 'good':
+      return 'Good Attendance';
+    case 'concern':
+      return 'Needs Attention';
+    default:
+      return 'Critical - Action Required';
+  }
+}
+
 function ReportTab() {
   const [selectedClassId, setSelectedClassId] = useState<string>('');
   const [showClassPicker, setShowClassPicker] = useState(false);
@@ -689,51 +782,7 @@ function ReportTab() {
 
   // Generate insights from the report data (use all loaded students for better insights)
   const insights = useMemo(() => {
-    if (!activeReportData || !displayStudents || displayStudents.length === 0) {
-      return null;
-    }
-
-    const students = displayStudents;
-    const totalStudents = students.length;
-    const totalWorkingDays = activeReportData.total_working_days;
-
-    // Categorize students by attendance percentage
-    const excellentStudents = students.filter((s) => s.percentage >= 95);
-    const goodStudents = students.filter((s) => s.percentage >= 85 && s.percentage < 95);
-    const atRiskStudents = students.filter((s) => s.percentage >= 75 && s.percentage < 85);
-    const criticalStudents = students.filter((s) => s.percentage < 75);
-
-    // Find patterns
-    const perfectAttendance = students.filter((s) => s.percentage === 100);
-    const highAbsentees = students.filter((s) => s.absent >= 3).sort((a, b) => b.absent - a.absent);
-    const frequentHalfDays = students
-      .filter((s) => s.half_day >= 2)
-      .sort((a, b) => b.half_day - a.half_day);
-
-    // Overall class health based on attendance percentage
-    const overallPercentage = activeReportData.attendance_percentage;
-    let classHealth: 'excellent' | 'good' | 'concern' | 'critical' = 'excellent';
-    if (overallPercentage < 75) classHealth = 'critical';
-    else if (overallPercentage < 85) classHealth = 'concern';
-    else if (overallPercentage < 95) classHealth = 'good';
-
-    return {
-      classHealth,
-      overallPercentage,
-      totalStudents,
-      totalWorkingDays,
-      excellentStudents,
-      goodStudents,
-      atRiskStudents,
-      criticalStudents,
-      perfectAttendance,
-      highAbsentees: highAbsentees.slice(0, 5),
-      frequentHalfDays: frequentHalfDays.slice(0, 3),
-      // Use the pre-calculated averages from the API response
-      avgAbsent: activeReportData.avg_absent_days,
-      avgHalfDay: activeReportData.avg_half_days,
-      avgPresent: activeReportData.avg_present_days,
-    };
+    return computeAttendanceInsights(activeReportData, displayStudents);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeReportData]);
 
@@ -760,18 +809,17 @@ function ReportTab() {
     }
   };
 
-  const getHealthColor = (health: string) => {
+  const getHealthIcon = (health: string) => {
+    const color = getHealthColor(health).icon;
     switch (health) {
       case 'excellent':
-        return { bg: '#dcfce7', text: '#16a34a', icon: '#22c55e' };
+        return <Award size={28} color={color} />;
       case 'good':
-        return { bg: '#dbeafe', text: '#2563eb', icon: '#3b82f6' };
+        return <ThumbsUp size={28} color={color} />;
       case 'concern':
-        return { bg: '#fef3c7', text: '#d97706', icon: '#f59e0b' };
-      case 'critical':
-        return { bg: '#fee2e2', text: '#dc2626', icon: '#ef4444' };
+        return <AlertTriangle size={28} color={color} />;
       default:
-        return { bg: '#f3f4f6', text: '#6b7280', icon: '#9ca3af' };
+        return <XCircle size={28} color={color} />;
     }
   };
 
@@ -893,15 +941,7 @@ function ReportTab() {
           >
             <View style={styles.healthHeader}>
               <View style={styles.healthLeft}>
-                {insights.classHealth === 'excellent' ? (
-                  <Award size={28} color={getHealthColor(insights.classHealth).icon} />
-                ) : insights.classHealth === 'good' ? (
-                  <ThumbsUp size={28} color={getHealthColor(insights.classHealth).icon} />
-                ) : insights.classHealth === 'concern' ? (
-                  <AlertTriangle size={28} color={getHealthColor(insights.classHealth).icon} />
-                ) : (
-                  <XCircle size={28} color={getHealthColor(insights.classHealth).icon} />
-                )}
+                {getHealthIcon(insights.classHealth)}
                 <View>
                   <Text
                     style={[
@@ -909,13 +949,7 @@ function ReportTab() {
                       { color: getHealthColor(insights.classHealth).text },
                     ]}
                   >
-                    {insights.classHealth === 'excellent'
-                      ? 'Excellent Attendance!'
-                      : insights.classHealth === 'good'
-                        ? 'Good Attendance'
-                        : insights.classHealth === 'concern'
-                          ? 'Needs Attention'
-                          : 'Critical - Action Required'}
+                    {getHealthLabel(insights.classHealth)}
                   </Text>
                   <Text style={styles.healthSubtitle}>
                     {insights.totalStudents} student{insights.totalStudents !== 1 ? 's' : ''} •{' '}

@@ -141,6 +141,87 @@ const CHART_COLORS = {
   secondary: '#8b5cf6',
 };
 
+type InsightType = 'success' | 'warning' | 'info' | 'alert';
+
+interface Insight {
+  type: InsightType;
+  title: string;
+  description: string;
+}
+
+/** Generate AI insights from marks overview data */
+function generateAiInsights(
+  marksOverview: { stats: { pass_percentage: number }; subjects: { subject_name: string; pass_percentage: number; average_marks: number; absent: number; total_students: number }[] } | undefined,
+  hasMarksEntered: boolean
+): Insight[] {
+  if (!marksOverview || !hasMarksEntered) {
+    return [];
+  }
+
+  const insights: Insight[] = [];
+  const { stats, subjects } = marksOverview;
+
+  if (stats.pass_percentage >= 80) {
+    insights.push({
+      type: 'success',
+      title: 'Excellent Class Performance!',
+      description: `${stats.pass_percentage}% of students passed all subjects. The class is performing exceptionally well.`,
+    });
+  } else if (stats.pass_percentage >= 60) {
+    insights.push({
+      type: 'info',
+      title: 'Good Class Performance',
+      description: `${stats.pass_percentage}% pass rate. Consider additional support for struggling students.`,
+    });
+  } else if (stats.pass_percentage < 50) {
+    insights.push({
+      type: 'alert',
+      title: 'Attention Required',
+      description: `Only ${stats.pass_percentage}% pass rate. Immediate intervention recommended.`,
+    });
+  }
+
+  if (subjects.length > 0) {
+    const sortedByPass = [...subjects].sort((a, b) => b.pass_percentage - a.pass_percentage);
+    const bestSubject = sortedByPass[0];
+    const worstSubject = sortedByPass[sortedByPass.length - 1];
+
+    if (bestSubject.pass_percentage >= 90) {
+      insights.push({
+        type: 'success',
+        title: `Top Performer: ${bestSubject.subject_name}`,
+        description: `${bestSubject.pass_percentage}% pass rate with ${bestSubject.average_marks.toFixed(1)} average marks.`,
+      });
+    }
+
+    if (worstSubject.pass_percentage < 60 && subjects.length > 1) {
+      insights.push({
+        type: 'warning',
+        title: `Needs Improvement: ${worstSubject.subject_name}`,
+        description: `Only ${worstSubject.pass_percentage}% pass rate. Consider remedial classes.`,
+      });
+    }
+
+    const highAbsence = subjects.filter((s) => s.absent > s.total_students * 0.1);
+    if (highAbsence.length > 0) {
+      insights.push({
+        type: 'warning',
+        title: 'High Absence Rate',
+        description: `${highAbsence.map((s) => s.subject_name).join(', ')} have more than 10% absence.`,
+      });
+    }
+
+    const topAverageSubject = [...subjects].sort((a, b) => b.average_marks - a.average_marks)[0];
+    insights.push({
+      type: 'info',
+      title: 'Highest Average Score',
+      description: `${topAverageSubject.subject_name} has the highest average of ${topAverageSubject.average_marks.toFixed(1)} marks.`,
+    });
+  }
+
+  return insights;
+}
+
 export function ExamOverviewPage() {
   const navigate = useNavigate();
   const [selectedSessionId, setSelectedSessionId] = useState<string>('');
@@ -275,82 +356,10 @@ export function ExamOverviewPage() {
   }, [marksOverview]);
 
   // AI-powered insights generation
-  const aiInsights = useMemo(() => {
-    if (!marksOverview || !hasMarksEntered) {
-      return [];
-    }
-
-    const insights: {
-      type: 'success' | 'warning' | 'info' | 'alert';
-      title: string;
-      description: string;
-    }[] = [];
-    const { stats, subjects } = marksOverview;
-
-    // Overall class performance
-    if (stats.pass_percentage >= 80) {
-      insights.push({
-        type: 'success',
-        title: 'Excellent Class Performance!',
-        description: `${stats.pass_percentage}% of students passed all subjects. The class is performing exceptionally well.`,
-      });
-    } else if (stats.pass_percentage >= 60) {
-      insights.push({
-        type: 'info',
-        title: 'Good Class Performance',
-        description: `${stats.pass_percentage}% pass rate. Consider additional support for struggling students.`,
-      });
-    } else if (stats.pass_percentage < 50) {
-      insights.push({
-        type: 'alert',
-        title: 'Attention Required',
-        description: `Only ${stats.pass_percentage}% pass rate. Immediate intervention recommended.`,
-      });
-    }
-
-    // Find best and worst performing subjects
-    if (subjects.length > 0) {
-      const sortedByPass = [...subjects].sort((a, b) => b.pass_percentage - a.pass_percentage);
-      const bestSubject = sortedByPass[0];
-      const worstSubject = sortedByPass[sortedByPass.length - 1];
-
-      if (bestSubject.pass_percentage >= 90) {
-        insights.push({
-          type: 'success',
-          title: `Top Performer: ${bestSubject.subject_name}`,
-          description: `${bestSubject.pass_percentage}% pass rate with ${bestSubject.average_marks.toFixed(1)} average marks.`,
-        });
-      }
-
-      if (worstSubject.pass_percentage < 60 && subjects.length > 1) {
-        insights.push({
-          type: 'warning',
-          title: `Needs Improvement: ${worstSubject.subject_name}`,
-          description: `Only ${worstSubject.pass_percentage}% pass rate. Consider remedial classes.`,
-        });
-      }
-
-      // Find subjects with high absence
-      const highAbsence = subjects.filter((s) => s.absent > s.total_students * 0.1);
-      if (highAbsence.length > 0) {
-        insights.push({
-          type: 'warning',
-          title: 'High Absence Rate',
-          description: `${highAbsence.map((s) => s.subject_name).join(', ')} have more than 10% absence.`,
-        });
-      }
-
-      // Top scorer analysis
-      const topAverageSubject = [...subjects].sort((a, b) => b.average_marks - a.average_marks)[0];
-      insights.push({
-        type: 'info',
-        title: 'Highest Average Score',
-        description: `${topAverageSubject.subject_name} has the highest average of ${topAverageSubject.average_marks.toFixed(1)} marks.`,
-      });
-    }
-
-    return insights;
-  }, [marksOverview, hasMarksEntered]);
+  const aiInsights = useMemo(
+    () => generateAiInsights(marksOverview, hasMarksEntered),
+    [marksOverview, hasMarksEntered]
+  );
 
   // Stats
   const stats = useMemo(() => {

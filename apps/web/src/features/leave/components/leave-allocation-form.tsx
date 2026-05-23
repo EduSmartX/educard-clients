@@ -46,6 +46,44 @@ interface LeaveAllocationFormProps {
   onCancel?: () => void;
 }
 
+/** Extracted component to avoid deep nesting in role checkboxes */
+function RoleCheckboxItem({
+  role,
+  selectedRoles,
+  onChange,
+}: {
+  role: { id: number; name: string };
+  selectedRoles: number[];
+  onChange: (roles: number[]) => void;
+}) {
+  const isChecked = selectedRoles?.includes(role.id);
+  return (
+    <FormItem className="flex flex-row items-center space-y-0 space-x-2 rounded-lg border border-transparent p-2 transition-colors hover:border-purple-200 hover:bg-purple-50/50">
+      <FormControl>
+        <Checkbox
+          checked={isChecked}
+          onCheckedChange={(checked) => {
+            const updatedRoles = checked
+              ? [...selectedRoles, role.id]
+              : selectedRoles?.filter((value) => value !== role.id);
+            onChange(updatedRoles);
+          }}
+        />
+      </FormControl>
+      <div className="flex min-w-0 flex-1 items-center gap-2">
+        <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-400 to-pink-400 text-xs font-semibold text-white">
+          {role.name.charAt(0)}
+        </div>
+        <div className="min-w-0 flex-1">
+          <FormLabel className="block cursor-pointer truncate text-sm font-medium">
+            {role.name}
+          </FormLabel>
+        </div>
+      </div>
+    </FormItem>
+  );
+}
+
 export function LeaveAllocationForm({
   mode = 'create',
   allocationId,
@@ -637,39 +675,13 @@ export function LeaveAllocationForm({
                                     key={role.id}
                                     control={form.control}
                                     name="roles"
-                                    render={({ field }) => {
-                                      const handleCheckedChange = (
-                                        checked: boolean | 'indeterminate'
-                                      ) => {
-                                        const updatedRoles = checked
-                                          ? [...field.value, role.id]
-                                          : field.value?.filter((value) => value !== role.id);
-                                        field.onChange(updatedRoles);
-                                      };
-                                      return (
-                                        <FormItem
-                                          key={role.id}
-                                          className="flex flex-row items-center space-y-0 space-x-2 rounded-lg border border-transparent p-2 transition-colors hover:border-purple-200 hover:bg-purple-50/50"
-                                        >
-                                          <FormControl>
-                                            <Checkbox
-                                              checked={field.value?.includes(role.id)}
-                                              onCheckedChange={handleCheckedChange}
-                                            />
-                                          </FormControl>
-                                          <div className="flex min-w-0 flex-1 items-center gap-2">
-                                            <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-400 to-pink-400 text-xs font-semibold text-white">
-                                              {role.name.charAt(0)}
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                              <FormLabel className="block cursor-pointer truncate text-sm font-medium">
-                                                {role.name}
-                                              </FormLabel>
-                                            </div>
-                                          </div>
-                                        </FormItem>
-                                      );
-                                    }}
+                                    render={({ field }) => (
+                                      <RoleCheckboxItem
+                                        role={role}
+                                        selectedRoles={field.value}
+                                        onChange={field.onChange}
+                                      />
+                                    )}
                                   />
                                 ))}
                               </div>

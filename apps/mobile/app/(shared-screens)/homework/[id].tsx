@@ -189,7 +189,7 @@ export default function HomeworkDetailScreen() {
           <View style={[styles.priorityBadge, { backgroundColor: priorityColor }]}>
             <Text style={styles.priorityText}>{homework.priority.toUpperCase()}</Text>
           </View>
-          {homework.is_overdue && (
+          {!!homework.is_overdue && (
             <View style={styles.overdueBadge}>
               <AlertCircle size={14} color="#fff" />
               <Text style={styles.overdueText}>Overdue</Text>
@@ -262,7 +262,7 @@ export default function HomeworkDetailScreen() {
         </Animated.View>
 
         {/* Description */}
-        {homework.description && (
+        {!!homework.description && (
           <Animated.View entering={FadeInDown.delay(300)} style={styles.section}>
             <Text style={styles.sectionTitle}>Description</Text>
             <Text style={styles.descriptionText}>{homework.description}</Text>
@@ -270,7 +270,7 @@ export default function HomeworkDetailScreen() {
         )}
 
         {/* Instructions */}
-        {homework.instructions && (
+        {!!homework.instructions && (
           <Animated.View entering={FadeInDown.delay(350)} style={styles.section}>
             <Text style={styles.sectionTitle}>Instructions</Text>
             <Text style={styles.descriptionText}>{homework.instructions}</Text>
@@ -278,7 +278,7 @@ export default function HomeworkDetailScreen() {
         )}
 
         {/* Reference Link */}
-        {homework.reference_link && (
+        {!!homework.reference_link && (
           <Animated.View entering={FadeInDown.delay(400)} style={styles.section}>
             <Text style={styles.sectionTitle}>Reference</Text>
             <TouchableOpacity

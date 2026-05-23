@@ -80,7 +80,7 @@ function TimeSlotCard({ entry }: { entry: TimetableEntry }) {
             <Building2 size={12} color="#6b7280" />
             <Text style={styles.detailText}>{entry.class_name}</Text>
           </View>
-          {entry.room && (
+          {!!entry.room && (
             <View style={styles.detailItem}>
               <Users size={12} color="#6b7280" />
               <Text style={styles.detailText}>{entry.room}</Text>

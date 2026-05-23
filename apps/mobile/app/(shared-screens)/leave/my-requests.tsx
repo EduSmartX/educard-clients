@@ -198,7 +198,7 @@ export default function MyLeaveRequestsScreen() {
                 {item.status === 'approved' ? '✓ Approved by: ' : '✗ Rejected by: '}
               </Text>
               <Text style={styles.reviewerInfoName}>{item.reviewed_by_name}</Text>
-              {item.reviewed_at && (
+              {!!item.reviewed_at && (
                 <Text style={styles.reviewerInfoDate}>
                   {' on '}
                   {format(parseISO(item.reviewed_at), 'dd MMM yyyy')}

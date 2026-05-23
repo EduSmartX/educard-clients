@@ -14,6 +14,87 @@
 
 import { useCallback, useRef } from 'react';
 
+type Direction = 'up' | 'down' | 'left' | 'right' | 'home' | 'end' | 'tableStart' | 'tableEnd';
+
+/**
+ * Determine navigation direction from a keyboard event.
+ * Returns null if the key should not trigger navigation.
+ */
+function getDirectionFromKey(
+  e: React.KeyboardEvent<HTMLInputElement>
+): Direction | null {
+  const target = e.target as HTMLInputElement;
+
+  switch (e.key) {
+    case 'ArrowUp':
+      return 'up';
+    case 'ArrowDown':
+    case 'Enter':
+      return 'down';
+    case 'ArrowLeft':
+      if (target.tagName === 'INPUT' && target.selectionStart !== 0 && target.value.length > 0) {
+        return null;
+      }
+      return 'left';
+    case 'ArrowRight':
+      if (
+        target.tagName === 'INPUT' &&
+        target.selectionEnd !== target.value.length &&
+        target.value.length > 0
+      ) {
+        return null;
+      }
+      return 'right';
+    case 'Tab':
+      return e.shiftKey ? 'left' : 'right';
+    case 'Home':
+      return e.ctrlKey ? 'tableStart' : 'home';
+    case 'End':
+      return e.ctrlKey ? 'tableEnd' : 'end';
+    default:
+      return null;
+  }
+}
+
+/** Calculate next grid position based on direction */
+function calculateNextPosition(
+  currentRow: number,
+  currentCol: number,
+  direction: Direction,
+  rows: number,
+  cols: number,
+  wrap: boolean
+): GridPosition | null {
+  switch (direction) {
+    case 'up':
+      return currentRow - 1 >= 0
+        ? { row: currentRow - 1, col: currentCol }
+        : wrap ? { row: rows - 1, col: currentCol } : null;
+    case 'down':
+      return currentRow + 1 < rows
+        ? { row: currentRow + 1, col: currentCol }
+        : wrap ? { row: 0, col: currentCol } : null;
+    case 'left':
+      if (currentCol - 1 >= 0) return { row: currentRow, col: currentCol - 1 };
+      if (!wrap) return null;
+      return currentRow > 0
+        ? { row: currentRow - 1, col: cols - 1 }
+        : { row: rows - 1, col: cols - 1 };
+    case 'right':
+      if (currentCol + 1 < cols) return { row: currentRow, col: currentCol + 1 };
+      if (!wrap) return null;
+      return currentRow < rows - 1 ? { row: currentRow + 1, col: 0 } : { row: 0, col: 0 };
+    case 'home':
+      return { row: currentRow, col: 0 };
+    case 'end':
+      return { row: currentRow, col: cols - 1 };
+    case 'tableStart':
+      return { row: 0, col: 0 };
+    case 'tableEnd':
+      return { row: rows - 1, col: cols - 1 };
+  }
+}
+
 interface GridPosition {
   row: number;
   col: number;
@@ -93,94 +174,11 @@ export function useGridKeyboardNavigation({
    * Calculate the next position based on direction
    */
   const getNextPosition = useCallback(
-    (
-      currentRow: number,
-      currentCol: number,
-      direction: 'up' | 'down' | 'left' | 'right' | 'home' | 'end' | 'tableStart' | 'tableEnd'
-    ): GridPosition | null => {
-      switch (direction) {
-        case 'up':
-          return currentRow - 1 >= 0
-            ? { row: currentRow - 1, col: currentCol }
-            : wrap
-              ? { row: rows - 1, col: currentCol }
-              : null;
-        case 'down':
-          return currentRow + 1 < rows
-            ? { row: currentRow + 1, col: currentCol }
-            : wrap
-              ? { row: 0, col: currentCol }
-              : null;
-        case 'left':
-          if (currentCol - 1 >= 0) {
-            return { row: currentRow, col: currentCol - 1 };
-          }
-          if (!wrap) {
-            return null;
-          }
-          return currentRow > 0
-            ? { row: currentRow - 1, col: cols - 1 }
-            : { row: rows - 1, col: cols - 1 };
-        case 'right':
-          if (currentCol + 1 < cols) {
-            return { row: currentRow, col: currentCol + 1 };
-          }
-          if (!wrap) {
-            return null;
-          }
-          return currentRow < rows - 1 ? { row: currentRow + 1, col: 0 } : { row: 0, col: 0 };
-        case 'home':
-          return { row: currentRow, col: 0 };
-        case 'end':
-          return { row: currentRow, col: cols - 1 };
-        case 'tableStart':
-          return { row: 0, col: 0 };
-        case 'tableEnd':
-          return { row: rows - 1, col: cols - 1 };
-      }
+    (currentRow: number, currentCol: number, direction: Direction): GridPosition | null => {
+      return calculateNextPosition(currentRow, currentCol, direction, rows, cols, wrap);
     },
     [rows, cols, wrap]
   );
-
-  /**
-   * Determine navigation direction from a keyboard event.
-   * Returns null if the key should not trigger navigation.
-   */
-  const getDirectionFromKey = (
-    e: React.KeyboardEvent<HTMLInputElement>
-  ): 'up' | 'down' | 'left' | 'right' | 'home' | 'end' | 'tableStart' | 'tableEnd' | null => {
-    const target = e.target as HTMLInputElement;
-
-    switch (e.key) {
-      case 'ArrowUp':
-        return 'up';
-      case 'ArrowDown':
-      case 'Enter':
-        return 'down';
-      case 'ArrowLeft':
-        if (target.tagName === 'INPUT' && target.selectionStart !== 0 && target.value.length > 0) {
-          return null;
-        }
-        return 'left';
-      case 'ArrowRight':
-        if (
-          target.tagName === 'INPUT' &&
-          target.selectionEnd !== target.value.length &&
-          target.value.length > 0
-        ) {
-          return null;
-        }
-        return 'right';
-      case 'Tab':
-        return e.shiftKey ? 'left' : 'right';
-      case 'Home':
-        return e.ctrlKey ? 'tableStart' : 'home';
-      case 'End':
-        return e.ctrlKey ? 'tableEnd' : 'end';
-      default:
-        return null;
-    }
-  };
 
   /**
    * Handle keyboard events on input cells
