@@ -43,9 +43,13 @@ export const phoneSchema = (required = false) => {
     .string()
     .refine(
       (val) => {
-        if (!val) {return true;}
+        if (!val) {
+          return true;
+        }
         // Allow masked phone numbers from backend (contains *)
-        if (isPhoneMasked(val)) {return true;}
+        if (isPhoneMasked(val)) {
+          return true;
+        }
         const cleaned = cleanPhoneNumber(val);
         return PHONE_REGEX.test(cleaned);
       },
@@ -90,7 +94,7 @@ export const employeeIdSchema = (required = true, maxLength = 50) => {
 };
 
 export const dateSchema = (fieldName: string, required = false) => {
-  const validator = z.string().refine((val) => !val || !isNaN(Date.parse(val)), {
+  const validator = z.string().refine((val) => !val || !Number.isNaN(Date.parse(val)), {
     message: `Please enter a valid ${fieldName.toLowerCase()}`,
   });
 
@@ -106,20 +110,32 @@ export const numberSchema = (
   const validator = z
     .union([z.string(), z.number()])
     .transform((val) => {
-      if (!val) {return undefined;}
-      const num = typeof val === 'string' ? parseFloat(val) : val;
-      return isNaN(num) ? undefined : num;
+      if (!val) {
+        return undefined;
+      }
+      const num = typeof val === 'string' ? Number.parseFloat(val) : val;
+      return Number.isNaN(num) ? undefined : num;
     })
     .refine(
       (val) => {
-        if (val === undefined) {return true;}
-        if (integer && !Number.isInteger(val)) {return false;}
-        if (min !== undefined && val < min) {return false;}
-        if (max !== undefined && val > max) {return false;}
+        if (val === undefined) {
+          return true;
+        }
+        if (integer && !Number.isInteger(val)) {
+          return false;
+        }
+        if (min !== undefined && val < min) {
+          return false;
+        }
+        if (max !== undefined && val > max) {
+          return false;
+        }
         return true;
       },
       (val) => {
-        if (val === undefined) {return { message: '' };}
+        if (val === undefined) {
+          return { message: '' };
+        }
         if (integer && !Number.isInteger(val)) {
           return { message: `${fieldName} must be a whole number` };
         }

@@ -122,10 +122,10 @@ export function validateCarryForward(
   totalDays: string,
   carryForwardDays: string
 ): { valid: boolean; message?: string } {
-  const total = parseFloat(totalDays);
-  const carryForward = parseFloat(carryForwardDays);
+  const total = Number.parseFloat(totalDays);
+  const carryForward = Number.parseFloat(carryForwardDays);
 
-  if (isNaN(total) || isNaN(carryForward)) {
+  if (Number.isNaN(total) || Number.isNaN(carryForward)) {
     return { valid: false, message: 'Please enter valid numbers' };
   }
 
@@ -180,7 +180,7 @@ export function formatAllocationSummary(allocation: LeaveAllocation): string {
 
   parts.push(`${allocation.total_days} days total`);
 
-  if (parseFloat(allocation.max_carry_forward_days) > 0) {
+  if (Number.parseFloat(allocation.max_carry_forward_days) > 0) {
     parts.push(`${allocation.max_carry_forward_days} carry forward`);
   }
 

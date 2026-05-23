@@ -56,7 +56,7 @@ export function StudentFeeTable({
       accessor: (row) => (
         <div>
           <div className="font-medium">{row.fee_structure_name}</div>
-          {row.academic_year && (
+          {!!row.academic_year && (
             <div className="text-muted-foreground text-sm">{row.academic_year}</div>
           )}
         </div>

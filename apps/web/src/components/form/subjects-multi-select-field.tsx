@@ -71,7 +71,7 @@ export function SubjectsMultiSelectField<TFieldValues extends FieldValues>({
                 value=""
                 onValueChange={(value: string) => {
                   if (value) {
-                    const subjectId = parseInt(value);
+                    const subjectId = Number.parseInt(value);
                     if (!selectedSubjects.includes(subjectId)) {
                       field.onChange([...selectedSubjects, subjectId]);
                     }

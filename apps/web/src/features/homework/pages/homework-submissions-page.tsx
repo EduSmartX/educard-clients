@@ -255,8 +255,7 @@ export default function HomeworkSubmissionsPage() {
       setSelectedHomeworkId('');
       return;
     }
-    const isCurrentSelectionValid = homeworkList.some((h) => h.public_id === selectedHomeworkId);
-    if (!selectedHomeworkId || !isCurrentSelectionValid) {
+    if (!selectedHomeworkId || !homeworkList.some((h) => h.public_id === selectedHomeworkId)) {
       setSelectedHomeworkId(homeworkList[0].public_id);
     }
   }, [homeworkList, selectedHomeworkId]);

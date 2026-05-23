@@ -141,7 +141,7 @@ export function LeaveRequestFormPage() {
           leave_balance: request.leave_balance_public_id,
           start_date: request.start_date,
           end_date: request.end_date,
-          number_of_days: parseFloat(request.number_of_days.toString()),
+          number_of_days: Number.parseFloat(request.number_of_days.toString()),
           reason: request.reason,
           attachment: null,
           remove_attachment: false,

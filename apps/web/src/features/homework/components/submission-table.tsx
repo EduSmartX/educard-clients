@@ -144,7 +144,7 @@ export const SubmissionTable = memo(
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <StatusBadge status={submission.status} />
-                    {submission.is_late && (
+                    {!!submission.is_late && (
                       <Badge variant="outline" className="border-red-200 bg-red-50 text-red-600">
                         {HOMEWORK_UI.LATE}
                       </Badge>
@@ -161,7 +161,7 @@ export const SubmissionTable = memo(
                   {submission.reviewed_by_name ? (
                     <div className="text-sm">
                       <p className="font-medium text-slate-900">{submission.reviewed_by_name}</p>
-                      {submission.reviewed_at && (
+                      {!!submission.reviewed_at && (
                         <p className="text-xs text-slate-500">
                           {format(new Date(submission.reviewed_at), 'MMM d')}
                         </p>

@@ -57,7 +57,9 @@ interface ColumnActions {
   onViewDetails: (row: LeaveRequestReview) => void;
 }
 
-export function getLeaveReviewColumns(actions: Readonly<ColumnActions>): Column<LeaveRequestReview>[] {
+export function getLeaveReviewColumns(
+  actions: Readonly<ColumnActions>
+): Column<LeaveRequestReview>[] {
   return [
     {
       header: 'Employee',
@@ -95,7 +97,7 @@ export function getLeaveReviewColumns(actions: Readonly<ColumnActions>): Column<
             <div className="font-medium">{row.leave_name}</div>
             <div className="text-muted-foreground text-xs">{row.leave_type_code}</div>
           </div>
-          {row.attachment_url && (
+          {!!row.attachment_url && (
             <span title="Has attachment">
               <Paperclip className="h-3.5 w-3.5 shrink-0 text-blue-500" />
             </span>

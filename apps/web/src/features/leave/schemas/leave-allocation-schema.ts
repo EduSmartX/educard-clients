@@ -36,8 +36,8 @@ export const createLeaveAllocationSchema = (mode: 'create' | 'view' | 'edit' = '
         .min(1, 'Total days is required')
         .refine(
           (val) => {
-            const num = parseFloat(val);
-            return !isNaN(num) && num > 0 && num <= 365;
+            const num = Number.parseFloat(val);
+            return !Number.isNaN(num) && num > 0 && num <= 365;
           },
           {
             message: 'Total days must be between 0.5 and 365',
@@ -56,8 +56,8 @@ export const createLeaveAllocationSchema = (mode: 'create' | 'view' | 'edit' = '
             if (!val || val.trim() === '') {
               return false;
             } // empty when enabled
-            const num = parseFloat(val);
-            return !isNaN(num) && num > 0 && num <= 365;
+            const num = Number.parseFloat(val);
+            return !Number.isNaN(num) && num > 0 && num <= 365;
           },
           {
             message: 'Maximum carry forward days must be between 0.5 and 365',
@@ -85,9 +85,9 @@ export const createLeaveAllocationSchema = (mode: 'create' | 'view' | 'edit' = '
     .refine(
       (data) => {
         // Validate max_carry_forward_days <= total_days
-        const totalDays = parseFloat(data.total_days);
-        const carryForward = parseFloat(data.max_carry_forward_days);
-        return !isNaN(totalDays) && !isNaN(carryForward) && carryForward <= totalDays;
+        const totalDays = Number.parseFloat(data.total_days);
+        const carryForward = Number.parseFloat(data.max_carry_forward_days);
+        return !Number.isNaN(totalDays) && !Number.isNaN(carryForward) && carryForward <= totalDays;
       },
       {
         message: 'Carry forward days cannot exceed total allocated days',

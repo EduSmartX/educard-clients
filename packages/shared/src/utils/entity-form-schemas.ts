@@ -89,7 +89,7 @@ export const teacherFullSchema = teacherQuickSchema.extend({
         return true;
       }
       const n = Number(v);
-      return !isNaN(n) && n >= 0 && n <= 70;
+      return !Number.isNaN(n) && n >= 0 && n <= 70;
     }, "Experience must be between 0 and 70")
     .optional()
     .or(z.literal("")),
@@ -152,7 +152,7 @@ export const classFormSchema = z.object({
         return true;
       }
       const n = Number(v);
-      return !isNaN(n) && n >= 1 && n <= 500;
+      return !Number.isNaN(n) && n >= 1 && n <= 500;
     }, "Capacity must be between 1 and 500")
     .optional()
     .or(z.literal("")),

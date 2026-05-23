@@ -65,7 +65,7 @@ export function CancelLeaveRequestDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] bg-white">
+      <DialogContent className="bg-white sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <X className="h-5 w-5 text-red-600" />
@@ -82,7 +82,7 @@ export function CancelLeaveRequestDialog({
             </Alert>
           )}
 
-          <div className="space-y-2 text-sm bg-gray-50 p-4 rounded-lg">
+          <div className="space-y-2 rounded-lg bg-gray-50 p-4 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-600">Leave Type:</span>
               <span className="font-medium text-gray-900">{request.leave_name}</span>
@@ -123,7 +123,7 @@ export function CancelLeaveRequestDialog({
             disabled={cancelMutation.isPending}
             className="gap-2"
           >
-            {cancelMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+            {!!cancelMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
             Yes, Cancel Request
           </Button>
         </DialogFooter>

@@ -45,7 +45,7 @@ export function useAttendanceDisplay(attendanceStats: DashboardAttendanceStats |
     }
 
     // Ensure it's a valid number
-    if (typeof percentage !== 'number' || isNaN(percentage)) {
+    if (typeof percentage !== 'number' || Number.isNaN(percentage)) {
       return 'N/A';
     }
 

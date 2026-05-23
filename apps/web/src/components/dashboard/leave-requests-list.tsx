@@ -31,11 +31,11 @@ export function LeaveRequestsList({
   return (
     <div
       className={cn(
-        'bg-white rounded-xl p-6 shadow-sm border border-gray-100 h-full flex flex-col',
+        'flex h-full flex-col rounded-xl border border-gray-100 bg-white p-6 shadow-sm',
         className
       )}
     >
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
         {onViewAll && (
           <button
@@ -47,11 +47,11 @@ export function LeaveRequestsList({
         )}
       </div>
 
-      <div className="space-y-4 flex-1 overflow-y-auto">
+      <div className="flex-1 space-y-4 overflow-y-auto">
         {requests.map((request) => (
           <div
             key={request.id}
-            className="flex items-center gap-4 p-4 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors"
+            className="flex items-center gap-4 rounded-lg border border-gray-100 p-4 transition-colors hover:border-gray-200"
           >
             {/* Avatar */}
             <div className="flex-shrink-0">
@@ -62,7 +62,7 @@ export function LeaveRequestsList({
                   className="h-10 w-10 rounded-full object-cover"
                 />
               ) : (
-                <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100">
                   <span className="text-sm font-semibold text-indigo-600">
                     {request.userName.charAt(0)}
                   </span>
@@ -71,13 +71,13 @@ export function LeaveRequestsList({
             </div>
 
             {/* Info */}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-900 truncate">{request.userName}</p>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-gray-900">{request.userName}</p>
               <p className="text-xs text-gray-500">
                 {request.leaveType} - {request.duration}
               </p>
-              {request.supervisor && (
-                <p className="text-xs text-gray-600 mt-1">
+              {!!request.supervisor && (
+                <p className="mt-1 text-xs text-gray-600">
                   <span className="font-medium">Supervisor:</span> {request.supervisor}
                 </p>
               )}
@@ -88,13 +88,13 @@ export function LeaveRequestsList({
               <div className="flex items-center gap-2">
                 <Button
                   onClick={() => onApprove(request.id)}
-                  className="h-8 px-3 text-xs font-semibold bg-green-600 hover:bg-green-700 text-white"
+                  className="h-8 bg-green-600 px-3 text-xs font-semibold text-white hover:bg-green-700"
                 >
                   Approve
                 </Button>
                 <Button
                   onClick={() => onReject(request.id)}
-                  className="h-8 px-3 text-xs font-semibold bg-red-600 hover:bg-red-700 text-white"
+                  className="h-8 bg-red-600 px-3 text-xs font-semibold text-white hover:bg-red-700"
                 >
                   Reject
                 </Button>
@@ -105,7 +105,7 @@ export function LeaveRequestsList({
             {request.status && request.status !== 'pending' && (
               <span
                 className={cn(
-                  'px-3 py-1 text-xs font-semibold rounded-full',
+                  'rounded-full px-3 py-1 text-xs font-semibold',
                   request.status === 'approved'
                     ? 'bg-green-100 text-green-700'
                     : 'bg-red-100 text-red-700'
@@ -118,7 +118,7 @@ export function LeaveRequestsList({
         ))}
 
         {requests.length === 0 && (
-          <div className="text-center py-8 text-gray-500 text-sm">
+          <div className="py-8 text-center text-sm text-gray-500">
             No leave requests at the moment
           </div>
         )}

@@ -418,7 +418,7 @@ export function MarksEntryPage() {
                                 data-marks-row={index}
                                 className={`h-9 w-24 font-mono ${entry.marksError ? 'border-red-500' : ''}`}
                               />
-                              {entry.marksError && (
+                              {!!entry.marksError && (
                                 <p className="text-xs text-red-500">{entry.marksError}</p>
                               )}
                             </div>

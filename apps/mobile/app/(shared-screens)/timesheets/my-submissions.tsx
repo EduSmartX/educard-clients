@@ -346,6 +346,57 @@ const AttendanceToggle = ({
   </TouchableOpacity>
 );
 
+/** Build week rows from attendance data for a given date range */
+function buildWeekRows(
+  weekStart: Date,
+  weekEnd: Date,
+  attendanceByDate: Map<string, AttendanceRecord>,
+  holidayDescriptions: Record<string, any>,
+  holidaySet: Set<string>,
+  workingDayPolicy: any,
+  exceptionsMap: Map<string, { type: string; reason: string }>,
+  defaultPresent: boolean,
+  strictLeaveCheck: boolean
+): WeekRow[] {
+  const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
+  return days.map((day) => {
+    const dateKey = toDateKey(day);
+    const record = attendanceByDate.get(dateKey);
+    const holidayInfo = holidayDescriptions[dateKey];
+    const isHoliday =
+      holidaySet.has(dateKey) ||
+      holidayInfo?.type === 'official_holiday' ||
+      holidayInfo?.type === 'holiday' ||
+      holidayInfo?.type === 'weekend';
+    const isForceWorking = holidayInfo?.type === 'force_working';
+    const isLeave = strictLeaveCheck
+      ? record?.is_leave &&
+        (record?.leave_status === 'approved' || record?.leave_status === 'pending')
+      : record?.is_leave;
+    const dayIsWorkingDay = isWorkingDay(day, workingDayPolicy, holidaySet, exceptionsMap);
+
+    let locked_reason: WeekRow['locked_reason'] = undefined;
+    if (isHoliday && !isForceWorking) locked_reason = 'holiday';
+    else if (isLeave) locked_reason = 'leave';
+    else if (!dayIsWorkingDay && !isForceWorking) locked_reason = 'non_working_day';
+
+    const morning_present = record?.morning_present ?? defaultPresent;
+    const afternoon_present = record?.afternoon_present ?? defaultPresent;
+
+    return {
+      date: dateKey,
+      dayName: format(day, 'EEE'),
+      morning_present,
+      afternoon_present,
+      locked_reason,
+      holiday_name: isHoliday && !isForceWorking ? holidayInfo?.name || 'Holiday' : undefined,
+      leave_name: isLeave ? record?.leave_type_name || 'Leave' : undefined,
+      is_working_day:
+        (dayIsWorkingDay || isForceWorking) && !(isHoliday && !isForceWorking) && !isLeave,
+    };
+  });
+}
+
 export default function MyTimesheetScreen() {
   const router = useRouter();
   const { showToast } = useToast();
@@ -463,46 +514,17 @@ export default function MyTimesheetScreen() {
         submission: null,
       }));
 
-      const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
-      const rows: WeekRow[] = days.map((day) => {
-        const dateKey = toDateKey(day);
-        const record = attendanceByDate.get(dateKey);
-        const holidayInfo = holidayDescriptions[dateKey];
-        const isHoliday =
-          holidaySet.has(dateKey) ||
-          holidayInfo?.type === 'official_holiday' ||
-          holidayInfo?.type === 'holiday' ||
-          holidayInfo?.type === 'weekend';
-        const isForceWorking = holidayInfo?.type === 'force_working';
-        const isLeave =
-          record?.is_leave &&
-          (record?.leave_status === 'approved' || record?.leave_status === 'pending');
-        const dayIsWorkingDay = isWorkingDay(day, workingDayPolicy, holidaySet, exceptionsMap);
-
-        let locked_reason: WeekRow['locked_reason'] = undefined;
-        if (isHoliday && !isForceWorking) locked_reason = 'holiday';
-        else if (isLeave) locked_reason = 'leave';
-        else if (!dayIsWorkingDay && !isForceWorking) locked_reason = 'non_working_day';
-
-        let morning_present = defaultPresent;
-        let afternoon_present = defaultPresent;
-        if (record) {
-          morning_present = record.morning_present ?? defaultPresent;
-          afternoon_present = record.afternoon_present ?? defaultPresent;
-        }
-
-        return {
-          date: dateKey,
-          dayName: format(day, 'EEE'),
-          morning_present,
-          afternoon_present,
-          locked_reason,
-          holiday_name: isHoliday && !isForceWorking ? holidayInfo?.name || 'Holiday' : undefined,
-          leave_name: isLeave ? record?.leave_type_name || 'Leave' : undefined,
-          is_working_day:
-            (dayIsWorkingDay || isForceWorking) && !(isHoliday && !isForceWorking) && !isLeave,
-        };
-      });
+      const rows = buildWeekRows(
+        weekStart,
+        weekEnd,
+        attendanceByDate,
+        holidayDescriptions,
+        holidaySet,
+        workingDayPolicy,
+        exceptionsMap,
+        defaultPresent,
+        true
+      );
 
       const newWeek: WeekBlock = {
         id: weekId,
@@ -519,37 +541,17 @@ export default function MyTimesheetScreen() {
         [...prev.filter((w) => w.id !== weekId), newWeek].sort((a, b) => a.id.localeCompare(b.id))
       );
     } catch {
-      const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
-      const rows: WeekRow[] = days.map((day) => {
-        const dateKey = toDateKey(day);
-        const record = attendanceByDate.get(dateKey);
-        const holidayInfo = holidayDescriptions[dateKey];
-        const isHoliday =
-          holidaySet.has(dateKey) ||
-          holidayInfo?.type === 'official_holiday' ||
-          holidayInfo?.type === 'holiday' ||
-          holidayInfo?.type === 'weekend';
-        const isForceWorking = holidayInfo?.type === 'force_working';
-        const isLeave = record?.is_leave;
-        const dayIsWorkingDay = isWorkingDay(day, workingDayPolicy, holidaySet, exceptionsMap);
-
-        let locked_reason: WeekRow['locked_reason'] = undefined;
-        if (isHoliday && !isForceWorking) locked_reason = 'holiday';
-        else if (isLeave) locked_reason = 'leave';
-        else if (!dayIsWorkingDay && !isForceWorking) locked_reason = 'non_working_day';
-
-        return {
-          date: dateKey,
-          dayName: format(day, 'EEE'),
-          morning_present: record?.morning_present ?? defaultPresent,
-          afternoon_present: record?.afternoon_present ?? defaultPresent,
-          locked_reason,
-          holiday_name: isHoliday && !isForceWorking ? holidayInfo?.name || 'Holiday' : undefined,
-          leave_name: isLeave ? record?.leave_type_name || 'Leave' : undefined,
-          is_working_day:
-            (dayIsWorkingDay || isForceWorking) && !(isHoliday && !isForceWorking) && !isLeave,
-        };
-      });
+      const rows = buildWeekRows(
+        weekStart,
+        weekEnd,
+        attendanceByDate,
+        holidayDescriptions,
+        holidaySet,
+        workingDayPolicy,
+        exceptionsMap,
+        defaultPresent,
+        false
+      );
       setWeeks((prev) =>
         [
           ...prev.filter((w) => w.id !== format(weekStart, 'yyyy-MM-dd')),

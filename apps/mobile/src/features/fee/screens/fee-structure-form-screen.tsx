@@ -224,7 +224,7 @@ export default function FeeStructureFormScreen() {
         e.components = 'All components must have a name';
         break;
       }
-      if (!comp.amount || isNaN(Number(comp.amount)) || Number(comp.amount) <= 0) {
+      if (!comp.amount || Number.isNaN(Number(comp.amount)) || Number(comp.amount) <= 0) {
         e.components = 'All components must have a valid amount';
         break;
       }

@@ -61,7 +61,7 @@ export function getStudentColumns({
       accessor: (row) => (
         <div className="flex flex-col">
           <span className="font-medium text-gray-900">{row.full_name}</span>
-          {row.email && <span className="text-sm text-gray-500">{row.email}</span>}
+          {!!row.email && <span className="text-sm text-gray-500">{row.email}</span>}
         </div>
       ),
       sortable: true,
@@ -73,7 +73,7 @@ export function getStudentColumns({
       accessor: (row) => (
         <div className="flex flex-col">
           <span className="font-medium text-gray-900">{row.admission_number || '—'}</span>
-          {row.admission_date && (
+          {!!row.admission_date && (
             <span className="text-sm text-gray-500">
               ({new Date(row.admission_date).toLocaleDateString('en-GB')})
             </span>

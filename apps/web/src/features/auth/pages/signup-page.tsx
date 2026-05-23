@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
+import type { AxiosError } from 'axios';
 import { motion } from 'framer-motion';
 import { sendOtps, verifyOtp } from '@/lib/api/otp-api';
 import { registerOrganization } from '@/lib/api/organization-api';
@@ -51,6 +52,28 @@ import {
   normalizeStep3DataForSave,
   SIGNUP_STEP_TITLES,
 } from '../utils/signup.utils';
+
+/** Handle OTP send errors with field-level mapping */
+function handleStep1Error(
+  error: unknown,
+  data: Step1Data,
+  step1Form: ReturnType<typeof useForm<Step1Data>>,
+  useSameEmail: boolean
+) {
+  const otpErrors = parseOtpErrors(error as AxiosError);
+  if (!otpErrors.detail || otpErrors.errors.length === 0) {
+    toast.error(getErrorMessage(error, 'Failed to send verification codes. Please try again.'));
+    return;
+  }
+  otpErrors.errors.forEach((err) => {
+    if (err.email === data.adminEmail) {
+      step1Form.setError('adminEmail', { type: 'manual', message: err.error });
+    }
+    if (!useSameEmail && err.email === data.orgEmail) {
+      step1Form.setError('orgEmail', { type: 'manual', message: err.error });
+    }
+  });
+}
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -111,56 +134,29 @@ export default function SignupPage() {
     setIsLoading(true);
     try {
       const emails = buildOtpSendRequests(useSameEmail, data);
-
       const response = await sendOtps(emails);
 
-      if (response.all_success) {
-        // If using same email, set orgEmail to adminEmail and mark both as sent
-        const updatedData = useSameEmail ? { ...data, orgEmail: data.adminEmail } : data;
-
-        setFormData((prev) => ({ ...prev, ...updatedData }));
-
-        toast.success(getOtpSendSuccessMessage(useSameEmail, data));
-        setCurrentStep(2);
-      } else {
+      if (!response.all_success) {
         const failedEmails = response.results.filter((r) => !r.success);
         toast.error(
           `${ErrorMessages.AUTH.SEND_OTP_FAILED} ${failedEmails.map((r) => r.email).join(', ')}`
         );
+        return;
       }
-    } catch (error: unknown) {
-      // Parse OTP validation errors
-      const otpErrors = parseOtpErrors(error);
 
-      if (otpErrors.detail && otpErrors.errors.length > 0) {
-        // Show field-level errors on the form
-        otpErrors.errors.forEach((err) => {
-          if (err.email === data.adminEmail) {
-            step1Form.setError('adminEmail', {
-              type: 'manual',
-              message: err.error,
-            });
-          }
-          if (!useSameEmail && err.email === data.orgEmail) {
-            step1Form.setError('orgEmail', {
-              type: 'manual',
-              message: err.error,
-            });
-          }
-        });
-      } else {
-        // Show generic error as toast
-        toast.error(getErrorMessage(error, 'Failed to send verification codes. Please try again.'));
-      }
+      const updatedData = useSameEmail ? { ...data, orgEmail: data.adminEmail } : data;
+      setFormData((prev) => ({ ...prev, ...updatedData }));
+      toast.success(getOtpSendSuccessMessage(useSameEmail, data));
+      setCurrentStep(2);
+    } catch (error: unknown) {
+      handleStep1Error(error, data, step1Form, useSameEmail);
     } finally {
       setIsLoading(false);
     }
   };
 
   // Step 2: Verify OTPs
-  const handleVerifyOtp = async (
-    type: 'admin' | 'org'
-  ) => {
+  const handleVerifyOtp = async (type: 'admin' | 'org') => {
     const otpField = type === 'admin' ? 'adminOtp' : 'orgOtp';
     const otpValue = step2Form.getValues(otpField);
     if (!otpValue || otpValue.length !== 6) {
@@ -171,9 +167,10 @@ export default function SignupPage() {
     const email = type === 'admin' ? formData.adminEmail! : formData.orgEmail!;
     const setVerifying = type === 'admin' ? setVerifyingAdmin : setVerifyingOrg;
     const setVerified = type === 'admin' ? setAdminOtpVerified : setOrgOtpVerified;
-    const successMsg = type === 'admin'
-      ? SuccessMessages.AUTH.ADMIN_EMAIL_VERIFIED
-      : SuccessMessages.AUTH.ORG_EMAIL_VERIFIED;
+    const successMsg =
+      type === 'admin'
+        ? SuccessMessages.AUTH.ADMIN_EMAIL_VERIFIED
+        : SuccessMessages.AUTH.ORG_EMAIL_VERIFIED;
 
     setVerifying(true);
     try {

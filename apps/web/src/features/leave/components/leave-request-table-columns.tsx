@@ -24,7 +24,7 @@ export function getLeaveRequestColumns(actions: ColumnActions): Column<LeaveRequ
             <div className="font-medium text-gray-900">{row.leave_name}</div>
             <div className="text-muted-foreground text-xs">{row.leave_type_code}</div>
           </div>
-          {row.attachment_url && (
+          {!!row.attachment_url && (
             <span title="Has attachment">
               <Paperclip className="h-3.5 w-3.5 shrink-0 text-blue-500" />
             </span>
@@ -120,7 +120,7 @@ export function getLeaveRequestColumns(actions: ColumnActions): Column<LeaveRequ
       header: 'Actions',
       accessor: (row) => (
         <div className="flex items-center gap-2">
-          {actions.onView && (
+          {!!actions.onView && (
             <Button
               variant="ghost"
               size="sm"

@@ -178,12 +178,9 @@ export default function CreateHomeworkScreen() {
     if (!isValid) return;
 
     // Validate reference link format if provided
-    if (referenceLink.trim()) {
-      const urlPattern = /^https?:\/\/.+/i;
-      if (!urlPattern.test(referenceLink.trim())) {
-        setFieldError('reference_link', 'Enter a valid URL (must start with http:// or https://)');
-        return;
-      }
+    if (referenceLink.trim() && !/^https?:\/\/.+/i.test(referenceLink.trim())) {
+      setFieldError('reference_link', 'Enter a valid URL (must start with http:// or https://)');
+      return;
     }
 
     const dueDateTime = `${dueDate}T${dueTime}:00`;

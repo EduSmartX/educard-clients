@@ -15,7 +15,11 @@ export interface ValidationError {
   message: string;
 }
 
-export type FieldValidator = (value: unknown, row: number, fieldLabel: string) => ValidationError | null;
+export type FieldValidator = (
+  value: unknown,
+  row: number,
+  fieldLabel: string
+) => ValidationError | null;
 
 /**
  * Creates a required field validator
@@ -26,7 +30,11 @@ export const requiredValidator = (maxLength?: number): FieldValidator => {
       return { row, field: fieldLabel, message: `${fieldLabel} is required` };
     }
     if (maxLength && String(value).trim().length > maxLength) {
-      return { row, field: fieldLabel, message: `${fieldLabel} is too long (max ${maxLength} characters)` };
+      return {
+        row,
+        field: fieldLabel,
+        message: `${fieldLabel} is too long (max ${maxLength} characters)`,
+      };
     }
     return null;
   };
@@ -41,7 +49,11 @@ export const optionalTextValidator = (maxLength: number): FieldValidator => {
       return null; // Optional field
     }
     if (String(value).trim().length > maxLength) {
-      return { row, field: fieldLabel, message: `${fieldLabel} is too long (max ${maxLength} characters)` };
+      return {
+        row,
+        field: fieldLabel,
+        message: `${fieldLabel} is too long (max ${maxLength} characters)`,
+      };
     }
     return null;
   };
@@ -93,10 +105,10 @@ export const supervisorEmailValidator: FieldValidator = (value, row, fieldLabel)
   const emailStr = String(value).trim();
   // Check if it looks like a concatenated string (contains semicolons or multiple @)
   if (emailStr.includes(';') || (emailStr.match(/@/g) || []).length > 1) {
-    return { 
-      row, 
-      field: fieldLabel, 
-      message: 'Please select only one supervisor from the dropdown. Multiple values detected.' 
+    return {
+      row,
+      field: fieldLabel,
+      message: 'Please select only one supervisor from the dropdown. Multiple values detected.',
     };
   }
   // Extract email from format "Name (email@example.com)"
@@ -133,12 +145,12 @@ const DATE_DDMMYYYY = /^\d{2}-\d{2}-\d{4}$/;
 function parseDateString(dateStr: string): Date | null {
   if (DATE_YYYYMMDD.test(dateStr)) {
     const d = new Date(dateStr);
-    return isNaN(d.getTime()) ? null : d;
+    return Number.isNaN(d.getTime()) ? null : d;
   }
   if (DATE_DDMMYYYY.test(dateStr)) {
     const [day, month, year] = dateStr.split('-');
     const d = new Date(`${year}-${month}-${day}`);
-    return isNaN(d.getTime()) ? null : d;
+    return Number.isNaN(d.getTime()) ? null : d;
   }
   return null;
 }
@@ -148,8 +160,8 @@ function parseDateString(dateStr: string): Date | null {
  * @param notInFuture - If true, date must not be in the future
  * @param maxFutureMonths - Max months in the future allowed (for dates like admission date)
  */
-export const dateValidator = (options?: { 
-  notInFuture?: boolean; 
+export const dateValidator = (options?: {
+  notInFuture?: boolean;
   maxFutureMonths?: number;
   minAge?: number;
 }): FieldValidator => {
@@ -158,7 +170,7 @@ export const dateValidator = (options?: {
       return null;
     }
     const dateStr = String(value).trim();
-    
+
     // Check if it might be an Excel serial date number
     if (typeof value === 'number') {
       return null;
@@ -166,24 +178,32 @@ export const dateValidator = (options?: {
 
     const date = parseDateString(dateStr);
     if (!date) {
-      return { row, field: fieldLabel, message: `Invalid date format. Use YYYY-MM-DD (e.g., 2024-01-15) or DD-MM-YYYY` };
+      return {
+        row,
+        field: fieldLabel,
+        message: `Invalid date format. Use YYYY-MM-DD (e.g., 2024-01-15) or DD-MM-YYYY`,
+      };
     }
-    
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     if (options?.notInFuture && date >= today) {
       return { row, field: fieldLabel, message: `${fieldLabel} must be in the past` };
     }
-    
+
     if (options?.maxFutureMonths !== undefined) {
       const maxDate = new Date();
       maxDate.setMonth(maxDate.getMonth() + options.maxFutureMonths);
       if (date > maxDate) {
-        return { row, field: fieldLabel, message: `${fieldLabel} cannot be more than ${options.maxFutureMonths} months in the future` };
+        return {
+          row,
+          field: fieldLabel,
+          message: `${fieldLabel} cannot be more than ${options.maxFutureMonths} months in the future`,
+        };
       }
     }
-    
+
     if (options?.minAge !== undefined) {
       const minAgeDate = new Date();
       minAgeDate.setFullYear(minAgeDate.getFullYear() - options.minAge);
@@ -191,7 +211,7 @@ export const dateValidator = (options?: {
         return { row, field: fieldLabel, message: `Must be at least ${options.minAge} years old` };
       }
     }
-    
+
     return null;
   };
 };
@@ -204,8 +224,12 @@ export const genderValidator: FieldValidator = (value, row, fieldLabel) => {
     return null; // Gender might be optional in some templates
   }
   const genderStr = String(value).trim();
-  if (!VALID_GENDERS.some(g => g.toLowerCase() === genderStr.toLowerCase())) {
-    return { row, field: fieldLabel, message: `Invalid gender "${genderStr}". Use M, F, or O (Male, Female, Other)` };
+  if (!VALID_GENDERS.some((g) => g.toLowerCase() === genderStr.toLowerCase())) {
+    return {
+      row,
+      field: fieldLabel,
+      message: `Invalid gender "${genderStr}". Use M, F, or O (Male, Female, Other)`,
+    };
   }
   return null;
 };
@@ -229,10 +253,10 @@ export const bloodGroupValidator: FieldValidator = (value, row, fieldLabel) => {
   }
   const bgStr = String(value).trim().toUpperCase();
   if (!VALID_BLOOD_GROUPS.includes(bgStr)) {
-    return { 
-      row, 
-      field: fieldLabel, 
-      message: `Invalid blood group "${bgStr}". Valid values: ${BLOOD_GROUP_ENUM.join(', ')}` 
+    return {
+      row,
+      field: fieldLabel,
+      message: `Invalid blood group "${bgStr}". Valid values: ${BLOOD_GROUP_ENUM.join(', ')}`,
     };
   }
   return null;
@@ -241,13 +265,16 @@ export const bloodGroupValidator: FieldValidator = (value, row, fieldLabel) => {
 /**
  * Positive integer validator (for fields like capacity, experience years)
  */
-export const positiveIntegerValidator = (options?: { min?: number; max?: number }): FieldValidator => {
+export const positiveIntegerValidator = (options?: {
+  min?: number;
+  max?: number;
+}): FieldValidator => {
   return (value, row, fieldLabel) => {
     if (!value || String(value).trim() === '') {
       return null; // Optional
     }
     const num = Number(value);
-    if (isNaN(num) || !Number.isInteger(num) || num < 0) {
+    if (Number.isNaN(num) || !Number.isInteger(num) || num < 0) {
       return { row, field: fieldLabel, message: `${fieldLabel} must be a positive integer` };
     }
     if (options?.min !== undefined && num < options.min) {
@@ -269,7 +296,11 @@ export const classNameValidator: FieldValidator = (value, row, fieldLabel) => {
   }
   const classStr = String(value).trim();
   if (!classStr.includes('_')) {
-    return { row, field: fieldLabel, message: `${fieldLabel} must be in format "Grade_Section" (e.g., "Class 1_A")` };
+    return {
+      row,
+      field: fieldLabel,
+      message: `${fieldLabel} must be in format "Grade_Section" (e.g., "Class 1_A")`,
+    };
   }
   return null;
 };
@@ -301,7 +332,11 @@ export const teacherInfoValidator: FieldValidator = (value, row, fieldLabel) => 
     // Could be just an email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(info)) {
-      return { row, field: fieldLabel, message: `Invalid format. Expected "Name (email)" or just email` };
+      return {
+        row,
+        field: fieldLabel,
+        message: `Invalid format. Expected "Name (email)" or just email`,
+      };
     }
   }
   return null;

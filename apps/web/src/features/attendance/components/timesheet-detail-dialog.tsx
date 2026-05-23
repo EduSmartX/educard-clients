@@ -259,7 +259,7 @@ export function TimesheetDetailDialog({
             )}
 
             {/* Review Info (if reviewed) */}
-            {submission.reviewed_at && (
+            {!!submission.reviewed_at && (
               <div className="rounded-lg border bg-gray-50 p-4">
                 <h4 className="mb-2 text-sm font-semibold">Review Information</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
@@ -273,7 +273,7 @@ export function TimesheetDetailDialog({
                       {format(parseISO(submission.reviewed_at), 'MMM dd, yyyy hh:mm a')}
                     </p>
                   </div>
-                  {submission.review_comments && (
+                  {!!submission.review_comments && (
                     <div className="col-span-2">
                       <p className="text-gray-600">Comments</p>
                       <p className="font-medium">{submission.review_comments}</p>

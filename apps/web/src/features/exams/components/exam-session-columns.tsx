@@ -36,7 +36,7 @@ export function createExamSessionColumns({
       accessor: (row) => (
         <div className="flex flex-col gap-1">
           <span className="font-semibold text-gray-900">{row.name}</span>
-          {row.description && (
+          {!!row.description && (
             <span className="line-clamp-1 text-xs text-gray-500">{row.description}</span>
           )}
         </div>
@@ -76,9 +76,9 @@ export function createExamSessionColumns({
         }
         return (
           <div className="flex flex-col gap-0.5 text-sm text-gray-700">
-            {row.start_date && <span>{format(new Date(row.start_date), 'dd MMM yyyy')}</span>}
+            {!!row.start_date && <span>{format(new Date(row.start_date), 'dd MMM yyyy')}</span>}
             {row.start_date && row.end_date && <span className="text-gray-400">to</span>}
-            {row.end_date && <span>{format(new Date(row.end_date), 'dd MMM yyyy')}</span>}
+            {!!row.end_date && <span>{format(new Date(row.end_date), 'dd MMM yyyy')}</span>}
           </div>
         );
       },
@@ -100,7 +100,7 @@ export function createExamSessionColumns({
           <span className="text-sm text-gray-700">
             {format(new Date(row.created_at), 'dd MMM yyyy')}
           </span>
-          {row.created_by_name && (
+          {!!row.created_by_name && (
             <span className="text-xs text-gray-500">by {row.created_by_name}</span>
           )}
         </div>

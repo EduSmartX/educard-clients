@@ -275,7 +275,7 @@ export default function HomeworkCreatePage() {
                     )}
                   />
                 )}
-                {errors.class_public_id && (
+                {!!errors.class_public_id && (
                   <FormError message={errors.class_public_id.message} compact />
                 )}
               </div>
@@ -433,7 +433,7 @@ export default function HomeworkCreatePage() {
                             <h3 className={cn('font-semibold', color.text)}>
                               {field.subject_name}
                             </h3>
-                            {field.teacher_name && (
+                            {!!field.teacher_name && (
                               <p className="text-muted-foreground text-xs">{field.teacher_name}</p>
                             )}
                           </div>

@@ -145,7 +145,7 @@ export function validateDateOfBirth(
   const today = new Date();
 
   // Check if valid date
-  if (isNaN(date.getTime())) {
+  if (Number.isNaN(date.getTime())) {
     return {
       isValid: false,
       error: 'Please enter a valid date',
@@ -196,7 +196,7 @@ export function validateJoiningDate(value: string): ValidationResult {
   const maxFutureMonths = 6; // Allow up to 6 months in the future
 
   // Check if valid date
-  if (isNaN(date.getTime())) {
+  if (Number.isNaN(date.getTime())) {
     return {
       isValid: false,
       error: 'Please enter a valid date',
@@ -243,9 +243,9 @@ export function validateNumeric(
     return { isValid: true };
   }
 
-  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  const numValue = typeof value === 'string' ? Number.parseFloat(value) : value;
 
-  if (isNaN(numValue)) {
+  if (Number.isNaN(numValue)) {
     return {
       isValid: false,
       error: `${fieldName} must be a valid number`,
@@ -330,15 +330,23 @@ export function validateAlphanumeric(
   }
 
   let pattern = 'a-zA-Z0-9';
-  if (allowSpaces) {pattern += '\\s';}
-  if (allowSpecialChars) {pattern += allowSpecialChars.replace(/[-[\]{}()*+?.,\\^$|#]/g, '\\$&');}
+  if (allowSpaces) {
+    pattern += '\\s';
+  }
+  if (allowSpecialChars) {
+    pattern += allowSpecialChars.replace(/[-[\]{}()*+?.,\\^$|#]/g, '\\$&');
+  }
 
   const regex = new RegExp(`^[${pattern}]+$`);
 
   if (!regex.test(value)) {
     let allowedChars = 'letters and numbers';
-    if (allowSpaces) {allowedChars += ', spaces';}
-    if (allowSpecialChars) {allowedChars += `, and these characters: ${allowSpecialChars}`;}
+    if (allowSpaces) {
+      allowedChars += ', spaces';
+    }
+    if (allowSpecialChars) {
+      allowedChars += `, and these characters: ${allowSpecialChars}`;
+    }
 
     return {
       isValid: false,

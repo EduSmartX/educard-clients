@@ -28,7 +28,8 @@ function resolveOrgPageState(locationState: Record<string, unknown>): OrgPageSta
     }>('organization') || {};
 
   return {
-    organizationName: (locationState.organizationName as string) || storedOrg.name || 'Your Organization',
+    organizationName:
+      (locationState.organizationName as string) || storedOrg.name || 'Your Organization',
     organizationEmail: (locationState.organizationEmail as string) || storedOrg.email,
     organizationPhone: (locationState.organizationPhone as string) || storedOrg.phone,
     isVerified: (locationState.isVerified as boolean) ?? storedOrg.is_verified ?? false,
@@ -41,8 +42,34 @@ export default function OrganizationNotApprovedPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { organizationName, organizationEmail, organizationPhone, isVerified, isRejected, userRole } =
-    resolveOrgPageState(location.state || {});
+  const {
+    organizationName,
+    organizationEmail,
+    organizationPhone,
+    isVerified,
+    isRejected,
+    userRole,
+  } = resolveOrgPageState(location.state || {});
+
+  const statusConfig = isRejected
+    ? {
+        gradient: 'from-red-100 to-rose-100',
+        icon: <XCircle className="h-12 w-12 text-red-600" strokeWidth={2} />,
+        badgeBg: 'bg-red-500',
+        emoji: '❌',
+        titleGradient: 'from-red-600 to-rose-600',
+        title: 'Organization Rejected',
+        subtitle: 'Your organization is not registered with us',
+      }
+    : {
+        gradient: 'from-orange-100 to-amber-100',
+        icon: <Clock className="h-12 w-12 text-orange-600" strokeWidth={2} />,
+        badgeBg: 'bg-orange-500',
+        emoji: '⏳',
+        titleGradient: 'from-orange-600 to-amber-600',
+        title: 'Organization Under Review',
+        subtitle: 'Your account is pending approval',
+      };
 
   const handleLogout = () => {
     localStorage.clear();
@@ -94,18 +121,14 @@ export default function OrganizationNotApprovedPage() {
               <motion.div
                 animate={{ scale: [1, 1.05, 1] }}
                 transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                className={`h-24 w-24 rounded-full ${isRejected ? 'bg-gradient-to-br from-red-100 to-rose-100' : 'bg-gradient-to-br from-orange-100 to-amber-100'} flex items-center justify-center`}
+                className={`h-24 w-24 rounded-full bg-gradient-to-br ${statusConfig.gradient} flex items-center justify-center`}
               >
-                {isRejected ? (
-                  <XCircle className="h-12 w-12 text-red-600" strokeWidth={2} />
-                ) : (
-                  <Clock className="h-12 w-12 text-orange-600" strokeWidth={2} />
-                )}
+                {statusConfig.icon}
               </motion.div>
               <div
-                className={`absolute -right-2 -bottom-2 h-10 w-10 rounded-full ${isRejected ? 'bg-red-500' : 'bg-orange-500'} flex items-center justify-center shadow-lg`}
+                className={`absolute -right-2 -bottom-2 h-10 w-10 rounded-full ${statusConfig.badgeBg} flex items-center justify-center shadow-lg`}
               >
-                <span className="text-2xl">{isRejected ? '❌' : '⏳'}</span>
+                <span className="text-2xl">{statusConfig.emoji}</span>
               </div>
             </div>
           </motion.div>
@@ -113,15 +136,11 @@ export default function OrganizationNotApprovedPage() {
           {/* Main Message */}
           <div className="space-y-4 text-center">
             <h1
-              className={`bg-gradient-to-r text-4xl font-bold ${isRejected ? 'from-red-600 to-rose-600' : 'from-orange-600 to-amber-600'} bg-clip-text text-transparent`}
+              className={`bg-gradient-to-r text-4xl font-bold ${statusConfig.titleGradient} bg-clip-text text-transparent`}
             >
-              {isRejected ? 'Organization Rejected' : 'Organization Under Review'}
+              {statusConfig.title}
             </h1>
-            <p className="text-xl font-medium text-gray-600">
-              {isRejected
-                ? 'Your organization is not registered with us'
-                : 'Your account is pending approval'}
-            </p>
+            <p className="text-xl font-medium text-gray-600">{statusConfig.subtitle}</p>
           </div>
 
           {/* Organization Info Card */}

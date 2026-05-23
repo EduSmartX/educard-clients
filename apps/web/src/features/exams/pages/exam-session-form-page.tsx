@@ -29,8 +29,6 @@ import {
   EXAM_SESSION_TYPE_OPTIONS,
   EXAM_SESSION_TYPE_LABELS,
   type ExamSessionType,
-  type ExamSessionCreatePayload,
-  type ExamSessionUpdatePayload,
 } from '@educard/shared';
 
 function validateSessionForm(
@@ -82,17 +80,16 @@ export function ExamSessionFormPage() {
 
   // Set defaults when creating
   useEffect(() => {
-    if (isCreate) {
-      // Set default session type
-      if (!sessionType) {
-        setSessionType('unit_test');
-      }
-      // Set default academic year to current one
-      if (academicYears.length > 0 && !academicYear) {
-        const currentYear = academicYears.find((y) => y.is_current);
-        if (currentYear) {
-          setAcademicYear(currentYear.name);
-        }
+    if (!isCreate) {
+      return;
+    }
+    if (!sessionType) {
+      setSessionType('unit_test');
+    }
+    if (academicYears.length > 0 && !academicYear) {
+      const currentYear = academicYears.find((y) => y.is_current);
+      if (currentYear) {
+        setAcademicYear(currentYear.name);
       }
     }
   }, [isCreate, academicYears, academicYear, sessionType]);
@@ -145,25 +142,18 @@ export function ExamSessionFormPage() {
       return;
     }
 
+    const payload = {
+      name: name.trim(),
+      session_type: sessionType as ExamSessionType,
+      academic_year: academicYear.trim(),
+      description: description.trim(),
+      start_date: formatDateForAPI(startDate) || null,
+      end_date: formatDateForAPI(endDate) || null,
+    };
+
     if (isCreate) {
-      const payload: ExamSessionCreatePayload = {
-        name: name.trim(),
-        session_type: sessionType as ExamSessionType,
-        academic_year: academicYear.trim(),
-        description: description.trim(),
-        start_date: formatDateForAPI(startDate) || null,
-        end_date: formatDateForAPI(endDate) || null,
-      };
       createMutation.mutate(payload);
     } else if (isEdit && id) {
-      const payload: ExamSessionUpdatePayload = {
-        name: name.trim(),
-        session_type: sessionType as ExamSessionType,
-        academic_year: academicYear.trim(),
-        description: description.trim(),
-        start_date: formatDateForAPI(startDate) || null,
-        end_date: formatDateForAPI(endDate) || null,
-      };
       updateMutation.mutate({ id, data: payload });
     }
   };
@@ -211,7 +201,7 @@ export function ExamSessionFormPage() {
                   disabled={isView}
                   className={fieldErrors.name ? 'border-red-500' : ''}
                 />
-                {fieldErrors.name && <p className="text-sm text-red-500">{fieldErrors.name}</p>}
+                {!!fieldErrors.name && <p className="text-sm text-red-500">{fieldErrors.name}</p>}
               </div>
 
               {/* Session Type */}
@@ -240,7 +230,7 @@ export function ExamSessionFormPage() {
                     className={fieldErrors.session_type ? 'border-red-500' : ''}
                   />
                 )}
-                {fieldErrors.session_type && (
+                {!!fieldErrors.session_type && (
                   <p className="text-sm text-red-500">{fieldErrors.session_type}</p>
                 )}
               </div>
@@ -265,7 +255,7 @@ export function ExamSessionFormPage() {
                     className={fieldErrors.academic_year ? 'border-red-500' : ''}
                   />
                 )}
-                {fieldErrors.academic_year && (
+                {!!fieldErrors.academic_year && (
                   <p className="text-sm text-red-500">{fieldErrors.academic_year}</p>
                 )}
               </div>
@@ -292,7 +282,7 @@ export function ExamSessionFormPage() {
                   minDate={startDate || undefined}
                   className={fieldErrors.end_date ? 'border-red-500' : ''}
                 />
-                {fieldErrors.end_date && (
+                {!!fieldErrors.end_date && (
                   <p className="text-sm text-red-500">{fieldErrors.end_date}</p>
                 )}
               </div>

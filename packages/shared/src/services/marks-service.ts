@@ -42,12 +42,16 @@ export const marksService = {
    * Parse marks value to number or 'AB' for absent
    */
   parseMarksValue(value: string | number | undefined): number | "AB" | null {
-    if (value === undefined || value === null || value === "") {return null;}
+    if (value === undefined || value === null || value === "") {
+      return null;
+    }
     if (typeof value === "string") {
       const upper = value.toUpperCase().trim();
-      if (upper === "AB" || upper === "A") {return "AB";}
-      const num = parseFloat(value);
-      return isNaN(num) ? null : num;
+      if (upper === "AB" || upper === "A") {
+        return "AB";
+      }
+      const num = Number.parseFloat(value);
+      return Number.isNaN(num) ? null : num;
     }
     return value;
   },
@@ -56,8 +60,12 @@ export const marksService = {
    * Format marks for display
    */
   formatMarksForDisplay(marks: number | "AB" | null): string {
-    if (marks === null || marks === undefined) {return "—";}
-    if (marks === "AB") {return "AB";}
+    if (marks === null || marks === undefined) {
+      return "—";
+    }
+    if (marks === "AB") {
+      return "AB";
+    }
     return marks.toString();
   },
 
@@ -66,7 +74,7 @@ export const marksService = {
    */
   validateMarks(
     value: string | number,
-    maxMarks: number
+    maxMarks: number,
   ): { valid: boolean; error?: string } {
     const parsed = this.parseMarksValue(value);
 
@@ -93,7 +101,11 @@ export const marksService = {
    * Calculate statistics for a subject's marks
    */
   calculateSubjectStats(
-    marks: Array<{ value: string | number | null; maxMarks: number; passingMarks: number }>
+    marks: Array<{
+      value: string | number | null;
+      maxMarks: number;
+      passingMarks: number;
+    }>,
   ): SubjectStats {
     let entered = 0;
     let absent = 0;
@@ -144,7 +156,7 @@ export const marksService = {
    * Calculate student's total marks across subjects
    */
   calculateStudentTotal(
-    marks: Array<{ value: string | number | null; maxMarks: number }>
+    marks: Array<{ value: string | number | null; maxMarks: number }>,
   ): StudentTotal {
     let total = 0;
     let maxTotal = 0;
@@ -180,12 +192,24 @@ export const marksService = {
    * Calculate grade based on percentage
    */
   calculateGrade(percentage: number): string {
-    if (percentage >= 90) {return "A+";}
-    if (percentage >= 80) {return "A";}
-    if (percentage >= 70) {return "B+";}
-    if (percentage >= 60) {return "B";}
-    if (percentage >= 50) {return "C";}
-    if (percentage >= 40) {return "D";}
+    if (percentage >= 90) {
+      return "A+";
+    }
+    if (percentage >= 80) {
+      return "A";
+    }
+    if (percentage >= 70) {
+      return "B+";
+    }
+    if (percentage >= 60) {
+      return "B";
+    }
+    if (percentage >= 50) {
+      return "C";
+    }
+    if (percentage >= 40) {
+      return "D";
+    }
     return "F";
   },
 
@@ -208,19 +232,17 @@ export const marksService = {
   /**
    * Natural sort for roll numbers (handles alphanumeric)
    */
-  naturalSortByRollNumber<T extends { roll_number?: string }>(
-    items: T[]
-  ): T[] {
+  naturalSortByRollNumber<T extends { roll_number?: string }>(items: T[]): T[] {
     return [...items].sort((a, b) => {
       const rollA = a.roll_number || "";
       const rollB = b.roll_number || "";
 
       // Extract numeric parts for comparison
-      const numA = parseInt(rollA.replace(/\D/g, ""), 10);
-      const numB = parseInt(rollB.replace(/\D/g, ""), 10);
+      const numA = Number.parseInt(rollA.replace(/\D/g, ""), 10);
+      const numB = Number.parseInt(rollB.replace(/\D/g, ""), 10);
 
       // If both have numeric parts, compare numerically
-      if (!isNaN(numA) && !isNaN(numB)) {
+      if (!Number.isNaN(numA) && !Number.isNaN(numB)) {
         return numA - numB;
       }
 

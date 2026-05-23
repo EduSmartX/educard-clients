@@ -337,7 +337,7 @@ export default function SubmissionReviewPage() {
                       <span className="text-xs text-slate-500">{homework.class_name}</span>
                     </div>
                     <h2 className="text-lg font-semibold text-slate-900">{homework.title}</h2>
-                    {homework.description && (
+                    {!!homework.description && (
                       <p className="mt-1 line-clamp-2 text-sm text-slate-600">
                         {homework.description}
                       </p>
@@ -383,7 +383,7 @@ export default function SubmissionReviewPage() {
             </Card>
           )}
 
-          {submission.notes && (
+          {!!submission.notes && (
             <Card>
               <CardHeader className="px-4 py-3">
                 <CardTitle className="flex items-center gap-2 text-sm font-medium">
@@ -435,13 +435,9 @@ export default function SubmissionReviewPage() {
             <CardHeader className="px-4 py-3">
               <CardTitle className="flex items-center gap-2 text-sm font-medium">
                 <BookOpen className="h-4 w-4" />
-                {isReviewed || !canReview
-                  ? HOMEWORK_UI.REVIEW_FEEDBACK
-                  : HOMEWORK_UI.SUBMIT_REVIEW}
+                {isReviewed || !canReview ? HOMEWORK_UI.REVIEW_FEEDBACK : HOMEWORK_UI.SUBMIT_REVIEW}
               </CardTitle>
-              <CardDescription className="text-xs">
-                {reviewDescription}
-              </CardDescription>
+              <CardDescription className="text-xs">{reviewDescription}</CardDescription>
             </CardHeader>
             <CardContent className="px-4 pt-0 pb-4">
               <div className="space-y-3">
@@ -453,7 +449,7 @@ export default function SubmissionReviewPage() {
                         {HOMEWORK_UI.REVIEWED_BY} {submission.reviewed_by_name}
                       </span>
                     </div>
-                    {submission.reviewed_at && (
+                    {!!submission.reviewed_at && (
                       <p className="mt-1 ml-6 text-green-600">
                         {format(new Date(submission.reviewed_at), 'MMM d, yyyy h:mm a')}
                       </p>

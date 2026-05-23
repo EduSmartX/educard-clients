@@ -88,13 +88,13 @@ function DiscountCard({ studentFee }: DiscountCardProps) {
                 ₹{studentFee.final_amount?.toLocaleString('en-IN')}
               </span>
             </div>
-            {studentFee.discount_reason && (
+            {!!studentFee.discount_reason && (
               <div className="text-muted-foreground border-t pt-2 text-xs">
                 <span className="text-foreground font-medium">Reason: </span>
                 {studentFee.discount_reason}
               </div>
             )}
-            {studentFee.referral_name && (
+            {!!studentFee.referral_name && (
               <div className="text-muted-foreground text-xs">
                 <span className="text-foreground font-medium">Referral: </span>
                 {studentFee.referral_name}
@@ -209,7 +209,7 @@ export function StudentFeeDetailPage() {
         ]}
       >
         <div className="mt-1 flex items-center gap-2">
-          {studentFee.student_roll_number && (
+          {!!studentFee.student_roll_number && (
             <span className="text-foreground bg-muted rounded-md px-2 py-0.5 text-sm font-bold">
               {studentFee.student_roll_number}
             </span>
@@ -246,7 +246,7 @@ export function StudentFeeDetailPage() {
               <IndianRupee className="h-5 w-5" />
               {studentFee.amount_paid?.toLocaleString('en-IN')}
             </div>
-            {studentFee.last_payment_date && (
+            {!!studentFee.last_payment_date && (
               <div className="text-muted-foreground mt-1 text-xs">
                 Last: {new Date(studentFee.last_payment_date).toLocaleDateString('en-IN')}
               </div>
@@ -310,7 +310,7 @@ export function StudentFeeDetailPage() {
                   })
                 : '-'}
             </div>
-            {studentFee.is_overdue && (
+            {!!studentFee.is_overdue && (
               <Badge variant="destructive" className="mt-1">
                 Overdue
               </Badge>
@@ -348,7 +348,7 @@ export function StudentFeeDetailPage() {
                       </span>{' '}
                       · ₹{component.amount?.toLocaleString('en-IN')}
                     </div>
-                    {component.request_note && (
+                    {!!component.request_note && (
                       <div className="text-muted-foreground mt-1 text-sm">
                         <span className="font-medium">Parent note:</span> {component.request_note}
                       </div>

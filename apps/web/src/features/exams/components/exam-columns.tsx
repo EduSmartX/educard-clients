@@ -53,7 +53,7 @@ export function createExamColumns({
           <span className="font-semibold text-gray-900">{row.session_name}</span>
           <Badge
             variant="outline"
-            className={`text-xs font-medium w-fit ${sessionTypeBadgeClass[row.session_type] || ''}`}
+            className={`w-fit text-xs font-medium ${sessionTypeBadgeClass[row.session_type] || ''}`}
           >
             {EXAM_SESSION_TYPE_LABELS[row.session_type] || row.session_type}
           </Badge>
@@ -67,16 +67,16 @@ export function createExamColumns({
       header: 'Session Duration',
       accessor: (row) => {
         if (!row.session_start_date && !row.session_end_date) {
-          return <span className="text-gray-400 italic text-sm">Not set</span>;
+          return <span className="text-sm text-gray-400 italic">Not set</span>;
         }
         return (
           <div className="flex flex-col gap-0.5 text-sm">
-            {row.session_start_date && (
+            {!!row.session_start_date && (
               <span className="text-gray-700">
                 {format(new Date(row.session_start_date), 'dd MMM yyyy')}
               </span>
             )}
-            {row.session_end_date && (
+            {!!row.session_end_date && (
               <span className="text-xs text-gray-500">
                 to {format(new Date(row.session_end_date), 'dd MMM yyyy')}
               </span>
@@ -88,9 +88,7 @@ export function createExamColumns({
     },
     {
       header: 'Subject',
-      accessor: (row) => (
-        <span className="font-medium text-gray-900">{row.subject_name}</span>
-      ),
+      accessor: (row) => <span className="font-medium text-gray-900">{row.subject_name}</span>,
       sortable: true,
       sortKey: 'subject_name',
       width: 150,

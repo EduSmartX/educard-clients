@@ -90,10 +90,12 @@ export default function ExamDashboardScreen() {
 
   // Helper to check if user can edit marks for a specific subject
   const canEditSubject = (subjectPublicId: string): boolean => {
-    if (!permissions) return true; // Default to editable if no permissions data
-    if (permissions.is_admin || permissions.is_class_teacher) return true;
-    if (permissions.editable_subject_ids === null) return true; // null means all
-    return permissions.editable_subject_ids.includes(subjectPublicId);
+    const hasFullAccess =
+      !permissions ||
+      permissions.is_admin ||
+      permissions.is_class_teacher ||
+      permissions.editable_subject_ids === null;
+    return hasFullAccess || permissions!.editable_subject_ids!.includes(subjectPublicId);
   };
 
   const onRefresh = () => {
@@ -284,13 +286,15 @@ export default function ExamDashboardScreen() {
         </View>
       </LinearGradient>
 
-      {!selectedClassId ? (
+      {!selectedClassId && (
         <View style={styles.empty}>
           <Text style={styles.emptyIcon}>🎓</Text>
           <Text style={styles.emptyTitle}>Select a Class</Text>
           <Text style={styles.emptySubtitle}>Choose a class from the dropdown above</Text>
         </View>
-      ) : (
+      )}
+
+      {!!selectedClassId && (
         <>
           {/* Tabs */}
           <View style={styles.tabs}>
@@ -324,39 +328,41 @@ export default function ExamDashboardScreen() {
           </View>
 
           {/* Content */}
-          {isLoading && !refreshing ? (
+          {isLoading && !refreshing && (
             <View style={styles.loading}>
               <ActivityIndicator size="large" color="#7c3aed" />
             </View>
-          ) : activeTab === 'exams' ? (
-            exams.length === 0 ? (
-              <View style={styles.empty}>
-                <Text style={styles.emptyIcon}>📝</Text>
-                <Text style={styles.emptyTitle}>No Exams</Text>
-                <Text style={styles.emptySubtitle}>Create exams for this class</Text>
-              </View>
-            ) : (
-              <FlatList
-                data={exams}
-                renderItem={renderExam}
-                keyExtractor={(item) => item.public_id}
-                contentContainerStyle={styles.list}
-                refreshControl={
-                  <RefreshControl
-                    refreshing={refreshing}
-                    onRefresh={onRefresh}
-                    colors={['#7c3aed']}
-                  />
-                }
-              />
-            )
-          ) : students.length === 0 ? (
+          )}
+          {!(isLoading && !refreshing) && activeTab === 'exams' && exams.length === 0 && (
+            <View style={styles.empty}>
+              <Text style={styles.emptyIcon}>📝</Text>
+              <Text style={styles.emptyTitle}>No Exams</Text>
+              <Text style={styles.emptySubtitle}>Create exams for this class</Text>
+            </View>
+          )}
+          {!(isLoading && !refreshing) && activeTab === 'exams' && exams.length > 0 && (
+            <FlatList
+              data={exams}
+              renderItem={renderExam}
+              keyExtractor={(item) => item.public_id}
+              contentContainerStyle={styles.list}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  colors={['#7c3aed']}
+                />
+              }
+            />
+          )}
+          {!(isLoading && !refreshing) && activeTab === 'students' && students.length === 0 && (
             <View style={styles.empty}>
               <Text style={styles.emptyIcon}>👥</Text>
               <Text style={styles.emptyTitle}>No Students</Text>
               <Text style={styles.emptySubtitle}>No marks data available</Text>
             </View>
-          ) : (
+          )}
+          {!(isLoading && !refreshing) && activeTab === 'students' && students.length > 0 && (
             <FlatList
               data={students}
               renderItem={renderStudent}

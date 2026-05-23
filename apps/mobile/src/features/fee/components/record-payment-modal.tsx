@@ -92,7 +92,7 @@ export function RecordPaymentModal({
   const validate = useCallback((): boolean => {
     const e: FormErrors = {};
     const amt = Number(amount);
-    if (!amount || isNaN(amt) || amt <= 0) {
+    if (!amount || Number.isNaN(amt) || amt <= 0) {
       e.amount = 'Enter a valid amount';
     } else if (!isRefundMode && amt > studentFee.balance_due) {
       e.amount = `Amount cannot exceed balance ₹${studentFee.balance_due.toLocaleString('en-IN')}`;

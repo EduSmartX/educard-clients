@@ -97,10 +97,10 @@ function PaymentCard({ payment, onDownloadReceipt }: PaymentCardProps) {
                   })
                 : '-'}
             </p>
-            {payment.receipt_number && (
+            {!!payment.receipt_number && (
               <p className="text-muted-foreground text-sm">Receipt: {payment.receipt_number}</p>
             )}
-            {payment.transaction_id && (
+            {!!payment.transaction_id && (
               <p className="text-muted-foreground text-sm">Transaction: {payment.transaction_id}</p>
             )}
           </div>
@@ -118,7 +118,7 @@ function PaymentCard({ payment, onDownloadReceipt }: PaymentCardProps) {
           </Button>
         </div>
       </div>
-      {payment.remarks && (
+      {!!payment.remarks && (
         <div className="mt-3 border-t pt-3">
           <p className="text-muted-foreground text-sm">
             <span className="font-medium">Remarks:</span> {payment.remarks}

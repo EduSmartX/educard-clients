@@ -140,7 +140,7 @@ function SidebarNavItem({
             />
             <span>{item.label}</span>
           </div>
-          {item.badge && (
+          {!!item.badge && (
             <span
               className={cn(
                 'rounded-full px-2.5 py-0.5 text-xs font-semibold',

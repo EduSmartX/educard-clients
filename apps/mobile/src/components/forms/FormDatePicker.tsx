@@ -184,7 +184,7 @@ export function FormDatePicker({
   const yearListRef = useRef<FlatList>(null);
 
   const displayValue = value
-    ? `${pad(parseInt(value.split('-')[2]))} ${SHORT_MONTHS[parseInt(value.split('-')[1]) - 1]} ${value.split('-')[0]}`
+    ? `${pad(Number.parseInt(value.split('-')[2]))} ${SHORT_MONTHS[Number.parseInt(value.split('-')[1]) - 1]} ${value.split('-')[0]}`
     : '';
 
   return (

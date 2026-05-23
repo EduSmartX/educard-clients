@@ -177,7 +177,9 @@ export default function HomeworkListPage() {
   }, [selectedDate, selectedClassId, navigateWorkingDay]);
 
   const handleNextDay = useCallback(async () => {
-    if (!canNavigateNext) return;
+    if (!canNavigateNext) {
+      return;
+    }
 
     const maxDate = new Date();
     maxDate.setDate(maxDate.getDate() + 7);
@@ -189,11 +191,15 @@ export default function HomeworkListPage() {
         class_id: selectedClassId || undefined,
       });
       const resultDate = new Date(result.date);
-      if (resultDate <= maxDate) setSelectedDate(resultDate);
+      if (resultDate <= maxDate) {
+        setSelectedDate(resultDate);
+      }
     } catch {
       const newDate = new Date(selectedDate);
       newDate.setDate(newDate.getDate() + 1);
-      if (newDate <= maxDate) setSelectedDate(newDate);
+      if (newDate <= maxDate) {
+        setSelectedDate(newDate);
+      }
     }
   }, [selectedDate, selectedClassId, navigateWorkingDay, canNavigateNext]);
 
@@ -508,7 +514,7 @@ function SubjectCard({ subject, homework, color, onView, onAdd, onDelete }: Subj
             </div>
             <div>
               <h3 className={cn('font-semibold', color.text)}>{subject.subject_name}</h3>
-              {subject.teacher_name && (
+              {!!subject.teacher_name && (
                 <p className="text-muted-foreground text-xs">{subject.teacher_name}</p>
               )}
             </div>
@@ -529,7 +535,7 @@ function SubjectCard({ subject, homework, color, onView, onAdd, onDelete }: Subj
           <div className="space-y-3">
             <h4 className="line-clamp-2 leading-tight font-medium">{homework.title}</h4>
 
-            {homework.description && (
+            {!!homework.description && (
               <p className="text-muted-foreground line-clamp-2 text-sm">{homework.description}</p>
             )}
 
@@ -544,7 +550,7 @@ function SubjectCard({ subject, homework, color, onView, onAdd, onDelete }: Subj
                   {homework.attachment_count} files
                 </span>
               )}
-              {homework.reference_link && (
+              {!!homework.reference_link && (
                 <span className="flex items-center gap-1">
                   <ExternalLink className="h-3.5 w-3.5" />
                   Link
@@ -552,7 +558,7 @@ function SubjectCard({ subject, homework, color, onView, onAdd, onDelete }: Subj
               )}
             </div>
 
-            {homework.submission_stats && (
+            {!!homework.submission_stats && (
               <div className="flex items-center gap-2">
                 <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200">
                   <div

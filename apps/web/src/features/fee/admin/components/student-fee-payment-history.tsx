@@ -121,15 +121,15 @@ export function StudentFeePaymentHistory({
                             </Badge>
                           </div>
                           <div className="text-muted-foreground truncate text-xs">
-                            {payment.receipt_number && (
+                            {!!payment.receipt_number && (
                               <span>Receipt: {payment.receipt_number}</span>
                             )}
-                            {payment.utr_number && (
+                            {!!payment.utr_number && (
                               <span className={payment.receipt_number ? '·' : ''}>
                                 UTR: {payment.utr_number}
                               </span>
                             )}
-                            {payment.received_by_name && (
+                            {!!payment.received_by_name && (
                               <span> · By: {payment.received_by_name}</span>
                             )}
                           </div>

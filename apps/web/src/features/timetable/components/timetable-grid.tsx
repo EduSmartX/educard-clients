@@ -373,7 +373,7 @@ function PeriodCell({
         {slot.subject_name}
       </span>
 
-      {slot.teacher_name && (
+      {!!slot.teacher_name && (
         <div className="mt-auto flex items-center gap-1.5 pt-2">
           <Avatar className="h-5 w-5 shadow-sm">
             <AvatarFallback className={`${color.light} text-[8px] font-bold ${color.text}`}>
@@ -386,7 +386,7 @@ function PeriodCell({
         </div>
       )}
 
-      {slot.room && (
+      {!!slot.room && (
         <span
           className={`mt-1.5 self-start rounded-md px-1.5 py-0.5 text-[9px] font-semibold ${color.badge}`}
         >
@@ -458,7 +458,7 @@ export function TimetableGrid({ timetable, isLoading, readOnly }: TimetableGridP
               <CardTitle className="text-xl">
                 {timetable.class ?? 'Class'} — Weekly Timetable
               </CardTitle>
-              {timetable.class_group && (
+              {!!timetable.class_group && (
                 <p className="text-muted-foreground mt-0.5 text-sm">
                   Group: {timetable.class_group.name}
                 </p>
@@ -559,7 +559,7 @@ export function TimetableGrid({ timetable, isLoading, readOnly }: TimetableGridP
             <CardTitle className="text-xl font-bold text-slate-800">
               {timetable.class} — Weekly Timetable
             </CardTitle>
-            {timetable.class_group && (
+            {!!timetable.class_group && (
               <p className="mt-1 text-sm text-slate-500">
                 Group:{' '}
                 <span className="font-medium text-slate-700">{timetable.class_group.name}</span>

@@ -60,7 +60,7 @@ function transformErrors(errors: unknown): BulkUploadError[] {
   if (typeof errors === 'object' && !Array.isArray(errors)) {
     return Object.entries(errors).map(([rowKey, errorData]: [string, unknown]) => {
       const rowMatch = rowKey.match(/Row (\d+)/i);
-      const rowNumber = rowMatch ? parseInt(rowMatch[1], 10) : 0;
+      const rowNumber = rowMatch ? Number.parseInt(rowMatch[1], 10) : 0;
 
       let errorMessage = 'Validation error';
       let data: Record<string, unknown> | null = null;

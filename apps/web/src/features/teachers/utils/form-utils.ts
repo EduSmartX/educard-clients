@@ -32,7 +32,7 @@ export function transformFormToCreatePayload(values: TeacherFormValues): CreateT
   };
 
   if (values.organization_role) {
-    payload.user.organization_role = parseInt(values.organization_role);
+    payload.user.organization_role = Number.parseInt(values.organization_role);
   }
 
   if (values.phone) {
@@ -108,7 +108,9 @@ export function transformFormToUpdatePayload(values: TeacherFormValues): UpdateT
     first_name: values.first_name,
     last_name: values.last_name,
     gender: values.gender,
-    ...(values.organization_role && { organization_role: parseInt(values.organization_role) }),
+    ...(values.organization_role && {
+      organization_role: Number.parseInt(values.organization_role),
+    }),
     ...(values.phone && { phone: values.phone }),
     ...(values.blood_group && { blood_group: values.blood_group }),
     ...(values.date_of_birth && { date_of_birth: values.date_of_birth }),
@@ -170,6 +172,6 @@ export function transformTeacherToForm(teacher: TeacherDetail): Partial<TeacherF
     state: teacher.user?.address?.state || '',
     postal_code: teacher.user?.address?.zip_code || '',
     country: teacher.user?.address?.country || '',
-    subjects: teacher.subjects?.map((subject) => parseInt(subject.public_id)) || [],
+    subjects: teacher.subjects?.map((subject) => Number.parseInt(subject.public_id)) || [],
   };
 }

@@ -22,7 +22,11 @@ import { Badge } from '@/components/ui/badge';
 import { useExamSessions, useMarksOverview } from '../hooks/use-exams';
 import { useClasses } from '@/features/classes/hooks/use-classes';
 import { bulkSaveAllMarks } from '../api/exams-api';
-import { buildStudentMarkEntries, buildBulkSavePayload, normalizeMarksInput } from '../utils/marks-overview-helpers';
+import {
+  buildStudentMarkEntries,
+  buildBulkSavePayload,
+  normalizeMarksInput,
+} from '../utils/marks-overview-helpers';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGridKeyboardNavigation } from '@/hooks/use-grid-keyboard-navigation';
 import { toast } from 'sonner';
@@ -99,6 +103,12 @@ function getMarkInputStyle({
   return 'bg-white';
 }
 
+/** Get a color for a subject name */
+function getSubjectColor(subjectName: string) {
+  const hash = subjectName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return SUBJECT_COLORS[hash % SUBJECT_COLORS.length];
+}
+
 export function MarksOverviewPage() {
   const [selectedSessionId, setSelectedSessionId] = useState<string>('');
   const [selectedClassId, setSelectedClassId] = useState<string>('');
@@ -130,23 +140,18 @@ export function MarksOverviewPage() {
   const isSubjectEditable = (subjectPublicId: string): boolean => {
     if (!permissions) {
       return true;
-    } // Default to editable if no permissions
+    }
     if (permissions.is_admin || permissions.is_class_teacher) {
       return true;
     }
     if (permissions.editable_subject_ids === null) {
       return true;
-    } // null means all
+    }
     return permissions.editable_subject_ids.includes(subjectPublicId);
   };
 
   // Check if user can edit ANY marks
-  const canEditAny = useMemo(() => {
-    if (!permissions) {
-      return true;
-    }
-    return permissions.can_edit;
-  }, [permissions]);
+  const canEditAny = useMemo(() => !permissions || permissions.can_edit, [permissions]);
 
   // Keyboard navigation for the marks grid
   const { containerRef, handleKeyDown } = useGridKeyboardNavigation({
@@ -163,12 +168,6 @@ export function MarksOverviewPage() {
       setStudentMarks([]);
     }
   }, [marksOverview]);
-
-  // Get subject color
-  const getSubjectColor = (subjectName: string) => {
-    const hash = subjectName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    return SUBJECT_COLORS[hash % SUBJECT_COLORS.length];
-  };
 
   // Handle marks change
   const handleMarksChange = (
@@ -264,9 +263,9 @@ export function MarksOverviewPage() {
         const val = student.marks[subject.exam_public_id];
         if (val === 'AB') {
           absent++;
-        } else if (val && !isNaN(parseFloat(val))) {
+        } else if (val && !Number.isNaN(Number.parseFloat(val))) {
           entered++;
-          sum += parseFloat(val);
+          sum += Number.parseFloat(val);
         }
       });
       statsMap[subject.exam_public_id] = {
@@ -300,8 +299,8 @@ export function MarksOverviewPage() {
         const val = student.marks[subject.exam_public_id];
         if (val === 'AB') {
           absentCount++;
-        } else if (val && !isNaN(parseFloat(val))) {
-          total += parseFloat(val);
+        } else if (val && !Number.isNaN(Number.parseFloat(val))) {
+          total += Number.parseFloat(val);
           maxTotal += subject.max_marks;
           attempted++;
         }
@@ -497,7 +496,7 @@ export function MarksOverviewPage() {
                             <div className="text-xs text-gray-600">
                               Max: {subject.max_marks} | Pass: {subject.passing_marks}
                             </div>
-                            {subject.date && (
+                            {!!subject.date && (
                               <div className="text-xs text-gray-500">
                                 {new Date(subject.date).toLocaleDateString()}
                               </div>
@@ -546,12 +545,13 @@ export function MarksOverviewPage() {
                       {subjects.map((subject, colIndex) => {
                         const colors = getSubjectColor(subject.subject_name);
                         const markValue = student.marks[subject.exam_public_id] || '';
-                        const numMark = parseFloat(markValue);
-                        const isPassing = !isNaN(numMark) && numMark >= subject.passing_marks;
+                        const numMark = Number.parseFloat(markValue);
+                        const isPassing =
+                          !Number.isNaN(numMark) && numMark >= subject.passing_marks;
                         const isFailing =
                           markValue &&
                           markValue !== 'AB' &&
-                          !isNaN(numMark) &&
+                          !Number.isNaN(numMark) &&
                           numMark < subject.passing_marks;
                         const isAbsent = markValue === 'AB';
                         const editable = isSubjectEditable(subject.subject_public_id);

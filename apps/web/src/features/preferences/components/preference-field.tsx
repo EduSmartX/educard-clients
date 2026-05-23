@@ -38,7 +38,7 @@ export function PreferenceField({
       <Label htmlFor={htmlFor} className="text-gray-900">
         {preference.display_name}
       </Label>
-      {preference.description && (
+      {!!preference.description && (
         <TooltipProvider delayDuration={0}>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -124,7 +124,7 @@ export function PreferenceField({
                 disabled={disabled}
               />
             </div>
-            {validationError && (
+            {!!validationError && (
               <p className="mt-1 text-sm font-medium text-red-500">{validationError}</p>
             )}
           </div>
@@ -168,7 +168,7 @@ export function PreferenceField({
                 validationError && 'border-red-500 focus-visible:ring-red-500'
               )}
             />
-            {validationError && (
+            {!!validationError && (
               <p className="mt-1 text-sm font-medium text-red-500">{validationError}</p>
             )}
           </div>
@@ -215,7 +215,7 @@ export function PreferenceField({
                 validationError && 'border-red-500 focus-visible:ring-red-500'
               )}
             />
-            {validationError && (
+            {!!validationError && (
               <p className="mt-1 text-sm font-medium text-red-500">{validationError}</p>
             )}
           </div>

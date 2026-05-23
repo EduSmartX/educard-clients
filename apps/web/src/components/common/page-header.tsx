@@ -168,12 +168,12 @@ export function PageHeader({
               {title}
             </motion.h1>
           </div>
-          {description && (
+          {!!description && (
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.25, duration: 0.4 }}
-              className="mt-1 max-w-2xl text-sm text-slate-500 sm:text-base leading-relaxed"
+              className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-500 sm:text-base"
             >
               {description}
             </motion.p>
@@ -198,10 +198,7 @@ export function PageHeader({
                     onClick={action.onClick}
                     variant={action.variant || 'brand'}
                     disabled={action.disabled}
-                    className={cn(
-                      'transition-all duration-200',
-                      action.className
-                    )}
+                    className={cn('transition-all duration-200', action.className)}
                   >
                     {ActionIcon && <ActionIcon className="h-4 w-4" strokeWidth={2} />}
                     <span>{action.label}</span>

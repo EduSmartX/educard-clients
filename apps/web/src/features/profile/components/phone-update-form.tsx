@@ -199,7 +199,9 @@ export function PhoneUpdateForm() {
                 variant="brand"
                 disabled={!otpSent || updatePhoneMutation.isPending}
               >
-                {updatePhoneMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {!!updatePhoneMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 <Phone className="mr-2 h-4 w-4" />
                 {CommonUiText.UPDATE_PHONE}
               </Button>

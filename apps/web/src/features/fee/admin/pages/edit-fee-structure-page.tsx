@@ -55,7 +55,7 @@ const IMPACT_MESSAGES = {
   CLASSES_REMOVED_PAID: (count: number) =>
     `${count} partially/fully paid record${count > 1 ? 's' : ''} will be marked as "Cancelled". You'll need to review refunds manually.`,
   REFUND_AMOUNT: (amount: string) =>
-    `₹${parseFloat(amount).toLocaleString('en-IN')} has already been collected from these students. Refund processing will be required.`,
+    `₹${Number.parseFloat(amount).toLocaleString('en-IN')} has already been collected from these students. Refund processing will be required.`,
   // Component/Amount changes
   AMOUNT_INCREASED: (oldAmt: number, newAmt: number) =>
     `Total fee increased from ₹${oldAmt.toLocaleString('en-IN')} → ₹${newAmt.toLocaleString('en-IN')}. All student balances will increase accordingly.`,
@@ -115,7 +115,7 @@ export function EditFeeStructurePage() {
     const oldAmount = structure.total_amount || 0;
     const newAmount = data.total_amount || 0;
     const amountChanged =
-      Math.abs(parseFloat(String(oldAmount)) - parseFloat(String(newAmount))) > 0.001;
+      Math.abs(Number.parseFloat(String(oldAmount)) - Number.parseFloat(String(newAmount))) > 0.001;
 
     // Detect component changes — compare only name/amount/component_type, sorted by name
     const normalise = (
@@ -124,7 +124,8 @@ export function EditFeeStructurePage() {
       [...comps]
         .sort((a, b) => a.name.localeCompare(b.name))
         .map(
-          (c) => `${c.name}|${parseFloat(String(c.amount)).toFixed(2)}|${c.component_type ?? ''}`
+          (c) =>
+            `${c.name}|${Number.parseFloat(String(c.amount)).toFixed(2)}|${c.component_type ?? ''}`
         )
         .join(',');
     const componentsChanged =
@@ -319,7 +320,7 @@ export function EditFeeStructurePage() {
                   )}
 
                   {/* Refund amount */}
-                  {impact && parseFloat(impact.total_paid_amount_affected) > 0 && (
+                  {impact && Number.parseFloat(impact.total_paid_amount_affected) > 0 && (
                     <div className="flex items-start gap-2 rounded bg-red-50 p-2 text-sm font-medium text-red-700">
                       <IndianRupee className="mt-0.5 h-4 w-4 shrink-0" />
                       <span>

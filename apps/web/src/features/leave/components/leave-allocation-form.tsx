@@ -184,27 +184,17 @@ export function LeaveAllocationForm({
     },
     onError: (error: unknown) => {
       const { hasFieldError, nonFieldErrors } = setFormFieldErrors(error, form.setError);
-
-      // If we have field errors, the inline errors are enough - no toast needed
       if (hasFieldError) {
         return;
       }
 
-      // Check for non-field errors (like duplicate allocation)
-      if (nonFieldErrors.length > 0) {
-        toast.error(ErrorMessages.CREATE_FAILED, {
-          description: nonFieldErrors[0],
-          icon: <AlertCircle className="h-4 w-4" />,
-          duration: 6000,
-        });
-      } else {
-        // Fallback to generic error
-        const errorMessage = parseApiError(error, ErrorMessages.CREATE_FAILED);
-        toast.error(ErrorMessages.CREATE_FAILED, {
-          description: errorMessage,
-          icon: <AlertCircle className="h-4 w-4" />,
-        });
-      }
+      const description =
+        nonFieldErrors.length > 0 ? nonFieldErrors[0] : String(parseApiError(error));
+      toast.error(ErrorMessages.CREATE_FAILED, {
+        description,
+        icon: <AlertCircle className="h-4 w-4" />,
+        duration: nonFieldErrors.length > 0 ? 6000 : undefined,
+      });
     },
   });
 
@@ -223,22 +213,16 @@ export function LeaveAllocationForm({
     },
     onError: (error: unknown) => {
       const { hasFieldError, nonFieldErrors } = setFormFieldErrors(error, form.setError);
-
-      // If we have field errors, the inline errors are enough - no toast needed
       if (hasFieldError) {
         return;
       }
 
-      // Check for non-field errors
-      if (nonFieldErrors.length > 0) {
-        toast.error(ErrorMessages.UPDATE_FAILED, {
-          description: nonFieldErrors[0],
-          icon: <AlertCircle className="h-4 w-4" />,
-          duration: 6000,
-        });
-      } else {
-        toast.error(ErrorMessages.UPDATE_FAILED);
-      }
+      const description = nonFieldErrors.length > 0 ? nonFieldErrors[0] : undefined;
+      toast.error(ErrorMessages.UPDATE_FAILED, {
+        description,
+        icon: <AlertCircle className="h-4 w-4" />,
+        duration: nonFieldErrors.length > 0 ? 6000 : undefined,
+      });
     },
   });
 
@@ -454,7 +438,7 @@ export function LeaveAllocationForm({
                                 })) || []
                               }
                               value={field.value?.toString()}
-                              onValueChange={(value) => field.onChange(parseInt(value))}
+                              onValueChange={(value) => field.onChange(Number.parseInt(value))}
                               placeholder={FormPlaceholders.SELECT_LEAVE_TYPE}
                               searchPlaceholder="Search leave types..."
                               disabled={isEditMode || isViewMode}
@@ -534,7 +518,7 @@ export function LeaveAllocationForm({
                                 size="icon"
                                 className="h-10 w-10 bg-white"
                                 onClick={() => {
-                                  const currentValue = parseFloat(field.value || '0');
+                                  const currentValue = Number.parseFloat(field.value || '0');
                                   if (currentValue > 0) {
                                     field.onChange((currentValue - 1).toString());
                                   }
@@ -558,7 +542,7 @@ export function LeaveAllocationForm({
                                 size="icon"
                                 className="h-10 w-10 bg-white"
                                 onClick={() => {
-                                  const currentValue = parseFloat(field.value || '0');
+                                  const currentValue = Number.parseFloat(field.value || '0');
                                   field.onChange((currentValue + 1).toString());
                                 }}
                               >
@@ -784,17 +768,18 @@ export function LeaveAllocationForm({
                         </div>
 
                         {/* Total Days */}
-                        {form.watch('total_days') && parseFloat(form.watch('total_days')) > 0 && (
-                          <div className="rounded-lg bg-white p-3">
-                            <p className="mb-1 text-xs text-gray-500">Total Days</p>
-                            <p className="text-2xl font-bold text-green-600">
-                              {form.watch('total_days')}
-                            </p>
-                          </div>
-                        )}
+                        {form.watch('total_days') &&
+                          Number.parseFloat(form.watch('total_days')) > 0 && (
+                            <div className="rounded-lg bg-white p-3">
+                              <p className="mb-1 text-xs text-gray-500">Total Days</p>
+                              <p className="text-2xl font-bold text-green-600">
+                                {form.watch('total_days')}
+                              </p>
+                            </div>
+                          )}
 
                         {/* Carry Forward */}
-                        {parseFloat(form.watch('max_carry_forward_days') || '0') > 0 && (
+                        {Number.parseFloat(form.watch('max_carry_forward_days') || '0') > 0 && (
                           <div className="rounded-lg bg-white p-3">
                             <p className="mb-1 text-xs text-gray-500">Carry Forward Days</p>
                             <p className="text-xl font-bold text-blue-600">

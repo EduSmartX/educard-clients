@@ -173,7 +173,7 @@ export function ProfileInformationForm() {
                 variant="brand"
                 disabled={updateMutation.isPending || !form.formState.isDirty}
               >
-                {updateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {!!updateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 <Save className="mr-2 h-4 w-4" />
                 {CommonUiText.SAVE_CHANGES}
               </Button>

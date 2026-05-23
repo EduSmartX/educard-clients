@@ -202,7 +202,9 @@ export function EmailUpdateForm() {
                 variant="brand"
                 disabled={!otpSent || updateEmailMutation.isPending}
               >
-                {updateEmailMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {!!updateEmailMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 <Mail className="mr-2 h-4 w-4" />
                 {CommonUiText.UPDATE_EMAIL}
               </Button>

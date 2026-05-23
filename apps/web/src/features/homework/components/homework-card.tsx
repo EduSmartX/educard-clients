@@ -259,7 +259,7 @@ export const HomeworkCard = memo(
             </div>
 
             {/* Description */}
-            {homework.description && (
+            {!!homework.description && (
               <p className="mb-4 line-clamp-2 text-sm text-slate-600 dark:text-slate-400">
                 {homework.description}
               </p>

@@ -57,7 +57,7 @@ export function GroupCard({ group, colorIdx, onEdit }: GroupCardProps) {
           <div className="flex items-start justify-between">
             <div className="min-w-0 flex-1">
               <h3 className="truncate text-lg font-bold text-white">{group.name}</h3>
-              {group.description && (
+              {!!group.description && (
                 <p className="mt-0.5 truncate text-xs text-white/75">{group.description}</p>
               )}
             </div>

@@ -52,16 +52,16 @@ export function LeavePermissionAlerts({
         <div className="space-y-1">
           <p className="font-medium">Your Management Permissions:</p>
           <ul className="space-y-0.5 text-sm">
-            {teacherContext.is_supervisor && (
+            {!!teacherContext.is_supervisor && (
               <li>
                 ✓ You can manage leave balances for {teacherContext.subordinate_count} staff
                 member(s)
               </li>
             )}
-            {teacherContext.is_class_teacher && (
+            {!!teacherContext.is_class_teacher && (
               <li>
-                ✓ You can manage leave balances for {teacherContext.student_count} student(s)
-                across {teacherContext.class_teacher_for.length} class(es)
+                ✓ You can manage leave balances for {teacherContext.student_count} student(s) across{' '}
+                {teacherContext.class_teacher_for.length} class(es)
               </li>
             )}
           </ul>

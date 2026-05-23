@@ -137,7 +137,7 @@ export default function HomeworkDetailPage() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="submissions">
             Submissions
-            {homework.submission_stats && (
+            {!!homework.submission_stats && (
               <Badge variant="secondary" className="ml-2">
                 {homework.submission_stats.submitted}
               </Badge>
@@ -151,7 +151,7 @@ export default function HomeworkDetailPage() {
             {/* Main Content */}
             <div className="space-y-6 lg:col-span-2">
               {/* Description */}
-              {homework.description && (
+              {!!homework.description && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base">Description</CardTitle>
@@ -163,7 +163,7 @@ export default function HomeworkDetailPage() {
               )}
 
               {/* Instructions */}
-              {homework.instructions && (
+              {!!homework.instructions && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base">Instructions</CardTitle>
@@ -175,7 +175,7 @@ export default function HomeworkDetailPage() {
               )}
 
               {/* Reference Link */}
-              {homework.reference_link && (
+              {!!homework.reference_link && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-base">
@@ -245,7 +245,7 @@ export default function HomeworkDetailPage() {
             {/* Sidebar */}
             <div className="space-y-6">
               {/* Assigned Date Card */}
-              {homework.assigned_date && (
+              {!!homework.assigned_date && (
                 <Card>
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-3">
@@ -287,7 +287,7 @@ export default function HomeworkDetailPage() {
                       </p>
                     </div>
                   </div>
-                  {homework.is_overdue && (
+                  {!!homework.is_overdue && (
                     <Badge variant="destructive" className="mt-3 w-full justify-center">
                       Overdue
                     </Badge>

@@ -65,8 +65,9 @@ export default function FeeAssignStudentScreen() {
     if (!studentId) e.studentId = 'Student is required';
     if (!structureId) e.structureId = 'Fee structure is required';
     if (discountPct) {
-      const pct = parseFloat(discountPct);
-      if (isNaN(pct) || pct < 0 || pct > 100) e.discountPct = 'Discount must be between 0 and 100';
+      const pct = Number.parseFloat(discountPct);
+      if (Number.isNaN(pct) || pct < 0 || pct > 100)
+        e.discountPct = 'Discount must be between 0 and 100';
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -100,7 +101,7 @@ export default function FeeAssignStudentScreen() {
       {
         student_public_id: studentId,
         fee_structure_public_id: structureId,
-        discount_percentage: discountPct ? parseFloat(discountPct) : undefined,
+        discount_percentage: discountPct ? Number.parseFloat(discountPct) : undefined,
         discount_reason: discountReason || undefined,
       },
       {

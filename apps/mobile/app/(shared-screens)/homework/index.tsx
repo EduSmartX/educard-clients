@@ -174,7 +174,6 @@ export default function HomeworkListScreen() {
   }, [selectedDate, selectedClassId, navigateWorkingDay]);
 
   const handleNextDay = useCallback(async () => {
-    // Don't allow navigation beyond 1 week from today
     if (!canNavigateNext) return;
 
     try {
@@ -183,16 +182,12 @@ export default function HomeworkListScreen() {
         direction: 'next',
         class_id: selectedClassId || undefined,
       });
-      // Additional check to not go beyond 1 week
       const resultDate = new Date(result.date);
       const oneWeekFromToday = new Date();
       oneWeekFromToday.setDate(oneWeekFromToday.getDate() + 7);
-      if (resultDate <= oneWeekFromToday) {
-        setSelectedDate(resultDate);
-      }
+      if (resultDate <= oneWeekFromToday) setSelectedDate(resultDate);
     } catch {
-      // Don't fallback to simple day change - stay on current date
-      // to avoid landing on holidays/non-working days
+      // Stay on current date to avoid landing on holidays/non-working days
     }
   }, [selectedDate, selectedClassId, navigateWorkingDay, canNavigateNext]);
 

@@ -332,7 +332,7 @@ export function LeaveRequestFormPageNew() {
               </div>
 
               {/* Date Range Error */}
-              {dateRangeError && (
+              {!!dateRangeError && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription className="whitespace-pre-line">

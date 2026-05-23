@@ -168,14 +168,11 @@ export function BulkExamCreatePage() {
 
   /**
    * Validate if a date is a valid exam date using the backend API
-   * This checks: working day policy, weekends, holidays, calendar exceptions
    */
   const validateExamDate = async (date: Date | null): Promise<string | undefined> => {
     if (!date || !classId) {
       return undefined;
     }
-
-    const dateStr = format(date, 'yyyy-MM-dd');
 
     // Check if date is within session range first (client-side check)
     if (selectedSession?.start_date && selectedSession?.end_date) {
@@ -191,8 +188,9 @@ export function BulkExamCreatePage() {
       }
     }
 
-    // Use backend API to check if it's a working day (considers all factors)
+    // Use backend API to check if it's a working day
     try {
+      const dateStr = format(date, 'yyyy-MM-dd');
       const validation = await validateAttendanceDate(classId, dateStr);
       if (!validation.is_working_day) {
         return validation.reason || ValidationMessages.EXAM.DATE_IS_HOLIDAY;
@@ -206,27 +204,26 @@ export function BulkExamCreatePage() {
 
   // Update subject rows when class changes
   useEffect(() => {
-    if (classId && subjectsList.length > 0) {
-      // Filter subjects for the selected class
-      const filteredSubjects = subjectsList.filter((s) => s.class_info.public_id === classId);
-      setSubjectRows(
-        filteredSubjects.map((subject) => ({
-          subject_id: subject.public_id,
-          subject_name: `${subject.subject_info.name}`,
-          selected: false,
-          max_marks: defaultMaxMarks,
-          passing_marks: defaultPassingMarks,
-          date: null,
-          start_time: '',
-          end_time: '',
-          dateError: undefined,
-        }))
-      );
-      setSelectAll(false);
-    } else {
+    if (!classId || subjectsList.length === 0) {
       setSubjectRows([]);
       setSelectAll(false);
+      return;
     }
+    const filteredSubjects = subjectsList.filter((s) => s.class_info.public_id === classId);
+    setSubjectRows(
+      filteredSubjects.map((subject) => ({
+        subject_id: subject.public_id,
+        subject_name: `${subject.subject_info.name}`,
+        selected: false,
+        max_marks: defaultMaxMarks,
+        passing_marks: defaultPassingMarks,
+        date: null,
+        start_time: '',
+        end_time: '',
+        dateError: undefined,
+      }))
+    );
+    setSelectAll(false);
   }, [classId, subjectsList, defaultMaxMarks, defaultPassingMarks]);
 
   // Handle select all toggle
@@ -322,15 +319,12 @@ export function BulkExamCreatePage() {
       }
     ) => {
       const respData = error.response?.data;
-      if (respData?.errors) {
-        const allMessages = Object.values(respData.errors).flat();
-        if (allMessages.length > 0) {
-          handleBulkCreateErrors(allMessages, setSubjectRows);
-          return;
-        }
+      const allMessages = respData?.errors ? Object.values(respData.errors).flat() : [];
+      if (allMessages.length > 0) {
+        handleBulkCreateErrors(allMessages, setSubjectRows);
+        return;
       }
-      const message = respData?.message || error.message || 'Failed to create exams';
-      toast.error(message);
+      toast.error(respData?.message || error.message || 'Failed to create exams');
     },
   });
 
@@ -434,7 +428,7 @@ export function BulkExamCreatePage() {
                     searchPlaceholder="Search sessions..."
                     className={fieldErrors.session_id ? 'border-red-500' : ''}
                   />
-                  {fieldErrors.session_id && (
+                  {!!fieldErrors.session_id && (
                     <p className="text-sm text-red-500">{fieldErrors.session_id}</p>
                   )}
                   {/* Session Date Range */}
@@ -470,7 +464,7 @@ export function BulkExamCreatePage() {
                     searchPlaceholder="Search classes..."
                     className={fieldErrors.class_id ? 'border-red-500' : ''}
                   />
-                  {fieldErrors.class_id && (
+                  {!!fieldErrors.class_id && (
                     <p className="text-sm text-red-500">{fieldErrors.class_id}</p>
                   )}
                 </div>
@@ -598,7 +592,7 @@ export function BulkExamCreatePage() {
                                 placeholder="Select date"
                                 className={`h-8 ${row.dateError ? 'border-red-500' : ''}`}
                               />
-                              {row.dateError && (
+                              {!!row.dateError && (
                                 <div className="flex items-center gap-1 text-xs text-red-500">
                                   <AlertTriangle className="h-3 w-3" />
                                   <span>{row.dateError}</span>
@@ -718,7 +712,7 @@ export function BulkExamCreatePage() {
                   </Table>
                 </div>
               )}
-              {fieldErrors.subjects && (
+              {!!fieldErrors.subjects && (
                 <p className="px-6 py-3 text-sm text-red-500">{fieldErrors.subjects}</p>
               )}
             </CardContent>

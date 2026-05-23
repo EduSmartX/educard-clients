@@ -127,6 +127,75 @@ const MONTHS = [
   'December',
 ];
 
+/** Check if a Saturday is off based on policy pattern */
+function isSaturdayOffByPolicy(day: number, pattern: string): boolean {
+  const nthSaturday = Math.ceil(day / 7);
+  switch (pattern) {
+    case 'ALL':
+      return true;
+    case 'SECOND_ONLY':
+      return nthSaturday === 2;
+    case 'SECOND_AND_FOURTH':
+      return nthSaturday === 2 || nthSaturday === 4;
+    default:
+      return false;
+  }
+}
+
+/** Generate weekend holidays for a month based on working day policy */
+function generateWeekendHolidays(
+  workingDayPolicy: { sunday_off: boolean; saturday_off_pattern: string } | undefined,
+  currentMonth: Date
+): Holiday[] {
+  if (!workingDayPolicy) return [];
+
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+  const endDate = new Date(year, month + 1, 0);
+  const holidays: Holiday[] = [];
+
+  const formatLocalDate = (date: Date): string => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+
+  const currentDate = new Date(year, month, 1);
+  while (currentDate <= endDate) {
+    const dayOfWeek = currentDate.getDay();
+    const dateStr = formatLocalDate(currentDate);
+
+    if (dayOfWeek === 0 && workingDayPolicy.sunday_off) {
+      holidays.push({
+        public_id: `sunday-${dateStr}`,
+        start_date: dateStr,
+        end_date: dateStr,
+        holiday_type: 'SUNDAY',
+        description: 'Sunday',
+      });
+    }
+
+    if (
+      dayOfWeek === 6 &&
+      isSaturdayOffByPolicy(currentDate.getDate(), workingDayPolicy.saturday_off_pattern)
+    ) {
+      const nthSaturday = Math.ceil(currentDate.getDate() / 7);
+      holidays.push({
+        public_id: `saturday-${dateStr}`,
+        start_date: dateStr,
+        end_date: dateStr,
+        holiday_type: nthSaturday === 2 ? 'SECOND_SATURDAY' : 'SATURDAY',
+        description: nthSaturday === 2 ? '2nd Saturday' : 'Saturday',
+      });
+    }
+
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  return holidays;
+}
+
 export default function HolidayCalendarScreen() {
   const router = useRouter();
   const { showToast } = useToast();
@@ -170,76 +239,10 @@ export default function HolidayCalendarScreen() {
   const workingDayPolicy = policyData?.data?.[0];
 
   // Generate weekend holidays based on working day policy
-  const generatedWeekendHolidays = useMemo(() => {
-    if (!workingDayPolicy) return [];
-
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-    const startDate = new Date(year, month, 1);
-    const endDate = new Date(year, month + 1, 0);
-    const holidays: Holiday[] = [];
-
-    // Helper to format date as YYYY-MM-DD without timezone shift
-    const formatLocalDate = (date: Date): string => {
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, '0');
-      const d = String(date.getDate()).padStart(2, '0');
-      return `${y}-${m}-${d}`;
-    };
-
-    const currentDate = new Date(startDate);
-    while (currentDate <= endDate) {
-      const dayOfWeek = currentDate.getDay();
-      const dateStr = formatLocalDate(currentDate);
-
-      // Check for Sunday
-      if (dayOfWeek === 0 && workingDayPolicy.sunday_off) {
-        holidays.push({
-          public_id: `sunday-${dateStr}`,
-          start_date: dateStr,
-          end_date: dateStr,
-          holiday_type: 'SUNDAY',
-          description: 'Sunday',
-        });
-      }
-
-      // Check for Saturday based on policy
-      if (dayOfWeek === 6) {
-        const day = currentDate.getDate();
-        const nthSaturday = Math.ceil(day / 7);
-        let isSaturdayOff = false;
-
-        switch (workingDayPolicy.saturday_off_pattern) {
-          case 'ALL':
-            isSaturdayOff = true;
-            break;
-          case 'SECOND_ONLY':
-            isSaturdayOff = nthSaturday === 2;
-            break;
-          case 'SECOND_AND_FOURTH':
-            isSaturdayOff = nthSaturday === 2 || nthSaturday === 4;
-            break;
-          default:
-            break;
-        }
-
-        if (isSaturdayOff) {
-          holidays.push({
-            public_id: `saturday-${dateStr}`,
-            start_date: dateStr,
-            end_date: dateStr,
-            holiday_type: nthSaturday === 2 ? 'SECOND_SATURDAY' : 'SATURDAY',
-            description: nthSaturday === 2 ? '2nd Saturday' : 'Saturday',
-          });
-        }
-      }
-
-      // Move to next day
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
-
-    return holidays;
-  }, [workingDayPolicy, currentMonth]);
+  const generatedWeekendHolidays = useMemo(
+    () => generateWeekendHolidays(workingDayPolicy, currentMonth),
+    [workingDayPolicy, currentMonth]
+  );
 
   // Combine API holidays with generated weekend holidays
   const holidays = useMemo(() => {

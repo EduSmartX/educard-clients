@@ -170,7 +170,7 @@ export function PasswordChangeForm() {
                 {CommonUiText.RESET}
               </Button>
               <Button type="submit" variant="brand" disabled={changeMutation.isPending}>
-                {changeMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {!!changeMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 <Save className="mr-2 h-4 w-4" />
                 {CommonUiText.CHANGE_PASSWORD}
               </Button>

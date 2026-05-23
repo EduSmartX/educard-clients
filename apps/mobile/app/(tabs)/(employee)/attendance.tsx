@@ -157,6 +157,15 @@ const timesheetActions = [
   },
 ];
 
+/** Get status-based styles for attendance badge */
+function getStatusStyles(status: string) {
+  if (status === 'PRESENT')
+    return { badge: styles.presentBadge, text: styles.presentText, color: '#059669' };
+  if (status === 'ABSENT')
+    return { badge: styles.absentBadge, text: styles.absentText, color: '#dc2626' };
+  return { badge: styles.pendingBadge, text: styles.pendingText, color: '#f59e0b' };
+}
+
 export default function EmployeeAttendanceScreen() {
   const router = useRouter();
   const { user: _user } = useAuthStore();
@@ -250,35 +259,10 @@ export default function EmployeeAttendanceScreen() {
               <View style={styles.myStatusContent}>
                 {myTodayRecord ? (
                   <>
-                    <View
-                      style={[
-                        styles.statusBadge,
-                        myTodayRecord.status === 'PRESENT'
-                          ? styles.presentBadge
-                          : myTodayRecord.status === 'ABSENT'
-                            ? styles.absentBadge
-                            : styles.pendingBadge,
-                      ]}
-                    >
-                      <CheckCircle
-                        size={14}
-                        color={
-                          myTodayRecord.status === 'PRESENT'
-                            ? '#059669'
-                            : myTodayRecord.status === 'ABSENT'
-                              ? '#dc2626'
-                              : '#f59e0b'
-                        }
-                      />
+                    <View style={[styles.statusBadge, getStatusStyles(myTodayRecord.status).badge]}>
+                      <CheckCircle size={14} color={getStatusStyles(myTodayRecord.status).color} />
                       <Text
-                        style={[
-                          styles.statusBadgeText,
-                          myTodayRecord.status === 'PRESENT'
-                            ? styles.presentText
-                            : myTodayRecord.status === 'ABSENT'
-                              ? styles.absentText
-                              : styles.pendingText,
-                        ]}
+                        style={[styles.statusBadgeText, getStatusStyles(myTodayRecord.status).text]}
                       >
                         {myTodayRecord.status}
                       </Text>

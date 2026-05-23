@@ -35,7 +35,6 @@ import {
 } from '../hooks';
 import { parseClasses } from '../utils/leave-data-parsers';
 import { LeaveRequestReviewDialog } from './leave-request-review-dialog';
-import { getLeaveReviewColumns, type LeaveRequestReview } from './leave-review-columns';
 
 type UserRole = 'staff' | 'student';
 
@@ -179,10 +178,7 @@ export function LeaveRequestReviews() {
     enabled: userRole === 'student',
   });
 
-  const classes = useMemo(
-    () => parseClasses(classesData?.data),
-    [classesData]
-  );
+  const classes = useMemo(() => parseClasses(classesData?.data), [classesData]);
 
   // Fetch manageable users
   const { data: usersData, isLoading: isLoadingUsers } = useQuery({
@@ -380,7 +376,7 @@ export function LeaveRequestReviews() {
             <div className="font-medium">{row.leave_name}</div>
             <div className="text-muted-foreground text-xs">{row.leave_type_code}</div>
           </div>
-          {row.attachment_url && (
+          {!!row.attachment_url && (
             <span title="Has attachment">
               <Paperclip className="h-3.5 w-3.5 shrink-0 text-blue-500" />
             </span>
@@ -510,13 +506,13 @@ export function LeaveRequestReviews() {
             <div className="space-y-1">
               <p className="font-medium">Your Review Permissions:</p>
               <ul className="space-y-0.5 text-sm">
-                {teacherContext.is_supervisor && (
+                {!!teacherContext.is_supervisor && (
                   <li>
                     ✓ You can review leave requests from {teacherContext.subordinate_count} staff
                     member(s)
                   </li>
                 )}
-                {teacherContext.is_class_teacher && (
+                {!!teacherContext.is_class_teacher && (
                   <li>
                     ✓ You can review leave requests from {teacherContext.student_count} student(s)
                     across {teacherContext.class_teacher_for.length} class(es)

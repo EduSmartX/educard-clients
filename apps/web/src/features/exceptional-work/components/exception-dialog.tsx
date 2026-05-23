@@ -24,7 +24,9 @@ function focusFirstErrorField(
   dateContainerRef: React.RefObject<HTMLDivElement | null>,
   reasonInputRef: React.RefObject<HTMLTextAreaElement | null>
 ) {
-  if (Object.keys(fieldErrors).length === 0) return;
+  if (Object.keys(fieldErrors).length === 0) {
+    return;
+  }
   setTimeout(() => {
     if (fieldErrors.date && dateContainerRef.current) {
       dateContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -84,7 +86,9 @@ export function ExceptionDialog({
 
   // Reset form when dialog closes or exception changes
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     setDate(exception ? new Date(exception.date) : undefined);
     setOverrideType(exception?.override_type || 'FORCE_WORKING');
     setReason(exception?.reason || '');
@@ -239,7 +243,7 @@ export function ExceptionDialog({
                   />
                 </div>
 
-                {errors.date && (
+                {!!errors.date && (
                   <p className="mt-2 flex items-center gap-1 text-sm text-red-500">
                     <AlertTriangle className="h-3.5 w-3.5" />
                     {errors.date}
@@ -467,7 +471,7 @@ export function ExceptionDialog({
                       </div>
                     </div>
                   )}
-                  {errors.classes && (
+                  {!!errors.classes && (
                     <p className="mt-2 flex items-center gap-1 text-sm text-red-500">
                       <AlertTriangle className="h-3.5 w-3.5" />
                       {errors.classes}

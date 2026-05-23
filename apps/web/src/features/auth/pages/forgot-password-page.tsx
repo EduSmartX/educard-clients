@@ -95,7 +95,6 @@ export default function ForgotPasswordPage() {
   const handleRequestOtp = async (formData: RequestOtpFormData) => {
     setIsLoading(true);
     try {
-      // Send either email or username based on toggle
       const requestData = useEmail
         ? { email: formData.identifier }
         : { username: formData.identifier };
@@ -117,9 +116,9 @@ export default function ForgotPasswordPage() {
   const handleVerifyOtp = async (formData: VerifyOtpFormData) => {
     setIsLoading(true);
     try {
-      // Send either email or username based on toggle
+      const identifierField = useEmail ? { email: identifier } : { username: identifier };
       const verifyData = {
-        ...(useEmail ? { email: identifier } : { username: identifier }),
+        ...identifierField,
         otp: formData.otp,
         new_password: formData.newPassword,
         confirm_password: formData.confirmPassword,
@@ -263,7 +262,7 @@ export default function ForgotPasswordPage() {
                       {...registerRequest('identifier')}
                     />
                   </div>
-                  {errorsRequest.identifier && (
+                  {!!errorsRequest.identifier && (
                     <p className="flex items-center gap-1.5 text-sm text-red-600">
                       ⚠️ {errorsRequest.identifier.message}
                     </p>
@@ -366,7 +365,7 @@ export default function ForgotPasswordPage() {
                       },
                     })}
                   />
-                  {errorsVerify.otp && (
+                  {!!errorsVerify.otp && (
                     <p className="flex items-center gap-1.5 text-sm text-red-600">
                       ⚠️ {errorsVerify.otp.message}
                     </p>
@@ -400,7 +399,7 @@ export default function ForgotPasswordPage() {
                       {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
-                  {errorsVerify.newPassword && (
+                  {!!errorsVerify.newPassword && (
                     <p className="flex items-center gap-1.5 text-sm text-red-600">
                       ⚠️ {errorsVerify.newPassword.message}
                     </p>
@@ -438,7 +437,7 @@ export default function ForgotPasswordPage() {
                       )}
                     </button>
                   </div>
-                  {errorsVerify.confirmPassword && (
+                  {!!errorsVerify.confirmPassword && (
                     <p className="flex items-center gap-1.5 text-sm text-red-600">
                       ⚠️ {errorsVerify.confirmPassword.message}
                     </p>

@@ -57,7 +57,7 @@ export const numberRange = (label: string, min: number, max: number): Validation
   validate: (v) => {
     if (v === undefined || v === null || v === '') return true;
     const n = Number(v);
-    return !isNaN(n) && n >= min && n <= max;
+    return !Number.isNaN(n) && n >= min && n <= max;
   },
   message: `${label} must be between ${min} and ${max}`,
 });

@@ -22,7 +22,7 @@ export const classFormSchema = z.object({
     .string()
     .optional()
     .refine((val) => !val || /^\d+$/.test(val), 'Capacity must be a valid number')
-    .refine((val) => !val || parseInt(val) > 0, 'Capacity must be greater than 0'),
+    .refine((val) => !val || Number.parseInt(val) > 0, 'Capacity must be greater than 0'),
 });
 
 export type ClassFormData = z.infer<typeof classFormSchema>;

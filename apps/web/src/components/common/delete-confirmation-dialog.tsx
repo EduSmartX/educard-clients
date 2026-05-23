@@ -42,12 +42,12 @@ export function DeleteConfirmationDialog({
 }: DeleteConfirmationDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="overflow-hidden border-0 p-0 rounded-2xl bg-white shadow-soft-xl">
+      <AlertDialogContent className="shadow-soft-xl overflow-hidden rounded-2xl border-0 bg-white p-0">
         {/* Header with gradient background */}
         <div className="relative overflow-hidden bg-gradient-to-r from-rose-500 via-red-500 to-rose-600 px-6 py-6">
           {/* Decorative circles */}
-          <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
-          <div className="absolute -left-8 -bottom-8 h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
+          <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
+          <div className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
 
           <AlertDialogHeader className="relative">
             <div className="flex items-center gap-4">
@@ -65,14 +65,17 @@ export function DeleteConfirmationDialog({
 
         {/* Content */}
         <div className="px-6 py-6">
-          <AlertDialogDescription className="text-base text-slate-600 leading-relaxed">
+          <AlertDialogDescription className="text-base leading-relaxed text-slate-600">
             {description || (
               <>
                 <div>
                   Are you sure you want to delete{' '}
-                  {itemName && <strong className="text-slate-900 font-semibold">{itemName}</strong>}?
+                  {!!itemName && (
+                    <strong className="font-semibold text-slate-900">{itemName}</strong>
+                  )}
+                  ?
                 </div>
-                <div className="mt-4 flex items-start gap-3 p-3 rounded-xl bg-slate-50">
+                <div className="mt-4 flex items-start gap-3 rounded-xl bg-slate-50 p-3">
                   <span className={`mt-0.5 ${isSoftDelete ? 'text-blue-500' : 'text-amber-500'}`}>
                     {isSoftDelete ? (
                       <svg
@@ -116,18 +119,18 @@ export function DeleteConfirmationDialog({
         </div>
 
         {/* Footer */}
-        <div className="bg-slate-50/50 px-6 py-4 border-t border-slate-100">
+        <div className="border-t border-slate-100 bg-slate-50/50 px-6 py-4">
           <AlertDialogFooter>
             <AlertDialogCancel
               disabled={isDeleting}
-              className="border-2 border-slate-200 bg-white text-slate-700 rounded-xl hover:bg-slate-50 hover:border-slate-300 hover:shadow-md active:scale-[0.98] transition-all duration-200 font-medium"
+              className="rounded-xl border-2 border-slate-200 bg-white font-medium text-slate-700 transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:shadow-md active:scale-[0.98]"
             >
               {cancelButtonText}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={onConfirm}
               disabled={isDeleting}
-              className="bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-xl border-0 hover:from-rose-600 hover:to-red-700 hover:shadow-lg hover:shadow-rose-500/30 active:scale-[0.98] disabled:opacity-50 transition-all duration-200 font-semibold"
+              className="rounded-xl border-0 bg-gradient-to-r from-rose-500 to-red-600 font-semibold text-white transition-all duration-200 hover:from-rose-600 hover:to-red-700 hover:shadow-lg hover:shadow-rose-500/30 active:scale-[0.98] disabled:opacity-50"
             >
               {isDeleting ? (
                 <>

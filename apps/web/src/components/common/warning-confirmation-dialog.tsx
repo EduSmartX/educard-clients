@@ -55,12 +55,12 @@ export function WarningConfirmationDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="overflow-hidden border-0 p-0 rounded-2xl bg-white shadow-soft-xl">
+      <AlertDialogContent className="shadow-soft-xl overflow-hidden rounded-2xl border-0 bg-white p-0">
         {/* Header with gradient background */}
         <div className="relative overflow-hidden bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 px-6 py-6">
           {/* Decorative circles */}
-          <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
-          <div className="absolute -left-8 -bottom-8 h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
+          <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
+          <div className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
 
           <AlertDialogHeader className="relative">
             <div className="flex items-center gap-4">
@@ -79,14 +79,10 @@ export function WarningConfirmationDialog({
         {/* Content */}
         <div className="px-6 py-6">
           <AlertDialogDescription asChild>
-            <div className="text-base text-slate-600 leading-relaxed">
-              {typeof description === 'string' ? (
-                <p>{description}</p>
-              ) : (
-                description
-              )}
-              {warningText && (
-                <div className="mt-4 flex items-start gap-3 p-3 rounded-xl bg-amber-50 border border-amber-200">
+            <div className="text-base leading-relaxed text-slate-600">
+              {typeof description === 'string' ? <p>{description}</p> : description}
+              {!!warningText && (
+                <div className="mt-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
                   <span className="mt-0.5 text-amber-500">
                     <svg
                       className="h-5 w-5"

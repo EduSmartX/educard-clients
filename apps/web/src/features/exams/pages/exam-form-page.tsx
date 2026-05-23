@@ -187,28 +187,7 @@ export function ExamFormPage() {
       return;
     }
 
-    if (isCreate) {
-      const payload = buildExamCreatePayload({
-        sessionId,
-        subjectId,
-        status: status as ExamStatus,
-        maxMarks,
-        passingMarks,
-        examDate,
-        startTime,
-        endTime,
-        description,
-      });
-
-      // Check for duplicate exam before creating
-      if (checkDuplicateExam) {
-        setPendingPayload(payload);
-        setShowDuplicateWarning(true);
-        return;
-      }
-
-      createMutation.mutate(payload);
-    } else if (isEdit && id) {
+    if (isEdit && id) {
       const payload = buildExamUpdatePayload({
         status: status as ExamStatus,
         maxMarks,
@@ -219,15 +198,31 @@ export function ExamFormPage() {
         description,
       });
       updateMutation.mutate({ id, data: payload });
+      return;
     }
+
+    const payload = buildExamCreatePayload({
+      sessionId,
+      subjectId,
+      status: status as ExamStatus,
+      maxMarks,
+      passingMarks,
+      examDate,
+      startTime,
+      endTime,
+      description,
+    });
+
+    if (checkDuplicateExam) {
+      setPendingPayload(payload);
+      setShowDuplicateWarning(true);
+      return;
+    }
+
+    createMutation.mutate(payload);
   };
 
-  const getPageTitle = () => {
-    if (isCreate) return 'Create Exam';
-    if (isEdit) return 'Edit Exam';
-    return 'View Exam';
-  };
-  const title = getPageTitle();
+  const title = isCreate ? 'Create Exam' : isEdit ? 'Edit Exam' : 'View Exam';
 
   if (id && isLoadingExam) {
     return (
@@ -287,7 +282,7 @@ export function ExamFormPage() {
                     className={fieldErrors.session_id ? 'border-red-500' : ''}
                   />
                 )}
-                {fieldErrors.session_id && (
+                {!!fieldErrors.session_id && (
                   <p className="text-sm text-red-500">{fieldErrors.session_id}</p>
                 )}
                 {/* Session Date Range */}
@@ -332,7 +327,7 @@ export function ExamFormPage() {
                     className={fieldErrors.class_id ? 'border-red-500' : ''}
                   />
                 )}
-                {fieldErrors.class_id && (
+                {!!fieldErrors.class_id && (
                   <p className="text-sm text-red-500">{fieldErrors.class_id}</p>
                 )}
               </div>
@@ -363,11 +358,11 @@ export function ExamFormPage() {
                     className={fieldErrors.subject_id ? 'border-red-500' : ''}
                   />
                 )}
-                {fieldErrors.subject_id && (
+                {!!fieldErrors.subject_id && (
                   <p className="text-sm text-red-500">{fieldErrors.subject_id}</p>
                 )}
                 {/* Duplicate warning inline */}
-                {checkDuplicateExam && (
+                {!!checkDuplicateExam && (
                   <div className="flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs text-amber-700">
                     <AlertCircle className="h-3.5 w-3.5" />
                     <span>
@@ -405,7 +400,9 @@ export function ExamFormPage() {
                     className={fieldErrors.status ? 'border-red-500' : ''}
                   />
                 )}
-                {fieldErrors.status && <p className="text-sm text-red-500">{fieldErrors.status}</p>}
+                {!!fieldErrors.status && (
+                  <p className="text-sm text-red-500">{fieldErrors.status}</p>
+                )}
               </div>
 
               {/* Max Marks */}
@@ -444,7 +441,7 @@ export function ExamFormPage() {
                   disabled={isView}
                   className={dateError ? 'border-red-500' : ''}
                 />
-                {dateError && (
+                {!!dateError && (
                   <div className="flex items-center gap-1 text-xs text-red-500">
                     <AlertTriangle className="h-3 w-3" />
                     <span>{dateError}</span>

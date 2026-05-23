@@ -49,6 +49,13 @@ export interface StudentListProps {
   onBack?: () => void;
 }
 
+/** Get display name for a class, handling various data shapes */
+function getClassDisplayName(classInfo: any): string | null {
+  if (!classInfo) return null;
+  const masterName = classInfo.class_master_name || classInfo.class_master?.name;
+  return masterName ? `${masterName} - ${classInfo.name}` : classInfo.name;
+}
+
 export function StudentList({ onBack }: StudentListProps) {
   const router = useRouter();
   const { user } = useAuthStore();
@@ -178,13 +185,7 @@ export function StudentList({ onBack }: StudentListProps) {
       const rollNumber = item.roll_number;
       const admissionNumber = item.admission_number;
       const classInfo = item.class_info;
-      const className = classInfo
-        ? classInfo.class_master_name
-          ? `${classInfo.class_master_name} - ${classInfo.name}`
-          : classInfo.class_master?.name
-            ? `${classInfo.class_master.name} - ${classInfo.name}`
-            : classInfo.name
-        : null;
+      const className = getClassDisplayName(classInfo);
 
       const initials = fullName
         ? fullName

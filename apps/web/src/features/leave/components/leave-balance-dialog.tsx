@@ -59,8 +59,8 @@ export function LeaveBalanceDialog({
   useEffect(() => {
     if (open) {
       setAllocationId(data?.leave_allocation?.public_id || '');
-      setTotalAllocated(data?.total_allocated ? parseFloat(data.total_allocated) : 0);
-      setCarryForward(data?.carried_forward ? parseFloat(data.carried_forward) : 0);
+      setTotalAllocated(data?.total_allocated ? Number.parseFloat(data.total_allocated) : 0);
+      setCarryForward(data?.carried_forward ? Number.parseFloat(data.carried_forward) : 0);
     } else {
       // Reset form when dialog closes
       setAllocationId('');

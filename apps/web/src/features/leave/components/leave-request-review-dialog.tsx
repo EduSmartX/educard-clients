@@ -176,7 +176,7 @@ export function LeaveRequestReviewDialog({
           </div>
 
           {/* Attachment */}
-          {request.attachment_url && (
+          {!!request.attachment_url && (
             <div className="space-y-2">
               <span className="text-sm font-medium text-gray-700">Supporting Document</span>
               <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2">

@@ -181,11 +181,9 @@ export function RecordPaymentPage() {
 
     createPayment.mutate(payload, {
       onSuccess: () => {
-        if (preloadId) {
-          navigate(ROUTES.FEES.STUDENT_FEES_VIEW.replace(':id', preloadId));
-        } else {
-          navigate(ROUTES.FEES.PAYMENTS);
-        }
+        navigate(
+          preloadId ? ROUTES.FEES.STUDENT_FEES_VIEW.replace(':id', preloadId) : ROUTES.FEES.PAYMENTS
+        );
       },
       onError: (error) => {
         // Apply field-level errors inline (e.g. amount exceeds balance_due)
@@ -196,13 +194,11 @@ export function RecordPaymentPage() {
     });
   };
 
-  const handleBack = () => {
-    if (preloadId) {
-      navigate(ROUTES.FEES.STUDENT_FEES_VIEW.replace(':id', preloadId));
-    } else {
-      navigate(ROUTES.FEES.PAYMENTS);
-    }
-  };
+  const backRoute = preloadId
+    ? ROUTES.FEES.STUDENT_FEES_VIEW.replace(':id', preloadId)
+    : ROUTES.FEES.PAYMENTS;
+
+  const handleBack = () => navigate(backRoute);
 
   if (preloadId && feeLoading) {
     return (
@@ -292,7 +288,7 @@ export function RecordPaymentPage() {
               </div>
               <div className="ml-auto">
                 <FeeStatusBadge status={selectedFee.status} />
-                {selectedFee.is_overdue && (
+                {!!selectedFee.is_overdue && (
                   <Badge variant="destructive" className="ml-2">
                     Overdue
                   </Badge>
