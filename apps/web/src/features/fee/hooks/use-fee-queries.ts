@@ -49,15 +49,7 @@ export function useFeeStructure(id: string | undefined) {
 export function useStudentFees(filters?: StudentFeeFilters) {
   return useQuery({
     queryKey: [FeeQueryKeys.STUDENT_FEES, filters],
-    queryFn: async () => {
-      try {
-        const data = await studentFeeApi.list(filters);
-        return data;
-      } catch (error) {
-        console.error('[useStudentFees] Error:', error);
-        throw error;
-      }
-    },
+    queryFn: () => studentFeeApi.list(filters),
   });
 }
 
@@ -92,15 +84,7 @@ export function usePayment(id: string | undefined) {
 export function useRecentPayments(filters?: PaymentFilters) {
   return useQuery({
     queryKey: [FeeQueryKeys.PAYMENTS, 'recent', filters],
-    queryFn: async () => {
-      try {
-        const data = await feePaymentApi.list(filters);
-        return data;
-      } catch (error) {
-        console.error('[useRecentPayments] Error:', error);
-        throw error;
-      }
-    },
+    queryFn: () => feePaymentApi.list(filters),
   });
 }
 
@@ -111,15 +95,7 @@ export function useRecentPayments(filters?: PaymentFilters) {
 export function useFeeDashboard() {
   return useQuery({
     queryKey: [FeeQueryKeys.FEE_DASHBOARD],
-    queryFn: async () => {
-      try {
-        const data = await feeDashboardApi.get();
-        return data;
-      } catch (error) {
-        console.error('[useFeeDashboard] Error fetching dashboard:', error);
-        throw error;
-      }
-    },
+    queryFn: () => feeDashboardApi.get(),
   });
 }
 

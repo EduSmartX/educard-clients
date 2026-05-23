@@ -26,8 +26,7 @@ export function useLocalStorage<T>(
     try {
       const item = window.localStorage.getItem(key);
       return item ? (JSON.parse(item) as T) : initialValue;
-    } catch (error) {
-      console.warn(`Error reading localStorage key "${key}":`, error);
+    } catch {
       return initialValue;
     }
   });
@@ -45,8 +44,8 @@ export function useLocalStorage<T>(
         if (typeof window !== "undefined") {
           window.localStorage.setItem(key, JSON.stringify(valueToStore));
         }
-      } catch (error) {
-        console.warn(`Error setting localStorage key "${key}":`, error);
+      } catch {
+        // localStorage may be unavailable (private browsing, quota exceeded)
       }
     },
     [key, storedValue],
@@ -59,30 +58,29 @@ export function useLocalStorage<T>(
       if (typeof window !== "undefined") {
         window.localStorage.removeItem(key);
       }
-    } catch (error) {
-      console.warn(`Error removing localStorage key "${key}":`, error);
+    } catch {
+      // localStorage may be unavailable
     }
   }, [key, initialValue]);
 
   // Sync with other tabs/windows
   useEffect(() => {
-    if (typeof window === "undefined") {return;}
+    if (globalThis.window === undefined) {
+      return;
+    }
 
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === key && e.newValue !== null) {
         try {
           setStoredValue(JSON.parse(e.newValue) as T);
-        } catch (error) {
-          console.warn(
-            `Error parsing localStorage change for key "${key}":`,
-            error,
-          );
+        } catch {
+          // Ignore malformed JSON from other tabs
         }
       }
     };
 
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
+    globalThis.addEventListener("storage", handleStorageChange);
+    return () => globalThis.removeEventListener("storage", handleStorageChange);
   }, [key]);
 
   return [storedValue, setValue, removeValue];

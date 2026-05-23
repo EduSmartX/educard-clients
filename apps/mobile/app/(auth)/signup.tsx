@@ -55,6 +55,15 @@ const isValidPhone = (phone: string): boolean => {
   return /^[6-9]\d{9}$/.test(digits);
 };
 
+/**
+ * Returns the icon color based on error state and focus state.
+ */
+function getIconColor(hasError: boolean, isFocused: boolean): string {
+  if (hasError) return '#ef4444';
+  if (isFocused) return Colors.primary[500];
+  return Colors.gray[400];
+}
+
 export default function SignupScreen() {
   const router = useRouter();
   const modal = useModal();
@@ -632,13 +641,7 @@ export default function SignupScreen() {
           >
             <Building2
               size={20}
-              color={
-                errors.orgName
-                  ? '#ef4444'
-                  : focusedInput === 'orgName'
-                    ? Colors.primary[500]
-                    : Colors.gray[400]
-              }
+              color={getIconColor(!!errors.orgName, focusedInput === 'orgName')}
             />
             <TextInput
               style={styles.input}
@@ -705,16 +708,7 @@ export default function SignupScreen() {
               errors.orgPhone && styles.inputError,
             ]}
           >
-            <Phone
-              size={20}
-              color={
-                errors.orgPhone
-                  ? '#ef4444'
-                  : focusedInput === 'orgPhone'
-                    ? Colors.primary[500]
-                    : Colors.gray[400]
-              }
-            />
+            <Phone size={20} color={getIconColor(!!errors.orgPhone, focusedInput === 'orgPhone')} />
             <TextInput
               style={styles.input}
               placeholder="9876543210"
@@ -856,13 +850,7 @@ export default function SignupScreen() {
           >
             <User
               size={18}
-              color={
-                errors.firstName
-                  ? '#ef4444'
-                  : focusedInput === 'firstName'
-                    ? Colors.primary[500]
-                    : Colors.gray[400]
-              }
+              color={getIconColor(!!errors.firstName, focusedInput === 'firstName')}
             />
             <TextInput
               style={styles.input}
@@ -894,16 +882,7 @@ export default function SignupScreen() {
               errors.lastName && styles.inputError,
             ]}
           >
-            <User
-              size={18}
-              color={
-                errors.lastName
-                  ? '#ef4444'
-                  : focusedInput === 'lastName'
-                    ? Colors.primary[500]
-                    : Colors.gray[400]
-              }
-            />
+            <User size={18} color={getIconColor(!!errors.lastName, focusedInput === 'lastName')} />
             <TextInput
               style={styles.input}
               placeholder="Doe"
@@ -937,16 +916,7 @@ export default function SignupScreen() {
             errors.phoneNumber && styles.inputError,
           ]}
         >
-          <Phone
-            size={20}
-            color={
-              errors.phoneNumber
-                ? '#ef4444'
-                : focusedInput === 'phone'
-                  ? Colors.primary[500]
-                  : Colors.gray[400]
-            }
-          />
+          <Phone size={20} color={getIconColor(!!errors.phoneNumber, focusedInput === 'phone')} />
           <TextInput
             style={styles.input}
             placeholder="9876543210"
@@ -981,16 +951,7 @@ export default function SignupScreen() {
             errors.password && styles.inputError,
           ]}
         >
-          <Lock
-            size={20}
-            color={
-              errors.password
-                ? '#ef4444'
-                : focusedInput === 'password'
-                  ? Colors.primary[500]
-                  : Colors.gray[400]
-            }
-          />
+          <Lock size={20} color={getIconColor(!!errors.password, focusedInput === 'password')} />
           <TextInput
             style={styles.input}
             placeholder="Create a strong password"
@@ -1032,13 +993,7 @@ export default function SignupScreen() {
         >
           <Lock
             size={20}
-            color={
-              errors.confirmPassword
-                ? '#ef4444'
-                : focusedInput === 'confirmPassword'
-                  ? Colors.primary[500]
-                  : Colors.gray[400]
-            }
+            color={getIconColor(!!errors.confirmPassword, focusedInput === 'confirmPassword')}
           />
           <TextInput
             style={styles.input}

@@ -38,8 +38,8 @@ interface StudentsListProps {
   onPageSizeChange?: (pageSize: number) => void;
   onSearch?: (query: string) => void;
   onFilterChange?: (filters: Record<string, string>) => void;
-  canCreateStudents?: boolean;  // NEW: Whether user can create students
-  isClassTeacher?: boolean;      // NEW: Whether user is a class teacher
+  canCreateStudents?: boolean; // NEW: Whether user can create students
+  isClassTeacher?: boolean; // NEW: Whether user is a class teacher
 }
 
 export function StudentsList({
@@ -57,9 +57,9 @@ export function StudentsList({
   onPageSizeChange,
   onSearch,
   onFilterChange,
-  canCreateStudents = true,  // Default true for admins
+  canCreateStudents = true, // Default true for admins
   isClassTeacher = false,
-}: StudentsListProps) {
+}: Readonly<StudentsListProps>) {
   const [appliedSearchQuery, setAppliedSearchQuery] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [showFilters, setShowFilters] = useState(false);
@@ -70,7 +70,7 @@ export function StudentsList({
 
   const classOptions = classes.map((cls) => ({
     value: cls.public_id,
-    label: `${cls.class_master.name} - ${cls.name}`,
+    label: `${cls.class_master?.name ?? ''} - ${cls.name}`,
   }));
 
   const filterFields: FilterField[] = [
@@ -118,7 +118,7 @@ export function StudentsList({
     onEdit,
     onDelete: onDelete || (() => {}),
     isDeletedView: showDeleted,
-    isClassTeacher,  // Pass to columns for conditional Edit/Delete
+    isClassTeacher, // Pass to columns for conditional Edit/Delete
   });
 
   return (
@@ -140,7 +140,7 @@ export function StudentsList({
             : []),
         ]}
       >
-        <div className="flex gap-2 items-center">
+        <div className="flex items-center gap-2">
           {onToggleDeleted && (
             <DeletedViewToggle
               showDeleted={showDeleted}
@@ -157,7 +157,7 @@ export function StudentsList({
         <CardHeader>
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-4">
-              <div className="text-sm text-muted-foreground">
+              <div className="text-muted-foreground text-sm">
                 {students.length} {students.length === 1 ? 'student' : 'students'} found
               </div>
               <Button
@@ -172,8 +172,8 @@ export function StudentsList({
 
             {/* Active filters display */}
             {Object.keys(filters).length > 0 && (
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm text-muted-foreground">Active filters:</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-muted-foreground text-sm">Active filters:</span>
                 {Object.entries(filters).map(([key, value]) => {
                   // Get label for class filter
                   let displayValue = value;
@@ -196,7 +196,7 @@ export function StudentsList({
                   return (
                     <Badge key={key} variant="secondary" className="gap-1">
                       <span className="capitalize">
-                        {key.replace(/_/g, ' ').replace('__', ': ')}: {displayValue}
+                        {key.replaceAll('_', ' ').replaceAll('__', ': ')}: {displayValue}
                       </span>
                       <button
                         type="button"
@@ -210,7 +210,7 @@ export function StudentsList({
                             onFilterChange(newFilters);
                           }
                         }}
-                        className="rounded-full p-0.5 hover:bg-muted"
+                        className="hover:bg-muted rounded-full p-0.5"
                       >
                         <X className="h-3 w-3" />
                       </button>

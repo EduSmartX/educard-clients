@@ -292,9 +292,8 @@ export function MarksOverviewPage() {
       queryClient.invalidateQueries({ queryKey: ['marks-overview'] });
 
       toast.success(result.message || `Marks saved for ${result.data.count} student(s)`);
-    } catch (error) {
+    } catch {
       toast.error('Failed to save marks');
-      console.error(error);
     } finally {
       setIsSaving(false);
     }

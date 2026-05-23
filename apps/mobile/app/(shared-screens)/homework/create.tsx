@@ -160,8 +160,7 @@ export default function CreateHomeworkScreen() {
 
         await uploadMutation.mutateAsync({ publicId: homeworkId, formData });
       }
-    } catch (error) {
-      console.error('Error uploading attachments:', error);
+    } catch {
       // Don't fail the whole operation, homework is already created
       Alert.alert('Warning', 'Homework created but some attachments failed to upload');
     } finally {

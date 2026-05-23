@@ -55,7 +55,7 @@ export function TeachersList({
   onSearch,
   onFilterChange,
   viewMode = 'admin',
-}: TeachersListProps) {
+}: Readonly<TeachersListProps>) {
   const isEmployeeView = viewMode === 'employee';
   const [appliedSearchQuery, setAppliedSearchQuery] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
@@ -65,8 +65,8 @@ export function TeachersList({
     const designations = Array.from(
       new Set(teachers.map((teacher) => teacher.designation).filter(Boolean))
     ).map((designation) => ({
-      value: designation!,
-      label: designation!,
+      value: designation,
+      label: designation,
     }));
 
     return [
@@ -155,7 +155,7 @@ export function TeachersList({
                 {Object.entries(filters).map(([key, value]) => (
                   <Badge key={key} variant="secondary" className="gap-1">
                     <span className="capitalize">
-                      {key.replace(/_/g, ' ')}: {value}
+                      {key.replaceAll('_', ' ')}: {value}
                     </span>
                     <button
                       type="button"

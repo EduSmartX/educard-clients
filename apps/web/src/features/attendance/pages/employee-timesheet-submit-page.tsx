@@ -48,6 +48,7 @@ import {
   getEmployeeAttendance,
   checkTimesheetStatus,
 } from '@/features/attendance/api/attendance-api';
+import { isSaturdayWorking as isSaturdayWorkingDay } from '@/features/attendance/utils';
 import { fetchMyLeaveRequests } from '@/features/leave/api/leave-api';
 import type { LeaveRequest } from '@/features/leave/types';
 import { LeaveRequestDialog } from '@/features/attendance/components/leave-request-dialog';
@@ -71,6 +72,62 @@ type WeekRow = {
   exception_reason?: string | null;
 };
 
+function determineLockReason(
+  isHoliday: boolean,
+  isForceWorking: boolean,
+  isLeave: boolean,
+  exception: { type: string; reason: string } | undefined,
+  workingDay: boolean
+): { reason: WeekRow['locked_reason']; description?: string } {
+  if (isHoliday && !isForceWorking) {
+    return { reason: 'holiday' };
+  }
+  if (isLeave) {
+    return { reason: 'leave' };
+  }
+  if (exception) {
+    if (exception.type === 'force_holiday' || exception.type === 'FORCE_HOLIDAY') {
+      return { reason: 'exception_holiday', description: `Exception: ${exception.reason}` };
+    }
+    if (exception.type === 'force_working' || exception.type === 'FORCE_WORKING') {
+      return { reason: 'exception_working' };
+    }
+  }
+  if (!workingDay) {
+    return { reason: 'non_working_day', description: 'Non-working day' };
+  }
+  return { reason: undefined };
+}
+
+function updateWeekRow(
+  weeks: WeekBlock[],
+  weekId: string,
+  date: string,
+  field: 'morning_present' | 'afternoon_present',
+  value: boolean
+): WeekBlock[] {
+  return weeks.map((week) => {
+    if (week.id !== weekId) {
+      return week;
+    }
+    const updatedRows = week.rows.map((row) =>
+      row.date === date ? { ...row, [field]: value } : row
+    );
+    return { ...week, rows: updatedRows };
+  });
+}
+
+function getSessionButtonClass(isPresent: boolean, disabled?: boolean): string {
+  if (isPresent) {
+    const hoverClass = disabled ? 'cursor-not-allowed opacity-75' : 'hover:bg-green-700';
+    return `border-green-600 bg-green-600 text-white shadow-sm ${hoverClass}`;
+  }
+  const hoverClass = disabled
+    ? 'cursor-not-allowed opacity-75'
+    : 'hover:border-red-500 hover:bg-red-100';
+  return `border-2 border-red-400 bg-red-50 text-red-700 ${hoverClass}`;
+}
+
 // Improved attendance indicator with side-by-side morning and afternoon buttons
 const AttendanceIndicator = ({
   morningPresent,
@@ -78,24 +135,20 @@ const AttendanceIndicator = ({
   disabled,
   onMorningClick,
   onAfternoonClick,
-}: {
+}: Readonly<{
   morningPresent: boolean;
   afternoonPresent: boolean;
   disabled?: boolean;
   onMorningClick?: () => void;
   onAfternoonClick?: () => void;
-}) => {
+}>) => {
   return (
     <div className="flex justify-center gap-1.5 sm:gap-2">
       {/* Morning Session */}
       <Button
         variant={morningPresent ? 'default' : 'outline'}
         size="sm"
-        className={`h-8 min-w-[60px] px-2 sm:h-10 sm:min-w-[120px] sm:px-6 ${
-          morningPresent
-            ? `border-green-600 bg-green-600 text-white shadow-sm ${disabled ? 'cursor-not-allowed opacity-75' : 'hover:bg-green-700'}`
-            : `border-2 border-red-400 bg-red-50 text-red-700 ${disabled ? 'cursor-not-allowed opacity-75' : 'hover:border-red-500 hover:bg-red-100'}`
-        }`}
+        className={`h-8 min-w-[60px] px-2 sm:h-10 sm:min-w-[120px] sm:px-6 ${getSessionButtonClass(morningPresent, disabled)}`}
         onClick={disabled ? undefined : onMorningClick}
         disabled={disabled}
       >
@@ -109,11 +162,7 @@ const AttendanceIndicator = ({
       <Button
         variant={afternoonPresent ? 'default' : 'outline'}
         size="sm"
-        className={`h-8 min-w-[60px] px-2 sm:h-10 sm:min-w-[120px] sm:px-6 ${
-          afternoonPresent
-            ? `border-green-600 bg-green-600 text-white shadow-sm ${disabled ? 'cursor-not-allowed opacity-75' : 'hover:bg-green-700'}`
-            : `border-2 border-red-400 bg-red-50 text-red-700 ${disabled ? 'cursor-not-allowed opacity-75' : 'hover:border-red-500 hover:bg-red-100'}`
-        }`}
+        className={`h-8 min-w-[60px] px-2 sm:h-10 sm:min-w-[120px] sm:px-6 ${getSessionButtonClass(afternoonPresent, disabled)}`}
         onClick={disabled ? undefined : onAfternoonClick}
         disabled={disabled}
       >
@@ -153,10 +202,10 @@ function getSubmitButtonColor(status: WeekBlock['submissionStatus']): string {
 function SubmitButtonContent({
   isPending,
   status,
-}: {
+}: Readonly<{
   isPending: boolean;
   status: WeekBlock['submissionStatus'];
-}) {
+}>) {
   if (isPending) {
     return <Loader2 className="h-4 w-4 animate-spin" />;
   }
@@ -319,21 +368,7 @@ export function EmployeeTimesheetSubmitPage() {
         }
 
         if (dayOfWeek === 6) {
-          const pattern = workingDayPolicy.saturday_off_pattern;
-          if (pattern === 'NONE') {
-            return true;
-          }
-          if (pattern === 'ALL') {
-            return false;
-          }
-          const saturdayOfMonth = Math.ceil(day.getDate() / 7);
-          if (pattern === 'FIRST_AND_THIRD') {
-            return saturdayOfMonth !== 1 && saturdayOfMonth !== 3;
-          }
-          if (pattern === 'SECOND_AND_FOURTH') {
-            return saturdayOfMonth !== 2 && saturdayOfMonth !== 4;
-          }
-          return true;
+          return isSaturdayWorkingDay(day, workingDayPolicy.saturday_off_pattern);
         }
 
         return true;
@@ -381,38 +416,36 @@ export function EmployeeTimesheetSubmitPage() {
           let lockedReason: WeekRow['locked_reason'] = undefined;
           let description = holidayInfo?.name || holidayInfo?.description;
 
-          if (isHoliday && !isForceWorking) {
-            lockedReason = 'holiday';
-          } else if (isLeave) {
-            lockedReason = 'leave';
-          } else if (exception) {
-            if (exception.type === 'force_holiday' || exception.type === 'FORCE_HOLIDAY') {
-              lockedReason = 'exception_holiday';
-              description = `Exception: ${exception.reason}`;
-            } else if (exception.type === 'force_working' || exception.type === 'FORCE_WORKING') {
-              lockedReason = 'exception_working';
-            }
-          } else if (!workingDay) {
-            lockedReason = 'non_working_day';
-            description = 'Non-working day';
+          const lockResult = determineLockReason(
+            isHoliday,
+            isForceWorking,
+            isLeave,
+            exception,
+            workingDay
+          );
+          lockedReason = lockResult.reason;
+          if (lockResult.description) {
+            description = lockResult.description;
           }
 
           const isLocked = !!lockedReason && lockedReason !== 'exception_working';
 
           const submittedData = submittedAttendanceMap.get(key);
 
+          const resolvePresence = (submitted: boolean | undefined): boolean => {
+            if (submittedData && submitted !== undefined) {
+              return submitted;
+            }
+            if (isLocked) {
+              return false;
+            }
+            return defaultPresent;
+          };
+
           return {
             date: key,
-            morning_present: submittedData
-              ? submittedData.morning_present
-              : isLocked
-                ? false
-                : defaultPresent,
-            afternoon_present: submittedData
-              ? submittedData.afternoon_present
-              : isLocked
-                ? false
-                : defaultPresent,
+            morning_present: resolvePresence(submittedData?.morning_present),
+            afternoon_present: resolvePresence(submittedData?.afternoon_present),
             remarks: submittedData ? submittedData.remarks : '',
             locked_reason: lockedReason,
             holiday_description: description,
@@ -439,8 +472,7 @@ export function EmployeeTimesheetSubmitPage() {
           reviewComments: submission?.review_comments || null, // Include rejection reason
         },
       ]);
-    } catch (error) {
-      console.error('Error loading week data:', error);
+    } catch {
       toast.error('Unable to load leave/holiday data for selected week.');
     } finally {
       setAddingWeek(false);
@@ -453,24 +485,7 @@ export function EmployeeTimesheetSubmitPage() {
     field: 'morning_present' | 'afternoon_present',
     value: boolean
   ) => {
-    setWeeks((prev) =>
-      prev.map((week) => {
-        if (week.id !== weekId) {
-          return week;
-        }
-        return {
-          ...week,
-          rows: week.rows.map((row) =>
-            row.date === date
-              ? {
-                  ...row,
-                  [field]: value,
-                }
-              : row
-          ),
-        };
-      })
-    );
+    setWeeks((prev) => updateWeekRow(prev, weekId, date, field, value));
   };
 
   const editableRowsByWeek = (week: WeekBlock) => week.rows.filter((row) => !row.locked_reason);
@@ -542,6 +557,75 @@ export function EmployeeTimesheetSubmitPage() {
   const handleLeaveSuccess = () => {
     // Reload weeks after leave request is successful
     toast.info('Please reload weeks to see updated leave information');
+  };
+
+  const renderRowAction = (row: WeekBlock['rows'][number]) => {
+    if (row.locked_reason === 'leave' && row.leave_type_name && row.leave_status) {
+      return (
+        <div className="flex flex-col items-center gap-1">
+          <Badge
+            variant="outline"
+            className={`font-medium ${
+              row.leave_status === 'approved'
+                ? 'border-green-300 bg-green-100 text-green-700'
+                : 'border-orange-300 bg-orange-100 text-orange-700'
+            }`}
+          >
+            {row.leave_type_name}
+          </Badge>
+          <Badge
+            variant="outline"
+            className={`text-xs font-medium ${
+              row.leave_status === 'approved'
+                ? 'border-green-200 bg-green-50 text-green-600'
+                : 'border-orange-200 bg-orange-50 text-orange-600'
+            }`}
+          >
+            {row.leave_status.charAt(0).toUpperCase() + row.leave_status.slice(1)}
+          </Badge>
+        </div>
+      );
+    }
+    if (row.locked_reason === 'exception_working' && row.exception_reason) {
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge
+              variant="outline"
+              className="cursor-help border-green-300 bg-green-100 font-medium text-green-700"
+            >
+              <Calendar className="mr-1 h-3 w-3" />
+              Exceptional Day
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="font-semibold">{row.exception_type}</p>
+            <p>{row.exception_reason}</p>
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+    if (!row.locked_reason || row.locked_reason === 'exception_working') {
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleRequestLeave(row.date)}
+              className="border-blue-400 bg-blue-50 font-medium text-blue-700 hover:bg-blue-100 hover:text-blue-800"
+            >
+              <Calendar className="mr-1.5 h-4 w-4" />
+              <span className="text-sm">Apply Leave</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Apply for leave on this date</p>
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+    return <span className="text-sm text-gray-400">—</span>;
   };
 
   return (
@@ -804,69 +888,7 @@ export function EmployeeTimesheetSubmitPage() {
                             />
                           </TableCell>
                           <TableCell className="hidden px-2 py-2 text-center sm:table-cell sm:px-4 sm:py-4">
-                            {row.locked_reason === 'leave' &&
-                            row.leave_type_name &&
-                            row.leave_status ? (
-                              <div className="flex flex-col items-center gap-1">
-                                <Badge
-                                  variant="outline"
-                                  className={`font-medium ${
-                                    row.leave_status === 'approved'
-                                      ? 'border-green-300 bg-green-100 text-green-700'
-                                      : 'border-orange-300 bg-orange-100 text-orange-700'
-                                  }`}
-                                >
-                                  {row.leave_type_name}
-                                </Badge>
-                                <Badge
-                                  variant="outline"
-                                  className={`text-xs font-medium ${
-                                    row.leave_status === 'approved'
-                                      ? 'border-green-200 bg-green-50 text-green-600'
-                                      : 'border-orange-200 bg-orange-50 text-orange-600'
-                                  }`}
-                                >
-                                  {row.leave_status.charAt(0).toUpperCase() +
-                                    row.leave_status.slice(1)}
-                                </Badge>
-                              </div>
-                            ) : row.locked_reason === 'exception_working' &&
-                              row.exception_reason ? (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Badge
-                                    variant="outline"
-                                    className="cursor-help border-green-300 bg-green-100 font-medium text-green-700"
-                                  >
-                                    <Calendar className="mr-1 h-3 w-3" />
-                                    Exceptional Day
-                                  </Badge>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p className="font-semibold">{row.exception_type}</p>
-                                  <p>{row.exception_reason}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            ) : !row.locked_reason || row.locked_reason === 'exception_working' ? (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleRequestLeave(row.date)}
-                                    className="border-blue-400 bg-blue-50 font-medium text-blue-700 hover:bg-blue-100 hover:text-blue-800"
-                                  >
-                                    <Calendar className="mr-1.5 h-4 w-4" />
-                                    <span className="text-sm">Apply Leave</span>
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Apply for leave on this date</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            ) : (
-                              <span className="text-sm text-gray-400">—</span>
-                            )}
+                            {renderRowAction(row)}
                           </TableCell>
                         </TableRow>
                       );

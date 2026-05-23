@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 import { Button } from './button';
-import { cn } from '@/lib/utils';
+import { cn, formatFileSize } from '@/lib/utils';
 
 export interface UploadedFile {
   id: string;
@@ -54,16 +54,6 @@ export interface FileUploadProps {
   className?: string;
 }
 
-const formatFileSize = (bytes: number): string => {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
-  }
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-};
-
 const getFileIcon = (type: string) => {
   if (type.startsWith('image/')) {
     return ImageIcon;
@@ -77,7 +67,7 @@ const getFileIcon = (type: string) => {
   return File;
 };
 
-const createFileId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+const createFileId = () => `${Date.now()}-${crypto.randomUUID().slice(0, 9)}`;
 
 export const FileUpload = memo(
   ({

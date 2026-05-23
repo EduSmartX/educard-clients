@@ -6,29 +6,26 @@
 
 import {
   createHolidaysApi,
-  HolidayType,
-  HolidayTypeLabels,
   type Holiday,
   type HolidayListParams,
   type HolidayCreatePayload,
   type HolidayUpdatePayload,
   type WorkingDayPolicy,
   type WorkingDayPolicyCreatePayload,
-  type HolidayTypeValue,
   type SaturdayOffPatternType,
 } from '@educard/shared';
 
 import { apiClient } from '@/api/client';
 
 // Re-export types for external use with backward-compatible names
-export type { Holiday, WorkingDayPolicy, HolidayTypeValue };
+export type { Holiday, WorkingDayPolicy, HolidayTypeValue } from '@educard/shared';
 export type FetchHolidaysParams = HolidayListParams;
 export type CreateHolidayPayload = HolidayCreatePayload;
 export type UpdateHolidayPayload = HolidayUpdatePayload;
 export type SaturdayOffPattern = SaturdayOffPatternType;
 
 // Re-export constants
-export { HolidayType, HolidayTypeLabels };
+export { HolidayType, HolidayTypeLabels } from '@educard/shared';
 
 // Note: We use manual API functions below instead of shared factory
 // because this module exports additional response wrapper types
@@ -65,7 +62,9 @@ export async function getHolidays(params?: FetchHolidaysParams): Promise<ApiList
   if (params?.page) queryParams.append('page', params.page.toString());
   if (params?.page_size) queryParams.append('page_size', params.page_size.toString());
 
-  const url = `/attendance/holiday-calendar/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+  const queryString = queryParams.toString();
+  const suffix = queryString ? `?${queryString}` : '';
+  const url = `/attendance/holiday-calendar/${suffix}`;
   const response = await apiClient.get<ApiListResponse<Holiday>>(url);
   return response.data;
 }

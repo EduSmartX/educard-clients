@@ -61,21 +61,16 @@ export async function fetchTeacher(publicId: string, isDeleted?: boolean): Promi
   const baseUrl = isDeleted ? ADMIN_BASE_URL : getBaseUrl(false);
   const params = isDeleted ? { is_deleted: 'true' } : {};
 
-  try {
-    const response = await api.get<ApiResponse<TeacherDetail>>(`${baseUrl}${publicId}/`, {
-      params,
-    });
+  const response = await api.get<ApiResponse<TeacherDetail>>(`${baseUrl}${publicId}/`, {
+    params,
+  });
 
-    // Ensure we return valid data or throw an error
-    if (!response?.data?.data) {
-      throw new Error('Teacher data not found');
-    }
-
-    return response.data.data;
-  } catch (error) {
-    console.error('Error fetching teacher:', error);
-    throw error;
+  // Ensure we return valid data or throw an error
+  if (!response?.data?.data) {
+    throw new Error('Teacher data not found');
   }
+
+  return response.data.data;
 }
 
 /**

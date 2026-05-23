@@ -127,8 +127,7 @@ export function FormAttachmentPicker({
       if (errors.length > 0) {
         Alert.alert('Some files skipped', errors.join('\n'));
       }
-    } catch (error) {
-      console.error('Error picking document:', error);
+    } catch {
       Alert.alert('Error', 'Failed to pick document');
     } finally {
       setIsLoading(false);
@@ -146,7 +145,7 @@ export function FormAttachmentPicker({
 
   return (
     <View style={styles.container}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {!!label && <Text style={styles.label}>{label}</Text>}
 
       <TouchableOpacity
         style={[styles.addButton, !canAddMore && styles.addButtonDisabled]}
@@ -168,11 +167,11 @@ export function FormAttachmentPicker({
       {files.length > 0 && (
         <View style={styles.fileList}>
           {files.map((file, index) => {
-            const FileIcon = getFileIcon(file.type);
+            const Icon = getFileIcon(file.type);
             return (
               <View key={`${file.name}-${index}`} style={styles.fileItem}>
                 <View style={styles.fileIcon}>
-                  <FileIcon size={20} color={Colors.primary[500]} />
+                  <Icon size={20} color={Colors.primary[500]} />
                 </View>
                 <View style={styles.fileInfo}>
                   <Text style={styles.fileName} numberOfLines={1}>
@@ -201,7 +200,7 @@ export function FormAttachmentPicker({
         </Text>
       )}
 
-      {hint && <Text style={styles.hint}>{hint}</Text>}
+      {!!hint && <Text style={styles.hint}>{hint}</Text>}
     </View>
   );
 }

@@ -138,7 +138,6 @@ export function ExamFormPage() {
         }
       } catch {
         // If validation API fails, allow the date (server will validate on submit)
-        console.warn('Date validation API failed, proceeding without holiday check');
       }
     }
 

@@ -41,6 +41,29 @@ type VerifyOtpFormData = z.infer<typeof verifyOtpSchema>;
 
 type Step = 'request' | 'verify' | 'success';
 
+/** Extract error message from OTP request API response */
+function getOtpRequestError(err: unknown): string | null {
+  const error = err as {
+    response?: {
+      data?: {
+        errors?: { email?: string; username?: string };
+        message?: string;
+      };
+    };
+    message?: string;
+  };
+
+  const fieldErrors = error?.response?.data?.errors;
+  if (fieldErrors) {
+    const fieldMessage = fieldErrors.email || fieldErrors.username;
+    if (fieldMessage) {
+      return fieldMessage;
+    }
+  }
+
+  return error?.response?.data?.message || error?.message || ErrorMessages.AUTH.SEND_OTP_FAILED;
+}
+
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<Step>('request');
@@ -83,30 +106,8 @@ export default function ForgotPasswordPage() {
       setCurrentStep('verify');
       toast.success(`${SuccessMessages.AUTH.OTP_SENT} to your ${useEmail ? 'email' : 'account'}!`);
     } catch (err: unknown) {
-      const error = err as {
-        response?: {
-          data?: {
-            errors?: { email?: string; username?: string };
-            message?: string;
-          };
-        };
-        message?: string;
-      };
-
-      // Check for field-level errors first
-      const fieldErrors = error?.response?.data?.errors;
-      if (fieldErrors) {
-        const errorMessage = fieldErrors.email || fieldErrors.username;
-        if (errorMessage) {
-          toast.error(errorMessage);
-          return;
-        }
-      }
-
-      // Fallback to generic error
-      const errorMessage =
-        error?.response?.data?.message || error?.message || ErrorMessages.AUTH.SEND_OTP_FAILED;
-      toast.error(errorMessage);
+      const errorMessage = getOtpRequestError(err);
+      toast.error(errorMessage ?? ErrorMessages.AUTH.SEND_OTP_FAILED);
     } finally {
       setIsLoading(false);
     }
@@ -351,7 +352,7 @@ export default function ForgotPasswordPage() {
                     id="otp"
                     type="text"
                     maxLength={6}
-                    placeholder={FormPlaceholders.OTP_MASK}
+                    placeholder="000000"
                     className={cn(
                       'h-16 w-full rounded-xl border-2 text-center text-2xl font-bold tracking-[0.5em] transition-all',
                       'focus:ring-4 focus:outline-none',
@@ -381,7 +382,7 @@ export default function ForgotPasswordPage() {
                     <input
                       id="newPassword"
                       type={showPassword ? 'text' : 'password'}
-                      placeholder={FormPlaceholders.ENTER_NEW_PASSWORD}
+                      placeholder="Enter new password"
                       className={cn(
                         'h-14 w-full rounded-xl border-2 pr-12 pl-4 text-base transition-all duration-200',
                         'focus:ring-4 focus:outline-none',
@@ -415,7 +416,7 @@ export default function ForgotPasswordPage() {
                     <input
                       id="confirmPassword"
                       type={showConfirmPassword ? 'text' : 'password'}
-                      placeholder={FormPlaceholders.CONFIRM_NEW_PASSWORD}
+                      placeholder={FormPlaceholders.CONFIRM_PASSWORD}
                       className={cn(
                         'h-14 w-full rounded-xl border-2 pr-12 pl-4 text-base transition-all duration-200',
                         'focus:ring-4 focus:outline-none',

@@ -10,14 +10,17 @@ interface AttendanceStatsCardsProps {
   isLoading?: boolean;
 }
 
-export function AttendanceStatsCards({ stats, isLoading = false }: AttendanceStatsCardsProps) {
+export function AttendanceStatsCards({
+  stats,
+  isLoading = false,
+}: Readonly<AttendanceStatsCardsProps>) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {[...Array(3)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {['skeleton-1', 'skeleton-2', 'skeleton-3'].map((key) => (
+          <Card key={key} className="animate-pulse">
             <CardContent className="p-6">
-              <div className="h-16 bg-gray-200 rounded"></div>
+              <div className="h-16 rounded bg-gray-200"></div>
             </CardContent>
           </Card>
         ))}
@@ -53,20 +56,18 @@ export function AttendanceStatsCards({ stats, isLoading = false }: AttendanceSta
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      {statCards.map((stat, index) => {
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      {statCards.map((stat) => {
         const Icon = stat.icon;
         return (
-          <Card key={index} className={`${stat.bgColor} border ${stat.borderColor}`}>
+          <Card key={stat.title} className={`${stat.bgColor} border ${stat.borderColor}`}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">
-                    {stat.title}
-                  </p>
+                  <p className="mb-1 text-sm font-medium text-gray-600">{stat.title}</p>
                   <p className="text-3xl font-bold">{stat.value}</p>
                 </div>
-                <div className={`p-3 rounded-full ${stat.bgColor}`}>
+                <div className={`rounded-full p-3 ${stat.bgColor}`}>
                   <Icon className={`h-6 w-6 ${stat.iconColor}`} />
                 </div>
               </div>

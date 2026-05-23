@@ -199,8 +199,8 @@ export function ExamOverviewPage() {
         id: examId,
         status: newStatus,
       });
-    } catch (error) {
-      console.error('Failed to update exam status:', error);
+    } catch {
+      // Error handled by mutation's onError callback
     }
   };
 
@@ -223,8 +223,8 @@ export function ExamOverviewPage() {
         sessionId: selectedSessionId,
         status: pendingBulkStatus,
       });
-    } catch (error) {
-      console.error('Failed to bulk update exam statuses:', error);
+    } catch {
+      // Error handled by mutation's onError callback
     } finally {
       setPendingBulkStatus(null);
     }

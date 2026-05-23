@@ -152,19 +152,57 @@ function buildDaySlotMap(allSlots: TimetableSlot[] | undefined): Record<number, 
   return map;
 }
 
+function getDayButtonClass(isActive: boolean, hasSlots: boolean): string {
+  if (isActive) {
+    return 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-300';
+  }
+  if (hasSlots) {
+    return 'border border-emerald-300 bg-emerald-50 text-emerald-700 hover:border-indigo-300 hover:bg-indigo-50';
+  }
+  return 'border border-slate-200 bg-white text-slate-500 hover:border-indigo-300 hover:bg-indigo-50';
+}
+
+function getSaveToButtonClass(isActive: boolean, isIncluded: boolean): string {
+  if (isActive) {
+    return 'cursor-default bg-indigo-100 text-indigo-700 ring-1 ring-indigo-300';
+  }
+  if (isIncluded) {
+    return 'bg-indigo-600 text-white shadow-sm';
+  }
+  return 'border border-slate-200 bg-white text-slate-400 hover:border-indigo-300 hover:text-indigo-600';
+}
+
+function getSaveButtonLabel(isPending: boolean, dayCount: number): string {
+  if (isPending) {
+    return 'Saving…';
+  }
+  if (dayCount > 1) {
+    return `Save (${dayCount} days)`;
+  }
+  return 'Save';
+}
+
+function getCopyButtonLabel(isCopying: boolean, dayCount: number): string {
+  if (isCopying) {
+    return 'Copying…';
+  }
+  const suffix = dayCount === 1 ? '' : 's';
+  return `Copy to ${dayCount} day${suffix}`;
+}
+
 function DayTabs({
   activeDay,
   onActiveDayChange,
   saveToDays,
   onSaveToDaysChange,
   configuredDays,
-}: {
+}: Readonly<{
   activeDay: number;
   onActiveDayChange: (day: number) => void;
   saveToDays: number[];
   onSaveToDaysChange: (days: number[]) => void;
   configuredDays: Set<number>;
-}) {
+}>) {
   const toggleSaveToDay = (day: number) => {
     if (day === activeDay) {
       return; // active day is always included
@@ -172,7 +210,7 @@ function DayTabs({
     if (saveToDays.includes(day)) {
       onSaveToDaysChange(saveToDays.filter((d) => d !== day));
     } else {
-      onSaveToDaysChange([...saveToDays, day].sort());
+      onSaveToDaysChange([...saveToDays, day].sort((a, b) => a - b));
     }
   };
 
@@ -188,7 +226,7 @@ function DayTabs({
     if (!days.includes(activeDay)) {
       days.push(activeDay);
     }
-    onSaveToDaysChange(days.sort());
+    onSaveToDaysChange([...days].sort((a, b) => a - b));
   };
 
   const selectSaveAll = () => onSaveToDaysChange([...ALL_DAYS]);
@@ -202,18 +240,13 @@ function DayTabs({
           {ALL_DAYS.map((day) => {
             const isActive = activeDay === day;
             const hasSlots = configuredDays.has(day);
+            const dayButtonClass = getDayButtonClass(isActive, hasSlots);
             return (
               <button
                 key={day}
                 type="button"
                 onClick={() => handleActiveDayChange(day)}
-                className={`relative rounded-lg px-3.5 py-2 text-xs font-semibold transition-all ${
-                  isActive
-                    ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-300'
-                    : hasSlots
-                      ? 'border border-emerald-300 bg-emerald-50 text-emerald-700 hover:border-indigo-300 hover:bg-indigo-50'
-                      : 'border border-slate-200 bg-white text-slate-500 hover:border-indigo-300 hover:bg-indigo-50'
-                }`}
+                className={`relative rounded-lg px-3.5 py-2 text-xs font-semibold transition-all ${dayButtonClass}`}
               >
                 {DAY_LABELS[day]}
                 {hasSlots && !isActive && (
@@ -257,13 +290,7 @@ function DayTabs({
                 key={day}
                 type="button"
                 onClick={() => toggleSaveToDay(day)}
-                className={`rounded-md px-2.5 py-1.5 text-[11px] font-medium transition-all ${
-                  isActive
-                    ? 'cursor-default bg-indigo-100 text-indigo-700 ring-1 ring-indigo-300'
-                    : isIncluded
-                      ? 'bg-indigo-600 text-white shadow-sm'
-                      : 'border border-slate-200 bg-white text-slate-400 hover:border-indigo-300 hover:text-indigo-600'
-                }`}
+                className={`rounded-md px-2.5 py-1.5 text-[11px] font-medium transition-all ${getSaveToButtonClass(isActive, isIncluded)}`}
               >
                 {DAY_SHORT_LABELS[day]}
                 {isActive && ' ✎'}
@@ -282,13 +309,13 @@ function SlotRow({
   onChange,
   onRemove,
   hasOverlap,
-}: {
+}: Readonly<{
   slot: BulkSlotItem;
   index: number;
   onChange: (updated: BulkSlotItem) => void;
   onRemove: () => void;
   hasOverlap?: boolean;
-}) {
+}>) {
   const colors = SLOT_TYPE_COLORS[slot.slot_type] || SLOT_TYPE_COLORS.period;
   const isBreak = BREAK_TYPES.has(slot.slot_type);
   const Icon = SLOT_TYPE_ICONS[slot.slot_type] || Clock;
@@ -381,14 +408,14 @@ function CopyToDaysDialog({
   configuredDays,
   onCopy,
   isCopying,
-}: {
+}: Readonly<{
   open: boolean;
   onOpenChange: (open: boolean) => void;
   sourceDay: number;
   configuredDays: Set<number>;
   onCopy: (targetDays: number[]) => void;
   isCopying: boolean;
-}) {
+}>) {
   const [targetDays, setTargetDays] = useState<number[]>([]);
 
   // Reset when opened
@@ -401,7 +428,7 @@ function CopyToDaysDialog({
 
   const toggle = (day: number) => {
     setTargetDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort()
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort((a, b) => a - b)
     );
   };
 
@@ -470,9 +497,7 @@ function CopyToDaysDialog({
             className="bg-indigo-600 hover:bg-indigo-700"
           >
             <Copy className="mr-1.5 h-4 w-4" />
-            {isCopying
-              ? 'Copying…'
-              : `Copy to ${targetDays.length} day${targetDays.length !== 1 ? 's' : ''}`}
+            {getCopyButtonLabel(isCopying, targetDays.length)}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -486,13 +511,13 @@ function SlotEditor({
   saveToDays,
   daySlotMap,
   onSaved,
-}: {
+}: Readonly<{
   group: ClassGroup;
   activeDay: number;
   saveToDays: number[];
   daySlotMap: Record<number, BulkSlotItem[]>;
   onSaved: () => void;
-}) {
+}>) {
   const saveMutation = useBulkSaveSlots(group.public_id);
 
   const [slots, setSlots] = useState<BulkSlotItem[]>([]);
@@ -537,12 +562,12 @@ function SlotEditor({
     return Object.keys(daySlotMap)
       .map(Number)
       .filter((d) => d !== activeDay && daySlotMap[d].length > 0)
-      .sort();
+      .sort((a, b) => a - b);
   }, [daySlotMap, activeDay]);
 
   const addSlot = () => {
     const nextNum = slots.length > 0 ? Math.max(...slots.map((s) => s.slot_number)) + 1 : 1;
-    const prev = slots[slots.length - 1];
+    const prev = slots.at(-1);
     const newSlot = defaultSlot(nextNum);
     if (prev?.end_time) {
       newSlot.start_time = prev.end_time;
@@ -552,12 +577,12 @@ function SlotEditor({
 
   const addBreak = () => {
     const nextNum = slots.length > 0 ? Math.max(...slots.map((s) => s.slot_number)) + 1 : 1;
-    const prev = slots[slots.length - 1];
+    const prev = slots.at(-1);
     setSlots([
       ...slots,
       {
         slot_number: nextNum,
-        slot_type: SLOT_TYPE.SHORT_BREAK as SlotType,
+        slot_type: SLOT_TYPE.SHORT_BREAK,
         start_time: prev?.end_time || '',
         end_time: '',
         label: 'Short Break',
@@ -662,8 +687,8 @@ function SlotEditor({
             <div>
               <p className="text-sm font-semibold text-red-700">Time Overlap Detected</p>
               <ul className="mt-1 space-y-0.5">
-                {overlaps.map((msg, i) => (
-                  <li key={i} className="text-xs text-red-600">
+                {overlaps.map((msg) => (
+                  <li key={msg} className="text-xs text-red-600">
                     • {msg}
                   </li>
                 ))}
@@ -707,7 +732,7 @@ function SlotEditor({
           <div className="space-y-1.5">
             {slots.map((slot, idx) => (
               <SlotRow
-                key={idx}
+                key={`${slot.slot_number}-${slot.slot_type}-${idx}`}
                 slot={slot}
                 index={idx}
                 onChange={(updated) => updateSlot(idx, updated)}
@@ -744,9 +769,7 @@ function SlotEditor({
                 className="bg-indigo-600 hover:bg-indigo-700"
               >
                 <Save className="mr-1.5 h-4 w-4" />
-                {saveMutation.isPending
-                  ? 'Saving…'
-                  : `Save${saveToDays.length > 1 ? ` (${saveToDays.length} days)` : ''}`}
+                {getSaveButtonLabel(saveMutation.isPending, saveToDays.length)}
               </Button>
             </div>
           </div>
@@ -814,7 +837,7 @@ export function TimeSlotsTab() {
       }
 
       // Save the same slots for ALL target days (plus the active day)
-      const allDays = [...new Set([activeDay, ...targetDays])].sort();
+      const allDays = [...new Set([activeDay, ...targetDays])].sort((a, b) => a - b);
       saveMutation.mutate(
         {
           days_of_week: allDays,

@@ -142,7 +142,6 @@ export function BulkExamCreatePage() {
       }
     } catch {
       // If API fails, allow the date (backend will validate on submit)
-      console.warn('Date validation API failed, allowing date selection');
     }
 
     return undefined;

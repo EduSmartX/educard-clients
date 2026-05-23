@@ -54,7 +54,7 @@ function parseLeaveBalances(rawBalances: unknown): LeaveBalanceSummary[] {
   if (Array.isArray(rawBalances)) {
     return rawBalances as LeaveBalanceSummary[];
   }
-  if (rawBalances && typeof rawBalances === 'object' && 'balances' in (rawBalances as object)) {
+  if (rawBalances && typeof rawBalances === 'object' && 'balances' in rawBalances) {
     const ob = rawBalances as { balances?: unknown };
     if (Array.isArray(ob.balances)) {
       return ob.balances as LeaveBalanceSummary[];
@@ -305,8 +305,8 @@ export function LeaveDashboard() {
           </h2>
           {isLoadingBalances && !balancesData ? (
             <div className="mb-4 flex gap-4">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Card key={i} className="w-[180px] min-w-[180px]">
+              {['skeleton-bal-1', 'skeleton-bal-2', 'skeleton-bal-3'].map((key) => (
+                <Card key={key} className="w-[180px] min-w-[180px]">
                   <CardContent className="py-8">
                     <Skeleton className="mb-2 h-10 w-24" />
                     <Skeleton className="h-5 w-20" />
@@ -314,7 +314,8 @@ export function LeaveDashboard() {
                 </Card>
               ))}
             </div>
-          ) : balances.length === 0 ? (
+          ) : null}
+          {!isLoadingBalances && balances.length === 0 && (
             <Card className="col-span-full">
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Calendar className="text-muted-foreground mb-4 h-12 w-12" />
@@ -324,7 +325,8 @@ export function LeaveDashboard() {
                 </p>
               </CardContent>
             </Card>
-          ) : (
+          )}
+          {!(isLoadingBalances && !balancesData) && balances.length > 0 && (
             <>
               {/* Summary Cards: Available, Used, Pending */}
               <div className="mb-6 grid grid-cols-3 gap-3 sm:gap-4">
@@ -424,7 +426,7 @@ export function LeaveDashboard() {
                       </div>
                       <div className="mb-2 flex flex-wrap items-center justify-center gap-2">
                         <div className={`text-xl font-extrabold sm:text-3xl ${style.text}`}>
-                          {parseFloat(total.toString()).toFixed(1)}
+                          {Number.parseFloat(total.toString()).toFixed(1)}
                         </div>
                       </div>
                       <div className="flex w-full flex-col gap-1.5 text-[10px] font-semibold sm:gap-2 sm:text-xs">
@@ -501,8 +503,14 @@ export function LeaveDashboard() {
             )}
             {isLoadingRequests && !requestsData ? (
               <div className="space-y-3">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-16 w-full" />
+                {[
+                  'skeleton-req-1',
+                  'skeleton-req-2',
+                  'skeleton-req-3',
+                  'skeleton-req-4',
+                  'skeleton-req-5',
+                ].map((key) => (
+                  <Skeleton key={key} className="h-16 w-full" />
                 ))}
               </div>
             ) : (

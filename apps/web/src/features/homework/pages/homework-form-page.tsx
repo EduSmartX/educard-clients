@@ -34,7 +34,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { FileUpload, type UploadedFile } from '@/components/ui/file-upload';
-import { cn } from '@/lib/utils';
+import { cn, formatFileSize } from '@/lib/utils';
 import { applyFieldErrors } from '@/lib/utils/error-handler';
 import { SUCCESS_MESSAGES } from '@/constants/app-config';
 import { PageHeader } from '@/components/common';
@@ -263,17 +263,6 @@ export default function HomeworkFormPage() {
     return File;
   };
 
-  // Format file size
-  const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) {
-      return `${bytes} B`;
-    }
-    if (bytes < 1024 * 1024) {
-      return `${(bytes / 1024).toFixed(1)} KB`;
-    }
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-
   const onSubmit = async (data: HomeworkFormData) => {
     try {
       let homeworkPublicId: string;
@@ -326,7 +315,6 @@ export default function HomeworkFormPage() {
         navigate(`/homework/${result.public_id}`);
       }
     } catch (error) {
-      console.error('Failed to save homework:', error);
       // Apply field-level validation errors to form fields
       const result = applyFieldErrors(error, setError);
       // Show toast only for non-field errors (server errors, network issues, etc.)

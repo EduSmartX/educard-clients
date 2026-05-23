@@ -15,6 +15,7 @@ import {
   getEmployeeAttendance,
   getMonthlyAttendanceSummary,
 } from '@/features/attendance/api/attendance-api';
+import { isWeekend } from '@/features/attendance/utils';
 import apiClient from '@/lib/api';
 import { EmployeeInfoCard } from '@/features/attendance/components/employee-info-card';
 import { YearlyCalendarGrid } from '@/features/attendance/components/yearly-calendar-grid';
@@ -57,35 +58,11 @@ function toDateKey(date: Date): string {
   return format(date, 'yyyy-MM-dd');
 }
 
-function isSaturdayOffForReport(date: Date, pattern: string): boolean {
-  if (pattern === 'ALL') {
-    return true;
+function getOrganizationRoleName(role: unknown): string | null {
+  if (typeof role === 'string') {
+    return role;
   }
-  if (pattern !== 'SECOND_ONLY' && pattern !== 'SECOND_AND_FOURTH') {
-    return false;
-  }
-  const weekOfMonth = Math.ceil(date.getDate() / 7);
-  if (pattern === 'SECOND_ONLY') {
-    return weekOfMonth === 2;
-  }
-  return weekOfMonth === 2 || weekOfMonth === 4;
-}
-
-function isWeekendForReport(
-  date: Date,
-  policy: { sunday_off: boolean; saturday_off_pattern: string } | null
-): boolean {
-  if (!policy) {
-    return false;
-  }
-  const dayOfWeek = date.getDay();
-  if (dayOfWeek === 0 && policy.sunday_off) {
-    return true;
-  }
-  if (dayOfWeek === 6) {
-    return isSaturdayOffForReport(date, policy.saturday_off_pattern);
-  }
-  return false;
+  return (role as { name?: string })?.name || null;
 }
 
 export function AttendanceReportPage() {
@@ -293,7 +270,7 @@ export function AttendanceReportPage() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
             {/* Report Type */}
             <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-700">Report Type</label>
+              <span className="mb-2 block text-sm font-semibold text-gray-700">Report Type</span>
               <SearchableSelect
                 options={[
                   { value: 'yearly', label: 'Yearly Report' },
@@ -308,7 +285,7 @@ export function AttendanceReportPage() {
 
             {/* View Type */}
             <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-700">View</label>
+              <span className="mb-2 block text-sm font-semibold text-gray-700">View</span>
               <SearchableSelect
                 options={[
                   { value: 'self', label: 'Self' },
@@ -324,9 +301,7 @@ export function AttendanceReportPage() {
             {/* Staff Selection */}
             {viewType === 'staff' && (
               <div>
-                <label className="mb-2 block text-sm font-semibold text-gray-700">
-                  Select Staff
-                </label>
+                <span className="mb-2 block text-sm font-semibold text-gray-700">Select Staff</span>
                 <Combobox
                   options={manageableUsers.map((staff) => ({
                     value: staff.public_id,
@@ -370,9 +345,7 @@ export function AttendanceReportPage() {
               }
               organizationRole={
                 'organization_role' in selectedUserData && selectedUserData.organization_role
-                  ? typeof selectedUserData.organization_role === 'string'
-                    ? selectedUserData.organization_role
-                    : (selectedUserData.organization_role as { name?: string })?.name
+                  ? getOrganizationRoleName(selectedUserData.organization_role)
                   : null
               }
               employeeId={monthlyDetailData?.employee_id || null}
@@ -602,8 +575,8 @@ export function AttendanceReportPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {yearlyData.monthlyStats.map((month, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
+                  {yearlyData.monthlyStats.map((month) => (
+                    <tr key={month.month} className="hover:bg-gray-50">
                       <td className="border border-gray-300 px-4 py-2 font-medium text-gray-800">
                         {month.month}
                       </td>
@@ -680,12 +653,12 @@ export function AttendanceReportPage() {
                   <>
                     {/* Week day headers */}
                     <div className="mb-2 grid grid-cols-7 gap-1">
-                      {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
                         <div
-                          key={i}
+                          key={day}
                           className="py-1 text-center text-xs font-semibold text-gray-600"
                         >
-                          {day}
+                          {day.charAt(0)}
                         </div>
                       ))}
                     </div>
@@ -736,19 +709,12 @@ export function AttendanceReportPage() {
                             );
                           }
                         }
-                        // Check for force holiday exception
-                        else if (exception?.override_type === 'FORCE_HOLIDAY' || isHoliday) {
-                          bgColor = 'bg-purple-50 border-purple-300';
-                          textColor = 'text-purple-900';
-                          icon = (
-                            <div className="mx-auto flex h-5 w-5 items-center justify-center rounded-full bg-purple-500 text-[10px] font-bold text-white">
-                              H
-                            </div>
-                          );
-                          statusLabel = 'Weekend';
-                        }
-                        // Check if it's a weekend based on working day policy
-                        else if (isWeekendForReport(date, monthlyDetailData.working_day_policy)) {
+                        // Check for force holiday exception or weekend
+                        else if (
+                          exception?.override_type === 'FORCE_HOLIDAY' ||
+                          isHoliday ||
+                          isWeekend(date, monthlyDetailData.working_day_policy)
+                        ) {
                           bgColor = 'bg-purple-50 border-purple-300';
                           textColor = 'text-purple-900';
                           icon = (
@@ -759,18 +725,11 @@ export function AttendanceReportPage() {
                           statusLabel = 'Weekend';
                         }
 
-                        // Check for approved leave
-                        if (!icon && leave?.status === 'approved') {
-                          bgColor = 'bg-orange-50 border-orange-300';
-                          textColor = 'text-orange-900';
-                          icon = (
-                            <div className="mx-auto flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white">
-                              ✕
-                            </div>
-                          );
-                        }
-                        // Check for pending leave
-                        else if (!icon && leave?.status === 'pending') {
+                        // Check for approved or pending leave
+                        if (
+                          !icon &&
+                          (leave?.status === 'approved' || leave?.status === 'pending')
+                        ) {
                           bgColor = 'bg-orange-50 border-orange-300';
                           textColor = 'text-orange-900';
                           icon = (

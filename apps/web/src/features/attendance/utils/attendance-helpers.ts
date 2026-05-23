@@ -1,10 +1,11 @@
-import { 
+import {
   USER_ROLES,
-  TimesheetStatus, 
+  TimesheetStatus,
   type TimesheetStatusValue,
   DayLockReason,
   type DayLockReasonValue,
 } from '@/constants';
+import { SaturdayOffPattern } from '@educard/shared';
 import type { EmployeeAttendanceRecord } from '../types/index';
 
 /**
@@ -39,16 +40,19 @@ export function canEditTimesheet(status: TimesheetStatusValue): boolean {
  * Check if day is a leave day
  */
 export function isLeaveDay(record: EmployeeAttendanceRecord): boolean {
-  return record.is_leave === true || 
-         (record.locked_reason as DayLockReasonValue) === DayLockReason.LEAVE;
+  return (
+    record.is_leave === true || (record.locked_reason as DayLockReasonValue) === DayLockReason.LEAVE
+  );
 }
 
 /**
  * Check if day is a holiday
  */
 export function isHolidayDay(record: EmployeeAttendanceRecord): boolean {
-  return record.is_holiday === true || 
-         (record.locked_reason as DayLockReasonValue) === DayLockReason.HOLIDAY;
+  return (
+    record.is_holiday === true ||
+    (record.locked_reason as DayLockReasonValue) === DayLockReason.HOLIDAY
+  );
 }
 
 /**
@@ -82,11 +86,13 @@ export function isHalfDay(record: EmployeeAttendanceRecord, includeLeave = false
  * Check if employee is absent for full day
  */
 export function isAbsent(record: EmployeeAttendanceRecord): boolean {
-  return !record.morning_present && 
-         !record.afternoon_present && 
-         !isHolidayDay(record) && 
-         !isLeaveDay(record) && 
-         !isNonWorkingDay(record);
+  return (
+    !record.morning_present &&
+    !record.afternoon_present &&
+    !isHolidayDay(record) &&
+    !isLeaveDay(record) &&
+    !isNonWorkingDay(record)
+  );
 }
 
 /**
@@ -109,9 +115,9 @@ export function getAttendanceRemarks(record: EmployeeAttendanceRecord): string {
 /**
  * Format employee full name from employee info object
  */
-export function getEmployeeFullName(employee?: { 
-  first_name?: string; 
-  last_name?: string; 
+export function getEmployeeFullName(employee?: {
+  first_name?: string;
+  last_name?: string;
   full_name?: string;
 }): string {
   if (!employee) {
@@ -134,4 +140,95 @@ export function calculateAttendancePercentage(
     return '0.00';
   }
   return ((presentDays / totalWorkingDays) * 100).toFixed(2);
+}
+
+/**
+ * Working Day Policy type used across attendance features
+ */
+export interface WorkingDayPolicy {
+  sunday_off: boolean;
+  saturday_off_pattern: string;
+}
+
+/**
+ * Determine if a given Saturday is a working day based on the off-pattern.
+ * Returns true if the Saturday is a working day.
+ */
+export function isSaturdayWorking(date: Date, pattern: string): boolean {
+  if (pattern === SaturdayOffPattern.NONE) {
+    return true;
+  }
+  if (pattern === SaturdayOffPattern.ALL) {
+    return false;
+  }
+  const saturdayOfMonth = Math.ceil(date.getDate() / 7);
+  if (pattern === 'FIRST_AND_THIRD') {
+    return saturdayOfMonth !== 1 && saturdayOfMonth !== 3;
+  }
+  if (pattern === SaturdayOffPattern.SECOND_AND_FOURTH) {
+    return saturdayOfMonth !== 2 && saturdayOfMonth !== 4;
+  }
+  if (pattern === 'SECOND_ONLY') {
+    return saturdayOfMonth !== 2;
+  }
+  return true;
+}
+
+/**
+ * Determine if a given Saturday is off (inverse of isSaturdayWorking).
+ */
+export function isSaturdayOff(date: Date, pattern: string): boolean {
+  return !isSaturdayWorking(date, pattern);
+}
+
+/**
+ * Check if a given date is a weekend based on the working day policy.
+ */
+export function isWeekend(date: Date, policy: WorkingDayPolicy | null): boolean {
+  if (!policy) {
+    return false;
+  }
+  const dayOfWeek = date.getDay();
+  if (dayOfWeek === 0 && policy.sunday_off) {
+    return true;
+  }
+  if (dayOfWeek === 6) {
+    return isSaturdayOff(date, policy.saturday_off_pattern);
+  }
+  return false;
+}
+
+/**
+ * Determine if a date is a working day based on policy, holidays, and exceptions.
+ */
+export function isWorkingDay(
+  date: Date,
+  policy: WorkingDayPolicy | null,
+  options?: {
+    isHoliday?: boolean;
+    isForceWorking?: boolean;
+  }
+): boolean {
+  if (options?.isForceWorking) {
+    return true;
+  }
+  if (options?.isHoliday) {
+    return false;
+  }
+
+  const dayOfWeek = date.getDay();
+
+  if (!policy) {
+    return dayOfWeek >= 1 && dayOfWeek <= 5;
+  }
+
+  if (dayOfWeek === 0) {
+    return !policy.sunday_off;
+  }
+
+  if (dayOfWeek === 6) {
+    return isSaturdayWorking(date, policy.saturday_off_pattern);
+  }
+
+  return true;
 }
