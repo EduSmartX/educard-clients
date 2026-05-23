@@ -70,6 +70,13 @@ export default function ResetPasswordScreen() {
   };
 
   const strength = getPasswordStrength();
+  const strengthWidth = strength
+    ? strength.label === 'Weak'
+      ? '33%'
+      : strength.label === 'Medium'
+        ? '66%'
+        : '100%'
+    : '0%';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -136,12 +143,7 @@ export default function ResetPasswordScreen() {
                     style={[
                       styles.strengthFill,
                       {
-                        width:
-                          strength.label === 'Weak'
-                            ? '33%'
-                            : strength.label === 'Medium'
-                              ? '66%'
-                              : '100%',
+                        width: strengthWidth,
                         backgroundColor: strength.color,
                       },
                     ]}

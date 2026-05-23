@@ -78,8 +78,8 @@ export default function ReviewScreen() {
   const [feedback, setFeedback] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const currentIndex = parseInt(index ?? '0', 10);
-  const totalCount = parseInt(total ?? '0', 10);
+  const currentIndex = Number.parseInt(index ?? '0', 10);
+  const totalCount = Number.parseInt(total ?? '0', 10);
 
   const { data: homework } = useHomeworkDetail(homework_id ?? '');
   const {
@@ -444,7 +444,7 @@ function formatFileSize(bytes: number): string {
   const k = 1024;
   const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
 const styles = StyleSheet.create({

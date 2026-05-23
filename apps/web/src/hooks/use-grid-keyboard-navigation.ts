@@ -102,20 +102,32 @@ export function useGridKeyboardNavigation({
         case 'up':
           return currentRow - 1 >= 0
             ? { row: currentRow - 1, col: currentCol }
-            : wrap ? { row: rows - 1, col: currentCol } : null;
+            : wrap
+              ? { row: rows - 1, col: currentCol }
+              : null;
         case 'down':
           return currentRow + 1 < rows
             ? { row: currentRow + 1, col: currentCol }
-            : wrap ? { row: 0, col: currentCol } : null;
+            : wrap
+              ? { row: 0, col: currentCol }
+              : null;
         case 'left':
-          if (currentCol - 1 >= 0) return { row: currentRow, col: currentCol - 1 };
-          if (!wrap) return null;
+          if (currentCol - 1 >= 0) {
+            return { row: currentRow, col: currentCol - 1 };
+          }
+          if (!wrap) {
+            return null;
+          }
           return currentRow > 0
             ? { row: currentRow - 1, col: cols - 1 }
             : { row: rows - 1, col: cols - 1 };
         case 'right':
-          if (currentCol + 1 < cols) return { row: currentRow, col: currentCol + 1 };
-          if (!wrap) return null;
+          if (currentCol + 1 < cols) {
+            return { row: currentRow, col: currentCol + 1 };
+          }
+          if (!wrap) {
+            return null;
+          }
           return currentRow < rows - 1 ? { row: currentRow + 1, col: 0 } : { row: 0, col: 0 };
         case 'home':
           return { row: currentRow, col: 0 };
@@ -151,7 +163,11 @@ export function useGridKeyboardNavigation({
         }
         return 'left';
       case 'ArrowRight':
-        if (target.tagName === 'INPUT' && target.selectionEnd !== target.value.length && target.value.length > 0) {
+        if (
+          target.tagName === 'INPUT' &&
+          target.selectionEnd !== target.value.length &&
+          target.value.length > 0
+        ) {
           return null;
         }
         return 'right';
@@ -175,9 +191,9 @@ export function useGridKeyboardNavigation({
 
       // Get current position from data attributes
       const rowAttr =
-        target.dataset.row ?? target.closest('[data-row]')?.getAttribute('data-row');
+        target.dataset.row ?? (target.closest('[data-row]') as HTMLElement | null)?.dataset.row;
       const colAttr =
-        target.dataset.col ?? target.closest('[data-col]')?.getAttribute('data-col');
+        target.dataset.col ?? (target.closest('[data-col]') as HTMLElement | null)?.dataset.col;
 
       if (rowAttr === null || rowAttr === undefined || colAttr === null || colAttr === undefined) {
         return;

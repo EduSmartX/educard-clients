@@ -81,7 +81,7 @@ apiClient.interceptors.response.use(
         if (!refreshToken) {
           // No refresh token - redirect to login
           await forceLogout();
-          return Promise.reject(new Error('Session expired. Please login again.'));
+          throw new Error('Session expired. Please login again.');
         }
 
         // Try to refresh the token
@@ -109,11 +109,11 @@ apiClient.interceptors.response.use(
       } catch {
         // Clear tokens and redirect to login
         await forceLogout();
-        return Promise.reject(new Error('Session expired. Please login again.'));
+        throw new Error('Session expired. Please login again.');
       }
     }
 
-    return Promise.reject(error);
+    throw error;
   }
 );
 

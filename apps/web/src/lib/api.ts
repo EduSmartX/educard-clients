@@ -86,13 +86,13 @@ apiClient.interceptors.response.use(
         localStorage.removeItem('logout-event');
 
         window.location.href = '/auth/login';
-        return Promise.reject(refreshError);
+        throw refreshError;
       }
     }
 
     // Handle other errors
     handleApiError(error);
-    return Promise.reject(error);
+    throw error;
   }
 );
 
@@ -100,7 +100,9 @@ apiClient.interceptors.response.use(
  * Determine if the error should be silently handled (no toast shown)
  */
 function shouldSkipToast(error: AxiosError): boolean {
-  if (!error.response) return false;
+  if (!error.response) {
+    return false;
+  }
 
   const status = error.response.status;
   const data = error.response.data as ApiErrorResponse;
@@ -145,9 +147,15 @@ function shouldSkipToast(error: AxiosError): boolean {
 function getToastMessageForStatus(status: number, data: ApiErrorResponse): string | null {
   switch (status) {
     case 400:
-      if (data.message && typeof data.message === 'string') return data.message;
-      if (data.detail) return data.detail;
-      if (data.non_field_errors) return data.non_field_errors[0];
+      if (data.message && typeof data.message === 'string') {
+        return data.message;
+      }
+      if (data.detail) {
+        return data.detail;
+      }
+      if (data.non_field_errors) {
+        return data.non_field_errors[0];
+      }
       return ErrorMessages.INVALID_REQUEST;
     case 401:
       return null; // Handled by auth interceptor
@@ -175,7 +183,9 @@ function getToastMessageForStatus(status: number, data: ApiErrorResponse): strin
  */
 function handleApiError(error: AxiosError): void {
   if (error.response) {
-    if (shouldSkipToast(error)) return;
+    if (shouldSkipToast(error)) {
+      return;
+    }
 
     const message = getToastMessageForStatus(
       error.response.status,

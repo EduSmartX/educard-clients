@@ -69,20 +69,23 @@ export function useUpdatePreference() {
 
       // Optimistically update grouped preferences
       if (previousGrouped) {
+        const updater = (old: { data: GroupedPreference[] } | undefined) => {
+          if (!old) {
+            return old;
+          }
+          return {
+            ...old,
+            data: old.data.map((group) => ({
+              ...group,
+              preferences: group.preferences.map((pref: OrganizationPreference) =>
+                pref.public_id === publicId ? { ...pref, value } : pref
+              ),
+            })),
+          };
+        };
         queryClient.setQueryData<{ data: GroupedPreference[] }>(
           ['organization-preferences', 'grouped'],
-          (old) => {
-            if (!old) {return old;}
-            return {
-              ...old,
-              data: old.data.map((group) => ({
-                ...group,
-                preferences: group.preferences.map((pref: OrganizationPreference) =>
-                  pref.public_id === publicId ? { ...pref, value } : pref
-                ),
-              })),
-            };
-          }
+          updater
         );
       }
 
@@ -90,7 +93,9 @@ export function useUpdatePreference() {
       if (previousSingle) {
         queryClient.setQueryData(['organization-preference', publicId], (old: unknown) => {
           const oldData = old as { data: OrganizationPreference };
-          if (!oldData) {return old;}
+          if (!oldData) {
+            return old;
+          }
           return {
             ...oldData,
             data: { ...oldData.data, value },
@@ -120,8 +125,7 @@ export function useUpdatePreference() {
         );
       }
 
-      const errorMessage =
-        error instanceof Error ? error.message : ErrorMessages.UPDATE_FAILED;
+      const errorMessage = error instanceof Error ? error.message : ErrorMessages.UPDATE_FAILED;
       toast.error(ToastTitles.ERROR, {
         description: errorMessage,
       });
@@ -155,8 +159,7 @@ export function useBulkUpdatePreferences() {
     },
 
     onError: (error) => {
-      const errorMessage =
-        error instanceof Error ? error.message : ErrorMessages.UPDATE_FAILED;
+      const errorMessage = error instanceof Error ? error.message : ErrorMessages.UPDATE_FAILED;
       toast.error(ToastTitles.ERROR, {
         description: errorMessage,
       });

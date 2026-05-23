@@ -153,7 +153,7 @@ function DatePickerModal({
 
           <View style={modalStyles.weekdaysRow}>
             {WEEKDAYS.map((day, i) => (
-              <View key={`weekday-${i}`} style={modalStyles.weekdayCell}>
+              <View key={day} style={modalStyles.weekdayCell}>
                 <Text style={[modalStyles.weekdayText, i === 0 && { color: '#ef4444' }]}>
                   {day}
                 </Text>
@@ -519,7 +519,7 @@ function ExceptionCard({
         )}
       </View>
 
-      {exception.reason && (
+      {!!exception.reason && (
         <View style={styles.exceptionReason}>
           <Text style={styles.exceptionReasonLabel}>Reason:</Text>
           <Text style={styles.exceptionReasonText}>{exception.reason}</Text>

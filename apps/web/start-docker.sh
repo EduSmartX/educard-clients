@@ -10,7 +10,7 @@ echo ""
 # Build and run
 docker compose up --build -d educard-frontend-dev
 
-if [ $? -eq 0 ]; then
+if [[ $? -eq 0 ]]; then
     echo ""
     echo "✅ Success! Development server is starting..."
     echo "📝 View logs with: docker compose logs -f educard-frontend-dev"

@@ -46,6 +46,19 @@ export function EmailUpdateForm() {
     },
   });
 
+  const startCountdownTimer = (minutes: number) => {
+    setCountdown(minutes * 60);
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
   const handleSendOTP = () => {
     const email = form.getValues('new_email');
     if (!email || !z.string().email().safeParse(email).success) {
@@ -59,17 +72,7 @@ export function EmailUpdateForm() {
         onSuccess: (data) => {
           setOtpSent(true);
           const expiresIn = data.data?.expires_in_minutes || 5;
-          setCountdown(expiresIn * 60);
-
-          const timer = setInterval(() => {
-            setCountdown((prev) => {
-              if (prev <= 1) {
-                clearInterval(timer);
-                return 0;
-              }
-              return prev - 1;
-            });
-          }, 1000);
+          startCountdownTimer(expiresIn);
         },
       }
     );
@@ -194,7 +197,11 @@ export function EmailUpdateForm() {
               >
                 {CommonUiText.RESET}
               </Button>
-              <Button type="submit" variant="brand" disabled={!otpSent || updateEmailMutation.isPending}>
+              <Button
+                type="submit"
+                variant="brand"
+                disabled={!otpSent || updateEmailMutation.isPending}
+              >
                 {updateEmailMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 <Mail className="mr-2 h-4 w-4" />
                 {CommonUiText.UPDATE_EMAIL}

@@ -46,6 +46,19 @@ export function PhoneUpdateForm() {
     },
   });
 
+  const startCountdownTimer = (minutes: number) => {
+    setCountdown(minutes * 60);
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
   const handleSendOTP = () => {
     const phone = form.getValues('new_phone');
     if (!phone || phone.length < 10) {
@@ -59,17 +72,7 @@ export function PhoneUpdateForm() {
         onSuccess: (data) => {
           setOtpSent(true);
           const expiresIn = data.data?.expires_in_minutes || 5;
-          setCountdown(expiresIn * 60);
-
-          const timer = setInterval(() => {
-            setCountdown((prev) => {
-              if (prev <= 1) {
-                clearInterval(timer);
-                return 0;
-              }
-              return prev - 1;
-            });
-          }, 1000);
+          startCountdownTimer(expiresIn);
         },
       }
     );
@@ -191,7 +194,11 @@ export function PhoneUpdateForm() {
               >
                 {CommonUiText.RESET}
               </Button>
-              <Button type="submit" variant="brand" disabled={!otpSent || updatePhoneMutation.isPending}>
+              <Button
+                type="submit"
+                variant="brand"
+                disabled={!otpSent || updatePhoneMutation.isPending}
+              >
                 {updatePhoneMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 <Phone className="mr-2 h-4 w-4" />
                 {CommonUiText.UPDATE_PHONE}

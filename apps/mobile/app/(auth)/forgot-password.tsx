@@ -5,10 +5,9 @@ import { Mail, ArrowLeft, Send, KeyRound } from 'lucide-react-native'; // Remove
 import { useState, useCallback, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated'; // Removed unused: FadeIn
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 
 import { authApi } from '@/api/auth';
-// import { otpApi } from '@/api/otp'; // Commented - unused for now
 
 type Step = 'email' | 'otp' | 'newPassword';
 

@@ -86,11 +86,11 @@ export function createApiClient(config: ApiClientConfig): AxiosInstance {
         } catch (refreshError) {
           await config.clearTokens();
           config.onAuthError?.();
-          return Promise.reject(refreshError);
+          throw refreshError;
         }
       }
 
-      return Promise.reject(error);
+      throw error;
     },
   );
 

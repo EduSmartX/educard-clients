@@ -186,13 +186,13 @@ export default function MyLeaveRequestsScreen() {
             </View>
           </View>
 
-          {item.reason && (
+          {!!item.reason && (
             <Text style={styles.reason} numberOfLines={2}>
               {item.reason}
             </Text>
           )}
 
-          {item.status !== 'pending' && item.status !== 'cancelled' && item.reviewed_by_name && (
+          {item.status !== 'pending' && item.status !== 'cancelled' && !!item.reviewed_by_name && (
             <View style={styles.reviewerInfo}>
               <Text style={styles.reviewerInfoLabel}>
                 {item.status === 'approved' ? '✓ Approved by: ' : '✗ Rejected by: '}
@@ -207,7 +207,7 @@ export default function MyLeaveRequestsScreen() {
             </View>
           )}
 
-          {item.review_comments && (
+          {!!item.review_comments && (
             <View style={styles.reviewComments}>
               <Text style={styles.reviewLabel}>Review: </Text>
               <Text style={styles.reviewText}>{item.review_comments}</Text>

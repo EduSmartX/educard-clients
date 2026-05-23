@@ -87,7 +87,7 @@ function timeIsAfter(end: string, start: string): boolean {
 function formatTimeDisplay(t: string): string {
   if (!t) return '';
   const [h, m] = t.split(':');
-  const hour = parseInt(h, 10);
+  const hour = Number.parseInt(h, 10);
   const ampm = hour >= 12 ? 'PM' : 'AM';
   const h12 = hour % 12 || 12;
   return `${h12}:${m} ${ampm}`;
@@ -149,7 +149,7 @@ export default function TimeSlotsEditorScreen() {
   }, [activeDay, daySlotMap]);
   const onRefresh = async () => {
     setRefreshing(true);
-    await void refetch();
+    await refetch();
     setRefreshing(false);
   };
   const handleDayChange = (day: number) => {
@@ -159,7 +159,7 @@ export default function TimeSlotsEditorScreen() {
   const toggleSaveToDay = (day: number) => {
     if (day === activeDay) return; // Always included
     setSaveToDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort()
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort((a, b) => a - b)
     );
   };
   const addPeriod = () => {
@@ -197,9 +197,7 @@ export default function TimeSlotsEditorScreen() {
       // Remove non-digit/colon chars
       let cleaned = value.replace(/[^\d:]/g, '');
       // Auto-insert colon: "10" -> "10:", "1030" -> "10:30"
-      if (cleaned.length === 3 && !cleaned.includes(':')) {
-        cleaned = `${cleaned.slice(0, 2)}:${cleaned.slice(2)}`;
-      } else if (cleaned.length === 4 && !cleaned.includes(':')) {
+      if ((cleaned.length === 3 || cleaned.length === 4) && !cleaned.includes(':')) {
         cleaned = `${cleaned.slice(0, 2)}:${cleaned.slice(2)}`;
       }
       finalValue = cleaned.slice(0, 5); // max HH:MM
@@ -282,7 +280,7 @@ export default function TimeSlotsEditorScreen() {
       Object.keys(daySlotMap)
         .map(Number)
         .filter((d) => d !== activeDay && daySlotMap[d].length > 0)
-        .sort(),
+        .sort((a, b) => a - b),
     [daySlotMap, activeDay]
   );
   return (

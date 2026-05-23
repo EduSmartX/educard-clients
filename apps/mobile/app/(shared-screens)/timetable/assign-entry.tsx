@@ -75,7 +75,7 @@ export default function AssignEntryScreen() {
       }
       const result = await createEntry.mutateAsync({
         slot_public_id: slotId,
-        day_of_week: parseInt(dayOfWeek, 10),
+        day_of_week: Number.parseInt(dayOfWeek, 10),
         class_public_id: classId,
         subject_public_id: selectedSubjectId,
       });

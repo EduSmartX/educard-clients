@@ -48,7 +48,7 @@ const SLOT_COLORS: Record<string, { bg: string; border: string; text: string }> 
 
 function formatTime(t: string) {
   const [h, m] = t.split(':');
-  const hour = parseInt(h, 10);
+  const hour = Number.parseInt(h, 10);
   const ampm = hour >= 12 ? 'PM' : 'AM';
   const h12 = hour % 12 || 12;
   return `${h12}:${m} ${ampm}`;
@@ -339,7 +339,9 @@ export default function TimetableScreen() {
                 </Text>
               </View>
             ) : (
-              <View style={styles.slotsList}>{daySlots.map(renderSlotCard)}</View>
+              <View style={styles.slotsList}>
+                {daySlots.map((slot, index) => renderSlotCard(slot, index))}
+              </View>
             )}
           </>
         )}

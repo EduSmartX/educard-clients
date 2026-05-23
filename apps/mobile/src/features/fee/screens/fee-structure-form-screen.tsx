@@ -51,6 +51,19 @@ const ACADEMIC_YEAR_OPTIONS = (() => {
   }));
 })();
 
+/** Normalize fee components for comparison */
+function normalizeComponents(
+  list: { name: string; amount: number | string; component_type?: string }[]
+): string {
+  return [...list]
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(
+      (component) =>
+        `${component.name}|${Number(component.amount).toFixed(2)}|${component.component_type ?? ''}`
+    )
+    .join(',');
+}
+
 // ─── types ────────────────────────────────────────────────────────────────────
 
 interface ComponentRow {
@@ -247,17 +260,6 @@ export default function FeeStructureFormScreen() {
           0
         );
         const amountChanged = Math.abs(oldAmount - newAmount) > 0.001;
-
-        const normalizeComponents = (
-          list: { name: string; amount: number | string; component_type?: string }[]
-        ) =>
-          [...list]
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map(
-              (component) =>
-                `${component.name}|${Number(component.amount).toFixed(2)}|${component.component_type ?? ''}`
-            )
-            .join(',');
 
         const componentsChanged =
           normalizeComponents(existing.components ?? []) !==

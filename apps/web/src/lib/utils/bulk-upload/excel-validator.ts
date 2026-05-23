@@ -53,6 +53,79 @@ export interface ExcelValidationOptions {
   duplicateChecks?: DuplicateCheckConfig[];
 }
 
+/** Map a row array to field names using header mapping */
+function mapRowToFields(
+  rowArray: unknown[],
+  headers: string[],
+  columnMapping: Record<string, string>
+): Record<string, unknown> {
+  const rowData: Record<string, unknown> = {};
+  headers.forEach((header, colIndex) => {
+    const fieldKey = columnMapping[header];
+    if (fieldKey) {
+      rowData[fieldKey] = rowArray[colIndex];
+    }
+  });
+  return rowData;
+}
+
+/** Validate all fields in a row */
+function validateRowFields(
+  rowData: Record<string, unknown>,
+  rowNumber: number,
+  columns: ColumnConfig[],
+  errors: ValidationError[]
+): void {
+  for (const col of columns) {
+    if (col.validator) {
+      const error = col.validator(rowData[col.key], rowNumber, col.name);
+      if (error) {
+        errors.push(error);
+      }
+    }
+  }
+}
+
+/** Check for duplicate values within the file */
+function checkRowDuplicates(
+  rowData: Record<string, unknown>,
+  rowNumber: number,
+  duplicateChecks: DuplicateCheckConfig[],
+  duplicateMaps: Map<string, number>[],
+  errors: ValidationError[]
+): void {
+  duplicateChecks.forEach((check, checkIndex) => {
+    const map = duplicateMaps[checkIndex];
+    const key = check.composite
+      ? check.fields
+          .map((f) =>
+            String(rowData[f] || '')
+              .trim()
+              .toLowerCase()
+          )
+          .join('_')
+      : String(rowData[check.fields[0]] || '')
+          .trim()
+          .toLowerCase();
+
+    const hasValue =
+      key &&
+      key !== '' &&
+      !check.fields.every((f) => !rowData[f] || String(rowData[f]).trim() === '');
+    if (hasValue) {
+      if (map.has(key)) {
+        errors.push({
+          row: rowNumber,
+          field: check.label,
+          message: `Duplicate ${check.label.toLowerCase()} - already exists in Row ${map.get(key)}`,
+        });
+      } else {
+        map.set(key, rowNumber);
+      }
+    }
+  });
+}
+
 /**
  * Parse and validate an Excel file
  */
@@ -65,7 +138,7 @@ export async function validateExcelFile(
 
   // Build column mapping from display name to field key
   const columnMapping: Record<string, string> = {};
-  columns.forEach(col => {
+  columns.forEach((col) => {
     // Handle both with and without asterisk for required fields
     columnMapping[col.name] = col.key;
     columnMapping[`${col.name}*`] = col.key;
@@ -99,7 +172,7 @@ export async function validateExcelFile(
         }
 
         // First row is headers
-        const headers = (jsonData[0] as string[]).map(h => String(h || '').trim());
+        const headers = (jsonData[0] as string[]).map((h) => String(h || '').trim());
         const dataRows = jsonData.slice(skipRows);
 
         const errors: ValidationError[] = [];
@@ -108,67 +181,25 @@ export async function validateExcelFile(
         // Track duplicates within file
         const duplicateMaps = duplicateChecks.map(() => new Map<string, number>());
 
-        dataRows.forEach((row, index) => {
-          const rowNumber = index + skipRows + 1; // Excel row number (1-indexed)
+        for (let index = 0; index < dataRows.length; index++) {
+          const row = dataRows[index];
+          const rowNumber = index + skipRows + 1;
           const rowArray = row as unknown[];
 
-          // Skip completely empty rows
-          if (!rowArray || rowArray.every(cell => cell === undefined || cell === null || String(cell).trim() === '')) {
-            return;
+          if (
+            !rowArray ||
+            rowArray.every(
+              (cell) => cell === undefined || cell === null || String(cell).trim() === ''
+            )
+          ) {
+            continue;
           }
 
-          const rowData: Record<string, unknown> = {};
-
-          // Map columns to field names
-          headers.forEach((header, colIndex) => {
-            const fieldKey = columnMapping[header];
-            if (fieldKey) {
-              rowData[fieldKey] = rowArray[colIndex];
-            }
-          });
-
-          // Validate each field
-          columns.forEach(col => {
-            if (col.validator) {
-              const error = col.validator(rowData[col.key], rowNumber, col.name);
-              if (error) {
-                errors.push(error);
-              }
-            }
-          });
-
-          // Check for duplicates
-          duplicateChecks.forEach((check, checkIndex) => {
-            const map = duplicateMaps[checkIndex];
-            let key: string;
-
-            if (check.composite) {
-              // Combine multiple fields as composite key
-              key = check.fields
-                .map(f => String(rowData[f] || '').trim().toLowerCase())
-                .join('_');
-            } else {
-              // Single field key
-              key = String(rowData[check.fields[0]] || '').trim().toLowerCase();
-            }
-
-            // Only check if key has value
-            if (key && key !== '' && !check.fields.every(f => !rowData[f] || String(rowData[f]).trim() === '')) {
-              if (map.has(key)) {
-                const existingRow = map.get(key)!;
-                errors.push({
-                  row: rowNumber,
-                  field: check.label,
-                  message: `Duplicate ${check.label.toLowerCase()} - already exists in Row ${existingRow}`,
-                });
-              } else {
-                map.set(key, rowNumber);
-              }
-            }
-          });
-
+          const rowData = mapRowToFields(rowArray, headers, columnMapping);
+          validateRowFields(rowData, rowNumber, columns, errors);
+          checkRowDuplicates(rowData, rowNumber, duplicateChecks, duplicateMaps, errors);
           parsedData.push(rowData);
-        });
+        }
 
         resolve({
           isValid: errors.length === 0,
@@ -194,7 +225,7 @@ export async function validateExcelFile(
 export function formatValidationErrors(errors: ValidationError[]): string[] {
   // Group errors by row
   const errorsByRow = new Map<number, ValidationError[]>();
-  errors.forEach(error => {
+  errors.forEach((error) => {
     const existing = errorsByRow.get(error.row) || [];
     existing.push(error);
     errorsByRow.set(error.row, existing);
@@ -204,12 +235,12 @@ export function formatValidationErrors(errors: ValidationError[]): string[] {
   errorsByRow.forEach((rowErrors, row) => {
     if (row === 0) {
       // File-level errors
-      rowErrors.forEach(error => {
+      rowErrors.forEach((error) => {
         formatted.push(error.message);
       });
     } else {
       // Row-level errors
-      const messages = rowErrors.map(e => `${e.field}: ${e.message}`);
+      const messages = rowErrors.map((e) => `${e.field}: ${e.message}`);
       formatted.push(`Row ${row}: ${messages.join('; ')}`);
     }
   });

@@ -60,7 +60,7 @@ export default function EnterMarksScreen() {
     viewOnly?: string;
   }>();
 
-  const maxMarks = parseInt(maxMarksStr ?? '100', 10);
+  const maxMarks = Number.parseInt(maxMarksStr ?? '100', 10);
   const isViewOnly = viewOnlyParam === 'true';
   const bulkUpsert = useBulkUpsertMarks();
 
@@ -106,8 +106,8 @@ export default function EnterMarksScreen() {
     if (!rollNumber) return [Infinity, '', 0];
     const parts = rollNumber.split(/(\d+)/);
     return parts.map((part) => {
-      const num = parseInt(part, 10);
-      return isNaN(num) ? part.toLowerCase() : num;
+      const num = Number.parseInt(part, 10);
+      return Number.isNaN(num) ? part.toLowerCase() : num;
     });
   };
 
@@ -160,8 +160,8 @@ export default function EnterMarksScreen() {
     const marks: BulkMarkEntry[] = [];
     for (const sm of Object.values(marksMap)) {
       if (sm.marksObtained !== '' || sm.isAbsent) {
-        const obtained = parseInt(sm.marksObtained, 10);
-        if (!sm.isAbsent && (isNaN(obtained) || obtained < 0 || obtained > maxMarks)) {
+        const obtained = Number.parseInt(sm.marksObtained, 10);
+        if (!sm.isAbsent && (Number.isNaN(obtained) || obtained < 0 || obtained > maxMarks)) {
           Alert.alert('Error', `Invalid marks for ${sm.studentName}. Must be 0-${maxMarks}.`);
           return;
         }

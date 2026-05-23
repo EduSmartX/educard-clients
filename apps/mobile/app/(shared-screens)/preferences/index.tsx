@@ -370,18 +370,10 @@ export default function OrgPreferencesScreen() {
               keyboardType={isNumber ? 'numeric' : 'default'}
               placeholder={`Enter ${pref.display_name.toLowerCase()}`}
               placeholderTextColor={Colors.gray[400]}
-              onFocus={(e) => {
+              onFocus={() => {
                 // Scroll to make input visible above keyboard
                 setTimeout(() => {
-                  const target = e.target as {
-                    measureInWindow?: (
-                      cb: (x: number, y: number, w: number, h: number) => void
-                    ) => void;
-                  };
-                  target.measureInWindow?.((_x: number, y: number, _w: number, _h: number) => {
-                    // _h instead of h (unused)
-                    scrollRef.current?.scrollTo({ y: y - 200, animated: true });
-                  });
+                  scrollRef.current?.scrollTo({ y: 0, animated: true });
                 }, 300);
               }}
               onSubmitEditing={() => {
@@ -758,15 +750,16 @@ export default function OrgPreferencesScreen() {
             <ScrollView style={styles.modalList}>
               {values.map((val) => {
                 const isSelected = multiSelectValues.includes(val);
+                const handleToggle = () => {
+                  setMultiSelectValues((prev) =>
+                    isSelected ? prev.filter((v) => v !== val) : [...prev, val]
+                  );
+                };
                 return (
                   <TouchableOpacity
                     key={val}
                     style={[styles.modalOption, isSelected && styles.modalOptionSelected]}
-                    onPress={() => {
-                      setMultiSelectValues((prev) =>
-                        isSelected ? prev.filter((v) => v !== val) : [...prev, val]
-                      );
-                    }}
+                    onPress={handleToggle}
                   >
                     <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
                       {isSelected && <Check size={12} color="#fff" />}

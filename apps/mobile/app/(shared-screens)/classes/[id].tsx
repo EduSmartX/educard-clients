@@ -39,7 +39,7 @@ export default function ClassDetailScreen() {
           <DetailRow label="Available Seats" value={c?.available_seats} />
           <DetailRow
             label="Full"
-            value={c?.is_full ? 'Yes' : c?.is_full === false ? 'No' : undefined}
+            value={c?.is_full == null ? undefined : c.is_full ? 'Yes' : 'No'}
           />
           <DetailRow label="Info" value={c?.info} />
         </DetailSection>
@@ -60,12 +60,16 @@ export default function ClassDetailScreen() {
           <DetailSection title="Subjects" icon="📚">
             <ChipRow
               // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
-              items={c.subjects.map((s: any) => ({
+              items={c.subjects.map((s: any) => {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
-                key: s.public_id,
+                const name = s.subject_info?.name || s.name;
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                label: `${s.subject_info?.name || s.name}${s.subject_info?.code || s.code ? ` (${s.subject_info?.code || s.code})` : ''}`,
-              }))}
+                const code = s.subject_info?.code || s.code;
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+                const label = code ? `${name} (${code})` : String(name);
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+                return { key: s.public_id, label };
+              })}
             />
           </DetailSection>
         </Animated.View>

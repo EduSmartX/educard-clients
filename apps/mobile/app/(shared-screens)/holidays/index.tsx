@@ -220,7 +220,7 @@ export default function HolidayCalendarScreen() {
             isSaturdayOff = nthSaturday === 2 || nthSaturday === 4;
             break;
           default:
-            isSaturdayOff = false;
+            break;
         }
 
         if (isSaturdayOff) {
@@ -496,7 +496,6 @@ export default function HolidayCalendarScreen() {
             const dayHolidays = getHolidaysForDate(item.date);
             const today = isToday(item.date);
             const isSunday = item.date.getDay() === 0;
-            const isSaturday = item.date.getDay() === 6;
             const primaryHoliday = dayHolidays.find(
               (h) => h.holiday_type !== 'SUNDAY' && h.holiday_type !== 'SATURDAY'
             );

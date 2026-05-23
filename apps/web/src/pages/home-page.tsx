@@ -28,7 +28,8 @@ import {
 } from '@/components/ui/carousel';
 import { COMPANY_NAME, ROUTES } from '@/constants/app-config';
 import { BRANDING } from '@/constants/branding';
-import heroImage from '/assets/images/hero-illustration.png';
+
+const heroImage = '/assets/images/hero-illustration.png';
 
 // --- Reusable animated wrapper that reveals on scroll ---
 function AnimatedSection({
@@ -586,7 +587,7 @@ export default function HomePage() {
             <div className="absolute right-10 bottom-10 h-60 w-60 rounded-full bg-white blur-3xl" />
           </div>
           <motion.div
-            className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-white/10 blur-2xl"
+            className="absolute -top-10 -right-10 h-48 w-48 rounded-full bg-white/10 blur-2xl"
             animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
             transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
           />

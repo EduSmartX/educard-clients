@@ -155,8 +155,9 @@ export default function ProfileScreen() {
 
   // Profile image - add cache busting for server images
   const serverPhotoUrl = getMediaUrl(profilePhoto?.thumbnail_url) ?? getMediaUrl(profilePhoto?.url);
+  const cacheSeparator = serverPhotoUrl?.includes('?') ? '&' : '?';
   const cacheBustedPhotoUrl = serverPhotoUrl
-    ? `${serverPhotoUrl}${serverPhotoUrl.includes('?') ? '&' : '?'}v=${dataUpdatedAt || Date.now()}`
+    ? `${serverPhotoUrl}${cacheSeparator}v=${dataUpdatedAt || Date.now()}`
     : undefined;
   const photoUrl = localPhotoUri ?? cacheBustedPhotoUrl;
   const initials = (profile?.full_name ?? profile?.first_name ?? user?.full_name ?? 'U')

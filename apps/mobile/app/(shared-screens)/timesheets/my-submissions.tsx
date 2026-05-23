@@ -170,6 +170,17 @@ const checkTimesheetStatus = async (
   return result as TimesheetStatusResponse;
 };
 
+// Shared bulk submit endpoint
+const bulkSubmitAttendance = async (
+  payload: Record<string, unknown>
+): Promise<{ message?: string }> => {
+  const response = await apiClient.post<{ message?: string }>(
+    '/attendance/employee-attendance/bulk_submit/',
+    payload
+  );
+  return response.data;
+};
+
 // Correct endpoint: /attendance/employee-attendance/bulk_submit/ with submit_timesheet=true
 const submitTimesheetApi = async (payload: {
   attendance_records: { date: string; morning_present: boolean; afternoon_present: boolean }[];
@@ -177,11 +188,7 @@ const submitTimesheetApi = async (payload: {
   week_start_date: string;
   week_end_date: string;
 }): Promise<{ message?: string }> => {
-  const response = await apiClient.post<{ message?: string }>(
-    '/attendance/employee-attendance/bulk_submit/',
-    payload
-  );
-  return response.data;
+  return bulkSubmitAttendance(payload);
 };
 
 // Correct endpoint: DELETE /attendance/timesheet-submission/return_to_draft/
@@ -207,11 +214,7 @@ const submitDailyAttendance = async (payload: {
     attendance_status: string;
   }[];
 }): Promise<{ message?: string }> => {
-  const response = await apiClient.post<{ message?: string }>(
-    '/attendance/employee-attendance/bulk_submit/',
-    payload
-  );
-  return response.data;
+  return bulkSubmitAttendance(payload);
 };
 
 const toDateKey = (d: Date) => format(d, 'yyyy-MM-dd');
@@ -574,12 +577,10 @@ export default function MyTimesheetScreen() {
     setWeeks((prev) =>
       prev.map((week) => {
         if (week.id !== weekId) return week;
-        return {
-          ...week,
-          rows: week.rows.map((row) =>
-            row.date === date ? { ...row, [field]: !row[field] } : row
-          ),
-        };
+        const updatedRows = week.rows.map((row) =>
+          row.date === date ? { ...row, [field]: !row[field] } : row
+        );
+        return { ...week, rows: updatedRows };
       })
     );
   };
