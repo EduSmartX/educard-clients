@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { format, eachDayOfInterval, startOfMonth, endOfMonth } from 'date-fns';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { CalendarDays, Loader2 } from 'lucide-react';
 
 import { PageHeader } from '@/components/common';
@@ -15,9 +15,10 @@ import {
   getEmployeeAttendance,
   getMonthlyAttendanceSummary,
 } from '@/features/attendance/api/attendance-api';
-import { isWeekend } from '@/features/attendance/utils';
 import apiClient from '@/lib/api';
 import { EmployeeInfoCard } from '@/features/attendance/components/employee-info-card';
+import { MonthlyCalendarCard } from '@/features/attendance/components/monthly-calendar-card';
+import { AttendanceInsightsPanel } from '@/features/attendance/components/attendance-insights-panel';
 import { YearlyCalendarGrid } from '@/features/attendance/components/yearly-calendar-grid';
 import type { ReportType, ViewType } from '../components/attendance-report-filters';
 import { getCurrentAcademicYear } from '@/lib/api/academic-year-api';
@@ -39,30 +40,49 @@ interface ManageableUser {
   full_name: string;
 }
 
-const MONTHS = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
-
-function toDateKey(date: Date): string {
-  return format(date, 'yyyy-MM-dd');
-}
-
 function getOrganizationRoleName(role: unknown): string | null {
   if (typeof role === 'string') {
     return role;
   }
   return (role as { name?: string })?.name || null;
+}
+
+function parseManageableUsers(data: unknown): ManageableUser[] {
+  if (!data) { return []; }
+  const record = data as { users?: unknown };
+  if (Array.isArray(record.users)) {
+    return record.users as ManageableUser[];
+  }
+  if (Array.isArray(data)) {
+    return data as ManageableUser[];
+  }
+  return [];
+}
+
+async function fetchMonthlyAttendanceDetail(
+  viewType: ViewType,
+  startDate: string,
+  endDate: string,
+  targetUserId: string | undefined
+) {
+  if (viewType === 'self') {
+    return getEmployeeAttendance({ from_date: startDate, to_date: endDate });
+  }
+  const response = await apiClient.get('/attendance/employee-attendance/', {
+    params: { from_date: startDate, to_date: endDate, user: targetUserId },
+  });
+  const payload = response.data?.data || {};
+  return {
+    records: payload.records || [],
+    stats: payload.stats || {},
+    employee_id: payload.employee_id || null,
+    user_info: payload.user_info || null,
+    date_range: payload.date_range || { from_date: startDate, to_date: endDate },
+    working_day_policy: payload.working_day_policy || null,
+    calendar_exceptions: payload.calendar_exceptions || [],
+    holiday_descriptions: payload.holiday_descriptions || {},
+    pagination: payload.pagination || {},
+  };
 }
 
 export function AttendanceReportPage() {
@@ -101,21 +121,10 @@ export function AttendanceReportPage() {
     enabled: viewType === 'staff',
   });
 
-  const manageableUsers = useMemo(() => {
-    if (!manageableUsersData?.data) {
-      return [];
-    }
-
-    if (Array.isArray(manageableUsersData.data.users)) {
-      return manageableUsersData.data.users as ManageableUser[];
-    }
-
-    if (Array.isArray(manageableUsersData.data)) {
-      return manageableUsersData.data as ManageableUser[];
-    }
-
-    return [];
-  }, [manageableUsersData]);
+  const manageableUsers = useMemo(
+    () => parseManageableUsers(manageableUsersData?.data),
+    [manageableUsersData]
+  );
 
   // Determine date range based on report type (only needed for monthly view)
   const { startDate, endDate } = useMemo(() => {
@@ -148,32 +157,7 @@ export function AttendanceReportPage() {
   // Fetch monthly attendance data for monthly view (day-by-day detail)
   const { data: monthlyDetailData, isLoading: loadingMonthlyDetail } = useQuery({
     queryKey: ['attendance-report-monthly', targetUserId, startDate, endDate, viewType],
-    queryFn: async () => {
-      if (viewType === 'self') {
-        return getEmployeeAttendance({ from_date: startDate, to_date: endDate });
-      } else {
-        // For staff view, fetch specific user's attendance
-        const response = await apiClient.get('/attendance/employee-attendance/', {
-          params: {
-            from_date: startDate,
-            to_date: endDate,
-            user: targetUserId,
-          },
-        });
-        const payload = response.data?.data || {};
-        return {
-          records: payload.records || [],
-          stats: payload.stats || {},
-          employee_id: payload.employee_id || null,
-          user_info: payload.user_info || null,
-          date_range: payload.date_range || { from_date: startDate, to_date: endDate },
-          working_day_policy: payload.working_day_policy || null,
-          calendar_exceptions: payload.calendar_exceptions || [],
-          holiday_descriptions: payload.holiday_descriptions || {},
-          pagination: payload.pagination || {},
-        };
-      }
-    },
+    queryFn: () => fetchMonthlyAttendanceDetail(viewType, startDate, endDate, targetUserId),
     enabled: !!targetUserId && reportType === 'monthly',
   });
 
@@ -206,7 +190,7 @@ export function AttendanceReportPage() {
       return {
         attendanceByDate: new Map(),
         leaveByDate: new Map(),
-        holidaySet: new Set(),
+        holidaySet: new Set<string>(),
         exceptionalWorkByDate: new Map(),
       };
     }
@@ -630,389 +614,18 @@ export function AttendanceReportPage() {
       {!loading && reportType === 'monthly' && monthlyDetailData && (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           {/* Calendar Section - Takes 2/3 width */}
-          <Card className="lg:col-span-2">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <CalendarDays className="h-5 w-5 text-blue-600" />
-                  {MONTHS[selectedMonth]} {selectedYear}
-                </CardTitle>
-                <Badge variant="outline" className="text-base">
-                  {MONTHS[selectedMonth]} {selectedYear}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {(() => {
-                const monthStart = startOfMonth(new Date(selectedYear, selectedMonth, 1));
-                const monthEnd = endOfMonth(new Date(selectedYear, selectedMonth, 1));
-                const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
-                const leadingEmptyDays = Array.from({ length: monthStart.getDay() });
-
-                return (
-                  <>
-                    {/* Week day headers */}
-                    <div className="mb-2 grid grid-cols-7 gap-1">
-                      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                        <div
-                          key={day}
-                          className="py-1 text-center text-xs font-semibold text-gray-600"
-                        >
-                          {day.charAt(0)}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Calendar days grid */}
-                    <div className="grid grid-cols-7 gap-1">
-                      {/* Leading empty cells for proper calendar alignment */}
-                      {leadingEmptyDays.map((_, index) => (
-                        <div
-                          key={`empty-${index}`}
-                          className="aspect-square rounded border border-transparent"
-                        />
-                      ))}
-
-                      {/* Actual days */}
-                      {monthDays.map((date) => {
-                        const dateKey = toDateKey(date);
-                        const attendance = attendanceByDate.get(dateKey);
-                        const leave = leaveByDate.get(dateKey);
-                        const exception = exceptionalWorkByDate.get(dateKey);
-                        const isHoliday = holidaySet.has(dateKey);
-                        const isFuture = date > new Date();
-
-                        // Determine day state and styling
-                        let bgColor = 'bg-white border-gray-200';
-                        let textColor = 'text-gray-900';
-                        let icon = null;
-                        let statusLabel = '';
-
-                        // Check for force working day exception (overrides holiday/weekend)
-                        if (exception?.override_type === 'FORCE_WORKING') {
-                          statusLabel = 'Testing';
-                          if (attendance?.morning_present && attendance?.afternoon_present) {
-                            bgColor = 'bg-green-50 border-green-300';
-                            textColor = 'text-green-900';
-                            icon = (
-                              <div className="mx-auto flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-[10px] font-bold text-white">
-                                ✓
-                              </div>
-                            );
-                          } else if (!isFuture) {
-                            bgColor = 'bg-red-50 border-red-300';
-                            textColor = 'text-red-900';
-                            icon = (
-                              <div className="mx-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                                ✕
-                              </div>
-                            );
-                          }
-                        }
-                        // Check for force holiday exception or weekend
-                        else if (
-                          exception?.override_type === 'FORCE_HOLIDAY' ||
-                          isHoliday ||
-                          isWeekend(date, monthlyDetailData.working_day_policy)
-                        ) {
-                          bgColor = 'bg-purple-50 border-purple-300';
-                          textColor = 'text-purple-900';
-                          icon = (
-                            <div className="mx-auto flex h-5 w-5 items-center justify-center rounded-full bg-purple-500 text-[10px] font-bold text-white">
-                              H
-                            </div>
-                          );
-                          statusLabel = 'Weekend';
-                        }
-
-                        // Check for approved or pending leave
-                        if (
-                          !icon &&
-                          (leave?.status === 'approved' || leave?.status === 'pending')
-                        ) {
-                          bgColor = 'bg-orange-50 border-orange-300';
-                          textColor = 'text-orange-900';
-                          icon = (
-                            <div className="mx-auto flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white">
-                              ✕
-                            </div>
-                          );
-                        }
-                        // Check for present
-                        else if (
-                          !icon &&
-                          attendance?.morning_present &&
-                          attendance?.afternoon_present
-                        ) {
-                          bgColor = 'bg-green-50 border-green-300';
-                          textColor = 'text-green-900';
-                          icon = (
-                            <div className="mx-auto flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-[10px] font-bold text-white">
-                              ✓
-                            </div>
-                          );
-                        }
-                        // Check for absent (only on past dates, not weekends/holidays)
-                        else if (
-                          !icon &&
-                          !isFuture &&
-                          !isHoliday &&
-                          bgColor === 'bg-white border-gray-200'
-                        ) {
-                          bgColor = 'bg-red-50 border-red-300';
-                          textColor = 'text-red-900';
-                          icon = (
-                            <div className="mx-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                              ✕
-                            </div>
-                          );
-                        }
-                        // Future dates - light gray
-                        else if (isFuture) {
-                          bgColor = 'bg-gray-50 border-gray-200';
-                          textColor = 'text-gray-400';
-                        }
-
-                        return (
-                          <div
-                            key={dateKey}
-                            className={`flex aspect-square flex-col items-center justify-between rounded border p-1 transition ${bgColor}`}
-                          >
-                            <div className="w-full text-center">
-                              <div className="text-[7px] font-medium text-gray-500">
-                                {format(date, 'EEE')}
-                              </div>
-                              <div className={`text-xs font-bold ${textColor}`}>
-                                {format(date, 'd')}
-                              </div>
-                            </div>
-                            <div className="flex w-full flex-1 flex-col items-center justify-center">
-                              {icon}
-                              {statusLabel && (
-                                <div className="mt-0.5 text-[7px] font-medium text-purple-600">
-                                  {statusLabel}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </>
-                );
-              })()}
-            </CardContent>
-          </Card>
+          <MonthlyCalendarCard
+            selectedYear={selectedYear}
+            selectedMonth={selectedMonth}
+            attendanceByDate={attendanceByDate}
+            leaveByDate={leaveByDate}
+            holidaySet={holidaySet}
+            exceptionalWorkByDate={exceptionalWorkByDate}
+            workingDayPolicy={monthlyDetailData.working_day_policy}
+          />
 
           {/* Insights Panel - Takes 1/3 width with Pie Chart */}
-          <div className="space-y-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base font-semibold">Attendance Distribution</CardTitle>
-                <p className="text-xs text-gray-600">
-                  Overall:{' '}
-                  {monthlyDetailData?.stats?.total_working_days > 0
-                    ? Math.round(
-                        (monthlyDetailData?.stats?.total_present /
-                          monthlyDetailData?.stats?.total_working_days) *
-                          100
-                      )
-                    : 0}
-                  %
-                </p>
-              </CardHeader>
-              <CardContent className="flex flex-col items-center">
-                {/* Simple Donut Chart using stroke-dasharray */}
-                <div className="relative mb-4 h-48 w-48">
-                  <svg viewBox="0 0 100 100" className="-rotate-90 transform">
-                    {(() => {
-                      const present = monthlyDetailData?.stats?.total_present || 0;
-                      const absent = monthlyDetailData?.stats?.total_absent || 0;
-                      const leaves = monthlyDetailData?.stats?.total_leaves || 0;
-                      const total = present + absent + leaves;
-
-                      if (total === 0) {
-                        return (
-                          <circle
-                            cx="50"
-                            cy="50"
-                            r="40"
-                            fill="none"
-                            stroke="#e5e7eb"
-                            strokeWidth="20"
-                          />
-                        );
-                      }
-
-                      const circumference = 2 * Math.PI * 40; // radius = 40
-                      const presentPercent = (present / total) * 100;
-                      const absentPercent = (absent / total) * 100;
-                      const leavePercent = (leaves / total) * 100;
-
-                      const presentLength = (presentPercent / 100) * circumference;
-                      const absentLength = (absentPercent / 100) * circumference;
-                      const leaveLength = (leavePercent / 100) * circumference;
-
-                      let offset = 0;
-
-                      return (
-                        <>
-                          {/* Present segment */}
-                          {presentPercent > 0 && (
-                            <circle
-                              cx="50"
-                              cy="50"
-                              r="40"
-                              fill="none"
-                              stroke="#22c55e"
-                              strokeWidth="20"
-                              strokeDasharray={`${presentLength} ${circumference - presentLength}`}
-                              strokeDashoffset={-offset}
-                            />
-                          )}
-
-                          {/* Absent segment */}
-                          {absentPercent > 0 &&
-                            (() => {
-                              offset += presentLength;
-                              return (
-                                <circle
-                                  cx="50"
-                                  cy="50"
-                                  r="40"
-                                  fill="none"
-                                  stroke="#ef4444"
-                                  strokeWidth="20"
-                                  strokeDasharray={`${absentLength} ${circumference - absentLength}`}
-                                  strokeDashoffset={-offset}
-                                />
-                              );
-                            })()}
-
-                          {/* Leave segment */}
-                          {leavePercent > 0 &&
-                            (() => {
-                              offset += absentLength;
-                              return (
-                                <circle
-                                  cx="50"
-                                  cy="50"
-                                  r="40"
-                                  fill="none"
-                                  stroke="#f97316"
-                                  strokeWidth="20"
-                                  strokeDasharray={`${leaveLength} ${circumference - leaveLength}`}
-                                  strokeDashoffset={-offset}
-                                />
-                              );
-                            })()}
-                        </>
-                      );
-                    })()}
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-gray-900">
-                        {monthlyDetailData?.stats?.total_working_days > 0
-                          ? `${Math.round((monthlyDetailData?.stats?.total_present / monthlyDetailData?.stats?.total_working_days) * 100)}%`
-                          : '0%'}
-                      </div>
-                      <div className="mt-1 text-xs text-gray-600">Present</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Legend */}
-                <div className="w-full space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-green-500"></div>
-                      <span className="text-xs text-gray-700">Present</span>
-                    </div>
-                    <span className="text-xs font-semibold text-gray-900">
-                      {monthlyDetailData?.stats?.total_present}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-red-500"></div>
-                      <span className="text-xs text-gray-700">Absent</span>
-                    </div>
-                    <span className="text-xs font-semibold text-gray-900">
-                      {monthlyDetailData?.stats?.total_absent}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-orange-500"></div>
-                      <span className="text-xs text-gray-700">Leave</span>
-                    </div>
-                    <span className="text-xs font-semibold text-gray-900">
-                      {monthlyDetailData?.stats?.total_leaves}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Summary Cards */}
-                <div className="mt-4 grid w-full grid-cols-2 gap-2">
-                  <div className="rounded-lg border border-green-200 bg-green-50 p-3">
-                    <div className="mb-1 text-[10px] font-medium text-green-700">Present</div>
-                    <div className="text-xl font-bold text-green-900">
-                      {monthlyDetailData?.stats?.total_present}
-                    </div>
-                  </div>
-                  <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-                    <div className="mb-1 text-[10px] font-medium text-red-700">Absent</div>
-                    <div className="text-xl font-bold text-red-900">
-                      {monthlyDetailData?.stats?.total_absent}
-                    </div>
-                  </div>
-                  <div className="rounded-lg border border-orange-200 bg-orange-50 p-3">
-                    <div className="mb-1 text-[10px] font-medium text-orange-700">Leaves</div>
-                    <div className="text-xl font-bold text-orange-900">
-                      {monthlyDetailData?.stats?.total_leaves}
-                    </div>
-                  </div>
-                  <div className="rounded-lg border border-purple-200 bg-purple-50 p-3">
-                    <div className="mb-1 text-[10px] font-medium text-purple-700">Holidays</div>
-                    <div className="text-xl font-bold text-purple-900">
-                      {monthlyDetailData?.stats?.total_holidays}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base font-semibold">Legend</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex items-center gap-2 text-xs">
-                  <div className="flex h-4 w-4 items-center justify-center rounded-full bg-green-500 text-[10px] text-white">
-                    ✓
-                  </div>
-                  <span className="text-gray-700">Present</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs">
-                  <div className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
-                    ✕
-                  </div>
-                  <span className="text-gray-700">Absent</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs">
-                  <div className="flex h-4 w-4 items-center justify-center rounded-full bg-orange-500 text-[10px] text-white">
-                    ✕
-                  </div>
-                  <span className="text-gray-700">Leave (Approved)</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs">
-                  <div className="h-4 w-4 rounded border border-purple-300 bg-purple-100"></div>
-                  <span className="text-gray-700">Holiday</span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <AttendanceInsightsPanel stats={monthlyDetailData.stats} />
         </div>
       )}
     </div>

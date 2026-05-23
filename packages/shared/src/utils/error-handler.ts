@@ -364,6 +364,80 @@ export function parseApiError(error: unknown): ApiError {
   };
 }
 
+/** Format a field name from snake_case to Title Case */
+function formatFieldLabel(fieldName: string): string {
+  return fieldName
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (l) => l.toUpperCase());
+}
+
+/** Check if a message is self-descriptive (long or contains punctuation) */
+function isDescriptiveMessage(msg: string): boolean {
+  return msg.length > 50 || msg.includes(".") || msg.includes("!");
+}
+
+const SKIP_FIELDS = new Set(["has_deleted_duplicate", "deleted_record_id"]);
+const NON_FIELD_KEYS = new Set(["non_field_errors", "non_field_error"]);
+const META_FIELDS = new Set(["success", "code", "data", "message"]);
+
+/** Extract error messages from a field errors object */
+function extractFieldErrors(errors: Record<string, unknown>): string[] {
+  const errorMessages: string[] = [];
+
+  Object.entries(errors).forEach(([fieldName, value]) => {
+    if (SKIP_FIELDS.has(fieldName)) return;
+
+    if (Array.isArray(value) && value.length > 0) {
+      if (NON_FIELD_KEYS.has(fieldName)) {
+        errorMessages.push(...value.filter((v) => typeof v === "string"));
+      } else {
+        const msg = value[0];
+        if (typeof msg === "string") {
+          errorMessages.push(
+            isDescriptiveMessage(msg) ? msg : `${formatFieldLabel(fieldName)}: ${msg}`
+          );
+        }
+      }
+    } else if (typeof value === "string") {
+      if (NON_FIELD_KEYS.has(fieldName) || fieldName === "detail") {
+        errorMessages.push(value);
+      } else {
+        errorMessages.push(
+          isDescriptiveMessage(value) ? value : `${formatFieldLabel(fieldName)}: ${value}`
+        );
+      }
+    } else if (typeof value === "object" && value !== null) {
+      Object.entries(value as Record<string, unknown>).forEach(
+        ([nestedField, nestedValue]) => {
+          if (Array.isArray(nestedValue) && nestedValue.length > 0 && typeof nestedValue[0] === "string") {
+            errorMessages.push(`${formatFieldLabel(`${fieldName}.${nestedField}`)}: ${nestedValue[0]}`);
+          }
+        },
+      );
+    }
+  });
+
+  return errorMessages;
+}
+
+/** Extract top-level DRF field errors (when no errors/detail/message wrapper) */
+function extractTopLevelErrors(rawData: Record<string, unknown>): string[] {
+  const topLevelErrors: string[] = [];
+  Object.entries(rawData).forEach(([fieldName, value]) => {
+    if (SKIP_FIELDS.has(fieldName) || META_FIELDS.has(fieldName)) return;
+    if (Array.isArray(value) && value.length > 0 && typeof value[0] === "string") {
+      if (NON_FIELD_KEYS.has(fieldName)) {
+        topLevelErrors.push(...(value as string[]));
+      } else {
+        topLevelErrors.push(`${formatFieldLabel(fieldName)}: ${value[0]}`);
+      }
+    } else if (typeof value === "string" && fieldName !== "status_code") {
+      topLevelErrors.push(value);
+    }
+  });
+  return topLevelErrors;
+}
+
 /** Extract error message for display */
 export function extractApiError(
   err: unknown,
@@ -374,8 +448,7 @@ export function extractApiError(
     return (err as Error)?.message || fallback;
   }
 
-  // Priority 1: Backend sends a specific "message" field for all error responses
-  // This is the primary source of truth from our backend
+  // Priority 1: Backend sends a specific "message" field
   if (data.message && typeof data.message === "string") {
     const genericMessages = [
       "Validation error occurred",
@@ -390,78 +463,7 @@ export function extractApiError(
 
   // Priority 2: Extract from errors object (field-level details)
   if (data.errors && typeof data.errors === "object") {
-    const errorMessages: string[] = [];
-
-    Object.entries(data.errors).forEach(([fieldName, value]) => {
-      // Skip internal flags
-      if (
-        fieldName === "has_deleted_duplicate" ||
-        fieldName === "deleted_record_id"
-      ) {
-        return;
-      }
-
-      // Handle array of error messages
-      if (Array.isArray(value) && value.length > 0) {
-        // For non_field_errors, add directly
-        if (
-          fieldName === "non_field_errors" ||
-          fieldName === "non_field_error"
-        ) {
-          errorMessages.push(...value.filter((v) => typeof v === "string"));
-        } else {
-          // For field errors, check if message is already descriptive
-          const msg = value[0];
-          if (typeof msg === "string") {
-            // If message is already descriptive (long sentence), use it directly
-            if (msg.length > 50 || msg.includes(".") || msg.includes("!")) {
-              errorMessages.push(msg);
-            } else {
-              // Convert snake_case to Title Case for short messages
-              const fieldLabel = fieldName
-                .replace(/_/g, " ")
-                .replace(/\b\w/g, (l) => l.toUpperCase());
-              errorMessages.push(`${fieldLabel}: ${msg}`);
-            }
-          }
-        }
-      } else if (typeof value === "string") {
-        if (
-          fieldName === "non_field_errors" ||
-          fieldName === "non_field_error" ||
-          fieldName === "detail"
-        ) {
-          errorMessages.push(value);
-        } else {
-          // If message is already descriptive, use it directly without field prefix
-          if (value.length > 50 || value.includes(".") || value.includes("!")) {
-            errorMessages.push(value);
-          } else {
-            const fieldLabel = fieldName
-              .replace(/_/g, " ")
-              .replace(/\b\w/g, (l) => l.toUpperCase());
-            errorMessages.push(`${fieldLabel}: ${value}`);
-          }
-        }
-      } else if (typeof value === "object" && value !== null) {
-        // Handle nested errors (e.g., student_data.email)
-        Object.entries(value as Record<string, unknown>).forEach(
-          ([nestedField, nestedValue]) => {
-            if (
-              Array.isArray(nestedValue) &&
-              nestedValue.length > 0 &&
-              typeof nestedValue[0] === "string"
-            ) {
-              const fieldLabel = `${fieldName}.${nestedField}`
-                .replace(/_/g, " ")
-                .replace(/\b\w/g, (l) => l.toUpperCase());
-              errorMessages.push(`${fieldLabel}: ${nestedValue[0]}`);
-            }
-          },
-        );
-      }
-    });
-
+    const errorMessages = extractFieldErrors(data.errors as Record<string, unknown>);
     if (errorMessages.length > 0) {
       return errorMessages.join("\n");
     }
@@ -470,55 +472,17 @@ export function extractApiError(
   // Check for top-level DRF validation errors (non_field_errors directly in data)
   const rawData = data as Record<string, unknown>;
   if (rawData.non_field_errors) {
-    if (
-      Array.isArray(rawData.non_field_errors) &&
-      rawData.non_field_errors.length > 0
-    ) {
-      return rawData.non_field_errors
-        .filter((v: unknown) => typeof v === "string")
-        .join("\n");
+    if (Array.isArray(rawData.non_field_errors) && rawData.non_field_errors.length > 0) {
+      return rawData.non_field_errors.filter((v: unknown) => typeof v === "string").join("\n");
     }
     if (typeof rawData.non_field_errors === "string") {
       return rawData.non_field_errors;
     }
   }
 
-  // Check for top-level field errors (DRF returns {field_name: ["error"]} directly)
+  // Check for top-level field errors
   if (!data.errors && !data.detail && !data.message) {
-    const topLevelErrors: string[] = [];
-    Object.entries(rawData).forEach(([fieldName, value]) => {
-      if (
-        fieldName === "has_deleted_duplicate" ||
-        fieldName === "deleted_record_id"
-      )
-        return;
-      if (
-        fieldName === "success" ||
-        fieldName === "code" ||
-        fieldName === "data" ||
-        fieldName === "message"
-      )
-        return;
-      if (
-        Array.isArray(value) &&
-        value.length > 0 &&
-        typeof value[0] === "string"
-      ) {
-        if (
-          fieldName === "non_field_errors" ||
-          fieldName === "non_field_error"
-        ) {
-          topLevelErrors.push(...(value as string[]));
-        } else {
-          const fieldLabel = fieldName
-            .replace(/_/g, " ")
-            .replace(/\b\w/g, (l) => l.toUpperCase());
-          topLevelErrors.push(`${fieldLabel}: ${value[0]}`);
-        }
-      } else if (typeof value === "string" && fieldName !== "status_code") {
-        topLevelErrors.push(value);
-      }
-    });
+    const topLevelErrors = extractTopLevelErrors(rawData);
     if (topLevelErrors.length > 0) {
       return topLevelErrors.join("\n");
     }

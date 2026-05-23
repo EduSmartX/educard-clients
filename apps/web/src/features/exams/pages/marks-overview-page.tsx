@@ -21,7 +21,8 @@ import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Badge } from '@/components/ui/badge';
 import { useExamSessions, useMarksOverview } from '../hooks/use-exams';
 import { useClasses } from '@/features/classes/hooks/use-classes';
-import { bulkSaveAllMarks, type StudentMarksEntry, type StudentExamMark } from '../api/exams-api';
+import { bulkSaveAllMarks } from '../api/exams-api';
+import { buildStudentMarkEntries, buildBulkSavePayload, normalizeMarksInput } from '../utils/marks-overview-helpers';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGridKeyboardNavigation } from '@/hooks/use-grid-keyboard-navigation';
 import { toast } from 'sonner';
@@ -157,30 +158,7 @@ export function MarksOverviewPage() {
   // Initialize/update student marks when marks overview data changes
   useEffect(() => {
     if (marksOverview?.students && marksOverview.subjects.length > 0) {
-      const entries: StudentMarkEntry[] = marksOverview.students.map((student) => {
-        // Convert existing marks to string values for input fields
-        const marksMap: Record<string, string> = {};
-        // Handle optional marks field
-        if (student.marks) {
-          Object.entries(student.marks).forEach(([examId, markData]) => {
-            if (markData.is_absent) {
-              marksMap[examId] = 'AB'; // Absent marker
-            } else if (markData.marks_obtained > 0) {
-              marksMap[examId] = String(markData.marks_obtained);
-            }
-          });
-        }
-
-        return {
-          studentId: student.student_public_id,
-          rollNumber: student.roll_number || '-',
-          name: student.student_name,
-          photo: student.profile_photo_thumbnail || undefined,
-          gender: student.gender || undefined,
-          marks: marksMap,
-        };
-      });
-      setStudentMarks(entries);
+      setStudentMarks(buildStudentMarkEntries(marksOverview.students));
     } else {
       setStudentMarks([]);
     }
@@ -199,35 +177,16 @@ export function MarksOverviewPage() {
     value: string,
     maxMarks: number
   ) => {
-    // Auto-convert 'a' or 'A' to 'AB' (absent)
-    const upper = value.toUpperCase();
-    if (upper === 'A' || upper === 'AB') {
-      setStudentMarks((prev) =>
-        prev.map((student) =>
-          student.studentId === studentId
-            ? { ...student, marks: { ...student.marks, [examId]: 'AB' } }
-            : student
-        )
-      );
+    const result = normalizeMarksInput(value, maxMarks);
+    if (result === null) {
+      toast.error(`Marks must be between 0 and ${maxMarks}`);
       return;
-    }
-
-    // Allow empty or valid number
-    if (value) {
-      const numValue = parseFloat(value);
-      if (isNaN(numValue) || numValue < 0 || numValue > maxMarks) {
-        toast.error(`Marks must be between 0 and ${maxMarks}`);
-        return;
-      }
     }
 
     setStudentMarks((prev) =>
       prev.map((student) =>
         student.studentId === studentId
-          ? {
-              ...student,
-              marks: { ...student.marks, [examId]: value },
-            }
+          ? { ...student, marks: { ...student.marks, [examId]: result.normalized } }
           : student
       )
     );
@@ -244,36 +203,7 @@ export function MarksOverviewPage() {
 
     setIsSaving(true);
     try {
-      // Build payload: group all marks by student
-      const studentsPayload: StudentMarksEntry[] = [];
-
-      studentMarks.forEach((student) => {
-        const examMarks: StudentExamMark[] = [];
-
-        subjects.forEach((subject) => {
-          const markValue = student.marks[subject.exam_public_id];
-
-          // Only include if there's a value
-          if (markValue !== undefined && markValue !== '') {
-            const isAbsent = markValue.toUpperCase() === 'AB';
-            const marksObtained = isAbsent ? 0 : parseFloat(markValue) || 0;
-
-            examMarks.push({
-              exam_id: subject.exam_public_id,
-              marks_obtained: marksObtained,
-              is_absent: isAbsent,
-            });
-          }
-        });
-
-        // Only include students who have at least one mark
-        if (examMarks.length > 0) {
-          studentsPayload.push({
-            student_id: student.studentId,
-            marks: examMarks,
-          });
-        }
-      });
+      const studentsPayload = buildBulkSavePayload(studentMarks, subjects);
 
       if (studentsPayload.length === 0) {
         toast.warning('No marks to save');

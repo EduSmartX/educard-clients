@@ -4,7 +4,7 @@
  */
 
 import { memo, useCallback, useState } from 'react';
-import { useDropzone, type DropzoneOptions, type FileRejection } from 'react-dropzone';
+import { useDropzone, type FileRejection } from 'react-dropzone';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import {
   Upload,
@@ -69,6 +69,38 @@ const getFileIcon = (type: string) => {
 
 const createFileId = () => `${Date.now()}-${crypto.randomUUID().slice(0, 9)}`;
 
+/** Validate accepted files and build UploadedFile entries */
+async function buildValidatedFiles(
+  acceptedFiles: File[],
+  validator: ((file: File) => Promise<string | null> | string | null) | undefined,
+  uploadMode: 'instant' | 'manual',
+  showPreview: boolean,
+  errors: Record<string, string>
+): Promise<UploadedFile[]> {
+  const validatedFiles: UploadedFile[] = [];
+  for (const file of acceptedFiles) {
+    const validationError = validator ? await validator(file) : null;
+    if (validationError) {
+      errors[file.name] = validationError;
+      continue;
+    }
+
+    const uploadedFile: UploadedFile = {
+      id: createFileId(),
+      file,
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      status: uploadMode === 'instant' ? 'uploading' : 'pending',
+      progress: uploadMode === 'instant' ? 0 : undefined,
+      ...(file.type.startsWith('image/') &&
+        showPreview && { preview: URL.createObjectURL(file) }),
+    };
+    validatedFiles.push(uploadedFile);
+  }
+  return validatedFiles;
+}
+
 export const FileUpload = memo(
   ({
     files,
@@ -103,53 +135,34 @@ export const FileUpload = memo(
         });
 
         // Validate and create UploadedFile entries
-        const validatedFiles: UploadedFile[] = [];
-        for (const file of acceptedFiles) {
-          const validationError = validator ? await validator(file) : null;
-          if (validationError) {
-            errors[file.name] = validationError;
-            continue;
-          }
-
-          const uploadedFile: UploadedFile = {
-            id: createFileId(),
-            file,
-            name: file.name,
-            size: file.size,
-            type: file.type,
-            status: uploadMode === 'instant' ? 'uploading' : 'pending',
-            progress: uploadMode === 'instant' ? 0 : undefined,
-            ...(file.type.startsWith('image/') &&
-              showPreview && { preview: URL.createObjectURL(file) }),
-          };
-          validatedFiles.push(uploadedFile);
-        }
+        const validatedFiles = await buildValidatedFiles(
+          acceptedFiles, validator, uploadMode, showPreview, errors
+        );
 
         setValidationErrors(errors);
 
         // Add to files list
         const newFiles = [...files, ...validatedFiles];
-        onFilesChange(maxFiles ? newFiles.slice(0, maxFiles) : newFiles);
+        const finalFiles = maxFiles ? newFiles.slice(0, maxFiles) : newFiles;
+        onFilesChange(finalFiles);
 
         // Instant upload if enabled
         if (uploadMode === 'instant' && onUpload) {
+          let currentFiles = finalFiles;
           for (const uploadedFile of validatedFiles) {
             try {
               await onUpload(uploadedFile.file);
-              onFilesChange((currentFiles) =>
-                currentFiles.map((f) =>
-                  f.id === uploadedFile.id ? { ...f, status: 'success' as const, progress: 100 } : f
-                )
+              currentFiles = currentFiles.map((f) =>
+                f.id === uploadedFile.id ? { ...f, status: 'success' as const, progress: 100 } : f
               );
             } catch (err) {
-              onFilesChange((currentFiles) =>
-                currentFiles.map((f) =>
-                  f.id === uploadedFile.id
-                    ? { ...f, status: 'error' as const, error: (err as Error).message }
-                    : f
-                )
+              currentFiles = currentFiles.map((f) =>
+                f.id === uploadedFile.id
+                  ? { ...f, status: 'error' as const, error: (err as Error).message }
+                  : f
               );
             }
+            onFilesChange(currentFiles);
           }
         }
       },
@@ -163,7 +176,7 @@ export const FileUpload = memo(
       multiple,
       disabled,
       maxFiles,
-    } as DropzoneOptions);
+    });
 
     const removeFile = useCallback(
       (id: string) => {
@@ -192,11 +205,9 @@ export const FileUpload = memo(
             className={cn(
               'cursor-pointer rounded-lg border-2 border-dashed text-center transition-colors',
               compact ? 'p-4' : 'p-6',
-              isDragActive
-                ? 'border-primary bg-primary/5'
-                : error
-                  ? 'border-destructive bg-destructive/5'
-                  : 'border-border hover:border-primary/50',
+              isDragActive && 'border-primary bg-primary/5',
+              !isDragActive && error && 'border-destructive bg-destructive/5',
+              !isDragActive && !error && 'border-border hover:border-primary/50',
               disabled && 'cursor-not-allowed opacity-50'
             )}
           >
@@ -208,18 +219,16 @@ export const FileUpload = memo(
               )}
             />
             <p className={cn('text-foreground', compact ? 'text-xs' : 'text-sm')}>
-              {isDragActive ? (
-                'Drop files here...'
-              ) : placeholder ? (
-                placeholder
-              ) : (
+              {isDragActive && 'Drop files here...'}
+              {!isDragActive && placeholder}
+              {!isDragActive && !placeholder && (
                 <>
                   Drag & drop files here, or <span className="text-primary">click to browse</span>
                 </>
               )}
             </p>
             {helperText && (
-              <p className={cn('text-muted-foreground mt-1', compact ? 'text-xs' : 'text-xs')}>
+              <p className={cn('text-muted-foreground mt-1', 'text-xs')}>
                 {helperText}
               </p>
             )}
@@ -336,7 +345,7 @@ const FileItem = memo(({ file, onRemove, showProgress, compact, allowReorder }: 
       <div className="min-w-0 flex-1">
         <p className={cn('truncate font-medium', compact ? 'text-xs' : 'text-sm')}>{file.name}</p>
         <div className="flex items-center gap-2">
-          <p className={cn('text-muted-foreground', compact ? 'text-xs' : 'text-xs')}>
+          <p className={cn('text-muted-foreground text-xs')}>
             {formatFileSize(file.size)}
           </p>
           {hasError && file.error && <span className="text-destructive text-xs">{file.error}</span>}

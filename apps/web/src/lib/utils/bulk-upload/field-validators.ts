@@ -126,6 +126,23 @@ export const phoneValidator: FieldValidator = (value, row, fieldLabel) => {
   return null;
 };
 
+const DATE_YYYYMMDD = /^\d{4}-\d{2}-\d{2}$/;
+const DATE_DDMMYYYY = /^\d{2}-\d{2}-\d{4}$/;
+
+/** Parse a date string in YYYY-MM-DD or DD-MM-YYYY format */
+function parseDateString(dateStr: string): Date | null {
+  if (DATE_YYYYMMDD.test(dateStr)) {
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  if (DATE_DDMMYYYY.test(dateStr)) {
+    const [day, month, year] = dateStr.split('-');
+    const d = new Date(`${year}-${month}-${day}`);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  return null;
+}
+
 /**
  * Date validator with format YYYY-MM-DD
  * @param notInFuture - If true, date must not be in the future
@@ -138,45 +155,27 @@ export const dateValidator = (options?: {
 }): FieldValidator => {
   return (value, row, fieldLabel) => {
     if (!value || String(value).trim() === '') {
-      return null; // Date is optional
+      return null;
     }
     const dateStr = String(value).trim();
     
-    // Check if it's a valid date format YYYY-MM-DD or DD-MM-YYYY
-    const yyyymmdd = /^\d{4}-\d{2}-\d{2}$/;
-    const ddmmyyyy = /^\d{2}-\d{2}-\d{4}$/;
-    
-    if (!yyyymmdd.test(dateStr) && !ddmmyyyy.test(dateStr)) {
-      // Check if it might be an Excel serial date number
-      if (typeof value === 'number') {
-        return null; // Excel serial date, will be converted by backend
-      }
+    // Check if it might be an Excel serial date number
+    if (typeof value === 'number') {
+      return null;
+    }
+
+    const date = parseDateString(dateStr);
+    if (!date) {
       return { row, field: fieldLabel, message: `Invalid date format. Use YYYY-MM-DD (e.g., 2024-01-15) or DD-MM-YYYY` };
-    }
-    
-    // Parse the date
-    let date: Date;
-    if (yyyymmdd.test(dateStr)) {
-      date = new Date(dateStr);
-    } else {
-      // DD-MM-YYYY format
-      const [day, month, year] = dateStr.split('-');
-      date = new Date(`${year}-${month}-${day}`);
-    }
-    
-    if (isNaN(date.getTime())) {
-      return { row, field: fieldLabel, message: 'Invalid date value' };
     }
     
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Check if not in future (for DOB)
     if (options?.notInFuture && date >= today) {
       return { row, field: fieldLabel, message: `${fieldLabel} must be in the past` };
     }
     
-    // Check max future months (for admission/joining dates)
     if (options?.maxFutureMonths !== undefined) {
       const maxDate = new Date();
       maxDate.setMonth(maxDate.getMonth() + options.maxFutureMonths);
@@ -185,7 +184,6 @@ export const dateValidator = (options?: {
       }
     }
     
-    // Check minimum age
     if (options?.minAge !== undefined) {
       const minAgeDate = new Date();
       minAgeDate.setFullYear(minAgeDate.getFullYear() - options.minAge);

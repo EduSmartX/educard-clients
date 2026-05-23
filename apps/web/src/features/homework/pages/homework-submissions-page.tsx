@@ -251,16 +251,13 @@ export default function HomeworkSubmissionsPage() {
 
   // Auto-select first homework when list loads
   useEffect(() => {
-    if (homeworkList.length > 0 && !selectedHomeworkId) {
-      setSelectedHomeworkId(homeworkList[0].public_id);
-    } else if (
-      homeworkList.length > 0 &&
-      !homeworkList.find((h) => h.public_id === selectedHomeworkId)
-    ) {
-      // If selected homework is not in the list anymore, select first one
-      setSelectedHomeworkId(homeworkList[0].public_id);
-    } else if (homeworkList.length === 0) {
+    if (homeworkList.length === 0) {
       setSelectedHomeworkId('');
+      return;
+    }
+    const isCurrentSelectionValid = homeworkList.some((h) => h.public_id === selectedHomeworkId);
+    if (!selectedHomeworkId || !isCurrentSelectionValid) {
+      setSelectedHomeworkId(homeworkList[0].public_id);
     }
   }, [homeworkList, selectedHomeworkId]);
 

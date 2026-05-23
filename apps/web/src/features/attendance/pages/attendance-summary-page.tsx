@@ -217,13 +217,11 @@ export function AttendanceSummaryPage() {
   const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
 
   // Calculate completion percentage
-  const completionPercent = summaryData?.summary
-    ? summaryData.summary.total_classes > 0
-      ? Math.round(
-          (summaryData.summary.classes_submitted / summaryData.summary.total_classes) * 100
-        )
-      : 0
-    : 0;
+  const completionPercent = useMemo(() => {
+    const summary = summaryData?.summary;
+    if (!summary || summary.total_classes === 0) return 0;
+    return Math.round((summary.classes_submitted / summary.total_classes) * 100);
+  }, [summaryData]);
 
   return (
     <div className="container mx-auto space-y-6 py-6">

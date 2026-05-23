@@ -171,7 +171,6 @@ export default function HomeworkListPage() {
       });
       setSelectedDate(new Date(result.date));
     } catch {
-      // Fallback to simple previous day if API fails
       setSelectedDate((prev) => {
         const newDate = new Date(prev);
         newDate.setDate(newDate.getDate() - 1);
@@ -181,10 +180,7 @@ export default function HomeworkListPage() {
   }, [selectedDate, selectedClassId, navigateWorkingDay]);
 
   const handleNextDay = useCallback(async () => {
-    // Don't allow navigation beyond 1 week from today
-    if (!canNavigateNext) {
-      return;
-    }
+    if (!canNavigateNext) return;
 
     try {
       const result = await navigateWorkingDay({
@@ -192,15 +188,13 @@ export default function HomeworkListPage() {
         direction: 'next',
         class_id: selectedClassId || undefined,
       });
-      // Additional check to not go beyond 1 week
       const resultDate = new Date(result.date);
-      const oneWeekFromToday = new Date();
-      oneWeekFromToday.setDate(oneWeekFromToday.getDate() + 7);
-      if (resultDate <= oneWeekFromToday) {
+      const maxDate = new Date();
+      maxDate.setDate(maxDate.getDate() + 7);
+      if (resultDate <= maxDate) {
         setSelectedDate(resultDate);
       }
     } catch {
-      // Fallback to simple next day if API fails
       setSelectedDate((prev) => {
         const newDate = new Date(prev);
         newDate.setDate(newDate.getDate() + 1);

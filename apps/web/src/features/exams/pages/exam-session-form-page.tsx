@@ -32,6 +32,25 @@ import {
   type ExamSessionCreatePayload,
   type ExamSessionUpdatePayload,
 } from '@educard/shared';
+
+function validateSessionForm(
+  name: string,
+  sessionType: ExamSessionType | '',
+  academicYear: string
+): Record<string, string> {
+  const errors: Record<string, string> = {};
+  if (!name.trim()) {
+    errors.name = ValidationMessages.EXAM_SESSION.ENTER_NAME;
+  }
+  if (!sessionType) {
+    errors.session_type = ValidationMessages.EXAM_SESSION.SELECT_TYPE;
+  }
+  if (!academicYear.trim()) {
+    errors.academic_year = ValidationMessages.EXAM_SESSION.SELECT_ACADEMIC_YEAR;
+  }
+  return errors;
+}
+
 export function ExamSessionFormPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -120,17 +139,7 @@ export function ExamSessionFormPage() {
     e.preventDefault();
     setFieldErrors({});
 
-    // Basic client-side validation
-    const errors: Record<string, string> = {};
-    if (!name.trim()) {
-      errors.name = ValidationMessages.EXAM_SESSION.ENTER_NAME;
-    }
-    if (!sessionType) {
-      errors.session_type = ValidationMessages.EXAM_SESSION.SELECT_TYPE;
-    }
-    if (!academicYear.trim()) {
-      errors.academic_year = ValidationMessages.EXAM_SESSION.SELECT_ACADEMIC_YEAR;
-    }
+    const errors = validateSessionForm(name, sessionType, academicYear);
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       return;

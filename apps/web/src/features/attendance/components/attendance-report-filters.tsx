@@ -74,7 +74,7 @@ export function AttendanceReportFilters({
   manageableUsers,
   isLoadingUsers,
   collapsed = false,
-}: AttendanceReportFiltersProps) {
+}: Readonly<AttendanceReportFiltersProps>) {
   const currentYear = new Date().getFullYear();
 
   const years = useMemo(() => {
@@ -134,7 +134,7 @@ export function AttendanceReportFilters({
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {/* Report Type */}
           <div>
-            <label className="mb-2 block text-sm font-semibold text-gray-700">Report Type</label>
+            <span className="mb-2 block text-sm font-semibold text-gray-700">Report Type</span>
             <SearchableSelect
               options={[
                 { value: 'yearly', label: 'Yearly Report' },
@@ -149,7 +149,7 @@ export function AttendanceReportFilters({
 
           {/* View Type */}
           <div>
-            <label className="mb-2 block text-sm font-semibold text-gray-700">View</label>
+            <span className="mb-2 block text-sm font-semibold text-gray-700">View</span>
             <SearchableSelect
               options={[
                 { value: 'self', label: 'Self' },
@@ -164,7 +164,7 @@ export function AttendanceReportFilters({
 
           {/* View Mode */}
           <div>
-            <label className="mb-2 block text-sm font-semibold text-gray-700">Display Mode</label>
+            <span className="mb-2 block text-sm font-semibold text-gray-700">Display Mode</span>
             <SearchableSelect
               options={[
                 { value: 'grid', label: 'Grid View' },
@@ -180,7 +180,7 @@ export function AttendanceReportFilters({
           {/* Staff Selection */}
           {viewType === 'staff' && (
             <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-700">Select Staff</label>
+              <span className="mb-2 block text-sm font-semibold text-gray-700">Select Staff</span>
               <SearchableSelect
                 options={manageableUsers.map((staff) => ({
                   value: staff.public_id,
@@ -199,7 +199,7 @@ export function AttendanceReportFilters({
 
           {/* Year Selection */}
           <div>
-            <label className="mb-2 block text-sm font-semibold text-gray-700">Year</label>
+            <span className="mb-2 block text-sm font-semibold text-gray-700">Year</span>
             <SearchableSelect
               options={years.map((year) => ({
                 value: String(year),
@@ -215,7 +215,7 @@ export function AttendanceReportFilters({
           {/* Month Selection (only for monthly report) */}
           {reportType === 'monthly' && (
             <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-700">Month</label>
+              <span className="mb-2 block text-sm font-semibold text-gray-700">Month</span>
               <SearchableSelect
                 options={MONTHS.map((month, index) => ({
                   value: String(index),

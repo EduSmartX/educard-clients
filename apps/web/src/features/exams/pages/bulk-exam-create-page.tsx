@@ -59,6 +59,63 @@ interface SubjectRow {
   dateError?: string; // Date validation error message
 }
 
+/** Validate the bulk exam form before submission */
+function validateBulkExamForm(
+  sessionId: string,
+  classId: string,
+  subjectRows: SubjectRow[]
+): Record<string, string> {
+  const errors: Record<string, string> = {};
+  if (!sessionId) {
+    errors.session_id = ValidationMessages.EXAM.SELECT_SESSION;
+  }
+  if (!classId) {
+    errors.class_id = ValidationMessages.EXAM.SELECT_CLASS;
+  }
+
+  const selectedRows = subjectRows.filter((row) => row.selected);
+  if (selectedRows.length === 0) {
+    errors.subjects = ValidationMessages.EXAM.SELECT_AT_LEAST_ONE_SUBJECT;
+  }
+
+  const rowsWithDateErrors = selectedRows.filter((row) => row.date && row.dateError);
+  if (rowsWithDateErrors.length > 0) {
+    errors.dates = `${rowsWithDateErrors.length} exam(s) have invalid dates. Please fix date errors before submitting.`;
+  }
+
+  return errors;
+}
+
+/** Map backend error messages to inline row date errors */
+function handleBulkCreateErrors(
+  allMessages: string[],
+  setSubjectRows: React.Dispatch<React.SetStateAction<SubjectRow[]>>
+) {
+  let hasInlineError = false;
+  setSubjectRows((prev) => {
+    const updated = [...prev];
+    for (const msg of allMessages) {
+      const dateMatch = msg.match(/date\s+(\d{4}-\d{2}-\d{2})/i);
+      if (dateMatch) {
+        const errorDate = dateMatch[1];
+        const rowIdx = updated.findIndex(
+          (r) => r.selected && r.date && format(r.date, 'yyyy-MM-dd') === errorDate
+        );
+        if (rowIdx !== -1) {
+          updated[rowIdx] = { ...updated[rowIdx], dateError: msg };
+          hasInlineError = true;
+        }
+      }
+    }
+    return updated;
+  });
+  if (!hasInlineError) {
+    allMessages.forEach((msg) => toast.error(msg));
+  } else {
+    toast.error('Please fix the date errors highlighted below.');
+  }
+}
+
 export function BulkExamCreatePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -268,32 +325,7 @@ export function BulkExamCreatePage() {
       if (respData?.errors) {
         const allMessages = Object.values(respData.errors).flat();
         if (allMessages.length > 0) {
-          // Try to map date-related errors back to rows inline
-          let hasInlineError = false;
-          setSubjectRows((prev) => {
-            const updated = [...prev];
-            for (const msg of allMessages) {
-              // Match "Exam date YYYY-MM-DD is after session end date..."
-              const dateMatch = msg.match(/date\s+(\d{4}-\d{2}-\d{2})/i);
-              if (dateMatch) {
-                const errorDate = dateMatch[1];
-                const rowIdx = updated.findIndex(
-                  (r) => r.selected && r.date && format(r.date, 'yyyy-MM-dd') === errorDate
-                );
-                if (rowIdx !== -1) {
-                  updated[rowIdx] = { ...updated[rowIdx], dateError: msg };
-                  hasInlineError = true;
-                }
-              }
-            }
-            return updated;
-          });
-          // Show remaining non-date errors (or all if none matched inline)
-          if (!hasInlineError) {
-            allMessages.forEach((msg) => toast.error(msg));
-          } else {
-            toast.error('Please fix the date errors highlighted below.');
-          }
+          handleBulkCreateErrors(allMessages, setSubjectRows);
           return;
         }
       }
@@ -306,26 +338,7 @@ export function BulkExamCreatePage() {
     e.preventDefault();
     setFieldErrors({});
 
-    // Validation
-    const errors: Record<string, string> = {};
-    if (!sessionId) {
-      errors.session_id = ValidationMessages.EXAM.SELECT_SESSION;
-    }
-    if (!classId) {
-      errors.class_id = ValidationMessages.EXAM.SELECT_CLASS;
-    }
-
-    const selectedRows = subjectRows.filter((row) => row.selected);
-    if (selectedRows.length === 0) {
-      errors.subjects = ValidationMessages.EXAM.SELECT_AT_LEAST_ONE_SUBJECT;
-    }
-
-    // Check for date validation errors in selected rows
-    const rowsWithDateErrors = selectedRows.filter((row) => row.date && row.dateError);
-    if (rowsWithDateErrors.length > 0) {
-      errors.dates = `${rowsWithDateErrors.length} exam(s) have invalid dates. Please fix date errors before submitting.`;
-    }
-
+    const errors = validateBulkExamForm(sessionId, classId, subjectRows);
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       if (errors.dates) {
@@ -335,6 +348,7 @@ export function BulkExamCreatePage() {
     }
 
     // Build payload
+    const selectedRows = subjectRows.filter((row) => row.selected);
     const exams: BulkExamItem[] = selectedRows.map((row) => ({
       subject_id: row.subject_id,
       max_marks: Number(row.max_marks) || 100,

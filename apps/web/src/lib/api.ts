@@ -97,99 +97,96 @@ apiClient.interceptors.response.use(
 );
 
 /**
+ * Determine if the error should be silently handled (no toast shown)
+ */
+function shouldSkipToast(error: AxiosError): boolean {
+  if (!error.response) return false;
+
+  const status = error.response.status;
+  const data = error.response.data as ApiErrorResponse;
+
+  // OTP validation errors - handled by form
+  if (
+    error.config?.url?.includes('/otp/') &&
+    status === 400 &&
+    data.detail &&
+    data.errors &&
+    Array.isArray(data.errors)
+  ) {
+    return true;
+  }
+
+  // Login errors - handled by login form
+  if (error.config?.url?.includes('/auth/login') && status === 401) {
+    return true;
+  }
+
+  // Field-level validation errors - handled by form fields
+  if (status === 400 && data.errors && typeof data.errors === 'object') {
+    return true;
+  }
+
+  // Standard backend error responses - handled by mutation onError handlers
+  if (
+    status === 400 &&
+    data.success === false &&
+    typeof data.message === 'string' &&
+    data.message.length > 0
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Get toast message for a specific HTTP status code
+ */
+function getToastMessageForStatus(status: number, data: ApiErrorResponse): string | null {
+  switch (status) {
+    case 400:
+      if (data.message && typeof data.message === 'string') return data.message;
+      if (data.detail) return data.detail;
+      if (data.non_field_errors) return data.non_field_errors[0];
+      return ErrorMessages.INVALID_REQUEST;
+    case 401:
+      return null; // Handled by auth interceptor
+    case 403:
+      return ErrorMessages.FORBIDDEN_ACTION;
+    case 404:
+      return ErrorMessages.NOT_FOUND;
+    case 409:
+      return data.message || data.detail || ErrorMessages.CONFLICT;
+    case 422:
+      return ErrorMessages.VALIDATION_ERROR;
+    case 429:
+      return ErrorMessages.TOO_MANY_REQUESTS;
+    case 500:
+      return ErrorMessages.SERVER_ERROR;
+    case 503:
+      return ErrorMessages.SERVICE_UNAVAILABLE;
+    default:
+      return data.message || data.detail || ErrorMessages.GENERIC_RETRY;
+  }
+}
+
+/**
  * Handle API errors and show toast notifications
  */
 function handleApiError(error: AxiosError): void {
   if (error.response) {
-    // Server responded with error
-    const status = error.response.status;
-    const data = error.response.data as ApiErrorResponse;
+    if (shouldSkipToast(error)) return;
 
-    // Skip toast for OTP validation errors (will be handled by form)
-    const isOtpError =
-      error.config?.url?.includes('/otp/') &&
-      status === 400 &&
-      data.detail &&
-      data.errors &&
-      Array.isArray(data.errors);
-
-    // Skip toast for login errors (will be handled by login form)
-    const isLoginError = error.config?.url?.includes('/auth/login') && status === 401;
-
-    if (isOtpError || isLoginError) {
-      // Don't show toast - errors will be displayed on the form
-      return;
-    }
-
-    const hasFieldErrors = status === 400 && data.errors && typeof data.errors === 'object';
-    if (hasFieldErrors) {
-      return;
-    }
-
-    // Skip toast for standard backend 400 responses (success=false, message=string)
-    // These will be handled by mutation onError handlers via handleMutationError
-    const isStandardBackendError =
-      status === 400 &&
-      data.success === false &&
-      typeof data.message === 'string' &&
-      data.message.length > 0;
-    if (isStandardBackendError) {
-      return;
-    }
-
-    switch (status) {
-      case 400:
-        // Bad Request - Show validation errors
-        if (data.message && typeof data.message === 'string') {
-          toast.error(data.message);
-        } else if (data.detail) {
-          toast.error(data.detail);
-        } else if (data.non_field_errors) {
-          toast.error(data.non_field_errors[0]);
-        } else {
-          toast.error(ErrorMessages.INVALID_REQUEST);
-        }
-        break;
-
-      case 401:
-        break;
-
-      case 403:
-        toast.error(ErrorMessages.FORBIDDEN_ACTION);
-        break;
-
-      case 404:
-        toast.error(ErrorMessages.NOT_FOUND);
-        break;
-
-      case 409:
-        toast.error(data.message || data.detail || ErrorMessages.CONFLICT);
-        break;
-
-      case 422:
-        toast.error(ErrorMessages.VALIDATION_ERROR);
-        break;
-
-      case 429:
-        toast.error(ErrorMessages.TOO_MANY_REQUESTS);
-        break;
-
-      case 500:
-        toast.error(ErrorMessages.SERVER_ERROR);
-        break;
-
-      case 503:
-        toast.error(ErrorMessages.SERVICE_UNAVAILABLE);
-        break;
-
-      default:
-        toast.error(data.message || data.detail || ErrorMessages.GENERIC_RETRY);
+    const message = getToastMessageForStatus(
+      error.response.status,
+      error.response.data as ApiErrorResponse
+    );
+    if (message) {
+      toast.error(message);
     }
   } else if (error.request) {
-    // Request made but no response
     toast.error(ErrorMessages.NO_SERVER_RESPONSE);
   } else {
-    // Error in request setup
     toast.error(ErrorMessages.GENERIC_RETRY);
   }
 }

@@ -55,7 +55,7 @@ import {
 const DEFAULT_RETURN_URL = '/homework/submissions';
 const DEFAULT_COLOR = '#6366f1';
 
-function StatusBadge({ status, isLate }: { status: SubmissionStatus; isLate?: boolean }) {
+function StatusBadge({ status, isLate }: Readonly<{ status: SubmissionStatus; isLate?: boolean }>) {
   const color = getSubmissionStatusColor(status);
   const label = getSubmissionStatusLabel(status);
 
@@ -83,13 +83,13 @@ function AttachmentCard({
   size,
   onView,
   onDownload,
-}: {
+}: Readonly<{
   name: string;
   type: string;
   size?: number;
   onView?: () => void;
   onDownload?: () => void;
-}) {
+}>) {
   const formatSize = (bytes?: number) => {
     if (!bytes) {
       return '';
@@ -257,6 +257,13 @@ export default function SubmissionReviewPage() {
   const isLoading = isLoadingSubmission || isLoadingHomework;
   const isReviewed = submission?.status === 'reviewed';
   const subjectColor = homework ? getSubjectColor(homework.subject_name) : null;
+
+  let reviewDescription: string = HOMEWORK_UI.ONLY_ASSIGNED_TEACHER_CAN_REVIEW;
+  if (isReviewed) {
+    reviewDescription = HOMEWORK_UI.FEEDBACK_PROVIDED;
+  } else if (canReview) {
+    reviewDescription = HOMEWORK_UI.FEEDBACK_IS_OPTIONAL;
+  }
 
   useEffect(() => {
     if (submission?.feedback) {
@@ -428,18 +435,12 @@ export default function SubmissionReviewPage() {
             <CardHeader className="px-4 py-3">
               <CardTitle className="flex items-center gap-2 text-sm font-medium">
                 <BookOpen className="h-4 w-4" />
-                {isReviewed
+                {isReviewed || !canReview
                   ? HOMEWORK_UI.REVIEW_FEEDBACK
-                  : canReview
-                    ? HOMEWORK_UI.SUBMIT_REVIEW
-                    : HOMEWORK_UI.REVIEW_FEEDBACK}
+                  : HOMEWORK_UI.SUBMIT_REVIEW}
               </CardTitle>
               <CardDescription className="text-xs">
-                {isReviewed
-                  ? HOMEWORK_UI.FEEDBACK_PROVIDED
-                  : canReview
-                    ? HOMEWORK_UI.FEEDBACK_IS_OPTIONAL
-                    : HOMEWORK_UI.ONLY_ASSIGNED_TEACHER_CAN_REVIEW}
+                {reviewDescription}
               </CardDescription>
             </CardHeader>
             <CardContent className="px-4 pt-0 pb-4">

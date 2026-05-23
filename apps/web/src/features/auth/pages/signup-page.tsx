@@ -158,53 +158,41 @@ export default function SignupPage() {
   };
 
   // Step 2: Verify OTPs
-  const handleVerifyAdminOtp = async () => {
-    const otpValue = step2Form.getValues('adminOtp');
+  const handleVerifyOtp = async (
+    type: 'admin' | 'org'
+  ) => {
+    const otpField = type === 'admin' ? 'adminOtp' : 'orgOtp';
+    const otpValue = step2Form.getValues(otpField);
     if (!otpValue || otpValue.length !== 6) {
       toast.error(ErrorMessages.AUTH.INVALID_OTP);
       return;
     }
 
-    setVerifyingAdmin(true);
-    try {
-      const response = await verifyOtp(formData.adminEmail!, otpValue, 'organization_registration');
+    const email = type === 'admin' ? formData.adminEmail! : formData.orgEmail!;
+    const setVerifying = type === 'admin' ? setVerifyingAdmin : setVerifyingOrg;
+    const setVerified = type === 'admin' ? setAdminOtpVerified : setOrgOtpVerified;
+    const successMsg = type === 'admin'
+      ? SuccessMessages.AUTH.ADMIN_EMAIL_VERIFIED
+      : SuccessMessages.AUTH.ORG_EMAIL_VERIFIED;
 
+    setVerifying(true);
+    try {
+      const response = await verifyOtp(email, otpValue, 'organization_registration');
       if (response.success) {
-        setAdminOtpVerified(true);
-        toast.success(SuccessMessages.AUTH.ADMIN_EMAIL_VERIFIED);
+        setVerified(true);
+        toast.success(successMsg);
       } else {
         toast.error(response.message || ErrorMessages.AUTH.VERIFY_OTP_FAILED);
       }
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, ErrorMessages.AUTH.VERIFY_OTP_FAILED));
     } finally {
-      setVerifyingAdmin(false);
+      setVerifying(false);
     }
   };
 
-  const handleVerifyOrgOtp = async () => {
-    const otpValue = step2Form.getValues('orgOtp');
-    if (!otpValue || otpValue.length !== 6) {
-      toast.error(ErrorMessages.AUTH.INVALID_OTP);
-      return;
-    }
-
-    setVerifyingOrg(true);
-    try {
-      const response = await verifyOtp(formData.orgEmail!, otpValue, 'organization_registration');
-
-      if (response.success) {
-        setOrgOtpVerified(true);
-        toast.success(SuccessMessages.AUTH.ORG_EMAIL_VERIFIED);
-      } else {
-        toast.error(response.message || ErrorMessages.AUTH.VERIFY_OTP_FAILED);
-      }
-    } catch (error: unknown) {
-      toast.error(getErrorMessage(error, ErrorMessages.AUTH.VERIFY_OTP_FAILED));
-    } finally {
-      setVerifyingOrg(false);
-    }
-  };
+  const handleVerifyAdminOtp = () => handleVerifyOtp('admin');
+  const handleVerifyOrgOtp = () => handleVerifyOtp('org');
 
   const handleStep2Submit = (data: Step2Data) => {
     // If using same email, only need admin OTP verified

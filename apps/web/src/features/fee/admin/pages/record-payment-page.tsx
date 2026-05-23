@@ -65,6 +65,19 @@ const paymentFormSchema = z.object({
 
 type PaymentFormValues = z.infer<typeof paymentFormSchema>;
 
+/** Calculate suggested amount based on transaction type and fee data */
+function getSuggestedAmount(
+  txType: string,
+  fee: { amount_paid: number; final_amount: number; balance_due: number }
+): number {
+  if (txType === TransactionType.DEBIT) {
+    // Refund: if overpaid, suggest excess; otherwise suggest full paid amount
+    const excess = fee.amount_paid - fee.final_amount;
+    return excess > 0 ? excess : fee.amount_paid;
+  }
+  return fee.balance_due;
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function RecordPaymentPage() {
@@ -104,12 +117,7 @@ export function RecordPaymentPage() {
   useEffect(() => {
     if (preloadedFee) {
       const txType = form.getValues('transaction_type');
-      const defaultAmount =
-        txType === TransactionType.DEBIT
-          ? preloadedFee.amount_paid > preloadedFee.final_amount
-            ? preloadedFee.amount_paid - preloadedFee.final_amount // overpaid: refund excess
-            : preloadedFee.amount_paid // refunding: refund full paid
-          : preloadedFee.balance_due;
+      const defaultAmount = getSuggestedAmount(txType, preloadedFee);
       form.setValue('student_fee_public_id', preloadedFee.public_id);
       form.setValue('amount', defaultAmount > 0 ? defaultAmount : 0);
     }
@@ -126,12 +134,7 @@ export function RecordPaymentPage() {
 
   useEffect(() => {
     if (selectedFee) {
-      const suggested =
-        watchedTxType === TransactionType.DEBIT
-          ? selectedFee.amount_paid > selectedFee.final_amount
-            ? selectedFee.amount_paid - selectedFee.final_amount // overpaid: refund excess
-            : selectedFee.amount_paid // refunding: refund full paid
-          : selectedFee.balance_due;
+      const suggested = getSuggestedAmount(watchedTxType, selectedFee);
       form.setValue('amount', suggested > 0 ? suggested : 0);
     }
   }, [watchedTxType, selectedFee, form]);

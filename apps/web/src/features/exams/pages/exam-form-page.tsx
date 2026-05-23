@@ -20,21 +20,25 @@ import { SearchableSelect } from '@/components/ui/searchable-select';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Button } from '@/components/ui/button';
 import { PageHeader, FormActions, WarningConfirmationDialog } from '@/components/common';
-import { ROUTES, ValidationMessages } from '@/constants';
-import { formatDateForAPI, parseDate } from '@/lib/utils/date-utils';
+import { ROUTES } from '@/constants';
+import { parseDate } from '@/lib/utils/date-utils';
 import { useExam, useExamSessions, useExams } from '../hooks/use-exams';
 import { useCreateExam, useUpdateExam } from '../hooks/mutations';
 import { useSubjects } from '@/features/subjects/hooks/use-subjects';
 import { useClasses } from '@/features/classes/hooks/use-classes';
 import { useRole } from '@/hooks/use-role';
-import { validateAttendanceDate } from '@/features/attendance/api/attendance-api';
 import {
   EXAM_STATUS_OPTIONS,
   EXAM_STATUS_LABELS,
   type ExamStatus,
   type ExamCreatePayload,
-  type ExamUpdatePayload,
 } from '@educard/shared';
+import {
+  validateExamDate,
+  validateExamFormFields,
+  buildExamCreatePayload,
+  buildExamUpdatePayload,
+} from '../utils/exam-form-helpers';
 
 export function ExamFormPage() {
   const navigate = useNavigate();
@@ -104,50 +108,10 @@ export function ExamFormPage() {
 
   /**
    * Validate if a date is a valid exam date
-   * - Must be within session date range
-   * - Must not be a holiday (uses backend validation API)
    */
-  const validateExamDate = async (date: Date | null): Promise<string | undefined> => {
-    if (!date) {
-      return undefined;
-    }
-
-    const dateStr = format(date, 'yyyy-MM-dd');
-
-    // Check if date is within session range
-    if (selectedSession?.start_date && selectedSession?.end_date) {
-      const sessionStart = new Date(selectedSession.start_date);
-      const sessionEnd = new Date(selectedSession.end_date);
-      // Reset times for date comparison
-      sessionStart.setHours(0, 0, 0, 0);
-      sessionEnd.setHours(0, 0, 0, 0);
-      const checkDate = new Date(date);
-      checkDate.setHours(0, 0, 0, 0);
-
-      if (checkDate < sessionStart || checkDate > sessionEnd) {
-        return ValidationMessages.EXAM.DATE_OUTSIDE_SESSION;
-      }
-    }
-
-    // Use backend API to validate if date is a working day
-    if (classIdForValidation) {
-      try {
-        const response = await validateAttendanceDate(classIdForValidation, dateStr);
-        if (!response.is_working_day) {
-          return response.reason || ValidationMessages.EXAM.DATE_IS_HOLIDAY;
-        }
-      } catch {
-        // If validation API fails, allow the date (server will validate on submit)
-      }
-    }
-
-    return undefined;
-  };
-
-  // Handle exam date change with validation
   const handleExamDateChange = async (date: Date | null) => {
     setExamDate(date);
-    const error = await validateExamDate(date);
+    const error = await validateExamDate(date, selectedSession, classIdForValidation);
     setDateError(error);
   };
 
@@ -210,25 +174,13 @@ export function ExamFormPage() {
     e.preventDefault();
     setFieldErrors({});
 
-    // Basic validation
-    const errors: Record<string, string> = {};
-    if (!sessionId) {
-      errors.session_id = ValidationMessages.EXAM.SELECT_SESSION;
-    }
-    if (!classId) {
-      errors.class_id = ValidationMessages.EXAM.SELECT_CLASS;
-    }
-    if (!subjectId) {
-      errors.subject_id = ValidationMessages.EXAM.SELECT_SUBJECT;
-    }
-    if (!status) {
-      errors.status = ValidationMessages.EXAM.SELECT_STATUS;
-    }
-
-    // Date validation
-    if (dateError) {
-      errors.date = dateError;
-    }
+    const errors = validateExamFormFields({
+      sessionId,
+      classId,
+      subjectId,
+      status,
+      dateError,
+    });
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -236,17 +188,17 @@ export function ExamFormPage() {
     }
 
     if (isCreate) {
-      const payload: ExamCreatePayload = {
-        session_id: sessionId,
-        subject_id: subjectId,
+      const payload = buildExamCreatePayload({
+        sessionId,
+        subjectId,
         status: status as ExamStatus,
-        max_marks: Number(maxMarks),
-        passing_marks: Number(passingMarks),
-        date: formatDateForAPI(examDate) || null,
-        start_time: startTime || null,
-        end_time: endTime || null,
-        description: description.trim(),
-      };
+        maxMarks,
+        passingMarks,
+        examDate,
+        startTime,
+        endTime,
+        description,
+      });
 
       // Check for duplicate exam before creating
       if (checkDuplicateExam) {
@@ -257,20 +209,25 @@ export function ExamFormPage() {
 
       createMutation.mutate(payload);
     } else if (isEdit && id) {
-      const payload: ExamUpdatePayload = {
+      const payload = buildExamUpdatePayload({
         status: status as ExamStatus,
-        max_marks: Number(maxMarks),
-        passing_marks: Number(passingMarks),
-        date: formatDateForAPI(examDate) || null,
-        start_time: startTime || null,
-        end_time: endTime || null,
-        description: description.trim(),
-      };
+        maxMarks,
+        passingMarks,
+        examDate,
+        startTime,
+        endTime,
+        description,
+      });
       updateMutation.mutate({ id, data: payload });
     }
   };
 
-  const title = isCreate ? 'Create Exam' : isEdit ? 'Edit Exam' : 'View Exam';
+  const getPageTitle = () => {
+    if (isCreate) return 'Create Exam';
+    if (isEdit) return 'Edit Exam';
+    return 'View Exam';
+  };
+  const title = getPageTitle();
 
   if (id && isLoadingExam) {
     return (

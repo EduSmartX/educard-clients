@@ -216,12 +216,12 @@ export function CalendarView({ currentDate, holidays }: Readonly<CalendarViewPro
                 };
 
                 return (
-                  <div
+                  <button
+                    type="button"
                     key={day.date.toISOString()}
-                    role="button"
                     tabIndex={day.isCurrentMonth ? 0 : -1}
                     className={cn(
-                      'min-h-[80px] cursor-pointer border-r border-b transition-all duration-200 sm:min-h-[100px]',
+                      'min-h-[80px] cursor-pointer border-r border-b text-left transition-all duration-200 sm:min-h-[100px]',
                       'hover:shadow-inner hover:ring-2 hover:ring-blue-300',
                       !day.isCurrentMonth &&
                         'cursor-default bg-gray-50/50 text-gray-400 hover:shadow-none hover:ring-0',
@@ -230,12 +230,6 @@ export function CalendarView({ currentDate, holidays }: Readonly<CalendarViewPro
                       'last:border-r-0'
                     )}
                     onClick={() => handleDateClick(day)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        handleDateClick(day);
-                      }
-                    }}
                     title={getDayTitle(day)}
                   >
                     <div className="p-2">
@@ -294,7 +288,7 @@ export function CalendarView({ currentDate, holidays }: Readonly<CalendarViewPro
                         </div>
                       )}
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -315,7 +309,7 @@ export function CalendarView({ currentDate, holidays }: Readonly<CalendarViewPro
               {ongoingHolidays.length > 0 && (
                 <div className="mb-4">
                   <h4 className="mb-3 flex items-center gap-1 text-xs font-semibold tracking-wide text-green-700 uppercase">
-                    <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-green-500"></span>
+                    <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-green-500"></span>{' '}
                     Ongoing Now
                   </h4>
                   <div className="space-y-3">

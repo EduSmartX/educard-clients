@@ -49,6 +49,16 @@ export function useGridKeyboardNavigation({
   }, []);
 
   /**
+   * Focus an element and select its text if it's an input
+   */
+  const focusAndSelect = (element: HTMLElement) => {
+    element.focus();
+    if ('select' in element && typeof element.select === 'function') {
+      (element as HTMLInputElement).select();
+    }
+  };
+
+  /**
    * Find and focus the input at the given position
    */
   const focusCell = useCallback(
@@ -57,35 +67,24 @@ export function useGridKeyboardNavigation({
         return false;
       }
 
-      // Try to find by data attributes first (most reliable)
       const cell = containerRef.current.querySelector(
         `[data-row="${row}"][data-col="${col}"]`
       ) as HTMLElement;
 
-      if (cell) {
-        // If it's an input, focus it directly
-        if (cell.tagName === 'INPUT' || cell.tagName === 'TEXTAREA') {
-          cell.focus();
-          // Select all text for easy replacement
-          if ('select' in cell && typeof cell.select === 'function') {
-            (cell as HTMLInputElement).select();
-          }
-        } else {
-          // Otherwise, find the input inside
-          const input = cell.querySelector(inputSelector) as HTMLElement;
-          if (input) {
-            input.focus();
-            if ('select' in input && typeof input.select === 'function') {
-              (input as HTMLInputElement).select();
-            }
-          }
-        }
-
-        onPositionChange?.({ row, col });
-        return true;
+      if (!cell) {
+        return false;
       }
 
-      return false;
+      // If it's an input, focus it directly; otherwise, find the input inside
+      const isInput = cell.tagName === 'INPUT' || cell.tagName === 'TEXTAREA';
+      const target = isInput ? cell : (cell.querySelector(inputSelector) as HTMLElement);
+
+      if (target) {
+        focusAndSelect(target);
+      }
+
+      onPositionChange?.({ row, col });
+      return true;
     },
     [inputSelector, onPositionChange]
   );
@@ -100,42 +99,24 @@ export function useGridKeyboardNavigation({
       direction: 'up' | 'down' | 'left' | 'right' | 'home' | 'end' | 'tableStart' | 'tableEnd'
     ): GridPosition | null => {
       switch (direction) {
-        case 'up': {
-          const nextRow = currentRow - 1;
-          if (nextRow >= 0) {
-            return { row: nextRow, col: currentCol };
-          }
-          return wrap ? { row: rows - 1, col: currentCol } : null;
-        }
-        case 'down': {
-          const nextRow = currentRow + 1;
-          if (nextRow < rows) {
-            return { row: nextRow, col: currentCol };
-          }
-          return wrap ? { row: 0, col: currentCol } : null;
-        }
-        case 'left': {
-          const nextCol = currentCol - 1;
-          if (nextCol >= 0) {
-            return { row: currentRow, col: nextCol };
-          }
-          if (!wrap) {
-            return null;
-          }
+        case 'up':
+          return currentRow - 1 >= 0
+            ? { row: currentRow - 1, col: currentCol }
+            : wrap ? { row: rows - 1, col: currentCol } : null;
+        case 'down':
+          return currentRow + 1 < rows
+            ? { row: currentRow + 1, col: currentCol }
+            : wrap ? { row: 0, col: currentCol } : null;
+        case 'left':
+          if (currentCol - 1 >= 0) return { row: currentRow, col: currentCol - 1 };
+          if (!wrap) return null;
           return currentRow > 0
             ? { row: currentRow - 1, col: cols - 1 }
             : { row: rows - 1, col: cols - 1 };
-        }
-        case 'right': {
-          const nextCol = currentCol + 1;
-          if (nextCol < cols) {
-            return { row: currentRow, col: nextCol };
-          }
-          if (!wrap) {
-            return null;
-          }
+        case 'right':
+          if (currentCol + 1 < cols) return { row: currentRow, col: currentCol + 1 };
+          if (!wrap) return null;
           return currentRow < rows - 1 ? { row: currentRow + 1, col: 0 } : { row: 0, col: 0 };
-        }
         case 'home':
           return { row: currentRow, col: 0 };
         case 'end':
@@ -150,6 +131,42 @@ export function useGridKeyboardNavigation({
   );
 
   /**
+   * Determine navigation direction from a keyboard event.
+   * Returns null if the key should not trigger navigation.
+   */
+  const getDirectionFromKey = (
+    e: React.KeyboardEvent<HTMLInputElement>
+  ): 'up' | 'down' | 'left' | 'right' | 'home' | 'end' | 'tableStart' | 'tableEnd' | null => {
+    const target = e.target as HTMLInputElement;
+
+    switch (e.key) {
+      case 'ArrowUp':
+        return 'up';
+      case 'ArrowDown':
+      case 'Enter':
+        return 'down';
+      case 'ArrowLeft':
+        if (target.tagName === 'INPUT' && target.selectionStart !== 0 && target.value.length > 0) {
+          return null;
+        }
+        return 'left';
+      case 'ArrowRight':
+        if (target.tagName === 'INPUT' && target.selectionEnd !== target.value.length && target.value.length > 0) {
+          return null;
+        }
+        return 'right';
+      case 'Tab':
+        return e.shiftKey ? 'left' : 'right';
+      case 'Home':
+        return e.ctrlKey ? 'tableStart' : 'home';
+      case 'End':
+        return e.ctrlKey ? 'tableEnd' : 'end';
+      default:
+        return null;
+    }
+  };
+
+  /**
    * Handle keyboard events on input cells
    */
   const handleKeyDown = useCallback(
@@ -158,9 +175,9 @@ export function useGridKeyboardNavigation({
 
       // Get current position from data attributes
       const rowAttr =
-        target.getAttribute('data-row') ?? target.closest('[data-row]')?.getAttribute('data-row');
+        target.dataset.row ?? target.closest('[data-row]')?.getAttribute('data-row');
       const colAttr =
-        target.getAttribute('data-col') ?? target.closest('[data-col]')?.getAttribute('data-col');
+        target.dataset.col ?? target.closest('[data-col]')?.getAttribute('data-col');
 
       if (rowAttr === null || rowAttr === undefined || colAttr === null || colAttr === undefined) {
         return;
@@ -173,48 +190,9 @@ export function useGridKeyboardNavigation({
         return;
       }
 
-      let direction: 'up' | 'down' | 'left' | 'right' | 'home' | 'end' | 'tableStart' | 'tableEnd';
-
-      switch (e.key) {
-        case 'ArrowUp':
-          direction = 'up';
-          break;
-        case 'ArrowDown':
-        case 'Enter':
-          direction = 'down';
-          break;
-        case 'ArrowLeft':
-          // Only navigate if at the start of input or input is empty
-          if (target.tagName === 'INPUT') {
-            const input = target as HTMLInputElement;
-            if (input.selectionStart !== 0 && input.value.length > 0) {
-              return; // Let default cursor movement happen
-            }
-          }
-          direction = 'left';
-          break;
-        case 'ArrowRight':
-          // Only navigate if at the end of input or input is empty
-          if (target.tagName === 'INPUT') {
-            const input = target as HTMLInputElement;
-            if (input.selectionEnd !== input.value.length && input.value.length > 0) {
-              return; // Let default cursor movement happen
-            }
-          }
-          direction = 'right';
-          break;
-        case 'Tab':
-          // Use Tab for navigation
-          direction = e.shiftKey ? 'left' : 'right';
-          break;
-        case 'Home':
-          direction = e.ctrlKey ? 'tableStart' : 'home';
-          break;
-        case 'End':
-          direction = e.ctrlKey ? 'tableEnd' : 'end';
-          break;
-        default:
-          return; // Don't prevent default for other keys
+      const direction = getDirectionFromKey(e);
+      if (!direction) {
+        return;
       }
 
       const nextPos = getNextPosition(currentRow, currentCol, direction);

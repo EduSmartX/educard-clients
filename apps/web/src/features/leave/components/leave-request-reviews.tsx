@@ -5,7 +5,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { RefreshCw, Users, User, Check, X, Eye, Info, Paperclip } from 'lucide-react';
+import { RefreshCw, Users, User, Info } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
@@ -22,19 +22,20 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { DataTable, type Column } from '@/components/ui/data-table';
+import { DataTable } from '@/components/ui/data-table';
 import { Combobox } from '@/components/ui/combobox';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import api from '@/lib/api';
 import { cn } from '@/lib/utils';
-import { formatDate } from '@/lib/utils/date-utils';
 import {
   useApproveLeaveRequest,
   useRejectLeaveRequest,
   useTeacherManagementContext,
 } from '../hooks';
+import { parseClasses } from '../utils/leave-data-parsers';
 import { LeaveRequestReviewDialog } from './leave-request-review-dialog';
+import { getLeaveReviewColumns, type LeaveRequestReview } from './leave-review-columns';
 
 type UserRole = 'staff' | 'student';
 
@@ -86,18 +87,6 @@ interface ManageableUser {
   organization_role: string | { code: string; name: string };
   gender: string;
   employee_id?: string;
-}
-
-interface ClassData {
-  public_id: string;
-  name: string;
-  class_master: {
-    id: number;
-    name: string;
-    code: string;
-    display_order: number;
-  };
-  is_active: boolean;
 }
 
 const STATUS_CONFIG = {
@@ -190,48 +179,10 @@ export function LeaveRequestReviews() {
     enabled: userRole === 'student',
   });
 
-  const classes = useMemo((): ClassData[] => {
-    if (!classesData?.data) {
-      return [];
-    }
-    if (Array.isArray(classesData.data)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return classesData.data.map((cls: any) => {
-        // Handle admin API response (has full class_master object)
-        if (
-          cls.class_master &&
-          typeof cls.class_master === 'object' &&
-          'name' in cls.class_master
-        ) {
-          return {
-            public_id: cls.public_id,
-            name: cls.name,
-            class_master: {
-              id: cls.class_master.id || 0,
-              name: cls.class_master.name,
-              code: cls.class_master.code || '',
-              display_order: cls.class_master.display_order || 0,
-            },
-            is_active: !cls.is_deleted,
-          };
-        }
-
-        // Handle teacher management context response (class_master is just a string)
-        return {
-          public_id: cls.public_id,
-          name: cls.name,
-          class_master: {
-            id: 0,
-            name: typeof cls.class_master === 'string' ? cls.class_master : 'Unknown',
-            code: '',
-            display_order: 0,
-          },
-          is_active: true,
-        };
-      });
-    }
-    return [];
-  }, [classesData]);
+  const classes = useMemo(
+    () => parseClasses(classesData?.data),
+    [classesData]
+  );
 
   // Fetch manageable users
   const { data: usersData, isLoading: isLoadingUsers } = useQuery({
@@ -445,7 +396,7 @@ export function LeaveRequestReviews() {
             {formatDate(row.start_date)} - {formatDate(row.end_date)}
           </div>
           <div className="text-muted-foreground text-xs">
-            {row.number_of_days} day{Number(row.number_of_days) !== 1 ? 's' : ''}
+            {row.number_of_days} day{Number(row.number_of_days) === 1 ? '' : 's'}
           </div>
         </div>
       ),
@@ -552,7 +503,7 @@ export function LeaveRequestReviews() {
       )}
 
       {/* Show context info if teacher has permissions (not for admins) */}
-      {!isAdmin && !isLoadingContext && teacherContext && teacherContext.can_review_requests && (
+      {!isAdmin && !isLoadingContext && teacherContext?.can_review_requests && (
         <Alert className="border-green-200 bg-green-50">
           <Info className="h-4 w-4 text-green-600" />
           <AlertDescription className="text-green-900">

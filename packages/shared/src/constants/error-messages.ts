@@ -626,6 +626,7 @@ export const FormPlaceholders = {
   SELECT_CLASS: "Select class",
   SELECT_SUBJECT: "Select subject",
   SELECT_TEACHER: "Select teacher",
+  SELECT_USER: "Select user",
   SELECT_CLASS_TEACHER: "Select class teacher",
 
   // Leave fields

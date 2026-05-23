@@ -8,12 +8,16 @@ import { BRANDING } from '@/constants/branding';
 import { USER_ROLES } from '@/constants';
 import { getParsedLocalStorageItem } from '@/lib/utils/storage';
 
-export default function OrganizationNotApprovedPage() {
-  const navigate = useNavigate();
-  const location = useLocation();
+interface OrgPageState {
+  organizationName: string;
+  organizationEmail: string | undefined;
+  organizationPhone: string | undefined;
+  isVerified: boolean;
+  isRejected: boolean;
+  userRole: string;
+}
 
-  // Get organization data from location state or localStorage
-  const state = location.state || {};
+function resolveOrgPageState(locationState: Record<string, unknown>): OrgPageState {
   const storedOrg =
     getParsedLocalStorageItem<{
       name?: string;
@@ -23,12 +27,22 @@ export default function OrganizationNotApprovedPage() {
       is_rejected?: boolean;
     }>('organization') || {};
 
-  const organizationName = state.organizationName || storedOrg.name || 'Your Organization';
-  const organizationEmail = state.organizationEmail || storedOrg.email;
-  const organizationPhone = state.organizationPhone || storedOrg.phone;
-  const isVerified = state.isVerified ?? storedOrg.is_verified ?? false;
-  const isRejected = state.isRejected ?? storedOrg.is_rejected ?? false;
-  const userRole = state.userRole || USER_ROLES.ADMIN;
+  return {
+    organizationName: (locationState.organizationName as string) || storedOrg.name || 'Your Organization',
+    organizationEmail: (locationState.organizationEmail as string) || storedOrg.email,
+    organizationPhone: (locationState.organizationPhone as string) || storedOrg.phone,
+    isVerified: (locationState.isVerified as boolean) ?? storedOrg.is_verified ?? false,
+    isRejected: (locationState.isRejected as boolean) ?? storedOrg.is_rejected ?? false,
+    userRole: (locationState.userRole as string) || USER_ROLES.ADMIN,
+  };
+}
+
+export default function OrganizationNotApprovedPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const { organizationName, organizationEmail, organizationPhone, isVerified, isRejected, userRole } =
+    resolveOrgPageState(location.state || {});
 
   const handleLogout = () => {
     localStorage.clear();

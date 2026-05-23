@@ -28,12 +28,12 @@ import { PageHeader } from '@/components/common';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ROUTES } from '@/constants/app-config';
 import { useAuth } from '@/hooks/use-auth';
 import { getEmployeeAttendance } from '@/features/attendance/api/attendance-api';
 import { EmployeeInfoCard } from '@/features/attendance/components/employee-info-card';
 import { SingleDayAttendanceDialog } from '@/features/attendance/components/single-day-attendance-dialog';
+import { TimesheetDayCell } from '@/features/attendance/components/timesheet-day-cell';
 
 type AttendanceRecord = {
   public_id: string;
@@ -524,139 +524,6 @@ export function EmployeeTimesheetPage() {
                     );
                     const leaveInfo = leaveByDate.get(dateKey);
                     const holidayInfo = attendanceData?.holiday_descriptions?.[dateKey];
-
-                    const renderIcon = () => {
-                      const dateKey = toDateKey(date);
-                      const record = attendanceByDate.get(dateKey);
-
-                      // IMPORTANT: Check for leaves FIRST before rendering attendance
-                      // Leave days have attendance records with is_leave=true but should show as leave icons
-                      if (state === 'leave-approved' || state === 'leave-pending') {
-                        const leaveName = leaveInfo?.leave_name || 'Leave';
-                        const leaveStatus = state === 'leave-approved' ? 'Approved' : 'Pending';
-                        const truncatedName =
-                          leaveName.length > 12 ? `${leaveName.substring(0, 10)}..` : leaveName;
-
-                        return (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="flex w-full cursor-help flex-col items-center gap-0.5">
-                                <div
-                                  className={`h-6 w-6 rounded-full ${state === 'leave-approved' ? 'bg-orange-500' : 'bg-yellow-500'} flex items-center justify-center shadow-sm`}
-                                >
-                                  <X className="h-4 w-4 stroke-[3] text-white" />
-                                </div>
-                                <span
-                                  className={`text-[10px] ${state === 'leave-approved' ? 'text-orange-900' : 'text-yellow-900'} w-full px-0.5 text-center leading-tight font-extrabold break-words`}
-                                >
-                                  {truncatedName}
-                                </span>
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent className="rounded-md bg-gray-900 px-3 py-2 text-white shadow-lg">
-                              <div className="flex flex-col gap-1">
-                                <p className="text-sm font-semibold">{leaveName}</p>
-                                <p className="text-xs text-gray-300">Status: {leaveStatus}</p>
-                              </div>
-                            </TooltipContent>
-                          </Tooltip>
-                        );
-                      }
-
-                      // Check if we have an attendance record with half-day data
-                      if (
-                        record &&
-                        !record.is_leave &&
-                        record.morning_present !== undefined &&
-                        record.afternoon_present !== undefined
-                      ) {
-                        const morningPresent = record.morning_present;
-                        const afternoonPresent = record.afternoon_present;
-
-                        // Full day present
-                        if (morningPresent && afternoonPresent) {
-                          return (
-                            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500">
-                              <Check className="h-3 w-3 stroke-[2.5] text-white" />
-                            </div>
-                          );
-                        }
-
-                        // Full day absent
-                        if (!morningPresent && !afternoonPresent) {
-                          return (
-                            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500">
-                              <X className="h-3 w-3 stroke-[2.5] text-white" />
-                            </div>
-                          );
-                        }
-
-                        // Half day - split circle (2 parts: top and bottom)
-                        return (
-                          <div className="relative h-6 w-6">
-                            <svg
-                              viewBox="0 0 24 24"
-                              className="h-full w-full"
-                              style={{ transform: 'rotate(0deg)' }}
-                            >
-                              {/* Bottom half (afternoon) - draw first so it's behind */}
-                              <path
-                                d="M 2 12 A 10 10 0 0 0 22 12 Z"
-                                fill={afternoonPresent ? '#22c55e' : '#ef4444'}
-                                stroke="white"
-                                strokeWidth="0.5"
-                              />
-                              {/* Top half (morning) */}
-                              <path
-                                d="M 2 12 A 10 10 0 0 1 22 12 Z"
-                                fill={morningPresent ? '#22c55e' : '#ef4444'}
-                                stroke="white"
-                                strokeWidth="0.5"
-                              />
-                            </svg>
-                          </div>
-                        );
-                      }
-
-                      // Fallback to state-based rendering for non-attendance days
-                      if (state === 'present') {
-                        return (
-                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500">
-                            <Check className="h-3 w-3 stroke-[2.5] text-white" />
-                          </div>
-                        );
-                      }
-                      if (state === 'absent') {
-                        return (
-                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500">
-                            <X className="h-3 w-3 stroke-[2.5] text-white" />
-                          </div>
-                        );
-                      }
-                      if (state === 'holiday') {
-                        const { shortLabel, fullDescription } = getHolidayLabels(holidayInfo);
-
-                        return (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="flex w-full cursor-help flex-col items-center gap-0.5">
-                                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-500 text-[10px] font-bold text-white">
-                                  H
-                                </div>
-                                <span className="w-full px-0.5 text-center text-[7px] leading-tight font-semibold break-words text-purple-700">
-                                  {shortLabel}
-                                </span>
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent className="rounded-md bg-gray-900 px-3 py-2 text-white shadow-lg">
-                              <p className="text-sm font-semibold">{fullDescription}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        );
-                      }
-                      return null;
-                    };
-
                     const attendanceRecord = attendanceByDate.get(dateKey);
                     const approvalStatus = attendanceRecord?.approval_status?.toLowerCase();
                     const isSubmittedOrApproved =
@@ -669,110 +536,25 @@ export function EmployeeTimesheetPage() {
                       today.setHours(0, 0, 0, 0);
                       const checkDate = new Date(date);
                       checkDate.setHours(0, 0, 0, 0);
-                      // Don't allow clicking if: future date, holiday, or already submitted/approved
                       return checkDate <= today && state !== 'holiday' && !isSubmittedOrApproved;
                     })();
 
-                    const dayContent = (
-                      <button
-                        type="button"
+                    return (
+                      <TimesheetDayCell
                         key={dateKey}
-                        onClick={() => isClickable && handleDateClick(date, state)}
-                        disabled={!isClickable}
-                        className={`flex aspect-square flex-col items-center justify-between rounded border p-1 transition ${stateStyles(state)} ${
-                          isClickable
-                            ? 'cursor-pointer hover:border-blue-400 hover:ring-2 hover:ring-blue-400'
-                            : 'cursor-default'
-                        }`}
-                      >
-                        {/* Desktop view: month label + day number + icon */}
-                        <div className="hidden w-full text-center sm:block">
-                          <div className="text-[7px] font-medium text-gray-500">
-                            {format(date, 'MMM')}
-                          </div>
-                          <div className="text-xs font-bold">{format(date, 'd')}</div>
-                        </div>
-                        <div className="hidden w-full flex-1 flex-col items-center justify-center sm:flex">
-                          {renderIcon()}
-                        </div>
-
-                        {/* Mobile view: day number inside color-coded circle */}
-                        <div className="flex h-full w-full items-center justify-center sm:hidden">
-                          {(() => {
-                            const mobileState = state;
-                            const bgColor = getMobileStateBgColor(mobileState);
-
-                            if (mobileState === 'holiday') {
-                              return (
-                                <div
-                                  className={`flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold ${bgColor}`}
-                                >
-                                  H
-                                </div>
-                              );
-                            }
-
-                            // For half-day: show split circle with day number overlay
-                            const record = attendanceByDate.get(dateKey);
-                            if (
-                              record &&
-                              !record.is_leave &&
-                              record.morning_present !== undefined &&
-                              record.afternoon_present !== undefined &&
-                              record.morning_present !== record.afternoon_present
-                            ) {
-                              return (
-                                <div className="relative flex h-7 w-7 items-center justify-center">
-                                  <svg
-                                    viewBox="0 0 28 28"
-                                    className="absolute inset-0 h-full w-full"
-                                  >
-                                    <path
-                                      d="M 0 14 A 14 14 0 0 1 28 14 Z"
-                                      fill={record.morning_present ? '#22c55e' : '#ef4444'}
-                                    />
-                                    <path
-                                      d="M 0 14 A 14 14 0 0 0 28 14 Z"
-                                      fill={record.afternoon_present ? '#22c55e' : '#ef4444'}
-                                    />
-                                  </svg>
-                                  <span className="relative text-[10px] font-bold text-white">
-                                    {format(date, 'd')}
-                                  </span>
-                                </div>
-                              );
-                            }
-
-                            return (
-                              <div
-                                className={`flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold ${bgColor}`}
-                              >
-                                {format(date, 'd')}
-                              </div>
-                            );
-                          })()}
-                        </div>
-                      </button>
+                        date={date}
+                        dateKey={dateKey}
+                        state={state}
+                        record={attendanceRecord}
+                        leaveInfo={leaveInfo}
+                        holidayInfo={holidayInfo}
+                        isClickable={isClickable}
+                        stateClassName={stateStyles(state)}
+                        onDateClick={handleDateClick}
+                        getHolidayLabels={getHolidayLabels}
+                        getMobileStateBgColor={getMobileStateBgColor}
+                      />
                     );
-
-                    // Wrap holiday days with tooltip
-                    if (state === 'holiday' && holidayInfo) {
-                      return (
-                        <TooltipProvider key={dateKey}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>{dayContent}</TooltipTrigger>
-                            <TooltipContent>
-                              <div className="text-sm">
-                                <p className="font-semibold">{holidayInfo.name}</p>
-                                <p className="text-xs text-gray-600">{holidayInfo.description}</p>
-                              </div>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      );
-                    }
-
-                    return dayContent;
                   })}
                 </div>
               </>

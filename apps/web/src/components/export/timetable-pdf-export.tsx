@@ -77,25 +77,26 @@ export function TimetablePdfExport({
   buttonVariant = 'outline',
   buttonSize = 'sm',
   className = '',
-}: TimetablePdfExportProps) {
+}: Readonly<TimetablePdfExportProps>) {
   const handleQuickPrint = (mode: 'color' | 'bw') => {
-    const printWindow = window.open('', '_blank');
+    const htmlContent = generatePrintableHTML(data, mode);
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const printWindow = window.open(url, '_blank');
     if (!printWindow) {
+      URL.revokeObjectURL(url);
       return;
     }
-    const htmlContent = generatePrintableHTML(data, mode);
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
     printWindow.onload = () => {
       setTimeout(() => {
         printWindow.print();
+        URL.revokeObjectURL(url);
       }, 500);
     };
   };
 
   return (
-    <>
-      <DropdownMenu>
+    <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant={buttonVariant} size={buttonSize} className={className}>
             <Download className="mr-2 h-4 w-4" />
@@ -132,8 +133,7 @@ export function TimetablePdfExport({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-    </>
-  );
+    );
 }
 
 function generatePrintableHTML(data: TimetableExportData, mode: 'color' | 'bw'): string {

@@ -18,6 +18,25 @@ import { fetchClasses } from '@/features/classes/api/classes-api';
 import { useCreateCalendarException, useUpdateCalendarException } from '../hooks';
 import type { CalendarException, CalendarExceptionCreate, OverrideType } from '../types';
 
+/** Focus on the first field with an error */
+function focusFirstErrorField(
+  fieldErrors: Record<string, string>,
+  dateContainerRef: React.RefObject<HTMLDivElement | null>,
+  reasonInputRef: React.RefObject<HTMLTextAreaElement | null>
+) {
+  if (Object.keys(fieldErrors).length === 0) return;
+  setTimeout(() => {
+    if (fieldErrors.date && dateContainerRef.current) {
+      dateContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const button = dateContainerRef.current.querySelector('button');
+      button?.focus();
+    } else if (fieldErrors.reason && reasonInputRef.current) {
+      reasonInputRef.current.focus();
+      reasonInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, 100);
+}
+
 interface ExceptionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -92,21 +111,9 @@ export function ExceptionDialog({
       onOpenChange(false);
     },
     onError: (_error, fieldErrors) => {
-      // Set field-level errors on form (toast already shown by mutation hook)
       if (Object.keys(fieldErrors).length > 0) {
         setErrors(fieldErrors);
-
-        // Focus on first error field
-        setTimeout(() => {
-          if (fieldErrors.date && dateContainerRef.current) {
-            dateContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            const button = dateContainerRef.current.querySelector('button');
-            button?.focus();
-          } else if (fieldErrors.reason && reasonInputRef.current) {
-            reasonInputRef.current.focus();
-            reasonInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }, 100);
+        focusFirstErrorField(fieldErrors, dateContainerRef, reasonInputRef);
       }
     },
   });
@@ -118,21 +125,9 @@ export function ExceptionDialog({
       onOpenChange(false);
     },
     onError: (_error, fieldErrors) => {
-      // Set field-level errors on form (toast already shown by mutation hook)
       if (Object.keys(fieldErrors).length > 0) {
         setErrors(fieldErrors);
-
-        // Focus on first error field
-        setTimeout(() => {
-          if (fieldErrors.date && dateContainerRef.current) {
-            dateContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            const button = dateContainerRef.current.querySelector('button');
-            button?.focus();
-          } else if (fieldErrors.reason && reasonInputRef.current) {
-            reasonInputRef.current.focus();
-            reasonInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }, 100);
+        focusFirstErrorField(fieldErrors, dateContainerRef, reasonInputRef);
       }
     },
   });

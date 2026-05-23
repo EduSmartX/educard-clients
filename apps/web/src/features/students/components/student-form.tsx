@@ -340,7 +340,7 @@ export function StudentForm({
               <CardTitle className="flex items-center gap-2">
                 <span className="bg-primary text-primary-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
                   1
-                </span>
+                </span>{' '}
                 Select Class
               </CardTitle>
             </CardHeader>
