@@ -281,8 +281,9 @@ export function ExamFormPage() {
   };
 
   const title = getExamFormTitle(isCreate, isEdit);
+  const isLoadingState = Boolean(id && isLoadingExam);
 
-  if (id && isLoadingExam) {
+  if (isLoadingState) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="h-8 w-8 animate-spin text-gray-400" />

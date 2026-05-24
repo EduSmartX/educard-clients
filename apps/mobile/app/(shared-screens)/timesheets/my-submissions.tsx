@@ -25,11 +25,7 @@ import {
   ChevronRight,
   Check,
   X,
-  Send,
   CalendarDays,
-  ChevronDown,
-  ChevronUp,
-  RotateCcw,
   Sun,
   Moon,
   Lock,
@@ -50,6 +46,8 @@ import {
 import Svg, { Path } from 'react-native-svg';
 
 import { apiClient } from '@/api/client';
+import { DayAttendanceModal } from '@/features/timesheets/components/DayAttendanceModal';
+import { TimesheetWeekCard } from '@/features/timesheets/components/TimesheetWeekCard';
 import { handleMutationError } from '@/lib/mutation-utils';
 import { useToast } from '@/lib/toast-context';
 const { width: screenWidth } = Dimensions.get('window');
@@ -179,15 +177,12 @@ const bulkSubmitAttendance = async (
 const returnTimesheetToDraft = async (payload: {
   week_start_date: string;
   week_end_date: string;
-}): Promise<{ message?: string }> => {
-  const response = await apiClient.delete<{ message?: string }>(
-    '/attendance/timesheet-submission/return_to_draft/',
-    {
+}): Promise<{ message?: string }> =>
+  apiClient
+    .delete<{ message?: string }>('/attendance/timesheet-submission/return_to_draft/', {
       params: payload,
-    }
-  );
-  return response.data;
-};
+    })
+    .then((r) => r.data);
 
 const toDateKey = (d: Date) => format(d, 'yyyy-MM-dd');
 
@@ -263,60 +258,6 @@ const stateColors: Record<DayState, { bg: string; border: string; text: string }
   none: { bg: '#ffffff', border: '#e5e7eb', text: '#374151' },
   future: { bg: '#fafafa', border: '#f3f4f6', text: '#d1d5db' },
 };
-
-const StatusBadge = ({ status }: { status: string | null | undefined }) => {
-  if (!status) return null;
-  const config: Record<string, { bg: string; text: string; label: string }> = {
-    DRAFT: { bg: '#f3f4f6', text: '#6b7280', label: 'Draft' },
-    SUBMITTED: { bg: '#dbeafe', text: '#1d4ed8', label: 'Submitted' },
-    APPROVED: { bg: '#dcfce7', text: '#16a34a', label: 'Approved' },
-    REJECTED: { bg: '#fee2e2', text: '#dc2626', label: 'Rejected' },
-  };
-  const c = config[status] || config.DRAFT;
-  return (
-    <View
-      style={{ backgroundColor: c.bg, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}
-    >
-      <Text style={{ fontSize: 10, fontWeight: '600', color: c.text }}>{c.label}</Text>
-    </View>
-  );
-};
-
-const AttendanceToggle = ({
-  label,
-  isPresent,
-  disabled,
-  onToggle,
-}: {
-  label: string;
-  isPresent: boolean;
-  disabled?: boolean;
-  onToggle: () => void;
-}) => (
-  <TouchableOpacity
-    onPress={disabled ? undefined : onToggle}
-    disabled={disabled}
-    activeOpacity={disabled ? 1 : 0.7}
-    style={{
-      flex: 1,
-      paddingVertical: 8,
-      paddingHorizontal: 12,
-      borderRadius: 8,
-      borderWidth: 2,
-      backgroundColor: isPresent ? '#dcfce7' : '#fee2e2',
-      borderColor: isPresent ? '#22c55e' : '#ef4444',
-      alignItems: 'center',
-      opacity: disabled ? 0.5 : 1,
-    }}
-  >
-    <Text style={{ fontSize: 10, color: '#6b7280', marginBottom: 2 }}>{label}</Text>
-    {isPresent ? (
-      <Check size={16} color="#16a34a" strokeWidth={3} />
-    ) : (
-      <X size={16} color="#dc2626" strokeWidth={3} />
-    )}
-  </TouchableOpacity>
-);
 
 /** Build week rows from attendance data for a given date range */
 function buildWeekRows(params: {
@@ -936,244 +877,6 @@ export default function MyTimesheetScreen() {
     ]
   );
 
-  // Week Card Renderer
-  const renderWeekCard = (weekInfo: { start: Date; end: Date; id: string }) => {
-    const week = weeks.find((w) => w.id === weekInfo.id);
-    const isExpanded = week && !week.collapsed;
-
-    return (
-      <View
-        key={weekInfo.id}
-        style={{
-          backgroundColor: 'white',
-          borderRadius: 12,
-          marginBottom: 12,
-          shadowColor: '#000',
-          shadowOpacity: 0.05,
-          shadowRadius: 8,
-          elevation: 3,
-          overflow: 'hidden',
-        }}
-      >
-        <TouchableOpacity
-          onPress={() => loadWeek(weekInfo.start, weekInfo.end)}
-          activeOpacity={0.7}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: 14,
-            backgroundColor: isExpanded ? '#f0fdfa' : 'white',
-            borderBottomWidth: isExpanded ? 1 : 0,
-            borderBottomColor: '#e5e7eb',
-          }}
-        >
-          <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <CalendarDays size={16} color="#0d9488" />
-              <Text style={{ fontSize: 14, fontWeight: '600', color: '#1f2937' }}>
-                {format(weekInfo.start, 'MMM d')} - {format(weekInfo.end, 'MMM d, yyyy')}
-              </Text>
-            </View>
-            {week?.submissionStatus && (
-              <View style={{ marginTop: 6 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <StatusBadge status={week.submissionStatus} />
-                  {week.submissionStatus === 'REJECTED' && week.reviewComments && (
-                    <Text style={{ fontSize: 11, color: '#dc2626', flex: 1 }} numberOfLines={1}>
-                      {week.reviewComments}
-                    </Text>
-                  )}
-                </View>
-                {(week.submissionStatus === 'APPROVED' || week.submissionStatus === 'REJECTED') &&
-                  week.reviewedByName && (
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        marginTop: 4,
-                        flexWrap: 'wrap',
-                      }}
-                    >
-                      <Text style={{ fontSize: 10, color: '#64748b' }}>
-                        {week.submissionStatus === 'APPROVED' ? '✓ Approved by ' : '✗ Rejected by '}
-                      </Text>
-                      <Text style={{ fontSize: 10, color: '#1e40af', fontWeight: '600' }}>
-                        {week.reviewedByName}
-                      </Text>
-                      {!!week.reviewedAt && (
-                        <Text style={{ fontSize: 10, color: '#64748b' }}>
-                          {' on '}
-                          {format(parseISO(week.reviewedAt), 'dd MMM yyyy')}
-                        </Text>
-                      )}
-                    </View>
-                  )}
-              </View>
-            )}
-          </View>
-          {isExpanded ? (
-            <ChevronUp size={20} color="#6b7280" />
-          ) : (
-            <ChevronDown size={20} color="#6b7280" />
-          )}
-        </TouchableOpacity>
-
-        {isExpanded && week && (
-          <View style={{ padding: 12 }}>
-            {week.rows.map((row, idx) => {
-              const isLocked = !!row.locked_reason;
-              let lockedBgColor = '#f3f4f6';
-              let lockedTextColor = '#6b7280';
-              if (row.locked_reason === 'holiday') {
-                lockedBgColor = '#f3e8ff';
-                lockedTextColor = '#7c3aed';
-              } else if (row.locked_reason === 'leave') {
-                lockedBgColor = '#ffedd5';
-                lockedTextColor = '#ea580c';
-              }
-              const isDisabled =
-                isLocked ||
-                week.submissionStatus === 'SUBMITTED' ||
-                week.submissionStatus === 'APPROVED';
-              return (
-                <View
-                  key={row.date}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingVertical: 10,
-                    borderBottomWidth: idx < week.rows.length - 1 ? 1 : 0,
-                    borderBottomColor: '#f3f4f6',
-                    opacity: isLocked ? 0.6 : 1,
-                  }}
-                >
-                  <View style={{ width: 70 }}>
-                    <Text style={{ fontSize: 12, fontWeight: '600', color: '#374151' }}>
-                      {row.dayName}
-                    </Text>
-                    <Text style={{ fontSize: 11, color: '#9ca3af' }}>
-                      {format(parseISO(row.date), 'MMM d')}
-                    </Text>
-                  </View>
-                  {isLocked ? (
-                    <View style={{ flex: 1, paddingHorizontal: 8 }}>
-                      <View
-                        style={{
-                          backgroundColor: lockedBgColor,
-                          paddingVertical: 8,
-                          paddingHorizontal: 12,
-                          borderRadius: 8,
-                          alignItems: 'center',
-                        }}
-                      >
-                        <Text
-                          style={{
-                            fontSize: 12,
-                            fontWeight: '500',
-                            color: lockedTextColor,
-                          }}
-                        >
-                          {row.holiday_name || row.leave_name || 'Non-working day'}
-                        </Text>
-                      </View>
-                    </View>
-                  ) : (
-                    <View style={{ flex: 1, flexDirection: 'row', gap: 8, paddingHorizontal: 8 }}>
-                      <AttendanceToggle
-                        label="AM"
-                        isPresent={row.morning_present}
-                        disabled={isDisabled}
-                        onToggle={() => toggleAttendance(week.id, row.date, 'morning_present')}
-                      />
-                      <AttendanceToggle
-                        label="PM"
-                        isPresent={row.afternoon_present}
-                        disabled={isDisabled}
-                        onToggle={() => toggleAttendance(week.id, row.date, 'afternoon_present')}
-                      />
-                    </View>
-                  )}
-                </View>
-              );
-            })}
-
-            <View style={{ marginTop: 12, gap: 8 }}>
-              {(!week.submissionStatus ||
-                week.submissionStatus === 'DRAFT' ||
-                week.submissionStatus === 'REJECTED') && (
-                <TouchableOpacity
-                  onPress={() => submitWeek(week)}
-                  disabled={submitMutation.isPending}
-                  style={{
-                    backgroundColor: '#4f46e5',
-                    paddingVertical: 12,
-                    borderRadius: 8,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8,
-                  }}
-                >
-                  {submitMutation.isPending ? (
-                    <ActivityIndicator size="small" color="white" />
-                  ) : (
-                    <>
-                      <Send size={16} color="white" />
-                      <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
-                        Submit Week
-                      </Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              )}
-              {(week.submissionStatus === 'SUBMITTED' || week.submissionStatus === 'REJECTED') && (
-                <TouchableOpacity
-                  onPress={() => handleReturnToDraft(week)}
-                  disabled={returnToDraftMutation.isPending}
-                  style={{
-                    backgroundColor: '#f3f4f6',
-                    paddingVertical: 12,
-                    borderRadius: 8,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8,
-                  }}
-                >
-                  {returnToDraftMutation.isPending ? (
-                    <ActivityIndicator size="small" color="#6b7280" />
-                  ) : (
-                    <>
-                      <RotateCcw size={16} color="#6b7280" />
-                      <Text style={{ color: '#6b7280', fontWeight: '600', fontSize: 14 }}>
-                        Return to Draft
-                      </Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              )}
-              {week.submissionStatus === 'APPROVED' && (
-                <View
-                  style={{
-                    backgroundColor: '#dcfce7',
-                    paddingVertical: 12,
-                    borderRadius: 8,
-                    alignItems: 'center',
-                  }}
-                >
-                  <Text style={{ color: '#16a34a', fontWeight: '600', fontSize: 14 }}>
-                    ✓ Approved
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
-        )}
-      </View>
-    );
-  };
-
   return (
     <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
       {/* Header */}
@@ -1489,7 +1192,19 @@ export default function MyTimesheetScreen() {
                     <ActivityIndicator size="small" color="#0d9488" />
                   </View>
                 )}
-                {monthWeeks.map((weekInfo) => renderWeekCard(weekInfo))}
+                {monthWeeks.map((weekInfo) => (
+                  <TimesheetWeekCard
+                    key={weekInfo.id}
+                    weekInfo={weekInfo}
+                    week={weeks.find((w) => w.id === weekInfo.id)}
+                    onExpandToggle={loadWeek}
+                    onToggleAttendance={toggleAttendance}
+                    onSubmit={submitWeek}
+                    onReturnToDraft={handleReturnToDraft}
+                    isSubmitting={submitMutation.isPending}
+                    isReturningToDraft={returnToDraftMutation.isPending}
+                  />
+                ))}
               </>
             )}
 
@@ -1548,212 +1263,23 @@ export default function MyTimesheetScreen() {
       </ScrollView>
 
       {/* Day Attendance Modal */}
-      <Modal
+      <DayAttendanceModal
         visible={dayModalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setDayModalVisible(false)}
-      >
-        <Pressable
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
-          onPress={() => setDayModalVisible(false)}
-        >
-          <Pressable
-            style={{
-              backgroundColor: 'white',
-              borderTopLeftRadius: 24,
-              borderTopRightRadius: 24,
-              padding: 20,
-              paddingBottom: 40,
-            }}
-            onPress={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <View style={{ alignItems: 'center', marginBottom: 20 }}>
-              <View
-                style={{
-                  width: 40,
-                  height: 4,
-                  backgroundColor: '#e5e7eb',
-                  borderRadius: 2,
-                  marginBottom: 16,
-                }}
-              />
-              <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#1f2937' }}>
-                Submit Attendance
-              </Text>
-              {selectedDay && (
-                <Text style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>
-                  {format(selectedDay, 'EEEE, MMMM d, yyyy')}
-                </Text>
-              )}
-            </View>
-
-            {/* Timesheet Status Warning */}
-            {weekTimesheetStatus &&
-              (weekTimesheetStatus === 'SUBMITTED' || weekTimesheetStatus === 'APPROVED') && (
-                <View
-                  style={{
-                    backgroundColor: '#fef3c7',
-                    borderRadius: 8,
-                    padding: 12,
-                    marginBottom: 16,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                  }}
-                >
-                  <Lock size={16} color="#d97706" style={{ marginRight: 8 }} />
-                  <Text style={{ fontSize: 12, color: '#92400e', flex: 1 }}>
-                    {weekTimesheetStatus === 'APPROVED'
-                      ? 'Timesheet Approved: You cannot modify this date.'
-                      : 'Timesheet Submitted: Return to draft to modify.'}
-                  </Text>
-                </View>
-              )}
-
-            {/* Instruction */}
-            <Text style={{ fontSize: 13, color: '#6b7280', marginBottom: 16, textAlign: 'center' }}>
-              Select the sessions you were present, or mark as absent:
-            </Text>
-
-            {/* Session Toggles */}
-            <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
-              <TouchableOpacity
-                style={{
-                  flex: 1,
-                  padding: 16,
-                  borderRadius: 12,
-                  borderWidth: 2,
-                  backgroundColor: dayMorningPresent ? '#dcfce7' : '#fee2e2',
-                  borderColor: dayMorningPresent ? '#22c55e' : '#ef4444',
-                  alignItems: 'center',
-                }}
-                onPress={() => setDayMorningPresent(!dayMorningPresent)}
-                activeOpacity={0.7}
-              >
-                <Sun size={24} color={dayMorningPresent ? '#16a34a' : '#dc2626'} />
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: '600',
-                    color: dayMorningPresent ? '#166534' : '#991b1b',
-                    marginTop: 8,
-                  }}
-                >
-                  Morning
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 12,
-                    color: dayMorningPresent ? '#16a34a' : '#dc2626',
-                    marginTop: 4,
-                  }}
-                >
-                  {dayMorningPresent ? 'Present' : 'Absent'}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={{
-                  flex: 1,
-                  padding: 16,
-                  borderRadius: 12,
-                  borderWidth: 2,
-                  backgroundColor: dayAfternoonPresent ? '#dcfce7' : '#fee2e2',
-                  borderColor: dayAfternoonPresent ? '#22c55e' : '#ef4444',
-                  alignItems: 'center',
-                }}
-                onPress={() => setDayAfternoonPresent(!dayAfternoonPresent)}
-                activeOpacity={0.7}
-              >
-                <Moon size={24} color={dayAfternoonPresent ? '#16a34a' : '#dc2626'} />
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: '600',
-                    color: dayAfternoonPresent ? '#166534' : '#991b1b',
-                    marginTop: 8,
-                  }}
-                >
-                  Afternoon
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 12,
-                    color: dayAfternoonPresent ? '#16a34a' : '#dc2626',
-                    marginTop: 4,
-                  }}
-                >
-                  {dayAfternoonPresent ? 'Present' : 'Absent'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Mark as Absent Button */}
-            <TouchableOpacity
-              style={{
-                backgroundColor: !dayMorningPresent && !dayAfternoonPresent ? '#ef4444' : '#f3f4f6',
-                paddingVertical: 12,
-                borderRadius: 8,
-                alignItems: 'center',
-                marginBottom: 16,
-              }}
-              onPress={() => {
-                setDayMorningPresent(false);
-                setDayAfternoonPresent(false);
-              }}
-              activeOpacity={0.7}
-            >
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: '600',
-                  color: !dayMorningPresent && !dayAfternoonPresent ? 'white' : '#6b7280',
-                }}
-              >
-                Mark as Absent (Full Day)
-              </Text>
-            </TouchableOpacity>
-
-            {/* Submit Button */}
-            <TouchableOpacity
-              style={{
-                backgroundColor: '#4f46e5',
-                paddingVertical: 14,
-                borderRadius: 10,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                opacity: dailyAttendanceMutation.isPending || checkingWeekStatus ? 0.7 : 1,
-              }}
-              onPress={handleSubmitDayAttendance}
-              disabled={dailyAttendanceMutation.isPending || checkingWeekStatus}
-              activeOpacity={0.8}
-            >
-              {dailyAttendanceMutation.isPending || checkingWeekStatus ? (
-                <ActivityIndicator size="small" color="white" />
-              ) : (
-                <>
-                  <Send size={18} color="white" />
-                  <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
-                    Save Attendance
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
-
-            {/* Cancel Button */}
-            <TouchableOpacity
-              style={{ marginTop: 12, paddingVertical: 12, alignItems: 'center' }}
-              onPress={() => setDayModalVisible(false)}
-              activeOpacity={0.7}
-            >
-              <Text style={{ fontSize: 14, color: '#6b7280' }}>Cancel</Text>
-            </TouchableOpacity>
-          </Pressable>
-        </Pressable>
-      </Modal>
+        onClose={() => setDayModalVisible(false)}
+        selectedDay={selectedDay}
+        weekTimesheetStatus={weekTimesheetStatus}
+        checkingWeekStatus={checkingWeekStatus}
+        dayMorningPresent={dayMorningPresent}
+        dayAfternoonPresent={dayAfternoonPresent}
+        onToggleMorning={() => setDayMorningPresent(!dayMorningPresent)}
+        onToggleAfternoon={() => setDayAfternoonPresent(!dayAfternoonPresent)}
+        onMarkAbsent={() => {
+          setDayMorningPresent(false);
+          setDayAfternoonPresent(false);
+        }}
+        onSubmit={handleSubmitDayAttendance}
+        isSubmitting={dailyAttendanceMutation.isPending}
+      />
     </View>
   );
 }

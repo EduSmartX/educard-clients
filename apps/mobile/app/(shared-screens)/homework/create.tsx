@@ -273,7 +273,7 @@ export default function CreateHomeworkScreen() {
         {/* Subject Selection */}
         {selectedClass && availableSubjects.length > 0 && (
           <Animated.View entering={FadeInDown.delay(150)} style={styles.section}>
-            <Text style={[styles.sectionTitle, errors.subject && styles.sectionTitleError]}>
+            <Text style={[styles.sectionTitle, !!errors.subject && styles.sectionTitleError]}>
               Select Subject *
             </Text>
             <ScrollView
@@ -288,7 +288,7 @@ export default function CreateHomeworkScreen() {
                     key={subject.public_id}
                     style={[
                       styles.chip,
-                      errors.subject && styles.chipError,
+                      !!errors.subject && styles.chipError,
                       selectedSubject === subject.public_id && [
                         styles.chipSelected,
                         { backgroundColor: subjectColor.hex },
@@ -322,10 +322,10 @@ export default function CreateHomeworkScreen() {
 
         {/* Title */}
         <Animated.View entering={FadeInDown.delay(200)} style={styles.section}>
-          <Text style={[styles.sectionTitle, errors.title && styles.sectionTitleError]}>
+          <Text style={[styles.sectionTitle, !!errors.title && styles.sectionTitleError]}>
             Title *
           </Text>
-          <View style={[styles.inputWrapper, errors.title && styles.inputWrapperError]}>
+          <View style={[styles.inputWrapper, !!errors.title && styles.inputWrapperError]}>
             <BookOpen size={18} color={errors.title ? '#ef4444' : Colors.gray[400]} />
             <TextInput
               style={styles.input}
@@ -460,10 +460,10 @@ export default function CreateHomeworkScreen() {
 
         {/* Reference Link */}
         <Animated.View entering={FadeInDown.delay(500)} style={styles.section}>
-          <Text style={[styles.sectionTitle, errors.reference_link && styles.sectionTitleError]}>
+          <Text style={[styles.sectionTitle, !!errors.reference_link && styles.sectionTitleError]}>
             Reference Link
           </Text>
-          <View style={[styles.inputWrapper, errors.reference_link && styles.inputWrapperError]}>
+          <View style={[styles.inputWrapper, !!errors.reference_link && styles.inputWrapperError]}>
             <Link size={18} color={errors.reference_link ? '#ef4444' : Colors.gray[400]} />
             <TextInput
               style={styles.input}

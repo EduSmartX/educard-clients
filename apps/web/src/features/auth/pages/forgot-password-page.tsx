@@ -138,6 +138,9 @@ export default function ForgotPasswordPage() {
     }
   };
 
+  const passwordInputType = showPassword ? 'text' : 'password';
+  const confirmPasswordInputType = showConfirmPassword ? 'text' : 'password';
+
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-50 p-4">
       {/* Animated Background Orbs */}
@@ -167,20 +170,17 @@ export default function ForgotPasswordPage() {
         className="relative w-full max-w-md"
       >
         <div className="space-y-6 rounded-3xl border border-white/20 bg-white/90 p-8 shadow-2xl backdrop-blur-xl">
-          {/* Back Button */}
-          {currentStep === 'request' && (
-            <a
-              href={ROUTES.AUTH.LOGIN}
-              className="inline-flex items-center gap-2 font-medium text-teal-600 transition-colors hover:text-teal-700"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Login
-            </a>
-          )}
-
           {/* Step 1: Request OTP */}
           {currentStep === 'request' && (
             <>
+              <a
+                href={ROUTES.AUTH.LOGIN}
+                className="inline-flex items-center gap-2 font-medium text-teal-600 transition-colors hover:text-teal-700"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Login
+              </a>
+
               {/* Header */}
               <div className="space-y-4 text-center">
                 <div className="flex justify-center">
@@ -381,7 +381,7 @@ export default function ForgotPasswordPage() {
                   <div className="relative">
                     <input
                       id="newPassword"
-                      type={showPassword ? 'text' : 'password'}
+                      type={passwordInputType}
                       placeholder="Enter new password"
                       className={cn(
                         'h-14 w-full rounded-xl border-2 pr-12 pl-4 text-base transition-all duration-200',
@@ -415,7 +415,7 @@ export default function ForgotPasswordPage() {
                   <div className="relative">
                     <input
                       id="confirmPassword"
-                      type={showConfirmPassword ? 'text' : 'password'}
+                      type={confirmPasswordInputType}
                       placeholder={FormPlaceholders.CONFIRM_PASSWORD}
                       className={cn(
                         'h-14 w-full rounded-xl border-2 pr-12 pl-4 text-base transition-all duration-200',

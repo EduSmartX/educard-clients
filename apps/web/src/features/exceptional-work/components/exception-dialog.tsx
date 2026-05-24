@@ -298,6 +298,15 @@ export function ExceptionDialog({
   };
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
+  const dialogTitle = isEditMode ? 'Edit Calendar Exception' : 'Add Calendar Exception';
+  const dialogDescription = isEditMode
+    ? 'Update the exception details below'
+    : 'Override working days or holidays for specific dates';
+  const headerIcon = isEditMode ? (
+    <AlertTriangle className="h-6 w-6 text-white sm:h-7 sm:w-7" />
+  ) : (
+    <Plus className="h-6 w-6 text-white sm:h-7 sm:w-7" />
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -306,21 +315,11 @@ export function ExceptionDialog({
         <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 via-violet-600 to-purple-700 p-6 text-white sm:p-8">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-white/20 shadow-lg backdrop-blur-sm sm:h-14 sm:w-14">
-              {isEditMode ? (
-                <AlertTriangle className="h-6 w-6 text-white sm:h-7 sm:w-7" />
-              ) : (
-                <Plus className="h-6 w-6 text-white sm:h-7 sm:w-7" />
-              )}
+              {headerIcon}
             </div>
             <div className="min-w-0 flex-1">
-              <h2 className="mb-2 text-xl font-bold sm:text-2xl">
-                {isEditMode ? 'Edit Calendar Exception' : 'Add Calendar Exception'}
-              </h2>
-              <p className="text-sm text-purple-100 sm:text-base">
-                {isEditMode
-                  ? 'Update the exception details below'
-                  : 'Override working days or holidays for specific dates'}
-              </p>
+              <h2 className="mb-2 text-xl font-bold sm:text-2xl">{dialogTitle}</h2>
+              <p className="text-sm text-purple-100 sm:text-base">{dialogDescription}</p>
             </div>
           </div>
         </div>

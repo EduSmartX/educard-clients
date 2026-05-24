@@ -351,3 +351,18 @@ Adhere strictly to these architectural standards:
 5. Robustness & Testing:
    - Gracefully handle loading, error, and empty states. Wrap async calls in try/catch blocks with strongly typed errors.
    - Provide clean JSDoc for custom hooks. Include a companion unit test using Vitest / React Testing Library (for Web) or React Native Testing Library (for Mobile).
+
+
+Checklist For front end Implementation:
+————————————————————
+Use Below reusable components where ever is possible in the new code implementations
+Multi Select dropdown
+Date Component
+Searchble Drop Component
+Error Wrapper
+Data Table components
+Reusable Filter component
+Use separate layers for each flow:
+Define Hooks separately
+Define interfaces separately
+Define shared code for Mob and web gracefully

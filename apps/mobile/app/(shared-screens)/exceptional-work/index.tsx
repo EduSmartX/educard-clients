@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-misused-promises, @typescript-eslint/no-floating-promises, @typescript-eslint/prefer-nullish-coalescing, @typescript-eslint/no-unsafe-return */ /**
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-misused-promises, @typescript-eslint/no-floating-promises, @typescript-eslint/prefer-nullish-coalescing, @typescript-eslint/no-unsafe-return */
+/**
  * Exceptional Work Policy Screen - Manage calendar exceptions
  */
 
@@ -38,11 +39,9 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
-  StyleSheet,
   Alert,
   Modal,
   TextInput,
-  Dimensions,
   Switch,
 } from 'react-native';
 
@@ -53,12 +52,12 @@ import { useAuthStore } from '@/lib/auth-store';
 import { useToast } from '@/lib/toast-context';
 import { isAdminRole } from '@/utils/role-utils';
 
-const { width: screenWidth } = Dimensions.get('window');
-const CALENDAR_CELL_SIZE = Math.floor((screenWidth - 80) / 7);
+import { styles, modalStyles, CALENDAR_CELL_SIZE } from './styles';
 
-// Use admin theme for consistency
 const adminGradient = getRoleGradient('admin');
 const adminTheme = getRoleThemeColors('admin');
+
+const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 interface CalendarException {
   public_id: string;
@@ -77,8 +76,6 @@ interface CalendarExceptionCreate {
   is_applicable_to_all_classes: boolean;
   classes?: string[];
 }
-
-const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 const getCalendarExceptions = async (): Promise<CalendarException[]> => {
   const response = await apiClient.get('/attendance/admin/calendar-exception/');
@@ -119,11 +116,6 @@ function DatePickerModal({
   );
   const leadingEmptyDays = useMemo(() => Array.from({ length: monthStart.getDay() }), [monthStart]);
 
-  const handleSelectDate = (date: Date) => {
-    onSelectDate(date);
-    onClose();
-  };
-
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={modalStyles.overlay}>
@@ -153,7 +145,7 @@ function DatePickerModal({
 
           <View style={modalStyles.weekdaysRow}>
             {WEEKDAYS.map((day, i) => (
-              <View key={day} style={modalStyles.weekdayCell}>
+              <View key={`${day}-${i}`} style={modalStyles.weekdayCell}>
                 <Text style={[modalStyles.weekdayText, i === 0 && { color: '#ef4444' }]}>
                   {day}
                 </Text>
@@ -169,7 +161,6 @@ function DatePickerModal({
               const isSelected = selectedDate && isSameDay(date, selectedDate);
               const isTodayDate = isToday(date);
               const dateKey = format(date, 'yyyy-MM-dd');
-
               return (
                 <TouchableOpacity
                   key={`day-${dateKey}`}
@@ -178,7 +169,10 @@ function DatePickerModal({
                     isSelected && modalStyles.selectedDayCell,
                     isTodayDate && !isSelected && modalStyles.todayCell,
                   ]}
-                  onPress={() => handleSelectDate(date)}
+                  onPress={() => {
+                    onSelectDate(date);
+                    onClose();
+                  }}
                   activeOpacity={0.7}
                 >
                   <Text
@@ -223,7 +217,6 @@ function CreateExceptionModal({
   const [isAllClasses, setIsAllClasses] = useState(true);
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
 
-  // Fetch classes for selection
   const { data: classesData } = useClasses({ is_active: true });
   const classes = classesData?.classes || [];
 
@@ -236,8 +229,11 @@ function CreateExceptionModal({
       onClose();
     },
     onError: (error: unknown) => {
-      const message = extractApiError(error, 'Failed to create exception');
-      showToast({ type: 'error', title: 'Error', message });
+      showToast({
+        type: 'error',
+        title: 'Error',
+        message: extractApiError(error, 'Failed to create exception'),
+      });
     },
   });
 
@@ -267,7 +263,6 @@ function CreateExceptionModal({
       Alert.alert('Error', 'Please select at least one class');
       return;
     }
-
     createMutation.mutate({
       date: format(selectedDate, 'yyyy-MM-dd'),
       override_type: overrideType,
@@ -332,7 +327,6 @@ function CreateExceptionModal({
                   </Text>
                   {overrideType === 'FORCE_WORKING' && <Check size={16} color="#0d9488" />}
                 </TouchableOpacity>
-
                 <TouchableOpacity
                   style={[
                     modalStyles.typeOption,
@@ -518,14 +512,12 @@ function ExceptionCard({
           </TouchableOpacity>
         )}
       </View>
-
       {!!exception.reason && (
         <View style={styles.exceptionReason}>
           <Text style={styles.exceptionReasonLabel}>Reason:</Text>
           <Text style={styles.exceptionReasonText}>{exception.reason}</Text>
         </View>
       )}
-
       <View style={styles.exceptionMeta}>
         <Text style={styles.exceptionMetaText}>
           {exception.is_applicable_to_all_classes
@@ -547,7 +539,6 @@ export default function ExceptionalWorkScreen() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<CalendarException | null>(null);
 
-  // Role-based access check
   const { user } = useAuthStore();
   const canManage = useMemo(() => isAdminRole(user?.role), [user?.role]);
 
@@ -577,26 +568,11 @@ export default function ExceptionalWorkScreen() {
     setRefreshing(false);
   };
 
-  const handleDelete = (exception: CalendarException) => {
-    setDeleteTarget(exception);
-  };
-
-  const confirmDelete = () => {
-    if (deleteTarget) {
-      deleteMutation.mutate(deleteTarget.public_id);
-    }
-  };
-
-  const handleCreateSuccess = () => {
-    queryClient.invalidateQueries({ queryKey: ['calendar-exceptions'] });
-  };
-
   const forceWorkingDays = exceptions?.filter((e) => e.override_type === 'FORCE_WORKING') || [];
   const forceHolidays = exceptions?.filter((e) => e.override_type === 'FORCE_HOLIDAY') || [];
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <LinearGradient
         colors={adminGradient}
         start={{ x: 0, y: 0 }}
@@ -618,7 +594,6 @@ export default function ExceptionalWorkScreen() {
         </View>
       </LinearGradient>
 
-      {/* Read-only banner for teachers */}
       {!canManage && (
         <View style={styles.readOnlyBanner}>
           <Eye size={16} color="#7c3aed" />
@@ -632,7 +607,6 @@ export default function ExceptionalWorkScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
         showsVerticalScrollIndicator={false}
       >
-        {/* Info Card */}
         <View style={styles.infoCard}>
           <AlertTriangle size={20} color={adminTheme.accent} />
           <Text style={styles.infoText}>
@@ -648,7 +622,6 @@ export default function ExceptionalWorkScreen() {
           </View>
         ) : (
           <>
-            {/* Force Working Days Section */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionHeaderLeft}>
@@ -659,7 +632,6 @@ export default function ExceptionalWorkScreen() {
                   <Text style={styles.sectionCountText}>{forceWorkingDays.length}</Text>
                 </View>
               </View>
-
               {forceWorkingDays.length === 0 ? (
                 <View style={styles.emptySection}>
                   <Text style={styles.emptySectionText}>No force working days</Text>
@@ -669,14 +641,13 @@ export default function ExceptionalWorkScreen() {
                   <ExceptionCard
                     key={exception.public_id}
                     exception={exception}
-                    onDelete={() => handleDelete(exception)}
+                    onDelete={() => setDeleteTarget(exception)}
                     canManage={canManage}
                   />
                 ))
               )}
             </View>
 
-            {/* Force Holidays Section */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionHeaderLeft}>
@@ -687,7 +658,6 @@ export default function ExceptionalWorkScreen() {
                   <Text style={styles.sectionCountText}>{forceHolidays.length}</Text>
                 </View>
               </View>
-
               {forceHolidays.length === 0 ? (
                 <View style={styles.emptySection}>
                   <Text style={styles.emptySectionText}>No force holidays</Text>
@@ -697,7 +667,7 @@ export default function ExceptionalWorkScreen() {
                   <ExceptionCard
                     key={exception.public_id}
                     exception={exception}
-                    onDelete={() => handleDelete(exception)}
+                    onDelete={() => setDeleteTarget(exception)}
                     canManage={canManage}
                   />
                 ))
@@ -707,19 +677,16 @@ export default function ExceptionalWorkScreen() {
         )}
       </ScrollView>
 
-      {/* FAB for adding new exception - Only for admin */}
       {canManage && (
         <FAB onPress={() => setShowCreateModal(true)} icon={Plus} color={adminTheme.accent} />
       )}
 
-      {/* Create Exception Modal */}
       <CreateExceptionModal
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        onSuccess={handleCreateSuccess}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ['calendar-exceptions'] })}
       />
 
-      {/* Delete Confirmation Dialog - Using reusable ConfirmDialog */}
       <ConfirmDialog
         visible={!!deleteTarget}
         title="Delete Exception"
@@ -729,7 +696,9 @@ export default function ExceptionalWorkScreen() {
             : ''
         }
         confirmText="Delete"
-        onConfirm={confirmDelete}
+        onConfirm={() => {
+          if (deleteTarget) deleteMutation.mutate(deleteTarget.public_id);
+        }}
         onCancel={() => setDeleteTarget(null)}
         confirmVariant="danger"
         isLoading={deleteMutation.isPending}
@@ -737,388 +706,3 @@ export default function ExceptionalWorkScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff7ed' },
-  header: { paddingTop: 48, paddingBottom: 20, paddingHorizontal: 16 },
-  headerContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  backButton: { padding: 4 },
-  headerTitle: { color: 'white', fontSize: 20, fontWeight: '700' },
-  headerSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 13 },
-  // Read-only banner
-  readOnlyBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ede9fe',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    gap: 8,
-  },
-  readOnlyText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#7c3aed',
-  },
-  content: { flex: 1 },
-  scrollContent: { padding: 16, paddingBottom: 100 },
-  infoCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-    backgroundColor: '#d1fae5', // emerald-100 (admin theme light)
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#6ee7b7', // emerald-300
-  },
-  infoText: { flex: 1, fontSize: 13, color: '#065f46', lineHeight: 18 }, // emerald-800
-  loadingContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60 },
-  loadingText: { color: '#6b7280', marginTop: 12 },
-  section: { marginBottom: 24 },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  sectionHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  sectionTitle: { fontSize: 16, fontWeight: '600', color: '#1f2937' },
-  sectionCount: {
-    backgroundColor: '#f3f4f6',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  sectionCountText: { fontSize: 12, fontWeight: '600', color: '#6b7280' },
-  emptySection: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 24,
-    alignItems: 'center',
-  },
-  emptySectionText: { color: '#9ca3af', fontSize: 14 },
-  exceptionCard: {
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 10,
-    borderWidth: 1,
-  },
-  forceWorkingCard: { backgroundColor: '#f0fdfa', borderColor: '#99f6e4' },
-  forceHolidayCard: { backgroundColor: '#fef2f2', borderColor: '#fecaca' },
-  exceptionCardHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  exceptionIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  forceWorkingIcon: { backgroundColor: '#ccfbf1' },
-  forceHolidayIcon: { backgroundColor: '#fee2e2' },
-  exceptionInfo: { flex: 1 },
-  exceptionDate: { fontSize: 14, fontWeight: '600', color: '#1f2937' },
-  exceptionTypeBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    marginTop: 6,
-  },
-  forceWorkingBadge: { backgroundColor: '#ccfbf1' },
-  forceHolidayBadge: { backgroundColor: '#fee2e2' },
-  exceptionTypeText: { fontSize: 11, fontWeight: '600' },
-  forceWorkingText: { color: '#0d9488' },
-  forceHolidayText: { color: '#dc2626' },
-  deleteButton: { padding: 8 },
-  exceptionReason: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#e5e7eb' },
-  exceptionReasonLabel: { fontSize: 11, fontWeight: '600', color: '#6b7280', marginBottom: 4 },
-  exceptionReasonText: { fontSize: 13, color: '#374151' },
-  exceptionMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-  },
-  exceptionMetaText: { fontSize: 11, color: '#9ca3af' },
-});
-
-const modalStyles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  container: {
-    backgroundColor: 'white',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: '90%',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1f2937',
-  },
-  body: {
-    padding: 20,
-    maxHeight: 400,
-  },
-  field: {
-    marginBottom: 20,
-  },
-  fieldLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-  },
-  dateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: '#f9fafb',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  dateButtonText: {
-    fontSize: 14,
-    color: '#1f2937',
-    flex: 1,
-  },
-  typeSelector: {
-    gap: 10,
-  },
-  typeOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderWidth: 2,
-    borderColor: '#e5e7eb',
-    borderRadius: 10,
-    backgroundColor: '#f9fafb',
-  },
-  typeOptionSelectedWorking: {
-    borderColor: '#0d9488',
-    backgroundColor: '#f0fdfa',
-  },
-  typeOptionSelectedHoliday: {
-    borderColor: '#dc2626',
-    backgroundColor: '#fef2f2',
-  },
-  typeOptionText: {
-    flex: 1,
-    fontSize: 14,
-    color: '#6b7280',
-    fontWeight: '500',
-  },
-  typeOptionTextWorking: {
-    color: '#0d9488',
-    fontWeight: '600',
-  },
-  typeOptionTextHoliday: {
-    color: '#dc2626',
-    fontWeight: '600',
-  },
-  textInput: {
-    backgroundColor: '#f9fafb',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 14,
-    color: '#1f2937',
-    minHeight: 80,
-  },
-  switchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-  switchHint: {
-    fontSize: 12,
-    color: '#9ca3af',
-  },
-  classesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  classChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#f3f4f6',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  classChipSelected: {
-    backgroundColor: '#f0fdfa',
-    borderColor: '#0d9488',
-  },
-  classChipText: {
-    fontSize: 13,
-    color: '#6b7280',
-  },
-  classChipTextSelected: {
-    color: '#0d9488',
-    fontWeight: '500',
-  },
-  noClassesText: {
-    fontSize: 13,
-    color: '#9ca3af',
-    fontStyle: 'italic',
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 34,
-    borderTopWidth: 1,
-    borderTopColor: '#f3f4f6',
-  },
-  cancelActionButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 10,
-    backgroundColor: '#f3f4f6',
-    alignItems: 'center',
-  },
-  cancelActionText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#6b7280',
-  },
-  submitButton: {
-    flex: 2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    borderRadius: 10,
-  },
-  submitButtonWorking: {
-    backgroundColor: '#0d9488',
-  },
-  submitButtonHoliday: {
-    backgroundColor: '#dc2626',
-  },
-  submitButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: 'white',
-  },
-  // Date Picker Modal Styles
-  datePickerContainer: {
-    backgroundColor: 'white',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
-  },
-  datePickerHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  datePickerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1f2937',
-  },
-  monthNavigation: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  monthNavButton: {
-    padding: 8,
-  },
-  monthLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1f2937',
-  },
-  weekdaysRow: {
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  weekdayCell: {
-    width: CALENDAR_CELL_SIZE,
-    alignItems: 'center',
-    paddingVertical: 4,
-  },
-  weekdayText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#6b7280',
-  },
-  daysGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  dayCell: {
-    width: CALENDAR_CELL_SIZE,
-    height: CALENDAR_CELL_SIZE,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: CALENDAR_CELL_SIZE / 2,
-  },
-  selectedDayCell: {
-    backgroundColor: '#10b981', // emerald-500 (admin accent)
-  },
-  todayCell: {
-    borderWidth: 2,
-    borderColor: '#10b981', // emerald-500
-  },
-  dayText: {
-    fontSize: 14,
-    color: '#374151',
-  },
-  selectedDayText: {
-    color: 'white',
-    fontWeight: '600',
-  },
-  todayText: {
-    color: '#10b981', // emerald-500
-    fontWeight: '600',
-  },
-  cancelButton: {
-    marginTop: 16,
-    paddingVertical: 12,
-    borderRadius: 10,
-    backgroundColor: '#f3f4f6',
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#6b7280',
-  },
-});
