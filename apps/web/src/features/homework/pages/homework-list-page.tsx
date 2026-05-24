@@ -261,8 +261,8 @@ export default function HomeworkListPage() {
 
       {/* Date & Class Selection */}
       <div className="bg-card flex flex-col gap-4 rounded-lg border p-4 sm:flex-row sm:items-center">
-        <div className="flex-1">
-          <label className="text-muted-foreground mb-1.5 block text-sm font-medium">Class</label>
+        <label className="flex-1">
+          <span className="text-muted-foreground mb-1.5 block text-sm font-medium">Class</span>
           {isLoadingClasses ? (
             <Skeleton className="h-10 w-full" />
           ) : (
@@ -278,12 +278,12 @@ export default function HomeworkListPage() {
               className="w-full sm:w-[250px]"
             />
           )}
-        </div>
+        </label>
 
         <div className="flex items-center gap-2">
-          <label className="text-muted-foreground mb-1.5 block text-sm font-medium sm:hidden">
+          <span className="text-muted-foreground mb-1.5 block text-sm font-medium sm:hidden">
             Date
-          </label>
+          </span>
           <div className="flex items-center gap-1">
             <Button
               variant="outline"

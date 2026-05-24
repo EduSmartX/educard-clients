@@ -36,12 +36,11 @@ import { useFeeDashboard, usePayments } from '../hooks';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
-function formatCurrency(amount: number | undefined): string {
-  const num = amount ?? 0;
-  if (num >= 10_000_000) return `₹${(num / 10_000_000).toFixed(2)} Cr`;
-  if (num >= 100_000) return `₹${(num / 100_000).toFixed(2)} L`;
-  if (num >= 1_000) return `₹${(num / 1_000).toFixed(1)} K`;
-  return `₹${num.toLocaleString('en-IN')}`;
+function formatCurrency(amount: number = 0): string {
+  if (amount >= 10_000_000) return `₹${(amount / 10_000_000).toFixed(2)} Cr`;
+  if (amount >= 100_000) return `₹${(amount / 100_000).toFixed(2)} L`;
+  if (amount >= 1_000) return `₹${(amount / 1_000).toFixed(1)} K`;
+  return `₹${amount.toLocaleString('en-IN')}`;
 }
 
 // ─── sub-components ──────────────────────────────────────────────────────────

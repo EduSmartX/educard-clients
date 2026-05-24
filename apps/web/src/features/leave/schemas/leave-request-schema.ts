@@ -4,7 +4,12 @@
 import { z } from 'zod';
 
 const MAX_ATTACHMENT_SIZE = 5 * 1024 * 1024; // 5 MB
-const ALLOWED_ATTACHMENT_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_ATTACHMENT_TYPES = new Set([
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+]);
 
 export const leaveRequestFormSchema = z
   .object({
@@ -23,7 +28,7 @@ export const leaveRequestFormSchema = z
       .nullable()
       .refine((file) => !file || file.size <= MAX_ATTACHMENT_SIZE, 'File size must be 5 MB or less')
       .refine(
-        (file) => !file || ALLOWED_ATTACHMENT_TYPES.includes(file.type),
+        (file) => !file || ALLOWED_ATTACHMENT_TYPES.has(file.type),
         'Only PDF, JPEG, PNG, or WebP files are allowed'
       ),
     remove_attachment: z.boolean().optional().default(false),

@@ -101,7 +101,7 @@ export function DataTable<T>({
       (col) => (col.sortKey || col.header.toLowerCase().replaceAll(/\s+/g, '_')) === sortField
     );
 
-    if (!column || !column.sortable) {
+    if (!column?.sortable) {
       return 0;
     }
 

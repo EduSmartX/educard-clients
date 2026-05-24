@@ -57,7 +57,7 @@ export function TimesheetApproveDialog({
               {target &&
                 `${format(parseISO(target.week_start_date), 'MMM dd')} - ${format(parseISO(target.week_end_date), 'MMM dd, yyyy')}`}
             </span>
-            ?
+            <span>?</span>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -134,14 +134,15 @@ export function TimesheetRejectDialog({
               {target &&
                 `${format(parseISO(target.week_start_date), 'MMM dd')} - ${format(parseISO(target.week_end_date), 'MMM dd, yyyy')}`}
             </span>
-            . Please provide a reason.
+            <span>. Please provide a reason.</span>
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2 py-2">
-          <label className="text-sm font-medium text-gray-700">
+          <label htmlFor="rejection-reason" className="text-sm font-medium text-gray-700">
             Reason for rejection <span className="text-red-500">*</span>
           </label>
           <Textarea
+            id="rejection-reason"
             value={comments}
             onChange={(e) => setComments(e.target.value)}
             placeholder="Enter reason for rejection..."

@@ -322,8 +322,8 @@ export function AttendanceSummaryPage() {
       {/* Summary Stats */}
       {isLoading && (
         <div className="grid gap-4 md:grid-cols-4">
-          {[...new Array(4)].map((_, i) => (
-            <Card key={`skeleton-${i}`}>
+          {['stat-1', 'stat-2', 'stat-3', 'stat-4'].map((key) => (
+            <Card key={key}>
               <CardContent className="py-4">
                 <Skeleton className="mb-2 h-8 w-20" />
                 <Skeleton className="h-4 w-32" />
@@ -441,7 +441,7 @@ export function AttendanceSummaryPage() {
       )}
 
       {/* Class-wise DataTable - Only show on working days */}
-      {summaryData && summaryData.is_working_day && !summaryData.is_holiday && (
+      {summaryData?.is_working_day && !summaryData.is_holiday && (
         <Card>
           <CardContent className="pt-6">
             <div className="mb-4 flex items-center justify-between">

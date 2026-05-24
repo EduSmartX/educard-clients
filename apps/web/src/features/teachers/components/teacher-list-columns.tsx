@@ -29,6 +29,80 @@ export function createTeacherListColumns({
 }: CreateColumnsParams): Column<Teacher>[] {
   const isEmployeeView = viewMode === 'employee';
 
+  const getActionColumns = (): Column<Teacher>[] => {
+    if (isEmployeeView) {
+      return [
+        {
+          header: 'Actions',
+          accessor: (teacher: Teacher) => (
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onView(teacher);
+                }}
+                className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                title="View details"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+            </div>
+          ),
+          headerClassName: 'text-right',
+        } as Column<Teacher>,
+      ];
+    }
+    if (isDeletedView) {
+      return [
+        {
+          header: 'Actions',
+          accessor: (teacher) => (
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onView(teacher);
+                }}
+                className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                title="View details"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+              {onDelete && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(teacher);
+                  }}
+                  className="text-green-600 hover:bg-green-50 hover:text-green-700"
+                  title="Restore Teacher"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          ),
+          headerClassName: 'text-right',
+        } as Column<Teacher>,
+      ];
+    }
+    return createCommonColumns<Teacher>(
+      { onView, onEdit, onDelete },
+      {
+        actionsOptions: {
+          variant: 'buttons',
+          align: 'right',
+        },
+      }
+    );
+  };
+
   return [
     {
       header: 'Photo',
@@ -120,75 +194,6 @@ export function createTeacherListColumns({
       width: 200,
     },
     // Common columns: Created, Updated, Actions
-    ...(isEmployeeView
-      ? [
-          // Employee view - Show only View action
-          {
-            header: 'Actions',
-            accessor: (teacher: Teacher) => (
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onView(teacher);
-                  }}
-                  className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-                  title="View details"
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-              </div>
-            ),
-            headerClassName: 'text-right',
-          } as Column<Teacher>,
-        ]
-      : isDeletedView
-        ? [
-            {
-              header: 'Actions',
-              accessor: (teacher) => (
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onView(teacher);
-                    }}
-                    className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-                    title="View details"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  {onDelete && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(teacher);
-                      }}
-                      className="text-green-600 hover:bg-green-50 hover:text-green-700"
-                      title="Restore Teacher"
-                    >
-                      <RotateCcw className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              ),
-              headerClassName: 'text-right',
-            } as Column<Teacher>,
-          ]
-        : createCommonColumns<Teacher>(
-            { onView, onEdit, onDelete },
-            {
-              actionsOptions: {
-                variant: 'buttons',
-                align: 'right',
-              },
-            }
-          )),
+    ...getActionColumns(),
   ];
 }

@@ -7,12 +7,7 @@ import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { Mail, Lock, LogIn, UserCircle2 } from 'lucide-react';
 import { authApi, type LoginCredentials } from '@/lib/api/auth-api';
-import {
-  CommonUiText,
-  ErrorMessages,
-  FormPlaceholders,
-  SuccessMessages,
-} from '@/constants';
+import { CommonUiText, ErrorMessages, FormPlaceholders, SuccessMessages } from '@/constants';
 import { ROUTES } from '@/constants/app-config';
 import { BRANDING } from '@/constants/branding';
 import { Button } from '@/components/ui/button';
@@ -175,7 +170,7 @@ export default function LoginPage() {
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">
                   1
                 </span>
-                Username or Email
+                <span>Username or Email</span>
               </Label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
@@ -201,7 +196,7 @@ export default function LoginPage() {
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">
                     2
                   </span>
-                  Password
+                  <span>Password</span>
                 </Label>
                 <a
                   href={ROUTES.AUTH.FORGOT_PASSWORD}

@@ -82,11 +82,12 @@ export function getDayStatus(
     record
   );
 
+  const weekendLabel = isWeekend ? (dayOfWeek === 0 ? 'Sunday' : 'Saturday') : '';
   const remarks =
     holidayInfo?.description ||
     (isLeave ? record?.leave_type_name : '') ||
     exception?.reason ||
-    (isWeekend ? (dayOfWeek === 0 ? 'Sunday' : 'Saturday') : '') ||
+    weekendLabel ||
     '-';
 
   return {

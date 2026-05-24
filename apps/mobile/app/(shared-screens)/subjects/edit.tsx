@@ -1,41 +1,34 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-misused-promises, @typescript-eslint/no-floating-promises, @typescript-eslint/prefer-nullish-coalescing */ /**
- * Edit Subject Screen
- * Fetches existing subject data, pre-populates form, PATCHes on save.
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/prefer-nullish-coalescing */
+/**
+ * Edit Subject Screen — Uses shared SubjectFormBase
  */
 
 import {
-  getRoleGradient,
   subjectFormSchema,
-  validateField,
   validateAllFields,
   buildSubjectPayload,
   parseApiErrors,
-  SUBJECT_TYPE_OPTIONS,
 } from '@educard/shared';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ChevronLeft, Save } from 'lucide-react-native';
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { View, Text, ActivityIndicator } from 'react-native';
 
-import { FormInput, FormSection, FormError, FormDropdown } from '@/components/forms';
+import {
+  SubjectFormBase,
+  SubjectFormState,
+  FieldErrors,
+} from '@/components/screens/SubjectFormBase';
 import { useManagedClasses } from '@/features/classes';
 import { useCoreSubjects } from '@/features/core';
 import { useSubjectDetail, useUpdateSubject } from '@/features/subjects';
 import { useTeachers } from '@/features/teachers';
-import { headerStyles, layoutStyles } from '@/styles';
-
-const adminGradient = getRoleGradient('admin');
-type FieldErrors = Record<string, string>;
+import { layoutStyles } from '@/styles';
 
 export default function EditSubjectScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: subject, isLoading: detailLoading } = useSubjectDetail(id || '');
   const updateMutation = useUpdateSubject();
-  // Fetch managed classes - for teachers, only classes where they are class teacher
   const { data: classesData } = useManagedClasses('subject');
   const { data: coreSubjects, isLoading: subjectsLoading } = useCoreSubjects();
   const { data: teachersData } = useTeachers({ page_size: 100 });
@@ -60,10 +53,10 @@ export default function EditSubjectScreen() {
     return teachers.map((t: any) => ({ value: t.public_id, label: `${t.full_name} (${t.email})` }));
   }, [teachersData]);
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<SubjectFormState>({
     class_id: '',
     subject_id: '',
-    subject_type: 'core' as 'core' | 'elective' | 'language',
+    subject_type: 'core',
     teacher_id: '',
     description: '',
   });
@@ -72,19 +65,13 @@ export default function EditSubjectScreen() {
 
   useEffect(() => {
     if (subject && !formLoaded) {
+      const s = subject as any;
       setForm({
-        class_id:
-          subject.class_info?.public_id ||
-          subject.class_assigned?.public_id ||
-          subject.class_id ||
-          '',
-        subject_id: String(
-          subject.subject_info?.id || subject.subject_master?.id || subject.subject_id || ''
-        ),
-        subject_type: (subject.subject_type as 'core' | 'elective' | 'language') || 'core',
-        teacher_id:
-          subject.teacher_info?.public_id || subject.teacher?.public_id || subject.teacher_id || '',
-        description: subject.description || '',
+        class_id: s.class_info?.public_id || s.class_assigned?.public_id || s.class_id || '',
+        subject_id: String(s.subject_info?.id || s.subject_master?.id || s.subject_id || ''),
+        subject_type: (s.subject_type as 'core' | 'elective' | 'language') || 'core',
+        teacher_id: s.teacher_info?.public_id || s.teacher?.public_id || s.teacher_id || '',
+        description: s.description || '',
       });
       setFormLoaded(true);
     }
@@ -103,26 +90,13 @@ export default function EditSubjectScreen() {
     [errors]
   );
 
-  const _blurValidate = useCallback(
-    (field: string) => {
-      const err = validateField(subjectFormSchema, field, form[field as keyof typeof form]);
-      setErrors((prev) => {
-        if (err) return { ...prev, [field]: err };
-        const n = { ...prev };
-        delete n[field];
-        return n;
-      });
-    },
-    [form]
-  );
-
   const handleSubmit = useCallback(() => {
     setApiError(null);
-    const fe = validateAllFields(subjectFormSchema, form);
+    const fe = validateAllFields(subjectFormSchema, form as unknown as Record<string, unknown>);
     setErrors(fe);
     if (Object.keys(fe).length > 0) return;
 
-    const payload = buildSubjectPayload(form);
+    const payload = buildSubjectPayload(form as any);
     updateMutation.mutate(
       { publicId: id, data: payload },
       {
@@ -130,9 +104,9 @@ export default function EditSubjectScreen() {
           router.back();
         },
         onError: (err: any) => {
-          const { fieldErrors: fe, generalError } = parseApiErrors(err?.response?.data);
-          if (Object.keys(fe).length > 0) {
-            setErrors(fe);
+          const { fieldErrors: fe2, generalError } = parseApiErrors(err?.response?.data);
+          if (Object.keys(fe2).length > 0) {
+            setErrors(fe2);
             return;
           }
           setApiError(generalError || 'Failed to update subject.');
@@ -151,124 +125,21 @@ export default function EditSubjectScreen() {
   }
 
   return (
-    <View style={layoutStyles.container}>
-      <LinearGradient colors={adminGradient} style={headerStyles.header}>
-        <Animated.View entering={FadeIn.delay(100)} style={headerStyles.circle1} />
-        <Animated.View entering={FadeIn.delay(200)} style={headerStyles.circle2} />
-        <View style={headerStyles.content}>
-          <View style={headerStyles.topRow}>
-            <TouchableOpacity style={headerStyles.backBtn} onPress={() => router.back()}>
-              <ChevronLeft size={24} color="#fff" />
-            </TouchableOpacity>
-            <View style={headerStyles.titleContainer}>
-              <Text style={headerStyles.title}>Edit Subject</Text>
-              <Text style={headerStyles.subtitle}>Update subject assignment</Text>
-            </View>
-            <View style={{ width: 40 }} />
-          </View>
-        </View>
-      </LinearGradient>
-
-      <KeyboardAwareScrollView
-        contentContainerStyle={st.form}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        enableOnAndroid
-        extraScrollHeight={20}
-        style={{ flex: 1 }}
-      >
-        <FormError message={apiError} onDismiss={() => setApiError(null)} />
-
-        <Animated.View entering={FadeInDown.delay(100)}>
-          <FormSection title="Subject Assignment" icon="📚">
-            <FormDropdown
-              label="Class"
-              required
-              options={classOpts}
-              value={form.class_id}
-              onChange={(v) => updateField('class_id', v)}
-              error={errors.class_id}
-              placeholder="Select a class"
-              searchable
-            />
-            <FormDropdown
-              label="Subject"
-              required
-              options={subjectOpts}
-              value={form.subject_id}
-              onChange={(v) => updateField('subject_id', v)}
-              error={errors.subject_id}
-              placeholder="Select a subject"
-              searchable
-              loading={subjectsLoading}
-            />
-            <FormDropdown
-              label="Subject Type (Optional)"
-              options={SUBJECT_TYPE_OPTIONS.map((opt) => ({
-                value: opt.value,
-                label: opt.label,
-              }))}
-              value={form.subject_type}
-              onChange={(v) => updateField('subject_type', v)}
-              error={errors.subject_type}
-              placeholder="Select subject type"
-            />
-            <FormDropdown
-              label="Teacher"
-              options={teacherOpts}
-              value={form.teacher_id}
-              onChange={(v) => updateField('teacher_id', v)}
-              placeholder="Select a teacher (optional)"
-              searchable
-            />
-            <FormInput
-              label="Description"
-              value={form.description}
-              onChangeText={(v) => updateField('description', v)}
-              placeholder="Optional description"
-              multiline
-              numberOfLines={3}
-            />
-          </FormSection>
-        </Animated.View>
-
-        <TouchableOpacity
-          onPress={handleSubmit}
-          disabled={updateMutation.isPending}
-          style={st.subBtn}
-          activeOpacity={0.8}
-        >
-          <LinearGradient
-            colors={['#7c3aed', '#4f46e5']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={st.subGrad}
-          >
-            {updateMutation.isPending ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <Save size={20} color="#fff" />
-                <Text style={st.subText}>Update Subject</Text>
-              </>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
-      </KeyboardAwareScrollView>
-    </View>
+    <SubjectFormBase
+      title="Edit Subject"
+      subtitle="Update subject assignment"
+      submitLabel="Update Subject"
+      form={form}
+      errors={errors}
+      apiError={apiError}
+      isSaving={updateMutation.isPending}
+      classOpts={classOpts}
+      subjectOpts={subjectOpts}
+      subjectsLoading={subjectsLoading}
+      teacherOpts={teacherOpts}
+      updateField={updateField}
+      onSubmit={handleSubmit}
+      onDismissError={() => setApiError(null)}
+    />
   );
 }
-
-const st = StyleSheet.create({
-  form: { padding: 16, paddingBottom: 40 },
-  subBtn: { marginTop: 8 },
-  subGrad: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    paddingVertical: 16,
-    borderRadius: 14,
-  },
-  subText: { color: '#fff', fontSize: 17, fontWeight: '700' },
-});

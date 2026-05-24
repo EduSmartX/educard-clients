@@ -558,12 +558,14 @@ export default function HomePage() {
                         </CardHeader>
                         <CardContent className="space-y-3">
                           <div className="flex gap-0.5">
-                            {Array.from({ length: testimonial.rating }).map((_, i) => (
-                              <Star
-                                key={`star-${i}`}
-                                className="h-3 w-3 fill-yellow-400 text-yellow-400"
-                              />
-                            ))}
+                            {Array.from({ length: testimonial.rating }, (_, i) => i + 1).map(
+                              (starNum) => (
+                                <Star
+                                  key={`star-${starNum}`}
+                                  className="h-3 w-3 fill-yellow-400 text-yellow-400"
+                                />
+                              )
+                            )}
                           </div>
                           <p className="text-muted-foreground text-sm leading-relaxed">
                             &ldquo;{testimonial.review}&rdquo;

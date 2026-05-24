@@ -310,7 +310,7 @@ export const checkTimesheetStatus = async (params: {
     const submission = data.submission || data;
 
     // If submission_status is null, return null submission
-    if (!submission || !submission.submission_status) {
+    if (!submission?.submission_status) {
       return { submission: null };
     }
 

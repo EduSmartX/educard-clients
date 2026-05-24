@@ -91,8 +91,8 @@ export function TimesheetSubmitPrompt({
       const tsErrors = err?.response?.data?.errors?.timesheet_submission;
       const recErrors = err?.response?.data?.errors?.attendance_records;
       const errorMessage =
-        (tsErrors && tsErrors[0]) ||
-        (recErrors && typeof recErrors[0] === 'string' && recErrors[0]) ||
+        tsErrors?.[0] ||
+        (typeof recErrors?.[0] === 'string' ? recErrors[0] : undefined) ||
         err?.response?.data?.message ||
         'Failed to submit timesheet';
       toast.error('Submission Failed', {

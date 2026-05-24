@@ -34,8 +34,9 @@ export function HeaderProfileButton({
 
   // Build profile image URL with cache-busting
   const serverUrl = getMediaUrl(profilePhoto?.thumbnail_url) ?? getMediaUrl(profilePhoto?.url);
+  const separator = serverUrl?.includes('?') ? '&' : '?';
   const profileImageUrl = serverUrl
-    ? `${serverUrl}${serverUrl.includes('?') ? '&' : '?'}v=${dataUpdatedAt || Date.now()}`
+    ? `${serverUrl}${separator}v=${dataUpdatedAt || Date.now()}`
     : undefined;
 
   const borderRadius = size * 0.34; // ~15 for size 44

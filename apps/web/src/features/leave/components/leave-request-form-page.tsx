@@ -725,7 +725,7 @@ export function LeaveRequestFormPage() {
                 {/* Attachment (View mode only) */}
                 {mode === 'view' && request?.attachment_url && (
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Supporting Document</label>
+                    <span className="text-sm font-medium">Supporting Document</span>
                     <div className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-3 py-2">
                       <FileText className="h-4 w-4 shrink-0 text-green-600" />
                       <span className="flex-1 truncate text-sm text-green-800">
@@ -747,7 +747,7 @@ export function LeaveRequestFormPage() {
                 {/* Status (View mode only) */}
                 {mode === 'view' && request && (
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Status</label>
+                    <span className="text-sm font-medium">Status</span>
                     <div>
                       <Badge className={LEAVE_STATUS_CONFIG[request.status].className}>
                         {LEAVE_STATUS_CONFIG[request.status].label}

@@ -14,18 +14,17 @@ const sizeClasses = {
 
 export function LoadingSpinner({ size = 'md', className }: Readonly<LoadingSpinnerProps>) {
   return (
-    <div
+    <output
       className={cn(
         'inline-block animate-spin rounded-full border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]',
         sizeClasses[size],
         className
       )}
-      role="status"
     >
       <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !border-0 !p-0 !whitespace-nowrap ![clip:rect(0,0,0,0)]">
         Loading...
       </span>
-    </div>
+    </output>
   );
 }
 

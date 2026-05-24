@@ -83,7 +83,8 @@ export async function fetchHolidays(params?: FetchHolidaysParams): Promise<Holid
   }
 
   const endpoint = getHolidaysEndpoint(false); // Read operation uses public endpoint
-  const url = `${endpoint}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+  const queryString = queryParams.toString();
+  const url = `${endpoint}${queryString ? `?${queryString}` : ''}`;
 
   const response = await api.get<HolidayListResponse>(url);
   return response.data;

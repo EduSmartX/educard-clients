@@ -223,7 +223,7 @@ export default function TeacherTimetableScreen() {
               if (isBreak) {
                 return (
                   <Animated.View
-                    key={`break-${index}`}
+                    key={`break-${entry.start_time}`}
                     entering={FadeInDown.delay(index * 50)}
                     style={styles.breakRow}
                   >
@@ -237,7 +237,7 @@ export default function TeacherTimetableScreen() {
 
               return (
                 <Animated.View
-                  key={entry.public_id || `period-${index}`}
+                  key={entry.public_id || `period-${entry.start_time}`}
                   entering={FadeInDown.delay(index * 50)}
                   style={[
                     styles.periodRow,

@@ -262,16 +262,17 @@ export default function HolidayCalendarScreen() {
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
 
-    const days: { date: Date | null; day: number; isCurrentMonth: boolean }[] = [];
+    const days: { date: Date | null; day: number; isCurrentMonth: boolean; cellKey: string }[] = [];
     for (let i = 0; i < totalCells; i++) {
       const dayOffset = i - firstDay;
       if (dayOffset < 0 || dayOffset >= daysInMonth) {
-        days.push({ date: null, day: 0, isCurrentMonth: false });
+        days.push({ date: null, day: 0, isCurrentMonth: false, cellKey: `empty-${i}` });
       } else {
         days.push({
           date: new Date(year, month, dayOffset + 1),
           day: dayOffset + 1,
           isCurrentMonth: true,
+          cellKey: `day-${dayOffset + 1}`,
         });
       }
     }
@@ -487,10 +488,10 @@ export default function HolidayCalendarScreen() {
 
         {/* Calendar Grid */}
         <View style={styles.calGrid}>
-          {calendarDays.map((item, idx) => {
+          {calendarDays.map((item) => {
             if (!item.date || !item.isCurrentMonth) {
               return (
-                <View key={`empty-${idx}`} style={styles.calCellEmpty}>
+                <View key={item.cellKey} style={styles.calCellEmpty}>
                   <Text style={styles.calCellEmptyText}>{item.day || ''}</Text>
                 </View>
               );

@@ -120,6 +120,12 @@ export default function CreateExamScreen() {
     }
   };
 
+  const getSubjectPlaceholder = () => {
+    if (!classId) return 'Select class first';
+    if (subjectsLoading) return 'Loading subjects...';
+    return 'Select subject';
+  };
+
   return (
     <View style={layoutStyles.container}>
       <LinearGradient colors={adminGradient} style={headerStyles.header}>
@@ -178,13 +184,7 @@ export default function CreateExamScreen() {
               value={subjectId}
               onChange={setSubjectId}
               options={subjectOptions}
-              placeholder={
-                classId
-                  ? subjectsLoading
-                    ? 'Loading subjects...'
-                    : 'Select subject'
-                  : 'Select class first'
-              }
+              placeholder={getSubjectPlaceholder()}
               required
               disabled={!classId}
               searchable

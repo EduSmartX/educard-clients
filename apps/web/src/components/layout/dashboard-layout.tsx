@@ -31,6 +31,8 @@ export function DashboardLayout({
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div
+          role="button"
+          tabIndex={-1}
           className="fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-sm transition-opacity lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />

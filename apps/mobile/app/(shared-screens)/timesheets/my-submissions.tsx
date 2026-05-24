@@ -175,16 +175,6 @@ const bulkSubmitAttendance = async (
   return response.data;
 };
 
-// Correct endpoint: /attendance/employee-attendance/bulk_submit/ with submit_timesheet=true
-const submitTimesheetApi = async (payload: {
-  attendance_records: { date: string; morning_present: boolean; afternoon_present: boolean }[];
-  submit_timesheet: boolean;
-  week_start_date: string;
-  week_end_date: string;
-}): Promise<{ message?: string }> => {
-  return bulkSubmitAttendance(payload);
-};
-
 // Correct endpoint: DELETE /attendance/timesheet-submission/return_to_draft/
 const returnTimesheetToDraft = async (payload: {
   week_start_date: string;
@@ -592,7 +582,7 @@ export default function MyTimesheetScreen() {
   };
 
   const submitMutation = useMutation({
-    mutationFn: submitTimesheetApi,
+    mutationFn: bulkSubmitAttendance,
     onSuccess: (response) => {
       showToast({
         type: 'success',

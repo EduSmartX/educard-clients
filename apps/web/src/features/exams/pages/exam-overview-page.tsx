@@ -407,8 +407,8 @@ export function ExamOverviewPage() {
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {/* Session Filter */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Exam Session</label>
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-gray-700">Exam Session</span>
               <SearchableSelect
                 options={sessionsList.map((session) => ({
                   value: session.public_id,
@@ -419,11 +419,11 @@ export function ExamOverviewPage() {
                 placeholder="Select session"
                 searchPlaceholder="Search sessions..."
               />
-            </div>
+            </label>
 
             {/* Class Filter */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Class</label>
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-gray-700">Class</span>
               <SearchableSelect
                 options={classesList.map((cls) => ({
                   value: cls.public_id,
@@ -434,12 +434,12 @@ export function ExamOverviewPage() {
                 placeholder="Select class"
                 searchPlaceholder="Search classes..."
               />
-            </div>
+            </label>
 
             {/* Bulk Status Update */}
             {selectedSessionId && selectedClassId && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Bulk Update Status</label>
+              <label className="block space-y-2">
+                <span className="text-sm font-medium text-gray-700">Bulk Update Status</span>
                 <SearchableSelect
                   options={Object.entries(STATUS_CONFIG).map(([key, config]) => ({
                     value: key,
@@ -449,7 +449,7 @@ export function ExamOverviewPage() {
                   onValueChange={(v) => handleBulkStatusUpdate(v as ExamStatus)}
                   placeholder="Update all exams"
                 />
-              </div>
+              </label>
             )}
           </div>
 

@@ -144,7 +144,7 @@ export function useFormErrors(options: UseFormErrorsOptions = {}): UseFormErrors
       const newErrors: FormErrors = {};
 
       fields.forEach(({ name, value, label }) => {
-        if (!value || !value.trim()) {
+        if (!value?.trim()) {
           newErrors[name] = `${label} is required`;
           isValid = false;
         }

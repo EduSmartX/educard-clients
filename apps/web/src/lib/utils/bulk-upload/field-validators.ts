@@ -7,7 +7,7 @@ import { GENDER_ENUM, BLOOD_GROUP_ENUM } from '@educard/shared';
 
 // Valid values including short forms for user convenience
 const VALID_GENDERS = [...GENDER_ENUM, 'M', 'F', 'O'];
-const VALID_BLOOD_GROUPS = [...BLOOD_GROUP_ENUM, ''];
+const VALID_BLOOD_GROUPS = new Set([...BLOOD_GROUP_ENUM, '']);
 
 export interface ValidationError {
   row: number;
@@ -252,7 +252,7 @@ export const bloodGroupValidator: FieldValidator = (value, row, fieldLabel) => {
     return null; // Blood group is optional
   }
   const bgStr = String(value).trim().toUpperCase();
-  if (!VALID_BLOOD_GROUPS.includes(bgStr)) {
+  if (!VALID_BLOOD_GROUPS.has(bgStr)) {
     return {
       row,
       field: fieldLabel,

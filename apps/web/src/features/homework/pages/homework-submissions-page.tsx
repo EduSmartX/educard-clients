@@ -120,7 +120,14 @@ function HomeworkSelectCard({
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          onClick?.();
+        }
+      }}
       className={cn(
         'relative cursor-pointer overflow-hidden rounded-lg border-2 p-4 transition-all hover:shadow-md',
         isSelected ? 'ring-2 ring-offset-1' : 'hover:shadow-lg'
@@ -380,8 +387,8 @@ export default function HomeworkSubmissionsPage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-            <div className="flex-1">
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">Class</label>
+            <label className="flex-1">
+              <span className="mb-1.5 block text-sm font-medium text-slate-700">Class</span>
               {isLoadingClasses ? (
                 <Skeleton className="h-10 w-full" />
               ) : (
@@ -397,12 +404,10 @@ export default function HomeworkSubmissionsPage() {
                   className="w-full"
                 />
               )}
-            </div>
+            </label>
 
             <div className="flex-1">
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Homework Date
-              </label>
+              <span className="mb-1.5 block text-sm font-medium text-slate-700">Homework Date</span>
               <div className="flex items-center gap-1">
                 <Button variant="outline" size="icon" onClick={handlePrevDay} className="h-10 w-10">
                   <ChevronLeft className="h-4 w-4" />
@@ -445,9 +450,9 @@ export default function HomeworkSubmissionsPage() {
 
           {/* Homework Selection */}
           <div className="mt-6">
-            <label className="mb-2 block text-sm font-medium text-slate-700">
+            <span className="mb-2 block text-sm font-medium text-slate-700">
               Select Homework to View Submissions
-            </label>
+            </span>
 
             {isLoadingHomework && (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

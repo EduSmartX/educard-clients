@@ -21,7 +21,7 @@ import type { ProfileImage } from '@/features/profile/types/profile.types';
 
 const MAX_FILE_SIZE_MB = 5;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
 interface ApiResponse<T> {
   success: boolean;
@@ -87,7 +87,7 @@ export function FormProfilePhoto({
   }, [userPublicId, mode]);
 
   const validateFile = useCallback((file: File): boolean => {
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    if (!ALLOWED_TYPES.has(file.type)) {
       toast.error('Please upload a JPEG, PNG, or WebP image.');
       return false;
     }

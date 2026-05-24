@@ -175,7 +175,7 @@ export function StudentAttendanceTable({
                             {student.user.first_name} {student.user.last_name}
                           </div>
                           {/* email removed intentionally - show only student name */}
-                          {student.leave_info && student.leave_info.leave_status && (
+                          {student.leave_info?.leave_status && (
                             <div className="mt-1">
                               {student.leave_info.leave_status === 'approved' ? (
                                 <Badge

@@ -30,8 +30,9 @@ const FormField = <
 >({
   ...props
 }: ControllerProps<TFieldValues, TName>) => {
+  const fieldContextValue = React.useMemo(() => ({ name: props.name }), [props.name]);
   return (
-    <FormFieldContext.Provider value={{ name: props.name }}>
+    <FormFieldContext.Provider value={fieldContextValue}>
       <Controller {...props} />
     </FormFieldContext.Provider>
   );
@@ -73,9 +74,10 @@ const FormItemContext = React.createContext<FormItemContextValue | null>(null);
 const FormItem = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => {
     const id = React.useId();
+    const itemContextValue = React.useMemo(() => ({ id }), [id]);
 
     return (
-      <FormItemContext.Provider value={{ id }}>
+      <FormItemContext.Provider value={itemContextValue}>
         <div ref={ref} className={cn('space-y-2', className)} {...props} />
       </FormItemContext.Provider>
     );
@@ -151,20 +153,20 @@ const FormMessage = React.forwardRef<
       ref={ref}
       id={formMessageId}
       className={cn(
-        'flex items-start gap-2 mt-2 p-3 rounded-lg border',
+        'mt-2 flex items-start gap-2 rounded-lg border p-3',
         'border-red-200 bg-red-50/80 backdrop-blur-sm',
         'animate-in fade-in-50 slide-in-from-top-1 duration-300',
         className
       )}
       {...props}
     >
-      <div className="flex-shrink-0 mt-0.5">
+      <div className="mt-0.5 flex-shrink-0">
         <div className="relative">
-          <div className="absolute inset-0 bg-red-500 rounded-full blur-sm opacity-30" />
+          <div className="absolute inset-0 rounded-full bg-red-500 opacity-30 blur-sm" />
           <AlertCircle className="relative h-5 w-5 text-red-600" strokeWidth={2.5} />
         </div>
       </div>
-      <p className="text-red-700 text-sm font-medium leading-relaxed flex-1">{body}</p>
+      <p className="flex-1 text-sm leading-relaxed font-medium text-red-700">{body}</p>
     </div>
   );
 });

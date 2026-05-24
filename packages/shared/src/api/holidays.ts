@@ -3,7 +3,7 @@
  * Factory pattern for platform-agnostic API calls
  */
 
-import type { AxiosInstance } from 'axios';
+import type { AxiosInstance } from "axios";
 import type {
   Holiday,
   HolidayListParams,
@@ -12,7 +12,7 @@ import type {
   WorkingDayPolicy,
   WorkingDayPolicyCreatePayload,
   WorkingDayPolicyUpdatePayload,
-} from '../types/holiday';
+} from "../types/holiday";
 
 // =============================================================================
 // Types
@@ -55,24 +55,37 @@ export function createHolidaysApi(config: HolidaysApiConfig) {
 
     async listHolidays(params?: HolidayListParams): Promise<{
       data: Holiday[];
-      pagination?: ApiListResponse<Holiday>['pagination'];
+      pagination?: ApiListResponse<Holiday>["pagination"];
     }> {
       const queryParams = new URLSearchParams();
-      if (params?.from_date) {queryParams.append('from_date', params.from_date);}
-      if (params?.to_date) {queryParams.append('to_date', params.to_date);}
-      if (params?.holiday_type) {queryParams.append('holiday_type', params.holiday_type);}
-      if (params?.ordering) {queryParams.append('ordering', params.ordering);}
-      if (params?.page) {queryParams.append('page', params.page.toString());}
-      if (params?.page_size) {queryParams.append('page_size', params.page_size.toString());}
+      if (params?.from_date) {
+        queryParams.append("from_date", params.from_date);
+      }
+      if (params?.to_date) {
+        queryParams.append("to_date", params.to_date);
+      }
+      if (params?.holiday_type) {
+        queryParams.append("holiday_type", params.holiday_type);
+      }
+      if (params?.ordering) {
+        queryParams.append("ordering", params.ordering);
+      }
+      if (params?.page) {
+        queryParams.append("page", params.page.toString());
+      }
+      if (params?.page_size) {
+        queryParams.append("page_size", params.page_size.toString());
+      }
 
-      const url = `/attendance/holiday-calendar/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      const queryString = queryParams.toString();
+      const url = `/attendance/holiday-calendar/${queryString ? `?${queryString}` : ""}`;
       const res = await client.get<ApiListResponse<Holiday>>(url);
       return { data: res.data.data, pagination: res.data.pagination };
     },
 
     async getHoliday(publicId: string): Promise<Holiday> {
       const res = await client.get<ApiDetailResponse<Holiday>>(
-        `/attendance/holiday-calendar/${publicId}/`
+        `/attendance/holiday-calendar/${publicId}/`,
       );
       return res.data.data;
     },
@@ -83,16 +96,19 @@ export function createHolidaysApi(config: HolidaysApiConfig) {
 
     async createHoliday(data: HolidayCreatePayload): Promise<Holiday> {
       const res = await client.post<ApiDetailResponse<Holiday>>(
-        '/attendance/admin/holiday-calendar/',
-        data
+        "/attendance/admin/holiday-calendar/",
+        data,
       );
       return res.data.data;
     },
 
-    async updateHoliday(publicId: string, data: HolidayUpdatePayload): Promise<Holiday> {
+    async updateHoliday(
+      publicId: string,
+      data: HolidayUpdatePayload,
+    ): Promise<Holiday> {
       const res = await client.patch<ApiDetailResponse<Holiday>>(
         `/attendance/admin/holiday-calendar/${publicId}/`,
-        data
+        data,
       );
       return res.data.data;
     },
@@ -107,33 +123,35 @@ export function createHolidaysApi(config: HolidaysApiConfig) {
 
     async listWorkingDayPolicies(): Promise<WorkingDayPolicy[]> {
       const res = await client.get<ApiListResponse<WorkingDayPolicy>>(
-        '/attendance/working-day-policy/'
+        "/attendance/working-day-policy/",
       );
       return res.data.data;
     },
 
     async getWorkingDayPolicy(publicId: string): Promise<WorkingDayPolicy> {
       const res = await client.get<ApiDetailResponse<WorkingDayPolicy>>(
-        `/attendance/working-day-policy/${publicId}/`
+        `/attendance/working-day-policy/${publicId}/`,
       );
       return res.data.data;
     },
 
-    async createWorkingDayPolicy(data: WorkingDayPolicyCreatePayload): Promise<WorkingDayPolicy> {
+    async createWorkingDayPolicy(
+      data: WorkingDayPolicyCreatePayload,
+    ): Promise<WorkingDayPolicy> {
       const res = await client.post<ApiDetailResponse<WorkingDayPolicy>>(
-        '/attendance/admin/working-day-policy/',
-        data
+        "/attendance/admin/working-day-policy/",
+        data,
       );
       return res.data.data;
     },
 
     async updateWorkingDayPolicy(
       publicId: string,
-      data: WorkingDayPolicyUpdatePayload
+      data: WorkingDayPolicyUpdatePayload,
     ): Promise<WorkingDayPolicy> {
       const res = await client.patch<ApiDetailResponse<WorkingDayPolicy>>(
         `/attendance/admin/working-day-policy/${publicId}/`,
-        data
+        data,
       );
       return res.data.data;
     },

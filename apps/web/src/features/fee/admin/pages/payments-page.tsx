@@ -272,8 +272,8 @@ export function PaymentsPage() {
             {showFilters && (
               <div className="grid gap-4 border-t pt-4 sm:grid-cols-2 lg:grid-cols-3">
                 {/* Class Filter */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Class</label>
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium">Class</span>
                   <SearchableSelect
                     options={[
                       { value: 'all', label: 'All Classes' },
@@ -291,11 +291,11 @@ export function PaymentsPage() {
                     placeholder="All Classes"
                     searchPlaceholder="Search class..."
                   />
-                </div>
+                </label>
 
                 {/* Student Filter — only populated when class is selected */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Student</label>
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium">Student</span>
                   <SearchableSelect
                     options={[
                       {
@@ -313,11 +313,11 @@ export function PaymentsPage() {
                     searchPlaceholder="Search student..."
                     disabled={classFilter === 'all'}
                   />
-                </div>
+                </label>
 
                 {/* Payment Mode Filter */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Payment Mode</label>
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium">Payment Mode</span>
                   <SearchableSelect
                     options={[
                       { value: 'all', label: 'All Modes' },
@@ -330,29 +330,29 @@ export function PaymentsPage() {
                     onValueChange={handleFilterChange(setPaymentModeFilter)}
                     placeholder="All Modes"
                   />
-                </div>
+                </label>
 
                 {/* From Date */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">From Date</label>
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium">From Date</span>
                   <DatePicker
                     value={startDate ?? null}
                     onChange={(date) => setStartDate(date ?? undefined)}
                     maxDate={endDate}
                     placeholder="Pick a date"
                   />
-                </div>
+                </label>
 
                 {/* To Date */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">To Date</label>
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium">To Date</span>
                   <DatePicker
                     value={endDate ?? null}
                     onChange={(date) => setEndDate(date ?? undefined)}
                     minDate={startDate}
                     placeholder="Pick a date"
                   />
-                </div>
+                </label>
               </div>
             )}
           </div>

@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
 import { fetchCalendarGridData } from '../api/attendance-api';
+import { isWeekend } from '../utils/attendance-helpers';
 
 interface YearlyCalendarGridProps {
   userId: string;
@@ -22,47 +23,6 @@ const MONTHS = [
   'November',
   'December',
 ];
-
-// Helper to check if date is a weekend based on working day policy
-function isWeekend(
-  date: Date,
-  workingDayPolicy?: { sunday_off: boolean; saturday_off_pattern: string } | null
-): boolean {
-  if (!workingDayPolicy) {
-    return false;
-  }
-
-  const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
-
-  // Sunday off check
-  if (workingDayPolicy.sunday_off && dayOfWeek === 0) {
-    return true;
-  }
-
-  // Saturday off check
-  if (dayOfWeek === 6) {
-    const pattern = workingDayPolicy.saturday_off_pattern;
-
-    if (pattern === 'ALL') {
-      return true;
-    } else if (pattern === 'SECOND_ONLY' || pattern === 'SECOND_AND_FOURTH') {
-      // Calculate which Saturday of the month this is
-      const dayOfMonth = date.getDate();
-      const saturdayNumber = Math.ceil(dayOfMonth / 7);
-
-      if (pattern === 'SECOND_ONLY' && saturdayNumber === 2) {
-        return true;
-      } else if (
-        pattern === 'SECOND_AND_FOURTH' &&
-        (saturdayNumber === 2 || saturdayNumber === 4)
-      ) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
 
 // Get cell color based on status
 function getCellColor(status: 'P' | 'HP' | 'A' | 'L' | 'H' | 'W' | '-' | null): string {
@@ -217,7 +177,7 @@ export function YearlyCalendarGrid({
     try {
       // Create date for checking (use correct year based on academic year)
       const checkDate = new Date(actualYear, month - 1, day);
-      const isWeekendResult = isWeekend(checkDate, data.working_day_policy);
+      const isWeekendResult = isWeekend(checkDate, data.working_day_policy ?? null);
 
       if (!Number.isNaN(checkDate.getTime()) && isWeekendResult) {
         return 'W';

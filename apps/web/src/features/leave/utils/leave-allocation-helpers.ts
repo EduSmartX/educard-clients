@@ -151,7 +151,12 @@ export function calculateEffectivePeriod(
   }
 
   const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
-  const end = endDate ? (typeof endDate === 'string' ? new Date(endDate) : endDate) : new Date();
+  const parsedEndDate = endDate
+    ? typeof endDate === 'string'
+      ? new Date(endDate)
+      : endDate
+    : null;
+  const end = parsedEndDate ?? new Date();
 
   const diffTime = end.getTime() - start.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));

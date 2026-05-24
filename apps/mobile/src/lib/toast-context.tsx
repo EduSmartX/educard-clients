@@ -5,7 +5,7 @@
  *        showToast({ type: 'success', title: 'Created!', message: 'Exam created successfully' });
  */
 
-import React, { createContext, useContext, useCallback, useEffect, useState } from 'react';
+import React, { createContext, useContext, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { ToastContainer, type ToastData, type ToastType } from '@/components/common/Toast';
 import { subscribeToToasts } from '@/utils/toast';
@@ -58,8 +58,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
+  const contextValue = useMemo(() => ({ showToast }), [showToast]);
+
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={contextValue}>
       {children}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </ToastContext.Provider>

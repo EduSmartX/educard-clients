@@ -76,6 +76,16 @@ export default function OrganizationNotApprovedPage() {
     navigate(ROUTES.AUTH.LOGIN);
   };
 
+  const getHelpText = () => {
+    if (!isRejected) {
+      return 'If you have any questions or need to expedite the approval process, please contact our support team.';
+    }
+    if (userRole === USER_ROLES.ADMIN) {
+      return `Please contact the ${BRANDING.APP_NAME} support team to understand the rejection reason and how to proceed.`;
+    }
+    return 'Please reach out to your Organization Admin or Principal for assistance with this matter.';
+  };
+
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 p-4">
       {/* Animated Background Orbs */}
@@ -265,13 +275,7 @@ export default function OrganizationNotApprovedPage() {
               <span className="flex-shrink-0 text-3xl">💬</span>
               <div className="flex-1">
                 <h3 className="mb-2 font-bold text-gray-900">Need Help?</h3>
-                <p className="mb-4 text-sm text-gray-700">
-                  {isRejected
-                    ? userRole === USER_ROLES.ADMIN
-                      ? `Please contact the ${BRANDING.APP_NAME} support team to understand the rejection reason and how to proceed.`
-                      : 'Please reach out to your Organization Admin or Principal for assistance with this matter.'
-                    : 'If you have any questions or need to expedite the approval process, please contact our support team.'}
-                </p>
+                <p className="mb-4 text-sm text-gray-700">{getHelpText()}</p>
                 <div className="flex flex-wrap gap-3">
                   {(userRole === USER_ROLES.ADMIN || !isRejected) && (
                     <Button

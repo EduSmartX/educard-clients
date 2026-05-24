@@ -91,6 +91,16 @@ export function ClassesMultiSelectField<TFieldValues extends FieldValues>({
           label: formatClassName(cls),
         }));
 
+        const getEmptyText = () => {
+          if (isLoading) {
+            return 'Loading classes...';
+          }
+          if (availableClasses.length === 0) {
+            return 'All classes selected';
+          }
+          return 'No classes available';
+        };
+
         return (
           <FormItem>
             <FormLabel className="font-medium">{label}</FormLabel>
@@ -107,13 +117,7 @@ export function ClassesMultiSelectField<TFieldValues extends FieldValues>({
                   }}
                   placeholder={placeholder}
                   searchPlaceholder="Search classes..."
-                  emptyText={
-                    isLoading
-                      ? 'Loading classes...'
-                      : availableClasses.length === 0
-                        ? 'All classes selected'
-                        : 'No classes available'
-                  }
+                  emptyText={getEmptyText()}
                   disabled={disabled || isLoading || availableClasses.length === 0}
                   className="border-gray-300 bg-gray-50 focus:bg-white"
                 />

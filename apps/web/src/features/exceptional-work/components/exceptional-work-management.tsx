@@ -60,6 +60,10 @@ export function ExceptionalWorkManagement() {
   const exceptions = data?.data || [];
   const totalCount = data?.pagination?.count || 0;
   const totalPages = data?.pagination?.total_pages || 0;
+  const exceptionsDescription =
+    totalCount > 0
+      ? `${totalCount} exception${totalCount > 1 ? 's' : ''} configured`
+      : 'No exceptions configured yet';
 
   // Filter fields configuration
   const filterFields: FilterField[] = [
@@ -315,11 +319,7 @@ export function ExceptionalWorkManagement() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Calendar Exceptions</CardTitle>
-              <CardDescription>
-                {totalCount > 0
-                  ? `${totalCount} exception${totalCount > 1 ? 's' : ''} configured`
-                  : 'No exceptions configured yet'}
-              </CardDescription>
+              <CardDescription>{exceptionsDescription}</CardDescription>
             </div>
             <Button
               variant={showFilters ? 'default' : 'outline'}

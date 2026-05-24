@@ -208,10 +208,10 @@ function AssignmentPopover({
                 </Button>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase">
+              <label className="block space-y-1.5">
+                <span className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase">
                   Subject
-                </label>
+                </span>
                 <SearchableSelect
                   options={subjects.map((sub) => ({
                     value: sub.public_id,
@@ -224,13 +224,13 @@ function AssignmentPopover({
                   emptyText="No subjects configured for this class"
                   className="h-9 text-xs"
                 />
-              </div>
+              </label>
 
               {selectedSubject && (
                 <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                  <label className="mb-2 block text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+                  <span className="mb-2 block text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
                     Teacher (auto-assigned)
-                  </label>
+                  </span>
                   {selectedSubject.teacher_info ? (
                     <div className="flex items-center gap-2.5">
                       <Avatar className="h-8 w-8 shadow-sm">

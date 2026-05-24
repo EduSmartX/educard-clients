@@ -116,8 +116,8 @@ export function FeeStructuresPage() {
 
             {showFilters && (
               <div className="grid gap-4 border-t pt-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Class</label>
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium">Class</span>
                   <SearchableSelect
                     options={[
                       { value: 'all', label: 'All Classes' },
@@ -135,10 +135,10 @@ export function FeeStructuresPage() {
                     placeholder="All Classes"
                     searchPlaceholder="Search classes..."
                   />
-                </div>
+                </label>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Status</label>
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium">Status</span>
                   <SearchableSelect
                     options={[
                       { value: 'all', label: 'All Status' },
@@ -150,7 +150,7 @@ export function FeeStructuresPage() {
                     placeholder="All Status"
                     searchPlaceholder="Search status..."
                   />
-                </div>
+                </label>
               </div>
             )}
           </div>

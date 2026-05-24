@@ -44,7 +44,7 @@ export function StudentsManagement() {
 
   // Fetch managed classes for class teacher permissions
   const { data: managedClasses = [] } = useManagedClasses();
-  
+
   // Determine if user can create students
   const isClassTeacher = user?.role === USER_ROLES.TEACHER && managedClasses.length > 0;
   const canCreateStudents = user?.role === USER_ROLES.ADMIN || isClassTeacher;
@@ -54,12 +54,21 @@ export function StudentsManagement() {
     const params = Object.fromEntries(searchParams.entries());
     const newFilters: Record<string, string> = {};
 
-    if (params.class_assigned__public_id)
-      {newFilters.class_assigned__public_id = params.class_assigned__public_id;}
-    if (params.user__gender) {newFilters.user__gender = params.user__gender;}
-    if (params.admission_date_from) {newFilters.admission_date_from = params.admission_date_from;}
-    if (params.admission_date_to) {newFilters.admission_date_to = params.admission_date_to;}
-    if (params.search) {setSearchQuery(params.search);}
+    if (params.class_assigned__public_id) {
+      newFilters.class_assigned__public_id = params.class_assigned__public_id;
+    }
+    if (params.user__gender) {
+      newFilters.user__gender = params.user__gender;
+    }
+    if (params.admission_date_from) {
+      newFilters.admission_date_from = params.admission_date_from;
+    }
+    if (params.admission_date_to) {
+      newFilters.admission_date_to = params.admission_date_to;
+    }
+    if (params.search) {
+      setSearchQuery(params.search);
+    }
 
     setFilters(newFilters);
   }, [searchParams]);
@@ -68,10 +77,14 @@ export function StudentsManagement() {
   useEffect(() => {
     const params = new URLSearchParams();
 
-    if (searchQuery) {params.set('search', searchQuery);}
+    if (searchQuery) {
+      params.set('search', searchQuery);
+    }
 
     Object.entries(filters).forEach(([key, value]) => {
-      if (value) {params.set(key, value);}
+      if (value) {
+        params.set(key, value);
+      }
     });
 
     const newSearch = params.toString();
@@ -81,13 +94,16 @@ export function StudentsManagement() {
   }, [searchQuery, filters, setSearchParams, searchParams]);
 
   // Determine page mode from URL
-  const mode: PageMode = id
-    ? window.location.pathname.endsWith('/edit')
-      ? 'edit'
-      : 'view'
-    : window.location.pathname.endsWith('/create') || window.location.pathname.endsWith('/new')
-      ? 'create'
-      : 'list';
+  const getPageMode = (): PageMode => {
+    if (id) {
+      return window.location.pathname.endsWith('/edit') ? 'edit' : 'view';
+    }
+    if (window.location.pathname.endsWith('/create') || window.location.pathname.endsWith('/new')) {
+      return 'create';
+    }
+    return 'list';
+  };
+  const mode: PageMode = getPageMode();
 
   // Fetch students (only for list mode)
   const { data, isLoading, error } = useStudents({

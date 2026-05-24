@@ -325,8 +325,8 @@ export function MarksOverviewPage() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {/* Session Filter */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Exam Session *</label>
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-gray-700">Exam Session *</span>
               <SearchableSelect
                 key={`session-${selectedSessionId || 'empty'}`}
                 options={sessionsList.map((session) => ({
@@ -341,11 +341,11 @@ export function MarksOverviewPage() {
                 placeholder="Select session"
                 searchPlaceholder="Search sessions..."
               />
-            </div>
+            </label>
 
             {/* Class Filter */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Class *</label>
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-gray-700">Class *</span>
               <SearchableSelect
                 key={`class-${selectedClassId || 'empty'}`}
                 options={classesList.map((cls) => ({
@@ -358,7 +358,7 @@ export function MarksOverviewPage() {
                 placeholder={selectedSessionId ? 'Select class' : 'Select session first'}
                 searchPlaceholder="Search classes..."
               />
-            </div>
+            </label>
           </div>
 
           {/* Session Info */}

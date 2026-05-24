@@ -366,9 +366,7 @@ export function parseApiError(error: unknown): ApiError {
 
 /** Format a field name from snake_case to Title Case */
 function formatFieldLabel(fieldName: string): string {
-  return fieldName
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (l) => l.toUpperCase());
+  return fieldName.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
 /** Check if a message is self-descriptive (long or contains punctuation) */
@@ -381,17 +379,18 @@ const NON_FIELD_KEYS = new Set(["non_field_errors", "non_field_error"]);
 const META_FIELDS = new Set(["success", "code", "data", "message"]);
 
 /** Process an array field value into error messages */
-function processArrayFieldValue(
-  fieldName: string,
-  value: unknown[]
-): string[] {
+function processArrayFieldValue(fieldName: string, value: unknown[]): string[] {
   if (value.length === 0) return [];
   if (NON_FIELD_KEYS.has(fieldName)) {
     return value.filter((v) => typeof v === "string") as string[];
   }
   const msg = value[0];
   if (typeof msg === "string") {
-    return [isDescriptiveMessage(msg) ? msg : `${formatFieldLabel(fieldName)}: ${msg}`];
+    return [
+      isDescriptiveMessage(msg)
+        ? msg
+        : `${formatFieldLabel(fieldName)}: ${msg}`,
+    ];
   }
   return [];
 }
@@ -401,15 +400,27 @@ function processStringFieldValue(fieldName: string, value: string): string[] {
   if (NON_FIELD_KEYS.has(fieldName) || fieldName === "detail") {
     return [value];
   }
-  return [isDescriptiveMessage(value) ? value : `${formatFieldLabel(fieldName)}: ${value}`];
+  return [
+    isDescriptiveMessage(value)
+      ? value
+      : `${formatFieldLabel(fieldName)}: ${value}`,
+  ];
 }
 
 /** Process a nested object field value into error messages */
-function processObjectFieldValue(fieldName: string, value: Record<string, unknown>): string[] {
+function processObjectFieldValue(
+  fieldName: string,
+  value: Record<string, unknown>,
+): string[] {
   const msgs: string[] = [];
   Object.entries(value).forEach(([nestedField, nestedValue]) => {
-    if (Array.isArray(nestedValue) && nestedValue.length > 0 && typeof nestedValue[0] === "string") {
-      msgs.push(`${formatFieldLabel(`${fieldName}.${nestedField}`)}: ${nestedValue[0]}`);
+    if (
+      Array.isArray(nestedValue) &&
+      nestedValue.length > 0 &&
+      typeof nestedValue[0] === "string"
+    ) {
+      const fullFieldName = `${fieldName}.${nestedField}`;
+      msgs.push(`${formatFieldLabel(fullFieldName)}: ${nestedValue[0]}`);
     }
   });
   return msgs;
@@ -427,7 +438,9 @@ function extractFieldErrors(errors: Record<string, unknown>): string[] {
     } else if (typeof value === "string") {
       errorMessages.push(...processStringFieldValue(fieldName, value));
     } else if (typeof value === "object" && value !== null) {
-      errorMessages.push(...processObjectFieldValue(fieldName, value as Record<string, unknown>));
+      errorMessages.push(
+        ...processObjectFieldValue(fieldName, value as Record<string, unknown>),
+      );
     }
   });
 
@@ -439,7 +452,11 @@ function extractTopLevelErrors(rawData: Record<string, unknown>): string[] {
   const topLevelErrors: string[] = [];
   Object.entries(rawData).forEach(([fieldName, value]) => {
     if (SKIP_FIELDS.has(fieldName) || META_FIELDS.has(fieldName)) return;
-    if (Array.isArray(value) && value.length > 0 && typeof value[0] === "string") {
+    if (
+      Array.isArray(value) &&
+      value.length > 0 &&
+      typeof value[0] === "string"
+    ) {
       if (NON_FIELD_KEYS.has(fieldName)) {
         topLevelErrors.push(...(value as string[]));
       } else {
@@ -461,14 +478,20 @@ const GENERIC_MESSAGES = new Set([
 
 /** Try to extract a non-generic message from data.message */
 function extractDataMessage(data: { message?: unknown }): string | null {
-  if (data.message && typeof data.message === "string" && !GENERIC_MESSAGES.has(data.message)) {
+  if (
+    data.message &&
+    typeof data.message === "string" &&
+    !GENERIC_MESSAGES.has(data.message)
+  ) {
     return data.message;
   }
   return null;
 }
 
 /** Try to extract non_field_errors from raw data */
-function extractNonFieldErrors(rawData: Record<string, unknown>): string | null {
+function extractNonFieldErrors(
+  rawData: Record<string, unknown>,
+): string | null {
   const nfe = rawData.non_field_errors;
   if (Array.isArray(nfe) && nfe.length > 0) {
     return nfe.filter((v: unknown) => typeof v === "string").join("\n");
@@ -495,7 +518,9 @@ export function extractApiError(
 
   // Priority 2: Extract from errors object (field-level details)
   if (data.errors && typeof data.errors === "object") {
-    const errorMessages = extractFieldErrors(data.errors as Record<string, unknown>);
+    const errorMessages = extractFieldErrors(
+      data.errors as Record<string, unknown>,
+    );
     if (errorMessages.length > 0) return errorMessages.join("\n");
   }
 

@@ -38,7 +38,9 @@ function getExceptionsEndpoint(isWriteOperation = false): string {
  * @param isWriteOperation - If true, uses admin endpoint. If false, uses public endpoint.
  */
 function getExceptionDetailEndpoint(id: string, isWriteOperation = false): string {
-  return isWriteOperation ? ADMIN_ENDPOINTS.exceptionDetail(id) : PUBLIC_ENDPOINTS.exceptionDetail(id);
+  return isWriteOperation
+    ? ADMIN_ENDPOINTS.exceptionDetail(id)
+    : PUBLIC_ENDPOINTS.exceptionDetail(id);
 }
 
 /**
@@ -74,7 +76,8 @@ export async function fetchCalendarExceptions(
   }
 
   const endpoint = getExceptionsEndpoint(false); // Read operation
-  const url = `${endpoint}${params.toString() ? `?${params.toString()}` : ''}`;
+  const queryString = params.toString();
+  const url = `${endpoint}${queryString ? `?${queryString}` : ''}`;
 
   const response = await api.get<CalendarExceptionListResponse>(url);
   return response.data;

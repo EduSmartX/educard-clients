@@ -226,8 +226,14 @@ function getSaturdayHolidayInfo(
     return null;
   }
 
-  const description =
-    nthSaturday === 2 ? '2nd Saturday' : `${nthSaturday === 4 ? '4th' : ''} Saturday`;
+  let description: string;
+  if (nthSaturday === 2) {
+    description = '2nd Saturday';
+  } else if (nthSaturday === 4) {
+    description = '4th Saturday';
+  } else {
+    description = 'Saturday';
+  }
   return { isSaturdayOff: true, holidayType, description: description.trim() };
 }
 

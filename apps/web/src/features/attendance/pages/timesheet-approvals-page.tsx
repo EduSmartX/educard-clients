@@ -453,35 +453,35 @@ export default function TimesheetApprovalsPage() {
         <CardContent className="px-3 pb-3 sm:px-6 sm:pb-6">
           <div className="grid gap-3 sm:gap-4 md:grid-cols-3">
             {/* Month Picker */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Select Month</label>
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-gray-700">Select Month</span>
               <MonthYearPicker
                 value={selectedMonth}
                 onChange={(date) => date && setSelectedMonth(date)}
               />
-            </div>
+            </label>
 
             {/* Employee Filter */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Filter by Employee</label>
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-gray-700">Filter by Employee</span>
               <Combobox
                 options={[{ value: 'all', label: 'All Employees' }, ...employeeOptions]}
                 value={selectedEmployee}
                 onValueChange={setSelectedEmployee}
                 placeholder="Select employee..."
               />
-            </div>
+            </label>
 
             {/* Status Filter */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Filter by Status</label>
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-gray-700">Filter by Status</span>
               <Combobox
                 options={statusOptions}
                 value={selectedStatus}
                 onValueChange={setSelectedStatus}
                 placeholder="Select status..."
               />
-            </div>
+            </label>
           </div>
         </CardContent>
       </Card>

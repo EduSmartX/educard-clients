@@ -26,7 +26,7 @@ import { getMediaUrl } from '@/lib/utils/media-utils';
 
 const MAX_FILE_SIZE_MB = 5;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
 export function ProfilePhotoUpload() {
   const { data: profile } = useUserProfile();
@@ -43,7 +43,7 @@ export function ProfilePhotoUpload() {
     : '?';
 
   const validateFile = useCallback((file: File): boolean => {
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    if (!ALLOWED_TYPES.has(file.type)) {
       toast.error('Please upload a JPEG, PNG, or WebP image.');
       return false;
     }
@@ -170,10 +170,17 @@ export function ProfilePhotoUpload() {
           <div className="flex-1 space-y-4">
             {/* Drag & drop zone */}
             <div
+              role="button"
+              tabIndex={0}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onClick={() => fileInputRef.current?.click()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  fileInputRef.current?.click();
+                }
+              }}
               className={`cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
                 isDragging
                   ? 'border-brand bg-brand/5'

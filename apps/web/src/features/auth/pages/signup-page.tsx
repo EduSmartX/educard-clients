@@ -385,7 +385,7 @@ export default function SignupPage() {
                     <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">
                       1
                     </span>
-                    Administrator Email
+                    <span>Administrator Email</span>
                     <span className="text-red-500">*</span>
                   </Label>
                   <div className="relative">
@@ -412,7 +412,7 @@ export default function SignupPage() {
                   )}
                   <p className="ml-1 flex items-center gap-1 text-xs text-gray-500">
                     <span className="inline-block h-1 w-1 rounded-full bg-gray-400"></span>
-                    Your personal admin account email
+                    <span>Your personal admin account email</span>
                   </p>
                 </div>
 
@@ -426,7 +426,7 @@ export default function SignupPage() {
                       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-cyan-100 text-xs font-bold text-cyan-700">
                         2
                       </span>
-                      Organization Email
+                      <span>Organization Email</span>
                       <span className="text-red-500">*</span>
                     </Label>
                     <div className="flex items-center gap-2">
@@ -597,7 +597,7 @@ export default function SignupPage() {
                       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-cyan-500 text-sm text-white">
                         🏢
                       </span>
-                      Organization Email Code
+                      <span>Organization Email Code</span>
                       <span className="text-red-500">*</span>
                     </Label>
 
@@ -705,7 +705,7 @@ export default function SignupPage() {
                     <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">
                       🏢
                     </span>
-                    Organization Name
+                    <span>Organization Name</span>
                     <span className="text-red-500">*</span>
                   </Label>
                   <Input
@@ -727,7 +727,7 @@ export default function SignupPage() {
                       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-cyan-100 text-xs font-bold text-cyan-700">
                         📚
                       </span>
-                      Organization Type
+                      <span>Organization Type</span>
                       <span className="text-red-500">*</span>
                     </Label>
                     <SearchableSelect
@@ -757,7 +757,7 @@ export default function SignupPage() {
                       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-100 text-xs font-bold text-purple-700">
                         📞
                       </span>
-                      Phone Number
+                      <span>Phone Number</span>
                       <span className="text-red-500">*</span>
                     </Label>
                     <div>
@@ -785,7 +785,7 @@ export default function SignupPage() {
                       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">
                         🌐
                       </span>
-                      Website
+                      <span>Website</span>
                       <span className="text-xs font-normal text-gray-500">(Optional)</span>
                     </Label>
                     <Input
@@ -805,7 +805,7 @@ export default function SignupPage() {
                       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
                         🎓
                       </span>
-                      Board Affiliation
+                      <span>Board Affiliation</span>
                       <span className="text-xs font-normal text-gray-500">(Optional)</span>
                     </Label>
                     <SearchableSelect

@@ -45,6 +45,16 @@ function PassFailBadge({ isPass }: { isPass: boolean | null }) {
   );
 }
 
+function getPercentageColor(percentage: number): string {
+  if (percentage >= 60) {
+    return 'text-emerald-600';
+  }
+  if (percentage >= 35) {
+    return 'text-amber-600';
+  }
+  return 'text-red-600';
+}
+
 function MarksCell({
   marks,
   maxMarks,
@@ -217,16 +227,7 @@ function StudentRow({ student, subjects, index }: Readonly<StudentRowProps>) {
       </TableCell>
       <TableCell className="text-center">
         {hasMarks ? (
-          <span
-            className={cn(
-              'text-sm font-semibold',
-              summary.percentage >= 60
-                ? 'text-emerald-600'
-                : summary.percentage >= 35
-                  ? 'text-amber-600'
-                  : 'text-red-600'
-            )}
-          >
+          <span className={cn('text-sm font-semibold', getPercentageColor(summary.percentage))}>
             {summary.percentage}%
           </span>
         ) : (

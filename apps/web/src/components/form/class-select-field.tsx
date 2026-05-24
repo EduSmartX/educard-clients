@@ -69,6 +69,16 @@ export function ClassSelectField<TFieldValues extends FieldValues>({
     label: formatClassName(cls),
   }));
 
+  const getEmptyText = () => {
+    if (isLoading) {
+      return 'Loading classes...';
+    }
+    if (classes.length === 0) {
+      return 'No classes available';
+    }
+    return 'No classes found';
+  };
+
   return (
     <FormField
       control={control}
@@ -83,13 +93,7 @@ export function ClassSelectField<TFieldValues extends FieldValues>({
               onValueChange={field.onChange}
               placeholder={placeholder}
               searchPlaceholder="Search classes..."
-              emptyText={
-                isLoading
-                  ? 'Loading classes...'
-                  : classes.length === 0
-                    ? 'No classes available'
-                    : 'No classes found'
-              }
+              emptyText={getEmptyText()}
               disabled={disabled || isLoading}
               className={className}
             />

@@ -12,6 +12,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { requestPasswordResetOtp, parseApiError } from '@/api';
 
+const OTP_SLOT_KEYS = ['slot-1', 'slot-2', 'slot-3', 'slot-4', 'slot-5', 'slot-6'] as const;
+
 export default function VerifyOTPScreen() {
   const router = useRouter();
   const { email } = useLocalSearchParams<{ email: string }>();
@@ -107,7 +109,7 @@ export default function VerifyOTPScreen() {
         <View style={styles.otpContainer}>
           {otp.map((digit, index) => (
             <TextInput
-              key={`otp-slot-${String(index)}`}
+              key={OTP_SLOT_KEYS[index]}
               ref={(ref: TextInput | null) => {
                 inputRefs.current[index] = ref;
               }}

@@ -41,7 +41,6 @@ export default tseslint.config(
       eqeqeq: ['error', 'always'],
       'no-debugger': 'error',
       'no-duplicate-imports': 'error',
-      'no-unused-expressions': 'error',
       'prefer-template': 'error',
       'prefer-arrow-callback': 'error',
       'object-shorthand': ['error', 'always'],

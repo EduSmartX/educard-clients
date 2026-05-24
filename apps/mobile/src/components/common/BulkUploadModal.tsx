@@ -246,9 +246,10 @@ export function BulkUploadModal({
 
       const createdCount = result.created_count ?? 0;
       const failedCount = result.failed_count ?? 0;
+      const successSuffix = createdCount > 1 ? 's' : '';
       const message =
         failedCount === 0
-          ? `${createdCount} record${createdCount > 1 ? 's' : ''} uploaded successfully!`
+          ? `${createdCount} record${successSuffix} uploaded successfully!`
           : `Created: ${createdCount}, Failed: ${failedCount}`;
 
       if (failedCount === 0) {

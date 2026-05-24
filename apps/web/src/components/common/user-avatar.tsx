@@ -150,9 +150,11 @@ export function UserAvatar({
         createPortal(
           <>
             {/* Transparent backdrop — click to close */}
-            <div className="fixed inset-0 z-[9998]" onClick={close} />
+            <div role="button" tabIndex={-1} className="fixed inset-0 z-[9998]" onClick={close} />
             {/* Expanding circle — stays in place, just grows */}
             <div
+              role="button"
+              tabIndex={-1}
               onClick={close}
               className="fixed z-[9999] cursor-pointer overflow-hidden rounded-full shadow-xl ring-4 ring-white/80"
               style={{

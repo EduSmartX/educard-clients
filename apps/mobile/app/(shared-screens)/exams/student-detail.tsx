@@ -240,7 +240,7 @@ export default function StudentDetailScreen() {
               >
                 <Text style={s.subjectName}>{sub.subject_name}</Text>
                 {!mark && <Text style={s.noMark}>No marks entered</Text>}
-                {mark && mark.is_absent && (
+                {mark?.is_absent && (
                   <View style={s.absentBar}>
                     <Text style={s.absentText}>ABSENT</Text>
                   </View>

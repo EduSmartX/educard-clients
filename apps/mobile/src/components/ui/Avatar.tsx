@@ -79,7 +79,7 @@ export function Avatar({
           transition={200}
         />
       )}
-      {!source && initials && (
+      {!source && Boolean(initials) && (
         <View
           className="items-center justify-center"
           style={{
