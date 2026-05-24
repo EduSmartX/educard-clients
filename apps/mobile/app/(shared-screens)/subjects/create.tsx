@@ -4,7 +4,6 @@
 
 import {
   subjectFormSchema,
-  validateField,
   validateAllFields,
   buildSubjectPayload,
   parseApiErrors,

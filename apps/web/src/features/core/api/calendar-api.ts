@@ -7,38 +7,19 @@
 
 import api from '@/lib/api';
 
+import type {
+  WorkingDayInfo,
+  WorkingDayInfoParams,
+  WorkingDayNavigationParams,
+  WorkingDayNavigationResult,
+} from '@educard/shared';
+
 const BASE_URL = '/core/calendar';
 
 interface DetailResponse<T> {
   success: boolean;
   data: T;
   message?: string;
-}
-
-// ============== Types ==============
-
-export interface WorkingDayInfo {
-  date: string; // YYYY-MM-DD format
-  is_working_day: boolean;
-  day_type: 'working' | 'weekend' | 'holiday' | 'force_working' | 'force_holiday';
-  reason: string;
-}
-
-export interface WorkingDayNavigationResult extends WorkingDayInfo {
-  days_skipped: number;
-}
-
-export interface WorkingDayNavigationParams {
-  date: string; // YYYY-MM-DD format
-  direction: 'previous' | 'next';
-  class_id?: string;
-  for_teachers?: boolean;
-}
-
-export interface WorkingDayInfoParams {
-  date: string; // YYYY-MM-DD format
-  class_id?: string;
-  for_teachers?: boolean;
 }
 
 // ============== API Functions ==============
@@ -93,3 +74,11 @@ export async function getWorkingDayInfo(params: WorkingDayInfoParams): Promise<W
   });
   return response.data.data;
 }
+
+// Re-export types for consumers
+export type {
+  WorkingDayInfo,
+  WorkingDayInfoParams,
+  WorkingDayNavigationParams,
+  WorkingDayNavigationResult,
+} from '@educard/shared';

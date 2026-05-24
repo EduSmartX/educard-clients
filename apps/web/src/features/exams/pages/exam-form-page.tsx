@@ -83,8 +83,8 @@ function getExamFormActionsConfig(
   return {
     primaryAction: {
       label: isCreate ? 'Create Exam' : 'Save Changes',
-      type: 'submit' as const,
-      icon: (isCreate ? 'create' : 'save') as 'create' | 'save',
+      type: 'submit',
+      icon: isCreate ? 'create' : 'save',
       isLoading: isPending,
       disabled: isPending,
     },

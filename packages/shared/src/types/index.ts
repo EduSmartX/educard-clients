@@ -21,3 +21,4 @@ export * from "./fee";
 export * from "./timetable";
 export * from "./holiday";
 export * from "./homework.types";
+export * from "./calendar";

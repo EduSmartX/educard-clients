@@ -48,8 +48,8 @@ import {
 
 export function useFeeStructures(params?: FeeStructureFilters) {
   return useInfiniteQuery({
-    queryKey: QueryKeys.FEE.STRUCTURES.INFINITE(params as Record<string, unknown>),
-    queryFn: ({ pageParam = 1 }) => fetchFeeStructures({ ...params, page: pageParam as number }),
+    queryKey: QueryKeys.FEE.STRUCTURES.INFINITE(params),
+    queryFn: ({ pageParam = 1 }) => fetchFeeStructures({ ...params, page: pageParam }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
       lastPage.pagination.has_next ? lastPage.pagination.current_page + 1 : undefined,
@@ -114,7 +114,7 @@ export function useDeleteFeeStructure() {
 
 export function useStudentFees(params?: StudentFeeFilters) {
   return useInfiniteQuery({
-    queryKey: QueryKeys.FEE.STUDENT_FEES.INFINITE(params as Record<string, unknown>),
+    queryKey: QueryKeys.FEE.STUDENT_FEES.INFINITE(params),
     queryFn: ({ pageParam = 1 }) => fetchStudentFees({ ...params, page: pageParam as number }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
@@ -214,7 +214,7 @@ export function useReviewComponentRequests() {
 
 export function usePayments(params?: PaymentFilters) {
   return useInfiniteQuery({
-    queryKey: QueryKeys.FEE.PAYMENTS.INFINITE(params as Record<string, unknown>),
+    queryKey: QueryKeys.FEE.PAYMENTS.INFINITE(params),
     queryFn: ({ pageParam = 1 }) => fetchPayments({ ...params, page: pageParam as number }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>

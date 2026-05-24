@@ -9,7 +9,7 @@ import type { FetchClassesParams } from '../types';
 
 export function useClasses(params: FetchClassesParams = {}) {
   return useQuery({
-    queryKey: QueryKeys.CLASSES.LIST(params as Record<string, unknown>),
+    queryKey: QueryKeys.CLASSES.LIST(params),
     queryFn: () => fetchClasses(params),
     staleTime: 30 * 1000,
   });

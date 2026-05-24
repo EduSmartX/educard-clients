@@ -1,4 +1,3 @@
-import { Colors } from '@educard/shared';
 import { Settings, Clock, Bell, Shield, Users, BookOpen } from 'lucide-react-native';
 import React from 'react';
 

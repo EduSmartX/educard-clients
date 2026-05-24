@@ -5,12 +5,7 @@
  * to avoid TurboModule crash in Expo Go
  */
 
-import {
-  Ionicons,
-  MaterialIcons as _MaterialIcons,
-  MaterialCommunityIcons as _MaterialCommunityIcons,
-  Feather,
-} from '@expo/vector-icons';
+import { Ionicons, Feather } from '@expo/vector-icons';
 import React from 'react';
 
 // Map lucide icon names to @expo/vector-icons equivalents

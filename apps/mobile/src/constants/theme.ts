@@ -13,8 +13,6 @@
  * });
  */
 
-import { Colors as _Colors } from '@educard/shared';
-
 // =============================================================================
 // SEMANTIC COLORS
 // Map design tokens to Tailwind-like color names for consistency

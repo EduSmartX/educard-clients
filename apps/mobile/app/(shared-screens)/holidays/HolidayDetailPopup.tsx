@@ -1,4 +1,3 @@
-import { Colors } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Calendar, Pencil } from 'lucide-react-native';
 import React from 'react';

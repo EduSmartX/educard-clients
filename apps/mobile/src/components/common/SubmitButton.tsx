@@ -7,7 +7,6 @@
  *   <SubmitButton label="Delete" variant="danger" onPress={handleDelete} />
  */
 
-import { Colors as _Colors } from '@educard/shared';
 import { LucideIcon } from 'lucide-react-native';
 import React from 'react';
 import {

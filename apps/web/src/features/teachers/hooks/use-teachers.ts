@@ -9,7 +9,7 @@ import type { FetchTeachersParams } from '../types';
 
 export function useTeachers(params: FetchTeachersParams = {}) {
   return useQuery({
-    queryKey: QueryKeys.TEACHERS.LIST(params as Record<string, unknown>),
+    queryKey: QueryKeys.TEACHERS.LIST(params),
     queryFn: () => fetchTeachers(params),
     staleTime: 30 * 1000,
   });

@@ -14,7 +14,6 @@
  *   />
  */
 
-import { Colors as _Colors } from '@educard/shared';
 import { AlertTriangle, Info, CheckCircle, XCircle, LucideIcon } from 'lucide-react-native';
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';

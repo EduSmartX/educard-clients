@@ -52,7 +52,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import { useToast } from '@/lib/toast-context';
 import { isAdminRole } from '@/utils/role-utils';
 
-import { styles, modalStyles, CALENDAR_CELL_SIZE } from './styles';
+import { styles, modalStyles } from './styles';
 
 const adminGradient = getRoleGradient('admin');
 const adminTheme = getRoleThemeColors('admin');
