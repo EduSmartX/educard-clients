@@ -17,8 +17,8 @@ export function FeeDashboardStats({ data, isLoading }: Readonly<FeeDashboardStat
   if (isLoading) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[...new Array(4)].map((_, i) => (
-          <Card key={`skeleton-${i}`} className="animate-pulse">
+        {['s1', 's2', 's3', 's4'].map((id) => (
+          <Card key={id} className="animate-pulse">
             <CardHeader className="pb-2">
               <div className="bg-muted h-4 w-24 rounded" />
             </CardHeader>

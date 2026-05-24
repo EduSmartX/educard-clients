@@ -169,19 +169,13 @@ export function ProfilePhotoUpload() {
           {/* Upload area + info */}
           <div className="flex-1 space-y-4">
             {/* Drag & drop zone */}
-            <div
-              role="button"
-              tabIndex={0}
+            <button
+              type="button"
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onClick={() => fileInputRef.current?.click()}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  fileInputRef.current?.click();
-                }
-              }}
-              className={`cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
+              className={`w-full cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
                 isDragging
                   ? 'border-brand bg-brand/5'
                   : 'border-muted-foreground/25 hover:border-brand/50 hover:bg-muted/50'
@@ -194,7 +188,7 @@ export function ProfilePhotoUpload() {
               <p className="text-muted-foreground mt-1 text-xs">
                 JPEG, PNG, or WebP • Max {MAX_FILE_SIZE_MB}MB
               </p>
-            </div>
+            </button>
 
             {/* Hidden file input */}
             <input

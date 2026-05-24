@@ -195,8 +195,8 @@ export function DataTable<T>({
   if (isLoading) {
     return (
       <div className="space-y-4">
-        {[...new Array(5)].map((_, i) => (
-          <Skeleton key={`skeleton-${i}`} className="h-16 w-full" />
+        {['s1', 's2', 's3', 's4', 's5'].map((id) => (
+          <Skeleton key={id} className="h-16 w-full" />
         ))}
       </div>
     );
@@ -271,7 +271,7 @@ export function DataTable<T>({
               >
                 {columns.map((column, colIndex) => (
                   <TableCell
-                    key={colIndex}
+                    key={column.header || `col-${colIndex}`}
                     className={`border-r border-gray-200 break-words last:border-r-0 ${column.className || ''}`}
                     style={{
                       width: `${columnWidths[colIndex]}px`,
@@ -453,11 +453,13 @@ function renderPageNumbers(pagination: PaginationInfo, onPageChange?: (page: num
     pages.push(total_pages);
   }
 
-  return pages.map((page, index) => {
+  let ellipsisCount = 0;
+  return pages.map((page) => {
     if (page === '...') {
+      ellipsisCount += 1;
       return (
         <span
-          key={`ellipsis-${index}`}
+          key={`ellipsis-${ellipsisCount}`}
           className="relative inline-flex h-10 w-10 items-center justify-center text-sm font-semibold text-gray-500"
         >
           ...

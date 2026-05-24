@@ -246,7 +246,7 @@ export function LeaveAllocationFormBase({
                     {form.roles.length} role{form.roles.length > 1 ? 's' : ''} selected
                   </Text>
                 )}
-                {errors.roles && <Text style={styles.errorText}>{errors.roles}</Text>}
+                {Boolean(errors.roles) && <Text style={styles.errorText}>{errors.roles}</Text>}
               </>
             )}
           </FormSection>

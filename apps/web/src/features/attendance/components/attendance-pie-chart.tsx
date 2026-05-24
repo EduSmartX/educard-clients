@@ -136,8 +136,8 @@ export function AttendancePieChart({
               fill="#8884d8"
               dataKey="value"
             >
-              {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
+              {data.map((entry) => (
+                <Cell key={entry.name} fill={entry.color} />
               ))}
             </Pie>
             <Tooltip
@@ -161,8 +161,8 @@ export function AttendancePieChart({
               content={({ payload }) => {
                 return (
                   <div className="mt-4 flex justify-center gap-6">
-                    {payload?.map((entry, index) => (
-                      <div key={`legend-${index}`} className="flex items-center gap-2">
+                    {payload?.map((entry) => (
+                      <div key={entry.value} className="flex items-center gap-2">
                         <div
                           className="h-3 w-3 rounded-full"
                           style={{ backgroundColor: entry.color }}

@@ -29,8 +29,8 @@ export function ParentFeeDashboardPage() {
       <div className="space-y-6">
         <div className="bg-muted h-8 w-48 animate-pulse rounded" />
         <div className="grid gap-4 md:grid-cols-3">
-          {[...new Array(3)].map((_, i) => (
-            <Card key={`skeleton-${i}`} className="animate-pulse">
+          {['s1', 's2', 's3'].map((id) => (
+            <Card key={id} className="animate-pulse">
               <CardHeader className="pb-2">
                 <div className="bg-muted h-4 w-24 rounded" />
               </CardHeader>

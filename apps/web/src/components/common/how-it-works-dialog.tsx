@@ -169,8 +169,8 @@ export function HowItWorksDialog({
               <div>
                 <p className="text-xs font-semibold text-amber-700">{warning.title}</p>
                 <ul className="mt-1 list-inside list-disc space-y-0.5 text-xs text-amber-600">
-                  {warning.items.map((item, itemIndex) => (
-                    <li key={itemIndex}>{item}</li>
+                  {warning.items.map((item) => (
+                    <li key={item}>{item}</li>
                   ))}
                 </ul>
               </div>

@@ -182,11 +182,11 @@ export function DashboardSidebar({
     <div className="flex h-full flex-col bg-white">
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-4 py-6">
-        {filteredSections.map((section, sectionIndex) => (
+        {filteredSections.map((section) => (
           <CollapsibleSection
-            key={sectionIndex}
+            key={section.title}
             section={section}
-            sectionIndex={sectionIndex}
+            sectionIndex={filteredSections.indexOf(section)}
             onNavigate={onNavigate}
             theme={theme}
           />

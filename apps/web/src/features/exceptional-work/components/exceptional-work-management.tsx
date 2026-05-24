@@ -60,9 +60,10 @@ export function ExceptionalWorkManagement() {
   const exceptions = data?.data || [];
   const totalCount = data?.pagination?.count || 0;
   const totalPages = data?.pagination?.total_pages || 0;
+  const pluralSuffix = totalCount > 1 ? 's' : '';
   const exceptionsDescription =
     totalCount > 0
-      ? `${totalCount} exception${totalCount > 1 ? 's' : ''} configured`
+      ? `${totalCount} exception${pluralSuffix} configured`
       : 'No exceptions configured yet';
 
   // Filter fields configuration

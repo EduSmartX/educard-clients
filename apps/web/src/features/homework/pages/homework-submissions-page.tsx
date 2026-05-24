@@ -119,17 +119,11 @@ function HomeworkSelectCard({
   const stats = homework.submission_stats;
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
+    <button
+      type="button"
       onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          onClick?.();
-        }
-      }}
       className={cn(
-        'relative cursor-pointer overflow-hidden rounded-lg border-2 p-4 transition-all hover:shadow-md',
+        'relative w-full cursor-pointer overflow-hidden rounded-lg border-2 p-4 text-left transition-all hover:shadow-md',
         isSelected ? 'ring-2 ring-offset-1' : 'hover:shadow-lg'
       )}
       style={{
@@ -197,7 +191,7 @@ function HomeworkSelectCard({
           </div>
         </div>
       )}
-    </div>
+    </button>
   );
 }
 

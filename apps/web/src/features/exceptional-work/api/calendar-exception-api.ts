@@ -77,7 +77,8 @@ export async function fetchCalendarExceptions(
 
   const endpoint = getExceptionsEndpoint(false); // Read operation
   const queryString = params.toString();
-  const url = `${endpoint}${queryString ? `?${queryString}` : ''}`;
+  const suffix = queryString ? `?${queryString}` : '';
+  const url = `${endpoint}${suffix}`;
 
   const response = await api.get<CalendarExceptionListResponse>(url);
   return response.data;

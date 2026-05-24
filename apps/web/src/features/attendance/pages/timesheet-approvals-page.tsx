@@ -34,6 +34,126 @@ interface ManageableUser {
   organization_role?: { name: string; code: string };
 }
 
+// Cell renderer components extracted outside parent to satisfy S6478
+function EmployeeCell({ row }: Readonly<{ row: TimesheetSubmission }>) {
+  return (
+    <div className="flex flex-col">
+      <div className="text-base font-semibold text-gray-900">
+        {row.employee_info?.full_name || 'N/A'}
+      </div>
+      <div className="text-xs text-gray-600">
+        {row.employee_info?.username || row.employee_info?.email}
+      </div>
+      {row.employee_info?.organization_role &&
+        typeof row.employee_info.organization_role === 'object' && (
+          <div className="mt-0.5 text-xs font-medium text-blue-600">
+            {row.employee_info.organization_role.name}
+          </div>
+        )}
+    </div>
+  );
+}
+
+function WeekPeriodCell({ row }: Readonly<{ row: TimesheetSubmission }>) {
+  return (
+    <div className="flex flex-col">
+      <div className="text-sm font-semibold text-gray-900">
+        {format(new Date(row.week_start_date), 'MMM dd')} -{' '}
+        {format(new Date(row.week_end_date), 'MMM dd, yyyy')}
+      </div>
+      <div className="mt-0.5 text-xs text-gray-500">
+        (
+        {Math.ceil(
+          (new Date(row.week_end_date).getTime() - new Date(row.week_start_date).getTime()) /
+            (1000 * 60 * 60 * 24) +
+            1
+        )}{' '}
+        days)
+      </div>
+    </div>
+  );
+}
+
+function AttendancePercentageCell({ row }: Readonly<{ row: TimesheetSubmission }>) {
+  const percentage =
+    typeof row.attendance_percentage === 'string'
+      ? Number.parseFloat(row.attendance_percentage)
+      : row.attendance_percentage;
+  const getAttendanceColor = (pct: number) => {
+    if (pct >= 75) {
+      return 'text-green-600';
+    }
+    if (pct >= 50) {
+      return 'text-yellow-600';
+    }
+    return 'text-red-600';
+  };
+  const colorClass = getAttendanceColor(percentage);
+  return <span className={`text-lg font-bold ${colorClass}`}>{row.attendance_percentage}%</span>;
+}
+
+function SubmittedOnCell({ row }: Readonly<{ row: TimesheetSubmission }>) {
+  if (!row.submitted_at) {
+    return <span>-</span>;
+  }
+  return (
+    <div className="flex flex-col">
+      <span className="text-sm font-medium text-gray-900">
+        {format(new Date(row.submitted_at), 'MMM dd, yyyy')}
+      </span>
+      <span className="text-xs text-gray-500">{format(new Date(row.submitted_at), 'h:mm a')}</span>
+    </div>
+  );
+}
+
+interface ActionsCellProps {
+  row: TimesheetSubmission;
+  isPending: boolean;
+  onView: (row: TimesheetSubmission) => void;
+  onApprove: (row: TimesheetSubmission) => void;
+  onReject: (row: TimesheetSubmission) => void;
+}
+
+function ActionsCell({ row, isPending, onView, onApprove, onReject }: Readonly<ActionsCellProps>) {
+  return (
+    <div className="flex items-center justify-center gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-8 border-blue-200 bg-blue-50 px-3 text-blue-700 shadow-sm transition-all duration-200 hover:border-blue-300 hover:bg-blue-100 hover:text-blue-800 hover:shadow"
+        onClick={() => onView(row)}
+      >
+        <Eye className="mr-1 h-4 w-4" />
+        <span className="text-xs font-medium">View</span>
+      </Button>
+      {row.submission_status === 'SUBMITTED' && (
+        <>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 border-green-200 bg-green-50 px-3 text-green-700 shadow-sm transition-all duration-200 hover:border-green-300 hover:bg-green-100 hover:text-green-800 hover:shadow"
+            disabled={isPending}
+            onClick={() => onApprove(row)}
+          >
+            <CheckCircle2 className="mr-1 h-4 w-4" />
+            <span className="text-xs font-medium">Approve</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 border-red-200 bg-red-50 px-3 text-red-700 shadow-sm transition-all duration-200 hover:border-red-300 hover:bg-red-100 hover:text-red-800 hover:shadow"
+            disabled={isPending}
+            onClick={() => onReject(row)}
+          >
+            <XCircle className="mr-1 h-4 w-4" />
+            <span className="text-xs font-medium">Reject</span>
+          </Button>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function TimesheetApprovalsPage() {
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [selectedEmployee, setSelectedEmployee] = useState<string>('all');
@@ -166,45 +286,14 @@ export default function TimesheetApprovalsPage() {
     () => [
       {
         header: 'Employee',
-        accessor: (row) => (
-          <div className="flex flex-col">
-            <div className="text-base font-semibold text-gray-900">
-              {row.employee_info?.full_name || 'N/A'}
-            </div>
-            <div className="text-xs text-gray-600">
-              {row.employee_info?.username || row.employee_info?.email}
-            </div>
-            {row.employee_info?.organization_role &&
-              typeof row.employee_info.organization_role === 'object' && (
-                <div className="mt-0.5 text-xs font-medium text-blue-600">
-                  {row.employee_info.organization_role.name}
-                </div>
-              )}
-          </div>
-        ),
+        accessor: (row) => <EmployeeCell row={row} />,
         sortable: true,
         sortKey: 'employee_info.full_name',
         width: 220,
       },
       {
         header: 'Week Period',
-        accessor: (row) => (
-          <div className="flex flex-col">
-            <div className="text-sm font-semibold text-gray-900">
-              {format(new Date(row.week_start_date), 'MMM dd')} -{' '}
-              {format(new Date(row.week_end_date), 'MMM dd, yyyy')}
-            </div>
-            <div className="mt-0.5 text-xs text-gray-500">
-              (
-              {Math.ceil(
-                (new Date(row.week_end_date).getTime() - new Date(row.week_start_date).getTime()) /
-                  (1000 * 60 * 60 * 24) +
-                  1
-              )}{' '}
-              days)
-            </div>
-          </div>
-        ),
+        accessor: (row) => <WeekPeriodCell row={row} />,
         sortable: true,
         sortKey: 'week_start_date',
         width: 220,
@@ -249,25 +338,7 @@ export default function TimesheetApprovalsPage() {
       },
       {
         header: 'Attendance %',
-        accessor: (row) => {
-          const percentage =
-            typeof row.attendance_percentage === 'string'
-              ? Number.parseFloat(row.attendance_percentage)
-              : row.attendance_percentage;
-          const getAttendanceColor = (pct: number) => {
-            if (pct >= 75) {
-              return 'text-green-600';
-            }
-            if (pct >= 50) {
-              return 'text-yellow-600';
-            }
-            return 'text-red-600';
-          };
-          const colorClass = getAttendanceColor(percentage);
-          return (
-            <span className={`text-lg font-bold ${colorClass}`}>{row.attendance_percentage}%</span>
-          );
-        },
+        accessor: (row) => <AttendancePercentageCell row={row} />,
         headerClassName: 'text-center',
         className: 'text-center',
         sortable: true,
@@ -276,19 +347,7 @@ export default function TimesheetApprovalsPage() {
       },
       {
         header: 'Submitted On',
-        accessor: (row) =>
-          row.submitted_at ? (
-            <div className="flex flex-col">
-              <span className="text-sm font-medium text-gray-900">
-                {format(new Date(row.submitted_at), 'MMM dd, yyyy')}
-              </span>
-              <span className="text-xs text-gray-500">
-                {format(new Date(row.submitted_at), 'h:mm a')}
-              </span>
-            </div>
-          ) : (
-            '-'
-          ),
+        accessor: (row) => <SubmittedOnCell row={row} />,
         sortable: true,
         sortKey: 'submitted_at',
         width: 150,
@@ -305,46 +364,16 @@ export default function TimesheetApprovalsPage() {
       {
         header: 'Actions',
         accessor: (row) => (
-          <div className="flex items-center justify-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 border-blue-200 bg-blue-50 px-3 text-blue-700 shadow-sm transition-all duration-200 hover:border-blue-300 hover:bg-blue-100 hover:text-blue-800 hover:shadow"
-              onClick={() => {
-                setSelectedSubmission(row);
-                setIsDetailDialogOpen(true);
-              }}
-            >
-              <Eye className="mr-1 h-4 w-4" />
-              <span className="text-xs font-medium">View</span>
-            </Button>
-            {row.submission_status === 'SUBMITTED' && (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 border-green-200 bg-green-50 px-3 text-green-700 shadow-sm transition-all duration-200 hover:border-green-300 hover:bg-green-100 hover:text-green-800 hover:shadow"
-                  disabled={reviewMutation.isPending}
-                  onClick={() => setApproveTarget(row)}
-                >
-                  <CheckCircle2 className="mr-1 h-4 w-4" />
-                  <span className="text-xs font-medium">Approve</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 border-red-200 bg-red-50 px-3 text-red-700 shadow-sm transition-all duration-200 hover:border-red-300 hover:bg-red-100 hover:text-red-800 hover:shadow"
-                  disabled={reviewMutation.isPending}
-                  onClick={() => {
-                    setRejectTarget(row);
-                  }}
-                >
-                  <XCircle className="mr-1 h-4 w-4" />
-                  <span className="text-xs font-medium">Reject</span>
-                </Button>
-              </>
-            )}
-          </div>
+          <ActionsCell
+            row={row}
+            isPending={reviewMutation.isPending}
+            onView={(r) => {
+              setSelectedSubmission(r);
+              setIsDetailDialogOpen(true);
+            }}
+            onApprove={(r) => setApproveTarget(r)}
+            onReject={(r) => setRejectTarget(r)}
+          />
         ),
         headerClassName: 'text-center',
         className: 'text-center',

@@ -43,7 +43,7 @@ const TABLE_HEADERS = {
   ACTIONS: 'Actions',
 } as const;
 
-const SKELETON_ROWS = 5;
+const SKELETON_IDS = ['s1', 's2', 's3', 's4', 's5'];
 
 function getInitials(name: string): string {
   return name
@@ -70,8 +70,8 @@ const StatusBadge = memo(({ status }: { status: SubmissionStatus }) => {
 function TableSkeleton() {
   return (
     <div className="space-y-3">
-      {[...new Array(SKELETON_ROWS)].map((_, i) => (
-        <div key={i} className="flex items-center gap-4 rounded-lg border p-4">
+      {SKELETON_IDS.map((id) => (
+        <div key={id} className="flex items-center gap-4 rounded-lg border p-4">
           <Skeleton className="h-10 w-10 rounded-full" />
           <div className="flex-1 space-y-2">
             <Skeleton className="h-4 w-32" />

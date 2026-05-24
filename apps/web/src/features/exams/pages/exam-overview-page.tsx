@@ -993,8 +993,8 @@ export function ExamOverviewPage() {
                               fill="#8884d8"
                               dataKey="value"
                             >
-                              {overallPieData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              {overallPieData.map((entry) => (
+                                <Cell key={entry.name} fill={entry.color} />
                               ))}
                             </Pie>
                             <Tooltip formatter={(value, name) => [value, name]} />

@@ -25,8 +25,8 @@ export function ParentPaymentHistoryPage() {
     return (
       <div className="space-y-6">
         <div className="bg-muted h-8 w-48 animate-pulse rounded" />
-        {[...new Array(3)].map((_, i) => (
-          <Card key={`skeleton-${i}`} className="animate-pulse">
+        {['s1', 's2', 's3'].map((id) => (
+          <Card key={id} className="animate-pulse">
             <CardContent className="p-6">
               <div className="bg-muted h-24 rounded" />
             </CardContent>

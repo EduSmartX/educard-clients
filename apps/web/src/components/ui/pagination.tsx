@@ -141,30 +141,34 @@ export function Pagination({
 
         {/* Page numbers */}
         <div className="flex items-center gap-1">
-          {getPageNumbers().map((page, index) => {
-            if (page === '...') {
-              return (
-                <span
-                  key={`ellipsis-${index}`}
-                  className="flex h-8 w-8 items-center justify-center text-sm text-gray-400"
-                >
-                  ...
-                </span>
-              );
-            }
+          {(() => {
+            let ellipsisCount = 0;
+            return getPageNumbers().map((page) => {
+              if (page === '...') {
+                ellipsisCount += 1;
+                return (
+                  <span
+                    key={`ellipsis-${ellipsisCount}`}
+                    className="flex h-8 w-8 items-center justify-center text-sm text-gray-400"
+                  >
+                    ...
+                  </span>
+                );
+              }
 
-            return (
-              <Button
-                key={page}
-                variant={currentPage === page ? 'default' : 'outline'}
-                size="icon"
-                onClick={() => onPageChange(page as number)}
-                className="h-8 w-8"
-              >
-                {page}
-              </Button>
-            );
-          })}
+              return (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? 'default' : 'outline'}
+                  size="icon"
+                  onClick={() => onPageChange(page as number)}
+                  className="h-8 w-8"
+                >
+                  {page}
+                </Button>
+              );
+            });
+          })()}
         </div>
 
         {/* Next page button */}
@@ -219,7 +223,7 @@ export function SimplePagination({
         onClick={() => onPageChange(currentPage - 1)}
         disabled={!canGoPrevious}
       >
-        <ChevronLeft className="h-4 w-4 mr-1" />
+        <ChevronLeft className="mr-1 h-4 w-4" />
         Previous
       </Button>
 
@@ -234,7 +238,7 @@ export function SimplePagination({
         disabled={!canGoNext}
       >
         Next
-        <ChevronRight className="h-4 w-4 ml-1" />
+        <ChevronRight className="ml-1 h-4 w-4" />
       </Button>
     </div>
   );

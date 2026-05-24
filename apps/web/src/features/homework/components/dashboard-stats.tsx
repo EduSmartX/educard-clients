@@ -82,8 +82,8 @@ export const DashboardStats = memo(({ stats, isLoading = false }: DashboardStats
   if (isLoading) {
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[...new Array(4)].map((_, i) => (
-          <StatSkeleton key={`skeleton-${i}`} />
+        {['s1', 's2', 's3', 's4'].map((id) => (
+          <StatSkeleton key={id} />
         ))}
       </div>
     );

@@ -150,13 +150,18 @@ export function UserAvatar({
         createPortal(
           <>
             {/* Transparent backdrop — click to close */}
-            <div role="button" tabIndex={-1} className="fixed inset-0 z-[9998]" onClick={close} />
-            {/* Expanding circle — stays in place, just grows */}
-            <div
-              role="button"
-              tabIndex={-1}
+            <button
+              type="button"
+              className="fixed inset-0 z-[9998] appearance-none border-0 bg-transparent"
               onClick={close}
-              className="fixed z-[9999] cursor-pointer overflow-hidden rounded-full shadow-xl ring-4 ring-white/80"
+              aria-label="Close expanded avatar"
+            />
+            {/* Expanding circle — stays in place, just grows */}
+            <button
+              type="button"
+              onClick={close}
+              aria-label="Close expanded avatar"
+              className="fixed z-[9999] cursor-pointer appearance-none overflow-hidden rounded-full border-0 p-0 shadow-xl ring-4 ring-white/80"
               style={{
                 top: animating
                   ? `${rect.top - (EXPANDED_SIZE - rect.height) / 2}px`
@@ -174,7 +179,7 @@ export function UserAvatar({
                 alt={name || 'Profile photo'}
                 className="h-full w-full object-cover"
               />
-            </div>
+            </button>
           </>,
           document.body
         )}

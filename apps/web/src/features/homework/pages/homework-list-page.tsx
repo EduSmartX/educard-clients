@@ -408,8 +408,8 @@ export default function HomeworkListPage() {
         <TabsContent value={activeTab} className="mt-6">
           {(isLoadingClasses || isLoadingHomework) && (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {[...new Array(6)].map((_, i) => (
-                <Skeleton key={`skeleton-${i}`} className="h-52 rounded-xl" />
+              {['s1', 's2', 's3', 's4', 's5', 's6'].map((id) => (
+                <Skeleton key={id} className="h-52 rounded-xl" />
               ))}
             </div>
           )}

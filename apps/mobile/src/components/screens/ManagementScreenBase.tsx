@@ -36,6 +36,62 @@ export interface ManagementItem {
   route: string;
 }
 
+/** Creates management items with role-specific route prefixes */
+export function createManagementItems(
+  routePrefix: '/(tabs)/(admin)' | '/(shared-screens)'
+): ManagementItem[] {
+  return [
+    {
+      id: 'teachers',
+      title: 'Teachers',
+      subtitle: routePrefix === '/(tabs)/(admin)' ? 'Manage teaching staff' : 'Teaching staff',
+      icon: UserCheck,
+      gradient: ['#7c3aed', '#a78bfa'],
+      route: `${routePrefix}/teachers`,
+    },
+    {
+      id: 'classes',
+      title: 'Classes',
+      subtitle: routePrefix === '/(tabs)/(admin)' ? 'Manage class sections' : 'Class sections',
+      icon: Building2,
+      gradient: ['#0891b2', '#22d3ee'],
+      route: `${routePrefix}/classes`,
+    },
+    {
+      id: 'students',
+      title: 'Students',
+      subtitle: 'Student records',
+      icon: GraduationCap,
+      gradient: ['#ea580c', '#fb923c'],
+      route: `${routePrefix}/students`,
+    },
+    {
+      id: 'subjects',
+      title: 'Subjects',
+      subtitle: 'Subjects & curriculum',
+      icon: BookMarked,
+      gradient: ['#059669', '#34d399'],
+      route: `${routePrefix}/subjects`,
+    },
+    {
+      id: 'timetable',
+      title: 'Timetable',
+      subtitle: 'Class schedules',
+      icon: Calendar,
+      gradient: ['#6366f1', '#818cf8'],
+      route: '/(shared-screens)/timetable',
+    },
+    {
+      id: 'exams',
+      title: 'Exams',
+      subtitle: 'Exams & marks',
+      icon: ClipboardList,
+      gradient: ['#e11d48', '#fb7185'],
+      route: '/(shared-screens)/exams/sessions',
+    },
+  ];
+}
+
 interface ManagementScreenBaseProps {
   items: ManagementItem[];
   settingsRoute: string;

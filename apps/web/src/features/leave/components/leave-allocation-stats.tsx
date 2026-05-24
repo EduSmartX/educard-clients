@@ -34,7 +34,7 @@ export function LeaveAllocationStats({ allocations }: Readonly<LeaveAllocationSt
           <div className="text-4xl font-bold text-green-600">{activeCount}</div>
           <p className="text-muted-foreground mt-2 flex items-center gap-1 text-xs">
             <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-green-500"></span>
-            Currently effective and active
+            <span>Currently effective and active</span>
           </p>
         </CardContent>
       </Card>

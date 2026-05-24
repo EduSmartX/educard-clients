@@ -298,7 +298,10 @@ export function EmployeeTimesheetPage() {
     () => eachDayOfInterval({ start: monthStart, end: monthEnd }),
     [monthStart, monthEnd]
   );
-  const leadingEmptyDays = useMemo(() => Array.from({ length: monthStart.getDay() }), [monthStart]);
+  const leadingEmptyDays = useMemo(
+    () => Array.from({ length: monthStart.getDay() }, (_, i) => `empty-${i}`),
+    [monthStart]
+  );
 
   // Use stats from backend
   const report = useMemo(() => {
@@ -505,11 +508,8 @@ export function EmployeeTimesheetPage() {
                 </div>
 
                 <div className="grid grid-cols-7 gap-1">
-                  {leadingEmptyDays.map((_, index) => (
-                    <div
-                      key={`empty-${index}`}
-                      className="aspect-square rounded border border-transparent"
-                    />
+                  {leadingEmptyDays.map((id) => (
+                    <div key={id} className="aspect-square rounded border border-transparent" />
                   ))}
 
                   {monthDays.map((date) => {

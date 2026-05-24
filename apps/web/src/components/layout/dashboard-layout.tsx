@@ -30,11 +30,11 @@ export function DashboardLayout({
     <div className="flex h-[calc(100vh-64px)] sm:h-[calc(100vh-72px)]">
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
-        <div
-          role="button"
-          tabIndex={-1}
-          className="fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-sm transition-opacity lg:hidden"
+        <button
+          type="button"
+          className="fixed inset-0 z-40 appearance-none border-0 bg-slate-900/30 p-0 backdrop-blur-sm transition-opacity lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
+          aria-label="Close sidebar"
         />
       )}
 

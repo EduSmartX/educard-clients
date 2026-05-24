@@ -122,6 +122,7 @@ export function MultiSelect({
                 <div
                   key={option.value}
                   role="option"
+                  tabIndex={0}
                   aria-selected={value.includes(option.value)}
                   className="hover:bg-muted flex cursor-pointer items-center space-x-2 rounded-sm px-2 py-1.5"
                   onClick={() => handleSelect(option.value)}

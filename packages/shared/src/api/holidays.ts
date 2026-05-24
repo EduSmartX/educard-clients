@@ -78,7 +78,8 @@ export function createHolidaysApi(config: HolidaysApiConfig) {
       }
 
       const queryString = queryParams.toString();
-      const url = `/attendance/holiday-calendar/${queryString ? `?${queryString}` : ""}`;
+      const suffix = queryString ? `?${queryString}` : "";
+      const url = `/attendance/holiday-calendar/${suffix}`;
       const res = await client.get<ApiListResponse<Holiday>>(url);
       return { data: res.data.data, pagination: res.data.pagination };
     },

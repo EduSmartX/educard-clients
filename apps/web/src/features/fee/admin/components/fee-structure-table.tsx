@@ -23,6 +23,123 @@ interface FeeStructureTableProps {
   isLoading?: boolean;
 }
 
+// Cell renderers extracted outside parent component
+function ClassesCell({ row }: Readonly<{ row: FeeStructureListItem }>) {
+  return (
+    <div className="flex flex-wrap gap-1">
+      {row.class_names.slice(0, 2).map((className) => (
+        <Badge key={className} variant="secondary" className="text-xs">
+          {className}
+        </Badge>
+      ))}
+      {row.class_names.length > 2 && (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Badge variant="outline" className="hover:bg-muted cursor-pointer text-xs">
+              +{row.class_names.length - 2} more
+            </Badge>
+          </PopoverTrigger>
+          <PopoverContent side="bottom" className="w-auto max-w-xs p-3">
+            <div className="space-y-1">
+              {row.class_names.slice(2).map((cls) => (
+                <div key={cls} className="text-xs">
+                  {cls}
+                </div>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+      )}
+    </div>
+  );
+}
+
+function StudentsCell({ row }: Readonly<{ row: FeeStructureListItem }>) {
+  return (
+    <div className="flex items-center justify-center gap-1">
+      <Users className="text-muted-foreground h-4 w-4" />
+      <span>{row.student_count}</span>
+    </div>
+  );
+}
+
+function StatusCell({ row }: Readonly<{ row: FeeStructureListItem }>) {
+  return (
+    <Badge variant={row.is_active ? 'default' : 'secondary'}>
+      {row.is_active ? 'Active' : 'Inactive'}
+    </Badge>
+  );
+}
+
+interface FeeStructureActionsCellProps {
+  row: FeeStructureListItem;
+  onView: (id: string) => void;
+  onEdit: (id: string) => void;
+  onDelete: (row: FeeStructureListItem) => void;
+  isDeleting: boolean;
+}
+
+function FeeStructureActionsCell({
+  row,
+  onView,
+  onEdit,
+  onDelete,
+  isDeleting,
+}: Readonly<FeeStructureActionsCellProps>) {
+  return (
+    <div className="flex items-center gap-1">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+              onClick={() => onView(row.public_id)}
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>View Details</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-amber-600 hover:bg-amber-50 hover:text-amber-700"
+              onClick={() => onEdit(row.public_id)}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Edit</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-700"
+              onClick={() => onDelete(row)}
+              disabled={isDeleting}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Delete Fee Structure</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
+  );
+}
+
 export function FeeStructureTable({ data, isLoading }: Readonly<FeeStructureTableProps>) {
   const navigate = useNavigate();
   const [editConfirmId, setEditConfirmId] = useState<string | null>(null);
@@ -60,33 +177,7 @@ export function FeeStructureTable({ data, isLoading }: Readonly<FeeStructureTabl
     },
     {
       header: 'Classes',
-      accessor: (row) => (
-        <div className="flex flex-wrap gap-1">
-          {row.class_names.slice(0, 2).map((className) => (
-            <Badge key={className} variant="secondary" className="text-xs">
-              {className}
-            </Badge>
-          ))}
-          {row.class_names.length > 2 && (
-            <Popover>
-              <PopoverTrigger asChild>
-                <Badge variant="outline" className="hover:bg-muted cursor-pointer text-xs">
-                  +{row.class_names.length - 2} more
-                </Badge>
-              </PopoverTrigger>
-              <PopoverContent side="bottom" className="w-auto max-w-xs p-3">
-                <div className="space-y-1">
-                  {row.class_names.slice(2).map((cls) => (
-                    <div key={cls} className="text-xs">
-                      {cls}
-                    </div>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-          )}
-        </div>
-      ),
+      accessor: (row) => <ClassesCell row={row} />,
       width: 180,
     },
     {
@@ -107,12 +198,7 @@ export function FeeStructureTable({ data, isLoading }: Readonly<FeeStructureTabl
     },
     {
       header: 'Students',
-      accessor: (row) => (
-        <div className="flex items-center justify-center gap-1">
-          <Users className="text-muted-foreground h-4 w-4" />
-          <span>{row.student_count}</span>
-        </div>
-      ),
+      accessor: (row) => <StudentsCell row={row} />,
       sortable: true,
       sortKey: 'student_count',
       className: 'text-center',
@@ -121,11 +207,7 @@ export function FeeStructureTable({ data, isLoading }: Readonly<FeeStructureTabl
     },
     {
       header: 'Status',
-      accessor: (row) => (
-        <Badge variant={row.is_active ? 'default' : 'secondary'}>
-          {row.is_active ? 'Active' : 'Inactive'}
-        </Badge>
-      ),
+      accessor: (row) => <StatusCell row={row} />,
       className: 'text-center',
       headerClassName: 'text-center',
       width: 100,
@@ -133,56 +215,13 @@ export function FeeStructureTable({ data, isLoading }: Readonly<FeeStructureTabl
     {
       header: 'Actions',
       accessor: (row) => (
-        <div className="flex items-center gap-1">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-                  onClick={() => navigate(`${ROUTES.FEES.STRUCTURES}/${row.public_id}`)}
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>View Details</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-amber-600 hover:bg-amber-50 hover:text-amber-700"
-                  onClick={() => setEditConfirmId(row.public_id)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Edit</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-700"
-                  onClick={() => setDeleteTarget(row)}
-                  disabled={deleteFeeStructure.isPending}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Delete Fee Structure</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
+        <FeeStructureActionsCell
+          row={row}
+          onView={(id) => navigate(`${ROUTES.FEES.STRUCTURES}/${id}`)}
+          onEdit={(id) => setEditConfirmId(id)}
+          onDelete={(r) => setDeleteTarget(r)}
+          isDeleting={deleteFeeStructure.isPending}
+        />
       ),
       width: 130,
     },
