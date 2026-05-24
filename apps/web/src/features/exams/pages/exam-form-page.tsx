@@ -10,14 +10,10 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { ArrowLeft, Loader2, CalendarDays, AlertTriangle, AlertCircle } from 'lucide-react';
-import { format } from 'date-fns';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { SearchableSelect } from '@/components/ui/searchable-select';
-import { DatePicker } from '@/components/ui/date-picker';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { PageHeader, FormActions, WarningConfirmationDialog } from '@/components/common';
 import { ROUTES } from '@/constants';
@@ -27,18 +23,14 @@ import { useCreateExam, useUpdateExam } from '../hooks/mutations';
 import { useSubjects } from '@/features/subjects/hooks/use-subjects';
 import { useClasses } from '@/features/classes/hooks/use-classes';
 import { useRole } from '@/hooks/use-role';
-import {
-  EXAM_STATUS_OPTIONS,
-  EXAM_STATUS_LABELS,
-  type ExamStatus,
-  type ExamCreatePayload,
-} from '@educard/shared';
+import { type ExamStatus, type ExamCreatePayload } from '@educard/shared';
 import {
   validateExamDate,
   validateExamFormFields,
   buildExamCreatePayload,
   buildExamUpdatePayload,
 } from '../utils/exam-form-helpers';
+import { ExamFormFields } from '../components/exam-form-fields';
 
 function getExamFormTitle(isCreate: boolean, isEdit: boolean): string {
   if (isCreate) {
@@ -314,224 +306,37 @@ export function ExamFormPage() {
             <CardTitle className="text-lg">Exam Details</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {/* Exam Session */}
-              <div className="space-y-2">
-                <Label htmlFor="session_id">
-                  Exam Session <span className="text-red-500">*</span>
-                </Label>
-                {isView && (
-                  <Input
-                    value={existingExam?.session_name || '-'}
-                    disabled
-                    className="bg-gray-50"
-                  />
-                )}
-                {!isView && (
-                  <SearchableSelect
-                    key={`session-${sessionId || 'empty'}`}
-                    options={sessionsList.map((session) => ({
-                      value: session.public_id,
-                      label: `${session.name} (${session.academic_year})`,
-                    }))}
-                    value={sessionId}
-                    onValueChange={setSessionId}
-                    disabled={isEdit}
-                    placeholder="Select session"
-                    searchPlaceholder="Search sessions..."
-                    className={fieldErrors.session_id ? 'border-red-500' : ''}
-                  />
-                )}
-                {!!fieldErrors.session_id && (
-                  <p className="text-sm text-red-500">{fieldErrors.session_id}</p>
-                )}
-                {/* Session Date Range */}
-                {selectedSession && (selectedSession.start_date || selectedSession.end_date) && (
-                  <div className="flex items-center gap-1.5 rounded-md bg-blue-50 px-2.5 py-1.5 text-xs text-blue-700">
-                    <CalendarDays className="h-3.5 w-3.5" />
-                    <span className="font-medium">
-                      {format(new Date(selectedSession.start_date || ''), 'dd MMM yyyy')}
-                      {' → '}
-                      {format(new Date(selectedSession.end_date || ''), 'dd MMM yyyy')}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Class Selection */}
-              <div className="space-y-2">
-                <Label htmlFor="class_id">
-                  Class <span className="text-red-500">*</span>
-                </Label>
-                {isView && (
-                  <Input value={existingExam?.class_name || '-'} disabled className="bg-gray-50" />
-                )}
-                {!isView && (
-                  <SearchableSelect
-                    key={`class-${classId || 'empty'}`}
-                    options={classesList.map((cls) => ({
-                      value: cls.public_id,
-                      label: `${cls.class_master?.name || 'Unknown'} - ${cls.name}`,
-                    }))}
-                    value={classId}
-                    onValueChange={(value) => {
-                      setClassId(value);
-                      setSubjectId('');
-                    }}
-                    disabled={isEdit}
-                    placeholder="Select class"
-                    searchPlaceholder="Search classes..."
-                    className={fieldErrors.class_id ? 'border-red-500' : ''}
-                  />
-                )}
-                {!!fieldErrors.class_id && (
-                  <p className="text-sm text-red-500">{fieldErrors.class_id}</p>
-                )}
-              </div>
-
-              {/* Subject (now filtered by class) */}
-              <div className="space-y-2">
-                <Label htmlFor="subject_id">
-                  Subject <span className="text-red-500">*</span>
-                </Label>
-                {isView && (
-                  <Input
-                    value={existingExam?.subject_name || '-'}
-                    disabled
-                    className="bg-gray-50"
-                  />
-                )}
-                {!isView && (
-                  <SearchableSelect
-                    key={`subject-${subjectId || 'empty'}`}
-                    options={subjectsList.map((subject) => ({
-                      value: subject.public_id,
-                      label: subject.subject_info.name,
-                    }))}
-                    value={subjectId}
-                    onValueChange={setSubjectId}
-                    disabled={isEdit || !classId}
-                    placeholder={classId ? 'Select subject' : 'Select class first'}
-                    searchPlaceholder="Search subjects..."
-                    className={fieldErrors.subject_id ? 'border-red-500' : ''}
-                  />
-                )}
-                {!!fieldErrors.subject_id && (
-                  <p className="text-sm text-red-500">{fieldErrors.subject_id}</p>
-                )}
-                {/* Duplicate warning inline */}
-                {!!checkDuplicateExam && (
-                  <div className="flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs text-amber-700">
-                    <AlertCircle className="h-3.5 w-3.5" />
-                    <span>
-                      An exam for this subject already exists in this session. Creating will replace
-                      the existing exam.
-                    </span>
-                  </div>
-                )}
-                {!isView && selectedSubject && !checkDuplicateExam && (
-                  <p className="text-xs text-gray-500">Class: {selectedSubject.class_info.name}</p>
-                )}
-              </div>
-
-              {/* Status */}
-              <div className="space-y-2">
-                <Label htmlFor="status">
-                  Status <span className="text-red-500">*</span>
-                </Label>
-                {isView && (
-                  <Input
-                    value={status ? EXAM_STATUS_LABELS[status as ExamStatus] : '-'}
-                    disabled
-                    className="bg-gray-50"
-                  />
-                )}
-                {!isView && (
-                  <SearchableSelect
-                    key={`status-${status || 'empty'}`}
-                    options={EXAM_STATUS_OPTIONS.map((opt) => ({
-                      value: opt.value,
-                      label: opt.label,
-                    }))}
-                    value={status}
-                    onValueChange={(v) => setStatus(v as ExamStatus)}
-                    placeholder="Select status"
-                    className={fieldErrors.status ? 'border-red-500' : ''}
-                  />
-                )}
-                {!!fieldErrors.status && (
-                  <p className="text-sm text-red-500">{fieldErrors.status}</p>
-                )}
-              </div>
-
-              {/* Max Marks */}
-              <div className="space-y-2">
-                <Label htmlFor="max_marks">Maximum Marks</Label>
-                <Input
-                  id="max_marks"
-                  type="number"
-                  min="1"
-                  value={maxMarks}
-                  onChange={(e) => setMaxMarks(e.target.value)}
-                  disabled={isView}
-                />
-              </div>
-
-              {/* Passing Marks */}
-              <div className="space-y-2">
-                <Label htmlFor="passing_marks">Passing Marks</Label>
-                <Input
-                  id="passing_marks"
-                  type="number"
-                  min="0"
-                  value={passingMarks}
-                  onChange={(e) => setPassingMarks(e.target.value)}
-                  disabled={isView}
-                />
-              </div>
-
-              {/* Exam Date */}
-              <div className="space-y-2">
-                <Label htmlFor="exam_date">Exam Date</Label>
-                <DatePicker
-                  value={examDate}
-                  onChange={handleExamDateChange}
-                  placeholder="Select exam date"
-                  disabled={isView}
-                  className={dateError ? 'border-red-500' : ''}
-                />
-                {(dateError || fieldErrors.date) && (
-                  <div className="flex items-center gap-1 text-xs text-red-500">
-                    <AlertTriangle className="h-3 w-3" />
-                    <span>{dateError || fieldErrors.date}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Start Time */}
-              <div className="space-y-2">
-                <Label htmlFor="start_time">Start Time</Label>
-                <Input
-                  id="start_time"
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  disabled={isView}
-                />
-              </div>
-
-              {/* End Time */}
-              <div className="space-y-2">
-                <Label htmlFor="end_time">End Time</Label>
-                <Input
-                  id="end_time"
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  disabled={isView}
-                />
-              </div>
-            </div>
+            <ExamFormFields
+              isView={isView}
+              isEdit={isEdit}
+              existingExam={existingExam}
+              sessionId={sessionId}
+              setSessionId={setSessionId}
+              classId={classId}
+              setClassId={setClassId}
+              subjectId={subjectId}
+              setSubjectId={setSubjectId}
+              status={status}
+              setStatus={setStatus}
+              maxMarks={maxMarks}
+              setMaxMarks={setMaxMarks}
+              passingMarks={passingMarks}
+              setPassingMarks={setPassingMarks}
+              examDate={examDate}
+              onExamDateChange={handleExamDateChange}
+              startTime={startTime}
+              setStartTime={setStartTime}
+              endTime={endTime}
+              setEndTime={setEndTime}
+              sessionsList={sessionsList}
+              classesList={classesList}
+              subjectsList={subjectsList}
+              selectedSession={selectedSession}
+              selectedSubject={selectedSubject}
+              checkDuplicateExam={checkDuplicateExam}
+              fieldErrors={fieldErrors}
+              dateError={dateError}
+            />
 
             {/* Description */}
             <div className="mt-6 space-y-2">

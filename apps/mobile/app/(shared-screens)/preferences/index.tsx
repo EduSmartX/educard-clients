@@ -28,8 +28,6 @@ import {
   RefreshControl,
   TextInput,
   Alert,
-  Modal,
-  Pressable,
   Keyboard,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -59,6 +57,7 @@ import {
   isPositiveValue,
   formatCategory,
 } from './constants';
+import { SingleSelectModal, MultiSelectModal, SaturdayPatternModal } from './PreferenceModals';
 import { styles } from './styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -664,140 +663,29 @@ export default function OrgPreferencesScreen() {
       )}
 
       {/* Single-select modal */}
-      {dropdownPref && (
-        <Modal
-          visible
-          transparent
-          animationType="slide"
-          onRequestClose={() => setDropdownPref(null)}
-        >
-          <Pressable style={styles.modalOverlay} onPress={() => setDropdownPref(null)}>
-            <Pressable style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
-              <View style={styles.modalHandle} />
-              <Text style={styles.modalTitle}>{dropdownPref.display_name}</Text>
-              <ScrollView style={styles.modalList}>
-                {(dropdownPref.applicable_values ?? []).map((val) => {
-                  const isSelected = val === String(dropdownPref.value);
-                  return (
-                    <TouchableOpacity
-                      key={val}
-                      style={[styles.modalOption, isSelected && styles.modalOptionSelected]}
-                      onPress={() => {
-                        handleUpdate(dropdownPref.public_id, val);
-                        setDropdownPref(null);
-                      }}
-                    >
-                      <Text
-                        style={[
-                          styles.modalOptionText,
-                          isSelected && styles.modalOptionTextSelected,
-                        ]}
-                      >
-                        {formatDropdownValue(val)}
-                      </Text>
-                      {isSelected && <Check size={18} color="#16a34a" />}
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-            </Pressable>
-          </Pressable>
-        </Modal>
-      )}
+      <SingleSelectModal
+        pref={dropdownPref}
+        onClose={() => setDropdownPref(null)}
+        onSelect={handleUpdate}
+      />
 
       {/* Multi-select modal */}
-      {multiSelectPref && (
-        <Modal
-          visible
-          transparent
-          animationType="slide"
-          onRequestClose={() => setMultiSelectPref(null)}
-        >
-          <Pressable style={styles.modalOverlay} onPress={() => setMultiSelectPref(null)}>
-            <Pressable style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
-              <View style={styles.modalHandle} />
-              <Text style={styles.modalTitle}>{multiSelectPref.display_name}</Text>
-              <ScrollView style={styles.modalList}>
-                {(multiSelectPref.applicable_values ?? []).map((val) => {
-                  const isSelected = multiSelectValues.includes(val);
-                  return (
-                    <TouchableOpacity
-                      key={val}
-                      style={[styles.modalOption, isSelected && styles.modalOptionSelected]}
-                      onPress={() =>
-                        setMultiSelectValues((prev) =>
-                          prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val]
-                        )
-                      }
-                    >
-                      <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
-                        {isSelected && <Check size={12} color="#fff" />}
-                      </View>
-                      <Text
-                        style={[
-                          styles.modalOptionText,
-                          isSelected && styles.modalOptionTextSelected,
-                        ]}
-                      >
-                        {formatDropdownValue(val)}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-              <TouchableOpacity
-                style={styles.modalSaveBtn}
-                onPress={() => {
-                  handleUpdate(multiSelectPref.public_id, multiSelectValues.join(','));
-                  setMultiSelectPref(null);
-                }}
-              >
-                <Text style={styles.modalSaveBtnText}>
-                  Save ({multiSelectValues.length} selected)
-                </Text>
-              </TouchableOpacity>
-            </Pressable>
-          </Pressable>
-        </Modal>
-      )}
+      <MultiSelectModal
+        pref={multiSelectPref}
+        values={multiSelectValues}
+        setValues={setMultiSelectValues}
+        onClose={() => setMultiSelectPref(null)}
+        onSave={handleUpdate}
+      />
 
       {/* Saturday pattern modal */}
-      <Modal
+      <SaturdayPatternModal
         visible={saturdayDropdownOpen}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setSaturdayDropdownOpen(false)}
-      >
-        <Pressable style={styles.modalOverlay} onPress={() => setSaturdayDropdownOpen(false)}>
-          <Pressable style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
-            <View style={styles.modalHandle} />
-            <Text style={styles.modalTitle}>Saturday Off Pattern</Text>
-            <ScrollView style={styles.modalList}>
-              {SATURDAY_OPTIONS.map((opt) => {
-                const isSelected = currentPolicy?.saturday_off_pattern === opt.value;
-                return (
-                  <TouchableOpacity
-                    key={opt.value}
-                    style={[styles.modalOption, isSelected && styles.modalOptionSelected]}
-                    onPress={() => {
-                      void handleWdpUpdate('saturday_off_pattern', opt.value);
-                      setSaturdayDropdownOpen(false);
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Text
-                      style={[styles.modalOptionText, isSelected && styles.modalOptionTextSelected]}
-                    >
-                      {opt.label}
-                    </Text>
-                    {isSelected && <Check size={18} color={Colors.primary[500]} />}
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </Pressable>
-        </Pressable>
-      </Modal>
+        onClose={() => setSaturdayDropdownOpen(false)}
+        options={SATURDAY_OPTIONS}
+        currentPattern={currentPolicy?.saturday_off_pattern}
+        onSelect={(value) => void handleWdpUpdate('saturday_off_pattern', value)}
+      />
     </View>
   );
 }

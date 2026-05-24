@@ -7,6 +7,8 @@ import { format } from 'date-fns';
 import { Lock, Moon, Send, Sun } from 'lucide-react-native';
 import { ActivityIndicator, Modal, Pressable, Text, TouchableOpacity, View } from 'react-native';
 
+import { DayAttendanceSession } from './DayAttendanceSession';
+
 interface DayAttendanceModalProps {
   visible: boolean;
   onClose: () => void;
@@ -43,6 +45,8 @@ export function DayAttendanceModal({
       : 'Timesheet Submitted: Return to draft to modify.';
   const isFullDayAbsent = !dayMorningPresent && !dayAfternoonPresent;
   const isBusy = isSubmitting || checkingWeekStatus;
+  const absentBtnBg = isFullDayAbsent ? '#ef4444' : '#f3f4f6';
+  const absentBtnColor = isFullDayAbsent ? 'white' : '#6b7280';
 
   return (
     <Modal visible={visible} transparent={true} animationType="slide" onRequestClose={onClose}>
@@ -105,81 +109,24 @@ export function DayAttendanceModal({
 
           {/* Session Toggles */}
           <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
-            <TouchableOpacity
-              style={{
-                flex: 1,
-                padding: 16,
-                borderRadius: 12,
-                borderWidth: 2,
-                backgroundColor: dayMorningPresent ? '#dcfce7' : '#fee2e2',
-                borderColor: dayMorningPresent ? '#22c55e' : '#ef4444',
-                alignItems: 'center',
-              }}
-              onPress={onToggleMorning}
-              activeOpacity={0.7}
-            >
-              <Sun size={24} color={dayMorningPresent ? '#16a34a' : '#dc2626'} />
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: '600',
-                  color: dayMorningPresent ? '#166534' : '#991b1b',
-                  marginTop: 8,
-                }}
-              >
-                Morning
-              </Text>
-              <Text
-                style={{
-                  fontSize: 12,
-                  color: dayMorningPresent ? '#16a34a' : '#dc2626',
-                  marginTop: 4,
-                }}
-              >
-                {dayMorningPresent ? 'Present' : 'Absent'}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={{
-                flex: 1,
-                padding: 16,
-                borderRadius: 12,
-                borderWidth: 2,
-                backgroundColor: dayAfternoonPresent ? '#dcfce7' : '#fee2e2',
-                borderColor: dayAfternoonPresent ? '#22c55e' : '#ef4444',
-                alignItems: 'center',
-              }}
-              onPress={onToggleAfternoon}
-              activeOpacity={0.7}
-            >
-              <Moon size={24} color={dayAfternoonPresent ? '#16a34a' : '#dc2626'} />
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: '600',
-                  color: dayAfternoonPresent ? '#166534' : '#991b1b',
-                  marginTop: 8,
-                }}
-              >
-                Afternoon
-              </Text>
-              <Text
-                style={{
-                  fontSize: 12,
-                  color: dayAfternoonPresent ? '#16a34a' : '#dc2626',
-                  marginTop: 4,
-                }}
-              >
-                {dayAfternoonPresent ? 'Present' : 'Absent'}
-              </Text>
-            </TouchableOpacity>
+            <DayAttendanceSession
+              icon={<Sun size={24} color={dayMorningPresent ? '#16a34a' : '#dc2626'} />}
+              label="Morning"
+              isPresent={dayMorningPresent}
+              onToggle={onToggleMorning}
+            />
+            <DayAttendanceSession
+              icon={<Moon size={24} color={dayAfternoonPresent ? '#16a34a' : '#dc2626'} />}
+              label="Afternoon"
+              isPresent={dayAfternoonPresent}
+              onToggle={onToggleAfternoon}
+            />
           </View>
 
           {/* Mark as Absent Button */}
           <TouchableOpacity
             style={{
-              backgroundColor: isFullDayAbsent ? '#ef4444' : '#f3f4f6',
+              backgroundColor: absentBtnBg,
               paddingVertical: 12,
               borderRadius: 8,
               alignItems: 'center',
@@ -192,7 +139,7 @@ export function DayAttendanceModal({
               style={{
                 fontSize: 14,
                 fontWeight: '600',
-                color: isFullDayAbsent ? 'white' : '#6b7280',
+                color: absentBtnColor,
               }}
             >
               Mark as Absent (Full Day)
