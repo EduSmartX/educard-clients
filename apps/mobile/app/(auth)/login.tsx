@@ -53,7 +53,9 @@ export default function LoginScreen() {
   const inputLabel = useEmail ? 'Email Address' : 'Username';
   const inputPlaceholder = useEmail ? 'Enter your email' : 'Enter your username';
   const toggleTitle = useEmail ? 'Using Email' : 'Using Username';
-  const toggleSubtitle = useEmail ? 'Sign in with your email address' : 'Sign in with your username';
+  const toggleSubtitle = useEmail
+    ? 'Sign in with your email address'
+    : 'Sign in with your username';
 
   return (
     <View style={styles.container}>
@@ -89,12 +91,8 @@ export default function LoginScreen() {
                 <InputIcon size={18} color={useEmail ? Colors.primary[600] : Colors.gray[500]} />
               </View>
               <View>
-                <Text style={styles.toggleTitle}>
-                  {toggleTitle}
-                </Text>
-                <Text style={styles.toggleSubtitle}>
-                  {toggleSubtitle}
-                </Text>
+                <Text style={styles.toggleTitle}>{toggleTitle}</Text>
+                <Text style={styles.toggleSubtitle}>{toggleSubtitle}</Text>
               </View>
             </View>
             <Switch
@@ -114,12 +112,13 @@ export default function LoginScreen() {
             <View
               style={[styles.inputContainer, focusedInput === 'username' && styles.inputFocused]}
             >
-              {useEmail ? (
+              {useEmail && (
                 <Mail
                   size={20}
                   color={focusedInput === 'username' ? Colors.primary[500] : Colors.gray[400]}
                 />
-              ) : (
+              )}
+              {!useEmail && (
                 <User
                   size={20}
                   color={focusedInput === 'username' ? Colors.primary[500] : Colors.gray[400]}
@@ -159,11 +158,8 @@ export default function LoginScreen() {
                 onBlur={() => setFocusedInput(null)}
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                {showPassword ? (
-                  <EyeOff size={20} color={Colors.gray[400]} />
-                ) : (
-                  <Eye size={20} color={Colors.gray[400]} />
-                )}
+                {showPassword && <EyeOff size={20} color={Colors.gray[400]} />}
+                {!showPassword && <Eye size={20} color={Colors.gray[400]} />}
               </TouchableOpacity>
             </View>
           </View>

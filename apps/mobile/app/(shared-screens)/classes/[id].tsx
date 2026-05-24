@@ -16,6 +16,10 @@ export default function ClassDetailScreen() {
   const { data: cls, isLoading, isError } = useClassDetail(id || '', isDeleted);
 
   const c = cls;
+  let isFullDisplay: string | undefined;
+  if (c?.is_full != null) {
+    isFullDisplay = c.is_full ? 'Yes' : 'No';
+  }
   const displayName = c?.class_master?.name
     ? `${c.class_master.name} - ${c.name}`
     : c?.name || '...';
@@ -37,10 +41,7 @@ export default function ClassDetailScreen() {
           <DetailRow label="Students" value={c?.student_count} />
           <DetailRow label="Subjects" value={c?.subjects_count} />
           <DetailRow label="Available Seats" value={c?.available_seats} />
-          <DetailRow
-            label="Full"
-            value={c?.is_full == null ? undefined : c.is_full ? 'Yes' : 'No'}
-          />
+          <DetailRow label="Full" value={isFullDisplay} />
           <DetailRow label="Info" value={c?.info} />
         </DetailSection>
       </Animated.View>

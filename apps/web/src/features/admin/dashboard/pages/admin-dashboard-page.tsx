@@ -318,23 +318,24 @@ function AttendanceCard({
               </div>
               <div>
                 <p className="text-sm text-gray-500">{label}</p>
-                {isLoading ? (
-                  <Loader2 className="mt-1 h-5 w-5 animate-spin text-gray-300" />
-                ) : isHoliday || isWorkingDay === false ? (
+                {isLoading && <Loader2 className="mt-1 h-5 w-5 animate-spin text-gray-300" />}
+                {!isLoading && (isHoliday || isWorkingDay === false) && (
                   <div>
                     <p className="text-lg font-semibold text-amber-600">
                       {displayContent.mainText}
                     </p>
                     <p className="text-xs text-gray-400">{displayContent.subText}</p>
                   </div>
-                ) : marked > 0 ? (
+                )}
+                {!isLoading && !(isHoliday || isWorkingDay === false) && marked > 0 && (
                   <p className="text-xl font-bold text-gray-900">
                     {displayContent.mainText}
                     <span className="text-sm font-normal text-gray-400">
                       {displayContent.subText}
                     </span>
                   </p>
-                ) : (
+                )}
+                {!isLoading && !(isHoliday || isWorkingDay === false) && marked <= 0 && (
                   <p className="mt-0.5 text-sm text-gray-400">{displayContent.mainText}</p>
                 )}
               </div>

@@ -25,10 +25,17 @@ export function FeeStructuresPage() {
   const [classFilter, setClassFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
 
+  let isActiveFilter: boolean | undefined;
+  if (statusFilter === 'active') {
+    isActiveFilter = true;
+  } else if (statusFilter === 'inactive') {
+    isActiveFilter = false;
+  }
+
   const { data: classesData } = useClasses();
   const { data, isLoading } = useFeeStructures({
     class_public_id: classFilter !== 'all' ? classFilter : undefined,
-    is_active: statusFilter === 'active' ? true : statusFilter === 'inactive' ? false : undefined,
+    is_active: isActiveFilter,
   });
 
   const structures = data?.data ?? [];

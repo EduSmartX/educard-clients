@@ -33,14 +33,22 @@ export function FeeAmount({
     maximumFractionDigits: 2,
   }).format(Math.abs(amount));
 
-  const sign = amount < 0 ? '-' : amount > 0 && showSign ? '+' : '';
-  const colorClass = colorCode
-    ? amount < 0
-      ? 'text-red-600'
-      : amount > 0
-        ? 'text-green-600'
-        : 'text-gray-600'
-    : '';
+  let sign = '';
+  if (amount < 0) {
+    sign = '-';
+  } else if (amount > 0 && showSign) {
+    sign = '+';
+  }
+  let colorClass = '';
+  if (colorCode) {
+    if (amount < 0) {
+      colorClass = 'text-red-600';
+    } else if (amount > 0) {
+      colorClass = 'text-green-600';
+    } else {
+      colorClass = 'text-gray-600';
+    }
+  }
 
   return (
     <span className={cn(sizeStyles[size], colorClass, className)}>

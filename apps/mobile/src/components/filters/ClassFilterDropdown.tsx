@@ -13,7 +13,7 @@ export interface ClassOption {
 }
 
 export function getClassLabel(cls: Partial<ClassLike> & { name?: string }): string {
-  const masterName = cls.class_master_name ?? cls.class_master?.name ?? '';
+  const masterName = cls.class_master_name || cls.class_master?.name || '';
   const sectionName = cls.name ?? '';
 
   if (masterName && sectionName) {

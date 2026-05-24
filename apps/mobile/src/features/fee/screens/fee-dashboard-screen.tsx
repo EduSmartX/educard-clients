@@ -217,11 +217,12 @@ export default function FeeDashboardScreen() {
                 </TouchableOpacity>
               </View>
 
-              {isPaymentsLoading ? (
-                <ActivityIndicator color="#059669" style={{ marginTop: 12 }} />
-              ) : recentPayments.length === 0 ? (
+              {isPaymentsLoading && <ActivityIndicator color="#059669" style={{ marginTop: 12 }} />}
+              {!isPaymentsLoading && recentPayments.length === 0 && (
                 <Text style={styles.emptyText}>No payments yet.</Text>
-              ) : (
+              )}
+              {!isPaymentsLoading &&
+                recentPayments.length > 0 &&
                 recentPayments.map((p: FeePaymentListItem) => (
                   <TouchableOpacity
                     key={p.public_id}
@@ -246,8 +247,7 @@ export default function FeeDashboardScreen() {
                     </View>
                     <ChevronRight size={16} color="#94a3b8" style={{ marginLeft: 4 }} />
                   </TouchableOpacity>
-                ))
-              )}
+                ))}
             </Animated.View>
 
             {/* Status breakdown */}

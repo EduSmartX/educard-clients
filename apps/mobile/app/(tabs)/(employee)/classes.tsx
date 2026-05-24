@@ -153,12 +153,13 @@ export default function EmployeeClassesScreen() {
         </LinearGradient>
 
         <View style={styles.content}>
-          {isLoading ? (
+          {isLoading && (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={colors.primary[600]} />
               <Text style={styles.loadingText}>Loading classes...</Text>
             </View>
-          ) : !classes || classes.length === 0 ? (
+          )}
+          {!isLoading && (!classes || classes.length === 0) && (
             <View style={styles.emptyState}>
               <BookOpen size={48} color="#d1d5db" />
               <Text style={styles.emptyTitle}>No Classes Assigned</Text>
@@ -166,7 +167,10 @@ export default function EmployeeClassesScreen() {
                 You don't have any classes assigned yet. Contact your administrator.
               </Text>
             </View>
-          ) : (
+          )}
+          {!isLoading &&
+            classes &&
+            classes.length > 0 &&
             classes.map((cls, index) => (
               <Animated.View
                 key={cls.public_id}
@@ -177,8 +181,7 @@ export default function EmployeeClassesScreen() {
                   onMarkAttendance={() => handleMarkAttendance(cls.public_id)}
                 />
               </Animated.View>
-            ))
-          )}
+            ))}
         </View>
       </ScrollView>
     </Screen>

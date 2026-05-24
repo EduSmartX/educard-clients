@@ -546,7 +546,7 @@ export default function HolidayCalendarScreen() {
                 >
                   {item.day}
                 </Text>
-                {config ? (
+                {config && (
                   <View style={[styles.calCellBadge, { backgroundColor: config.color + '18' }]}>
                     <Text
                       style={[styles.calCellBadgeText, { color: config.color }]}
@@ -557,11 +557,12 @@ export default function HolidayCalendarScreen() {
                         : primaryHoliday!.description}
                     </Text>
                   </View>
-                ) : secondSatHoliday ? (
+                )}
+                {!config && secondSatHoliday && (
                   <View style={[styles.calCellBadge, { backgroundColor: '#4f46e518' }]}>
                     <Text style={[styles.calCellBadgeText, { color: '#4f46e5' }]}>2nd Sat</Text>
                   </View>
-                ) : null}
+                )}
               </TouchableOpacity>
             );
           })}
@@ -755,13 +756,13 @@ export default function HolidayCalendarScreen() {
       />
 
       {/* Content */}
-      {isLoading && !refreshing ? (
+      {isLoading && !refreshing && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary[500]} />
         </View>
-      ) : viewMode === 'calendar' ? (
-        renderCalendar()
-      ) : (
+      )}
+      {!(isLoading && !refreshing) && viewMode === 'calendar' && renderCalendar()}
+      {!(isLoading && !refreshing) && viewMode !== 'calendar' && (
         <FlatList
           data={tableHolidays}
           keyExtractor={(item) => item.public_id}

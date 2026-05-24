@@ -70,6 +70,10 @@ export function Input({
   // Support both icon (LucideIcon component) and leftIcon (rendered React element)
   const LeftIcon = LeftIconComponent;
 
+  let labelColorClass = 'text-secondary-400';
+  if (isFocused) labelColorClass = 'text-primary-500';
+  else if (error) labelColorClass = 'text-danger-500';
+
   return (
     <View className={`mb-4 ${containerClassName ?? ''}`}>
       <View
@@ -91,9 +95,7 @@ export function Input({
           <Text
             className={`absolute left-0 ${
               isFloating ? '-top-2 text-xs' : 'top-1/2 -translate-y-1/2 text-base'
-            } ${
-              isFocused ? 'text-primary-500' : error ? 'text-danger-500' : 'text-secondary-400'
-            } transition-all duration-200`}
+            } ${labelColorClass} transition-all duration-200`}
           >
             {label}
           </Text>

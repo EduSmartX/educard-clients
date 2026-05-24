@@ -156,10 +156,13 @@ export default function FeeStructuresScreen() {
   const classOptions = buildClassOptions(classesData?.classes ?? []);
   const filterFields = buildFeeStructureFilterFields(classOptions);
 
+  let isActiveFilter: boolean | undefined;
+  if (filters.is_active === 'true') isActiveFilter = true;
+  else if (filters.is_active === 'false') isActiveFilter = false;
+
   const apiFilters: FeeStructureFilters = {
     class_public_id: (filters.class_public_id as string) || undefined,
-    is_active:
-      filters.is_active === 'true' ? true : filters.is_active === 'false' ? false : undefined,
+    is_active: isActiveFilter,
   };
 
   const {

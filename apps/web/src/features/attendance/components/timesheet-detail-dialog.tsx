@@ -248,13 +248,15 @@ export function TimesheetDetailDialog({
             <SummaryStats attendanceData={attendanceData} submission={submission} />
 
             {/* Day-wise Details */}
-            {isLoadingAttendance ? (
+            {isLoadingAttendance && (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
               </div>
-            ) : attendanceData ? (
+            )}
+            {!isLoadingAttendance && attendanceData && (
               <DailyAttendanceTable submission={submission} attendanceData={attendanceData} />
-            ) : (
+            )}
+            {!isLoadingAttendance && !attendanceData && (
               <div className="py-8 text-center text-gray-500">No attendance data available</div>
             )}
 

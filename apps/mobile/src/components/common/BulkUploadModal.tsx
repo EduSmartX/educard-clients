@@ -129,12 +129,13 @@ function extractUploadErrorResult(error: unknown): BulkUploadResult | null {
   }
 
   const data = rawResult as unknown as BulkUploadResult;
+  const successCount = data.successful_count ?? 0;
+  const createdCount = data.created_count ?? successCount;
+  const failedCount = data.failed_count ?? 0;
   return {
-    created_count: data.created_count ?? data.successful_count ?? 0,
-    failed_count: data.failed_count ?? 0,
-    total_rows:
-      data.total_rows ??
-      (data.created_count ?? data.successful_count ?? 0) + (data.failed_count ?? 0),
+    created_count: createdCount,
+    failed_count: failedCount,
+    total_rows: data.total_rows ?? createdCount + failedCount,
     errors: data.errors ? transformErrors(data.errors) : [],
   };
 }

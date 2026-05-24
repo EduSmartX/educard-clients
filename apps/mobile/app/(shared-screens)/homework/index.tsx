@@ -192,13 +192,11 @@ export default function HomeworkListScreen() {
   }, [selectedDate, selectedClassId, navigateWorkingDay, canNavigateNext]);
 
   const handleCreateHomework = (subjectId?: string) => {
-    const today = new Date();
-    const dateStr = formatDateYYYYMMDD(today);
-    let url = `/(shared-screens)/homework/create?class=${selectedClassId}&date=${dateStr}`;
-    if (subjectId) {
-      url += `&subject=${subjectId}`;
-    }
-    router.push(url as Href);
+    const dateStr = formatDateYYYYMMDD(new Date());
+    const subjectParam = subjectId ? `&subject=${subjectId}` : '';
+    router.push(
+      `/(shared-screens)/homework/create?class=${selectedClassId}&date=${dateStr}${subjectParam}` as Href
+    );
   };
 
   const handleViewHomework = (homework: Homework) => {
@@ -387,22 +385,25 @@ export default function HomeworkListScreen() {
 
       {/* Class Selection Dropdown */}
       <View style={styles.classSelector}>
-        {classesLoading ? (
+        {classesLoading && (
           <View style={styles.classLoadingContainer}>
             <ActivityIndicator size="small" color={Colors.primary[500]} />
             <Text style={styles.classLoadingText}>Loading classes...</Text>
           </View>
-        ) : classesError ? (
+        )}
+        {!classesLoading && classesError && (
           <View style={styles.noClassesContainer}>
             <Text style={styles.noClassesText}>
               Error: {(classesError as Error)?.message || 'Failed to load classes'}
             </Text>
           </View>
-        ) : teacherClasses.length === 0 ? (
+        )}
+        {!classesLoading && !classesError && teacherClasses.length === 0 && (
           <View style={styles.noClassesContainer}>
             <Text style={styles.noClassesText}>No classes assigned. Please contact admin.</Text>
           </View>
-        ) : (
+        )}
+        {!classesLoading && !classesError && teacherClasses.length > 0 && (
           <TouchableOpacity style={styles.classDropdown} onPress={() => setShowClassPicker(true)}>
             <View style={styles.classDropdownContent}>
               <Text style={styles.classDropdownLabel}>Class</Text>

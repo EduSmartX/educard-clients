@@ -262,18 +262,20 @@ export default function TimetableScreen() {
           />
         </View>
 
-        {!selectedClassId ? (
+        {!selectedClassId && (
           <View style={styles.emptyState}>
             <Text style={styles.emptyIcon}>📚</Text>
             <Text style={styles.emptyTitle}>Select a Class</Text>
             <Text style={styles.emptySubtitle}>Choose a class above to view its timetable</Text>
           </View>
-        ) : ttLoading ? (
+        )}
+        {selectedClassId && ttLoading && (
           <View style={styles.loadingState}>
             <ActivityIndicator size="large" color="#7c3aed" />
             <Text style={styles.loadingText}>Loading timetable...</Text>
           </View>
-        ) : !timetable || availableDays.length === 0 ? (
+        )}
+        {selectedClassId && !ttLoading && (!timetable || availableDays.length === 0) && (
           <View style={styles.emptyState}>
             <Text style={styles.emptyIcon}>📋</Text>
             <Text style={styles.emptyTitle}>No Timetable</Text>
@@ -301,7 +303,8 @@ export default function TimetableScreen() {
               </TouchableOpacity>
             )}
           </View>
-        ) : (
+        )}
+        {selectedClassId && !ttLoading && timetable && availableDays.length > 0 && (
           <>
             {/* Day Tabs */}
             <ScrollView

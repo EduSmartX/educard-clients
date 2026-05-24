@@ -72,13 +72,13 @@ export function AddClassDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="py-2">
-          {classesLoading ? (
-            <Skeleton className="h-10 w-full" />
-          ) : availableClasses.length === 0 ? (
+          {classesLoading && <Skeleton className="h-10 w-full" />}
+          {!classesLoading && availableClasses.length === 0 && (
             <div className="rounded-xl bg-slate-50 px-4 py-6 text-center">
               <p className="text-sm font-medium text-slate-500">{S.ALL_CLASSES_ASSIGNED}</p>
             </div>
-          ) : (
+          )}
+          {!classesLoading && availableClasses.length > 0 && (
             <SearchableSelect
               options={availableClasses.map((cls) => ({
                 value: cls.public_id,

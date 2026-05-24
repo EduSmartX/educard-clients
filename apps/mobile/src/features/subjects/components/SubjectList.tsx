@@ -273,15 +273,15 @@ export function SubjectList({ onBack }: SubjectListProps) {
         title="Filter Subjects"
       />
 
-      {isLoading ? (
-        <LoadingState color={adminTheme.accent} message="Loading subjects..." />
-      ) : isError ? (
+      {isLoading && <LoadingState color={adminTheme.accent} message="Loading subjects..." />}
+      {!isLoading && isError && (
         <ErrorState
           message="Failed to load subjects"
           detail={error?.message}
           onRetry={() => void refetch()}
         />
-      ) : (
+      )}
+      {!isLoading && !isError && (
         <FlatList
           data={subjects}
           renderItem={renderSubjectCard}

@@ -397,6 +397,37 @@ function buildWeekRows(
   });
 }
 
+/** Check if a day click should be blocked, returns alert info or null */
+function getDayClickBlockReason(
+  date: Date,
+  state: DayState,
+  attendanceByDate: Map<string, AttendanceRecord>
+): { title: string; message: string } | null {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const clickedDate = new Date(date);
+  clickedDate.setHours(0, 0, 0, 0);
+
+  if (clickedDate > today)
+    return { title: 'Cannot Edit', message: 'Cannot submit attendance for future dates.' };
+  if (state === 'holiday')
+    return { title: 'Holiday', message: 'This is a holiday. No attendance required.' };
+  if (state === 'leave-approved' || state === 'leave-pending')
+    return { title: 'On Leave', message: 'You are on leave for this date.' };
+
+  const record = attendanceByDate.get(format(date, 'yyyy-MM-dd'));
+  const status = record?.approval_status?.toLowerCase();
+  if (status === 'approved')
+    return { title: 'Cannot Edit', message: 'This date has been approved and cannot be modified.' };
+  if (status === 'submitted' || status === 'pending')
+    return {
+      title: 'Cannot Edit',
+      message: 'This date has been submitted for approval. Wait for approval or return to draft.',
+    };
+
+  return null;
+}
+
 export default function MyTimesheetScreen() {
   const router = useRouter();
   const { showToast } = useToast();
@@ -507,68 +538,53 @@ export default function MyTimesheetScreen() {
     }
 
     setLoadingWeeks(true);
+    const fromDateStr = format(weekStart, 'yyyy-MM-dd');
+    const toDateStr = format(weekEnd, 'yyyy-MM-dd');
+
+    let submissionStatus: string | null = null;
+    let reviewComments: string | null = null;
+    let reviewedByName: string | null = null;
+    let reviewedAt: string | null = null;
+    let hasStatus = false;
+
     try {
-      const fromDate = format(weekStart, 'yyyy-MM-dd');
-      const toDate = format(weekEnd, 'yyyy-MM-dd');
-      const statusResponse = await checkTimesheetStatus(fromDate, toDate).catch(() => ({
-        submission: null,
-      }));
-
-      const rows = buildWeekRows(
-        weekStart,
-        weekEnd,
-        attendanceByDate,
-        holidayDescriptions,
-        holidaySet,
-        workingDayPolicy,
-        exceptionsMap,
-        defaultPresent,
-        true
-      );
-
-      const newWeek: WeekBlock = {
-        id: weekId,
-        start: fromDate,
-        end: toDate,
-        rows,
-        collapsed: false,
-        submissionStatus: statusResponse.submission?.submission_status || null,
-        reviewComments: statusResponse.submission?.review_comments || null,
-        reviewedByName: statusResponse.submission?.reviewed_by_name || null,
-        reviewedAt: statusResponse.submission?.reviewed_at || null,
-      };
-      setWeeks((prev) =>
-        [...prev.filter((w) => w.id !== weekId), newWeek].sort((a, b) => a.id.localeCompare(b.id))
-      );
+      const statusResponse = await checkTimesheetStatus(fromDateStr, toDateStr);
+      submissionStatus = statusResponse.submission?.submission_status || null;
+      reviewComments = statusResponse.submission?.review_comments || null;
+      reviewedByName = statusResponse.submission?.reviewed_by_name || null;
+      reviewedAt = statusResponse.submission?.reviewed_at || null;
+      hasStatus = true;
     } catch {
-      const rows = buildWeekRows(
-        weekStart,
-        weekEnd,
-        attendanceByDate,
-        holidayDescriptions,
-        holidaySet,
-        workingDayPolicy,
-        exceptionsMap,
-        defaultPresent,
-        false
-      );
-      setWeeks((prev) =>
-        [
-          ...prev.filter((w) => w.id !== format(weekStart, 'yyyy-MM-dd')),
-          {
-            id: format(weekStart, 'yyyy-MM-dd'),
-            start: format(weekStart, 'yyyy-MM-dd'),
-            end: format(weekEnd, 'yyyy-MM-dd'),
-            rows,
-            collapsed: false,
-            submissionStatus: null,
-            reviewComments: null,
-          },
-        ].sort((a, b) => a.id.localeCompare(b.id))
-      );
-    } finally {
-      setLoadingWeeks(false);
+      // Status check failed, continue without it
     }
+
+    const rows = buildWeekRows(
+      weekStart,
+      weekEnd,
+      attendanceByDate,
+      holidayDescriptions,
+      holidaySet,
+      workingDayPolicy,
+      exceptionsMap,
+      defaultPresent,
+      hasStatus
+    );
+
+    const newWeek: WeekBlock = {
+      id: weekId,
+      start: fromDateStr,
+      end: toDateStr,
+      rows,
+      collapsed: false,
+      submissionStatus,
+      reviewComments,
+      reviewedByName,
+      reviewedAt,
+    };
+    setWeeks((prev) =>
+      [...prev.filter((w) => w.id !== weekId), newWeek].sort((a, b) => a.id.localeCompare(b.id))
+    );
+    setLoadingWeeks(false);
   };
 
   const toggleAttendance = (
@@ -577,16 +593,15 @@ export default function MyTimesheetScreen() {
     field: 'morning_present' | 'afternoon_present'
   ) => {
     setWeeks((prev) =>
-      prev.map((week) =>
-        week.id !== weekId
-          ? week
-          : {
-              ...week,
-              rows: week.rows.map((row) =>
-                row.date === date ? { ...row, [field]: !row[field] } : row
-              ),
-            }
-      )
+      prev.map((week) => {
+        if (week.id !== weekId) return week;
+        return {
+          ...week,
+          rows: week.rows.map((row) =>
+            row.date === date ? { ...row, [field]: !row[field] } : row
+          ),
+        };
+      })
     );
   };
 
@@ -643,44 +658,10 @@ export default function MyTimesheetScreen() {
   // Handle clicking on a calendar day
   const handleDayClick = useCallback(
     async (date: Date, state: DayState) => {
-      const dateKey = toDateKey(date);
-      const record = attendanceByDate.get(dateKey);
-
-      // Don't allow clicking on future dates or holidays
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const clickedDate = new Date(date);
-      clickedDate.setHours(0, 0, 0, 0);
-
-      if (clickedDate > today) {
-        Alert.alert('Cannot Edit', 'Cannot submit attendance for future dates.');
+      const blockReason = getDayClickBlockReason(date, state, attendanceByDate);
+      if (blockReason) {
+        Alert.alert(blockReason.title, blockReason.message);
         return;
-      }
-
-      if (state === 'holiday') {
-        Alert.alert('Holiday', 'This is a holiday. No attendance required.');
-        return;
-      }
-
-      if (state === 'leave-approved' || state === 'leave-pending') {
-        Alert.alert('On Leave', 'You are on leave for this date.');
-        return;
-      }
-
-      // Check if attendance is already submitted/approved
-      if (record) {
-        const status = record.approval_status?.toLowerCase();
-        if (status === 'approved') {
-          Alert.alert('Cannot Edit', 'This date has been approved and cannot be modified.');
-          return;
-        }
-        if (status === 'submitted' || status === 'pending') {
-          Alert.alert(
-            'Cannot Edit',
-            'This date has been submitted for approval. Wait for approval or return to draft.'
-          );
-          return;
-        }
       }
 
       // Check if timesheet for this week is already submitted/approved
@@ -704,7 +685,6 @@ export default function MyTimesheetScreen() {
           setCheckingWeekStatus(false);
           return;
         }
-
         if (timesheetStatus === 'SUBMITTED') {
           Alert.alert(
             'Cannot Edit',
@@ -714,20 +694,15 @@ export default function MyTimesheetScreen() {
           return;
         }
       } catch {
-        // No submission exists - that's fine, allow editing
         setWeekTimesheetStatus(null);
       }
       setCheckingWeekStatus(false);
 
       // Set the selected day and pre-fill attendance values
       setSelectedDay(date);
-      if (record) {
-        setDayMorningPresent(record.morning_present ?? defaultPresent);
-        setDayAfternoonPresent(record.afternoon_present ?? defaultPresent);
-      } else {
-        setDayMorningPresent(defaultPresent);
-        setDayAfternoonPresent(defaultPresent);
-      }
+      const record = attendanceByDate.get(format(date, 'yyyy-MM-dd'));
+      setDayMorningPresent(record?.morning_present ?? defaultPresent);
+      setDayAfternoonPresent(record?.afternoon_present ?? defaultPresent);
       setDayModalVisible(true);
     },
     [attendanceByDate, defaultPresent]
@@ -844,13 +819,16 @@ export default function MyTimesheetScreen() {
       const isClickable = clickedDate <= today && state !== 'future';
 
       // Label for holiday display - computed but used in potential future UI
-      const _shortLabel = holidayInfo // prefixed _ - unused for now
-        ? holidayInfo.type === 'weekend'
-          ? 'Weekend'
-          : holidayInfo.name.length > 8
-            ? holidayInfo.name.substring(0, 6) + '..'
-            : holidayInfo.name
-        : '';
+      let _shortLabel = '';
+      if (holidayInfo) {
+        if (holidayInfo.type === 'weekend') {
+          _shortLabel = 'Weekend';
+        } else if (holidayInfo.name.length > 8) {
+          _shortLabel = holidayInfo.name.substring(0, 6) + '..';
+        } else {
+          _shortLabel = holidayInfo.name;
+        }
+      }
 
       const renderIcon = () => {
         if (state === 'leave-approved' || state === 'leave-pending') {
@@ -1058,6 +1036,15 @@ export default function MyTimesheetScreen() {
           <View style={{ padding: 12 }}>
             {week.rows.map((row, idx) => {
               const isLocked = !!row.locked_reason;
+              let lockedBgColor = '#f3f4f6';
+              let lockedTextColor = '#6b7280';
+              if (row.locked_reason === 'holiday') {
+                lockedBgColor = '#f3e8ff';
+                lockedTextColor = '#7c3aed';
+              } else if (row.locked_reason === 'leave') {
+                lockedBgColor = '#ffedd5';
+                lockedTextColor = '#ea580c';
+              }
               const isDisabled =
                 isLocked ||
                 week.submissionStatus === 'SUBMITTED' ||
@@ -1086,12 +1073,7 @@ export default function MyTimesheetScreen() {
                     <View style={{ flex: 1, paddingHorizontal: 8 }}>
                       <View
                         style={{
-                          backgroundColor:
-                            row.locked_reason === 'holiday'
-                              ? '#f3e8ff'
-                              : row.locked_reason === 'leave'
-                                ? '#ffedd5'
-                                : '#f3f4f6',
+                          backgroundColor: lockedBgColor,
                           paddingVertical: 8,
                           paddingHorizontal: 12,
                           borderRadius: 8,
@@ -1102,12 +1084,7 @@ export default function MyTimesheetScreen() {
                           style={{
                             fontSize: 12,
                             fontWeight: '500',
-                            color:
-                              row.locked_reason === 'holiday'
-                                ? '#7c3aed'
-                                : row.locked_reason === 'leave'
-                                  ? '#ea580c'
-                                  : '#6b7280',
+                            color: lockedTextColor,
                           }}
                         >
                           {row.holiday_name || row.leave_name || 'Non-working day'}
@@ -1325,12 +1302,13 @@ export default function MyTimesheetScreen() {
         contentContainerStyle={{ padding: 12, paddingBottom: 40 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
       >
-        {isLoading ? (
+        {isLoading && (
           <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 80 }}>
             <ActivityIndicator size="large" color="#0d9488" />
             <Text style={{ color: '#6b7280', marginTop: 12 }}>Loading timesheet...</Text>
           </View>
-        ) : error ? (
+        )}
+        {!isLoading && error && (
           <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 80 }}>
             <Text style={{ color: '#dc2626', fontSize: 16, fontWeight: '600', marginBottom: 8 }}>
               Failed to load data
@@ -1347,7 +1325,8 @@ export default function MyTimesheetScreen() {
               <Text style={{ color: 'white', fontWeight: '600' }}>Retry</Text>
             </TouchableOpacity>
           </View>
-        ) : (
+        )}
+        {!isLoading && !error && (
           <>
             {/* Summary Card */}
             <View

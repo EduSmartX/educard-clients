@@ -256,8 +256,8 @@ export function StudentFeeDetailPage() {
 
         <Card>
           <CardContent className="pt-6">
-            {studentFee.status === FeeStatus.REFUNDING ||
-            studentFee.status === FeeStatus.REFUNDED ? (
+            {(studentFee.status === FeeStatus.REFUNDING ||
+              studentFee.status === FeeStatus.REFUNDED) && (
               <>
                 <div className="text-sm font-medium text-orange-600">
                   {studentFee.status === FeeStatus.REFUNDED ? 'Refunded' : 'Refundable'}
@@ -270,30 +270,38 @@ export function StudentFeeDetailPage() {
                   <div className="mt-1 text-xs text-orange-500">Full refund pending</div>
                 )}
               </>
-            ) : studentFee.balance_due < 0 ? (
-              <>
-                <div className="text-sm font-medium text-orange-600">Overpaid</div>
-                <div className="flex items-center text-2xl font-bold text-orange-600">
-                  <IndianRupee className="h-5 w-5" />
-                  {Math.abs(studentFee.balance_due).toLocaleString('en-IN')}
-                </div>
-                <div className="mt-1 text-xs text-orange-500">Excess payment — refund required</div>
-              </>
-            ) : (
-              <>
-                <div className="text-muted-foreground text-sm">Balance Due</div>
-                <div className="flex items-center text-2xl font-bold text-red-600">
-                  <IndianRupee className="h-5 w-5" />
-                  {studentFee.balance_due?.toLocaleString('en-IN')}
-                </div>
-                {studentFee.reminder_count > 0 && (
-                  <div className="text-muted-foreground mt-1 text-xs">
-                    {studentFee.reminder_count} reminder{studentFee.reminder_count > 1 ? 's' : ''}{' '}
-                    sent
-                  </div>
-                )}
-              </>
             )}
+            {studentFee.status !== FeeStatus.REFUNDING &&
+              studentFee.status !== FeeStatus.REFUNDED &&
+              studentFee.balance_due < 0 && (
+                <>
+                  <div className="text-sm font-medium text-orange-600">Overpaid</div>
+                  <div className="flex items-center text-2xl font-bold text-orange-600">
+                    <IndianRupee className="h-5 w-5" />
+                    {Math.abs(studentFee.balance_due).toLocaleString('en-IN')}
+                  </div>
+                  <div className="mt-1 text-xs text-orange-500">
+                    Excess payment — refund required
+                  </div>
+                </>
+              )}
+            {studentFee.status !== FeeStatus.REFUNDING &&
+              studentFee.status !== FeeStatus.REFUNDED &&
+              studentFee.balance_due >= 0 && (
+                <>
+                  <div className="text-muted-foreground text-sm">Balance Due</div>
+                  <div className="flex items-center text-2xl font-bold text-red-600">
+                    <IndianRupee className="h-5 w-5" />
+                    {studentFee.balance_due?.toLocaleString('en-IN')}
+                  </div>
+                  {studentFee.reminder_count > 0 && (
+                    <div className="text-muted-foreground mt-1 text-xs">
+                      {studentFee.reminder_count} reminder{studentFee.reminder_count > 1 ? 's' : ''}{' '}
+                      sent
+                    </div>
+                  )}
+                </>
+              )}
           </CardContent>
         </Card>
 

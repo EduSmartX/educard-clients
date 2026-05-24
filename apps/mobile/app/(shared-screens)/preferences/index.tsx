@@ -750,16 +750,15 @@ export default function OrgPreferencesScreen() {
             <ScrollView style={styles.modalList}>
               {values.map((val) => {
                 const isSelected = multiSelectValues.includes(val);
-                const handleToggle = () => {
-                  setMultiSelectValues((prev) =>
-                    isSelected ? prev.filter((v) => v !== val) : [...prev, val]
-                  );
-                };
                 return (
                   <TouchableOpacity
                     key={val}
                     style={[styles.modalOption, isSelected && styles.modalOptionSelected]}
-                    onPress={handleToggle}
+                    onPress={() =>
+                      setMultiSelectValues((prev) =>
+                        isSelected ? prev.filter((v) => v !== val) : [...prev, val]
+                      )
+                    }
                   >
                     <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
                       {isSelected && <Check size={12} color="#fff" />}

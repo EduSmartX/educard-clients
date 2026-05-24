@@ -239,34 +239,32 @@ export default function StudentDetailScreen() {
                 style={s.subjectCard}
               >
                 <Text style={s.subjectName}>{sub.subject_name}</Text>
-                {mark ? (
-                  mark.is_absent ? (
-                    <View style={s.absentBar}>
-                      <Text style={s.absentText}>ABSENT</Text>
-                    </View>
-                  ) : (
-                    <View style={s.marksRow}>
-                      <MarksBar
-                        obtained={mark.marks_obtained}
-                        max={mark.max_marks}
-                        pass={sub.passing_marks}
-                      />
-                      <View
-                        style={[
-                          s.markBadge,
-                          { backgroundColor: mark.is_pass ? '#dcfce7' : '#fee2e2' },
-                        ]}
+                {!mark && <Text style={s.noMark}>No marks entered</Text>}
+                {mark && mark.is_absent && (
+                  <View style={s.absentBar}>
+                    <Text style={s.absentText}>ABSENT</Text>
+                  </View>
+                )}
+                {mark && !mark.is_absent && (
+                  <View style={s.marksRow}>
+                    <MarksBar
+                      obtained={mark.marks_obtained}
+                      max={mark.max_marks}
+                      pass={sub.passing_marks}
+                    />
+                    <View
+                      style={[
+                        s.markBadge,
+                        { backgroundColor: mark.is_pass ? '#dcfce7' : '#fee2e2' },
+                      ]}
+                    >
+                      <Text
+                        style={[s.markBadgeText, { color: mark.is_pass ? '#16a34a' : '#dc2626' }]}
                       >
-                        <Text
-                          style={[s.markBadgeText, { color: mark.is_pass ? '#16a34a' : '#dc2626' }]}
-                        >
-                          {mark.is_pass ? 'P' : 'F'}
-                        </Text>
-                      </View>
+                        {mark.is_pass ? 'P' : 'F'}
+                      </Text>
                     </View>
-                  )
-                ) : (
-                  <Text style={s.noMark}>No marks entered</Text>
+                  </View>
                 )}
               </Animated.View>
             );

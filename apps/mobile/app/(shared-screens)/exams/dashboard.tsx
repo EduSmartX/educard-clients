@@ -277,7 +277,7 @@ export default function ExamDashboardScreen() {
                   }}
                 >
                   <Text style={styles.classOptionText}>
-                    {cls.display_name ?? `${cls.class_master?.name ?? ''} - ${cls.name}`.trim()}
+                    {cls.display_name ?? `${cls.class_master?.name || ''} - ${cls.name}`.trim()}
                   </Text>
                 </TouchableOpacity>
               ))}

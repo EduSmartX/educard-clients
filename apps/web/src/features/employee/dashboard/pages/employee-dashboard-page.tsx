@@ -100,15 +100,53 @@ function AnimatedNumber({ value, isLoading }: { value: number; isLoading: boolea
 }
 
 const DONUT_SEGMENTS = [
-  { key: 'present', label: 'Present', color: '#22c55e', dotClass: 'bg-green-500', borderClass: 'border-green-200', bgClass: 'bg-green-50', textClass: 'text-green-700', boldClass: 'text-green-800' },
-  { key: 'absent', label: 'Absent', color: '#ef4444', dotClass: 'bg-red-500', borderClass: 'border-red-200', bgClass: 'bg-red-50', textClass: 'text-red-700', boldClass: 'text-red-800' },
-  { key: 'leaves', label: 'Leave', color: '#f97316', dotClass: 'bg-orange-500', borderClass: 'border-orange-200', bgClass: 'bg-orange-50', textClass: 'text-orange-700', boldClass: 'text-orange-800' },
-  { key: 'holidays', label: 'Holiday', color: '#a855f7', dotClass: 'bg-purple-500', borderClass: 'border-purple-200', bgClass: 'bg-purple-50', textClass: 'text-purple-700', boldClass: 'text-purple-800' },
+  {
+    key: 'present',
+    label: 'Present',
+    color: '#22c55e',
+    dotClass: 'bg-green-500',
+    borderClass: 'border-green-200',
+    bgClass: 'bg-green-50',
+    textClass: 'text-green-700',
+    boldClass: 'text-green-800',
+  },
+  {
+    key: 'absent',
+    label: 'Absent',
+    color: '#ef4444',
+    dotClass: 'bg-red-500',
+    borderClass: 'border-red-200',
+    bgClass: 'bg-red-50',
+    textClass: 'text-red-700',
+    boldClass: 'text-red-800',
+  },
+  {
+    key: 'leaves',
+    label: 'Leave',
+    color: '#f97316',
+    dotClass: 'bg-orange-500',
+    borderClass: 'border-orange-200',
+    bgClass: 'bg-orange-50',
+    textClass: 'text-orange-700',
+    boldClass: 'text-orange-800',
+  },
+  {
+    key: 'holidays',
+    label: 'Holiday',
+    color: '#a855f7',
+    dotClass: 'bg-purple-500',
+    borderClass: 'border-purple-200',
+    bgClass: 'bg-purple-50',
+    textClass: 'text-purple-700',
+    boldClass: 'text-purple-800',
+  },
 ] as const;
 
 /** Format time string (HH:MM) to 12-hour format */
 function formatTime(timeStr: string): string {
-  if (!timeStr) return '';
+  if (!timeStr) {
+    return '';
+  }
   const [hours, minutes] = timeStr.split(':').map(Number);
   const period = hours >= 12 ? 'PM' : 'AM';
   const displayHours = hours % 12 || 12;
@@ -206,7 +244,7 @@ export default function EmployeeDashboardPage() {
         className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 p-6 text-white shadow-2xl shadow-blue-500/20 sm:p-8"
       >
         <motion.div
-          className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"
+          className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"
           animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
           transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
         />
@@ -285,7 +323,13 @@ export default function EmployeeDashboardPage() {
           className="grid gap-4 sm:grid-cols-3"
         >
           {/* My Classes Today */}
-          <motion.div variants={FADE_UP} whileHover={{ y: -4, scale: 1.02 }} whileTap={{ scale: 0.98 }} className="group cursor-pointer" onClick={() => navigate('/timetable')}>
+          <motion.div
+            variants={FADE_UP}
+            whileHover={{ y: -4, scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="group cursor-pointer"
+            onClick={() => navigate('/timetable')}
+          >
             <Card className="relative overflow-hidden border border-gray-100 shadow-sm transition-shadow duration-300 hover:shadow-xl">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/90 to-indigo-600/90 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
               <CardContent className="relative z-10 p-5">
@@ -307,7 +351,13 @@ export default function EmployeeDashboardPage() {
           </motion.div>
 
           {/* Leave Balance */}
-          <motion.div variants={FADE_UP} whileHover={{ y: -4, scale: 1.02 }} whileTap={{ scale: 0.98 }} className="group cursor-pointer" onClick={() => navigate('/leave/requests/new')}>
+          <motion.div
+            variants={FADE_UP}
+            whileHover={{ y: -4, scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="group cursor-pointer"
+            onClick={() => navigate('/leave/requests/new')}
+          >
             <Card className="relative overflow-hidden border border-gray-100 shadow-sm transition-shadow duration-300 hover:shadow-xl">
               <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/90 to-teal-600/90 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
               <CardContent className="relative z-10 p-5">
@@ -329,7 +379,13 @@ export default function EmployeeDashboardPage() {
           </motion.div>
 
           {/* Pending Tasks */}
-          <motion.div variants={FADE_UP} whileHover={{ y: -4, scale: 1.02 }} whileTap={{ scale: 0.98 }} className="group cursor-pointer" onClick={() => navigate('/employee/attendance/timesheet')}>
+          <motion.div
+            variants={FADE_UP}
+            whileHover={{ y: -4, scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="group cursor-pointer"
+            onClick={() => navigate('/employee/attendance/timesheet')}
+          >
             <Card className="relative overflow-hidden border border-gray-100 shadow-sm transition-shadow duration-300 hover:shadow-xl">
               <div className="absolute inset-0 bg-gradient-to-br from-orange-500/90 to-amber-600/90 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
               <CardContent className="relative z-10 p-5">
@@ -369,21 +425,22 @@ export default function EmployeeDashboardPage() {
                 Today&apos;s Schedule — {DAY_LABELS[todayDayNum]}
               </CardTitle>
               <CardDescription>
-                {loadingTimetable
-                  ? 'Loading...'
-                  : todayClasses.length > 0
-                    ? `${todayClasses.length} class${todayClasses.length > 1 ? 'es' : ''} scheduled`
-                    : 'No classes scheduled for today'}
+                {loadingTimetable && 'Loading...'}
+                {!loadingTimetable &&
+                  todayClasses.length > 0 &&
+                  `${todayClasses.length} class${todayClasses.length > 1 ? 'es' : ''} scheduled`}
+                {!loadingTimetable && todayClasses.length === 0 && 'No classes scheduled for today'}
               </CardDescription>
             </CardHeader>
             <CardContent className="p-4">
-              {loadingTimetable ? (
+              {loadingTimetable && (
                 <div className="space-y-3">
                   {[1, 2, 3].map((i) => (
                     <Skeleton key={i} className="h-20 w-full rounded-xl" />
                   ))}
                 </div>
-              ) : todayClasses.length === 0 ? (
+              )}
+              {!loadingTimetable && todayClasses.length === 0 && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -392,14 +449,17 @@ export default function EmployeeDashboardPage() {
                   <Calendar className="mb-2 h-12 w-12 text-gray-300" />
                   <p className="text-sm text-gray-500">No classes scheduled for today</p>
                 </motion.div>
-              ) : (
+              )}
+              {!loadingTimetable && todayClasses.length > 0 && (
                 <div className="max-h-80 space-y-3 overflow-y-auto pr-1">
                   {todayClasses.map((entry, idx) => {
                     const isNext = nextClass?.public_id === entry.public_id;
                     const [hours] = (entry.start_time || '00:00').split(':').map(Number);
                     const period = hours >= 12 ? 'PM' : 'AM';
                     const displayHours = hours % 12 || 12;
-                    const subjectColor = getSubjectColor(entry.subject_name || entry.slot_label || 'default');
+                    const subjectColor = getSubjectColor(
+                      entry.subject_name || entry.slot_label || 'default'
+                    );
 
                     return (
                       <motion.div
@@ -416,7 +476,9 @@ export default function EmployeeDashboardPage() {
                       >
                         <div
                           className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl text-white"
-                          style={{ background: `linear-gradient(135deg, ${subjectColor.hex}, ${subjectColor.hex}cc)` }}
+                          style={{
+                            background: `linear-gradient(135deg, ${subjectColor.hex}, ${subjectColor.hex}cc)`,
+                          }}
                         >
                           <span className="text-xs font-medium">
                             {displayHours}:{(entry.start_time || '00:00').split(':')[1]}
@@ -594,9 +656,8 @@ export default function EmployeeDashboardPage() {
               </p>
             </CardHeader>
             <CardContent className="flex flex-col items-center p-4">
-              {loadingAttendance ? (
-                <Skeleton className="h-48 w-48 rounded-full" />
-              ) : attendanceStats.total === 0 ? (
+              {loadingAttendance && <Skeleton className="h-48 w-48 rounded-full" />}
+              {!loadingAttendance && attendanceStats.total === 0 && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -604,7 +665,8 @@ export default function EmployeeDashboardPage() {
                 >
                   No attendance data
                 </motion.div>
-              ) : (
+              )}
+              {!loadingAttendance && attendanceStats.total > 0 && (
                 <>
                   {/* Animated Donut Chart */}
                   <motion.div

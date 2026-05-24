@@ -99,13 +99,18 @@ export function getStudentColumns({
           return <span className="text-gray-400">—</span>;
         }
 
-        const genderLabel = gender === 'M' ? 'Male' : gender === 'F' ? 'Female' : 'Other';
-        const genderColor =
-          gender === 'M'
-            ? 'bg-blue-100 text-blue-800'
-            : gender === 'F'
-              ? 'bg-pink-100 text-pink-800'
-              : 'bg-gray-100 text-gray-800';
+        let genderLabel = 'Other';
+        if (gender === 'M') {
+          genderLabel = 'Male';
+        } else if (gender === 'F') {
+          genderLabel = 'Female';
+        }
+        let genderColor = 'bg-gray-100 text-gray-800';
+        if (gender === 'M') {
+          genderColor = 'bg-blue-100 text-blue-800';
+        } else if (gender === 'F') {
+          genderColor = 'bg-pink-100 text-pink-800';
+        }
 
         return (
           <Badge variant="secondary" className={genderColor}>

@@ -67,14 +67,13 @@ export function FormInput({
           {...props}
         />
       </View>
-      {hasError ? (
+      {hasError && (
         <View style={styles.errorRow}>
           <AlertCircle size={13} color="#ef4444" />
           <Text style={styles.error}>{error}</Text>
         </View>
-      ) : hint ? (
-        <Text style={styles.hint}>{hint}</Text>
-      ) : null}
+      )}
+      {!hasError && hint && <Text style={styles.hint}>{hint}</Text>}
     </View>
   );
 }

@@ -337,12 +337,13 @@ export function TeacherList({ onBack }: TeacherListProps) {
       />
 
       {/* Teachers List */}
-      {isLoading ? (
+      {isLoading && (
         <View style={stateStyles.loading}>
           <ActivityIndicator size="large" color={adminTheme.accent} />
           <Text style={stateStyles.loadingText}>Loading teachers...</Text>
         </View>
-      ) : isError ? (
+      )}
+      {!isLoading && isError && (
         <View style={stateStyles.error}>
           <AlertCircle size={48} color={Colors.error[400]} />
           <Text style={stateStyles.errorText}>Failed to load teachers</Text>
@@ -351,7 +352,8 @@ export function TeacherList({ onBack }: TeacherListProps) {
             <Text style={stateStyles.retryText}>Retry</Text>
           </TouchableOpacity>
         </View>
-      ) : (
+      )}
+      {!isLoading && !isError && (
         <FlatList
           data={teachers}
           renderItem={renderTeacherCard}

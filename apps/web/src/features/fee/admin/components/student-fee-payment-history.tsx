@@ -39,8 +39,12 @@ export function StudentFeePaymentHistory({
 
   const payments: FeePayment[] = (data?.data ?? []) as FeePayment[];
 
-  const countLabel =
-    paymentCount !== undefined ? paymentCount : isOpen && !isLoading ? payments.length : null;
+  let countLabel: number | null = null;
+  if (paymentCount !== undefined) {
+    countLabel = paymentCount;
+  } else if (isOpen && !isLoading) {
+    countLabel = payments.length;
+  }
 
   return (
     <Card>
@@ -70,18 +74,20 @@ export function StudentFeePaymentHistory({
       {isOpen && (
         <CardContent className="px-6 pt-0 pb-4">
           <div className="border-t pt-4">
-            {isLoading ? (
+            {isLoading && (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
                   <Skeleton key={i} className="h-14 w-full rounded-lg" />
                 ))}
               </div>
-            ) : payments.length === 0 ? (
+            )}
+            {!isLoading && payments.length === 0 && (
               <div className="text-muted-foreground flex flex-col items-center gap-2 py-8">
                 <CreditCard className="h-8 w-8 opacity-40" />
                 <p className="text-sm">No payment transactions yet</p>
               </div>
-            ) : (
+            )}
+            {!isLoading && payments.length > 0 && (
               <div className="space-y-2">
                 {payments.map((payment) => {
                   const isCredit = payment.transaction_type === 'credit';

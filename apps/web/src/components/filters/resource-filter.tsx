@@ -275,20 +275,19 @@ export function ResourceFilter({
                           <div className="flex flex-wrap gap-2">
                             {(filters[field.name] as string[]).map((value) => {
                               const option = field.options?.find((opt) => opt.value === value);
-                              const handleRemove = () => {
-                                const currentValues = filters[field.name] as string[];
-                                handleFilterChange(
-                                  field.name,
-                                  currentValues.filter((v) => v !== value)
-                                );
-                              };
                               return (
                                 <Badge key={value} variant="secondary" className="gap-1">
                                   <span>{option?.label || value}</span>
                                   {!field.disabled && (
                                     <button
                                       type="button"
-                                      onClick={handleRemove}
+                                      onClick={() => {
+                                        const currentValues = filters[field.name] as string[];
+                                        handleFilterChange(
+                                          field.name,
+                                          currentValues.filter((v) => v !== value)
+                                        );
+                                      }}
                                       className="hover:bg-muted rounded-full p-0.5"
                                     >
                                       <X className="h-3 w-3" />

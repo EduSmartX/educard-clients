@@ -183,14 +183,12 @@ export default function CreateHomeworkScreen() {
       return;
     }
 
-    const dueDateTime = `${dueDate}T${dueTime}:00`;
-
     const payload: HomeworkCreatePayload = {
       title: title.trim(),
       description: description.trim() || undefined,
       instructions: instructions.trim() || undefined,
       subject_public_id: selectedSubject,
-      due_datetime: dueDateTime,
+      due_datetime: `${dueDate}T${dueTime}:00`,
       assigned_date: assignedDate,
       status: status as HomeworkStatus,
       priority: priority as HomeworkPriority,
@@ -200,10 +198,7 @@ export default function CreateHomeworkScreen() {
 
     createMutation.mutate(payload, {
       onSuccess: (data) => {
-        // Upload attachments if any
-        if (attachments.length > 0 && data?.public_id) {
-          void uploadAttachments(data.public_id);
-        }
+        if (attachments.length > 0 && data?.public_id) void uploadAttachments(data.public_id);
         showToast({ type: 'success', title: 'Success', message: 'Homework created successfully' });
         router.back();
       },
@@ -253,9 +248,8 @@ export default function CreateHomeworkScreen() {
         {/* Class Display (Readonly) */}
         <Animated.View entering={FadeInDown.delay(100)} style={styles.section}>
           <Text style={styles.sectionTitle}>Class</Text>
-          {classesLoading ? (
-            <ActivityIndicator size="small" color={Colors.primary[500]} />
-          ) : selectedClassData ? (
+          {classesLoading && <ActivityIndicator size="small" color={Colors.primary[500]} />}
+          {!classesLoading && selectedClassData && (
             <View style={styles.readonlyField}>
               <BookOpen size={18} color={Colors.primary[500]} />
               <Text style={styles.readonlyText}>{selectedClassData.name}</Text>
@@ -265,7 +259,8 @@ export default function CreateHomeworkScreen() {
                 </View>
               )}
             </View>
-          ) : (
+          )}
+          {!classesLoading && !selectedClassData && (
             <View style={styles.errorField}>
               <AlertCircle size={18} color="#dc2626" />
               <Text style={styles.errorFieldText}>

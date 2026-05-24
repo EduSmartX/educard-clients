@@ -222,7 +222,12 @@ export function ExamFormPage() {
     createMutation.mutate(payload);
   };
 
-  const title = isCreate ? 'Create Exam' : isEdit ? 'Edit Exam' : 'View Exam';
+  let title = 'View Exam';
+  if (isCreate) {
+    title = 'Create Exam';
+  } else if (isEdit) {
+    title = 'Edit Exam';
+  }
 
   if (id && isLoadingExam) {
     return (
@@ -290,13 +295,9 @@ export function ExamFormPage() {
                   <div className="flex items-center gap-1.5 rounded-md bg-blue-50 px-2.5 py-1.5 text-xs text-blue-700">
                     <CalendarDays className="h-3.5 w-3.5" />
                     <span className="font-medium">
-                      {selectedSession.start_date
-                        ? format(new Date(selectedSession.start_date), 'dd MMM yyyy')
-                        : 'N/A'}
+                      {format(new Date(selectedSession.start_date || ''), 'dd MMM yyyy')}
                       {' → '}
-                      {selectedSession.end_date
-                        ? format(new Date(selectedSession.end_date), 'dd MMM yyyy')
-                        : 'N/A'}
+                      {format(new Date(selectedSession.end_date || ''), 'dd MMM yyyy')}
                     </span>
                   </div>
                 )}
@@ -441,14 +442,11 @@ export function ExamFormPage() {
                   disabled={isView}
                   className={dateError ? 'border-red-500' : ''}
                 />
-                {!!dateError && (
+                {(dateError || fieldErrors.date) && (
                   <div className="flex items-center gap-1 text-xs text-red-500">
                     <AlertTriangle className="h-3 w-3" />
-                    <span>{dateError}</span>
+                    <span>{dateError || fieldErrors.date}</span>
                   </div>
-                )}
-                {fieldErrors.date && !dateError && (
-                  <p className="text-sm text-red-500">{fieldErrors.date}</p>
                 )}
               </div>
 
@@ -491,38 +489,29 @@ export function ExamFormPage() {
             </div>
 
             {/* Actions */}
-            {!isView && (
-              <FormActions
-                primaryAction={{
-                  label: isCreate ? 'Create Exam' : 'Save Changes',
-                  type: 'submit',
-                  icon: isCreate ? 'create' : 'save',
-                  isLoading: isPending,
-                  disabled: isPending,
-                }}
-                secondaryAction={{
-                  label: 'Cancel',
-                  onClick: () => navigate(ROUTES.EXAMS_LIST),
-                  icon: 'cancel',
-                }}
-              />
-            )}
-
-            {isView && (
-              <FormActions
-                primaryAction={{
-                  label: 'Edit Exam',
-                  onClick: () => navigate(ROUTES.EXAMS_EDIT.replace(':id', id!)),
-                  type: 'button',
-                  style: 'info',
-                }}
-                secondaryAction={{
-                  label: 'Back',
-                  onClick: () => navigate(ROUTES.EXAMS_LIST),
-                  icon: 'back',
-                }}
-              />
-            )}
+            <FormActions
+              primaryAction={
+                isView
+                  ? {
+                      label: 'Edit Exam',
+                      onClick: () => navigate(ROUTES.EXAMS_EDIT.replace(':id', id!)),
+                      type: 'button',
+                      style: 'info',
+                    }
+                  : {
+                      label: isCreate ? 'Create Exam' : 'Save Changes',
+                      type: 'submit',
+                      icon: isCreate ? 'create' : 'save',
+                      isLoading: isPending,
+                      disabled: isPending,
+                    }
+              }
+              secondaryAction={{
+                label: isView ? 'Back' : 'Cancel',
+                onClick: () => navigate(ROUTES.EXAMS_LIST),
+                icon: isView ? 'back' : 'cancel',
+              }}
+            />
           </CardContent>
         </Card>
       </form>

@@ -183,12 +183,13 @@ export default function EmployeeScheduleScreen() {
         <View style={styles.content}>
           <Text style={styles.dayTitle}>{selectedDayName}</Text>
 
-          {isLoading ? (
+          {isLoading && (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#6366f1" />
               <Text style={styles.loadingText}>Loading schedule...</Text>
             </View>
-          ) : dayEntries.length === 0 ? (
+          )}
+          {!isLoading && dayEntries.length === 0 && (
             <View style={styles.emptyState}>
               <Calendar size={48} color="#d1d5db" />
               <Text style={styles.emptyTitle}>No Classes</Text>
@@ -196,7 +197,9 @@ export default function EmployeeScheduleScreen() {
                 You don't have any classes scheduled for {selectedDayName}.
               </Text>
             </View>
-          ) : (
+          )}
+          {!isLoading &&
+            dayEntries.length > 0 &&
             dayEntries.map((entry, index) => (
               <Animated.View
                 key={entry.public_id || index}
@@ -204,8 +207,7 @@ export default function EmployeeScheduleScreen() {
               >
                 <TimeSlotCard entry={entry} />
               </Animated.View>
-            ))
-          )}
+            ))}
         </View>
       </ScrollView>
     </Screen>

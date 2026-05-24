@@ -86,9 +86,6 @@ export function SubjectsMultiSelectField<TFieldValues extends FieldValues>({
                 <div className="flex flex-wrap gap-2 rounded-md border bg-gray-50 p-3">
                   {selectedSubjects.map((subjectId) => {
                     const subject = subjects.find((s) => s.id === subjectId);
-                    const handleRemove = () => {
-                      field.onChange(selectedSubjects.filter((id) => id !== subjectId));
-                    };
                     return (
                       <Badge
                         key={subjectId}
@@ -99,7 +96,9 @@ export function SubjectsMultiSelectField<TFieldValues extends FieldValues>({
                         {!disabled && (
                           <button
                             type="button"
-                            onClick={handleRemove}
+                            onClick={() =>
+                              field.onChange(selectedSubjects.filter((id) => id !== subjectId))
+                            }
                             className="ml-1 rounded-full p-0.5 transition-colors hover:bg-gray-300"
                           >
                             <X className="h-3 w-3" />

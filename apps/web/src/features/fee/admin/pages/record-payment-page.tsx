@@ -115,12 +115,13 @@ export function RecordPaymentPage() {
 
   // Pre-fill amount when student fee loads
   useEffect(() => {
-    if (preloadedFee) {
-      const txType = form.getValues('transaction_type');
-      const defaultAmount = getSuggestedAmount(txType, preloadedFee);
-      form.setValue('student_fee_public_id', preloadedFee.public_id);
-      form.setValue('amount', defaultAmount > 0 ? defaultAmount : 0);
+    if (!preloadedFee) {
+      return;
     }
+    const txType = form.getValues('transaction_type');
+    const defaultAmount = getSuggestedAmount(txType, preloadedFee);
+    form.setValue('student_fee_public_id', preloadedFee.public_id);
+    form.setValue('amount', Math.max(0, defaultAmount));
   }, [preloadedFee, form]);
 
   // When transaction type changes, update the suggested amount
@@ -133,10 +134,11 @@ export function RecordPaymentPage() {
     preloadedFee ?? (allFeesData?.data ?? []).find((f) => f.public_id === watchedStudentFeeId);
 
   useEffect(() => {
-    if (selectedFee) {
-      const suggested = getSuggestedAmount(watchedTxType, selectedFee);
-      form.setValue('amount', suggested > 0 ? suggested : 0);
+    if (!selectedFee) {
+      return;
     }
+    const suggested = getSuggestedAmount(watchedTxType, selectedFee);
+    form.setValue('amount', Math.max(0, suggested));
   }, [watchedTxType, selectedFee, form]);
 
   const isRefund = watchedTxType === TransactionType.DEBIT;
@@ -155,11 +157,8 @@ export function RecordPaymentPage() {
   const handleSubmit = (values: PaymentFormValues) => {
     // Client-side max amount validation
     if (maxAmount !== undefined && values.amount > maxAmount) {
-      form.setError('amount', {
-        message: isRefund
-          ? `Refund cannot exceed ₹${maxAmount.toLocaleString('en-IN')}`
-          : `Payment cannot exceed balance ₹${maxAmount.toLocaleString('en-IN')}`,
-      });
+      const label = isRefund ? 'Refund cannot exceed' : 'Payment cannot exceed balance';
+      form.setError('amount', { message: `${label} ₹${maxAmount.toLocaleString('en-IN')}` });
       return;
     }
 
@@ -186,7 +185,6 @@ export function RecordPaymentPage() {
         );
       },
       onError: (error) => {
-        // Apply field-level errors inline (e.g. amount exceeds balance_due)
         import('@/lib/utils/error-handler').then(({ applyFieldErrors }) => {
           applyFieldErrors(error, form.setError);
         });

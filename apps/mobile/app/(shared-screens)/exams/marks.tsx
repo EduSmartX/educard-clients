@@ -99,18 +99,20 @@ export default function MarksScreen() {
         </View>
       </LinearGradient>
 
-      {isLoading && !refreshing ? (
+      {isLoading && !refreshing && (
         <View style={s.loading}>
           <ActivityIndicator size="large" color="#7c3aed" />
           <Text style={s.loadingText}>Loading marks...</Text>
         </View>
-      ) : !data || students.length === 0 ? (
+      )}
+      {!(isLoading && !refreshing) && (!data || students.length === 0) && (
         <View style={s.empty}>
           <Text style={s.emptyIcon}>📊</Text>
           <Text style={s.emptyTitle}>No Marks Data</Text>
           <Text style={s.emptySubtitle}>No marks have been entered yet for this selection</Text>
         </View>
-      ) : (
+      )}
+      {!(isLoading && !refreshing) && data && students.length > 0 && (
         <ScrollView
           style={s.body}
           contentContainerStyle={s.bodyContent}
@@ -261,20 +263,18 @@ export default function MarksScreen() {
                           <Text style={s.markBarSubject} numberOfLines={1}>
                             {sub.subject_name}
                           </Text>
-                          {mark ? (
-                            mark.is_absent ? (
-                              <View style={s.absentBar}>
-                                <Text style={s.absentText}>ABSENT</Text>
-                              </View>
-                            ) : (
-                              <MarksBar
-                                obtained={mark.marks_obtained}
-                                max={mark.max_marks}
-                                pass={sub.passing_marks}
-                              />
-                            )
-                          ) : (
-                            <Text style={s.noMark}>—</Text>
+                          {!mark && <Text style={s.noMark}>—</Text>}
+                          {mark && mark.is_absent && (
+                            <View style={s.absentBar}>
+                              <Text style={s.absentText}>ABSENT</Text>
+                            </View>
+                          )}
+                          {mark && !mark.is_absent && (
+                            <MarksBar
+                              obtained={mark.marks_obtained}
+                              max={mark.max_marks}
+                              pass={sub.passing_marks}
+                            />
                           )}
                         </View>
                       );

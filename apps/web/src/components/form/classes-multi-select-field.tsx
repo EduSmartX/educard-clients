@@ -120,9 +120,6 @@ export function ClassesMultiSelectField<TFieldValues extends FieldValues>({
                 <div className="flex max-h-[200px] flex-wrap gap-2 overflow-y-auto rounded-md border bg-gray-50 p-3">
                   {selectedClassIds.map((classId) => {
                     const classObj = classes.find((c) => c.public_id === classId);
-                    const handleRemove = () => {
-                      field.onChange(selectedClassIds.filter((id) => id !== classId));
-                    };
                     return (
                       <Badge
                         key={classId}
@@ -133,7 +130,9 @@ export function ClassesMultiSelectField<TFieldValues extends FieldValues>({
                         {!disabled && (
                           <button
                             type="button"
-                            onClick={handleRemove}
+                            onClick={() =>
+                              field.onChange(selectedClassIds.filter((id) => id !== classId))
+                            }
                             className="ml-1 rounded-full p-0.5 transition-colors hover:bg-gray-300"
                           >
                             <X className="h-3 w-3" />

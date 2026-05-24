@@ -69,23 +69,22 @@ export function useUpdatePreference() {
 
       // Optimistically update grouped preferences
       if (previousGrouped) {
-        const updater = (old: { data: GroupedPreference[] } | undefined) => {
-          if (!old) {
-            return old;
-          }
-          return {
-            ...old,
-            data: old.data.map((group) => ({
-              ...group,
-              preferences: group.preferences.map((pref: OrganizationPreference) =>
-                pref.public_id === publicId ? { ...pref, value } : pref
-              ),
-            })),
-          };
-        };
         queryClient.setQueryData<{ data: GroupedPreference[] }>(
           ['organization-preferences', 'grouped'],
-          updater
+          (old) => {
+            if (!old) {
+              return old;
+            }
+            return {
+              ...old,
+              data: old.data.map((group) => ({
+                ...group,
+                preferences: group.preferences.map((pref: OrganizationPreference) =>
+                  pref.public_id === publicId ? { ...pref, value } : pref
+                ),
+              })),
+            };
+          }
         );
       }
 

@@ -86,11 +86,12 @@ export function ExamSessionFormPage() {
     if (!sessionType) {
       setSessionType('unit_test');
     }
-    if (academicYears.length > 0 && !academicYear) {
-      const currentYear = academicYears.find((y) => y.is_current);
-      if (currentYear) {
-        setAcademicYear(currentYear.name);
-      }
+    if (academicYears.length === 0 || academicYear) {
+      return;
+    }
+    const currentYear = academicYears.find((y) => y.is_current);
+    if (currentYear) {
+      setAcademicYear(currentYear.name);
     }
   }, [isCreate, academicYears, academicYear, sessionType]);
 
@@ -158,11 +159,12 @@ export function ExamSessionFormPage() {
     }
   };
 
-  const title = isCreate
-    ? 'Create Exam Session'
-    : isEdit
-      ? 'Edit Exam Session'
-      : 'View Exam Session';
+  let title = 'View Exam Session';
+  if (isCreate) {
+    title = 'Create Exam Session';
+  } else if (isEdit) {
+    title = 'Edit Exam Session';
+  }
 
   if (id && isLoadingSession) {
     return (

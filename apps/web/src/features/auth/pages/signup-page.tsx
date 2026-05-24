@@ -192,15 +192,12 @@ export default function SignupPage() {
   const handleVerifyOrgOtp = () => handleVerifyOtp('org');
 
   const handleStep2Submit = (data: Step2Data) => {
-    // If using same email, only need admin OTP verified
     const isVerified = useSameEmail ? adminOtpVerified : adminOtpVerified && orgOtpVerified;
-
     if (!isVerified) {
       toast.error(getOtpVerifyBlockingMessage(useSameEmail));
       return;
     }
 
-    // If using same email, set orgOtp to same as adminOtp and mark as verified
     if (useSameEmail) {
       setOrgOtpVerified(true);
       step2Form.setValue('orgOtp', data.adminOtp);
@@ -224,22 +221,20 @@ export default function SignupPage() {
     try {
       const completeData = { ...formData, ...data } as CompleteSignupData;
       const registrationData = buildOrganizationRegistrationPayload(completeData);
-
       const response = await registerOrganization(registrationData);
 
-      // Backend returns {success, message, data: {organization_info, admin_info, address_info}, code}
-      if (response && response.success && response.data) {
-        // Navigate to success page with registration data
-        navigate(ROUTES.AUTH.REGISTRATION_SUCCESS, {
-          state: {
-            organizationName: response.data.organization_info.name,
-            organizationType: response.data.organization_info.type,
-            organizationEmail: response.data.organization_info.email,
-            adminName: `${response.data.admin_info.first_name} ${response.data.admin_info.last_name}`,
-            adminEmail: response.data.admin_info.email,
-          },
-        });
+      if (!response?.success || !response.data) {
+        return;
       }
+      navigate(ROUTES.AUTH.REGISTRATION_SUCCESS, {
+        state: {
+          organizationName: response.data.organization_info.name,
+          organizationType: response.data.organization_info.type,
+          organizationEmail: response.data.organization_info.email,
+          adminName: `${response.data.admin_info.first_name} ${response.data.admin_info.last_name}`,
+          adminEmail: response.data.admin_info.email,
+        },
+      });
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, 'Failed to register. Please try again.'));
     } finally {

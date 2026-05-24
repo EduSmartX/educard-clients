@@ -128,15 +128,17 @@ export function DetailScreenShell({
         </View>
       </LinearGradient>
 
-      {isLoading ? (
+      {isLoading && (
         <View style={styles.center}>
           <ActivityIndicator size="large" color="#7c3aed" />
         </View>
-      ) : isError ? (
+      )}
+      {!isLoading && isError && (
         <View style={styles.center}>
           <Text style={styles.errorText}>{errorMessage ?? 'Failed to load details.'}</Text>
         </View>
-      ) : (
+      )}
+      {!isLoading && !isError && (
         <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
           {avatarName ? (
             <Animated.View entering={FadeIn.delay(150)} style={styles.avatarWrapper}>

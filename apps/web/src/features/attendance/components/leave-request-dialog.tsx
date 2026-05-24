@@ -55,21 +55,24 @@ function computeTimesheetConflict(
   endDate: Date | null,
   timesheetResults: TimesheetSubmission[] | undefined
 ): TimesheetConflictResult {
-  const empty: TimesheetConflictResult = { status: 'none', blockedDates: [], freeCount: 0, totalDays: 0 };
-  if (!startDate || !endDate || !timesheetResults) return empty;
+  const empty: TimesheetConflictResult = {
+    status: 'none',
+    blockedDates: [],
+    freeCount: 0,
+    totalDays: 0,
+  };
+  if (!startDate || !endDate || !timesheetResults) {
+    return empty;
+  }
 
   const lockedSheets = timesheetResults.filter(
     (ts) => ts.submission_status === 'SUBMITTED' || ts.submission_status === 'APPROVED'
   );
-  if (lockedSheets.length === 0) return empty;
-
-  const lockedDateSet = new Set<string>();
-  for (const ts of lockedSheets) {
-    eachDayOfInterval({ start: parseISO(ts.week_start_date), end: parseISO(ts.week_end_date) }).forEach((d) =>
-      lockedDateSet.add(format(d, 'yyyy-MM-dd'))
-    );
+  if (lockedSheets.length === 0) {
+    return empty;
   }
 
+  const lockedDateSet = buildLockedDateSet(lockedSheets);
   const leaveDays = eachDayOfInterval({ start: startDate, end: endDate });
   const blockedDates: string[] = [];
   let freeCount = 0;
@@ -83,9 +86,24 @@ function computeTimesheetConflict(
   }
 
   const totalDays = leaveDays.length;
-  if (blockedDates.length === totalDays) return { status: 'all_blocked', blockedDates, freeCount, totalDays };
-  if (blockedDates.length > 0) return { status: 'partial', blockedDates, freeCount, totalDays };
+  if (blockedDates.length === totalDays) {
+    return { status: 'all_blocked', blockedDates, freeCount, totalDays };
+  }
+  if (blockedDates.length > 0) {
+    return { status: 'partial', blockedDates, freeCount, totalDays };
+  }
   return empty;
+}
+
+function buildLockedDateSet(lockedSheets: TimesheetSubmission[]): Set<string> {
+  const set = new Set<string>();
+  for (const ts of lockedSheets) {
+    eachDayOfInterval({
+      start: parseISO(ts.week_start_date),
+      end: parseISO(ts.week_end_date),
+    }).forEach((d) => set.add(format(d, 'yyyy-MM-dd')));
+  }
+  return set;
 }
 
 export function LeaveRequestDialog({
@@ -113,25 +131,21 @@ export function LeaveRequestDialog({
 
   // Calculate working days when dates change
   useEffect(() => {
-    if (startDate && endDate && startDate <= endDate) {
-      setCalculatingDays(true);
-      calculateWorkingDays({
-        start_date: format(startDate, 'yyyy-MM-dd'),
-        end_date: format(endDate, 'yyyy-MM-dd'),
-      })
-        .then((response) => {
-          setWorkingDays(response.data?.working_days || 0);
-        })
-        .catch(() => {
-          setWorkingDays(null);
-          toast.error('Failed to calculate working days');
-        })
-        .finally(() => {
-          setCalculatingDays(false);
-        });
-    } else {
+    if (!startDate || !endDate || startDate > endDate) {
       setWorkingDays(null);
+      return;
     }
+    setCalculatingDays(true);
+    calculateWorkingDays({
+      start_date: format(startDate, 'yyyy-MM-dd'),
+      end_date: format(endDate, 'yyyy-MM-dd'),
+    })
+      .then((response) => setWorkingDays(response.data?.working_days || 0))
+      .catch(() => {
+        setWorkingDays(null);
+        toast.error('Failed to calculate working days');
+      })
+      .finally(() => setCalculatingDays(false));
   }, [startDate, endDate]);
 
   // --- Timesheet conflict check ---
@@ -190,33 +204,37 @@ export function LeaveRequestDialog({
     },
   });
 
-  const handleSubmit = () => {
+  const validateForm = (): string | null => {
     if (!leaveBalanceId) {
-      toast.error('Please select a leave type');
-      return;
+      return 'Please select a leave type';
     }
     if (!startDate || !endDate) {
-      toast.error('Please select start and end dates');
-      return;
+      return 'Please select start and end dates';
     }
     if (startDate > endDate) {
-      toast.error('End date must be after start date');
-      return;
+      return 'End date must be after start date';
     }
     if (!reason.trim()) {
-      toast.error('Please provide a reason');
-      return;
+      return 'Please provide a reason';
     }
     if (workingDays === null || workingDays <= 0) {
-      toast.error('Invalid number of working days');
+      return 'Invalid number of working days';
+    }
+    return null;
+  };
+
+  const handleSubmit = () => {
+    const error = validateForm();
+    if (error) {
+      toast.error(error);
       return;
     }
 
     createMutation.mutate({
       leave_balance: leaveBalanceId,
-      start_date: format(startDate, 'yyyy-MM-dd'),
-      end_date: format(endDate, 'yyyy-MM-dd'),
-      number_of_days: workingDays,
+      start_date: format(startDate!, 'yyyy-MM-dd'),
+      end_date: format(endDate!, 'yyyy-MM-dd'),
+      number_of_days: workingDays!,
       reason: reason.trim(),
     });
   };

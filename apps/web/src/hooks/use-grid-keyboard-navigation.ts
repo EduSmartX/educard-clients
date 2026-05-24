@@ -54,6 +54,48 @@ function getDirectionFromKey(e: React.KeyboardEvent<HTMLInputElement>): Directio
   }
 }
 
+/** Calculate vertical move (up/down) */
+function calculateVerticalMove(
+  currentRow: number,
+  currentCol: number,
+  delta: number,
+  rows: number,
+  wrap: boolean
+): GridPosition | null {
+  const nextRow = currentRow + delta;
+  if (nextRow >= 0 && nextRow < rows) {
+    return { row: nextRow, col: currentCol };
+  }
+  if (!wrap) {
+    return null;
+  }
+  return { row: delta < 0 ? rows - 1 : 0, col: currentCol };
+}
+
+/** Calculate horizontal move (left/right) with row wrapping */
+function calculateHorizontalMove(
+  currentRow: number,
+  currentCol: number,
+  delta: number,
+  rows: number,
+  cols: number,
+  wrap: boolean
+): GridPosition | null {
+  const nextCol = currentCol + delta;
+  if (nextCol >= 0 && nextCol < cols) {
+    return { row: currentRow, col: nextCol };
+  }
+  if (!wrap) {
+    return null;
+  }
+  if (delta < 0) {
+    return currentRow > 0
+      ? { row: currentRow - 1, col: cols - 1 }
+      : { row: rows - 1, col: cols - 1 };
+  }
+  return currentRow < rows - 1 ? { row: currentRow + 1, col: 0 } : { row: 0, col: 0 };
+}
+
 /** Calculate next grid position based on direction */
 function calculateNextPosition(
   currentRow: number,
@@ -65,35 +107,13 @@ function calculateNextPosition(
 ): GridPosition | null {
   switch (direction) {
     case 'up':
-      return currentRow - 1 >= 0
-        ? { row: currentRow - 1, col: currentCol }
-        : wrap
-          ? { row: rows - 1, col: currentCol }
-          : null;
+      return calculateVerticalMove(currentRow, currentCol, -1, rows, wrap);
     case 'down':
-      return currentRow + 1 < rows
-        ? { row: currentRow + 1, col: currentCol }
-        : wrap
-          ? { row: 0, col: currentCol }
-          : null;
+      return calculateVerticalMove(currentRow, currentCol, 1, rows, wrap);
     case 'left':
-      if (currentCol - 1 >= 0) {
-        return { row: currentRow, col: currentCol - 1 };
-      }
-      if (!wrap) {
-        return null;
-      }
-      return currentRow > 0
-        ? { row: currentRow - 1, col: cols - 1 }
-        : { row: rows - 1, col: cols - 1 };
+      return calculateHorizontalMove(currentRow, currentCol, -1, rows, cols, wrap);
     case 'right':
-      if (currentCol + 1 < cols) {
-        return { row: currentRow, col: currentCol + 1 };
-      }
-      if (!wrap) {
-        return null;
-      }
-      return currentRow < rows - 1 ? { row: currentRow + 1, col: 0 } : { row: 0, col: 0 };
+      return calculateHorizontalMove(currentRow, currentCol, 1, rows, cols, wrap);
     case 'home':
       return { row: currentRow, col: 0 };
     case 'end':

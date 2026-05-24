@@ -67,7 +67,7 @@ export function Avatar({
 
   return (
     <View className="relative">
-      {source ? (
+      {source && (
         <Image
           source={{ uri: source }}
           style={{
@@ -78,7 +78,8 @@ export function Avatar({
           contentFit="cover"
           transition={200}
         />
-      ) : initials ? (
+      )}
+      {!source && initials && (
         <View
           className="items-center justify-center"
           style={{
@@ -90,7 +91,8 @@ export function Avatar({
         >
           <Text className={`font-semibold text-white ${config.text}`}>{initials}</Text>
         </View>
-      ) : (
+      )}
+      {!source && !initials && (
         <View
           className="items-center justify-center bg-secondary-200"
           style={{

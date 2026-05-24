@@ -84,6 +84,47 @@ function RoleCheckboxItem({
   );
 }
 
+/** Extracted role selection field to reduce nesting depth */
+function RoleSelectionField({
+  control,
+  organizationRoles,
+}: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  control: any;
+  organizationRoles: { id: number; name: string }[];
+}) {
+  return (
+    <FormField
+      control={control}
+      name="roles"
+      render={() => (
+        <FormItem>
+          <FormLabel className="mb-2 block text-sm font-medium">Select Roles</FormLabel>
+          <div className="max-h-[400px] overflow-y-auto rounded-lg border bg-white p-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {organizationRoles.map((role) => (
+                <FormField
+                  key={role.id}
+                  control={control}
+                  name="roles"
+                  render={({ field }) => (
+                    <RoleCheckboxItem
+                      role={role}
+                      selectedRoles={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+              ))}
+            </div>
+          </div>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
 export function LeaveAllocationForm({
   mode = 'create',
   allocationId,
@@ -644,35 +685,9 @@ export function LeaveAllocationForm({
 
                     {/* Role Selection in 2 Columns */}
                     {!applies_to_all_roles && (
-                      <FormField
+                      <RoleSelectionField
                         control={form.control}
-                        name="roles"
-                        render={() => (
-                          <FormItem>
-                            <FormLabel className="mb-2 block text-sm font-medium">
-                              Select Roles
-                            </FormLabel>
-                            <div className="max-h-[400px] overflow-y-auto rounded-lg border bg-white p-3">
-                              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                {organizationRoles?.map((role) => (
-                                  <FormField
-                                    key={role.id}
-                                    control={form.control}
-                                    name="roles"
-                                    render={({ field }) => (
-                                      <RoleCheckboxItem
-                                        role={role}
-                                        selectedRoles={field.value}
-                                        onChange={field.onChange}
-                                      />
-                                    )}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        organizationRoles={organizationRoles || []}
                       />
                     )}
                   </CardContent>

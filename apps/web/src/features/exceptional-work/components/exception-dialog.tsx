@@ -46,6 +46,115 @@ interface ExceptionDialogProps {
   onSuccess?: () => void;
 }
 
+/** Extracted class selector to reduce parent complexity */
+function ClassSelectorSection({
+  classes,
+  isLoadingClasses,
+  selectedClasses,
+  toggleClass,
+  errors,
+}: {
+  classes: { public_id: string; name: string; class_master?: { name: string } | null }[];
+  isLoadingClasses: boolean;
+  selectedClasses: string[];
+  toggleClass: (id: string) => void;
+  errors: Record<string, string>;
+}) {
+  if (isLoadingClasses) {
+    return (
+      <div className="flex items-center justify-center rounded-xl border-2 border-purple-200 bg-purple-50 py-12">
+        <div className="text-center">
+          <Loader2 className="mx-auto mb-2 h-8 w-8 animate-spin text-purple-600" />
+          <p className="text-sm font-medium text-purple-600">Loading classes...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div
+        className={cn(
+          'max-h-64 overflow-y-auto rounded-xl border-2 bg-gradient-to-br from-white to-purple-50/30 p-4',
+          errors.classes && 'border-red-500'
+        )}
+      >
+        {classes.length === 0 ? (
+          <div className="py-8 text-center">
+            <p className="text-muted-foreground text-sm">No classes available</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {classes.map((cls) => {
+              const isSelected = selectedClasses.includes(cls.public_id);
+              return (
+                <button
+                  key={cls.public_id}
+                  type="button"
+                  onClick={() => toggleClass(cls.public_id)}
+                  className={cn(
+                    'flex items-center gap-3 rounded-lg border-2 px-3 py-2.5 text-left text-sm shadow-sm transition-all hover:shadow-md',
+                    isSelected
+                      ? 'border-purple-500 bg-purple-100 text-purple-900'
+                      : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/50'
+                  )}
+                >
+                  <div
+                    className={cn(
+                      'flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2',
+                      isSelected ? 'border-purple-600 bg-purple-600' : 'border-gray-300'
+                    )}
+                  >
+                    {isSelected && <div className="h-2.5 w-2.5 rounded-sm bg-white" />}
+                  </div>
+                  <span className="flex-1 truncate">
+                    {cls.class_master?.name}-{cls.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+      {selectedClasses.length > 0 && (
+        <div className="mt-3 rounded-lg border border-purple-200 bg-purple-50 p-3">
+          <p className="mb-2 text-xs font-medium text-purple-900">
+            Selected Classes ({selectedClasses.length})
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {selectedClasses.map((classId) => {
+              const cls = classes.find((c) => c.public_id === classId);
+              return cls ? (
+                <Badge
+                  key={classId}
+                  variant="secondary"
+                  className="gap-1.5 bg-purple-600 pr-1 text-white shadow-sm hover:bg-purple-700"
+                >
+                  {cls.class_master?.name}-{cls.name}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 w-5 rounded-full p-0 hover:bg-white/20"
+                    onClick={() => toggleClass(classId)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </Badge>
+              ) : null;
+            })}
+          </div>
+        </div>
+      )}
+      {!!errors.classes && (
+        <p className="mt-2 flex items-center gap-1 text-sm text-red-500">
+          <AlertTriangle className="h-3.5 w-3.5" />
+          {errors.classes}
+        </p>
+      )}
+    </>
+  );
+}
+
 export function ExceptionDialog({
   open,
   onOpenChange,
@@ -105,10 +214,11 @@ export function ExceptionDialog({
       onOpenChange(false);
     },
     onError: (_error, fieldErrors) => {
-      if (Object.keys(fieldErrors).length > 0) {
-        setErrors(fieldErrors);
-        focusFirstErrorField(fieldErrors, dateContainerRef, reasonInputRef);
+      if (Object.keys(fieldErrors).length === 0) {
+        return;
       }
+      setErrors(fieldErrors);
+      focusFirstErrorField(fieldErrors, dateContainerRef, reasonInputRef);
     },
   });
 
@@ -119,10 +229,11 @@ export function ExceptionDialog({
       onOpenChange(false);
     },
     onError: (_error, fieldErrors) => {
-      if (Object.keys(fieldErrors).length > 0) {
-        setErrors(fieldErrors);
-        focusFirstErrorField(fieldErrors, dateContainerRef, reasonInputRef);
+      if (Object.keys(fieldErrors).length === 0) {
+        return;
       }
+      setErrors(fieldErrors);
+      focusFirstErrorField(fieldErrors, dateContainerRef, reasonInputRef);
     },
   });
 
@@ -162,10 +273,7 @@ export function ExceptionDialog({
     };
 
     if (isEditMode) {
-      updateMutation.mutate({
-        publicId: exception!.public_id,
-        payload: data,
-      });
+      updateMutation.mutate({ publicId: exception!.public_id, payload: data });
     } else {
       createMutation.mutate(data);
     }
@@ -176,7 +284,6 @@ export function ExceptionDialog({
     setSelectedClasses((prev) =>
       prev.includes(classId) ? prev.filter((id) => id !== classId) : [...prev, classId]
     );
-    // Clear error when user makes a selection
     if (errors.classes) {
       setErrors((prev) => ({ ...prev, classes: '' }));
     }
@@ -374,111 +481,13 @@ export function ExceptionDialog({
                   </p>
                 </div>
               </div>
-              {isLoadingClasses ? (
-                <div className="flex items-center justify-center rounded-xl border-2 border-purple-200 bg-purple-50 py-12">
-                  <div className="text-center">
-                    <Loader2 className="mx-auto mb-2 h-8 w-8 animate-spin text-purple-600" />
-                    <p className="text-sm font-medium text-purple-600">Loading classes...</p>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div
-                    className={cn(
-                      'max-h-64 overflow-y-auto rounded-xl border-2 bg-gradient-to-br from-white to-purple-50/30 p-4',
-                      errors.classes && 'border-red-500'
-                    )}
-                  >
-                    {classes.length === 0 ? (
-                      <div className="py-8 text-center">
-                        <p className="text-muted-foreground text-sm">No classes available</p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        {classes.map(
-                          (cls: {
-                            public_id: string;
-                            name: string;
-                            class_master?: { name: string } | null;
-                          }) => {
-                            const isSelected = selectedClasses.includes(cls.public_id);
-                            return (
-                              <button
-                                key={cls.public_id}
-                                type="button"
-                                onClick={() => toggleClass(cls.public_id)}
-                                className={cn(
-                                  'flex items-center gap-3 rounded-lg border-2 px-3 py-2.5 text-left text-sm shadow-sm transition-all hover:shadow-md',
-                                  isSelected
-                                    ? 'border-purple-500 bg-purple-100 text-purple-900'
-                                    : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/50'
-                                )}
-                              >
-                                <div
-                                  className={cn(
-                                    'flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2',
-                                    isSelected
-                                      ? 'border-purple-600 bg-purple-600'
-                                      : 'border-gray-300'
-                                  )}
-                                >
-                                  {isSelected && (
-                                    <div className="h-2.5 w-2.5 rounded-sm bg-white" />
-                                  )}
-                                </div>
-                                <span className="flex-1 truncate">
-                                  {cls.class_master?.name}-{cls.name}
-                                </span>
-                              </button>
-                            );
-                          }
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  {selectedClasses.length > 0 && (
-                    <div className="mt-3 rounded-lg border border-purple-200 bg-purple-50 p-3">
-                      <p className="mb-2 text-xs font-medium text-purple-900">
-                        Selected Classes ({selectedClasses.length})
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedClasses.map((classId) => {
-                          const cls = classes.find(
-                            (c: {
-                              public_id: string;
-                              name: string;
-                              class_master?: { name: string } | null;
-                            }) => c.public_id === classId
-                          );
-                          return cls ? (
-                            <Badge
-                              key={classId}
-                              variant="secondary"
-                              className="gap-1.5 bg-purple-600 pr-1 text-white shadow-sm hover:bg-purple-700"
-                            >
-                              {cls.class_master?.name}-{cls.name}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-5 w-5 rounded-full p-0 hover:bg-white/20"
-                                onClick={() => toggleClass(classId)}
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
-                            </Badge>
-                          ) : null;
-                        })}
-                      </div>
-                    </div>
-                  )}
-                  {!!errors.classes && (
-                    <p className="mt-2 flex items-center gap-1 text-sm text-red-500">
-                      <AlertTriangle className="h-3.5 w-3.5" />
-                      {errors.classes}
-                    </p>
-                  )}
-                </>
-              )}
+              <ClassSelectorSection
+                classes={classes}
+                isLoadingClasses={isLoadingClasses}
+                selectedClasses={selectedClasses}
+                toggleClass={toggleClass}
+                errors={errors}
+              />
             </div>
           )}
 

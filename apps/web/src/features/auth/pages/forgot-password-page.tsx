@@ -42,7 +42,7 @@ type VerifyOtpFormData = z.infer<typeof verifyOtpSchema>;
 type Step = 'request' | 'verify' | 'success';
 
 /** Extract error message from OTP request API response */
-function getOtpRequestError(err: unknown): string | null {
+function getOtpRequestError(err: unknown): string {
   const error = err as {
     response?: {
       data?: {
@@ -54,13 +54,10 @@ function getOtpRequestError(err: unknown): string | null {
   };
 
   const fieldErrors = error?.response?.data?.errors;
-  if (fieldErrors) {
-    const fieldMessage = fieldErrors.email || fieldErrors.username;
-    if (fieldMessage) {
-      return fieldMessage;
-    }
+  const fieldMessage = fieldErrors?.email || fieldErrors?.username;
+  if (fieldMessage) {
+    return fieldMessage;
   }
-
   return error?.response?.data?.message || error?.message || ErrorMessages.AUTH.SEND_OTP_FAILED;
 }
 
@@ -105,8 +102,7 @@ export default function ForgotPasswordPage() {
       setCurrentStep('verify');
       toast.success(`${SuccessMessages.AUTH.OTP_SENT} to your ${useEmail ? 'email' : 'account'}!`);
     } catch (err: unknown) {
-      const errorMessage = getOtpRequestError(err);
-      toast.error(errorMessage ?? ErrorMessages.AUTH.SEND_OTP_FAILED);
+      toast.error(getOtpRequestError(err));
     } finally {
       setIsLoading(false);
     }

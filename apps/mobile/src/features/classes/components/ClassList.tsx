@@ -284,15 +284,15 @@ export function ClassList({ onBack }: ClassListProps) {
         title="Filter Classes"
       />
 
-      {isLoading ? (
-        <LoadingState color={adminTheme.accent} message="Loading classes..." />
-      ) : isError ? (
+      {isLoading && <LoadingState color={adminTheme.accent} message="Loading classes..." />}
+      {!isLoading && isError && (
         <ErrorState
           message="Failed to load classes"
           detail={error?.message}
           onRetry={() => void refetch()}
         />
-      ) : (
+      )}
+      {!isLoading && !isError && (
         <FlatList
           data={classes}
           renderItem={renderClassCard}

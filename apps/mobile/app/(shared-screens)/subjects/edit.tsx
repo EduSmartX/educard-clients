@@ -79,7 +79,7 @@ export default function EditSubjectScreen() {
           subject.class_id ||
           '',
         subject_id: String(
-          subject.subject_info?.id ?? subject.subject_master?.id ?? subject.subject_id ?? ''
+          subject.subject_info?.id || subject.subject_master?.id || subject.subject_id || ''
         ),
         subject_type: (subject.subject_type as 'core' | 'elective' | 'language') || 'core',
         teacher_id:

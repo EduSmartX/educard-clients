@@ -199,7 +199,9 @@ export function TodaySchedule({
                     status === 'ongoing' && styles.scheduleStatusTextOngoing,
                   ]}
                 >
-                  {status === 'completed' ? '✓' : status === 'ongoing' ? '●' : '○'}
+                  {status === 'completed' && '✓'}
+                  {status === 'ongoing' && '●'}
+                  {status !== 'completed' && status !== 'ongoing' && '○'}
                 </Text>
               </View>
             </View>

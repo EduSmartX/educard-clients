@@ -133,13 +133,15 @@ export function ProfilePhotoUpload() {
           {/* Avatar Preview */}
           <div className="relative">
             <Avatar className="border-muted h-28 w-28 border-2">
-              {isLoading ? (
+              {isLoading && (
                 <AvatarFallback>
                   <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
                 </AvatarFallback>
-              ) : displayUrl ? (
+              )}
+              {!isLoading && displayUrl && (
                 <AvatarImage src={displayUrl} alt="Profile photo" className="object-cover" />
-              ) : (
+              )}
+              {!isLoading && !displayUrl && (
                 <AvatarFallback className="bg-brand/10 text-brand text-2xl font-semibold">
                   {initials}
                 </AvatarFallback>

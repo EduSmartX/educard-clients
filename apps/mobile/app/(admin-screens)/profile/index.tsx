@@ -171,9 +171,8 @@ export default function ProfileScreen() {
     ? `${serverPhotoUrl}${cacheSeparator}v=${dataUpdatedAt || Date.now()}`
     : undefined;
   const photoUrl = localPhotoUri ?? cacheBustedPhotoUrl;
-  const initials = (profile?.full_name ?? profile?.first_name ?? user?.full_name ?? 'U')
-    .charAt(0)
-    .toUpperCase();
+  const displayName = profile?.full_name || profile?.first_name || user?.full_name || 'U';
+  const initials = displayName.charAt(0).toUpperCase();
 
   if (isLoading) {
     return (

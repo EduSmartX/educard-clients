@@ -76,15 +76,17 @@ export default function ViewTeacherScreen() {
         </View>
       </LinearGradient>
 
-      {isLoading ? (
+      {isLoading && (
         <View style={styles.center}>
           <ActivityIndicator size="large" color="#7c3aed" />
         </View>
-      ) : isError || !teacher ? (
+      )}
+      {!isLoading && (isError || !teacher) && (
         <View style={styles.center}>
           <Text style={styles.errorText}>Failed to load teacher details.</Text>
         </View>
-      ) : (
+      )}
+      {!isLoading && !isError && teacher && (
         <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
           {/* Avatar */}
           <Animated.View

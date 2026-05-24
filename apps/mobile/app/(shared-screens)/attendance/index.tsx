@@ -396,17 +396,15 @@ function SummaryTab() {
   }
 
   // Pre-compute day status text and badge style to avoid nested ternaries
-  const dayStatusText = data?.is_holiday
-    ? data.holiday_name || 'Holiday'
-    : data?.is_working_day
-      ? 'Working Day'
-      : 'Non-Working Day';
-
-  const dayBadgeStyle = data?.is_holiday
-    ? styles.holidayBadge
-    : data?.is_working_day
-      ? styles.workingBadge
-      : styles.nonWorkingBadge;
+  let dayStatusText = 'Non-Working Day';
+  let dayBadgeStyle = styles.nonWorkingBadge;
+  if (data?.is_holiday) {
+    dayStatusText = data.holiday_name || 'Holiday';
+    dayBadgeStyle = styles.holidayBadge;
+  } else if (data?.is_working_day) {
+    dayStatusText = 'Working Day';
+    dayBadgeStyle = styles.workingBadge;
+  }
 
   const renderDayBadgeContent = () => {
     if (data?.is_holiday) {
@@ -477,19 +475,10 @@ function SummaryTab() {
           </View>
           <View>
             <Text style={styles.dateLabel}>{isToday ? "Today's Status" : 'Day Status'}</Text>
-            <Text style={styles.dateValue}>
-              {dayStatusText}
-            </Text>
+            <Text style={styles.dateValue}>{dayStatusText}</Text>
           </View>
         </View>
-        <View
-          style={[
-            styles.statusBadge,
-            dayBadgeStyle,
-          ]}
-        >
-          {renderDayBadgeContent()}
-        </View>
+        <View style={[styles.statusBadge, dayBadgeStyle]}>{renderDayBadgeContent()}</View>
       </View>
 
       {/* Holiday/Non-Working Banners */}
@@ -680,6 +669,27 @@ function getHealthLabel(health: string) {
   }
 }
 
+function getAvatarBgColor(percentage: number) {
+  if (percentage >= 95) return '#dcfce7';
+  if (percentage >= 85) return '#dbeafe';
+  if (percentage >= 75) return '#fef3c7';
+  return '#fee2e2';
+}
+
+function getAvatarTextColor(percentage: number) {
+  if (percentage >= 95) return '#16a34a';
+  if (percentage >= 85) return '#2563eb';
+  if (percentage >= 75) return '#d97706';
+  return '#dc2626';
+}
+
+function getPercentageStyle(percentage: number, styles: Record<string, object>) {
+  if (percentage >= 95) return styles.percentageGreen;
+  if (percentage >= 85) return styles.percentageBlue;
+  if (percentage >= 75) return styles.percentageYellow;
+  return styles.percentageRed;
+}
+
 function ReportTab() {
   const [selectedClassId, setSelectedClassId] = useState<string>('');
   const [showClassPicker, setShowClassPicker] = useState(false);
@@ -835,13 +845,13 @@ function ReportTab() {
           <Filter size={18} color="#0d9488" />
           <Text style={styles.selectorTitle}>Select Class</Text>
         </View>
-        {loadingClasses ? (
-          <ActivityIndicator size="small" color="#0d9488" />
-        ) : !classOptions || classOptions.length === 0 ? (
+        {loadingClasses && <ActivityIndicator size="small" color="#0d9488" />}
+        {!loadingClasses && (!classOptions || classOptions.length === 0) && (
           <Text style={{ color: '#9ca3af', fontSize: 14, paddingVertical: 8 }}>
             No classes available
           </Text>
-        ) : (
+        )}
+        {!loadingClasses && classOptions && classOptions.length > 0 && (
           <View style={{ zIndex: 100 }}>
             <TouchableOpacity
               style={styles.dropdown}
@@ -920,17 +930,19 @@ function ReportTab() {
       </View>
 
       {/* Report Content */}
-      {!selectedClassId ? (
+      {!selectedClassId && (
         <View style={styles.emptyState}>
           <GraduationCap size={48} color="#d1d5db" />
           <Text style={styles.emptyStateText}>Select a class to view report</Text>
         </View>
-      ) : isLoadingData ? (
+      )}
+      {!!selectedClassId && isLoadingData && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#0d9488" />
           <Text style={styles.loadingText}>Analyzing attendance data...</Text>
         </View>
-      ) : activeReportData && insights ? (
+      )}
+      {!!selectedClassId && !isLoadingData && activeReportData && insights && (
         <>
           {/* Class Health Overview */}
           <View
@@ -1200,25 +1212,13 @@ function ReportTab() {
                       <View
                         style={[
                           styles.studentAvatar,
-                          student.percentage >= 95
-                            ? { backgroundColor: '#dcfce7' }
-                            : student.percentage >= 85
-                              ? { backgroundColor: '#dbeafe' }
-                              : student.percentage >= 75
-                                ? { backgroundColor: '#fef3c7' }
-                                : { backgroundColor: '#fee2e2' },
+                          { backgroundColor: getAvatarBgColor(student.percentage) },
                         ]}
                       >
                         <Text
                           style={[
                             styles.studentAvatarText,
-                            student.percentage >= 95
-                              ? { color: '#16a34a' }
-                              : student.percentage >= 85
-                                ? { color: '#2563eb' }
-                                : student.percentage >= 75
-                                  ? { color: '#d97706' }
-                                  : { color: '#dc2626' },
+                            { color: getAvatarTextColor(student.percentage) },
                           ]}
                         >
                           {student.student_name.charAt(0).toUpperCase()}
@@ -1238,13 +1238,7 @@ function ReportTab() {
                     <View
                       style={[
                         styles.studentPercentageLarge,
-                        student.percentage >= 95
-                          ? styles.percentageGreen
-                          : student.percentage >= 85
-                            ? styles.percentageBlue
-                            : student.percentage >= 75
-                              ? styles.percentageYellow
-                              : styles.percentageRed,
+                        getPercentageStyle(student.percentage, styles),
                       ]}
                     >
                       <Text style={styles.studentPercentageTextLarge}>{student.percentage}%</Text>
@@ -1275,7 +1269,7 @@ function ReportTab() {
             </View>
           )}
         </>
-      ) : null}
+      )}
     </ScrollView>
   );
 }

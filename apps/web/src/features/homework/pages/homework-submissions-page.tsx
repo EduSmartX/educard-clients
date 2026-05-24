@@ -288,26 +288,23 @@ export default function HomeworkSubmissionsPage() {
 
     let filtered = submissionsData.submissions;
 
-    // Filter by status
-    if (statusFilter !== 'all') {
-      if (statusFilter === 'late') {
-        filtered = filtered.filter((s) => s.is_late);
-      } else {
-        filtered = filtered.filter((s) => s.status === statusFilter);
-      }
+    if (statusFilter === 'late') {
+      filtered = filtered.filter((s) => s.is_late);
+    }
+    if (statusFilter !== 'all' && statusFilter !== 'late') {
+      filtered = filtered.filter((s) => s.status === statusFilter);
     }
 
-    // Filter by search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (s) =>
-          s.student_name.toLowerCase().includes(query) ||
-          s.student_roll_number.toLowerCase().includes(query)
-      );
+    if (!searchQuery) {
+      return filtered;
     }
 
-    return filtered;
+    const query = searchQuery.toLowerCase();
+    return filtered.filter(
+      (s) =>
+        s.student_name.toLowerCase().includes(query) ||
+        s.student_roll_number.toLowerCase().includes(query)
+    );
   }, [submissionsData?.submissions, statusFilter, searchQuery]);
 
   // Handlers
@@ -317,7 +314,7 @@ export default function HomeworkSubmissionsPage() {
       newDate = subDays(newDate, 1);
     }
     setSelectedDate(newDate);
-    setSelectedHomeworkId(''); // Reset homework selection
+    setSelectedHomeworkId('');
   }, [selectedDate]);
 
   const handleNextDay = useCallback(() => {
@@ -327,7 +324,7 @@ export default function HomeworkSubmissionsPage() {
       newDate.setDate(newDate.getDate() + 1);
     }
     setSelectedDate(newDate);
-    setSelectedHomeworkId(''); // Reset homework selection
+    setSelectedHomeworkId('');
   }, [selectedDate]);
 
   const handleClassChange = useCallback((classId: string) => {

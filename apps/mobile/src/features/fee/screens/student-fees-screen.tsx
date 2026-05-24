@@ -149,7 +149,7 @@ const StudentFeeCard = React.memo(
 
         {/* Actions */}
         <View style={styles.cardActions}>
-          {isRefunding || isOverpaid ? (
+          {(isRefunding || isOverpaid) && (
             <TouchableOpacity
               style={[styles.actionBtn, { backgroundColor: '#fff7ed' }]}
               onPress={() => onRecordPayment(item)}
@@ -157,15 +157,19 @@ const StudentFeeCard = React.memo(
               <CreditCard size={14} color="#ea580c" />
               <Text style={[styles.actionText, { color: '#ea580c' }]}>Refund</Text>
             </TouchableOpacity>
-          ) : !isRefunded && item.status !== FeeStatus.PAID && item.status !== FeeStatus.WAIVED ? (
-            <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: '#f0fdf4' }]}
-              onPress={() => onRecordPayment(item)}
-            >
-              <CreditCard size={14} color="#059669" />
-              <Text style={[styles.actionText, { color: '#059669' }]}>Pay</Text>
-            </TouchableOpacity>
-          ) : null}
+          )}
+          {!(isRefunding || isOverpaid) &&
+            !isRefunded &&
+            item.status !== FeeStatus.PAID &&
+            item.status !== FeeStatus.WAIVED && (
+              <TouchableOpacity
+                style={[styles.actionBtn, { backgroundColor: '#f0fdf4' }]}
+                onPress={() => onRecordPayment(item)}
+              >
+                <CreditCard size={14} color="#059669" />
+                <Text style={[styles.actionText, { color: '#059669' }]}>Pay</Text>
+              </TouchableOpacity>
+            )}
 
           {!isRefundFlow && !isOverpaid && item.status !== FeeStatus.PAID && (
             <TouchableOpacity

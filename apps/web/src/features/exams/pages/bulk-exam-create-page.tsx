@@ -166,9 +166,6 @@ export function BulkExamCreatePage() {
     [sessionsList, sessionId]
   );
 
-  /**
-   * Validate if a date is a valid exam date using the backend API
-   */
   const validateExamDate = async (date: Date | null): Promise<string | undefined> => {
     if (!date || !classId) {
       return undefined;
@@ -242,31 +239,28 @@ export function BulkExamCreatePage() {
     setSubjectRows((prev) => {
       const updated = [...prev];
       updated[index] = { ...updated[index], selected: checked };
-      // Update selectAll state
-      const allSelected = updated.every((row) => row.selected);
-      setSelectAll(allSelected);
+      setSelectAll(updated.every((row) => row.selected));
       return updated;
     });
   };
 
   // Handle row field changes
   const updateRow = async (index: number, field: keyof SubjectRow, value: string | Date | null) => {
-    // Update the field immediately
     setSubjectRows((prev) => {
       const updated = [...prev];
       updated[index] = { ...updated[index], [field]: value };
       return updated;
     });
 
-    // Validate date asynchronously when it changes
-    if (field === 'date') {
-      const dateError = await validateExamDate(value as Date | null);
-      setSubjectRows((prev) => {
-        const updated = [...prev];
-        updated[index] = { ...updated[index], dateError };
-        return updated;
-      });
+    if (field !== 'date') {
+      return;
     }
+    const dateError = await validateExamDate(value as Date | null);
+    setSubjectRows((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], dateError };
+      return updated;
+    });
   };
 
   // Apply default marks to all rows
@@ -359,8 +353,8 @@ export function BulkExamCreatePage() {
       exams,
     };
 
-    const rowsWithMissingDateTime = selectedRows.filter((row) => !row.date || !row.start_time);
-    if (rowsWithMissingDateTime.length > 0) {
+    const hasIncomplete = selectedRows.some((row) => !row.date || !row.start_time);
+    if (hasIncomplete) {
       setPendingSubmitPayload(payload);
       setShowMissingDateTimeWarning(true);
       return;

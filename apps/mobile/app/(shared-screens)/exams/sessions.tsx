@@ -145,18 +145,20 @@ export default function ExamSessionsScreen() {
         </View>
       </LinearGradient>
 
-      {isLoading && !refreshing ? (
+      {isLoading && !refreshing && (
         <View style={styles.loading}>
           <ActivityIndicator size="large" color="#7c3aed" />
           <Text style={styles.loadingText}>Loading sessions...</Text>
         </View>
-      ) : sessions.length === 0 ? (
+      )}
+      {!(isLoading && !refreshing) && sessions.length === 0 && (
         <View style={styles.empty}>
           <Text style={styles.emptyIcon}>📝</Text>
           <Text style={styles.emptyTitle}>No Exam Sessions</Text>
           <Text style={styles.emptySubtitle}>Tap + to create your first exam session</Text>
         </View>
-      ) : (
+      )}
+      {!(isLoading && !refreshing) && sessions.length > 0 && (
         <FlatList
           data={sessions}
           renderItem={renderSession}

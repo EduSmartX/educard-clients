@@ -389,10 +389,12 @@ export default function CreateStudentScreen() {
             />
             <FormSelect
               label="Gender"
-              options={GENDER_OPTIONS.map((g) => ({
-                value: g.value,
-                label: `${g.value === 'M' ? '👨' : g.value === 'F' ? '👩' : '🧑'} ${g.label}`,
-              }))}
+              options={GENDER_OPTIONS.map((g) => {
+                let icon = '🧑';
+                if (g.value === 'M') icon = '👨';
+                else if (g.value === 'F') icon = '👩';
+                return { value: g.value, label: `${icon} ${g.label}` };
+              })}
               value={form.gender}
               onChange={(v) => updateField('gender', v)}
             />

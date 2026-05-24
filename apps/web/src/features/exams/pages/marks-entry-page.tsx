@@ -357,12 +357,13 @@ export function MarksEntryPage() {
             </Button>
           </CardHeader>
           <CardContent className="p-0" ref={tableContainerRef}>
-            {studentsLoading ? (
+            {studentsLoading && (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
                 <span className="ml-2 text-gray-500">Loading students...</span>
               </div>
-            ) : markEntries.length > 0 ? (
+            )}
+            {!studentsLoading && markEntries.length > 0 && (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
@@ -432,17 +433,19 @@ export function MarksEntryPage() {
                             />
                           </td>
                           <td className="px-4 py-3 text-center">
-                            {entry.is_absent ? (
+                            {entry.is_absent && (
                               <Badge variant="outline" className="bg-gray-50 text-gray-500">
                                 Absent
                               </Badge>
-                            ) : entry.marks_obtained ? (
-                              isPass ? (
+                            )}
+                            {!entry.is_absent &&
+                              entry.marks_obtained &&
+                              (isPass ? (
                                 <CheckCircle2 className="mx-auto h-5 w-5 text-emerald-500" />
                               ) : (
                                 <XCircle className="mx-auto h-5 w-5 text-red-400" />
-                              )
-                            ) : (
+                              ))}
+                            {!entry.is_absent && !entry.marks_obtained && (
                               <span className="text-gray-300">—</span>
                             )}
                           </td>
@@ -452,7 +455,8 @@ export function MarksEntryPage() {
                   </tbody>
                 </table>
               </div>
-            ) : (
+            )}
+            {!studentsLoading && markEntries.length === 0 && (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <GraduationCap className="mb-3 h-10 w-10 text-gray-300" />
                 <p className="text-sm text-gray-500">No students found in this class.</p>

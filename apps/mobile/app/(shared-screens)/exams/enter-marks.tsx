@@ -307,17 +307,19 @@ export default function EnterMarksScreen() {
           <Text style={st.colMarks}>Marks (/{maxMarks})</Text>
         </View>
 
-        {isLoading ? (
+        {isLoading && (
           <View style={st.loading}>
             <ActivityIndicator size="large" color="#7c3aed" />
           </View>
-        ) : studentList.length === 0 ? (
+        )}
+        {!isLoading && studentList.length === 0 && (
           <View style={st.empty}>
             <Text style={st.emptyIcon}>📝</Text>
             <Text style={st.emptyTitle}>No Students</Text>
             <Text style={st.emptySubtitle}>No students found for this class</Text>
           </View>
-        ) : (
+        )}
+        {!isLoading && studentList.length > 0 && (
           <FlatList
             data={studentList}
             renderItem={renderStudent}

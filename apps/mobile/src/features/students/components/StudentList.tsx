@@ -332,15 +332,15 @@ export function StudentList({ onBack }: StudentListProps) {
         title="Filter Students"
       />
 
-      {isLoading ? (
-        <LoadingState color={adminTheme.accent} message="Loading students..." />
-      ) : isError ? (
+      {isLoading && <LoadingState color={adminTheme.accent} message="Loading students..." />}
+      {!isLoading && isError && (
         <ErrorState
           message="Failed to load students"
           detail={error?.message}
           onRetry={() => void refetch()}
         />
-      ) : (
+      )}
+      {!isLoading && !isError && (
         <FlatList
           data={students}
           renderItem={renderStudentCard}

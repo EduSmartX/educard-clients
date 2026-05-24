@@ -100,7 +100,6 @@ export default function HomeworkListPage() {
     if (activeTab !== 'all') {
       params.set('tab', activeTab);
     }
-
     setSearchParams(params, { replace: true });
   }, [selectedClassId, selectedDate, activeTab, setSearchParams]);
 
@@ -407,43 +406,52 @@ export default function HomeworkListPage() {
         </div>
 
         <TabsContent value={activeTab} className="mt-6">
-          {isLoadingClasses || isLoadingHomework ? (
+          {(isLoadingClasses || isLoadingHomework) && (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {[...Array(6)].map((_, i) => (
                 <Skeleton key={i} className="h-52 rounded-xl" />
               ))}
             </div>
-          ) : !selectedClass ? (
+          )}
+          {!isLoadingClasses && !isLoadingHomework && !selectedClass && (
             <EmptyState
               icon={BookOpen}
               title="No Class Selected"
               description="Select a class to view homework assignments"
             />
-          ) : filteredSubjects.length === 0 ? (
-            <EmptyState
-              icon={BookOpen}
-              title="No Subjects Found"
-              description={
-                searchQuery
-                  ? 'No subjects match your search'
-                  : 'This class has no subjects assigned'
-              }
-            />
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredSubjects.map(({ subject, homework, color }) => (
-                <SubjectCard
-                  key={subject.public_id}
-                  subject={subject}
-                  homework={homework}
-                  color={color}
-                  onView={handleViewHomework}
-                  onAdd={() => handleAddSubjectHomework(subject.public_id)}
-                  onDelete={handleDeleteHomework}
-                />
-              ))}
-            </div>
           )}
+          {!isLoadingClasses &&
+            !isLoadingHomework &&
+            selectedClass &&
+            filteredSubjects.length === 0 && (
+              <EmptyState
+                icon={BookOpen}
+                title="No Subjects Found"
+                description={
+                  searchQuery
+                    ? 'No subjects match your search'
+                    : 'This class has no subjects assigned'
+                }
+              />
+            )}
+          {!isLoadingClasses &&
+            !isLoadingHomework &&
+            selectedClass &&
+            filteredSubjects.length > 0 && (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredSubjects.map(({ subject, homework, color }) => (
+                  <SubjectCard
+                    key={subject.public_id}
+                    subject={subject}
+                    homework={homework}
+                    color={color}
+                    onView={handleViewHomework}
+                    onAdd={() => handleAddSubjectHomework(subject.public_id)}
+                    onDelete={handleDeleteHomework}
+                  />
+                ))}
+              </div>
+            )}
         </TabsContent>
       </Tabs>
     </div>

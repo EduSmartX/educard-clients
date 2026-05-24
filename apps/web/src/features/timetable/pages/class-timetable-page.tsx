@@ -72,7 +72,7 @@ export default function ClassTimetablePage() {
       </PageHeader>
 
       {/* Timetable Grid */}
-      {!selectedClassId ? (
+      {!selectedClassId && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="text-muted-foreground mb-3 text-5xl">📚</div>
           <h3 className="text-lg font-semibold">Select a Class</h3>
@@ -80,9 +80,9 @@ export default function ClassTimetablePage() {
             Choose a class from the dropdown above to view its timetable.
           </p>
         </div>
-      ) : timetableLoading ? (
-        <PageLoader />
-      ) : isError ? (
+      )}
+      {selectedClassId && timetableLoading && <PageLoader />}
+      {selectedClassId && !timetableLoading && isError && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="text-destructive mb-3 text-5xl">⚠️</div>
           <h3 className="text-lg font-semibold">Error Loading Timetable</h3>
@@ -90,9 +90,10 @@ export default function ClassTimetablePage() {
             {(error as Error)?.message || 'Something went wrong. Please try again.'}
           </p>
         </div>
-      ) : timetable ? (
+      )}
+      {selectedClassId && !timetableLoading && !isError && timetable && (
         <TimetableGrid timetable={timetable} />
-      ) : null}
+      )}
     </div>
   );
 }

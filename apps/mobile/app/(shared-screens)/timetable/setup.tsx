@@ -279,11 +279,12 @@ export default function TimetableSetupScreen() {
         )}
 
         {/* Loading */}
-        {isLoading ? (
+        {isLoading && (
           <View style={st.loading}>
             <ActivityIndicator size="large" color="#7c3aed" />
           </View>
-        ) : groups.length === 0 && !showGroupForm ? (
+        )}
+        {!isLoading && groups.length === 0 && !showGroupForm && (
           <View style={st.empty}>
             <Text style={st.emptyIcon}>📦</Text>
             <Text style={st.emptyTitle}>No Class Groups</Text>
@@ -296,7 +297,9 @@ export default function TimetableSetupScreen() {
               <Text style={st.createFirstText}>Create First Group</Text>
             </TouchableOpacity>
           </View>
-        ) : (
+        )}
+        {!isLoading &&
+          (groups.length > 0 || showGroupForm) &&
           groups.map((group, gIdx) => (
             <Animated.View key={group.public_id} entering={FadeInDown.delay(gIdx * 80).springify()}>
               <View style={st.groupCard}>
@@ -396,8 +399,7 @@ export default function TimetableSetupScreen() {
                 </View>
               </View>
             </Animated.View>
-          ))
-        )}
+          ))}
       </ScrollView>
     </View>
   );

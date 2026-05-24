@@ -74,15 +74,17 @@ export default function ViewSubjectScreen() {
         </View>
       </LinearGradient>
 
-      {isLoading ? (
+      {isLoading && (
         <View style={styles.center}>
           <ActivityIndicator size="large" color="#7c3aed" />
         </View>
-      ) : isError || !subject ? (
+      )}
+      {!isLoading && (isError || !subject) && (
         <View style={styles.center}>
           <Text style={styles.errorText}>Failed to load subject details.</Text>
         </View>
-      ) : (
+      )}
+      {!isLoading && !isError && subject && (
         <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
           <Animated.View entering={FadeInDown.delay(100)}>
             <Section title="Subject Info" icon="📚">

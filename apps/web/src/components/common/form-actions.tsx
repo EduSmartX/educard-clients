@@ -5,7 +5,17 @@
  */
 
 import { motion } from 'framer-motion';
-import { Save, X, Loader2, ArrowLeft, Plus, Trash2, Check, Send, type LucideIcon } from 'lucide-react';
+import {
+  Save,
+  X,
+  Loader2,
+  ArrowLeft,
+  Plus,
+  Trash2,
+  Check,
+  Send,
+  type LucideIcon,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { BUTTON_STYLES, type ButtonStyleType } from '@/constants/button-styles';
@@ -53,23 +63,16 @@ export function ActionButton({
 }: ActionButtonProps) {
   // Get the icon component
   const IconComponent = typeof icon === 'string' ? ACTION_ICONS[icon] : icon;
-  
+
   return (
     <Button
       type={type}
       onClick={onClick}
       disabled={disabled || isLoading}
-      className={cn(
-        'gap-2 font-medium',
-        BUTTON_STYLES[style],
-        className
-      )}
+      className={cn('gap-2 font-medium', BUTTON_STYLES[style], className)}
     >
-      {isLoading ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : IconComponent ? (
-        <IconComponent className="h-4 w-4" />
-      ) : null}
+      {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+      {!isLoading && IconComponent && <IconComponent className="h-4 w-4" />}
       {label}
     </Button>
   );
@@ -124,7 +127,8 @@ export function FormActions({
   const containerClasses = cn(
     'flex items-center gap-3',
     alignmentClasses[align],
-    mode === 'floating' && 'fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-t border-gray-200 px-6 py-4 shadow-lg',
+    mode === 'floating' &&
+      'fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-t border-gray-200 px-6 py-4 shadow-lg',
     mode === 'inline' && 'pt-4 border-t border-gray-100',
     className
   );
@@ -141,7 +145,7 @@ export function FormActions({
         isLoading={primaryAction.isLoading}
         disabled={primaryAction.disabled}
       />
-      
+
       {/* Secondary Action */}
       {secondaryAction && (
         <ActionButton
@@ -152,7 +156,7 @@ export function FormActions({
           icon={secondaryAction.icon || 'cancel'}
         />
       )}
-      
+
       {/* Additional Actions */}
       {additionalActions.map((action, index) => (
         <ActionButton key={index} {...action} />
@@ -169,9 +173,7 @@ export function FormActions({
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         className={containerClasses}
       >
-        <div className="mx-auto flex w-full max-w-4xl items-center gap-3">
-          {content}
-        </div>
+        <div className="mx-auto flex w-full max-w-4xl items-center gap-3">{content}</div>
       </motion.div>
     );
   }
@@ -207,7 +209,12 @@ export function SaveButton({ onClick, isLoading, disabled, className }: QuickBut
 }
 
 /** Pre-configured Create button */
-export function CreateButton({ onClick, isLoading, disabled, className }: QuickButtonProps & { label?: string }) {
+export function CreateButton({
+  onClick,
+  isLoading,
+  disabled,
+  className,
+}: QuickButtonProps & { label?: string }) {
   return (
     <ActionButton
       label="Create"
@@ -223,7 +230,10 @@ export function CreateButton({ onClick, isLoading, disabled, className }: QuickB
 }
 
 /** Pre-configured Cancel button */
-export function CancelButton({ onClick, className }: Pick<QuickButtonProps, 'onClick' | 'className'>) {
+export function CancelButton({
+  onClick,
+  className,
+}: Pick<QuickButtonProps, 'onClick' | 'className'>) {
   return (
     <ActionButton
       label="Cancel"
@@ -237,7 +247,10 @@ export function CancelButton({ onClick, className }: Pick<QuickButtonProps, 'onC
 }
 
 /** Pre-configured Back button */
-export function BackButton({ onClick, className }: Pick<QuickButtonProps, 'onClick' | 'className'>) {
+export function BackButton({
+  onClick,
+  className,
+}: Pick<QuickButtonProps, 'onClick' | 'className'>) {
   return (
     <ActionButton
       label="Back"

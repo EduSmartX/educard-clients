@@ -74,15 +74,17 @@ export default function ViewClassScreen() {
         </View>
       </LinearGradient>
 
-      {isLoading ? (
+      {isLoading && (
         <View style={styles.center}>
           <ActivityIndicator size="large" color="#7c3aed" />
         </View>
-      ) : isError || !cls ? (
+      )}
+      {!isLoading && (isError || !cls) && (
         <View style={styles.center}>
           <Text style={styles.errorText}>Failed to load class details.</Text>
         </View>
-      ) : (
+      )}
+      {!isLoading && !isError && cls && (
         <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
           <Animated.View entering={FadeInDown.delay(100)}>
             <Section title="Class Info" icon="🏫">

@@ -94,7 +94,7 @@ function createButtonActions<T extends CommonRowData>(
 ) {
   const { onView, onEdit, onDelete, onCustomAction } = callbacks;
   const { showLabels = false, customActions = [] } = options || {};
-  
+
   // Check if user can manage this row (edit/delete)
   const canManage = row.can_manage ?? true; // Default to true for admins
 
@@ -191,7 +191,7 @@ function createDropdownActions<T extends CommonRowData>(
 ) {
   const { onView, onEdit, onDelete, onCustomAction } = callbacks;
   const { customActions = [] } = options || {};
-  
+
   // Check if user can manage this row (edit/delete)
   const canManage = row.can_manage ?? true; // Default to true for admins
 
@@ -273,13 +273,20 @@ export function createActionsColumn<T extends CommonRowData>(
 ): Column<T> {
   const { variant = 'buttons', align = 'right' } = options || {};
 
+  let headerClassName = '';
+  if (align === 'right') {
+    headerClassName = 'text-right';
+  } else if (align === 'center') {
+    headerClassName = 'text-center';
+  }
+
   return {
     header: 'Actions',
     accessor: (row) =>
       variant === 'dropdown'
         ? createDropdownActions(row, callbacks, options)
         : createButtonActions(row, callbacks, options),
-    headerClassName: align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : '',
+    headerClassName,
   };
 }
 
@@ -292,7 +299,7 @@ export function createCreatedAtColumn<T extends CommonRowData>(): Column<T> {
     accessor: (row) => (
       <div className="text-sm">
         <div className="font-medium text-gray-900">{row.created_by_name || 'System'}</div>
-        <div className="text-xs text-muted-foreground">{formatDateForDisplay(row.created_at)}</div>
+        <div className="text-muted-foreground text-xs">{formatDateForDisplay(row.created_at)}</div>
       </div>
     ),
     sortable: true,
@@ -309,7 +316,7 @@ export function createUpdatedAtColumn<T extends CommonRowData>(): Column<T> {
     accessor: (row) => (
       <div className="text-sm">
         <div className="font-medium text-gray-900">{row.updated_by_name || 'System'}</div>
-        <div className="text-xs text-muted-foreground">{formatDateForDisplay(row.updated_at)}</div>
+        <div className="text-muted-foreground text-xs">{formatDateForDisplay(row.updated_at)}</div>
       </div>
     ),
     sortable: true,
