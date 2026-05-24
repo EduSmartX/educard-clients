@@ -98,7 +98,7 @@ export function DataTable<T>({
     }
 
     const column = columns.find(
-      (col) => (col.sortKey || col.header.toLowerCase().replace(/\s+/g, '_')) === sortField
+      (col) => (col.sortKey || col.header.toLowerCase().replaceAll(/\s+/g, '_')) === sortField
     );
 
     if (!column || !column.sortable) {
@@ -123,7 +123,7 @@ export function DataTable<T>({
       return;
     }
 
-    const field = column.sortKey || column.header.toLowerCase().replace(/\s+/g, '_');
+    const field = column.sortKey || column.header.toLowerCase().replaceAll(/\s+/g, '_');
 
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -138,7 +138,7 @@ export function DataTable<T>({
       return null;
     }
 
-    const field = column.sortKey || column.header.toLowerCase().replace(/\s+/g, '_');
+    const field = column.sortKey || column.header.toLowerCase().replaceAll(/\s+/g, '_');
 
     if (sortField !== field) {
       return <ArrowUpDown className="ml-1 h-4 w-4 text-gray-400" />;
@@ -195,8 +195,8 @@ export function DataTable<T>({
   if (isLoading) {
     return (
       <div className="space-y-4">
-        {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} className="h-16 w-full" />
+        {[...new Array(5)].map((_, i) => (
+          <Skeleton key={`skeleton-${i}`} className="h-16 w-full" />
         ))}
       </div>
     );
@@ -230,7 +230,7 @@ export function DataTable<T>({
             <TableRow className="border-b-2 border-gray-300 bg-gray-100">
               {columns.map((column, index) => (
                 <TableHead
-                  key={index}
+                  key={column.header}
                   className={`relative border-r border-gray-300 bg-gray-100 font-bold text-gray-900 last:border-r-0 ${column.headerClassName || ''}`}
                   style={{
                     width: `${columnWidths[index]}px`,

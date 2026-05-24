@@ -278,19 +278,21 @@ export function LeaveRequestDialog({
             <Label htmlFor="leave-type" className="text-base font-semibold text-gray-900">
               Leave Type *
             </Label>
-            {loadingBalances ? (
+            {loadingBalances && (
               <div className="flex items-center justify-center rounded-lg border-2 border-gray-200 bg-gray-50 p-6">
                 <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
                 <span className="ml-3 text-gray-600">Loading leave types...</span>
               </div>
-            ) : leaveBalances.length === 0 ? (
+            )}
+            {!loadingBalances && leaveBalances.length === 0 && (
               <Alert className="border-2 border-orange-400 bg-orange-50">
                 <AlertDescription className="text-base font-semibold text-orange-900">
                   ⚠ No leave balances available. Please contact your administrator to set up your
                   leave allocations.
                 </AlertDescription>
               </Alert>
-            ) : (
+            )}
+            {!loadingBalances && leaveBalances.length > 0 && (
               <SearchableSelect
                 options={leaveBalances.map((balance) => ({
                   value: balance.public_id,
@@ -396,7 +398,7 @@ export function LeaveRequestDialog({
           )}
 
           {/* Working Days Display */}
-          {calculatingDays ? (
+          {calculatingDays && (
             <Alert className="border-2 border-gray-400 bg-gray-50">
               <div className="flex items-center">
                 <Loader2 className="mr-3 h-5 w-5 animate-spin text-blue-600" />
@@ -405,7 +407,8 @@ export function LeaveRequestDialog({
                 </AlertDescription>
               </div>
             </Alert>
-          ) : workingDays !== null && workingDays > 0 ? (
+          )}
+          {!calculatingDays && workingDays !== null && workingDays > 0 && (
             <Alert
               className={
                 selectedBalance && workingDays > selectedAvailableBalance
@@ -429,7 +432,7 @@ export function LeaveRequestDialog({
                 </AlertDescription>
               </div>
             </Alert>
-          ) : null}
+          )}
 
           {/* Reason */}
           <div className="space-y-3">

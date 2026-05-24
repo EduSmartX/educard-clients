@@ -254,12 +254,16 @@ export default function TimesheetApprovalsPage() {
             typeof row.attendance_percentage === 'string'
               ? Number.parseFloat(row.attendance_percentage)
               : row.attendance_percentage;
-          const colorClass =
-            percentage >= 75
-              ? 'text-green-600'
-              : percentage >= 50
-                ? 'text-yellow-600'
-                : 'text-red-600';
+          const getAttendanceColor = (pct: number) => {
+            if (pct >= 75) {
+              return 'text-green-600';
+            }
+            if (pct >= 50) {
+              return 'text-yellow-600';
+            }
+            return 'text-red-600';
+          };
+          const colorClass = getAttendanceColor(percentage);
           return (
             <span className={`text-lg font-bold ${colorClass}`}>{row.attendance_percentage}%</span>
           );

@@ -67,7 +67,7 @@ interface FeeBalanceProps {
   className?: string;
 }
 
-export function FeeBalance({ balanceDue, className }: FeeBalanceProps) {
+export function FeeBalance({ balanceDue, className }: Readonly<FeeBalanceProps>) {
   const isPaid = balanceDue <= 0;
 
   return (
@@ -101,14 +101,20 @@ export function FeeProgress({
   className,
   showLabels = true,
 }: FeeProgressProps) {
-  const progressColor =
-    paidPercentage >= 100
-      ? 'bg-green-500'
-      : paidPercentage >= 50
-        ? 'bg-blue-500'
-        : paidPercentage > 0
-          ? 'bg-amber-500'
-          : 'bg-gray-300';
+  const getProgressColor = (percentage: number) => {
+    if (percentage >= 100) {
+      return 'bg-green-500';
+    }
+    if (percentage >= 50) {
+      return 'bg-blue-500';
+    }
+    if (percentage > 0) {
+      return 'bg-amber-500';
+    }
+    return 'bg-gray-300';
+  };
+
+  const progressColor = getProgressColor(paidPercentage);
 
   return (
     <div className={cn('space-y-1', className)}>

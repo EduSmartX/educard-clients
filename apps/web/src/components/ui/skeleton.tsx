@@ -7,6 +7,6 @@ import { cn } from '@/lib/utils';
 
 type SkeletonProps = React.HTMLAttributes<HTMLDivElement>;
 
-export function Skeleton({ className, ...props }: SkeletonProps) {
+export function Skeleton({ className, ...props }: Readonly<SkeletonProps>) {
   return <div className={cn('animate-pulse rounded-md bg-gray-200', className)} {...props} />;
 }

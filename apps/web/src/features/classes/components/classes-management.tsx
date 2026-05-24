@@ -19,7 +19,7 @@ interface ClassesManagementProps {
   viewMode?: 'admin' | 'employee'; // Admin = full CRUD, Employee = read-only
 }
 
-export function ClassesManagement({ viewMode = 'admin' }: ClassesManagementProps) {
+export function ClassesManagement({ viewMode = 'admin' }: Readonly<ClassesManagementProps>) {
   const isEmployeeView = viewMode === 'employee';
   const navigate = useNavigate();
 

@@ -44,6 +44,22 @@ export function usePreference(publicId: string) {
 }
 
 /**
+ * Helper to update a preference within a group (extracted for nesting reduction)
+ */
+function updateGroupPreference(
+  group: GroupedPreference,
+  publicId: string,
+  value: string | string[]
+): GroupedPreference {
+  return {
+    ...group,
+    preferences: group.preferences.map((pref: OrganizationPreference) =>
+      pref.public_id === publicId ? { ...pref, value } : pref
+    ),
+  };
+}
+
+/**
  * Hook to update a preference with optimistic updates
  */
 export function useUpdatePreference() {
@@ -77,12 +93,7 @@ export function useUpdatePreference() {
             }
             return {
               ...old,
-              data: old.data.map((group) => ({
-                ...group,
-                preferences: group.preferences.map((pref: OrganizationPreference) =>
-                  pref.public_id === publicId ? { ...pref, value } : pref
-                ),
-              })),
+              data: old.data.map((group) => updateGroupPreference(group, publicId, value)),
             };
           }
         );

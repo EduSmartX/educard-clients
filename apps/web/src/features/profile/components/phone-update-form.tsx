@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { CommonUiText, FormPlaceholders } from '@/constants';
 import { useUserProfile } from '../hooks/queries';
 import { useSendOTP, useUpdatePhone } from '../hooks/mutations';
+import { formatCountdown } from '../utils/format-countdown';
 
 const phoneSchema = z.object({
   new_phone: z.string().min(10, 'Phone number must be at least 10 digits'),
@@ -88,12 +89,6 @@ export function PhoneUpdateForm() {
     });
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -146,7 +141,7 @@ export function PhoneUpdateForm() {
                   <FormDescription>
                     {otpSent ? (
                       <span className="text-green-600">
-                        OTP sent! Expires in {formatTime(countdown)}
+                        OTP sent! Expires in {formatCountdown(countdown)}
                       </span>
                     ) : (
                       'Click the button to send OTP to this phone'

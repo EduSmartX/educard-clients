@@ -1,7 +1,7 @@
 import { Colors } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Mail, ArrowLeft, Send, KeyRound } from 'lucide-react-native'; // Removed unused: CheckCircle, RefreshCw, Lock, Eye, EyeOff
+import { Mail, ArrowLeft, Send, KeyRound } from 'lucide-react-native';
 import { useState, useCallback, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';

@@ -155,6 +155,27 @@ function ClassSelectorSection({
   );
 }
 
+function validateExceptionForm(
+  date: Date | undefined,
+  reason: string,
+  isAllClasses: boolean,
+  selectedClasses: string[]
+): Record<string, string> {
+  const errors: Record<string, string> = {};
+  if (!date) {
+    errors.date = 'Date is required';
+  }
+  if (!reason.trim()) {
+    errors.reason = 'Reason is required';
+  } else if (reason.length > 500) {
+    errors.reason = 'Reason must be 500 characters or less';
+  }
+  if (!isAllClasses && selectedClasses.length === 0) {
+    errors.classes = 'Please select at least one class';
+  }
+  return errors;
+}
+
 export function ExceptionDialog({
   open,
   onOpenChange,
@@ -239,20 +260,7 @@ export function ExceptionDialog({
 
   // Validation
   const validate = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!date) {
-      newErrors.date = 'Date is required';
-    }
-    if (!reason.trim()) {
-      newErrors.reason = 'Reason is required';
-    } else if (reason.length > 500) {
-      newErrors.reason = 'Reason must be 500 characters or less';
-    }
-    if (!isAllClasses && selectedClasses.length === 0) {
-      newErrors.classes = 'Please select at least one class';
-    }
-
+    const newErrors = validateExceptionForm(date, reason, isAllClasses, selectedClasses);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };

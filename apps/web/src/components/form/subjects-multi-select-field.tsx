@@ -43,31 +43,37 @@ export function SubjectsMultiSelectField<TFieldValues extends FieldValues>({
           ? subjects.filter((subject) => !selectedSubjects.includes(subject.id))
           : [];
 
+        const handleRemoveSubject = (subjectId: number) => {
+          field.onChange(selectedSubjects.filter((id) => id !== subjectId));
+        };
+
+        const getSelectOptions = () => {
+          if (isLoading) {
+            return [{ value: 'loading', label: 'Loading subjects...', disabled: true }];
+          }
+          if (availableSubjects.length === 0) {
+            return [
+              {
+                value: 'none',
+                label:
+                  selectedSubjects.length > 0 ? 'All subjects selected' : 'No subjects available',
+                disabled: true,
+              },
+            ];
+          }
+          return availableSubjects.map((subject) => ({
+            value: subject.id.toString(),
+            label: `${subject.name} (${subject.code})`,
+          }));
+        };
+
         return (
           <FormItem>
             <FormLabel>{label}</FormLabel>
             <div className="space-y-2">
               {/* Dropdown to add subjects */}
               <SearchableSelect
-                options={
-                  isLoading
-                    ? [{ value: 'loading', label: 'Loading subjects...', disabled: true }]
-                    : availableSubjects.length === 0
-                      ? [
-                          {
-                            value: 'none',
-                            label:
-                              selectedSubjects.length > 0
-                                ? 'All subjects selected'
-                                : 'No subjects available',
-                            disabled: true,
-                          },
-                        ]
-                      : availableSubjects.map((subject) => ({
-                          value: subject.id.toString(),
-                          label: `${subject.name} (${subject.code})`,
-                        }))
-                }
+                options={getSelectOptions()}
                 value=""
                 onValueChange={(value: string) => {
                   if (value) {
@@ -96,9 +102,7 @@ export function SubjectsMultiSelectField<TFieldValues extends FieldValues>({
                         {!disabled && (
                           <button
                             type="button"
-                            onClick={() =>
-                              field.onChange(selectedSubjects.filter((id) => id !== subjectId))
-                            }
+                            onClick={() => handleRemoveSubject(subjectId)}
                             className="ml-1 rounded-full p-0.5 transition-colors hover:bg-gray-300"
                           >
                             <X className="h-3 w-3" />

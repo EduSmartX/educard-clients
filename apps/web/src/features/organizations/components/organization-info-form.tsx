@@ -40,7 +40,10 @@ interface OrganizationInfoFormProps {
   isLoading: boolean;
 }
 
-export function OrganizationInfoForm({ organization, isLoading }: OrganizationInfoFormProps) {
+export function OrganizationInfoForm({
+  organization,
+  isLoading,
+}: Readonly<OrganizationInfoFormProps>) {
   const updateMutation = useUpdateOrganization(organization?.public_id || '');
 
   const form = useForm<OrganizationInfoFormData>({

@@ -431,8 +431,8 @@ export function BulkUploadModal({
                   <Text style={styles.errorsTitle}>Errors ({uploadResult.errors.length})</Text>
                 </View>
                 <ScrollView style={styles.errorsList} nestedScrollEnabled>
-                  {uploadResult.errors.map((error, index) => (
-                    <View key={index} style={styles.errorItem}>
+                  {uploadResult.errors.map((error) => (
+                    <View key={`${error.row}-${error.error}`} style={styles.errorItem}>
                       {error.row !== 0 && (
                         <View style={styles.errorRowBadge}>
                           <Text style={styles.errorRowText}>Row {error.row}</Text>

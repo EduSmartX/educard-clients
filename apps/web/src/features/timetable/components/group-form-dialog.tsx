@@ -25,7 +25,7 @@ interface GroupFormDialogProps {
   editGroup?: ClassGroup | null;
 }
 
-export function GroupFormDialog({ open, onOpenChange, editGroup }: GroupFormDialogProps) {
+export function GroupFormDialog({ open, onOpenChange, editGroup }: Readonly<GroupFormDialogProps>) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [displayOrder, setDisplayOrder] = useState(0);
@@ -115,7 +115,9 @@ export function GroupFormDialog({ open, onOpenChange, editGroup }: GroupFormDial
             disabled={!name.trim() || isLoading}
             className="bg-emerald-600 hover:bg-emerald-700"
           >
-            {isLoading ? S.BUTTON_SAVING : editGroup ? S.BUTTON_UPDATE : S.BUTTON_CREATE_GROUP}
+            {isLoading && S.BUTTON_SAVING}
+            {!isLoading && editGroup && S.BUTTON_UPDATE}
+            {!isLoading && !editGroup && S.BUTTON_CREATE_GROUP}
           </Button>
         </DialogFooter>
       </DialogContent>

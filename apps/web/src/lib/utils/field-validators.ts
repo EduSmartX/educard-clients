@@ -38,7 +38,7 @@ export function validatePhone(value: string): ValidationResult {
   }
 
   // Remove all non-digit characters for length check
-  const digitsOnly = value.replace(/\D/g, '');
+  const digitsOnly = value.replaceAll(/\D/g, '');
 
   if (digitsOnly.length < 10) {
     return {

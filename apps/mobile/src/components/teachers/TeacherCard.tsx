@@ -53,8 +53,8 @@ export function TeacherCard({ teacher, onView, onEdit, onDelete }: TeacherCardPr
 
         {teacher.subjects && teacher.subjects.length > 0 ? (
           <View style={styles.subjectsRow}>
-            {teacher.subjects.slice(0, 2).map((subject, idx) => (
-              <View key={idx} style={styles.subjectTag}>
+            {teacher.subjects.slice(0, 2).map((subject) => (
+              <View key={subject.name} style={styles.subjectTag}>
                 <Text style={textStyles.tag}>{subject.name}</Text>
               </View>
             ))}

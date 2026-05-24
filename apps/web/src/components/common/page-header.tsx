@@ -190,11 +190,11 @@ export function PageHeader({
           >
             {/* Render action buttons */}
             {actions.length > 0 &&
-              actions.map((action, index) => {
+              actions.map((action) => {
                 const ActionIcon = action.icon;
                 return (
                   <Button
-                    key={index}
+                    key={action.label}
                     onClick={action.onClick}
                     variant={action.variant || 'brand'}
                     disabled={action.disabled}

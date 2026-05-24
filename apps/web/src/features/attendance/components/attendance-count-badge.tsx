@@ -8,7 +8,11 @@ interface AttendanceCountBadgeProps {
  * Reusable count badge component for displaying attendance counts
  * Used in tables and summary views
  */
-export function AttendanceCountBadge({ count, type, className }: AttendanceCountBadgeProps) {
+export function AttendanceCountBadge({
+  count,
+  type,
+  className,
+}: Readonly<AttendanceCountBadgeProps>) {
   const getTypeStyle = () => {
     switch (type) {
       case 'present':
@@ -24,7 +28,7 @@ export function AttendanceCountBadge({ count, type, className }: AttendanceCount
 
   return (
     <span
-      className={`inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded-full ${getTypeStyle()} ${className || ''}`}
+      className={`inline-flex items-center justify-center rounded-full px-2 py-1 text-xs font-bold ${getTypeStyle()} ${className || ''}`}
     >
       {count}
     </span>

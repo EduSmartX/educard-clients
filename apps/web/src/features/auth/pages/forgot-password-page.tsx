@@ -61,6 +61,14 @@ function getOtpRequestError(err: unknown): string {
   return error?.response?.data?.message || error?.message || ErrorMessages.AUTH.SEND_OTP_FAILED;
 }
 
+function buildIdentifierPayload(useEmail: boolean, identifier: string) {
+  return useEmail ? { email: identifier } : { username: identifier };
+}
+
+function getIdentifierLabel(useEmail: boolean) {
+  return useEmail ? 'email' : 'username';
+}
+
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<Step>('request');
@@ -92,15 +100,13 @@ export default function ForgotPasswordPage() {
   const handleRequestOtp = async (formData: RequestOtpFormData) => {
     setIsLoading(true);
     try {
-      const requestData = useEmail
-        ? { email: formData.identifier }
-        : { username: formData.identifier };
+      const requestData = buildIdentifierPayload(useEmail, formData.identifier);
 
       await authApi.requestPasswordResetOtp(requestData);
 
       setIdentifier(formData.identifier);
       setCurrentStep('verify');
-      toast.success(`${SuccessMessages.AUTH.OTP_SENT} to your ${useEmail ? 'email' : 'account'}!`);
+      toast.success(`${SuccessMessages.AUTH.OTP_SENT} to your ${getIdentifierLabel(useEmail)}!`);
     } catch (err: unknown) {
       toast.error(getOtpRequestError(err));
     } finally {
@@ -112,7 +118,7 @@ export default function ForgotPasswordPage() {
   const handleVerifyOtp = async (formData: VerifyOtpFormData) => {
     setIsLoading(true);
     try {
-      const identifierField = useEmail ? { email: identifier } : { username: identifier };
+      const identifierField = buildIdentifierPayload(useEmail, identifier);
       const verifyData = {
         ...identifierField,
         otp: formData.otp,
@@ -190,8 +196,7 @@ export default function ForgotPasswordPage() {
                     Forgot Password? 🔒
                   </h1>
                   <p className="text-base text-gray-600">
-                    Don't worry! Enter your {useEmail ? 'email' : 'username'} and we'll send you an
-                    OTP
+                    Don't worry! Enter your {getIdentifierLabel(useEmail)} and we'll send you an OTP
                   </p>
                 </div>
               </div>
@@ -357,7 +362,7 @@ export default function ForgotPasswordPage() {
                     )}
                     {...registerVerify('otp', {
                       onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
-                        e.target.value = e.target.value.replace(/\D/g, '');
+                        e.target.value = e.target.value.replaceAll(/\D/g, '');
                       },
                     })}
                   />

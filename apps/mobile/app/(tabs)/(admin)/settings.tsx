@@ -1,10 +1,10 @@
 /**
- * Admin Settings Screen
- * Simplified: Organization Settings (admin) + App Settings
+ * Settings Screen (Role-aware)
+ * Organization Settings (admin only) + App Settings (all roles)
  *
  * Permission Model:
  * - Admin: Access to Organization Preferences, Holidays (CRUD)
- * - Teacher: App settings only (no Organization section)
+ * - Teacher/Employee: App settings only (no Organization section)
  */
 
 import { getRoleGradient } from '@educard/shared';
@@ -52,7 +52,7 @@ interface SettingSection {
   items: SettingItem[];
 }
 
-export default function AdminSettingsScreen() {
+export default function SettingsScreen() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
   const { profileImageUrl } = useProfileImageUrl();
@@ -155,7 +155,9 @@ export default function AdminSettingsScreen() {
   // Build sections based on role
   const sections: SettingSection[] = isAdmin ? [organizationSection, appSection] : [appSection];
 
-  const initials = (user?.full_name ?? user?.first_name ?? 'A').charAt(0).toUpperCase();
+  const initials = (user?.full_name ?? user?.first_name ?? user?.role ?? 'U')
+    .charAt(0)
+    .toUpperCase();
 
   return (
     <View style={layoutStyles.container}>
@@ -185,7 +187,7 @@ export default function AdminSettingsScreen() {
               </View>
             )}
             <View style={{ flex: 1 }}>
-              <Text style={st.headerName}>{user?.full_name ?? user?.first_name ?? 'Admin'}</Text>
+              <Text style={st.headerName}>{user?.full_name ?? user?.first_name ?? 'User'}</Text>
               <Text style={st.headerEmail}>{user?.email ?? ''}</Text>
               <View style={st.roleBadge}>
                 <Text style={st.roleText}>

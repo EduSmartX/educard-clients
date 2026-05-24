@@ -5,7 +5,7 @@ interface AttendanceComingSoonCardProps {
   title: string;
 }
 
-export function AttendanceComingSoonCard({ title }: AttendanceComingSoonCardProps) {
+export function AttendanceComingSoonCard({ title }: Readonly<AttendanceComingSoonCardProps>) {
   return (
     <Card>
       <CardHeader>

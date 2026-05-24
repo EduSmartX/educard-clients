@@ -5,7 +5,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { RefreshCw, Users, User, Info } from 'lucide-react';
+import { RefreshCw, Users, User, Info, Check, X, Eye, Paperclip } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
@@ -22,12 +22,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { DataTable } from '@/components/ui/data-table';
+import { DataTable, type Column } from '@/components/ui/data-table';
 import { Combobox } from '@/components/ui/combobox';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import api from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { formatDate } from '@/lib/utils/date-utils';
 import {
   useApproveLeaveRequest,
   useRejectLeaveRequest,

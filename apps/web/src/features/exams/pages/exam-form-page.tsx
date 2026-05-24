@@ -40,6 +40,70 @@ import {
   buildExamUpdatePayload,
 } from '../utils/exam-form-helpers';
 
+function getExamFormTitle(isCreate: boolean, isEdit: boolean): string {
+  if (isCreate) {
+    return 'Create Exam';
+  }
+  if (isEdit) {
+    return 'Edit Exam';
+  }
+  return 'View Exam';
+}
+
+function findDuplicateExam(
+  isCreate: boolean,
+  sessionId: string,
+  subjectId: string,
+  existingExams: Array<{ subject_public_id: string; public_id: string }>
+) {
+  if (!isCreate || !sessionId || !subjectId) {
+    return null;
+  }
+  return existingExams.find((exam) => exam.subject_public_id === subjectId) || null;
+}
+
+function shouldRedirectNonAdmin(isAdmin: boolean, isCreate: boolean, isEdit: boolean): boolean {
+  return !isAdmin && (isCreate || isEdit);
+}
+
+function getExamFormActionsConfig(
+  isView: boolean,
+  isCreate: boolean,
+  isPending: boolean,
+  navigateToList: () => void,
+  navigateToEdit: () => void
+) {
+  if (isView) {
+    return {
+      primaryAction: {
+        label: 'Edit Exam',
+        onClick: navigateToEdit,
+        type: 'button' as const,
+        style: 'info' as const,
+      },
+      secondaryAction: {
+        label: 'Back',
+        onClick: navigateToList,
+        icon: 'back' as const,
+      },
+    };
+  }
+  return {
+    primaryAction: {
+      label: isCreate ? 'Create Exam' : 'Save Changes',
+      type: 'submit' as const,
+      icon: (isCreate ? 'create' : 'save') as 'create' | 'save',
+      isLoading: isPending,
+      disabled: isPending,
+    },
+    secondaryAction: {
+      label: 'Cancel',
+      onClick: navigateToList,
+      icon: 'cancel' as const,
+    },
+  };
+}
+
 export function ExamFormPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -52,7 +116,7 @@ export function ExamFormPage() {
 
   // Non-admin users can only view, not create or edit
   useEffect(() => {
-    if (!isAdmin && (isCreate || isEdit)) {
+    if (shouldRedirectNonAdmin(isAdmin, isCreate, isEdit)) {
       navigate(ROUTES.EXAMS_LIST, { replace: true });
     }
   }, [isAdmin, isCreate, isEdit, navigate]);
@@ -139,12 +203,10 @@ export function ExamFormPage() {
   }, [existingExam]);
 
   // Check if exam already exists for this session + subject
-  const checkDuplicateExam = useMemo(() => {
-    if (!isCreate || !sessionId || !subjectId) {
-      return null;
-    }
-    return existingExams.find((exam) => exam.subject_public_id === subjectId);
-  }, [isCreate, sessionId, subjectId, existingExams]);
+  const checkDuplicateExam = useMemo(
+    () => findDuplicateExam(isCreate, sessionId, subjectId, existingExams),
+    [isCreate, sessionId, subjectId, existingExams]
+  );
 
   const createMutation = useCreateExam({
     onSuccess: () => {
@@ -222,12 +284,7 @@ export function ExamFormPage() {
     createMutation.mutate(payload);
   };
 
-  let title = 'View Exam';
-  if (isCreate) {
-    title = 'Create Exam';
-  } else if (isEdit) {
-    title = 'Edit Exam';
-  }
+  const title = getExamFormTitle(isCreate, isEdit);
 
   if (id && isLoadingExam) {
     return (
@@ -266,13 +323,14 @@ export function ExamFormPage() {
                 <Label htmlFor="session_id">
                   Exam Session <span className="text-red-500">*</span>
                 </Label>
-                {isView ? (
+                {isView && (
                   <Input
                     value={existingExam?.session_name || '-'}
                     disabled
                     className="bg-gray-50"
                   />
-                ) : (
+                )}
+                {!isView && (
                   <SearchableSelect
                     key={`session-${sessionId || 'empty'}`}
                     options={sessionsList.map((session) => ({
@@ -308,9 +366,10 @@ export function ExamFormPage() {
                 <Label htmlFor="class_id">
                   Class <span className="text-red-500">*</span>
                 </Label>
-                {isView ? (
+                {isView && (
                   <Input value={existingExam?.class_name || '-'} disabled className="bg-gray-50" />
-                ) : (
+                )}
+                {!isView && (
                   <SearchableSelect
                     key={`class-${classId || 'empty'}`}
                     options={classesList.map((cls) => ({
@@ -338,13 +397,14 @@ export function ExamFormPage() {
                 <Label htmlFor="subject_id">
                   Subject <span className="text-red-500">*</span>
                 </Label>
-                {isView ? (
+                {isView && (
                   <Input
                     value={existingExam?.subject_name || '-'}
                     disabled
                     className="bg-gray-50"
                   />
-                ) : (
+                )}
+                {!isView && (
                   <SearchableSelect
                     key={`subject-${subjectId || 'empty'}`}
                     options={subjectsList.map((subject) => ({
@@ -382,13 +442,14 @@ export function ExamFormPage() {
                 <Label htmlFor="status">
                   Status <span className="text-red-500">*</span>
                 </Label>
-                {isView ? (
+                {isView && (
                   <Input
                     value={status ? EXAM_STATUS_LABELS[status as ExamStatus] : '-'}
                     disabled
                     className="bg-gray-50"
                   />
-                ) : (
+                )}
+                {!isView && (
                   <SearchableSelect
                     key={`status-${status || 'empty'}`}
                     options={EXAM_STATUS_OPTIONS.map((opt) => ({
@@ -490,27 +551,13 @@ export function ExamFormPage() {
 
             {/* Actions */}
             <FormActions
-              primaryAction={
-                isView
-                  ? {
-                      label: 'Edit Exam',
-                      onClick: () => navigate(ROUTES.EXAMS_EDIT.replace(':id', id!)),
-                      type: 'button',
-                      style: 'info',
-                    }
-                  : {
-                      label: isCreate ? 'Create Exam' : 'Save Changes',
-                      type: 'submit',
-                      icon: isCreate ? 'create' : 'save',
-                      isLoading: isPending,
-                      disabled: isPending,
-                    }
-              }
-              secondaryAction={{
-                label: isView ? 'Back' : 'Cancel',
-                onClick: () => navigate(ROUTES.EXAMS_LIST),
-                icon: isView ? 'back' : 'cancel',
-              }}
+              {...getExamFormActionsConfig(
+                isView,
+                isCreate,
+                isPending,
+                () => navigate(ROUTES.EXAMS_LIST),
+                () => navigate(ROUTES.EXAMS_EDIT.replace(':id', id!))
+              )}
             />
           </CardContent>
         </Card>

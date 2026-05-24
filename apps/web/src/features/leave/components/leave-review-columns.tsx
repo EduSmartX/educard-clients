@@ -5,6 +5,7 @@ import { Check, X, Eye, Paperclip } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { formatDate } from '@/lib/utils/date-utils';
 import type { Column } from '@/components/ui/data-table';
 
 export interface LeaveRequestReview {
@@ -41,14 +42,6 @@ const STATUS_CONFIG = {
   rejected: { label: 'Rejected', className: 'bg-red-500 text-white hover:bg-red-600' },
   cancelled: { label: 'Cancelled', className: 'bg-gray-500 text-white hover:bg-gray-600' },
 };
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-}
 
 interface ColumnActions {
   onNavigate: (path: string) => void;

@@ -62,14 +62,14 @@ const StudentFeeCard = React.memo(
     const isRefundFlow = isRefunding || isRefunded;
     const _showRefundAction = isRefunding || isOverpaid;
 
-    const pctColor =
-      item.paid_percentage >= 100
-        ? '#059669'
-        : item.paid_percentage >= 50
-          ? '#3b82f6'
-          : item.is_overdue
-            ? '#dc2626'
-            : '#f59e0b';
+    const getFeeColor = (item: { paid_percentage: number; is_overdue?: boolean }) => {
+      if (item.paid_percentage >= 100) return '#059669';
+      if (item.paid_percentage >= 50) return '#3b82f6';
+      if (item.is_overdue) return '#dc2626';
+      return '#f59e0b';
+    };
+
+    const pctColor = getFeeColor(item);
 
     return (
       <TouchableOpacity

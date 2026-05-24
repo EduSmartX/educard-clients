@@ -79,17 +79,19 @@ export function DateActionDialog({
     }
   };
 
-  if (!date) {return null;}
+  if (!date) {
+    return null;
+  }
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-3xl overflow-hidden border-0 p-0 bg-gradient-to-br from-amber-50 via-white to-orange-50">
+        <DialogContent className="max-w-3xl overflow-hidden border-0 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-0">
           {/* Header with gradient background */}
           <div className="relative overflow-hidden bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 px-6 py-8">
             {/* Decorative circles */}
-            <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"></div>
-            <div className="absolute -left-10 -bottom-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"></div>
+            <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"></div>
+            <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"></div>
 
             <DialogHeader className="relative">
               <div className="flex items-center gap-3">
@@ -100,10 +102,10 @@ export function DateActionDialog({
                   <DialogTitle className="text-2xl font-bold text-white">
                     {format(date, 'MMMM dd, yyyy')}
                   </DialogTitle>
-                  <DialogDescription className="text-amber-50 mt-1">
-                    {nonWeekendHolidays.length === 0
-                      ? 'No holidays on this date. Add one now!'
-                      : `${nonWeekendHolidays.length} ${nonWeekendHolidays.length === 1 ? 'holiday' : 'holidays'} on this date`}
+                  <DialogDescription className="mt-1 text-amber-50">
+                    {nonWeekendHolidays.length === 0 && 'No holidays on this date. Add one now!'}
+                    {nonWeekendHolidays.length > 0 &&
+                      `${nonWeekendHolidays.length} ${nonWeekendHolidays.length === 1 ? 'holiday' : 'holidays'} on this date`}
                   </DialogDescription>
                 </div>
               </div>
@@ -111,15 +113,15 @@ export function DateActionDialog({
           </div>
 
           {/* Content area */}
-          <div className="overflow-y-auto max-h-[calc(90vh-280px)] px-6 py-6">
+          <div className="max-h-[calc(90vh-280px)] overflow-y-auto px-6 py-6">
             <div className="space-y-4">
               {nonWeekendHolidays.length === 0 ? (
-                <div className="text-center py-12 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border-2 border-dashed border-amber-200">
-                  <div className="rounded-full bg-amber-100 p-4 w-fit mx-auto mb-4">
+                <div className="rounded-xl border-2 border-dashed border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 py-12 text-center">
+                  <div className="mx-auto mb-4 w-fit rounded-full bg-amber-100 p-4">
                     <CalendarIcon className="h-12 w-12 text-amber-600" />
                   </div>
-                  <p className="text-gray-600 font-medium">No holidays on this date</p>
-                  <p className="text-sm text-gray-500 mt-1">Click "Add Holiday" to create one</p>
+                  <p className="font-medium text-gray-600">No holidays on this date</p>
+                  <p className="mt-1 text-sm text-gray-500">Click "Add Holiday" to create one</p>
                 </div>
               ) : (
                 nonWeekendHolidays.map((holiday) => {
@@ -129,7 +131,7 @@ export function DateActionDialog({
                   return (
                     <Card
                       key={holiday.public_id}
-                      className="border-2 border-amber-100 shadow-lg hover:shadow-xl transition-all duration-200 bg-gradient-to-br from-white to-amber-50/30"
+                      className="border-2 border-amber-100 bg-gradient-to-br from-white to-amber-50/30 shadow-lg transition-all duration-200 hover:shadow-xl"
                     >
                       <CardContent className="pt-4 pb-4">
                         <div className="flex items-start justify-between gap-4">
@@ -151,14 +153,14 @@ export function DateActionDialog({
                             <div className="flex items-center gap-2">
                               <Badge
                                 variant="secondary"
-                                className="text-xs px-3 py-1 bg-gradient-to-r from-amber-100 to-orange-100 text-amber-800 border-0 font-medium"
+                                className="border-0 bg-gradient-to-r from-amber-100 to-orange-100 px-3 py-1 text-xs font-medium text-amber-800"
                               >
                                 {duration} {duration === 1 ? 'Day' : 'Days'}
                               </Badge>
                               <Badge
                                 className={cn(
                                   colors.badge,
-                                  'text-xs px-3 py-1 border-0 font-medium shadow-sm'
+                                  'border-0 px-3 py-1 text-xs font-medium shadow-sm'
                                 )}
                               >
                                 {formatHolidayType(holiday.holiday_type)}
@@ -169,7 +171,7 @@ export function DateActionDialog({
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-9 w-9 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700 transition-all duration-200"
+                              className="h-9 w-9 transition-all duration-200 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700"
                               onClick={() => handleEdit(holiday)}
                               disabled={deleteMutation.isPending}
                               title="Edit holiday"
@@ -179,7 +181,7 @@ export function DateActionDialog({
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-9 w-9 text-red-600 hover:bg-gradient-to-br hover:from-red-50 hover:to-rose-50 hover:text-red-700 transition-all duration-200"
+                              className="h-9 w-9 text-red-600 transition-all duration-200 hover:bg-gradient-to-br hover:from-red-50 hover:to-rose-50 hover:text-red-700"
                               onClick={() => handleDelete(holiday)}
                               disabled={deleteMutation.isPending}
                               title="Delete holiday"
@@ -197,8 +199,8 @@ export function DateActionDialog({
           </div>
 
           {/* Footer with gradient background */}
-          <div className="bg-gradient-to-r from-amber-50/50 to-orange-50/50 px-6 py-4 border-t border-amber-100">
-            <DialogFooter className="gap-2 flex-col sm:flex-row">
+          <div className="border-t border-amber-100 bg-gradient-to-r from-amber-50/50 to-orange-50/50 px-6 py-4">
+            <DialogFooter className="flex-col gap-2 sm:flex-row">
               <Button
                 variant="brandOutline"
                 onClick={() => onOpenChange(false)}
@@ -211,7 +213,7 @@ export function DateActionDialog({
                 variant="brand"
                 onClick={onAddAnother}
                 disabled={deleteMutation.isPending}
-                className="w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-200"
+                className="w-full shadow-lg transition-all duration-200 hover:shadow-xl sm:w-auto"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Add Holiday

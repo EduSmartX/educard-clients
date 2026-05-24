@@ -272,7 +272,7 @@ export function PreferenceField({
             <SearchableSelect
               options={(preference.applicable_values || []).map((option: string) => ({
                 value: option,
-                label: option.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
+                label: option.replaceAll('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
               }))}
               value={value as string}
               onValueChange={(v) => onChange(v)}
@@ -299,7 +299,7 @@ export function PreferenceField({
                   .map((option: string) => ({
                     value: option,
                     label: option
-                      .replace(/_/g, ' ')
+                      .replaceAll('_', ' ')
                       .replace(/\b\w/g, (l: string) => l.toUpperCase()),
                   }))}
                 value={multiSelectInput}

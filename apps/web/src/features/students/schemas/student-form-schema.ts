@@ -9,7 +9,7 @@ const phoneTransform = (val: string | undefined) => {
   if (!val) {
     return '';
   }
-  return val.replace(/\D/g, '');
+  return val.replaceAll(/\D/g, '');
 };
 
 const uppercaseTransform = (val: string | undefined) => {

@@ -47,20 +47,15 @@ export function useMarkAttendanceForm() {
   const { data: eligibleClasses, isLoading: loadingClasses } = useEligibleClasses();
 
   // Validate the date
-  const { data: dateValidation } = useValidateDate(
-    classId,
-    dateString,
-    !!classId && !!dateString
-  );
+  const { data: dateValidation } = useValidateDate(classId, dateString, !!classId && !!dateString);
 
   // Fetch comprehensive data if it's a working day
   const isWorkingDay = dateValidation?.is_working_day ?? true;
-  const { data: comprehensiveData, isLoading: loadingData } =
-    useComprehensiveAttendance(
-      classId,
-      dateString,
-      !!classId && !!dateString && isWorkingDay
-    );
+  const { data: comprehensiveData, isLoading: loadingData } = useComprehensiveAttendance(
+    classId,
+    dateString,
+    !!classId && !!dateString && isWorkingDay
+  );
 
   const bulkMarkMutation = useBulkMarkAttendance();
 
@@ -89,9 +84,7 @@ export function useMarkAttendanceForm() {
 
       setStudents(studentRows);
       setIsViewMode(hasExisting);
-      initialStudentsRef.current = hasExisting
-        ? JSON.parse(JSON.stringify(studentRows))
-        : null;
+      initialStudentsRef.current = hasExisting ? JSON.parse(JSON.stringify(studentRows)) : null;
     }
   }, [comprehensiveData]);
 
@@ -110,17 +103,13 @@ export function useMarkAttendanceForm() {
     value: boolean
   ) => {
     setStudents((prev) =>
-      prev.map((s) =>
-        s.public_id === studentId && s.canEdit ? { ...s, [field]: value } : s
-      )
+      prev.map((s) => (s.public_id === studentId && s.canEdit ? { ...s, [field]: value } : s))
     );
   };
 
   const updateStudentRemarks = (studentId: string, remarks: string) => {
     setStudents((prev) =>
-      prev.map((s) =>
-        s.public_id === studentId && s.canEdit ? { ...s, remarks } : s
-      )
+      prev.map((s) => (s.public_id === studentId && s.canEdit ? { ...s, remarks } : s))
     );
   };
 
@@ -194,29 +183,37 @@ export function useMarkAttendanceForm() {
     };
 
     await bulkMarkMutation.mutateAsync({ classId: data.class_id, payload });
-    
+
     // Update view mode and initial state after successful submit
     setIsViewMode(true);
     initialStudentsRef.current = JSON.parse(JSON.stringify(students));
   };
 
   // Calculate summary stats
+  const getPresentCount = () => {
+    if (period === 'morning') {
+      return students.filter((s) => s.morning_present).length;
+    }
+    if (period === 'afternoon') {
+      return students.filter((s) => s.afternoon_present).length;
+    }
+    return students.filter((s) => s.morning_present && s.afternoon_present).length;
+  };
+
+  const getAbsentCount = () => {
+    if (period === 'morning') {
+      return students.filter((s) => !s.morning_present && s.canEdit).length;
+    }
+    if (period === 'afternoon') {
+      return students.filter((s) => !s.afternoon_present && s.canEdit).length;
+    }
+    return students.filter((s) => !s.morning_present && !s.afternoon_present && s.canEdit).length;
+  };
+
   const summary = {
     total: students.length,
-    present:
-      period === 'morning'
-        ? students.filter((s) => s.morning_present).length
-        : period === 'afternoon'
-          ? students.filter((s) => s.afternoon_present).length
-          : students.filter((s) => s.morning_present && s.afternoon_present).length,
-    absent:
-      period === 'morning'
-        ? students.filter((s) => !s.morning_present && s.canEdit).length
-        : period === 'afternoon'
-          ? students.filter((s) => !s.afternoon_present && s.canEdit).length
-          : students.filter(
-              (s) => !s.morning_present && !s.afternoon_present && s.canEdit
-            ).length,
+    present: getPresentCount(),
+    absent: getAbsentCount(),
     onLeave: students.filter((s) => s.leave_status === 'approved').length,
   };
 

@@ -158,8 +158,8 @@ export function FormActions({
       )}
 
       {/* Additional Actions */}
-      {additionalActions.map((action, index) => (
-        <ActionButton key={index} {...action} />
+      {additionalActions.map((action) => (
+        <ActionButton key={action.label} {...action} />
       ))}
     </>
   );
@@ -193,7 +193,12 @@ interface QuickButtonProps {
 }
 
 /** Pre-configured Save button */
-export function SaveButton({ onClick, isLoading, disabled, className }: QuickButtonProps) {
+export function SaveButton({
+  onClick,
+  isLoading,
+  disabled,
+  className,
+}: Readonly<QuickButtonProps>) {
   return (
     <ActionButton
       label="Save"
@@ -264,7 +269,12 @@ export function BackButton({
 }
 
 /** Pre-configured Delete button */
-export function DeleteButton({ onClick, isLoading, disabled, className }: QuickButtonProps) {
+export function DeleteButton({
+  onClick,
+  isLoading,
+  disabled,
+  className,
+}: Readonly<QuickButtonProps>) {
   return (
     <ActionButton
       label="Delete"

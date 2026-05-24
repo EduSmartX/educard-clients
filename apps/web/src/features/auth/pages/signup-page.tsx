@@ -53,6 +53,17 @@ import {
   SIGNUP_STEP_TITLES,
 } from '../utils/signup.utils';
 
+/** Get step circle styling class based on progress */
+function getStepClass(step: number, currentStep: number): string {
+  if (step < currentStep) {
+    return 'scale-100 bg-gradient-to-br from-teal-500 to-cyan-600 text-white shadow-lg';
+  }
+  if (step === currentStep) {
+    return 'scale-110 bg-gradient-to-br from-teal-500 to-cyan-600 text-white shadow-lg ring-4 ring-teal-100';
+  }
+  return 'bg-gray-200 text-gray-500';
+}
+
 /** Handle OTP send errors with field-level mapping */
 function handleStep1Error(
   error: unknown,
@@ -157,20 +168,29 @@ export default function SignupPage() {
 
   // Step 2: Verify OTPs
   const handleVerifyOtp = async (type: 'admin' | 'org') => {
-    const otpField = type === 'admin' ? 'adminOtp' : 'orgOtp';
+    const config = {
+      admin: {
+        otpField: 'adminOtp' as const,
+        email: formData.adminEmail!,
+        setVerifying: setVerifyingAdmin,
+        setVerified: setAdminOtpVerified,
+        successMsg: SuccessMessages.AUTH.ADMIN_EMAIL_VERIFIED,
+      },
+      org: {
+        otpField: 'orgOtp' as const,
+        email: formData.orgEmail!,
+        setVerifying: setVerifyingOrg,
+        setVerified: setOrgOtpVerified,
+        successMsg: SuccessMessages.AUTH.ORG_EMAIL_VERIFIED,
+      },
+    };
+    const { otpField, email, setVerifying, setVerified, successMsg } = config[type];
+
     const otpValue = step2Form.getValues(otpField);
-    if (!otpValue || otpValue.length !== 6) {
+    if (!otpValue?.length || otpValue.length !== 6) {
       toast.error(ErrorMessages.AUTH.INVALID_OTP);
       return;
     }
-
-    const email = type === 'admin' ? formData.adminEmail! : formData.orgEmail!;
-    const setVerifying = type === 'admin' ? setVerifyingAdmin : setVerifyingOrg;
-    const setVerified = type === 'admin' ? setAdminOtpVerified : setOrgOtpVerified;
-    const successMsg =
-      type === 'admin'
-        ? SuccessMessages.AUTH.ADMIN_EMAIL_VERIFIED
-        : SuccessMessages.AUTH.ORG_EMAIL_VERIFIED;
 
     setVerifying(true);
     try {
@@ -302,13 +322,7 @@ export default function SignupPage() {
                     {/* Step circle */}
                     <div className="relative flex flex-col items-center">
                       <div
-                        className={`flex h-12 w-12 items-center justify-center rounded-full text-sm font-bold transition-all duration-500 ${
-                          step < currentStep
-                            ? 'scale-100 bg-gradient-to-br from-teal-500 to-cyan-600 text-white shadow-lg'
-                            : step === currentStep
-                              ? 'scale-110 bg-gradient-to-br from-teal-500 to-cyan-600 text-white shadow-lg ring-4 ring-teal-100'
-                              : 'bg-gray-200 text-gray-500'
-                        }`}
+                        className={`flex h-12 w-12 items-center justify-center rounded-full text-sm font-bold transition-all duration-500 ${getStepClass(step, currentStep)}`}
                       >
                         {step < currentStep ? '✓' : step}
                       </div>

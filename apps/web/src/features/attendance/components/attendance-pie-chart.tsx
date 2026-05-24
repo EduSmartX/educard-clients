@@ -13,11 +13,14 @@ interface AttendancePieChartProps {
 
 const COLORS = {
   present: '#22c55e', // green-500
-  absent: '#ef4444',   // red-500
-  leave: '#f97316',    // orange-500
+  absent: '#ef4444', // red-500
+  leave: '#f97316', // orange-500
 };
 
-export function AttendancePieChart({ stats, isLoading = false }: AttendancePieChartProps) {
+export function AttendancePieChart({
+  stats,
+  isLoading = false,
+}: Readonly<AttendancePieChartProps>) {
   if (isLoading) {
     return (
       <Card>
@@ -25,7 +28,7 @@ export function AttendancePieChart({ stats, isLoading = false }: AttendancePieCh
           <CardTitle>Attendance Distribution</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-64 flex items-center justify-center">
+          <div className="flex h-64 items-center justify-center">
             <div className="animate-pulse text-gray-400">Loading chart...</div>
           </div>
         </CardContent>
@@ -45,7 +48,7 @@ export function AttendancePieChart({ stats, isLoading = false }: AttendancePieCh
           <CardTitle>Attendance Distribution</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-64 flex items-center justify-center text-gray-400">
+          <div className="flex h-64 items-center justify-center text-gray-400">
             No attendance data available
           </div>
         </CardContent>
@@ -72,9 +75,16 @@ export function AttendancePieChart({ stats, isLoading = false }: AttendancePieCh
       percentage: ((totalLeaves / total) * 100).toFixed(1),
       color: COLORS.leave,
     },
-  ].filter(item => item.value > 0); // Only show segments with data
+  ].filter((item) => item.value > 0); // Only show segments with data
 
-  const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percentage }: {
+  const renderCustomLabel = ({
+    cx,
+    cy,
+    midAngle,
+    innerRadius,
+    outerRadius,
+    percentage,
+  }: {
     cx: number;
     cy: number;
     midAngle: number;
@@ -94,7 +104,7 @@ export function AttendancePieChart({ stats, isLoading = false }: AttendancePieCh
         fill="white"
         textAnchor={x > cx ? 'start' : 'end'}
         dominantBaseline="central"
-        className="font-semibold text-sm"
+        className="text-sm font-semibold"
       >
         {`${percentage}%`}
       </text>
@@ -135,14 +145,10 @@ export function AttendancePieChart({ stats, isLoading = false }: AttendancePieCh
                 if (active && payload && payload.length) {
                   const data = payload[0].payload;
                   return (
-                    <div className="bg-white p-3 shadow-lg rounded-lg border">
+                    <div className="rounded-lg border bg-white p-3 shadow-lg">
                       <p className="font-semibold">{data.name}</p>
-                      <p className="text-sm text-gray-600">
-                        Count: {data.value}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        Percentage: {data.percentage}%
-                      </p>
+                      <p className="text-sm text-gray-600">Count: {data.value}</p>
+                      <p className="text-sm text-gray-600">Percentage: {data.percentage}%</p>
                     </div>
                   );
                 }
@@ -154,11 +160,11 @@ export function AttendancePieChart({ stats, isLoading = false }: AttendancePieCh
               height={36}
               content={({ payload }) => {
                 return (
-                  <div className="flex justify-center gap-6 mt-4">
+                  <div className="mt-4 flex justify-center gap-6">
                     {payload?.map((entry, index) => (
                       <div key={`legend-${index}`} className="flex items-center gap-2">
                         <div
-                          className="w-3 h-3 rounded-full"
+                          className="h-3 w-3 rounded-full"
                           style={{ backgroundColor: entry.color }}
                         />
                         <span className="text-sm text-gray-700">{entry.value}</span>

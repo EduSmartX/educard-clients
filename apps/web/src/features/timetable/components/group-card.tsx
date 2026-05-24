@@ -20,7 +20,7 @@ interface GroupCardProps {
   onEdit: (group: ClassGroup) => void;
 }
 
-export function GroupCard({ group, colorIdx, onEdit }: GroupCardProps) {
+export function GroupCard({ group, colorIdx, onEdit }: Readonly<GroupCardProps>) {
   const [showAddClass, setShowAddClass] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const deleteMutation = useDeleteClassGroup();

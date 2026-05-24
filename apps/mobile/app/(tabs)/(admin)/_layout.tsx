@@ -2,46 +2,17 @@
  * Admin Tab Layout
  */
 
-import { getRoleThemeColors } from '@educard/shared';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Tabs } from 'expo-router';
-import { LayoutDashboard, Building2, User, Shield, Settings } from 'lucide-react-native';
-import { View, StyleSheet, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// colors import removed - unused
-
-const _adminTheme = getRoleThemeColors('admin'); // prefixed _ - unused for now
-
-// Icon props type
-type IconProps = { size: number; color: string; strokeWidth?: number };
-
-const GradientIcon = ({
-  Icon,
-  size,
-  focused,
-}: {
-  Icon: React.ComponentType<IconProps>; // proper type instead of any
-  size: number;
-  focused: boolean;
-}) => {
-  if (!focused) {
-    return <Icon size={size} color="#94a3b8" strokeWidth={1.5} />;
-  }
-
-  return (
-    <View style={styles.iconContainer}>
-      <LinearGradient
-        colors={['#10b981', '#059669']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.activeIconBg}
-      >
-        <Icon size={size - 2} color="#fff" strokeWidth={2.5} />
-      </LinearGradient>
-    </View>
-  );
-};
+import {
+  DashboardIcon,
+  ManageIcon,
+  MyWorkIcon,
+  AdminIcon,
+  SettingsIcon,
+} from '@/components/navigation/tab-icons';
 
 export default function AdminTabLayout() {
   const insets = useSafeAreaInsets();
@@ -77,45 +48,35 @@ export default function AdminTabLayout() {
         name="dashboard"
         options={{
           title: 'Dashboard',
-          tabBarIcon: ({ focused, size }) => (
-            <GradientIcon Icon={LayoutDashboard} size={size} focused={focused} />
-          ),
+          tabBarIcon: DashboardIcon,
         }}
       />
       <Tabs.Screen
         name="management"
         options={{
           title: 'Manage',
-          tabBarIcon: ({ focused, size }) => (
-            <GradientIcon Icon={Building2} size={size} focused={focused} />
-          ),
+          tabBarIcon: ManageIcon,
         }}
       />
       <Tabs.Screen
         name="my-work"
         options={{
           title: 'My Work',
-          tabBarIcon: ({ focused, size }) => (
-            <GradientIcon Icon={User} size={size} focused={focused} />
-          ),
+          tabBarIcon: MyWorkIcon,
         }}
       />
       <Tabs.Screen
         name="admin"
         options={{
           title: 'Admin',
-          tabBarIcon: ({ focused, size }) => (
-            <GradientIcon Icon={Shield} size={size} focused={focused} />
-          ),
+          tabBarIcon: AdminIcon,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: ({ focused, size }) => (
-            <GradientIcon Icon={Settings} size={size} focused={focused} />
-          ),
+          tabBarIcon: SettingsIcon,
         }}
       />
       {/* Hidden screens accessible via navigation */}
@@ -146,22 +107,3 @@ export default function AdminTabLayout() {
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  iconContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  activeIconBg: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#10b981',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-});

@@ -29,8 +29,8 @@ export function ParentFeeDashboardPage() {
       <div className="space-y-6">
         <div className="bg-muted h-8 w-48 animate-pulse rounded" />
         <div className="grid gap-4 md:grid-cols-3">
-          {[...Array(3)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
+          {[...new Array(3)].map((_, i) => (
+            <Card key={`skeleton-${i}`} className="animate-pulse">
               <CardHeader className="pb-2">
                 <div className="bg-muted h-4 w-24 rounded" />
               </CardHeader>
@@ -138,7 +138,7 @@ interface FeeCardProps {
   fee: StudentFee;
 }
 
-function FeeCard({ fee }: FeeCardProps) {
+function FeeCard({ fee }: Readonly<FeeCardProps>) {
   const isOverdue = fee.status === FeeStatus.OVERPAID;
   const isPaid = fee.status === FeeStatus.PAID;
 

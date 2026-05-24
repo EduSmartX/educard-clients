@@ -424,6 +424,13 @@ export function LeaveAllocationForm({
   const selectedRoles =
     organizationRoles?.filter((role) => form.watch('roles').includes(role.id)) || [];
 
+  const watchedTotalDays = form.watch('total_days');
+  const showTotalDaysSummary =
+    !!selectedLeaveType && !!watchedTotalDays && Number.parseFloat(watchedTotalDays) > 0;
+  const watchedCarryForward = form.watch('max_carry_forward_days');
+  const showCarryForwardSummary =
+    !!selectedLeaveType && Number.parseFloat(watchedCarryForward || '0') > 0;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -768,7 +775,7 @@ export function LeaveAllocationForm({
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {selectedLeaveType ? (
+                    {selectedLeaveType && (
                       <div className="space-y-3">
                         {/* Policy Type */}
                         <div className="flex items-center justify-between rounded-lg bg-white/60 p-2">
@@ -783,18 +790,17 @@ export function LeaveAllocationForm({
                         </div>
 
                         {/* Total Days */}
-                        {form.watch('total_days') &&
-                          Number.parseFloat(form.watch('total_days')) > 0 && (
-                            <div className="rounded-lg bg-white p-3">
-                              <p className="mb-1 text-xs text-gray-500">Total Days</p>
-                              <p className="text-2xl font-bold text-green-600">
-                                {form.watch('total_days')}
-                              </p>
-                            </div>
-                          )}
+                        {showTotalDaysSummary && (
+                          <div className="rounded-lg bg-white p-3">
+                            <p className="mb-1 text-xs text-gray-500">Total Days</p>
+                            <p className="text-2xl font-bold text-green-600">
+                              {form.watch('total_days')}
+                            </p>
+                          </div>
+                        )}
 
                         {/* Carry Forward */}
-                        {Number.parseFloat(form.watch('max_carry_forward_days') || '0') > 0 && (
+                        {showCarryForwardSummary && (
                           <div className="rounded-lg bg-white p-3">
                             <p className="mb-1 text-xs text-gray-500">Carry Forward Days</p>
                             <p className="text-xl font-bold text-blue-600">
@@ -804,12 +810,13 @@ export function LeaveAllocationForm({
                         )}
 
                         {/* Applicable To */}
-                        {applies_to_all_roles ? (
+                        {applies_to_all_roles && (
                           <div className="rounded-lg bg-white p-3">
                             <p className="mb-1 text-xs text-gray-500">Applicable To</p>
                             <p className="font-semibold text-purple-600">All Roles</p>
                           </div>
-                        ) : selectedRoles.length > 0 ? (
+                        )}
+                        {!applies_to_all_roles && selectedRoles.length > 0 && (
                           <div className="rounded-lg bg-white p-3">
                             <p className="mb-2 text-xs text-gray-500">
                               Selected Roles ({selectedRoles.length})
@@ -828,13 +835,15 @@ export function LeaveAllocationForm({
                               ))}
                             </div>
                           </div>
-                        ) : (
+                        )}
+                        {!applies_to_all_roles && selectedRoles.length === 0 && (
                           <div className="rounded-lg bg-white/60 p-3">
                             <p className="text-xs text-gray-400">No roles selected</p>
                           </div>
                         )}
                       </div>
-                    ) : (
+                    )}
+                    {!selectedLeaveType && (
                       <Alert>
                         <AlertCircle className="h-4 w-4" />
                         <AlertTitle>No leave type selected</AlertTitle>

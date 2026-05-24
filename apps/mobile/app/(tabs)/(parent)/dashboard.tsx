@@ -26,6 +26,17 @@ import { Card, Avatar, Badge } from '@/components/ui';
 import { colors } from '@/constants/colors';
 import { useAuthStore } from '@/lib/auth-store';
 
+const EVENT_TYPE_CONFIG: Record<
+  string,
+  { color: string; variant: 'warning' | 'danger' | 'primary' }
+> = {
+  exam: { color: colors.warning[500], variant: 'warning' },
+  fee: { color: colors.danger[500], variant: 'danger' },
+};
+
+const getEventConfig = (type: string) =>
+  EVENT_TYPE_CONFIG[type] || { color: colors.primary[500], variant: 'primary' as const };
+
 // Mock data
 const mockChildren = [
   {
@@ -257,7 +268,7 @@ export default function ParentDashboard() {
             <Card>
               {mockRecentMarks.map((mark, index) => (
                 <View
-                  key={index}
+                  key={mark.subject}
                   className={`flex-row items-center py-3 ${
                     index !== mockRecentMarks.length - 1 ? 'border-b border-gray-100' : ''
                   }`}
@@ -308,26 +319,12 @@ export default function ParentDashboard() {
                   <View
                     className="mr-3 h-10 w-1 rounded-full"
                     style={{
-                      backgroundColor:
-                        event.type === 'exam'
-                          ? colors.warning[500]
-                          : event.type === 'fee'
-                            ? colors.danger[500]
-                            : colors.primary[500],
+                      backgroundColor: getEventConfig(event.type).color,
                     }}
                   />
                   <View className="flex-1">
                     <Text className="font-medium text-gray-900">{event.title}</Text>
-                    <Badge
-                      variant={
-                        event.type === 'exam'
-                          ? 'warning'
-                          : event.type === 'fee'
-                            ? 'danger'
-                            : 'primary'
-                      }
-                      size="sm"
-                    >
+                    <Badge variant={getEventConfig(event.type).variant} size="sm">
                       {event.type}
                     </Badge>
                   </View>

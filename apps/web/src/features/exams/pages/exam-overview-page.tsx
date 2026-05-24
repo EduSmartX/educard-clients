@@ -883,12 +883,12 @@ export function ExamOverviewPage() {
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                        {aiInsights.map((insight, index) => {
+                        {aiInsights.map((insight) => {
                           const styles = INSIGHT_STYLES[insight.type];
                           const { Icon } = styles;
                           return (
                             <div
-                              key={index}
+                              key={insight.message}
                               className={`rounded-lg border p-4 ${styles.container}`}
                             >
                               <div className="flex items-start gap-3">

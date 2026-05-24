@@ -33,7 +33,11 @@ const statusIcons: Record<FeeStatusType, string> = {
   [FeeStatus.REFUNDED]: '✓',
 };
 
-export function FeeStatusBadge({ status, className, showIcon = false }: FeeStatusBadgeProps) {
+export function FeeStatusBadge({
+  status,
+  className,
+  showIcon = false,
+}: Readonly<FeeStatusBadgeProps>) {
   return (
     <Badge
       variant="outline"

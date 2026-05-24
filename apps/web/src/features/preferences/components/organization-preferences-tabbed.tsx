@@ -35,7 +35,7 @@ interface PreferencesByCategoryProps {
   preferences: OrganizationPreference[];
 }
 
-function PreferencesByCategory({ preferences }: PreferencesByCategoryProps) {
+function PreferencesByCategory({ preferences }: Readonly<PreferencesByCategoryProps>) {
   const queryClient = useQueryClient();
   const [savingStates, setSavingStates] = useState<Record<string, boolean>>({});
   const [changedValues, setChangedValues] = useState<Record<string, string | string[]>>({});
@@ -144,8 +144,8 @@ function PreferencesByCategory({ preferences }: PreferencesByCategoryProps) {
                     {categoryIcons[category] || '⚙️'}
                   </div>
                   <div>
-                    <CardTitle className="text-lg font-semibold capitalize text-gray-900">
-                      {category.replace(/_/g, ' ')}
+                    <CardTitle className="text-lg font-semibold text-gray-900 capitalize">
+                      {category.replaceAll('_', ' ')}
                     </CardTitle>
                     <CardDescription className="mt-1 text-sm text-gray-500">
                       {categoryDescriptions[category] || 'Configure settings for this category'}
@@ -161,7 +161,7 @@ function PreferencesByCategory({ preferences }: PreferencesByCategoryProps) {
               </div>
             </CardHeader>
             <CardContent className="p-6">
-              <div className="rounded-lg border border-gray-200 bg-gray-50/50 overflow-hidden">
+              <div className="overflow-hidden rounded-lg border border-gray-200 bg-gray-50/50">
                 {/* Boolean/Radio Fields */}
                 {radioPrefs.map((preference) => (
                   <PreferenceField
@@ -308,7 +308,7 @@ export function OrganizationPreferencesTabbed() {
     <div className="space-y-6">
       {/* Tabbed Interface */}
       <Tabs defaultValue="preferences" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid">
+        <TabsList className="grid w-full grid-cols-3 lg:inline-grid lg:w-auto">
           <TabsTrigger value="preferences" className="gap-2">
             <Settings className="h-4 w-4" />
             <span className="hidden sm:inline">Organization Preferences</span>

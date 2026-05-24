@@ -97,12 +97,6 @@ interface TimesheetStatusResponse {
   } | null;
 }
 
-// AttendanceRecordExtended interface - used for type extension
-type _AttendanceRecordExtended = AttendanceRecord & {
-  // prefixed _ unused for now
-  approval_status?: string;
-};
-
 type DayState =
   | 'present'
   | 'absent'
@@ -203,18 +197,6 @@ const returnTimesheetToDraft = async (payload: {
     }
   );
   return response.data;
-};
-
-// Submit single day attendance (without submitting timesheet)
-const submitDailyAttendance = async (payload: {
-  attendance_records: {
-    date: string;
-    morning_present: boolean;
-    afternoon_present: boolean;
-    attendance_status: string;
-  }[];
-}): Promise<{ message?: string }> => {
-  return bulkSubmitAttendance(payload);
 };
 
 const toDateKey = (d: Date) => format(d, 'yyyy-MM-dd');
@@ -428,6 +410,15 @@ function getDayClickBlockReason(
   return null;
 }
 
+/** Helper to toggle a single row's attendance field */
+function toggleRowField(
+  rows: WeekRow[],
+  date: string,
+  field: 'morning_present' | 'afternoon_present'
+): WeekRow[] {
+  return rows.map((row) => (row.date === date ? { ...row, [field]: !row[field] } : row));
+}
+
 export default function MyTimesheetScreen() {
   const router = useRouter();
   const { showToast } = useToast();
@@ -595,12 +586,7 @@ export default function MyTimesheetScreen() {
     setWeeks((prev) =>
       prev.map((week) => {
         if (week.id !== weekId) return week;
-        return {
-          ...week,
-          rows: week.rows.map((row) =>
-            row.date === date ? { ...row, [field]: !row[field] } : row
-          ),
-        };
+        return { ...week, rows: toggleRowField(week.rows, date, field) };
       })
     );
   };
@@ -639,7 +625,7 @@ export default function MyTimesheetScreen() {
 
   // Daily attendance submission mutation
   const dailyAttendanceMutation = useMutation({
-    mutationFn: submitDailyAttendance,
+    mutationFn: bulkSubmitAttendance,
     onSuccess: (response) => {
       showToast({
         type: 'success',

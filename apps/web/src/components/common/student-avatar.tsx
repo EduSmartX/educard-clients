@@ -2,7 +2,7 @@
  * StudentAvatar Component
  * Reusable avatar component for displaying student photos
  * Used across: Marks entry, Attendance marking, etc.
- * 
+ *
  * Features:
  * - LRU cache for images (memory efficient)
  * - Gender-based avatar fallback (same as Student List)
@@ -53,7 +53,13 @@ function getGenderAvatar(gender?: string | null): string {
   }
 }
 
-export function StudentAvatar({ name, photoUrl, gender, size = 'md', className = '' }: StudentAvatarProps) {
+export function StudentAvatar({
+  name,
+  photoUrl,
+  gender,
+  size = 'md',
+  className = '',
+}: Readonly<StudentAvatarProps>) {
   const [cachedUrl, setCachedUrl] = useState<string | null>(null);
 
   // Resolve URL (handles relative paths from backend)
@@ -104,19 +110,17 @@ export function StudentAvatar({ name, photoUrl, gender, size = 'md', className =
   return (
     <Avatar className={`${sizeClasses[size]} ${className}`}>
       {displayUrl ? (
-        <AvatarImage 
-          src={displayUrl} 
-          alt={name}
-          className="object-cover"
-        />
+        <AvatarImage src={displayUrl} alt={name} className="object-cover" />
       ) : (
-        <AvatarImage 
-          src={fallbackAvatar} 
+        <AvatarImage
+          src={fallbackAvatar}
           alt={`${gender || 'default'} avatar`}
           className="object-contain p-1"
         />
       )}
-      <AvatarFallback className={`bg-brand-100 text-brand-700 font-semibold font-sans ${textSizeClasses[size]}`}>
+      <AvatarFallback
+        className={`bg-brand-100 text-brand-700 font-sans font-semibold ${textSizeClasses[size]}`}
+      >
         {getInitials(name)}
       </AvatarFallback>
     </Avatar>

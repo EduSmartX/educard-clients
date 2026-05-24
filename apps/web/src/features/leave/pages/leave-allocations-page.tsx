@@ -30,13 +30,16 @@ export default function LeaveAllocationsPage() {
   const [filters, setFilters] = useState<Record<string, string>>({});
 
   // Determine page mode from URL
-  const mode: PageMode = id
-    ? window.location.pathname.endsWith('/edit')
-      ? 'edit'
-      : 'view'
-    : window.location.pathname.endsWith('/create')
-      ? 'create'
-      : 'list';
+  const getPageMode = (): PageMode => {
+    if (id) {
+      return window.location.pathname.endsWith('/edit') ? 'edit' : 'view';
+    }
+    if (window.location.pathname.endsWith('/create')) {
+      return 'create';
+    }
+    return 'list';
+  };
+  const mode: PageMode = getPageMode();
 
   // Fetch leave allocations (only for list mode)
   const { data, isLoading, error } = useLeaveAllocations({

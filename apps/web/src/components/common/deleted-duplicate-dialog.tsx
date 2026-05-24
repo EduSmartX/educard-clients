@@ -69,12 +69,12 @@ export function DeletedDuplicateDialog({
           // If the part is wrapped in quotes, make it bold
           if (part.startsWith("'") && part.endsWith("'")) {
             return (
-              <span key={index} className="font-bold text-gray-900">
+              <span key={`part-${index}-${part}`} className="font-bold text-gray-900">
                 {part}
               </span>
             );
           }
-          return <span key={index}>{part}</span>;
+          return <span key={`part-${index}-${part}`}>{part}</span>;
         })}
       </span>
     );
@@ -82,15 +82,15 @@ export function DeletedDuplicateDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="sm:max-w-[480px] bg-white p-0 gap-0 rounded-xl border shadow-xl overflow-hidden">
+      <AlertDialogContent className="gap-0 overflow-hidden rounded-xl border bg-white p-0 shadow-xl sm:max-w-[480px]">
         {/* Header with Icon */}
-        <div className="bg-gradient-to-br from-orange-50 to-red-50 px-6 py-5 border-b border-orange-100">
+        <div className="border-b border-orange-100 bg-gradient-to-br from-orange-50 to-red-50 px-6 py-5">
           <AlertDialogHeader className="space-y-3">
             <div className="flex items-center gap-3">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-orange-100">
                 <AlertTriangle className="h-5 w-5 text-orange-600" />
               </div>
-              <AlertDialogTitle className="text-xl font-semibold text-gray-900 m-0">
+              <AlertDialogTitle className="m-0 text-xl font-semibold text-gray-900">
                 {title}
               </AlertDialogTitle>
             </div>
@@ -99,17 +99,17 @@ export function DeletedDuplicateDialog({
 
         {/* Content */}
         <div className="px-6 py-6">
-          <AlertDialogDescription className="text-[15px] text-gray-600 leading-relaxed" asChild>
+          <AlertDialogDescription className="text-[15px] leading-relaxed text-gray-600" asChild>
             <p>{renderMessage()}</p>
           </AlertDialogDescription>
         </div>
 
         {/* Footer with Actions */}
-        <AlertDialogFooter className="px-6 py-4 bg-gray-50 border-t flex-col sm:flex-col gap-2.5 space-x-0">
+        <AlertDialogFooter className="flex-col gap-2.5 space-x-0 border-t bg-gray-50 px-6 py-4 sm:flex-col">
           <Button
             onClick={handleReactivate}
             size="lg"
-            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base shadow-sm transition-colors rounded-lg"
+            className="h-12 w-full rounded-lg bg-blue-600 text-base font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
           >
             {reactivateLabel}
           </Button>
@@ -117,7 +117,7 @@ export function DeletedDuplicateDialog({
             onClick={handleCreateNew}
             size="lg"
             variant="outline"
-            className="w-full h-12 border-2 border-gray-300 text-gray-700 hover:bg-gray-100 hover:border-gray-400 font-semibold text-base transition-colors rounded-lg"
+            className="h-12 w-full rounded-lg border-2 border-gray-300 text-base font-semibold text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-100"
           >
             {createNewLabel}
           </Button>
@@ -125,7 +125,7 @@ export function DeletedDuplicateDialog({
             <Button
               size="lg"
               variant="ghost"
-              className="w-full h-12 text-gray-600 hover:text-gray-900 hover:bg-gray-100 font-medium text-base mt-0 transition-colors rounded-lg"
+              className="mt-0 h-12 w-full rounded-lg text-base font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
             >
               {cancelLabel}
             </Button>

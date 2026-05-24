@@ -219,7 +219,9 @@ export function AttendanceSummaryPage() {
   // Calculate completion percentage
   const completionPercent = useMemo(() => {
     const summary = summaryData?.summary;
-    if (!summary || summary.total_classes === 0) return 0;
+    if (!summary || summary.total_classes === 0) {
+      return 0;
+    }
     return Math.round((summary.classes_submitted / summary.total_classes) * 100);
   }, [summaryData]);
 
@@ -318,10 +320,10 @@ export function AttendanceSummaryPage() {
       )}
 
       {/* Summary Stats */}
-      {isLoading ? (
+      {isLoading && (
         <div className="grid gap-4 md:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i}>
+          {[...new Array(4)].map((_, i) => (
+            <Card key={`skeleton-${i}`}>
               <CardContent className="py-4">
                 <Skeleton className="mb-2 h-8 w-20" />
                 <Skeleton className="h-4 w-32" />
@@ -329,7 +331,8 @@ export function AttendanceSummaryPage() {
             </Card>
           ))}
         </div>
-      ) : summaryData ? (
+      )}
+      {!isLoading && summaryData && (
         <div className="grid gap-4 md:grid-cols-4">
           <Card className="border-slate-200 bg-gradient-to-br from-slate-50 to-slate-100">
             <CardContent className="py-4">
@@ -418,7 +421,7 @@ export function AttendanceSummaryPage() {
             </CardContent>
           </Card>
         </div>
-      ) : null}
+      )}
 
       {/* Completion Progress Bar */}
       {summaryData && !isLoading && (

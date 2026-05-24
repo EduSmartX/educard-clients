@@ -12,7 +12,7 @@ const sizeClasses = {
   xl: 'h-16 w-16 border-4',
 };
 
-export function LoadingSpinner({ size = 'md', className }: LoadingSpinnerProps) {
+export function LoadingSpinner({ size = 'md', className }: Readonly<LoadingSpinnerProps>) {
   return (
     <div
       className={cn(
@@ -22,7 +22,7 @@ export function LoadingSpinner({ size = 'md', className }: LoadingSpinnerProps) 
       )}
       role="status"
     >
-      <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
+      <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !border-0 !p-0 !whitespace-nowrap ![clip:rect(0,0,0,0)]">
         Loading...
       </span>
     </div>
@@ -31,11 +31,11 @@ export function LoadingSpinner({ size = 'md', className }: LoadingSpinnerProps) 
 
 export function PageLoader() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-mesh">
+    <div className="bg-gradient-mesh flex min-h-screen items-center justify-center">
       <div className="flex flex-col items-center gap-5">
         <div className="relative">
           <div className="absolute inset-0 animate-ping rounded-full bg-violet-500/20"></div>
-          <LoadingSpinner size="xl" className="text-violet-600 relative" />
+          <LoadingSpinner size="xl" className="relative text-violet-600" />
         </div>
         <p className="text-sm font-medium text-slate-500">Loading...</p>
       </div>

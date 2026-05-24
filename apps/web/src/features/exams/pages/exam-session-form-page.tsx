@@ -49,6 +49,16 @@ function validateSessionForm(
   return errors;
 }
 
+function getSessionFormTitle(isCreate: boolean, isEdit: boolean): string {
+  if (isCreate) {
+    return 'Create Exam Session';
+  }
+  if (isEdit) {
+    return 'Edit Exam Session';
+  }
+  return 'View Exam Session';
+}
+
 export function ExamSessionFormPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -159,12 +169,7 @@ export function ExamSessionFormPage() {
     }
   };
 
-  let title = 'View Exam Session';
-  if (isCreate) {
-    title = 'Create Exam Session';
-  } else if (isEdit) {
-    title = 'Edit Exam Session';
-  }
+  const title = getSessionFormTitle(isCreate, isEdit);
 
   if (id && isLoadingSession) {
     return (

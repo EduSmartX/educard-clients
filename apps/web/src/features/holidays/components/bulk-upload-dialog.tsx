@@ -10,7 +10,7 @@ interface HolidayBulkUploadDialogProps {
   onUploadSuccess?: () => void;
 }
 
-export function BulkUploadDialog({ onUploadSuccess }: HolidayBulkUploadDialogProps) {
+export function BulkUploadDialog({ onUploadSuccess }: Readonly<HolidayBulkUploadDialogProps>) {
   return (
     <GenericBulkUploadDialog
       title="Bulk Upload Holidays"

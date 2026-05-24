@@ -228,6 +228,16 @@ interface DateInputFieldProps<T extends FieldValues> {
   };
 }
 
+function toDateOrUndefined(value: Date | string | undefined): Date | undefined {
+  if (value instanceof Date) {
+    return value;
+  }
+  if (value) {
+    return new Date(value);
+  }
+  return undefined;
+}
+
 export function DateInputField<T extends FieldValues>({
   control,
   name,
@@ -278,8 +288,8 @@ export function DateInputField<T extends FieldValues>({
               onChange={(date) => handleDateChange(date, field.onChange)}
               placeholder={`Select ${label.toLowerCase()}`}
               disabled={disabled}
-              minDate={min instanceof Date ? min : min ? new Date(min) : undefined}
-              maxDate={max instanceof Date ? max : max ? new Date(max) : undefined}
+              minDate={toDateOrUndefined(min)}
+              maxDate={toDateOrUndefined(max)}
             />
           </FormControl>
           {description && <FormDescription>{description}</FormDescription>}

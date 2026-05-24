@@ -107,8 +107,8 @@ export const HomeworkList = memo(
     if (isLoading) {
       return (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <HomeworkSkeleton key={i} />
+          {[...new Array(6)].map((_, i) => (
+            <HomeworkSkeleton key={`skeleton-${i}`} />
           ))}
         </div>
       );

@@ -63,10 +63,6 @@ function getActiveDays(days: Record<string, ClassTimetableSlot[]>): number[] {
     .sort((a, b) => a - b);
 }
 
-function getMaxSlots(days: Record<string, ClassTimetableSlot[]>): number {
-  return Math.max(0, ...Object.values(days).map((slots) => slots.length));
-}
-
 function gridStyle(dayCount: number): React.CSSProperties {
   return {
     gridTemplateColumns: `90px repeat(${dayCount}, minmax(0, 1fr))`,
@@ -163,8 +159,8 @@ function AssignmentPopover({
                   <AlertTriangle className="h-4 w-4 text-amber-600" />
                   <span className="text-xs font-bold text-amber-800">Teacher Conflict</span>
                 </div>
-                {warnings.map((w, i) => (
-                  <p key={i} className="text-xs leading-relaxed text-amber-700">
+                {warnings.map((w) => (
+                  <p key={w} className="text-xs leading-relaxed text-amber-700">
                     {w}
                   </p>
                 ))}
@@ -417,15 +413,11 @@ function TimetableGridSkeleton() {
   );
 }
 
-export function TimetableGrid({ timetable, isLoading, readOnly }: TimetableGridProps) {
+export function TimetableGrid({ timetable, isLoading, readOnly }: Readonly<TimetableGridProps>) {
   const { isAdmin: isAdminRole } = useRole();
   const isAdmin = isAdminRole && !readOnly;
   const activeDays = useMemo(
     () => (timetable.days ? getActiveDays(timetable.days) : []),
-    [timetable.days]
-  );
-  const _maxSlots = useMemo(
-    () => (timetable.days ? getMaxSlots(timetable.days) : 0),
     [timetable.days]
   );
 
@@ -610,10 +602,16 @@ export function TimetableGrid({ timetable, isLoading, readOnly }: TimetableGridP
           {/* Slot rows */}
           {refSlots.map((refSlot, idx) => {
             if (BREAK_TYPES.has(refSlot.slot_type)) {
-              return <BreakRow key={idx} slot={refSlot} colCount={activeDays.length} />;
+              return (
+                <BreakRow key={refSlot.public_id} slot={refSlot} colCount={activeDays.length} />
+              );
             }
             return (
-              <div key={idx} className="mb-1.5 grid gap-1.5" style={gridStyle(activeDays.length)}>
+              <div
+                key={refSlot.public_id}
+                className="mb-1.5 grid gap-1.5"
+                style={gridStyle(activeDays.length)}
+              >
                 <div className="flex flex-col items-center justify-center rounded-lg bg-slate-100/80 px-1 py-2 text-center">
                   <span className="text-[11px] font-bold text-slate-700">{refSlot.label}</span>
                   <span className="mt-0.5 text-[10px] font-medium text-slate-500">

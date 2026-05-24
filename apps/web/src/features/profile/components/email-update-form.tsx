@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { CommonUiText, FormPlaceholders } from '@/constants';
 import { useUserProfile } from '../hooks/queries';
 import { useSendOTP, useUpdateEmail } from '../hooks/mutations';
+import { formatCountdown } from '../utils/format-countdown';
 
 const emailSchema = z.object({
   new_email: z.string().email('Invalid email address'),
@@ -88,12 +89,6 @@ export function EmailUpdateForm() {
     });
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -149,7 +144,7 @@ export function EmailUpdateForm() {
                   <FormDescription>
                     {otpSent ? (
                       <span className="text-green-600">
-                        OTP sent! Expires in {formatTime(countdown)}
+                        OTP sent! Expires in {formatCountdown(countdown)}
                       </span>
                     ) : (
                       'Click the button to send OTP to this email'

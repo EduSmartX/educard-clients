@@ -606,14 +606,19 @@ export function MarksOverviewPage() {
                             );
                           }
                           const pct = t.percentage;
-                          const pctColor =
-                            pct >= 75
-                              ? 'text-green-700 bg-green-50'
-                              : pct >= 50
-                                ? 'text-amber-700 bg-amber-50'
-                                : pct >= 35
-                                  ? 'text-orange-700 bg-orange-50'
-                                  : 'text-red-700 bg-red-50';
+                          const getPctColor = (p: number) => {
+                            if (p >= 75) {
+                              return 'text-green-700 bg-green-50';
+                            }
+                            if (p >= 50) {
+                              return 'text-amber-700 bg-amber-50';
+                            }
+                            if (p >= 35) {
+                              return 'text-orange-700 bg-orange-50';
+                            }
+                            return 'text-red-700 bg-red-50';
+                          };
+                          const pctColor = getPctColor(pct);
                           return (
                             <>
                               <td className="border-2 border-gray-300 bg-emerald-50 p-3 text-center font-bold text-emerald-800">

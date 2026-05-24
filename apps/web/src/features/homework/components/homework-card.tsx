@@ -135,6 +135,16 @@ const StatusBadge = memo(({ status }: { status: HomeworkStatus }) => {
   );
 });
 
+function getCompletionColor(rate: number): string {
+  if (rate >= 80) {
+    return '#10B981';
+  }
+  if (rate >= 50) {
+    return '#F59E0B';
+  }
+  return '#EF4444';
+}
+
 export const HomeworkCard = memo(
   ({
     homework,
@@ -300,12 +310,7 @@ export const HomeworkCard = memo(
                   className="h-2"
                   style={
                     {
-                      '--progress-background':
-                        completionRate >= 80
-                          ? '#10B981'
-                          : completionRate >= 50
-                            ? '#F59E0B'
-                            : '#EF4444',
+                      '--progress-background': getCompletionColor(completionRate),
                     } as React.CSSProperties
                   }
                 />

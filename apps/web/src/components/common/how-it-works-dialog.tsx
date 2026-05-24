@@ -116,7 +116,7 @@ export function HowItWorksDialog({
           {steps.map((step, index) => {
             const color = step.color || defaultStepColors[index % defaultStepColors.length];
             return (
-              <div key={index} className="flex gap-3">
+              <div key={step.title} className="flex gap-3">
                 <div
                   className={cn(
                     'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold',
@@ -134,24 +134,28 @@ export function HowItWorksDialog({
           })}
 
           {/* Tips */}
-          {tips.map((tip, index) => (
-            <div key={index} className="flex gap-2 rounded-xl bg-green-50 px-3 py-3">
+          {tips.map((tip) => (
+            <div key={tip.title} className="flex gap-2 rounded-xl bg-green-50 px-3 py-3">
               {tip.type === 'info' ? (
                 <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
               ) : (
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />
               )}
               <div>
-                <p className={cn(
-                  'text-xs font-semibold',
-                  tip.type === 'info' ? 'text-blue-700' : 'text-green-700'
-                )}>
+                <p
+                  className={cn(
+                    'text-xs font-semibold',
+                    tip.type === 'info' ? 'text-blue-700' : 'text-green-700'
+                  )}
+                >
                   {tip.title}
                 </p>
-                <div className={cn(
-                  'mt-0.5 text-xs',
-                  tip.type === 'info' ? 'text-blue-600' : 'text-green-600'
-                )}>
+                <div
+                  className={cn(
+                    'mt-0.5 text-xs',
+                    tip.type === 'info' ? 'text-blue-600' : 'text-green-600'
+                  )}
+                >
                   {tip.description}
                 </div>
               </div>
@@ -159,8 +163,8 @@ export function HowItWorksDialog({
           ))}
 
           {/* Warnings */}
-          {warnings.map((warning, index) => (
-            <div key={index} className="flex gap-2 rounded-xl bg-amber-50 px-3 py-3">
+          {warnings.map((warning) => (
+            <div key={warning.title} className="flex gap-2 rounded-xl bg-amber-50 px-3 py-3">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
               <div>
                 <p className="text-xs font-semibold text-amber-700">{warning.title}</p>

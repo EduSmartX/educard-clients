@@ -13,12 +13,12 @@ interface FeeDashboardStatsProps {
   isLoading?: boolean;
 }
 
-export function FeeDashboardStats({ data, isLoading }: FeeDashboardStatsProps) {
+export function FeeDashboardStats({ data, isLoading }: Readonly<FeeDashboardStatsProps>) {
   if (isLoading) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
+        {[...new Array(4)].map((_, i) => (
+          <Card key={`skeleton-${i}`} className="animate-pulse">
             <CardHeader className="pb-2">
               <div className="bg-muted h-4 w-24 rounded" />
             </CardHeader>
@@ -70,8 +70,8 @@ export function FeeDashboardStats({ data, isLoading }: FeeDashboardStatsProps) {
     <div className="space-y-6">
       {/* Main Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, index) => (
-          <Card key={index}>
+        {stats.map((stat) => (
+          <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-muted-foreground text-sm font-medium">
                 {stat.title}
@@ -155,7 +155,7 @@ interface StatusRowProps {
   color: string;
 }
 
-function StatusRow({ icon: Icon, label, count, total, color }: StatusRowProps) {
+function StatusRow({ icon: Icon, label, count, total, color }: Readonly<StatusRowProps>) {
   const percentage = total > 0 ? (count / total) * 100 : 0;
 
   return (

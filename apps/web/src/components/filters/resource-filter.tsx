@@ -108,6 +108,14 @@ export function ResourceFilter({
     return value && value !== 'all';
   });
 
+  const handleRemoveMultiselectValue = (fieldName: string, valueToRemove: string) => {
+    const currentValues = filters[fieldName] as string[];
+    handleFilterChange(
+      fieldName,
+      currentValues.filter((v) => v !== valueToRemove)
+    );
+  };
+
   const activeFiltersCount = Object.values(filters).filter((value) => {
     if (Array.isArray(value)) {
       return value.length > 0;
@@ -281,13 +289,9 @@ export function ResourceFilter({
                                   {!field.disabled && (
                                     <button
                                       type="button"
-                                      onClick={() => {
-                                        const currentValues = filters[field.name] as string[];
-                                        handleFilterChange(
-                                          field.name,
-                                          currentValues.filter((v) => v !== value)
-                                        );
-                                      }}
+                                      onClick={() =>
+                                        handleRemoveMultiselectValue(field.name, value)
+                                      }
                                       className="hover:bg-muted rounded-full p-0.5"
                                     >
                                       <X className="h-3 w-3" />

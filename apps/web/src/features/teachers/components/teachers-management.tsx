@@ -22,7 +22,7 @@ interface TeachersManagementProps {
   viewMode?: 'admin' | 'employee'; // Admin = full CRUD, Employee = read-only
 }
 
-export function TeachersManagement({ viewMode = 'admin' }: TeachersManagementProps) {
+export function TeachersManagement({ viewMode = 'admin' }: Readonly<TeachersManagementProps>) {
   const isEmployeeView = viewMode === 'employee';
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -43,13 +43,16 @@ export function TeachersManagement({ viewMode = 'admin' }: TeachersManagementPro
   });
 
   // Determine page mode from URL
-  const mode: PageMode = id
-    ? window.location.pathname.endsWith('/edit')
-      ? 'edit'
-      : 'view'
-    : window.location.pathname.endsWith('/create') || window.location.pathname.endsWith('/new')
-      ? 'create'
-      : 'list';
+  const getPageMode = (): PageMode => {
+    if (id) {
+      return window.location.pathname.endsWith('/edit') ? 'edit' : 'view';
+    }
+    if (window.location.pathname.endsWith('/create') || window.location.pathname.endsWith('/new')) {
+      return 'create';
+    }
+    return 'list';
+  };
+  const mode: PageMode = getPageMode();
 
   // Fetch teachers (only for list mode)
   const { data, isLoading, error } = useTeachers({

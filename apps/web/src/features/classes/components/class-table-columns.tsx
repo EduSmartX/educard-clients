@@ -80,60 +80,70 @@ export function createClassListColumns({
       width: 100,
     },
     // Common columns: Created, Updated, Actions (Actions hidden for employee view)
-    ...(isEmployeeView
-      ? [] // No actions for employee view
-      : isDeletedView
-        ? [
-            {
-              header: 'Actions',
-              accessor: (classItem) => (
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onView(classItem);
-                    }}
-                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                    title="View details"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  {onDelete && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(classItem);
-                      }}
-                      className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                      title="Restore Class"
-                    >
-                      <RotateCcw className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              ),
-              headerClassName: 'text-left',
-            } as Column<Class>,
-          ]
-        : createCommonColumns<Class>(
-            {
-              onView,
-              onEdit,
-              onDelete,
-            },
-            {
-              includeCreated: true,
-              includeUpdated: true,
-              actionsOptions: {
-                variant: 'buttons',
-                showLabels: false,
-                align: 'left',
-              },
-            }
-          )),
+    ...getActionColumns(isEmployeeView, isDeletedView, onView, onEdit, onDelete),
   ];
+}
+
+function getActionColumns(
+  isEmployeeView: boolean,
+  isDeletedView: boolean,
+  onView: (item: Class) => void,
+  onEdit?: (item: Class) => void,
+  onDelete?: (item: Class) => void
+): Column<Class>[] {
+  if (isEmployeeView) {
+    return [];
+  }
+
+  if (isDeletedView) {
+    return [
+      {
+        header: 'Actions',
+        accessor: (classItem) => (
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                onView(classItem);
+              }}
+              className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+              title="View details"
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+            {onDelete && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(classItem);
+                }}
+                className="text-green-600 hover:bg-green-50 hover:text-green-700"
+                title="Restore Class"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        ),
+        headerClassName: 'text-left',
+      } as Column<Class>,
+    ];
+  }
+
+  return createCommonColumns<Class>(
+    { onView, onEdit, onDelete },
+    {
+      includeCreated: true,
+      includeUpdated: true,
+      actionsOptions: {
+        variant: 'buttons',
+        showLabels: false,
+        align: 'left',
+      },
+    }
+  );
 }

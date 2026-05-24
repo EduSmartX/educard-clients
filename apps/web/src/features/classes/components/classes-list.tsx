@@ -101,7 +101,7 @@ export function ClassesList({
             : []),
         ]}
       >
-        <div className="flex gap-2 items-center">
+        <div className="flex items-center gap-2">
           {onToggleDeleted && !isEmployeeView && (
             <DeletedViewToggle
               showDeleted={showDeleted}
@@ -118,7 +118,7 @@ export function ClassesList({
         <CardHeader>
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-4">
-              <div className="text-sm text-muted-foreground">
+              <div className="text-muted-foreground text-sm">
                 {classes.length} {classes.length === 1 ? 'class' : 'classes'} found
               </div>
               <Button
@@ -133,12 +133,12 @@ export function ClassesList({
 
             {/* Active filters display */}
             {Object.keys(filters).length > 0 && (
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm text-muted-foreground">Active filters:</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-muted-foreground text-sm">Active filters:</span>
                 {Object.entries(filters).map(([key, value]) => (
                   <Badge key={key} variant="secondary" className="gap-1">
                     <span className="capitalize">
-                      {key.replace(/_/g, ' ')}: {value}
+                      {key.replaceAll('_', ' ')}: {value}
                     </span>
                     <button
                       type="button"
@@ -152,7 +152,7 @@ export function ClassesList({
                           onFilterChange(newFilters);
                         }
                       }}
-                      className="rounded-full p-0.5 hover:bg-muted"
+                      className="hover:bg-muted rounded-full p-0.5"
                     >
                       <X className="h-3 w-3" />
                     </button>

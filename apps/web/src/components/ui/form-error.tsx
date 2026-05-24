@@ -23,7 +23,7 @@ interface FormErrorProps {
  * // Compact inline
  * <FormError message="This field is required" compact />
  */
-export function FormError({ message, className, compact = false }: FormErrorProps) {
+export function FormError({ message, className, compact = false }: Readonly<FormErrorProps>) {
   if (!message) {
     return null;
   }

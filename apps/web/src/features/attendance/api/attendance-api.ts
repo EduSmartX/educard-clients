@@ -205,11 +205,16 @@ export const fetchOrganizationHolidays = async (params: {
   });
 
   const payload = response.data || {};
-  const holidays = Array.isArray(payload.results)
-    ? payload.results
-    : Array.isArray(payload.data)
-      ? payload.data
-      : [];
+  const getHolidaysArray = () => {
+    if (Array.isArray(payload.results)) {
+      return payload.results;
+    }
+    if (Array.isArray(payload.data)) {
+      return payload.data;
+    }
+    return [];
+  };
+  const holidays = getHolidaysArray();
 
   return { holidays };
 };

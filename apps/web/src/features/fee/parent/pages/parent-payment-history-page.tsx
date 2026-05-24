@@ -25,8 +25,8 @@ export function ParentPaymentHistoryPage() {
     return (
       <div className="space-y-6">
         <div className="bg-muted h-8 w-48 animate-pulse rounded" />
-        {[...Array(3)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
+        {[...new Array(3)].map((_, i) => (
+          <Card key={`skeleton-${i}`} className="animate-pulse">
             <CardContent className="p-6">
               <div className="bg-muted h-24 rounded" />
             </CardContent>
@@ -75,7 +75,7 @@ interface PaymentCardProps {
   onDownloadReceipt: (paymentId: string) => void;
 }
 
-function PaymentCard({ payment, onDownloadReceipt }: PaymentCardProps) {
+function PaymentCard({ payment, onDownloadReceipt }: Readonly<PaymentCardProps>) {
   return (
     <div className="hover:bg-muted/50 rounded-lg border p-4 transition-colors">
       <div className="flex items-start justify-between">

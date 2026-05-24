@@ -11,7 +11,7 @@ interface LeaveAllocationStatsProps {
   allocations: LeaveAllocation[];
 }
 
-export function LeaveAllocationStats({ allocations }: LeaveAllocationStatsProps) {
+export function LeaveAllocationStats({ allocations }: Readonly<LeaveAllocationStatsProps>) {
   const activeCount = allocations.filter(
     (a) => !a.effective_to || new Date(a.effective_to) > new Date()
   ).length;
@@ -20,9 +20,9 @@ export function LeaveAllocationStats({ allocations }: LeaveAllocationStatsProps)
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
-      <Card className="relative overflow-hidden border-l-4 border-l-green-500 shadow-sm hover:shadow-md transition-shadow">
-        <div className="absolute top-0 right-0 w-32 h-32 transform translate-x-8 -translate-y-8">
-          <div className="w-full h-full bg-green-100 rounded-full opacity-20"></div>
+      <Card className="relative overflow-hidden border-l-4 border-l-green-500 shadow-sm transition-shadow hover:shadow-md">
+        <div className="absolute top-0 right-0 h-32 w-32 translate-x-8 -translate-y-8 transform">
+          <div className="h-full w-full rounded-full bg-green-100 opacity-20"></div>
         </div>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-gray-600">Active Policies</CardTitle>
@@ -32,16 +32,16 @@ export function LeaveAllocationStats({ allocations }: LeaveAllocationStatsProps)
         </CardHeader>
         <CardContent>
           <div className="text-4xl font-bold text-green-600">{activeCount}</div>
-          <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-            <span className="inline-block h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+          <p className="text-muted-foreground mt-2 flex items-center gap-1 text-xs">
+            <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-green-500"></span>
             Currently effective and active
           </p>
         </CardContent>
       </Card>
 
-      <Card className="relative overflow-hidden border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-shadow">
-        <div className="absolute top-0 right-0 w-32 h-32 transform translate-x-8 -translate-y-8">
-          <div className="w-full h-full bg-blue-100 rounded-full opacity-20"></div>
+      <Card className="relative overflow-hidden border-l-4 border-l-blue-500 shadow-sm transition-shadow hover:shadow-md">
+        <div className="absolute top-0 right-0 h-32 w-32 translate-x-8 -translate-y-8 transform">
+          <div className="h-full w-full rounded-full bg-blue-100 opacity-20"></div>
         </div>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-gray-600">Leave Types</CardTitle>
@@ -51,7 +51,7 @@ export function LeaveAllocationStats({ allocations }: LeaveAllocationStatsProps)
         </CardHeader>
         <CardContent>
           <div className="text-4xl font-bold text-blue-600">{leaveTypesCount}</div>
-          <p className="text-xs text-muted-foreground mt-2">Different categories configured</p>
+          <p className="text-muted-foreground mt-2 text-xs">Different categories configured</p>
         </CardContent>
       </Card>
     </div>

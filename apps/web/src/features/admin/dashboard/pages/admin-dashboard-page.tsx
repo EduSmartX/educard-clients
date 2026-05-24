@@ -159,7 +159,7 @@ interface ActionCardProps {
   iconBg: string;
 }
 
-function ActionCard({ icon: Icon, label, description, path, iconBg }: ActionCardProps) {
+function ActionCard({ icon: Icon, label, description, path, iconBg }: Readonly<ActionCardProps>) {
   const navigate = useNavigate();
 
   return (

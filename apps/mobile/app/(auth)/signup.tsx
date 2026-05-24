@@ -64,6 +64,47 @@ function getIconColor(hasError: boolean, isFocused: boolean): string {
   return Colors.gray[400];
 }
 
+function ProgressSteps({ currentStep }: { currentStep: number }) {
+  return (
+    <View style={styles.progressContainer}>
+      {SIGNUP_STEP_LABELS.map((title, idx) => {
+        const step = idx + 1;
+        const isCompleted = step < currentStep;
+        const isCurrent = step === currentStep;
+
+        return (
+          <View key={step} style={styles.stepWrapper}>
+            <View style={styles.stepItem}>
+              <View
+                style={[
+                  styles.stepCircle,
+                  isCompleted && styles.stepCompleted,
+                  isCurrent && styles.stepCurrent,
+                ]}
+              >
+                {isCompleted ? (
+                  <CheckCircle2 size={16} color="#fff" />
+                ) : (
+                  <Text
+                    style={[
+                      styles.stepNumber,
+                      (isCompleted || isCurrent) && styles.stepNumberActive,
+                    ]}
+                  >
+                    {step}
+                  </Text>
+                )}
+              </View>
+              <Text style={[styles.stepLabel, isCurrent && styles.stepLabelActive]}>{title}</Text>
+            </View>
+            {idx < 3 && <View style={[styles.stepLine, isCompleted && styles.stepLineCompleted]} />}
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
 export default function SignupScreen() {
   const router = useRouter();
   const modal = useModal();
@@ -381,45 +422,6 @@ export default function SignupScreen() {
   };
 
   // Progress Steps Component
-  const ProgressSteps = () => (
-    <View style={styles.progressContainer}>
-      {SIGNUP_STEP_LABELS.map((title, idx) => {
-        const step = idx + 1;
-        const isCompleted = step < currentStep;
-        const isCurrent = step === currentStep;
-
-        return (
-          <View key={step} style={styles.stepWrapper}>
-            <View style={styles.stepItem}>
-              <View
-                style={[
-                  styles.stepCircle,
-                  isCompleted && styles.stepCompleted,
-                  isCurrent && styles.stepCurrent,
-                ]}
-              >
-                {isCompleted ? (
-                  <CheckCircle2 size={16} color="#fff" />
-                ) : (
-                  <Text
-                    style={[
-                      styles.stepNumber,
-                      (isCompleted || isCurrent) && styles.stepNumberActive,
-                    ]}
-                  >
-                    {step}
-                  </Text>
-                )}
-              </View>
-              <Text style={[styles.stepLabel, isCurrent && styles.stepLabelActive]}>{title}</Text>
-            </View>
-            {idx < 3 && <View style={[styles.stepLine, isCompleted && styles.stepLineCompleted]} />}
-          </View>
-        );
-      })}
-    </View>
-  );
-
   // Render Step Content
   const renderStepContent = () => {
     switch (currentStep) {
@@ -1074,7 +1076,7 @@ export default function SignupScreen() {
 
         {/* Progress Steps */}
         <Animated.View entering={FadeInDown.delay(200).duration(500)}>
-          <ProgressSteps />
+          <ProgressSteps currentStep={currentStep} />
         </Animated.View>
 
         {/* Form Card */}

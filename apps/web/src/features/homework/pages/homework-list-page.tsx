@@ -408,8 +408,8 @@ export default function HomeworkListPage() {
         <TabsContent value={activeTab} className="mt-6">
           {(isLoadingClasses || isLoadingHomework) && (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {[...Array(6)].map((_, i) => (
-                <Skeleton key={i} className="h-52 rounded-xl" />
+              {[...new Array(6)].map((_, i) => (
+                <Skeleton key={`skeleton-${i}`} className="h-52 rounded-xl" />
               ))}
             </div>
           )}
@@ -462,11 +462,11 @@ function EmptyState({
   icon: Icon,
   title,
   description,
-}: {
+}: Readonly<{
   icon: React.ComponentType<{ className?: string }>;
   title: string;
   description: string;
-}) {
+}>) {
   return (
     <div className="bg-muted/30 flex flex-col items-center justify-center rounded-xl border-2 border-dashed py-20">
       <Icon className="text-muted-foreground/50 mb-4 h-12 w-12" />
@@ -485,7 +485,14 @@ interface SubjectCardProps {
   onDelete: (publicId: string) => void;
 }
 
-function SubjectCard({ subject, homework, color, onView, onAdd, onDelete }: SubjectCardProps) {
+function SubjectCard({
+  subject,
+  homework,
+  color,
+  onView,
+  onAdd,
+  onDelete,
+}: Readonly<SubjectCardProps>) {
   const hasHomework = !!homework;
 
   return (

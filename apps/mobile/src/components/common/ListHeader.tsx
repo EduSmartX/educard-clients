@@ -66,7 +66,7 @@ export function ListHeader({
           <View style={styles.actions}>
             {actions.map((action, index) => (
               <TouchableOpacity
-                key={index}
+                key={`action-${action.icon.displayName || index}`}
                 style={[styles.actionBtn, action.variant === 'primary' && styles.primaryBtn]}
                 onPress={action.onPress}
               >

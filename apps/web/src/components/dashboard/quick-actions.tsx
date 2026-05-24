@@ -16,23 +16,27 @@ interface QuickActionsProps {
   className?: string;
 }
 
-export function QuickActions({ title = 'Quick Actions', actions, className }: QuickActionsProps) {
+export function QuickActions({
+  title = 'Quick Actions',
+  actions,
+  className,
+}: Readonly<QuickActionsProps>) {
   return (
     <div
       className={cn(
-        'bg-white rounded-xl p-6 shadow-sm border border-gray-100 h-full flex flex-col',
+        'flex h-full flex-col rounded-xl border border-gray-100 bg-white p-6 shadow-sm',
         className
       )}
     >
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
-      <div className="space-y-2 flex-1">
+      <h3 className="mb-4 text-lg font-semibold text-gray-900">{title}</h3>
+      <div className="flex-1 space-y-2">
         {actions.map((action) => (
           <button
             key={action.id}
             onClick={action.onClick}
-            className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors text-left group"
+            className="group flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors hover:bg-gray-50"
           >
-            <div className={cn('p-2 rounded-lg', action.iconBgColor)}>
+            <div className={cn('rounded-lg p-2', action.iconBgColor)}>
               <action.icon className={cn('h-5 w-5', action.iconColor)} />
             </div>
             <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">

@@ -14,7 +14,10 @@ interface LeaveAllocationFormPageProps {
   allocationId?: string;
 }
 
-export function LeaveAllocationFormPage({ mode, allocationId }: LeaveAllocationFormPageProps) {
+export function LeaveAllocationFormPage({
+  mode,
+  allocationId,
+}: Readonly<LeaveAllocationFormPageProps>) {
   const navigate = useNavigate();
 
   const handleBackToList = () => {
@@ -28,12 +31,12 @@ export function LeaveAllocationFormPage({ mode, allocationId }: LeaveAllocationF
   // Validate ID for edit/view modes
   if (mode !== 'create' && !allocationId) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center space-y-4">
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto" />
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="space-y-4 text-center">
+          <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
           <div>
-            <p className="text-red-600 font-medium">Invalid allocation ID</p>
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="font-medium text-red-600">Invalid allocation ID</p>
+            <p className="mt-2 text-sm text-gray-500">
               The leave allocation you're looking for doesn't exist or the ID is invalid.
             </p>
           </div>

@@ -452,6 +452,9 @@ export const SuccessMessages = {
     PASSWORD_RESET_SUCCESS: "Password reset successful.",
     LOGIN_SUCCESS: "Logged in successfully.",
     LOGOUT_SUCCESS: "Logged out successfully.",
+    ADMIN_EMAIL_VERIFIED: "Admin email verified successfully.",
+    ORG_EMAIL_VERIFIED: "Organization email verified successfully.",
+    EMAIL_VERIFICATION_COMPLETE: "Email verification complete.",
   },
 
   FILES: {
@@ -589,10 +592,20 @@ export const FormPlaceholders = {
 
   // Student fields
   ROLL_NUMBER: "Enter roll number",
+  ENTER_ROLL_NUMBER: "Enter roll number",
   ADMISSION_NUMBER: "Enter admission number",
+  ENTER_ADMISSION_NUMBER: "Enter admission number",
   GUARDIAN_NAME: "Enter guardian name",
+  ENTER_GUARDIAN_NAME: "Enter guardian name",
   GUARDIAN_PHONE: "Enter guardian phone",
+  ENTER_GUARDIAN_PHONE: "Enter guardian phone",
   GUARDIAN_EMAIL: "Enter guardian email",
+  ENTER_GUARDIAN_EMAIL: "Enter guardian email",
+  MEDICAL_CONDITIONS: "Enter medical conditions (if any)",
+  ENTER_ADDITIONAL_NOTES: "Enter additional notes",
+  ENTER_PREVIOUS_SCHOOL_NAME: "Enter previous school name",
+  ENTER_PREVIOUS_CLASS: "Enter previous class",
+  ENTER_PREVIOUS_SCHOOL_ADDRESS: "Enter previous school address",
 
   // Teacher fields
   EMPLOYEE_ID: "Enter employee ID",
@@ -643,9 +656,35 @@ export const FormPlaceholders = {
   // Organization fields
   ORGANIZATION_NAME: "Enter organization name",
   ORGANIZATION_CODE: "Enter organization code",
+  ORG_NAME_EXAMPLE: "e.g., Springfield Academy",
+  ORG_EMAIL_EXAMPLE: "e.g., info@school.com",
+  PHONE_EXAMPLE: "e.g., 9876543210",
+  REGISTRATION_NUMBER_EXAMPLE: "e.g., REG-2024-001",
+  CIN_EXAMPLE: "e.g., U80302RJ2024PTC123456",
+  GSTIN_EXAMPLE: "e.g., 08AABCU9603R1ZM",
+  WEBSITE_EXAMPLE: "e.g., https://www.school.com",
 
   // OTP
   OTP: "Enter 6-digit OTP",
+  ENTER_OTP_6_DIGIT: "Enter 6-digit OTP",
+  OTP_MASK: "------",
+
+  // Email
+  EMAIL_EXAMPLE: "example@email.com",
+  ADMIN_EMAIL_EXAMPLE: "admin@school.com",
+  SCHOOL_EMAIL_EXAMPLE: "info@school.com",
+
+  // Names
+  FIRST_NAME_EXAMPLE: "e.g., John",
+  LAST_NAME_EXAMPLE: "e.g., Smith",
+
+  // Organization/School
+  ENTER_SCHOOL_NAME: "Enter school name",
+  WEBSITE_GENERIC_EXAMPLE: "e.g., https://www.school.com",
+
+  // Password
+  CREATE_STRONG_PASSWORD: "Create a strong password",
+  REENTER_NEW_PASSWORD: "Re-enter new password",
 
   // Search
   SEARCH_CLASSES: "Search classes...",
@@ -749,6 +788,11 @@ export const AttendanceUiText = {
   REFERRAL_NAME: "Enter referral name (optional)",
   DISCOUNT_REASON: "Enter reason for discount",
   PAYMENT_REMARKS: "Add payment notes (optional)",
+
+  // Feature status
+  COMING_SOON: "Coming Soon",
+  FEATURE_IN_PROGRESS:
+    "This feature is currently under development and will be available soon.",
 } as const;
 
 /**

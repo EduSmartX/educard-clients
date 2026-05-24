@@ -32,7 +32,10 @@ interface OrganizationAddressFormProps {
   isLoading: boolean;
 }
 
-export function OrganizationAddressForm({ organization, isLoading }: OrganizationAddressFormProps) {
+export function OrganizationAddressForm({
+  organization,
+  isLoading,
+}: Readonly<OrganizationAddressFormProps>) {
   const updateMutation = useUpdateOrganizationAddress(organization?.public_id || '');
 
   const form = useForm<OrganizationAddressFormData>({

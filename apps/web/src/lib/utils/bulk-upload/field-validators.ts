@@ -131,7 +131,7 @@ export const phoneValidator: FieldValidator = (value, row, fieldLabel) => {
   if (!value || String(value).trim() === '') {
     return null; // Phone is optional
   }
-  const phoneStr = String(value).replace(/\D/g, ''); // Remove non-digits
+  const phoneStr = String(value).replaceAll(/\D/g, ''); // Remove non-digits
   if (phoneStr.length !== 10) {
     return { row, field: fieldLabel, message: `${fieldLabel} must be exactly 10 digits` };
   }

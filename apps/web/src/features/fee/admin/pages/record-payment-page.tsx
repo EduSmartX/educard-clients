@@ -78,6 +78,16 @@ function getSuggestedAmount(
   return fee.balance_due;
 }
 
+function getMaxPaymentAmount(
+  selectedFee: { amount_paid: number; balance_due: number } | undefined,
+  isRefund: boolean
+): number | undefined {
+  if (!selectedFee) {
+    return undefined;
+  }
+  return isRefund ? selectedFee.amount_paid : selectedFee.balance_due;
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function RecordPaymentPage() {
@@ -148,11 +158,7 @@ export function RecordPaymentPage() {
   const isUpi = watchedMode === PaymentMode.UPI;
   const isCard = watchedMode === PaymentMode.CARD;
 
-  const maxAmount = selectedFee
-    ? isRefund
-      ? selectedFee.amount_paid
-      : selectedFee.balance_due
-    : undefined;
+  const maxAmount = getMaxPaymentAmount(selectedFee, isRefund);
 
   const handleSubmit = (values: PaymentFormValues) => {
     // Client-side max amount validation
@@ -607,11 +613,9 @@ export function RecordPaymentPage() {
                   variant={isRefund ? 'destructive' : 'default'}
                   className={!isRefund ? 'bg-green-600 hover:bg-green-700' : ''}
                 >
-                  {createPayment.isPending
-                    ? 'Saving...'
-                    : isRefund
-                      ? 'Issue Refund'
-                      : 'Record Payment'}
+                  {createPayment.isPending && 'Saving...'}
+                  {!createPayment.isPending && isRefund && 'Issue Refund'}
+                  {!createPayment.isPending && !isRefund && 'Record Payment'}
                 </Button>
               </div>
             </form>

@@ -52,7 +52,7 @@ import {
   useCalculateWorkingDays,
 } from '../hooks';
 import { leaveRequestFormSchema, type LeaveRequestFormData } from '../schemas';
-import { LEAVE_STATUS_CONFIG, type HolidayInfo, type WorkingDaysCalculation } from '../types';
+import { LEAVE_STATUS_CONFIG, type WorkingDaysCalculation } from '../types';
 import { getLeaveTypeName } from '../utils/leave-name-helper';
 
 type PageMode = 'create' | 'edit' | 'view';
@@ -62,7 +62,6 @@ export function LeaveRequestFormPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [_holidays, setHolidays] = useState<HolidayInfo[]>([]);
   const [workingDaysInfo, setWorkingDaysInfo] = useState<WorkingDaysCalculation | null>(null);
   const [dateRangeError, setDateRangeError] = useState<string | null>(null);
   const [conflictingLeaves, setConflictingLeaves] = useState<string[]>([]);
@@ -175,7 +174,6 @@ export function LeaveRequestFormPage() {
       const dateError = validateDateRange(startDate, endDate, 'Start date', 'End date');
       if (dateError) {
         setDateRangeError(dateError);
-        setHolidays([]);
         setWorkingDaysInfo(null);
         form.setValue('number_of_days', 0);
         return;
@@ -192,7 +190,6 @@ export function LeaveRequestFormPage() {
           onSuccess: (response) => {
             const calculation = response.data;
             setWorkingDaysInfo(calculation);
-            setHolidays(calculation.holidays || []);
             const days = calculation.working_days ?? calculation.leave_days ?? 0;
             form.setValue('number_of_days', days);
             // Clear any conflicts when calculation succeeds
@@ -210,7 +207,6 @@ export function LeaveRequestFormPage() {
               setDateRangeError(errorMessage);
               setConflictingLeaves([]);
             }
-            setHolidays([]);
             setWorkingDaysInfo(null);
           },
         }
@@ -231,6 +227,22 @@ export function LeaveRequestFormPage() {
     form.setValue('number_of_days', adjusted);
   }, [isHalfDay, workingDaysInfo, form]);
 
+  const handleMutationError = (error: unknown, fallbackMessage: string) => {
+    const result = applyFieldErrors(error, form.setError);
+
+    const apiError = error as {
+      response?: { data?: { data?: { conflicting_leaves?: string[] } } };
+    };
+    if (apiError?.response?.data?.data?.conflicting_leaves) {
+      setConflictingLeaves(apiError.response.data.data.conflicting_leaves);
+    }
+
+    if (!result.hasFieldErrors) {
+      const errorMessage = getErrorMessage(error, fallbackMessage);
+      toast.error(ToastTitles.ERROR, { description: errorMessage });
+    }
+  };
+
   const onSubmit = (data: LeaveRequestFormData) => {
     // Clear any previous conflicts
     setConflictingLeaves([]);
@@ -242,22 +254,7 @@ export function LeaveRequestFormPage() {
           navigate('/leave/dashboard');
         },
         onError: (error: unknown) => {
-          // Apply field-level validation errors to form fields
-          const result = applyFieldErrors(error, form.setError);
-
-          // Handle conflicting leaves (special case for date overlap errors)
-          const apiError = error as {
-            response?: { data?: { data?: { conflicting_leaves?: string[] } } };
-          };
-          if (apiError?.response?.data?.data?.conflicting_leaves) {
-            setConflictingLeaves(apiError.response.data.data.conflicting_leaves);
-          }
-
-          // Show toast only for non-field errors (server errors, network issues, etc.)
-          if (!result.hasFieldErrors) {
-            const errorMessage = getErrorMessage(error, ErrorMessages.LEAVE.CREATE_REQUEST_FAILED);
-            toast.error(ToastTitles.ERROR, { description: errorMessage });
-          }
+          handleMutationError(error, ErrorMessages.LEAVE.CREATE_REQUEST_FAILED);
         },
       });
     } else if (mode === 'edit') {
@@ -279,25 +276,7 @@ export function LeaveRequestFormPage() {
             navigate(`/leave/requests/${id}`);
           },
           onError: (error: unknown) => {
-            // Apply field-level validation errors to form fields
-            const result = applyFieldErrors(error, form.setError);
-
-            // Handle conflicting leaves (special case for date overlap errors)
-            const apiError = error as {
-              response?: { data?: { data?: { conflicting_leaves?: string[] } } };
-            };
-            if (apiError?.response?.data?.data?.conflicting_leaves) {
-              setConflictingLeaves(apiError.response.data.data.conflicting_leaves);
-            }
-
-            // Show toast only for non-field errors (server errors, network issues, etc.)
-            if (!result.hasFieldErrors) {
-              const errorMessage = getErrorMessage(
-                error,
-                ErrorMessages.LEAVE.UPDATE_REQUEST_FAILED
-              );
-              toast.error(ToastTitles.ERROR, { description: errorMessage });
-            }
+            handleMutationError(error, ErrorMessages.LEAVE.UPDATE_REQUEST_FAILED);
           },
         }
       );
@@ -326,12 +305,12 @@ export function LeaveRequestFormPage() {
     );
   }
 
-  const title =
-    mode === 'create'
-      ? 'Apply Leave'
-      : mode === 'edit'
-        ? 'Edit Leave Request'
-        : 'Leave Request Details';
+  const titleByMode: Record<PageMode, string> = {
+    create: 'Apply Leave',
+    edit: 'Edit Leave Request',
+    view: 'Leave Request Details',
+  };
+  const title = titleByMode[mode];
 
   const hasNoAllocatedBalances = mode === 'create' && balances.length === 0;
 
@@ -475,8 +454,8 @@ export function LeaveRequestFormPage() {
                         </div>
                         <div className="mt-2 font-medium">Conflicting Leaves:</div>
                         <ul className="ml-2 list-inside list-disc space-y-1">
-                          {conflictingLeaves.map((leave, index) => (
-                            <li key={index} className="text-sm text-red-800">
+                          {conflictingLeaves.map((leave) => (
+                            <li key={leave} className="text-sm text-red-800">
                               {leave}
                             </li>
                           ))}
@@ -535,9 +514,9 @@ export function LeaveRequestFormPage() {
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {workingDaysInfo.holidays.map((holiday, index) => (
+                                  {workingDaysInfo.holidays.map((holiday) => (
                                     <tr
-                                      key={index}
+                                      key={holiday.date}
                                       className="border-b border-gray-100 last:border-0"
                                     >
                                       <td className="px-3 py-2 text-gray-900">

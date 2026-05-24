@@ -41,11 +41,11 @@ export function DeletedDuplicateModal({
       <Text style={styles.message}>
         {parts.map((part, i) =>
           part.startsWith("'") && part.endsWith("'") ? (
-            <Text key={i} style={styles.messageBold}>
+            <Text key={`${i}-${part}`} style={styles.messageBold}>
               {part}
             </Text>
           ) : (
-            <Text key={i}>{part}</Text>
+            <Text key={`${i}-${part}`}>{part}</Text>
           )
         )}
       </Text>

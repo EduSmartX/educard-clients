@@ -73,9 +73,9 @@ export function createLeaveAllocationColumns({
 
         return (
           <div className="flex flex-wrap items-center gap-1.5">
-            {visibleRoles.map((role: string, idx: number) => (
+            {visibleRoles.map((role: string) => (
               <Badge
-                key={idx}
+                key={role}
                 variant="secondary"
                 className="bg-purple-100 text-xs font-medium text-purple-700 hover:bg-purple-200"
               >
@@ -99,9 +99,9 @@ export function createLeaveAllocationColumns({
                       All Applicable Roles ({roles.length})
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {roles.map((role: string, idx: number) => (
+                      {roles.map((role: string) => (
                         <Badge
-                          key={idx}
+                          key={role}
                           variant="secondary"
                           className="bg-purple-100 px-2.5 py-1 text-xs font-medium text-purple-700"
                         >

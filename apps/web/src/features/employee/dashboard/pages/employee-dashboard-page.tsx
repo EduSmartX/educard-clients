@@ -688,7 +688,7 @@ export default function EmployeeDashboardPage() {
                           { value: holidays, color: '#a855f7' },
                         ];
 
-                        return segments.map((seg, idx) => {
+                        return segments.map((seg, _idx) => {
                           if (seg.value === 0) {
                             return null;
                           }
@@ -697,7 +697,7 @@ export default function EmployeeDashboardPage() {
                           offset += length;
                           return (
                             <circle
-                              key={idx}
+                              key={seg.color}
                               cx="50"
                               cy="50"
                               r="40"

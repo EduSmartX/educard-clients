@@ -23,7 +23,7 @@ interface FeeStructureTableProps {
   isLoading?: boolean;
 }
 
-export function FeeStructureTable({ data, isLoading }: FeeStructureTableProps) {
+export function FeeStructureTable({ data, isLoading }: Readonly<FeeStructureTableProps>) {
   const navigate = useNavigate();
   const [editConfirmId, setEditConfirmId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FeeStructureListItem | null>(null);
@@ -62,8 +62,8 @@ export function FeeStructureTable({ data, isLoading }: FeeStructureTableProps) {
       header: 'Classes',
       accessor: (row) => (
         <div className="flex flex-wrap gap-1">
-          {row.class_names.slice(0, 2).map((className, idx) => (
-            <Badge key={idx} variant="secondary" className="text-xs">
+          {row.class_names.slice(0, 2).map((className) => (
+            <Badge key={className} variant="secondary" className="text-xs">
               {className}
             </Badge>
           ))}
@@ -76,8 +76,8 @@ export function FeeStructureTable({ data, isLoading }: FeeStructureTableProps) {
               </PopoverTrigger>
               <PopoverContent side="bottom" className="w-auto max-w-xs p-3">
                 <div className="space-y-1">
-                  {row.class_names.slice(2).map((cls, idx) => (
-                    <div key={idx} className="text-xs">
+                  {row.class_names.slice(2).map((cls) => (
+                    <div key={cls} className="text-xs">
                       {cls}
                     </div>
                   ))}

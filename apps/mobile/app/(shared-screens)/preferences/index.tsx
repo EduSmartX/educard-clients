@@ -736,6 +736,13 @@ export default function OrgPreferencesScreen() {
   const renderMultiSelectModal = () => {
     if (!multiSelectPref) return null;
     const values = multiSelectPref.applicable_values ?? []; // ?? instead of ||
+
+    const handleToggleValue = (val: string) => {
+      setMultiSelectValues((prev) =>
+        prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val]
+      );
+    };
+
     return (
       <Modal
         visible
@@ -754,11 +761,7 @@ export default function OrgPreferencesScreen() {
                   <TouchableOpacity
                     key={val}
                     style={[styles.modalOption, isSelected && styles.modalOptionSelected]}
-                    onPress={() =>
-                      setMultiSelectValues((prev) =>
-                        isSelected ? prev.filter((v) => v !== val) : [...prev, val]
-                      )
-                    }
+                    onPress={() => handleToggleValue(val)}
                   >
                     <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
                       {isSelected && <Check size={12} color="#fff" />}

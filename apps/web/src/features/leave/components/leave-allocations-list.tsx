@@ -34,6 +34,20 @@ interface LeaveAllocationsListProps {
   readOnly?: boolean;
 }
 
+function getEmptyMessage(
+  error: Error | null | undefined,
+  searchQuery: string,
+  filters: Record<string, string>
+): string {
+  if (error) {
+    return 'Unable to load data due to an error';
+  }
+  if (searchQuery || Object.keys(filters).length > 0) {
+    return 'No policies found matching your filters';
+  }
+  return 'No leave allocation policies found';
+}
+
 export function LeaveAllocationsList({
   allocations,
   isLoading,
@@ -47,7 +61,7 @@ export function LeaveAllocationsList({
   onSearch,
   onFilterChange,
   readOnly = false,
-}: LeaveAllocationsListProps) {
+}: Readonly<LeaveAllocationsListProps>) {
   const [appliedSearchQuery, setAppliedSearchQuery] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [showFilters, setShowFilters] = useState(false);
@@ -184,7 +198,7 @@ export function LeaveAllocationsList({
                 {Object.entries(filters).map(([key, value]) => (
                   <Badge key={key} variant="secondary" className="gap-1">
                     <span className="capitalize">
-                      {key.replace(/_/g, ' ')}: {value}
+                      {key.replaceAll('_', ' ')}: {value}
                     </span>
                     <button
                       type="button"
@@ -293,13 +307,7 @@ export function LeaveAllocationsList({
             pagination={pagination}
             onPageChange={onPageChange}
             onPageSizeChange={onPageSizeChange}
-            emptyMessage={
-              error
-                ? 'Unable to load data due to an error'
-                : appliedSearchQuery || Object.keys(filters).length > 0
-                  ? 'No policies found matching your filters'
-                  : 'No leave allocation policies found'
-            }
+            emptyMessage={getEmptyMessage(error, appliedSearchQuery, filters)}
             emptyAction={
               !error && !appliedSearchQuery && Object.keys(filters).length === 0
                 ? {

@@ -115,9 +115,9 @@ export function Modal({
             {/* Actions */}
             {actions && actions.length > 0 && (
               <View style={styles.actionsContainer}>
-                {actions.map((action, index) => (
+                {actions.map((action) => (
                   <TouchableOpacity
-                    key={index}
+                    key={action.label}
                     style={[
                       styles.actionButton,
                       action.variant === 'primary' && styles.primaryButton,

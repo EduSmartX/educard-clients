@@ -312,11 +312,9 @@ export const HomeworkForm = memo(
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting
-                  ? 'Saving...'
-                  : mode === 'create'
-                    ? 'Create Homework'
-                    : 'Save Changes'}
+                {isSubmitting && 'Saving...'}
+                {!isSubmitting && mode === 'create' && 'Create Homework'}
+                {!isSubmitting && mode !== 'create' && 'Save Changes'}
               </Button>
             </DialogFooter>
           </form>

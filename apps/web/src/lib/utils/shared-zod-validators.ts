@@ -22,7 +22,7 @@ export const cleanPhoneNumber = (phone: string): string => {
   if (isPhoneMasked(phone)) {
     return phone;
   }
-  return phone.replace(/\D/g, '');
+  return phone.replaceAll(/\D/g, '');
 };
 
 export const emailSchema = (required = true) => {

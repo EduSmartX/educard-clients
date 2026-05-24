@@ -10,7 +10,7 @@ interface TimesheetStatusBadgeProps {
  * Reusable badge component for displaying timesheet submission status
  * with consistent styling across the application
  */
-export function TimesheetStatusBadge({ status, className }: TimesheetStatusBadgeProps) {
+export function TimesheetStatusBadge({ status, className }: Readonly<TimesheetStatusBadgeProps>) {
   const getStatusStyle = () => {
     switch (status) {
       case TimesheetStatus.SUBMITTED:

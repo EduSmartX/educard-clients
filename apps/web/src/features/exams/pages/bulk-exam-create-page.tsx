@@ -380,6 +380,13 @@ export function BulkExamCreatePage() {
   const isLoading = isLoadingSessions || isLoadingClasses;
   const isPending = bulkCreateMutation.isPending;
 
+  const sessionStartLabel = selectedSession?.start_date
+    ? format(new Date(selectedSession.start_date), 'dd MMM yyyy')
+    : 'N/A';
+  const sessionEndLabel = selectedSession?.end_date
+    ? format(new Date(selectedSession.end_date), 'dd MMM yyyy')
+    : 'N/A';
+
   return (
     <div className="space-y-6">
       <PageHeader title="Create Exams (Bulk)">
@@ -393,11 +400,12 @@ export function BulkExamCreatePage() {
         </Button>
       </PageHeader>
 
-      {isLoading ? (
+      {isLoading && (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
         </div>
-      ) : (
+      )}
+      {!isLoading && (
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Session & Class Selection Card */}
           <Card className="border shadow-sm">
@@ -430,13 +438,9 @@ export function BulkExamCreatePage() {
                     <div className="flex items-center gap-1.5 rounded-md bg-blue-50 px-2.5 py-1.5 text-xs text-blue-700">
                       <CalendarDays className="h-3.5 w-3.5" />
                       <span className="font-medium">
-                        {selectedSession.start_date
-                          ? format(new Date(selectedSession.start_date), 'dd MMM yyyy')
-                          : 'N/A'}
+                        {sessionStartLabel}
                         {' → '}
-                        {selectedSession.end_date
-                          ? format(new Date(selectedSession.end_date), 'dd MMM yyyy')
-                          : 'N/A'}
+                        {sessionEndLabel}
                       </span>
                     </div>
                   )}
@@ -514,19 +518,22 @@ export function BulkExamCreatePage() {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              {!classId ? (
+              {!classId && (
                 <div className="text-muted-foreground flex items-center justify-center py-12">
                   Select a class to view subjects
                 </div>
-              ) : isLoadingSubjects ? (
+              )}
+              {classId && isLoadingSubjects && (
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
                 </div>
-              ) : subjectRows.length === 0 ? (
+              )}
+              {classId && !isLoadingSubjects && subjectRows.length === 0 && (
                 <div className="text-muted-foreground flex items-center justify-center py-12">
                   No subjects found for this class
                 </div>
-              ) : (
+              )}
+              {classId && !isLoadingSubjects && subjectRows.length > 0 && (
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>

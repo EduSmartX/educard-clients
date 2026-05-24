@@ -9,7 +9,10 @@ interface MinimalStudentFieldsProps {
   disabled?: boolean;
 }
 
-export function MinimalStudentFields({ control, disabled = false }: MinimalStudentFieldsProps) {
+export function MinimalStudentFields({
+  control,
+  disabled = false,
+}: Readonly<MinimalStudentFieldsProps>) {
   return (
     <Card>
       <CardHeader>

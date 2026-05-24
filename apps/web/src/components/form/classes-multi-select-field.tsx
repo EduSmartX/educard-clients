@@ -56,6 +56,10 @@ export function ClassesMultiSelectField<TFieldValues extends FieldValues>({
           ? classes.filter((cls) => !selectedClassIds.includes(cls.public_id))
           : [];
 
+        const handleRemoveClass = (classId: string) => {
+          field.onChange(selectedClassIds.filter((id) => id !== classId));
+        };
+
         // Format class name to show master class name
         const formatClassName = (cls: ClassOption) => {
           // First priority: use display_name if available
@@ -106,7 +110,7 @@ export function ClassesMultiSelectField<TFieldValues extends FieldValues>({
                   emptyText={
                     isLoading
                       ? 'Loading classes...'
-                      : selectedClassIds.length > 0
+                      : availableClasses.length === 0
                         ? 'All classes selected'
                         : 'No classes available'
                   }
@@ -130,9 +134,7 @@ export function ClassesMultiSelectField<TFieldValues extends FieldValues>({
                         {!disabled && (
                           <button
                             type="button"
-                            onClick={() =>
-                              field.onChange(selectedClassIds.filter((id) => id !== classId))
-                            }
+                            onClick={() => handleRemoveClass(classId)}
                             className="ml-1 rounded-full p-0.5 transition-colors hover:bg-gray-300"
                           >
                             <X className="h-3 w-3" />

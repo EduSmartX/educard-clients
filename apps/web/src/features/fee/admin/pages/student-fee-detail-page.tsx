@@ -43,7 +43,7 @@ interface DiscountCardProps {
   studentFee: StudentFee;
 }
 
-function DiscountCard({ studentFee }: DiscountCardProps) {
+function DiscountCard({ studentFee }: Readonly<DiscountCardProps>) {
   const [open, setOpen] = useState(false);
   return (
     <Card>

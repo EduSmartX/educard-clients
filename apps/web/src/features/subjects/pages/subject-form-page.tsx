@@ -227,11 +227,6 @@ export default function SubjectFormPage() {
     },
   });
 
-  // Delete handlers
-  const _handleDelete = () => {
-    setShowDeleteDialog(true);
-  };
-
   const confirmDelete = () => {
     setShowDeleteDialog(false);
     if (subject) {

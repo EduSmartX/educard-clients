@@ -42,7 +42,10 @@ interface StyledButtonProps extends Omit<ButtonProps, 'variant'> {
 }
 
 export const StyledButton = forwardRef<HTMLButtonElement, StyledButtonProps>(
-  ({ styleType = 'primary', icon: Icon, isLoading, children, className, disabled, ...props }, ref) => {
+  (
+    { styleType = 'primary', icon: Icon, isLoading, children, className, disabled, ...props },
+    ref
+  ) => {
     return (
       <Button
         ref={ref}
@@ -50,11 +53,8 @@ export const StyledButton = forwardRef<HTMLButtonElement, StyledButtonProps>(
         className={cn('gap-2 font-medium', BUTTON_STYLES[styleType], className)}
         {...props}
       >
-        {isLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : Icon ? (
-          <Icon className="h-4 w-4" />
-        ) : null}
+        {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+        {!isLoading && Icon && <Icon className="h-4 w-4" />}
         {children}
       </Button>
     );
@@ -95,7 +95,7 @@ type QuickButtonProps = Omit<StyledButtonProps, 'icon' | 'styleType' | 'children
 };
 
 /** Primary Create/Add button */
-export function CreateButton({ label = 'Create', ...props }: QuickButtonProps) {
+export function CreateButton({ label = 'Create', ...props }: Readonly<QuickButtonProps>) {
   return (
     <StyledButton styleType="primary" icon={Plus} {...props}>
       {label}
@@ -104,7 +104,7 @@ export function CreateButton({ label = 'Create', ...props }: QuickButtonProps) {
 }
 
 /** Primary Save button */
-export function SaveButton({ label = 'Save', ...props }: QuickButtonProps) {
+export function SaveButton({ label = 'Save', ...props }: Readonly<QuickButtonProps>) {
   return (
     <StyledButton styleType="primary" icon={Save} {...props}>
       {label}
@@ -113,7 +113,7 @@ export function SaveButton({ label = 'Save', ...props }: QuickButtonProps) {
 }
 
 /** Submit button */
-export function SubmitButton({ label = 'Submit', ...props }: QuickButtonProps) {
+export function SubmitButton({ label = 'Submit', ...props }: Readonly<QuickButtonProps>) {
   return (
     <StyledButton styleType="success" icon={Send} {...props}>
       {label}
@@ -122,7 +122,7 @@ export function SubmitButton({ label = 'Submit', ...props }: QuickButtonProps) {
 }
 
 /** Secondary Cancel button */
-export function CancelButton({ label = 'Cancel', ...props }: QuickButtonProps) {
+export function CancelButton({ label = 'Cancel', ...props }: Readonly<QuickButtonProps>) {
   return (
     <StyledButton styleType="secondary" icon={X} {...props}>
       {label}
@@ -131,7 +131,7 @@ export function CancelButton({ label = 'Cancel', ...props }: QuickButtonProps) {
 }
 
 /** Back navigation button */
-export function BackButton({ label = 'Back', ...props }: QuickButtonProps) {
+export function BackButton({ label = 'Back', ...props }: Readonly<QuickButtonProps>) {
   return (
     <StyledButton styleType="secondaryOutline" icon={ArrowLeft} {...props}>
       {label}
@@ -140,7 +140,7 @@ export function BackButton({ label = 'Back', ...props }: QuickButtonProps) {
 }
 
 /** Danger Delete button */
-export function DeleteButton({ label = 'Delete', ...props }: QuickButtonProps) {
+export function DeleteButton({ label = 'Delete', ...props }: Readonly<QuickButtonProps>) {
   return (
     <StyledButton styleType="danger" icon={Trash2} {...props}>
       {label}
@@ -149,7 +149,7 @@ export function DeleteButton({ label = 'Delete', ...props }: QuickButtonProps) {
 }
 
 /** Edit button */
-export function EditButton({ label = 'Edit', ...props }: QuickButtonProps) {
+export function EditButton({ label = 'Edit', ...props }: Readonly<QuickButtonProps>) {
   return (
     <StyledButton styleType="info" icon={Edit} {...props}>
       {label}
@@ -158,7 +158,7 @@ export function EditButton({ label = 'Edit', ...props }: QuickButtonProps) {
 }
 
 /** View button */
-export function ViewButton({ label = 'View', ...props }: QuickButtonProps) {
+export function ViewButton({ label = 'View', ...props }: Readonly<QuickButtonProps>) {
   return (
     <StyledButton styleType="secondaryOutline" icon={Eye} {...props}>
       {label}
@@ -167,7 +167,7 @@ export function ViewButton({ label = 'View', ...props }: QuickButtonProps) {
 }
 
 /** Confirm button */
-export function ConfirmButton({ label = 'Confirm', ...props }: QuickButtonProps) {
+export function ConfirmButton({ label = 'Confirm', ...props }: Readonly<QuickButtonProps>) {
   return (
     <StyledButton styleType="success" icon={Check} {...props}>
       {label}
@@ -176,7 +176,7 @@ export function ConfirmButton({ label = 'Confirm', ...props }: QuickButtonProps)
 }
 
 /** Download button */
-export function DownloadButton({ label = 'Download', ...props }: QuickButtonProps) {
+export function DownloadButton({ label = 'Download', ...props }: Readonly<QuickButtonProps>) {
   return (
     <StyledButton styleType="info" icon={Download} {...props}>
       {label}
@@ -185,7 +185,7 @@ export function DownloadButton({ label = 'Download', ...props }: QuickButtonProp
 }
 
 /** Upload button */
-export function UploadButton({ label = 'Upload', ...props }: QuickButtonProps) {
+export function UploadButton({ label = 'Upload', ...props }: Readonly<QuickButtonProps>) {
   return (
     <StyledButton styleType="info" icon={Upload} {...props}>
       {label}
@@ -194,7 +194,7 @@ export function UploadButton({ label = 'Upload', ...props }: QuickButtonProps) {
 }
 
 /** Refresh button */
-export function RefreshButton({ label = 'Refresh', ...props }: QuickButtonProps) {
+export function RefreshButton({ label = 'Refresh', ...props }: Readonly<QuickButtonProps>) {
   return (
     <StyledButton styleType="secondary" icon={RefreshCw} {...props}>
       {label}
@@ -213,13 +213,14 @@ interface IconButtonProps extends Omit<ButtonProps, 'children'> {
   'aria-label': string;
 }
 
-export function IconButton({ icon: Icon, styleType = 'ghost', className, ...props }: IconButtonProps) {
+export function IconButton({
+  icon: Icon,
+  styleType = 'ghost',
+  className,
+  ...props
+}: Readonly<IconButtonProps>) {
   return (
-    <Button
-      size="icon"
-      className={cn('h-9 w-9', BUTTON_STYLES[styleType], className)}
-      {...props}
-    >
+    <Button size="icon" className={cn('h-9 w-9', BUTTON_STYLES[styleType], className)} {...props}>
       <Icon className="h-4 w-4" />
     </Button>
   );
@@ -236,7 +237,7 @@ interface ButtonGroupProps {
   align?: 'left' | 'center' | 'right';
 }
 
-export function ButtonGroup({ children, className, align = 'left' }: ButtonGroupProps) {
+export function ButtonGroup({ children, className, align = 'left' }: Readonly<ButtonGroupProps>) {
   const alignClass = {
     left: 'justify-start',
     center: 'justify-center',

@@ -348,6 +348,12 @@ export default function HomeworkSubmissionsPage() {
   const stats = submissionsData?.stats;
   const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
 
+  const hasActiveFilter = searchQuery || statusFilter !== 'all';
+  const emptyStateTitle = hasActiveFilter ? 'No Matching Submissions' : 'No Submissions Yet';
+  const emptyStateDescription = hasActiveFilter
+    ? 'Try adjusting your search or filter criteria.'
+    : "Students haven't submitted their homework yet.";
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -443,13 +449,14 @@ export default function HomeworkSubmissionsPage() {
               Select Homework to View Submissions
             </label>
 
-            {isLoadingHomework ? (
+            {isLoadingHomework && (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {[1, 2, 3].map((i) => (
                   <Skeleton key={i} className="h-32 w-full rounded-lg" />
                 ))}
               </div>
-            ) : homeworkList.length === 0 ? (
+            )}
+            {!isLoadingHomework && homeworkList.length === 0 && (
               <div className="rounded-lg border-2 border-dashed p-8 text-center">
                 <BookOpen className="mx-auto h-10 w-10 text-slate-300" />
                 <p className="mt-2 text-sm text-slate-500">
@@ -457,7 +464,8 @@ export default function HomeworkSubmissionsPage() {
                   {format(selectedDate, 'MMM d, yyyy')}
                 </p>
               </div>
-            ) : (
+            )}
+            {!isLoadingHomework && homeworkList.length > 0 && (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {homeworkList.map((homework) => (
                   <HomeworkSelectCard
@@ -553,26 +561,17 @@ export default function HomeworkSubmissionsPage() {
               </div>
             </CardHeader>
             <CardContent>
-              {isLoadingSubmissions ? (
+              {isLoadingSubmissions && (
                 <div className="space-y-3">
                   {[1, 2, 3, 4, 5].map((i) => (
                     <Skeleton key={i} className="h-16 w-full rounded-lg" />
                   ))}
                 </div>
-              ) : filteredSubmissions.length === 0 ? (
-                <EmptyState
-                  title={
-                    searchQuery || statusFilter !== 'all'
-                      ? 'No Matching Submissions'
-                      : 'No Submissions Yet'
-                  }
-                  description={
-                    searchQuery || statusFilter !== 'all'
-                      ? 'Try adjusting your search or filter criteria.'
-                      : "Students haven't submitted their homework yet."
-                  }
-                />
-              ) : (
+              )}
+              {!isLoadingSubmissions && filteredSubmissions.length === 0 && (
+                <EmptyState title={emptyStateTitle} description={emptyStateDescription} />
+              )}
+              {!isLoadingSubmissions && filteredSubmissions.length > 0 && (
                 <SubmissionTable
                   submissions={filteredSubmissions}
                   homeworkId={selectedHomeworkId}

@@ -350,8 +350,8 @@ export default function HomePage() {
                   label: 'Institutions',
                   gradient: 'from-teal-500 to-blue-500',
                 },
-              ].map((stat, i) => (
-                <div key={i} className="space-y-1">
+              ].map((stat) => (
+                <div key={stat.label} className="space-y-1">
                   <div
                     className={`bg-gradient-to-r ${stat.gradient} bg-clip-text text-3xl font-bold text-transparent lg:text-4xl`}
                   >
@@ -418,11 +418,11 @@ export default function HomePage() {
           </AnimatedSection>
 
           <StaggerContainer className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {features.map((feature, index) => {
+            {features.map((feature) => {
               const Icon = feature.icon;
               return (
                 <motion.div
-                  key={index}
+                  key={feature.title}
                   variants={staggerItem}
                   whileHover={{ y: -8, scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -488,9 +488,9 @@ export default function HomePage() {
               </AnimatedSection>
 
               <StaggerContainer className="space-y-4">
-                {highlights.map((item, i) => (
+                {highlights.map((item) => (
                   <motion.div
-                    key={i}
+                    key={item}
                     variants={staggerItem}
                     whileHover={{ x: 8 }}
                     className="flex items-start gap-3 rounded-lg bg-gradient-to-r from-emerald-50 to-transparent p-3 transition-colors hover:from-emerald-100"
@@ -523,8 +523,8 @@ export default function HomePage() {
           <AnimatedSection delay={0.2}>
             <Carousel opts={{ align: 'start', loop: true }} className="w-full">
               <CarouselContent>
-                {testimonials.map((testimonial, index) => (
-                  <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                {testimonials.map((testimonial) => (
+                  <CarouselItem key={testimonial.name} className="md:basis-1/2 lg:basis-1/3">
                     <motion.div
                       className="p-2"
                       whileHover={{ y: -4, scale: 1.02 }}
@@ -559,7 +559,10 @@ export default function HomePage() {
                         <CardContent className="space-y-3">
                           <div className="flex gap-0.5">
                             {Array.from({ length: testimonial.rating }).map((_, i) => (
-                              <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                              <Star
+                                key={`star-${i}`}
+                                className="h-3 w-3 fill-yellow-400 text-yellow-400"
+                              />
                             ))}
                           </div>
                           <p className="text-muted-foreground text-sm leading-relaxed">

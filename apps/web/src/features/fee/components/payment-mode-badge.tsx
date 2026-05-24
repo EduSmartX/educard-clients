@@ -32,7 +32,11 @@ const ModeIcons: Record<PaymentModeType, React.ReactNode> = {
   [PaymentMode.ONLINE]: <Globe className="h-3 w-3" />,
 };
 
-export function PaymentModeBadge({ mode, className, showIcon = true }: PaymentModeBadgeProps) {
+export function PaymentModeBadge({
+  mode,
+  className,
+  showIcon = true,
+}: Readonly<PaymentModeBadgeProps>) {
   return (
     <Badge
       variant="outline"

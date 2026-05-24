@@ -113,7 +113,7 @@ export function FeeComponentsEditor({
           {components.map(([name, amount]) => (
             <div key={name} className="flex items-center gap-2 rounded-md border p-2">
               <span className="flex-1 text-sm font-medium capitalize">
-                {name.replace(/_/g, ' ')}
+                {name.replaceAll('_', ' ')}
               </span>
               <div className="flex items-center gap-2">
                 <SearchableSelect
@@ -205,8 +205,8 @@ export function FeeComponentsEditor({
         {/* Errors */}
         {errors && errors.length > 0 && (
           <div className="text-destructive text-sm">
-            {errors.map((error, idx) => (
-              <p key={idx}>{error}</p>
+            {errors.map((error) => (
+              <p key={error}>{error}</p>
             ))}
           </div>
         )}
@@ -229,7 +229,10 @@ interface FeeComponentsDisplayProps {
   className?: string;
 }
 
-export function FeeComponentsDisplay({ components, className }: FeeComponentsDisplayProps) {
+export function FeeComponentsDisplay({
+  components,
+  className,
+}: Readonly<FeeComponentsDisplayProps>) {
   const entries = Object.entries(components || {});
   const totalAmount = entries.reduce((sum, [, amount]) => sum + amount, 0);
 
@@ -243,7 +246,7 @@ export function FeeComponentsDisplay({ components, className }: FeeComponentsDis
     <div className={cn('space-y-2', className)}>
       {entries.map(([name, amount]) => (
         <div key={name} className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground capitalize">{name.replace(/_/g, ' ')}</span>
+          <span className="text-muted-foreground capitalize">{name.replaceAll('_', ' ')}</span>
           <FeeAmount amount={amount} />
         </div>
       ))}

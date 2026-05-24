@@ -17,7 +17,12 @@ interface DashboardLayoutProps {
  * DashboardLayout - Provides sidebar navigation for dashboard pages
  * Note: Header is rendered once in ProtectedLayout, not here
  */
-export function DashboardLayout({ children, sidebarSections, userRole, isSupervisor = false }: DashboardLayoutProps) {
+export function DashboardLayout({
+  children,
+  sidebarSections,
+  userRole,
+  isSupervisor = false,
+}: Readonly<DashboardLayoutProps>) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const theme = getThemeConfig(userRole);
 
@@ -26,24 +31,17 @@ export function DashboardLayout({ children, sidebarSections, userRole, isSupervi
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-sm lg:hidden transition-opacity"
+          className="fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-sm transition-opacity lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar - Responsive */}
       <aside
-        className={`
-          fixed lg:static inset-y-0 left-0 z-50
-          w-64 bg-white border-r border-slate-100 shadow-soft
-          transform transition-transform duration-300 ease-in-out
-          lg:transform-none
-          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-          overflow-y-auto mt-[64px] sm:mt-[72px] lg:mt-0
-        `}
+        className={`shadow-soft fixed inset-y-0 left-0 z-50 w-64 transform border-r border-slate-100 bg-white transition-transform duration-300 ease-in-out lg:static lg:transform-none ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} mt-[64px] overflow-y-auto sm:mt-[72px] lg:mt-0`}
       >
-        <DashboardSidebar 
-          sections={sidebarSections} 
+        <DashboardSidebar
+          sections={sidebarSections}
           onNavigate={() => setIsSidebarOpen(false)}
           userRole={userRole}
           isSupervisor={isSupervisor}
@@ -55,7 +53,7 @@ export function DashboardLayout({ children, sidebarSections, userRole, isSupervi
         variant="ghost"
         size="icon"
         className={cn(
-          "fixed top-3 left-3 sm:top-4 sm:left-4 z-[60] text-white lg:hidden rounded-xl h-10 w-10",
+          'fixed top-3 left-3 z-[60] h-10 w-10 rounded-xl text-white sm:top-4 sm:left-4 lg:hidden',
           theme.mobileMenuBg,
           theme.mobileMenuHover,
           theme.mobileMenuShadow
@@ -70,9 +68,7 @@ export function DashboardLayout({ children, sidebarSections, userRole, isSupervi
       </Button>
 
       {/* Main Content - Responsive padding */}
-      <main className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-        {children}
-      </main>
+      <main className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">{children}</main>
     </div>
   );
 }

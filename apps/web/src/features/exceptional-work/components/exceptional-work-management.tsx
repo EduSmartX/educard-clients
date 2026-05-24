@@ -338,7 +338,7 @@ export function ExceptionalWorkManagement() {
               {Object.entries(filters).map(([key, value]) => (
                 <Badge key={key} variant="secondary" className="gap-1">
                   <span className="capitalize">
-                    {key.replace(/_/g, ' ')}: {value}
+                    {key.replaceAll('_', ' ')}: {value}
                   </span>
                   <button
                     type="button"

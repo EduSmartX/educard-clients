@@ -95,10 +95,10 @@ export function FormMultiSelect({
       {/* Selected chips */}
       {selectedLabels.length > 0 && (
         <View style={styles.chipsRow}>
-          {selectedLabels.map((lbl, idx) => {
+          {selectedLabels.map((lbl) => {
             const opt = options.find((o) => o.label === lbl);
             return (
-              <View key={idx} style={styles.chip}>
+              <View key={lbl} style={styles.chip}>
                 <Text style={styles.chipText} numberOfLines={1}>
                   {lbl}
                 </Text>

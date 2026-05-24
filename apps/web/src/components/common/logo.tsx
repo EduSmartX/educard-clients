@@ -6,7 +6,7 @@ interface LogoProps {
   className?: string;
 }
 
-export function Logo({ size = 'md', showText = true, className = '' }: LogoProps) {
+export function Logo({ size = 'md', showText = true, className = '' }: Readonly<LogoProps>) {
   const sizeClasses = {
     sm: {
       img: 'h-8 w-8',
@@ -26,7 +26,7 @@ export function Logo({ size = 'md', showText = true, className = '' }: LogoProps
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      <div className="h-10 w-10 rounded-lg bg-indigo-600 flex items-center justify-center shadow-sm">
+      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600 shadow-sm">
         <svg
           width="32"
           height="32"
