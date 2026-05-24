@@ -1,6 +1,6 @@
 /**
  * LRU Image Cache for Student Profile Photos
- * 
+ *
  * Features:
  * - LRU (Least Recently Used) eviction policy
  * - Configurable max size
@@ -17,10 +17,10 @@ interface CacheEntry {
 }
 
 class ImageCache {
-  private cache: Map<string, CacheEntry>;
-  private maxSize: number;
+  private readonly cache: Map<string, CacheEntry>;
+  private readonly maxSize: number;
   private currentSize: number;
-  private maxEntries: number;
+  private readonly maxEntries: number;
 
   constructor(maxSizeMB: number = 50, maxEntries: number = 200) {
     this.cache = new Map();
@@ -62,8 +62,7 @@ class ImageCache {
 
     // Evict if needed
     while (
-      (this.currentSize + blob.size > this.maxSize || 
-       this.cache.size >= this.maxEntries) && 
+      (this.currentSize + blob.size > this.maxSize || this.cache.size >= this.maxEntries) &&
       this.cache.size > 0
     ) {
       this.evictLRU();
@@ -101,21 +100,21 @@ class ImageCache {
    */
   invalidateByPattern(pattern: string): void {
     const keysToDelete: string[] = [];
-    
+
     this.cache.forEach((_, key) => {
       if (key.includes(pattern)) {
         keysToDelete.push(key);
       }
     });
 
-    keysToDelete.forEach(key => this.invalidate(key));
+    keysToDelete.forEach((key) => this.invalidate(key));
   }
 
   /**
    * Clear entire cache
    */
   clear(): void {
-    this.cache.forEach(entry => {
+    this.cache.forEach((entry) => {
       URL.revokeObjectURL(entry.blobUrl);
     });
     this.cache.clear();
@@ -168,10 +167,12 @@ export async function getCachedImageUrl(originalUrl: string): Promise<string> {
 
   // Skip fetch-based caching for signed URLs (GCS, S3, etc.) due to CORS
   // These URLs already have authentication built in
-  if (originalUrl.includes('X-Goog-Signature') || 
-      originalUrl.includes('X-Amz-Signature') ||
-      originalUrl.includes('storage.googleapis.com') ||
-      originalUrl.includes('s3.amazonaws.com')) {
+  if (
+    originalUrl.includes('X-Goog-Signature') ||
+    originalUrl.includes('X-Amz-Signature') ||
+    originalUrl.includes('storage.googleapis.com') ||
+    originalUrl.includes('s3.amazonaws.com')
+  ) {
     return originalUrl;
   }
 
@@ -183,11 +184,11 @@ export async function getCachedImageUrl(originalUrl: string): Promise<string> {
 
   try {
     // Fetch and cache
-    const response = await fetch(originalUrl, { 
+    const response = await fetch(originalUrl, {
       mode: 'cors',
-      credentials: 'omit' 
+      credentials: 'omit',
     });
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch image: ${response.status}`);
     }
@@ -204,12 +205,10 @@ export async function getCachedImageUrl(originalUrl: string): Promise<string> {
  * Preload multiple images into cache
  */
 export async function preloadImages(urls: string[]): Promise<void> {
-  const uncachedUrls = urls.filter(url => url && !imageCache.has(url));
-  
+  const uncachedUrls = urls.filter((url) => url && !imageCache.has(url));
+
   // Load in parallel, but don't fail if some images fail
-  await Promise.allSettled(
-    uncachedUrls.map(url => getCachedImageUrl(url))
-  );
+  await Promise.allSettled(uncachedUrls.map((url) => getCachedImageUrl(url)));
 }
 
 /**

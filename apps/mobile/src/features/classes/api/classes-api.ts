@@ -6,7 +6,6 @@
  * - Teacher: Read-only access via /classes/employee/ endpoints
  */
 
-// import { API_ENDPOINTS } from '@educard/shared'; // unused - keeping for future reference
 import type {
   Class,
   ClassDetail,

@@ -151,11 +151,10 @@ export function calculateEffectivePeriod(
   }
 
   const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
-  const parsedEndDate = endDate
-    ? typeof endDate === 'string'
-      ? new Date(endDate)
-      : endDate
-    : null;
+  let parsedEndDate: Date | null = null;
+  if (endDate) {
+    parsedEndDate = typeof endDate === 'string' ? new Date(endDate) : endDate;
+  }
   const end = parsedEndDate ?? new Date();
 
   const diffTime = end.getTime() - start.getTime();

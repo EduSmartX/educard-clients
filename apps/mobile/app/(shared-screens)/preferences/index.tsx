@@ -72,6 +72,31 @@ const SATURDAY_OPTIONS: { label: string; value: SaturdayOffPattern }[] = [
 const getSaturdayLabel = (val: SaturdayOffPattern) =>
   SATURDAY_OPTIONS.find((o) => o.value === val)?.label ?? val;
 
+/** Build WDP create payload - extracted to reduce component complexity */
+function buildWdpCreatePayload(field: string, value: boolean | SaturdayOffPattern) {
+  const today = new Date().toISOString().split('T')[0];
+  return {
+    sunday_off: field === 'sunday_off' ? (value as boolean) : true,
+    saturday_off_pattern:
+      field === 'saturday_off_pattern'
+        ? (value as SaturdayOffPattern)
+        : ('SECOND_AND_FOURTH' as SaturdayOffPattern),
+    effective_from: field === 'effective_from' ? (value as string) : today,
+  };
+}
+
+/** Determine which render function to use for a preference */
+function getPreferenceRenderer(
+  pref: OrganizationPreference
+): 'radio' | 'choicePills' | 'choice' | 'multi' | 'text' {
+  if (pref.field_type === 'radio') return 'radio';
+  if (pref.field_type === 'choice' && pref.applicable_values) {
+    return pref.applicable_values.length === 2 ? 'choicePills' : 'choice';
+  }
+  if (pref.field_type === 'multi-choice') return 'multi';
+  return 'text';
+}
+
 export default function OrgPreferencesScreen() {
   const router = useRouter();
   const { showToast } = useToast();
@@ -110,8 +135,11 @@ export default function OrgPreferencesScreen() {
   const toggleCategory = (category: string) => {
     setExpandedCategories((prev) => {
       const next = new Set(prev);
-      if (next.has(category)) next.delete(category);
-      else next.add(category);
+      if (next.has(category)) {
+        next.delete(category);
+      } else {
+        next.add(category);
+      }
       return next;
     });
   };
@@ -150,16 +178,7 @@ export default function OrgPreferencesScreen() {
           data: { [field]: value },
         });
       } else {
-        const today = new Date().toISOString().split('T')[0];
-        const defaultSundayOff = field === 'sunday_off' ? (value as boolean) : true;
-        const defaultSatPattern =
-          field === 'saturday_off_pattern' ? (value as SaturdayOffPattern) : 'SECOND_AND_FOURTH';
-        const defaultEffectiveFrom = field === 'effective_from' ? (value as string) : today;
-        await createWdpMutation.mutateAsync({
-          sunday_off: defaultSundayOff,
-          saturday_off_pattern: defaultSatPattern,
-          effective_from: defaultEffectiveFrom,
-        });
+        await createWdpMutation.mutateAsync(buildWdpCreatePayload(field, value));
       }
     } catch (e: unknown) {
       showToast({
@@ -429,13 +448,14 @@ export default function OrgPreferencesScreen() {
 
   // ── Render a single preference based on type ──
   const renderPreference = (pref: OrganizationPreference) => {
-    if (pref.field_type === 'radio') return renderRadioPills(pref);
-    if (pref.field_type === 'choice' && pref.applicable_values) {
-      if (pref.applicable_values.length === 2) return renderChoicePills(pref);
-      return renderChoice(pref);
-    }
-    if (pref.field_type === 'multi-choice') return renderMultiChoice(pref);
-    return renderTextInput(pref);
+    const rendererMap = {
+      radio: renderRadioPills,
+      choicePills: renderChoicePills,
+      choice: renderChoice,
+      multi: renderMultiChoice,
+      text: renderTextInput,
+    } as const;
+    return rendererMap[getPreferenceRenderer(pref)](pref);
   };
 
   return (

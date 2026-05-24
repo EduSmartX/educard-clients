@@ -1,6 +1,6 @@
 /**
- * ExamFormFields - The form fields section of the exam form
- * Extracted to reduce cognitive complexity of ExamFormPage
+ * Exam form field sub-components
+ * Extracted to reduce cognitive complexity of ExamFormFields
  */
 
 import { format } from 'date-fns';
@@ -13,58 +13,26 @@ import {
   EXAM_STATUS_OPTIONS,
   EXAM_STATUS_LABELS,
   type ExamStatus,
-  type Exam,
   type ExamSession,
   type Class,
   type SubjectItem,
+  type Exam,
 } from '@educard/shared';
 
-interface ExamFormFieldsProps {
+// --- Session Field ---
+
+interface SessionFieldProps {
   isView: boolean;
   isEdit: boolean;
   existingExam: Exam | undefined;
   sessionId: string;
   setSessionId: (v: string) => void;
-  classId: string;
-  setClassId: (v: string) => void;
-  subjectId: string;
-  setSubjectId: (v: string) => void;
-  status: ExamStatus | '';
-  setStatus: (v: ExamStatus | '') => void;
-  maxMarks: string;
-  setMaxMarks: (v: string) => void;
-  passingMarks: string;
-  setPassingMarks: (v: string) => void;
-  examDate: Date | null;
-  onExamDateChange: (d: Date | null) => void;
-  startTime: string;
-  setStartTime: (v: string) => void;
-  endTime: string;
-  setEndTime: (v: string) => void;
   sessionsList: ExamSession[];
-  classesList: Class[];
-  subjectsList: SubjectItem[];
   selectedSession: ExamSession | undefined;
-  selectedSubject: SubjectItem | undefined;
-  checkDuplicateExam: Exam | null | undefined;
   fieldErrors: Record<string, string>;
-  dateError: string | undefined;
 }
 
-export function ExamFormFields(props: ExamFormFieldsProps) {
-  return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      <SessionField {...props} />
-      <ClassField {...props} />
-      <SubjectField {...props} />
-      <StatusField {...props} />
-      <MarksFields {...props} />
-      <DateTimeFields {...props} />
-    </div>
-  );
-}
-
-function SessionField({
+export function SessionField({
   isView,
   isEdit,
   existingExam,
@@ -73,7 +41,7 @@ function SessionField({
   sessionsList,
   selectedSession,
   fieldErrors,
-}: ExamFormFieldsProps) {
+}: SessionFieldProps) {
   return (
     <div className="space-y-2">
       <Label htmlFor="session_id">
@@ -111,7 +79,20 @@ function SessionField({
   );
 }
 
-function ClassField({
+// --- Class Field ---
+
+interface ClassFieldProps {
+  isView: boolean;
+  isEdit: boolean;
+  existingExam: Exam | undefined;
+  classId: string;
+  setClassId: (v: string) => void;
+  setSubjectId: (v: string) => void;
+  classesList: Class[];
+  fieldErrors: Record<string, string>;
+}
+
+export function ClassField({
   isView,
   isEdit,
   existingExam,
@@ -120,7 +101,7 @@ function ClassField({
   setSubjectId,
   classesList,
   fieldErrors,
-}: ExamFormFieldsProps) {
+}: ClassFieldProps) {
   return (
     <div className="space-y-2">
       <Label htmlFor="class_id">
@@ -151,7 +132,22 @@ function ClassField({
   );
 }
 
-function SubjectField({
+// --- Subject Field ---
+
+interface SubjectFieldProps {
+  isView: boolean;
+  isEdit: boolean;
+  existingExam: Exam | undefined;
+  classId: string;
+  subjectId: string;
+  setSubjectId: (v: string) => void;
+  subjectsList: SubjectItem[];
+  selectedSubject: SubjectItem | undefined;
+  checkDuplicateExam: Exam | null | undefined;
+  fieldErrors: Record<string, string>;
+}
+
+export function SubjectField({
   isView,
   isEdit,
   existingExam,
@@ -162,7 +158,7 @@ function SubjectField({
   selectedSubject,
   checkDuplicateExam,
   fieldErrors,
-}: ExamFormFieldsProps) {
+}: SubjectFieldProps) {
   return (
     <div className="space-y-2">
       <Label htmlFor="subject_id">
@@ -175,7 +171,7 @@ function SubjectField({
           key={`subject-${subjectId || 'empty'}`}
           options={subjectsList.map((subject) => ({
             value: subject.public_id,
-            label: subject.subject_info.name,
+            label: subject.subject_info?.name ?? subject.name,
           }))}
           value={subjectId}
           onValueChange={setSubjectId}
@@ -196,13 +192,22 @@ function SubjectField({
         </div>
       )}
       {!isView && selectedSubject && !checkDuplicateExam && (
-        <p className="text-xs text-gray-500">Class: {selectedSubject.class_info.name}</p>
+        <p className="text-xs text-gray-500">Class: {selectedSubject.class_info?.name}</p>
       )}
     </div>
   );
 }
 
-function StatusField({ isView, status, setStatus, fieldErrors }: ExamFormFieldsProps) {
+// --- Status Field ---
+
+interface StatusFieldProps {
+  isView: boolean;
+  status: ExamStatus | '';
+  setStatus: (v: ExamStatus | '') => void;
+  fieldErrors: Record<string, string>;
+}
+
+export function StatusField({ isView, status, setStatus, fieldErrors }: StatusFieldProps) {
   return (
     <div className="space-y-2">
       <Label htmlFor="status">
@@ -232,90 +237,39 @@ function StatusField({ isView, status, setStatus, fieldErrors }: ExamFormFieldsP
   );
 }
 
-function MarksFields({
-  isView,
-  maxMarks,
-  setMaxMarks,
-  passingMarks,
-  setPassingMarks,
-}: ExamFormFieldsProps) {
-  return (
-    <>
-      <div className="space-y-2">
-        <Label htmlFor="max_marks">Maximum Marks</Label>
-        <Input
-          id="max_marks"
-          type="number"
-          min="1"
-          value={maxMarks}
-          onChange={(e) => setMaxMarks(e.target.value)}
-          disabled={isView}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="passing_marks">Passing Marks</Label>
-        <Input
-          id="passing_marks"
-          type="number"
-          min="0"
-          value={passingMarks}
-          onChange={(e) => setPassingMarks(e.target.value)}
-          disabled={isView}
-        />
-      </div>
-    </>
-  );
+// --- Date Field ---
+
+interface ExamDateFieldProps {
+  isView: boolean;
+  examDate: Date | null;
+  onExamDateChange: (d: Date | null) => void;
+  dateError: string | undefined;
+  fieldErrors: Record<string, string>;
 }
 
-function DateTimeFields({
+export function ExamDateField({
   isView,
   examDate,
   onExamDateChange,
-  startTime,
-  setStartTime,
-  endTime,
-  setEndTime,
-  fieldErrors,
   dateError,
-}: ExamFormFieldsProps) {
+  fieldErrors,
+}: ExamDateFieldProps) {
   return (
-    <>
-      <div className="space-y-2">
-        <Label htmlFor="exam_date">Exam Date</Label>
-        <DatePicker
-          value={examDate}
-          onChange={onExamDateChange}
-          placeholder="Select exam date"
-          disabled={isView}
-          className={dateError ? 'border-red-500' : ''}
-        />
-        {(dateError || fieldErrors.date) && (
-          <div className="flex items-center gap-1 text-xs text-red-500">
-            <AlertTriangle className="h-3 w-3" />
-            <span>{dateError || fieldErrors.date}</span>
-          </div>
-        )}
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="start_time">Start Time</Label>
-        <Input
-          id="start_time"
-          type="time"
-          value={startTime}
-          onChange={(e) => setStartTime(e.target.value)}
-          disabled={isView}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="end_time">End Time</Label>
-        <Input
-          id="end_time"
-          type="time"
-          value={endTime}
-          onChange={(e) => setEndTime(e.target.value)}
-          disabled={isView}
-        />
-      </div>
-    </>
+    <div className="space-y-2">
+      <Label htmlFor="exam_date">Exam Date</Label>
+      <DatePicker
+        value={examDate}
+        onChange={onExamDateChange}
+        placeholder="Select exam date"
+        disabled={isView}
+        className={dateError ? 'border-red-500' : ''}
+      />
+      {(dateError || fieldErrors.date) && (
+        <div className="flex items-center gap-1 text-xs text-red-500">
+          <AlertTriangle className="h-3 w-3" />
+          <span>{dateError || fieldErrors.date}</span>
+        </div>
+      )}
+    </div>
   );
 }

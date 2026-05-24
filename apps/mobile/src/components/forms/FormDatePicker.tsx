@@ -253,8 +253,8 @@ export function FormDatePicker({
 
                 {/* Weekday headers */}
                 <View style={styles.weekRow}>
-                  {WEEKDAYS.map((d, i) => (
-                    <Text key={`weekday-${i}`} style={styles.weekDay}>
+                  {WEEKDAYS.map((d) => (
+                    <Text key={d} style={styles.weekDay}>
                       {d}
                     </Text>
                   ))}

@@ -9,7 +9,6 @@
  * The backend returns `can_manage` field indicating whether the user can edit/delete
  */
 
-// import { API_ENDPOINTS } from '@educard/shared'; // unused - keeping for future reference
 import type {
   Subject,
   ApiListResponse,

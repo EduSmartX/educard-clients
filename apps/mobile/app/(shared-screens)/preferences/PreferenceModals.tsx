@@ -93,6 +93,10 @@ export function MultiSelectModal({
   if (!pref) return null;
   const options = pref.applicable_values ?? [];
 
+  const handleToggle = (val: string) => {
+    setValues((prev) => (prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val]));
+  };
+
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.modalOverlay} onPress={onClose}>
@@ -105,11 +109,7 @@ export function MultiSelectModal({
                 key={val}
                 val={val}
                 isSelected={values.includes(val)}
-                onToggle={() =>
-                  setValues((prev) =>
-                    prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val]
-                  )
-                }
+                onToggle={handleToggle}
               />
             ))}
           </ScrollView>
@@ -135,12 +135,12 @@ function MultiSelectOption({
 }: {
   val: string;
   isSelected: boolean;
-  onToggle: () => void;
+  onToggle: (val: string) => void;
 }) {
   return (
     <TouchableOpacity
       style={[styles.modalOption, isSelected && styles.modalOptionSelected]}
-      onPress={onToggle}
+      onPress={() => onToggle(val)}
     >
       <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
         {isSelected && <Check size={12} color="#fff" />}

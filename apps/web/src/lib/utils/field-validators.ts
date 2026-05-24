@@ -114,7 +114,7 @@ export function validateName(value: string, fieldName: string = 'Name'): Validat
   }
 
   // Allow letters, spaces, hyphens, apostrophes, and common international characters
-  const nameRegex = /^[a-zA-Z\s'-\u00C0-\u017F]+$/;
+  const nameRegex = /^[a-zA-Z\s'\u00C0-\u017F-]+$/;
   if (!nameRegex.test(value)) {
     return {
       isValid: false,
