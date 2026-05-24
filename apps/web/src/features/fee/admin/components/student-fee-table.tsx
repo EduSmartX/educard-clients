@@ -23,6 +23,153 @@ interface StudentFeeTableProps {
   onPageSizeChange?: (pageSize: number) => void;
 }
 
+// Cell renderers extracted outside parent component
+function StudentInfoCell({ row }: Readonly<{ row: StudentFee }>) {
+  return (
+    <div>
+      <div className="font-medium">{row.student_name}</div>
+      <div className="text-muted-foreground text-sm">{row.student_roll_number || '-'}</div>
+    </div>
+  );
+}
+
+function FeeStructureCell({ row }: Readonly<{ row: StudentFee }>) {
+  return (
+    <div>
+      <div className="font-medium">{row.fee_structure_name}</div>
+      {!!row.academic_year && (
+        <div className="text-muted-foreground text-sm">{row.academic_year}</div>
+      )}
+    </div>
+  );
+}
+
+function BalanceCell({ row }: Readonly<{ row: StudentFee }>) {
+  if (row.status === FeeStatus.REFUNDING || row.status === FeeStatus.REFUNDED) {
+    return <FeeAmount amount={-row.amount_paid} colorCode={true} />;
+  }
+  return <FeeAmount amount={row.balance_due} colorCode={true} />;
+}
+
+function ProgressCell({ row }: Readonly<{ row: StudentFee }>) {
+  return (
+    <div className="w-28">
+      <FeeProgress
+        amountPaid={row.amount_paid}
+        totalAmount={row.final_amount}
+        paidPercentage={row.paid_percentage ?? 0}
+        showLabels={false}
+      />
+    </div>
+  );
+}
+
+interface StudentFeeActionsCellProps {
+  row: StudentFee;
+  onNavigate: (path: string) => void;
+  onSendReminder?: (studentFee: StudentFee) => void;
+}
+
+function StudentFeeActionsCell({
+  row,
+  onNavigate,
+  onSendReminder,
+}: Readonly<StudentFeeActionsCellProps>) {
+  const isRefund = row.status === FeeStatus.OVERPAID || row.status === FeeStatus.REFUNDING;
+  const canRecordPayment = row.status === FeeStatus.PENDING || row.status === FeeStatus.PARTIAL;
+  const canSendReminder = !(
+    [FeeStatus.PAID, FeeStatus.OVERPAID, FeeStatus.REFUNDING, FeeStatus.REFUNDED] as FeeStatusType[]
+  ).includes(row.status);
+
+  return (
+    <div className="flex items-center gap-1">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+              onClick={(e) => {
+                e.stopPropagation();
+                onNavigate(`/fees/students/${row.public_id}`);
+              }}
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>View Details</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      {isRefund && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onNavigate(
+                    `${ROUTES.FEES.PAYMENT_NEW_FOR_STUDENT.replace(':id', row.public_id)}?mode=refund`
+                  );
+                }}
+              >
+                <CreditCard className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Issue Refund</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+
+      {canRecordPayment && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-green-600 hover:bg-green-50 hover:text-green-700"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onNavigate(ROUTES.FEES.PAYMENT_NEW_FOR_STUDENT.replace(':id', row.public_id));
+                }}
+              >
+                <CreditCard className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Record Payment</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+
+      {canSendReminder && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-amber-600 hover:bg-amber-50 hover:text-amber-700"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSendReminder?.(row);
+                }}
+              >
+                <Bell className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Send Reminder</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+    </div>
+  );
+}
+
 export function StudentFeeTable({
   data,
   isLoading,
@@ -36,12 +183,7 @@ export function StudentFeeTable({
   const columns: Column<StudentFee>[] = [
     {
       header: 'Student',
-      accessor: (row) => (
-        <div>
-          <div className="font-medium">{row.student_name}</div>
-          <div className="text-muted-foreground text-sm">{row.student_roll_number || '-'}</div>
-        </div>
-      ),
+      accessor: (row) => <StudentInfoCell row={row} />,
       sortable: true,
       sortKey: 'student_name',
       width: 180,
@@ -53,14 +195,7 @@ export function StudentFeeTable({
     },
     {
       header: 'Fee Structure',
-      accessor: (row) => (
-        <div>
-          <div className="font-medium">{row.fee_structure_name}</div>
-          {!!row.academic_year && (
-            <div className="text-muted-foreground text-sm">{row.academic_year}</div>
-          )}
-        </div>
-      ),
+      accessor: (row) => <FeeStructureCell row={row} />,
       width: 160,
     },
     {
@@ -81,29 +216,14 @@ export function StudentFeeTable({
     },
     {
       header: 'Balance',
-      accessor: (row) => {
-        // For refunding/refunded, show refundable amount as negative
-        if (row.status === FeeStatus.REFUNDING || row.status === FeeStatus.REFUNDED) {
-          return <FeeAmount amount={-row.amount_paid} colorCode={true} />;
-        }
-        return <FeeAmount amount={row.balance_due} colorCode={true} />;
-      },
+      accessor: (row) => <BalanceCell row={row} />,
       className: 'text-right',
       headerClassName: 'text-right',
       width: 120,
     },
     {
       header: 'Progress',
-      accessor: (row) => (
-        <div className="w-28">
-          <FeeProgress
-            amountPaid={row.amount_paid}
-            totalAmount={row.final_amount}
-            paidPercentage={row.paid_percentage ?? 0}
-            showLabels={false}
-          />
-        </div>
-      ),
+      accessor: (row) => <ProgressCell row={row} />,
       width: 140,
     },
     {
@@ -129,107 +249,13 @@ export function StudentFeeTable({
     },
     {
       header: 'Actions',
-      accessor: (row) => {
-        const isRefund = row.status === FeeStatus.OVERPAID || row.status === FeeStatus.REFUNDING;
-        const canRecordPayment =
-          row.status === FeeStatus.PENDING || row.status === FeeStatus.PARTIAL;
-        const canSendReminder = !(
-          [
-            FeeStatus.PAID,
-            FeeStatus.OVERPAID,
-            FeeStatus.REFUNDING,
-            FeeStatus.REFUNDED,
-          ] as FeeStatusType[]
-        ).includes(row.status);
-
-        return (
-          <div className="flex items-center gap-1">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/fees/students/${row.public_id}`);
-                    }}
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>View Details</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            {isRefund && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(
-                          `${ROUTES.FEES.PAYMENT_NEW_FOR_STUDENT.replace(':id', row.public_id)}?mode=refund`
-                        );
-                      }}
-                    >
-                      <CreditCard className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Issue Refund</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-
-            {canRecordPayment && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-green-600 hover:bg-green-50 hover:text-green-700"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(ROUTES.FEES.PAYMENT_NEW_FOR_STUDENT.replace(':id', row.public_id));
-                      }}
-                    >
-                      <CreditCard className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Record Payment</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-
-            {canSendReminder && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-amber-600 hover:bg-amber-50 hover:text-amber-700"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onSendReminder?.(row);
-                      }}
-                    >
-                      <Bell className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Send Reminder</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-          </div>
-        );
-      },
+      accessor: (row) => (
+        <StudentFeeActionsCell
+          row={row}
+          onNavigate={(path) => navigate(path)}
+          onSendReminder={onSendReminder}
+        />
+      ),
       width: 130,
     },
   ];

@@ -20,6 +20,38 @@ interface DatePickerProps {
   containerClassName?: string;
 }
 
+const DatePickerInput = React.forwardRef<
+  HTMLButtonElement,
+  {
+    value?: string;
+    onClick?: () => void;
+    disabled?: boolean;
+    className?: string;
+    placeholder?: string;
+  }
+>(({ value, onClick, disabled, className, placeholder }, ref) => (
+  <Button
+    ref={ref}
+    type="button"
+    variant="outline"
+    onClick={onClick}
+    disabled={disabled}
+    className={cn(
+      'h-10 w-full justify-start border-gray-300 bg-gray-50 px-3 text-left font-normal',
+      'transition-colors hover:border-gray-400 hover:bg-white focus:bg-white',
+      'focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:outline-none',
+      !value && 'text-gray-400',
+      value && 'text-gray-900',
+      disabled && 'cursor-not-allowed opacity-50',
+      className
+    )}
+  >
+    <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0 text-gray-500" />
+    <span className="text-sm">{value || placeholder}</span>
+  </Button>
+));
+DatePickerInput.displayName = 'DatePickerInput';
+
 export function DatePicker({
   value,
   onChange,
@@ -30,42 +62,19 @@ export function DatePicker({
   className,
   containerClassName,
 }: DatePickerProps) {
-  const CustomInput = React.forwardRef<HTMLButtonElement, { value?: string; onClick?: () => void }>(
-    ({ value, onClick }, ref) => (
-      <Button
-        ref={ref}
-        type="button"
-        variant="outline"
-        onClick={onClick}
-        disabled={disabled}
-        className={cn(
-          'w-full h-10 px-3 justify-start text-left font-normal bg-gray-50 border-gray-300',
-          'hover:bg-white hover:border-gray-400 focus:bg-white transition-colors',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
-          !value && 'text-gray-400',
-          value && 'text-gray-900',
-          disabled && 'opacity-50 cursor-not-allowed',
-          className
-        )}
-      >
-        <CalendarIcon className="mr-2 h-4 w-4 text-gray-500 flex-shrink-0" />
-        <span className="text-sm">{value || placeholder}</span>
-      </Button>
-    )
-  );
-  CustomInput.displayName = 'CustomInput';
-
   return (
     <div
       className={cn(
-        'w-full [&_.react-datepicker-wrapper]:w-full [&_.react-datepicker__input-container]:w-full',
+        'w-full [&_.react-datepicker__input-container]:w-full [&_.react-datepicker-wrapper]:w-full',
         containerClassName
       )}
     >
       <ReactDatePicker
         selected={value}
         onChange={onChange}
-        customInput={<CustomInput />}
+        customInput={
+          <DatePickerInput disabled={disabled} className={className} placeholder={placeholder} />
+        }
         dateFormat="MMMM d, yyyy"
         minDate={minDate}
         maxDate={maxDate}

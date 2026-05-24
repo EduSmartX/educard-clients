@@ -203,7 +203,9 @@ export function ChangeCredentialScreenBase({ config }: Props) {
                 { backgroundColor: accentColor },
                 isSendingOtp && styles.buttonDisabled,
               ]}
-              onPress={() => void handleSendOtp()}
+              onPress={() => {
+                handleSendOtp();
+              }}
               disabled={isSendingOtp}
             >
               {isSendingOtp ? (
@@ -253,7 +255,12 @@ export function ChangeCredentialScreenBase({ config }: Props) {
                   {String(countdown % 60).padStart(2, '0')}
                 </Text>
               ) : (
-                <TouchableOpacity onPress={() => void handleSendOtp()} disabled={isSendingOtp}>
+                <TouchableOpacity
+                  onPress={() => {
+                    handleSendOtp();
+                  }}
+                  disabled={isSendingOtp}
+                >
                   <Text style={[styles.resendText, { color: accentColor }]}>Resend Code</Text>
                 </TouchableOpacity>
               )}
@@ -267,7 +274,9 @@ export function ChangeCredentialScreenBase({ config }: Props) {
                   { backgroundColor: accentColor },
                   isUpdating && styles.buttonDisabled,
                 ]}
-                onPress={() => void handleUpdate()}
+                onPress={() => {
+                  handleUpdate();
+                }}
                 disabled={isUpdating}
               >
                 {isUpdating ? (

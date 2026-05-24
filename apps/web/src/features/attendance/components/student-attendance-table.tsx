@@ -50,24 +50,17 @@ interface StudentAttendanceTableProps {
   onMarkAllAbsent?: () => void;
 }
 
-export function StudentAttendanceTable({
-  students,
-  period,
-  isViewMode,
-  onStudentChange,
-}: StudentAttendanceTableProps) {
-  const showMorning = period === 'morning' || period === 'full_day';
-  const showAfternoon = period === 'afternoon' || period === 'full_day';
-
-  const AttendanceToggle = ({
-    present,
-    disabled,
-    onChange,
-  }: {
-    present: boolean;
-    disabled: boolean;
-    onChange: (value: boolean) => void;
-  }) => (
+// Extracted outside parent component for S6478 compliance
+function AttendanceToggle({
+  present,
+  disabled,
+  onChange,
+}: Readonly<{
+  present: boolean;
+  disabled: boolean;
+  onChange: (value: boolean) => void;
+}>) {
+  return (
     <div className="flex justify-center gap-2">
       <Button
         type="button"
@@ -91,6 +84,16 @@ export function StudentAttendanceTable({
       </Button>
     </div>
   );
+}
+
+export function StudentAttendanceTable({
+  students,
+  period,
+  isViewMode,
+  onStudentChange,
+}: StudentAttendanceTableProps) {
+  const showMorning = period === 'morning' || period === 'full_day';
+  const showAfternoon = period === 'afternoon' || period === 'full_day';
 
   return (
     <div className="space-y-4">

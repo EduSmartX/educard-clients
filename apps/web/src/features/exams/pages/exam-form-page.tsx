@@ -215,18 +215,14 @@ export function ExamFormPage() {
       navigate(ROUTES.EXAMS_LIST);
     },
     onError: (_err, errors) => {
-      if (errors) {
-        setFieldErrors(errors as Record<string, string>);
-      }
+      setFieldErrors((errors as Record<string, string>) || {});
     },
   });
 
   const updateMutation = useUpdateExam({
     onSuccess: () => navigate(ROUTES.EXAMS_LIST),
     onError: (_err, errors) => {
-      if (errors) {
-        setFieldErrors(errors as Record<string, string>);
-      }
+      setFieldErrors((errors as Record<string, string>) || {});
     },
   });
 

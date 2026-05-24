@@ -71,6 +71,7 @@ interface StudentFormProps {
   isLoading?: boolean;
   onSuccess: () => void;
   onCancel: () => void;
+  onDelete?: () => void;
 }
 
 export function StudentForm({
@@ -80,6 +81,7 @@ export function StudentForm({
   isLoading: isLoadingData,
   onSuccess,
   onCancel,
+  onDelete: _onDelete,
 }: Readonly<StudentFormProps>) {
   const [useQuickAdd, setUseQuickAdd] = useState(false);
   const [isAddressExpanded, setIsAddressExpanded] = useState(false);

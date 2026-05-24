@@ -167,8 +167,12 @@ export interface StudentQueryParams extends BaseQueryParams {
   class_master_id?: string;
   class_assigned__public_id?: string;
   user__public_id?: string;
+  user__gender?: string;
   for_attendance?: boolean;
   embed_images?: boolean;
+  admission_date_from?: string;
+  admission_date_to?: string;
+  is_deleted?: boolean;
 }
 
 // Bulk Operations

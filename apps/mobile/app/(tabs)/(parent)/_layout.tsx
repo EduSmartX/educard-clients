@@ -16,6 +16,26 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors } from '@/constants/colors';
 
+function DashboardIcon({ color, size }: { color: string; size: number }) {
+  return <LayoutDashboard size={size} color={color} strokeWidth={1.5} />;
+}
+
+function AcademicsIcon({ color, size }: { color: string; size: number }) {
+  return <GraduationCap size={size} color={color} strokeWidth={1.5} />;
+}
+
+function AttendanceIcon({ color, size }: { color: string; size: number }) {
+  return <Calendar size={size} color={color} strokeWidth={1.5} />;
+}
+
+function FeesIcon({ color, size }: { color: string; size: number }) {
+  return <CreditCard size={size} color={color} strokeWidth={1.5} />;
+}
+
+function SettingsIcon({ color, size }: { color: string; size: number }) {
+  return <Settings size={size} color={color} strokeWidth={1.5} />;
+}
+
 export default function ParentTabLayout() {
   const insets = useSafeAreaInsets();
   const bottomPadding = Math.max(insets.bottom, Platform.OS === 'android' ? 12 : 0);
@@ -45,41 +65,35 @@ export default function ParentTabLayout() {
         name="dashboard"
         options={{
           title: 'Dashboard',
-          tabBarIcon: ({ color, size }) => (
-            <LayoutDashboard size={size} color={color} strokeWidth={1.5} />
-          ),
+          tabBarIcon: DashboardIcon,
         }}
       />
       <Tabs.Screen
         name="academics"
         options={{
           title: 'Academics',
-          tabBarIcon: ({ color, size }) => (
-            <GraduationCap size={size} color={color} strokeWidth={1.5} />
-          ),
+          tabBarIcon: AcademicsIcon,
         }}
       />
       <Tabs.Screen
         name="attendance"
         options={{
           title: 'Attendance',
-          tabBarIcon: ({ color, size }) => <Calendar size={size} color={color} strokeWidth={1.5} />,
+          tabBarIcon: AttendanceIcon,
         }}
       />
       <Tabs.Screen
         name="fees"
         options={{
           title: 'Fees',
-          tabBarIcon: ({ color, size }) => (
-            <CreditCard size={size} color={color} strokeWidth={1.5} />
-          ),
+          tabBarIcon: FeesIcon,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: ({ color, size }) => <Settings size={size} color={color} strokeWidth={1.5} />,
+          tabBarIcon: SettingsIcon,
         }}
       />
     </Tabs>

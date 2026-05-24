@@ -71,7 +71,9 @@ export function isValidApiResponse(response: unknown): boolean {
  * Validates if the response is a list response with pagination
  */
 export function isListResponse<T>(response: unknown): response is ApiListResponse<T> {
-  if (!isValidApiResponse(response)) {return false;}
+  if (!isValidApiResponse(response)) {
+    return false;
+  }
 
   const apiResponse = response as Record<string, unknown>;
   return (
@@ -233,10 +235,11 @@ export function extractErrorMessages(error: unknown): string[] {
 export function validateAxiosResponse(response: Record<string, unknown>) {
   const data = response.data;
 
-  // If the response is already in the correct format, return it
+  // If the response is already in the correct format, return it as-is
   if (isValidApiResponse(data)) {
     return response;
   }
 
-  return response;
+  // Wrap non-standard responses into expected format
+  return { ...response, data: { status: 'success', data } };
 }

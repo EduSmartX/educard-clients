@@ -319,17 +319,28 @@ const AttendanceToggle = ({
 );
 
 /** Build week rows from attendance data for a given date range */
-function buildWeekRows(
-  weekStart: Date,
-  weekEnd: Date,
-  attendanceByDate: Map<string, AttendanceRecord>,
-  holidayDescriptions: Record<string, any>,
-  holidaySet: Set<string>,
-  workingDayPolicy: any,
-  exceptionsMap: Map<string, { type: string; reason: string }>,
-  defaultPresent: boolean,
-  strictLeaveCheck: boolean
-): WeekRow[] {
+function buildWeekRows(params: {
+  weekStart: Date;
+  weekEnd: Date;
+  attendanceByDate: Map<string, AttendanceRecord>;
+  holidayDescriptions: Record<string, any>;
+  holidaySet: Set<string>;
+  workingDayPolicy: any;
+  exceptionsMap: Map<string, { type: string; reason: string }>;
+  defaultPresent: boolean;
+  strictLeaveCheck: boolean;
+}): WeekRow[] {
+  const {
+    weekStart,
+    weekEnd,
+    attendanceByDate,
+    holidayDescriptions,
+    holidaySet,
+    workingDayPolicy,
+    exceptionsMap,
+    defaultPresent,
+    strictLeaveCheck,
+  } = params;
   const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
   return days.map((day) => {
     const dateKey = toDateKey(day);
@@ -539,7 +550,7 @@ export default function MyTimesheetScreen() {
       // Status check failed, continue without it
     }
 
-    const rows = buildWeekRows(
+    const rows = buildWeekRows({
       weekStart,
       weekEnd,
       attendanceByDate,
@@ -548,8 +559,8 @@ export default function MyTimesheetScreen() {
       workingDayPolicy,
       exceptionsMap,
       defaultPresent,
-      hasStatus
-    );
+      strictLeaveCheck: hasStatus,
+    });
 
     const newWeek: WeekBlock = {
       id: weekId,

@@ -31,6 +31,92 @@ import { useDeleteCalendarException } from '../hooks';
 import type { CalendarException } from '../types';
 import { ExceptionDialog } from './exception-dialog';
 
+// Cell renderers extracted outside parent component
+function DateCell({ row }: Readonly<{ row: CalendarException }>) {
+  return (
+    <div className="flex items-center gap-2">
+      <Calendar className="h-4 w-4 text-gray-500" />
+      <span className="font-medium">{format(new Date(row.date), 'MMM dd, yyyy')}</span>
+    </div>
+  );
+}
+
+function TypeBadgeCell({ row }: Readonly<{ row: CalendarException }>) {
+  const isForceWorking = row.override_type === 'FORCE_WORKING';
+  return (
+    <Badge
+      variant="secondary"
+      className={cn(
+        'font-medium',
+        isForceWorking
+          ? 'bg-green-100 text-green-800 hover:bg-green-200'
+          : 'bg-red-100 text-red-800 hover:bg-red-200'
+      )}
+    >
+      <div className="flex items-center gap-1.5">
+        <div
+          className={cn('h-2 w-2 rounded-full', isForceWorking ? 'bg-green-600' : 'bg-red-600')}
+        />
+        {isForceWorking ? 'Force Working' : 'Force Holiday'}
+      </div>
+    </Badge>
+  );
+}
+
+function StudentScopeCell({ row }: Readonly<{ row: CalendarException }>) {
+  if (row.is_applicable_to_all_classes) {
+    return (
+      <Badge variant="outline" className="font-normal">
+        All Classes
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="outline" className="font-normal">
+      {row.classes.length} {row.classes.length === 1 ? 'Class' : 'Classes'}
+    </Badge>
+  );
+}
+
+function TeacherScopeCell({ row }: Readonly<{ row: CalendarException }>) {
+  if (row.is_applicable_to_all_teachers) {
+    return (
+      <Badge variant="default" className="border-blue-200 bg-blue-100 font-normal text-blue-700">
+        All Teachers
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="outline" className="font-normal text-gray-500">
+      Students Only
+    </Badge>
+  );
+}
+
+interface ExceptionActionsCellProps {
+  row: CalendarException;
+  onEdit: (row: CalendarException) => void;
+  onDelete: (row: CalendarException) => void;
+}
+
+function ExceptionActionsCell({ row, onEdit, onDelete }: Readonly<ExceptionActionsCellProps>) {
+  return (
+    <div className="flex items-center gap-2">
+      <Button variant="ghost" size="sm" onClick={() => onEdit(row)} className="h-8 w-8 p-0">
+        <Edit className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => onDelete(row)}
+        className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
 export function ExceptionalWorkManagement() {
   const { isAdmin } = useRole();
 
@@ -117,80 +203,23 @@ export function ExceptionalWorkManagement() {
   const columns = [
     {
       header: 'Date',
-      accessor: (row: CalendarException) => (
-        <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-gray-500" />
-          <span className="font-medium">{format(new Date(row.date), 'MMM dd, yyyy')}</span>
-        </div>
-      ),
+      accessor: (row: CalendarException) => <DateCell row={row} />,
       sortable: true,
       sortKey: 'date',
     },
     {
       header: 'Type',
-      accessor: (row: CalendarException) => {
-        const isForceWorking = row.override_type === 'FORCE_WORKING';
-        return (
-          <Badge
-            variant="secondary"
-            className={cn(
-              'font-medium',
-              isForceWorking
-                ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                : 'bg-red-100 text-red-800 hover:bg-red-200'
-            )}
-          >
-            <div className="flex items-center gap-1.5">
-              <div
-                className={cn(
-                  'h-2 w-2 rounded-full',
-                  isForceWorking ? 'bg-green-600' : 'bg-red-600'
-                )}
-              />
-              {isForceWorking ? 'Force Working' : 'Force Holiday'}
-            </div>
-          </Badge>
-        );
-      },
+      accessor: (row: CalendarException) => <TypeBadgeCell row={row} />,
       sortable: true,
       sortKey: 'override_type',
     },
     {
       header: 'Student Scope',
-      accessor: (row: CalendarException) => {
-        if (row.is_applicable_to_all_classes) {
-          return (
-            <Badge variant="outline" className="font-normal">
-              All Classes
-            </Badge>
-          );
-        }
-        return (
-          <Badge variant="outline" className="font-normal">
-            {row.classes.length} {row.classes.length === 1 ? 'Class' : 'Classes'}
-          </Badge>
-        );
-      },
+      accessor: (row: CalendarException) => <StudentScopeCell row={row} />,
     },
     {
       header: 'Teacher Scope',
-      accessor: (row: CalendarException) => {
-        if (row.is_applicable_to_all_teachers) {
-          return (
-            <Badge
-              variant="default"
-              className="border-blue-200 bg-blue-100 font-normal text-blue-700"
-            >
-              All Teachers
-            </Badge>
-          );
-        }
-        return (
-          <Badge variant="outline" className="font-normal text-gray-500">
-            Students Only
-          </Badge>
-        );
-      },
+      accessor: (row: CalendarException) => <TeacherScopeCell row={row} />,
     },
     {
       header: 'Reason',
@@ -204,24 +233,11 @@ export function ExceptionalWorkManagement() {
           {
             header: 'Actions',
             accessor: (row: CalendarException) => (
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setEditingException(row)}
-                  className="h-8 w-8 p-0"
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setDeletingException(row)}
-                  className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
+              <ExceptionActionsCell
+                row={row}
+                onEdit={(r) => setEditingException(r)}
+                onDelete={(r) => setDeletingException(r)}
+              />
             ),
           },
         ]

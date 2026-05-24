@@ -3,7 +3,7 @@
  * View homework details, attachments, videos, and submissions
  */
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -28,13 +28,7 @@ import { cn } from '@/lib/utils';
 import { getMediaUrl } from '@/lib/utils/media-utils';
 
 import { SubmissionTable } from '../components';
-import {
-  useHomeworkDetail,
-  useHomeworkSubmissions,
-  useDeleteHomework,
-  useReviewSubmission,
-} from '../hooks';
-import { type HomeworkSubmission } from '../types';
+import { useHomeworkDetail, useHomeworkSubmissions, useDeleteHomework } from '../hooks';
 
 export default function HomeworkDetailPage() {
   const { id: publicId } = useParams<{ id: string }>();
@@ -52,7 +46,6 @@ export default function HomeworkDetailPage() {
 
   // Mutations
   const deleteMutation = useDeleteHomework();
-  const reviewMutation = useReviewSubmission();
 
   // Handlers
   const handleBack = () => navigate(-1);
@@ -70,25 +63,6 @@ export default function HomeworkDetailPage() {
       navigate('/homework');
     }
   };
-
-  const handleViewSubmission = useCallback((_submission: HomeworkSubmission) => {
-    // TODO: Open submission detail modal or navigate to submission detail page
-  }, []);
-
-  const handleGradeSubmission = useCallback(
-    async (submissionId: string, _marks: number, feedback: string) => {
-      if (!publicId) {
-        return;
-      }
-      // TODO: Add marks support when backend supports it
-      await reviewMutation.mutateAsync({
-        homeworkPublicId: publicId,
-        submissionId,
-        data: { feedback },
-      });
-    },
-    [publicId, reviewMutation]
-  );
 
   if (isLoadingHomework) {
     return <HomeworkDetailSkeleton />;
@@ -372,9 +346,8 @@ export default function HomeworkDetailPage() {
         <TabsContent value="submissions" className="mt-6">
           <SubmissionTable
             submissions={submissionsData?.submissions || []}
+            homeworkId={publicId || ''}
             isLoading={isLoadingSubmissions}
-            onViewSubmission={handleViewSubmission}
-            onGradeSubmission={handleGradeSubmission}
           />
         </TabsContent>
       </Tabs>

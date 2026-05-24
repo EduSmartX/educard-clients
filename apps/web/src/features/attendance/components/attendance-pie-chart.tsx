@@ -17,6 +17,40 @@ const COLORS = {
   leave: '#f97316', // orange-500
 };
 
+// Extracted outside parent component for S6478 compliance
+function CustomTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload: { name: string; value: number; percentage: string } }>;
+}) {
+  if (active && payload?.length) {
+    const item = payload[0].payload;
+    return (
+      <div className="rounded-lg border bg-white p-3 shadow-lg">
+        <p className="font-semibold">{item.name}</p>
+        <p className="text-sm text-gray-600">Count: {item.value}</p>
+        <p className="text-sm text-gray-600">Percentage: {item.percentage}%</p>
+      </div>
+    );
+  }
+  return null;
+}
+
+function CustomLegend({ payload }: { payload?: Array<{ value: string; color?: string }> }) {
+  return (
+    <div className="mt-4 flex justify-center gap-6">
+      {payload?.map((entry) => (
+        <div key={entry.value} className="flex items-center gap-2">
+          <div className="h-3 w-3 rounded-full" style={{ backgroundColor: entry.color }} />
+          <span className="text-sm text-gray-700">{entry.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function AttendancePieChart({
   stats,
   isLoading = false,
@@ -140,40 +174,8 @@ export function AttendancePieChart({
                 <Cell key={entry.name} fill={entry.color} />
               ))}
             </Pie>
-            <Tooltip
-              content={({ active, payload }) => {
-                if (active && payload?.length) {
-                  const data = payload[0].payload;
-                  return (
-                    <div className="rounded-lg border bg-white p-3 shadow-lg">
-                      <p className="font-semibold">{data.name}</p>
-                      <p className="text-sm text-gray-600">Count: {data.value}</p>
-                      <p className="text-sm text-gray-600">Percentage: {data.percentage}%</p>
-                    </div>
-                  );
-                }
-                return null;
-              }}
-            />
-            <Legend
-              verticalAlign="bottom"
-              height={36}
-              content={({ payload }) => {
-                return (
-                  <div className="mt-4 flex justify-center gap-6">
-                    {payload?.map((entry) => (
-                      <div key={entry.value} className="flex items-center gap-2">
-                        <div
-                          className="h-3 w-3 rounded-full"
-                          style={{ backgroundColor: entry.color }}
-                        />
-                        <span className="text-sm text-gray-700">{entry.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                );
-              }}
-            />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend verticalAlign="bottom" height={36} content={<CustomLegend />} />
           </PieChart>
         </ResponsiveContainer>
       </CardContent>

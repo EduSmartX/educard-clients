@@ -96,7 +96,7 @@ export function StudentsManagement() {
   // Determine page mode from URL
   const getPageMode = (): PageMode => {
     if (id) {
-      return window.location.pathname.endsWith('/edit') ? 'edit' : 'view';
+      return globalThis.location.pathname.endsWith('/edit') ? 'edit' : 'view';
     }
     if (window.location.pathname.endsWith('/create') || window.location.pathname.endsWith('/new')) {
       return 'create';

@@ -70,7 +70,7 @@ export function getDayStatus(
   const afternoonPresent = record?.afternoon_present ?? false;
   const hasRecord = !!record;
 
-  const { statusText, statusColor, rowBg } = getStatusDisplay(
+  const { statusText, statusColor, rowBg } = getStatusDisplay({
     isForceHoliday,
     isOfficialHoliday,
     isWeekend,
@@ -79,8 +79,8 @@ export function getDayStatus(
     hasRecord,
     morningPresent,
     afternoonPresent,
-    record
-  );
+    record,
+  });
 
   let weekendLabel = '';
   if (isWeekend) {
@@ -106,17 +106,29 @@ export function getDayStatus(
   };
 }
 
-function getStatusDisplay(
-  isForceHoliday: boolean,
-  isOfficialHoliday: boolean,
-  isWeekend: boolean,
-  isForceWorking: boolean,
-  isLeave: boolean,
-  hasRecord: boolean,
-  morningPresent: boolean,
-  afternoonPresent: boolean,
-  record: AttendanceRecord | undefined
-): { statusText: string; statusColor: string; rowBg: string } {
+interface StatusDisplayParams {
+  isForceHoliday: boolean;
+  isOfficialHoliday: boolean;
+  isWeekend: boolean;
+  isForceWorking: boolean;
+  isLeave: boolean;
+  hasRecord: boolean;
+  morningPresent: boolean;
+  afternoonPresent: boolean;
+  record: AttendanceRecord | undefined;
+}
+
+function getStatusDisplay({
+  isForceHoliday,
+  isOfficialHoliday,
+  isWeekend,
+  isForceWorking,
+  isLeave,
+  hasRecord,
+  morningPresent,
+  afternoonPresent,
+  record,
+}: StatusDisplayParams): { statusText: string; statusColor: string; rowBg: string } {
   if (isForceHoliday) {
     return {
       statusText: 'Special Holiday',

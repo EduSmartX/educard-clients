@@ -27,7 +27,7 @@ const verifyOtpSchema = z
       .min(8, 'Password must be at least 8 characters')
       .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
       .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-      .regex(/[0-9]/, 'Password must contain at least one number')
+      .regex(/\d/, 'Password must contain at least one number')
       .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
     confirmPassword: z.string(),
   })
@@ -490,52 +490,50 @@ export default function ForgotPasswordPage() {
 
           {/* Step 4: Success */}
           {currentStep === 'success' && (
-            <>
-              <div className="space-y-6 text-center">
-                <div className="flex justify-center">
-                  <div className="relative">
-                    <div className="absolute inset-0 animate-pulse rounded-full bg-gradient-to-br from-green-400 to-emerald-500 opacity-50 blur-xl" />
-                    <div className="relative rounded-full bg-gradient-to-br from-green-500 to-emerald-600 p-4 text-white shadow-lg ring-4 ring-white/50">
-                      <CheckCircle2 className="h-12 w-12" />
-                    </div>
+            <div className="space-y-6 text-center">
+              <div className="flex justify-center">
+                <div className="relative">
+                  <div className="absolute inset-0 animate-pulse rounded-full bg-gradient-to-br from-green-400 to-emerald-500 opacity-50 blur-xl" />
+                  <div className="relative rounded-full bg-gradient-to-br from-green-500 to-emerald-600 p-4 text-white shadow-lg ring-4 ring-white/50">
+                    <CheckCircle2 className="h-12 w-12" />
                   </div>
                 </div>
-
-                <div className="space-y-3">
-                  <h2 className="bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-3xl font-bold text-transparent">
-                    Password Reset Successful! 🎉
-                  </h2>
-                  <p className="text-base text-gray-600">
-                    Your password has been changed successfully.
-                  </p>
-                </div>
-
-                <div className="rounded-xl border-2 border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 p-6">
-                  <p className="mb-3 font-medium text-green-900">
-                    ✅ You can now sign in with your new password
-                  </p>
-                  <ul className="space-y-2 text-left text-sm text-green-800">
-                    <li className="flex items-start gap-2">
-                      <span>🔒</span>
-                      <span>Keep your password secure and don't share it with anyone</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span>💡</span>
-                      <span>Use a password manager for better security</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <Button
-                  onClick={() => navigate(ROUTES.AUTH.LOGIN)}
-                  variant="brand"
-                  size="xl"
-                  className="w-full font-semibold"
-                >
-                  Go to Login
-                </Button>
               </div>
-            </>
+
+              <div className="space-y-3">
+                <h2 className="bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-3xl font-bold text-transparent">
+                  Password Reset Successful! 🎉
+                </h2>
+                <p className="text-base text-gray-600">
+                  Your password has been changed successfully.
+                </p>
+              </div>
+
+              <div className="rounded-xl border-2 border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 p-6">
+                <p className="mb-3 font-medium text-green-900">
+                  ✅ You can now sign in with your new password
+                </p>
+                <ul className="space-y-2 text-left text-sm text-green-800">
+                  <li className="flex items-start gap-2">
+                    <span>🔒</span>
+                    <span>Keep your password secure and don't share it with anyone</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span>💡</span>
+                    <span>Use a password manager for better security</span>
+                  </li>
+                </ul>
+              </div>
+
+              <Button
+                onClick={() => navigate(ROUTES.AUTH.LOGIN)}
+                variant="brand"
+                size="xl"
+                className="w-full font-semibold"
+              >
+                Go to Login
+              </Button>
+            </div>
           )}
         </div>
       </motion.div>

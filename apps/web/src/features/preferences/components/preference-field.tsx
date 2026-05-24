@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { HelpCircle, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,22 +23,18 @@ interface PreferenceFieldProps {
   disabled?: boolean;
 }
 
-export function PreferenceField({
-  preference,
-  value,
-  onChange,
-  disabled = false,
-}: PreferenceFieldProps) {
-  const [multiSelectInput, setMultiSelectInput] = useState('');
-  const [validationError, setValidationError] = useState<string | null>(null);
-
-  // Reusable label with tooltip
-  const FieldLabel = ({ htmlFor }: { htmlFor?: string }) => (
+// Extracted outside parent component
+function FieldLabel({
+  htmlFor,
+  displayName,
+  description,
+}: Readonly<{ htmlFor?: string; displayName: string; description?: string }>) {
+  return (
     <div className="flex items-center gap-2">
       <Label htmlFor={htmlFor} className="text-gray-900">
-        {preference.display_name}
+        {displayName}
       </Label>
-      {!!preference.description && (
+      {!!description && (
         <TooltipProvider delayDuration={0}>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -48,13 +44,23 @@ export function PreferenceField({
               side="right"
               className="max-w-sm border-gray-700 bg-gray-900 text-white shadow-lg"
             >
-              <p className="text-sm leading-relaxed">{preference.description}</p>
+              <p className="text-sm leading-relaxed">{description}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       )}
     </div>
   );
+}
+
+export function PreferenceField({
+  preference,
+  value,
+  onChange,
+  disabled = false,
+}: PreferenceFieldProps) {
+  const [multiSelectInput, setMultiSelectInput] = useState('');
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleMultiSelectAdd = (selectedValue: string) => {
     const currentValues = Array.isArray(value) ? value : [];
@@ -98,7 +104,11 @@ export function PreferenceField({
       return (
         <div className="flex flex-col gap-3 border-b border-dotted border-gray-200 px-4 py-4 last:border-b-0 sm:flex-row sm:items-start sm:gap-0">
           <div className="sm:w-[600px] sm:flex-shrink-0 sm:pr-8">
-            <FieldLabel htmlFor={preference.key} />
+            <FieldLabel
+              htmlFor={preference.key}
+              displayName={preference.display_name}
+              description={preference.description}
+            />
           </div>
           <div className="flex-1">
             <div className="flex w-full items-center gap-2 sm:max-w-md">
@@ -151,7 +161,11 @@ export function PreferenceField({
       return (
         <div className="flex flex-col gap-3 border-b border-dotted border-gray-200 px-4 py-4 last:border-b-0 sm:flex-row sm:items-start sm:gap-0">
           <div className="sm:w-[600px] sm:flex-shrink-0 sm:pr-8">
-            <FieldLabel htmlFor={preference.key} />
+            <FieldLabel
+              htmlFor={preference.key}
+              displayName={preference.display_name}
+              description={preference.description}
+            />
           </div>
           <div className="flex-1">
             <Input
@@ -196,7 +210,11 @@ export function PreferenceField({
       return (
         <div className="flex flex-col gap-3 border-b border-dotted border-gray-200 px-4 py-4 last:border-b-0 sm:flex-row sm:items-start sm:gap-0">
           <div className="sm:w-[600px] sm:flex-shrink-0 sm:pr-8">
-            <FieldLabel htmlFor={preference.key} />
+            <FieldLabel
+              htmlFor={preference.key}
+              displayName={preference.display_name}
+              description={preference.description}
+            />
           </div>
           <div className="flex-1">
             <Input
@@ -227,7 +245,10 @@ export function PreferenceField({
       return (
         <div className="flex flex-col gap-3 border-b border-dotted border-gray-200 px-4 py-4 last:border-b-0 sm:flex-row sm:items-center sm:gap-0">
           <div className="sm:w-[600px] sm:flex-shrink-0 sm:pr-8">
-            <FieldLabel />
+            <FieldLabel
+              displayName={preference.display_name}
+              description={preference.description}
+            />
           </div>
           <div className="flex-1">
             <RadioGroup
@@ -266,7 +287,11 @@ export function PreferenceField({
       return (
         <div className="flex flex-col gap-3 border-b border-dotted border-gray-200 px-4 py-4 last:border-b-0 sm:flex-row sm:items-start sm:gap-0">
           <div className="sm:w-[600px] sm:flex-shrink-0 sm:pr-8">
-            <FieldLabel htmlFor={preference.key} />
+            <FieldLabel
+              htmlFor={preference.key}
+              displayName={preference.display_name}
+              description={preference.description}
+            />
           </div>
           <div className="flex-1">
             <SearchableSelect
@@ -290,7 +315,11 @@ export function PreferenceField({
         <div className="flex flex-col border-b border-dotted border-gray-200 px-4 py-4 last:border-b-0">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-0">
             <div className="sm:w-[600px] sm:flex-shrink-0 sm:pr-8">
-              <FieldLabel htmlFor={preference.key} />
+              <FieldLabel
+                htmlFor={preference.key}
+                displayName={preference.display_name}
+                description={preference.description}
+              />
             </div>
             <div className="flex-1">
               <SearchableSelect

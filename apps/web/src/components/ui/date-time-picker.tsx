@@ -24,6 +24,42 @@ interface DateTimePickerProps {
   error?: boolean;
 }
 
+const DateTimeInput = React.forwardRef<
+  HTMLButtonElement,
+  {
+    value?: string;
+    onClick?: () => void;
+    disabled?: boolean;
+    className?: string;
+    placeholder?: string;
+    error?: boolean;
+    showTimeIcon?: boolean;
+  }
+>(({ value, onClick, disabled, className, placeholder, error, showTimeIcon }, ref) => (
+  <Button
+    ref={ref}
+    type="button"
+    variant="outline"
+    onClick={onClick}
+    disabled={disabled}
+    className={cn(
+      'h-10 w-full justify-start border-gray-300 bg-gray-50 px-3 text-left font-normal',
+      'transition-colors hover:border-gray-400 hover:bg-white focus:bg-white',
+      'focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:outline-none',
+      !value && 'text-gray-400',
+      value && 'text-gray-900',
+      disabled && 'cursor-not-allowed opacity-50',
+      error && 'border-red-500 focus-visible:ring-red-500',
+      className
+    )}
+  >
+    <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0 text-gray-500" />
+    <span className="flex-1 truncate text-sm">{value || placeholder}</span>
+    {showTimeIcon && <Clock className="ml-2 h-4 w-4 flex-shrink-0 text-gray-400" />}
+  </Button>
+));
+DateTimeInput.displayName = 'DateTimeInput';
+
 export function DateTimePicker({
   value,
   onChange,
@@ -38,33 +74,6 @@ export function DateTimePicker({
   dateFormat = 'MMMM d, yyyy h:mm aa',
   error = false,
 }: DateTimePickerProps) {
-  const CustomInput = React.forwardRef<HTMLButtonElement, { value?: string; onClick?: () => void }>(
-    ({ value, onClick }, ref) => (
-      <Button
-        ref={ref}
-        type="button"
-        variant="outline"
-        onClick={onClick}
-        disabled={disabled}
-        className={cn(
-          'h-10 w-full justify-start border-gray-300 bg-gray-50 px-3 text-left font-normal',
-          'transition-colors hover:border-gray-400 hover:bg-white focus:bg-white',
-          'focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:outline-none',
-          !value && 'text-gray-400',
-          value && 'text-gray-900',
-          disabled && 'cursor-not-allowed opacity-50',
-          error && 'border-red-500 focus-visible:ring-red-500',
-          className
-        )}
-      >
-        <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0 text-gray-500" />
-        <span className="flex-1 truncate text-sm">{value || placeholder}</span>
-        {showTimeSelect && <Clock className="ml-2 h-4 w-4 flex-shrink-0 text-gray-400" />}
-      </Button>
-    )
-  );
-  CustomInput.displayName = 'DateTimeCustomInput';
-
   return (
     <div
       className={cn(
@@ -75,7 +84,15 @@ export function DateTimePicker({
       <ReactDatePicker
         selected={value}
         onChange={onChange}
-        customInput={<CustomInput />}
+        customInput={
+          <DateTimeInput
+            disabled={disabled}
+            className={className}
+            placeholder={placeholder}
+            error={error}
+            showTimeIcon={showTimeSelect}
+          />
+        }
         dateFormat={dateFormat}
         minDate={minDate}
         maxDate={maxDate}

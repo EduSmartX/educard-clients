@@ -96,6 +96,115 @@ const STATUS_CONFIG = {
   cancelled: { label: 'Cancelled', className: 'bg-gray-500 text-white hover:bg-gray-600' },
 };
 
+// Cell renderers extracted outside parent component
+function EmployeeCell({
+  row,
+  onNavigate,
+}: Readonly<{ row: LeaveRequestReview; onNavigate: (path: string) => void }>) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onNavigate(`/leave/dashboard/${row.user_public_id}`);
+          }}
+          className="w-full text-left text-blue-600 hover:text-blue-700 focus:underline focus:outline-none"
+          aria-label={`View ${row.user_name}'s leave dashboard`}
+        >
+          <div className="flex flex-col items-start gap-0.5">
+            <div className="font-medium">{row.user_name}</div>
+            <div className="text-muted-foreground text-xs">
+              {typeof row.organization_role === 'object' && row.organization_role
+                ? row.organization_role.name
+                : row.organization_role}
+            </div>
+          </div>
+        </button>
+      </TooltipTrigger>
+      <TooltipContent>View {row.user_name}&apos;s leave dashboard</TooltipContent>
+    </Tooltip>
+  );
+}
+
+function LeaveTypeCell({ row }: Readonly<{ row: LeaveRequestReview }>) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <div>
+        <div className="font-medium">{row.leave_name}</div>
+        <div className="text-muted-foreground text-xs">{row.leave_type_code}</div>
+      </div>
+      {!!row.attachment_url && (
+        <span title="Has attachment">
+          <Paperclip className="h-3.5 w-3.5 shrink-0 text-blue-500" />
+        </span>
+      )}
+    </div>
+  );
+}
+
+function LeaveDurationCell({ row }: Readonly<{ row: LeaveRequestReview }>) {
+  return (
+    <div className="text-sm">
+      <div>
+        {formatDate(row.start_date)} - {formatDate(row.end_date)}
+      </div>
+      <div className="text-muted-foreground text-xs">
+        {row.number_of_days} day{Number(row.number_of_days) === 1 ? '' : 's'}
+      </div>
+    </div>
+  );
+}
+
+function LeaveStatusCell({ row }: Readonly<{ row: LeaveRequestReview }>) {
+  const config = STATUS_CONFIG[row.status];
+  return <Badge className={config.className}>{config.label}</Badge>;
+}
+
+interface LeaveActionsCellProps {
+  row: LeaveRequestReview;
+  onApprove: (row: LeaveRequestReview) => void;
+  onReject: (row: LeaveRequestReview) => void;
+  onView: (row: LeaveRequestReview) => void;
+}
+
+function LeaveActionsCell({ row, onApprove, onReject, onView }: Readonly<LeaveActionsCellProps>) {
+  return (
+    <div className="flex items-center gap-1">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => onApprove(row)}
+        className="h-8 w-8 p-0 text-green-600 hover:bg-green-50 hover:text-green-700"
+        disabled={row.status !== 'pending'}
+        title="Approve"
+      >
+        <Check className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => onReject(row)}
+        className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"
+        disabled={row.status !== 'pending'}
+        title="Reject"
+      >
+        <X className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => onView(row)}
+        className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+        title="View Details"
+      >
+        <Eye className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
 export function LeaveRequestReviews() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -343,67 +452,19 @@ export function LeaveRequestReviews() {
   const columns: Column<LeaveRequestReview>[] = [
     {
       header: 'Employee',
-      accessor: (row) => (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/leave/dashboard/${row.user_public_id}`);
-              }}
-              className="w-full text-left text-blue-600 hover:text-blue-700 focus:underline focus:outline-none"
-              aria-label={`View ${row.user_name}'s leave dashboard`}
-            >
-              <div className="flex flex-col items-start gap-0.5">
-                <div className="font-medium">{row.user_name}</div>
-                <div className="text-muted-foreground text-xs">
-                  {typeof row.organization_role === 'object' && row.organization_role
-                    ? row.organization_role.name
-                    : row.organization_role}
-                </div>
-              </div>
-            </button>
-          </TooltipTrigger>
-          <TooltipContent>View {row.user_name}'s leave dashboard</TooltipContent>
-        </Tooltip>
-      ),
+      accessor: (row) => <EmployeeCell row={row} onNavigate={(path) => navigate(path)} />,
     },
     {
       header: 'Leave Type',
-      accessor: (row) => (
-        <div className="flex items-center gap-1.5">
-          <div>
-            <div className="font-medium">{row.leave_name}</div>
-            <div className="text-muted-foreground text-xs">{row.leave_type_code}</div>
-          </div>
-          {!!row.attachment_url && (
-            <span title="Has attachment">
-              <Paperclip className="h-3.5 w-3.5 shrink-0 text-blue-500" />
-            </span>
-          )}
-        </div>
-      ),
+      accessor: (row) => <LeaveTypeCell row={row} />,
     },
     {
       header: 'Leave Duration',
-      accessor: (row) => (
-        <div className="text-sm">
-          <div>
-            {formatDate(row.start_date)} - {formatDate(row.end_date)}
-          </div>
-          <div className="text-muted-foreground text-xs">
-            {row.number_of_days} day{Number(row.number_of_days) === 1 ? '' : 's'}
-          </div>
-        </div>
-      ),
+      accessor: (row) => <LeaveDurationCell row={row} />,
     },
     {
       header: 'Status',
-      accessor: (row) => {
-        const config = STATUS_CONFIG[row.status];
-        return <Badge className={config.className}>{config.label}</Badge>;
-      },
+      accessor: (row) => <LeaveStatusCell row={row} />,
     },
     {
       header: 'Reason',
@@ -416,37 +477,12 @@ export function LeaveRequestReviews() {
     {
       header: 'Actions',
       accessor: (row) => (
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleApprove(row)}
-            className="h-8 w-8 p-0 text-green-600 hover:bg-green-50 hover:text-green-700"
-            disabled={row.status !== 'pending'}
-            title="Approve"
-          >
-            <Check className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleReject(row)}
-            className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"
-            disabled={row.status !== 'pending'}
-            title="Reject"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setReviewDialog({ open: true, request: row, action: null })}
-            className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-            title="View Details"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-        </div>
+        <LeaveActionsCell
+          row={row}
+          onApprove={handleApprove}
+          onReject={handleReject}
+          onView={(r) => setReviewDialog({ open: true, request: r, action: null })}
+        />
       ),
       width: 120,
     },
