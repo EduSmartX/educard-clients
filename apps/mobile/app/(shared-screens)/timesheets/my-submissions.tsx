@@ -20,16 +20,7 @@ import {
   isSameDay,
 } from 'date-fns';
 import { useRouter } from 'expo-router';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Check,
-  X,
-  CalendarDays,
-  Sun,
-  Moon,
-  Lock,
-} from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Check, X, CalendarDays } from 'lucide-react-native';
 import { useState, useMemo, useCallback } from 'react';
 import {
   View,
@@ -40,8 +31,6 @@ import {
   RefreshControl,
   Alert,
   Dimensions,
-  Modal,
-  Pressable,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
@@ -177,12 +166,15 @@ const bulkSubmitAttendance = async (
 const returnTimesheetToDraft = async (payload: {
   week_start_date: string;
   week_end_date: string;
-}): Promise<{ message?: string }> =>
-  apiClient
-    .delete<{ message?: string }>('/attendance/timesheet-submission/return_to_draft/', {
+}): Promise<{ message?: string }> => {
+  const response = await apiClient.delete<{ message?: string }>(
+    '/attendance/timesheet-submission/return_to_draft/',
+    {
       params: payload,
-    })
-    .then((r) => r.data);
+    }
+  );
+  return response.data;
+};
 
 const toDateKey = (d: Date) => format(d, 'yyyy-MM-dd');
 

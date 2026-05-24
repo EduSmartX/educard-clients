@@ -33,7 +33,7 @@ import {
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import type { SaturdayOffPattern } from '@/features/holidays/api/holidays-api';
+import type { SaturdayOffPattern, WorkingDayPolicy } from '@/features/holidays/api/holidays-api';
 import {
   useWorkingDayPolicy,
   useCreateWorkingDayPolicy,
@@ -97,6 +97,33 @@ function getPreferenceRenderer(
   return 'text';
 }
 
+/** Handle WDP update/create - extracted to reduce component complexity */
+async function performWdpUpdate(
+  currentPolicy: WorkingDayPolicy | null,
+  field: string,
+  value: boolean | SaturdayOffPattern,
+  updateWdpMutation: ReturnType<typeof useUpdateWorkingDayPolicy>,
+  createWdpMutation: ReturnType<typeof useCreateWorkingDayPolicy>,
+  showToast: ReturnType<typeof useToast>['showToast']
+) {
+  try {
+    if (currentPolicy) {
+      await updateWdpMutation.mutateAsync({
+        id: currentPolicy.public_id,
+        data: { [field]: value },
+      });
+    } else {
+      await createWdpMutation.mutateAsync(buildWdpCreatePayload(field, value));
+    }
+  } catch (e: unknown) {
+    showToast({
+      type: 'error',
+      title: 'Error',
+      message: extractApiError(e, 'Failed to update working day policy'),
+    });
+  }
+}
+
 export default function OrgPreferencesScreen() {
   const router = useRouter();
   const { showToast } = useToast();
@@ -135,11 +162,8 @@ export default function OrgPreferencesScreen() {
   const toggleCategory = (category: string) => {
     setExpandedCategories((prev) => {
       const next = new Set(prev);
-      if (next.has(category)) {
-        next.delete(category);
-      } else {
-        next.add(category);
-      }
+      const action = next.has(category) ? 'delete' : 'add';
+      next[action](category);
       return next;
     });
   };
@@ -170,24 +194,8 @@ export default function OrgPreferencesScreen() {
     ]);
   };
 
-  const handleWdpUpdate = async (field: string, value: boolean | SaturdayOffPattern) => {
-    try {
-      if (currentPolicy) {
-        await updateWdpMutation.mutateAsync({
-          id: currentPolicy.public_id,
-          data: { [field]: value },
-        });
-      } else {
-        await createWdpMutation.mutateAsync(buildWdpCreatePayload(field, value));
-      }
-    } catch (e: unknown) {
-      showToast({
-        type: 'error',
-        title: 'Error',
-        message: extractApiError(e, 'Failed to update working day policy'),
-      });
-    }
-  };
+  const handleWdpUpdate = (field: string, value: boolean | SaturdayOffPattern) =>
+    performWdpUpdate(currentPolicy, field, value, updateWdpMutation, createWdpMutation, showToast);
 
   // ── Tooltip badge ──
   const renderTooltip = (pref: OrganizationPreference) => {
