@@ -21,12 +21,14 @@ export interface TeacherInfo {
   employee_id: string;
 }
 
+export type SubjectType = 'core' | 'elective' | 'language';
+
 export interface Subject {
   public_id: string;
   class_info: ClassInfo;
   subject_info: CoreSubject;
   teacher_info: TeacherInfo | null;
-  subject_type: 'core' | 'elective' | 'language';
+  subject_type: SubjectType;
   description: string;
   created_at: string;
   updated_at: string;

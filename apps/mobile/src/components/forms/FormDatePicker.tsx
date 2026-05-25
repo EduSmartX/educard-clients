@@ -296,7 +296,7 @@ export function FormDatePicker({
               <FlatList<number>
                 ref={yearListRef}
                 data={years}
-                keyExtractor={(item) => String(item)}
+                keyExtractor={String}
                 style={styles.yearList}
                 initialScrollIndex={Math.max(0, years.indexOf(viewYear) - 2)}
                 getItemLayout={(_data, index: number) => ({

@@ -174,10 +174,10 @@ export function ExamOverviewPage() {
     const notAttempted = total_students - passed_count - failed_count;
     return [
       { name: 'Passed', value: passed_count, color: CHART_COLORS.passed },
-      { name: 'Failed', value: failed_count > 0 ? failed_count : 0, color: CHART_COLORS.failed },
+      { name: 'Failed', value: Math.max(failed_count, 0), color: CHART_COLORS.failed },
       {
         name: 'Not Attempted',
-        value: notAttempted > 0 ? notAttempted : 0,
+        value: Math.max(notAttempted, 0),
         color: CHART_COLORS.absent,
       },
     ].filter((item) => item.value > 0);

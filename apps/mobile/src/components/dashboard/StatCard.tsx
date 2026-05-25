@@ -12,8 +12,6 @@ const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48) / 2;
 
 export interface StatCardProps {
-  /** Unique identifier */
-  id: string;
   /** Display title */
   title: string;
   /** Value to display (string for flexibility - can be number, percentage, text) */

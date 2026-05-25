@@ -6,7 +6,7 @@
 import { Colors, getRoleGradient, extractApiError } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, ChevronDown, ChevronUp, Settings, Calendar, Eye } from 'lucide-react-native';
+import { ChevronLeft, ChevronDown, ChevronUp, Settings, Eye } from 'lucide-react-native';
 import { useState, useCallback, useRef, useMemo } from 'react';
 import {
   View,
@@ -22,8 +22,9 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { getCategoryConfig, formatCategory } from './constants';
 import { PreferenceItem } from './PreferenceItems';
-import { SingleSelectModal, MultiSelectModal, SaturdayPatternModal } from './PreferenceModals';
+import { SingleSelectModal, MultiSelectModal } from './PreferenceModals';
 import { styles } from './styles';
+import { WorkingDayPolicyCard } from './WorkingDayPolicyCard';
 
 import type { SaturdayOffPattern, WorkingDayPolicy } from '@/features/holidays/api/holidays-api';
 import {
@@ -43,16 +44,6 @@ import { useToast } from '@/lib/toast-context';
 import { isAdminRole } from '@/utils/role-utils';
 
 const adminGradient = getRoleGradient('admin');
-
-const SATURDAY_OPTIONS: { label: string; value: SaturdayOffPattern }[] = [
-  { label: 'No Saturdays Off', value: 'NONE' },
-  { label: '2nd Saturday Off', value: 'SECOND_ONLY' },
-  { label: '2nd & 4th Saturday Off', value: 'SECOND_AND_FOURTH' },
-  { label: 'All Saturdays Off', value: 'ALL' },
-];
-
-const getSaturdayLabel = (val: SaturdayOffPattern) =>
-  SATURDAY_OPTIONS.find((o) => o.value === val)?.label ?? val;
 
 /** Build WDP create payload - extracted to reduce component complexity */
 function buildWdpCreatePayload(field: string, value: boolean | SaturdayOffPattern) {
@@ -118,9 +109,6 @@ export default function OrgPreferencesScreen() {
   const { data: wdpData, refetch: refetchWdp } = useWorkingDayPolicy();
   const createWdpMutation = useCreateWorkingDayPolicy();
   const updateWdpMutation = useUpdateWorkingDayPolicy();
-  const [wdpExpanded, setWdpExpanded] = useState(false);
-  const [saturdayDropdownOpen, setSaturdayDropdownOpen] = useState(false);
-
   const currentPolicy = wdpData?.data?.[0] ?? null;
   const groups: GroupedPreference[] = data?.data ?? [];
 
@@ -266,133 +254,13 @@ export default function OrgPreferencesScreen() {
               );
             })}
 
-            {/* Working Day Policy Card */}
-            <Animated.View
-              entering={FadeInDown.delay(groups.length * 80).duration(400)}
-              style={styles.categoryCard}
-            >
-              <TouchableOpacity
-                style={styles.categoryHeader}
-                onPress={() => setWdpExpanded(!wdpExpanded)}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.catIconCircle, { backgroundColor: '#fef3c7' }]}>
-                  <Calendar size={18} color="#d97706" />
-                </View>
-                <View style={styles.catInfo}>
-                  <Text style={styles.catTitle}>Working Day Policy</Text>
-                  <Text style={styles.catCount}>Sunday & Saturday rules</Text>
-                </View>
-                {wdpExpanded ? (
-                  <ChevronUp size={20} color={Colors.gray[400]} />
-                ) : (
-                  <ChevronDown size={20} color={Colors.gray[400]} />
-                )}
-              </TouchableOpacity>
-
-              {wdpExpanded && (
-                <View style={styles.prefList}>
-                  {/* Sunday Off */}
-                  <View style={styles.prefRow}>
-                    <View style={styles.prefLabelRow}>
-                      <Text style={styles.prefName}>Sunday Off</Text>
-                    </View>
-                    <View style={styles.pillRow}>
-                      <TouchableOpacity
-                        style={[
-                          styles.pill,
-                          currentPolicy?.sunday_off !== false && styles.pillActiveGreen,
-                          !canManage && styles.pillDisabled,
-                        ]}
-                        onPress={() => {
-                          if (canManage) void handleWdpUpdate('sunday_off', true);
-                        }}
-                        disabled={
-                          updateWdpMutation.isPending || createWdpMutation.isPending || !canManage
-                        }
-                        activeOpacity={canManage ? 0.7 : 1}
-                      >
-                        <Text
-                          style={[
-                            styles.pillText,
-                            currentPolicy?.sunday_off !== false && styles.pillTextActive,
-                          ]}
-                        >
-                          Yes
-                        </Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[
-                          styles.pill,
-                          currentPolicy?.sunday_off === false && styles.pillActiveRed,
-                          !canManage && styles.pillDisabled,
-                        ]}
-                        onPress={() => {
-                          if (canManage) void handleWdpUpdate('sunday_off', false);
-                        }}
-                        disabled={
-                          updateWdpMutation.isPending || createWdpMutation.isPending || !canManage
-                        }
-                        activeOpacity={canManage ? 0.7 : 1}
-                      >
-                        <Text
-                          style={[
-                            styles.pillText,
-                            currentPolicy?.sunday_off === false && styles.pillTextActive,
-                          ]}
-                        >
-                          No
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-
-                  <View style={styles.divider} />
-
-                  {/* Saturday Off Pattern */}
-                  <View style={styles.prefRow}>
-                    <View style={styles.prefLabelRow}>
-                      <Text style={styles.prefName}>Saturday Off Pattern</Text>
-                    </View>
-                    <TouchableOpacity
-                      style={[styles.dropdown, !canManage && { opacity: 0.6 }]}
-                      onPress={() => canManage && setSaturdayDropdownOpen(true)}
-                      activeOpacity={canManage ? 0.7 : 1}
-                      disabled={!canManage}
-                    >
-                      <Text style={styles.dropdownText}>
-                        {currentPolicy
-                          ? getSaturdayLabel(currentPolicy.saturday_off_pattern)
-                          : 'Select...'}
-                      </Text>
-                      <ChevronDown size={16} color={Colors.gray[500]} />
-                    </TouchableOpacity>
-                  </View>
-
-                  {currentPolicy?.effective_from && (
-                    <>
-                      <View style={styles.divider} />
-                      <View style={styles.prefRow}>
-                        <View style={styles.prefLabelRow}>
-                          <Text style={styles.prefName}>Effective From</Text>
-                        </View>
-                        <Text style={{ fontSize: 14, color: Colors.gray[600] }}>
-                          {currentPolicy.effective_from}
-                        </Text>
-                      </View>
-                    </>
-                  )}
-
-                  {!currentPolicy && (
-                    <View style={{ padding: 12, alignItems: 'center' }}>
-                      <Text style={{ fontSize: 13, color: Colors.gray[400], textAlign: 'center' }}>
-                        No policy set yet. Choose options above to create one.
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              )}
-            </Animated.View>
+            <WorkingDayPolicyCard
+              currentPolicy={currentPolicy}
+              canManage={canManage}
+              isPending={updateWdpMutation.isPending || createWdpMutation.isPending}
+              onUpdate={handleWdpUpdate}
+              animationDelay={groups.length * 80}
+            />
 
             {groups.length === 0 && (
               <View style={styles.emptyContainer}>
@@ -420,15 +288,6 @@ export default function OrgPreferencesScreen() {
         setValues={setMultiSelectValues}
         onClose={() => setMultiSelectPref(null)}
         onSave={handleUpdate}
-      />
-
-      {/* Saturday pattern modal */}
-      <SaturdayPatternModal
-        visible={saturdayDropdownOpen}
-        onClose={() => setSaturdayDropdownOpen(false)}
-        options={SATURDAY_OPTIONS}
-        currentPattern={currentPolicy?.saturday_off_pattern}
-        onSelect={(value) => void handleWdpUpdate('saturday_off_pattern', value)}
       />
     </View>
   );

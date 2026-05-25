@@ -20,10 +20,12 @@ export const DATE_FORMATS = {
   INPUT: 'yyyy-MM-dd', // HTML input format
 } as const;
 
+export type DateInput = Date | string | null | undefined;
+
 /**
  * Format date for API submission (YYYY-MM-DD)
  */
-export function formatDateForApi(date: Date | string | null | undefined): string {
+export function formatDateForApi(date: DateInput): string {
   if (!date) {
     return '';
   }

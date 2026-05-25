@@ -183,7 +183,6 @@ const iconMap: Record<string, IconMapping> = {
 interface IconProps {
   size?: number;
   color?: string;
-  strokeWidth?: number;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   style?: any;
 }

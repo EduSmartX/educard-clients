@@ -30,7 +30,7 @@ import {
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { FAB } from '@/components/common';
+import { FAB as FloatingActionButton } from '@/components/common';
 import { useHolidays } from '@/features/holidays';
 import { useMyLeaveRequests, useCancelLeaveRequest } from '@/features/leave';
 import { headerStyles, layoutStyles } from '@/styles';
@@ -329,7 +329,7 @@ export default function MyLeaveRequestsScreen() {
       )}
 
       {/* FAB for Apply Leave */}
-      <FAB
+      <FloatingActionButton
         icon={Plus}
         onPress={() => router.push('/(shared-screens)/leave/apply')}
         style={{ backgroundColor: employeeTheme.accent }}

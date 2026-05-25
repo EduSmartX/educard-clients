@@ -95,7 +95,8 @@ function handleBulkCreateErrors(
   setSubjectRows((prev) => {
     const updated = [...prev];
     for (const msg of allMessages) {
-      const dateMatch = msg.match(/date\s+(\d{4}-\d{2}-\d{2})/i);
+      const dateRegex = /date\s+(\d{4}-\d{2}-\d{2})/i;
+      const dateMatch = dateRegex.exec(msg);
       if (dateMatch) {
         const errorDate = dateMatch[1];
         const rowIdx = updated.findIndex(

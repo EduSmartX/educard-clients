@@ -46,8 +46,6 @@ interface StudentAttendanceTableProps {
     field: 'morning_present' | 'afternoon_present' | 'remarks',
     value: boolean | string
   ) => void;
-  onMarkAllPresent?: () => void;
-  onMarkAllAbsent?: () => void;
 }
 
 // Extracted outside parent component for S6478 compliance

@@ -46,7 +46,7 @@ import {
 } from 'react-native';
 
 import { apiClient } from '@/api/client';
-import { FAB, ConfirmDialog } from '@/components/common';
+import { FAB as FloatingActionButton, ConfirmDialog } from '@/components/common';
 import { useClasses } from '@/features/classes';
 import { useAuthStore } from '@/lib/auth-store';
 import { useToast } from '@/lib/toast-context';
@@ -678,7 +678,11 @@ export default function ExceptionalWorkScreen() {
       </ScrollView>
 
       {canManage && (
-        <FAB onPress={() => setShowCreateModal(true)} icon={Plus} color={adminTheme.accent} />
+        <FloatingActionButton
+          onPress={() => setShowCreateModal(true)}
+          icon={Plus}
+          color={adminTheme.accent}
+        />
       )}
 
       <CreateExceptionModal

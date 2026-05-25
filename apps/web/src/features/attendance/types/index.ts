@@ -67,8 +67,10 @@ export interface AttendanceRecord {
   };
 }
 
+export type LeaveStatus = 'approved' | 'pending' | null;
+
 export interface LeaveInfo {
-  leave_status: 'approved' | 'pending' | null;
+  leave_status: LeaveStatus;
   leave_type: string | null;
   leave_reason: string | null;
   leave_start_date: string | null;

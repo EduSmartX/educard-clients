@@ -144,79 +144,65 @@ export async function validateExcelFile(
     columnMapping[`${col.name}*`] = col.key;
   });
 
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const data = new Uint8Array(arrayBuffer);
+    const workbook = xlsx.read(data, { type: 'array' });
 
-    reader.onload = (e) => {
-      try {
-        const data = new Uint8Array(e.target?.result as ArrayBuffer);
-        const workbook = xlsx.read(data, { type: 'array' });
+    // Get the first sheet
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
 
-        // Get the first sheet
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
+    // Convert to JSON
+    const jsonData = xlsx.utils.sheet_to_json(sheet, {
+      header: 1,
+      raw: false, // Get formatted values
+    }) as unknown[][];
 
-        // Convert to JSON
-        const jsonData = xlsx.utils.sheet_to_json(sheet, {
-          header: 1,
-          raw: false, // Get formatted values
-        }) as unknown[][];
+    if (jsonData.length < skipRows + 1) {
+      return {
+        isValid: false,
+        errors: [{ row: 0, field: 'File', message: 'File is empty or has no data rows' }],
+        data: [],
+      };
+    }
 
-        if (jsonData.length < skipRows + 1) {
-          resolve({
-            isValid: false,
-            errors: [{ row: 0, field: 'File', message: 'File is empty or has no data rows' }],
-            data: [],
-          });
-          return;
-        }
+    // First row is headers
+    const headers = (jsonData[0] as string[]).map((h) => String(h || '').trim());
+    const dataRows = jsonData.slice(skipRows);
 
-        // First row is headers
-        const headers = (jsonData[0] as string[]).map((h) => String(h || '').trim());
-        const dataRows = jsonData.slice(skipRows);
+    const errors: ValidationError[] = [];
+    const parsedData: Record<string, unknown>[] = [];
 
-        const errors: ValidationError[] = [];
-        const parsedData: Record<string, unknown>[] = [];
+    // Track duplicates within file
+    const duplicateMaps = duplicateChecks.map(() => new Map<string, number>());
 
-        // Track duplicates within file
-        const duplicateMaps = duplicateChecks.map(() => new Map<string, number>());
+    for (let index = 0; index < dataRows.length; index++) {
+      const row = dataRows[index];
+      const rowNumber = index + skipRows + 1;
+      const rowArray = row as unknown[];
 
-        for (let index = 0; index < dataRows.length; index++) {
-          const row = dataRows[index];
-          const rowNumber = index + skipRows + 1;
-          const rowArray = row as unknown[];
-
-          if (
-            !rowArray ||
-            rowArray.every(
-              (cell) => cell === undefined || cell === null || String(cell).trim() === ''
-            )
-          ) {
-            continue;
-          }
-
-          const rowData = mapRowToFields(rowArray, headers, columnMapping);
-          validateRowFields(rowData, rowNumber, columns, errors);
-          checkRowDuplicates(rowData, rowNumber, duplicateChecks, duplicateMaps, errors);
-          parsedData.push(rowData);
-        }
-
-        resolve({
-          isValid: errors.length === 0,
-          errors,
-          data: parsedData,
-        });
-      } catch (error) {
-        reject(new Error(`Failed to parse Excel file: ${(error as Error).message}`));
+      if (
+        !rowArray ||
+        rowArray.every((cell) => cell === undefined || cell === null || String(cell).trim() === '')
+      ) {
+        continue;
       }
-    };
 
-    reader.onerror = () => {
-      reject(new Error('Failed to read file'));
-    };
+      const rowData = mapRowToFields(rowArray, headers, columnMapping);
+      validateRowFields(rowData, rowNumber, columns, errors);
+      checkRowDuplicates(rowData, rowNumber, duplicateChecks, duplicateMaps, errors);
+      parsedData.push(rowData);
+    }
 
-    reader.readAsArrayBuffer(file);
-  });
+    return {
+      isValid: errors.length === 0,
+      errors,
+      data: parsedData,
+    };
+  } catch (error) {
+    throw new Error(`Failed to parse Excel file: ${(error as Error).message}`);
+  }
 }
 
 /**

@@ -10,9 +10,6 @@ import type {
   HolidayCreatePayload,
   HolidayUpdatePayload as SharedHolidayUpdatePayload,
   WorkingDayPolicy as SharedWorkingDayPolicy,
-  WorkingDayPolicyCreatePayload,
-  WorkingDayPolicyUpdatePayload,
-  SaturdayOffPatternType,
 } from '@educard/shared';
 
 // Re-export shared types
@@ -22,10 +19,16 @@ export type {
   WorkingDayPolicyCreatePayload,
   WorkingDayPolicyUpdatePayload,
   SaturdayOffPatternType,
-};
+} from '@educard/shared';
 
 export type { HolidayTypeValue } from '@educard/shared';
-export { HOLIDAY_TYPE_COLORS, HolidayType, HolidayTypeLabels, SaturdayOffPattern, SaturdayOffPatternLabels } from '@educard/shared';
+export {
+  HOLIDAY_TYPE_COLORS,
+  HolidayType,
+  HolidayTypeLabels,
+  SaturdayOffPattern,
+  SaturdayOffPatternLabels,
+} from '@educard/shared';
 
 // Re-export with original names for backward compatibility
 export type Holiday = SharedHoliday;

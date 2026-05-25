@@ -46,8 +46,8 @@ export function HolidayFormDialog({
   showTrigger = false,
 }: HolidayFormDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
-  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
-  const setOpen = onOpenChange || setInternalOpen;
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
 
   const [formData, setFormData] = useState<HolidayFormData>(getDefaultHolidayFormData());
   const [fieldErrors, setFieldErrors] = useState<FieldErrors | undefined>();
@@ -148,7 +148,7 @@ export function HolidayFormDialog({
       {mode === 'create' && showTrigger && (
         <DialogTrigger asChild>
           <Button
-            className={`gap-2 bg-gradient-to-r ${config.buttonGradient} shadow-lg hover:shadow-xl transition-all duration-200`}
+            className={`gap-2 bg-gradient-to-r ${config.buttonGradient} shadow-lg transition-all duration-200 hover:shadow-xl`}
           >
             <Calendar className="h-4 w-4" />
             Add Holiday
@@ -156,12 +156,12 @@ export function HolidayFormDialog({
         </DialogTrigger>
       )}
 
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto border-0 p-0 bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto border-0 bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-0">
         <div
-          className={`sticky top-0 z-10 relative overflow-hidden bg-gradient-to-r ${config.headerGradient} px-6 py-8`}
+          className={`relative sticky top-0 z-10 overflow-hidden bg-gradient-to-r ${config.headerGradient} px-6 py-8`}
         >
-          <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"></div>
-          <div className="absolute -left-10 -bottom-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"></div>
+          <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"></div>
+          <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"></div>
 
           <DialogHeader className="relative">
             <div className="flex items-center gap-3">
@@ -170,7 +170,7 @@ export function HolidayFormDialog({
               </div>
               <div>
                 <DialogTitle className="text-2xl font-bold text-white">{config.title}</DialogTitle>
-                <DialogDescription className="text-blue-50 mt-1">
+                <DialogDescription className="mt-1 text-blue-50">
                   {config.description}
                 </DialogDescription>
               </div>
@@ -186,7 +186,7 @@ export function HolidayFormDialog({
                   <Sparkles className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-semibold text-emerald-900 mb-1">Quick Tip</h4>
+                  <h4 className="mb-1 font-semibold text-emerald-900">Quick Tip</h4>
                   <p className="text-sm text-emerald-700">
                     For adding multiple holidays at once, use the{' '}
                     <Badge
@@ -233,7 +233,7 @@ export function HolidayFormDialog({
             <Button
               onClick={handleSubmit}
               disabled={isLoading}
-              className={`bg-gradient-to-r ${config.buttonGradient} shadow-lg hover:shadow-xl transition-all duration-200 min-w-[160px]`}
+              className={`bg-gradient-to-r ${config.buttonGradient} min-w-[160px] shadow-lg transition-all duration-200 hover:shadow-xl`}
             >
               {isLoading ? (
                 <>

@@ -16,13 +16,12 @@ import {
   isSameDay,
 } from 'date-fns';
 
+export type DateInput = Date | string | null | undefined;
+
 /**
  * Format date to string
  */
-export function formatDate(
-  date: Date | string | null | undefined,
-  formatStr: string = 'dd MMM yyyy'
-): string {
+export function formatDate(date: DateInput, formatStr: string = 'dd MMM yyyy'): string {
   if (!date) {
     return '';
   }
@@ -295,7 +294,9 @@ export function validateDateRange(
   startLabel: string = 'Start date',
   endLabel: string = 'End date'
 ): string | null {
-  if (!startDate || !endDate) {return null;}
+  if (!startDate || !endDate) {
+    return null;
+  }
   const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
   const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
   start.setHours(0, 0, 0, 0);

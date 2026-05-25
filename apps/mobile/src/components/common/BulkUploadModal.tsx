@@ -50,7 +50,6 @@ interface BulkUploadModalProps {
   >;
   uploadFile: (fileUri: string, fileName: string) => Promise<BulkUploadResponse>;
   onUploadSuccess?: (result: BulkUploadResult) => void;
-  templateFileName?: string;
   customInfoMessage?: string;
 }
 
@@ -59,7 +58,8 @@ function transformErrors(errors: unknown): BulkUploadError[] {
 
   if (typeof errors === 'object' && !Array.isArray(errors)) {
     return Object.entries(errors).map(([rowKey, errorData]: [string, unknown]) => {
-      const rowMatch = rowKey.match(/Row (\d+)/i);
+      const rowRegex = /Row (\d+)/i;
+      const rowMatch = rowRegex.exec(rowKey);
       const rowNumber = rowMatch ? Number.parseInt(rowMatch[1], 10) : 0;
 
       let errorMessage = 'Validation error';
