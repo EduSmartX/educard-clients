@@ -256,9 +256,9 @@ function buildWeekRows(params: {
   weekStart: Date;
   weekEnd: Date;
   attendanceByDate: Map<string, AttendanceRecord>;
-  holidayDescriptions: Record<string, any>;
+  holidayDescriptions: Record<string, HolidayDescription>;
   holidaySet: Set<string>;
-  workingDayPolicy: any;
+  workingDayPolicy: { sunday_off: boolean; saturday_off_pattern: string } | null;
   exceptionsMap: Map<string, { type: string; reason: string }>;
   defaultPresent: boolean;
   strictLeaveCheck: boolean;

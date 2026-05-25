@@ -71,7 +71,7 @@ export default function CreateExamScreen() {
 
   const classOptions = useMemo(
     () =>
-      classes.map((c: any) => ({
+      classes.map((c) => ({
         label: `${c.class_master?.name || ''} - ${c.name}`.trim(),
         value: c.public_id,
       })),
@@ -80,7 +80,7 @@ export default function CreateExamScreen() {
 
   const subjectOptions = useMemo(
     () =>
-      subjects.map((s: any) => ({
+      subjects.map((s: { public_id: string; name?: string; subject_info?: { name?: string } }) => ({
         label: s.subject_info?.name || s.name || 'Unknown Subject',
         value: s.public_id,
       })),
@@ -115,7 +115,7 @@ export default function CreateExamScreen() {
       });
       showToast({ type: 'success', title: 'Exam Created', message: 'Exam created successfully' });
       router.back();
-    } catch (err: any) {
+    } catch (err: unknown) {
       showToast({ type: 'error', title: 'Error', message: extractApiError(err) });
     }
   };

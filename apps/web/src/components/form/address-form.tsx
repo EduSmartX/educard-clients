@@ -21,7 +21,7 @@ interface FieldNames {
 
 interface AddressFormProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  form: any; // UseFormReturn from react-hook-form
+  form: any;
   required?: boolean;
   fieldPrefix?: string; // For nested form fields like 'address.city'
   showHeader?: boolean;

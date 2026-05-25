@@ -6,6 +6,7 @@
 import { createLeaveApi } from '@educard/shared';
 
 import { apiClient } from '@/api/client';
+import { safeDeleteVoid } from '@/api/shared-api-utils';
 
 // Note: We use manual API functions below instead of shared factory
 // because this module exports additional response wrapper types
@@ -177,15 +178,7 @@ export async function updateLeaveAllocation(
 }
 
 export async function deleteLeaveAllocation(publicId: string): Promise<void> {
-  try {
-    await apiClient.delete(`/leave/admin/allocations/${publicId}/`);
-  } catch (error: unknown) {
-    const axiosError = error as { response?: { status?: number }; message?: string };
-    const status = axiosError?.response?.status;
-    if (status && status >= 200 && status < 300) return;
-    if (axiosError?.message === 'Network Error' && !axiosError?.response) return;
-    throw error;
-  }
+  return safeDeleteVoid(`/leave/admin/allocations/${publicId}/`);
 }
 
 // Leave Approvals API

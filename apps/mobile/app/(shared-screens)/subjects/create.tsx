@@ -136,7 +136,7 @@ export default function CreateSubjectScreen() {
     setErrors(fe);
     if (Object.keys(fe).length > 0) return;
 
-    const payload = buildSubjectPayload(form as any);
+    const payload = buildSubjectPayload(form as unknown as Record<string, string>);
     submitCreate(payload, false);
   }, [form, submitCreate]);
 

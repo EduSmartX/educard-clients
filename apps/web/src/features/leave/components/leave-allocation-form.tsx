@@ -89,7 +89,7 @@ function RoleSelectionField({
   control,
   organizationRoles,
 }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- react-hook-form Control generic variance prevents strict typing
   control: any;
   organizationRoles: { id: number; name: string }[];
 }) {

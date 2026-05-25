@@ -24,7 +24,7 @@ import type {
 } from '@educard/shared';
 
 import { apiClient } from '@/api/client';
-import { isAdminRole } from '@/utils/role-utils';
+import { createRoleBasedUrlResolver } from '@/api/shared-api-utils';
 
 // Types imported directly from shared package
 
@@ -42,17 +42,7 @@ interface DetailResponse<T> {
   data: T;
 }
 
-/**
- * Get the appropriate base URL based on user role and operation type
- */
-function getBaseUrl(userRole?: string | null, isWriteOperation = false): string {
-  // Write operations always use admin endpoint
-  if (isWriteOperation) {
-    return ADMIN_BASE;
-  }
-  // Read operations: use employee endpoint for non-admins
-  return isAdminRole(userRole) ? ADMIN_BASE : EMPLOYEE_BASE;
-}
+const getBaseUrl = createRoleBasedUrlResolver(ADMIN_BASE, EMPLOYEE_BASE);
 
 // Sessions — Queries
 export async function fetchExamSessions(

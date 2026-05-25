@@ -4,18 +4,9 @@
  * Features: Searchable dropdown, scrollable list, master class names
  */
 
-import { Badge } from '@/components/ui/badge';
-import {
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { SearchableSelect } from '@/components/ui/searchable-select';
-import { X } from 'lucide-react';
 import type { Control, FieldPath, FieldValues } from 'react-hook-form';
+import { GenericMultiSelectField } from './generic-multi-select-field';
+import { useMemo } from 'react';
 
 interface ClassOption {
   public_id: string;
@@ -46,116 +37,61 @@ export function ClassesMultiSelectField<TFieldValues extends FieldValues>({
   classes,
   isLoading = false,
 }: ClassesMultiSelectFieldProps<TFieldValues>) {
+  // Format class name to show master class name
+  const formatClassName = (cls: ClassOption) => {
+    // First priority: use display_name if available
+    if (cls.display_name) {
+      return cls.display_name;
+    }
+
+    // Second priority: if name already contains ' - ', it's formatted (e.g., "Pre-KG - Demo U")
+    if (cls.name.includes(' - ')) {
+      return cls.name;
+    }
+
+    // Third priority: combine master_class with section/name
+    if (cls.master_class) {
+      return `${cls.master_class} - ${cls.name}`;
+    }
+
+    // Fourth priority: combine with section if available
+    if (cls.section) {
+      return `${cls.name} - ${cls.section}`;
+    }
+
+    // Fallback: just return name
+    return cls.name;
+  };
+
+  const options = useMemo(
+    () =>
+      classes.map((cls) => ({
+        value: cls.public_id,
+        label: formatClassName(cls),
+      })),
+    [classes]
+  );
+
+  const formatDisplayValue = (classId: string) => {
+    const classObj = classes.find((c) => c.public_id === classId);
+    return classObj ? formatClassName(classObj) : classId;
+  };
+
   return (
-    <FormField
+    <GenericMultiSelectField<TFieldValues, string>
       control={control}
       name={name}
-      render={({ field }) => {
-        const selectedClassIds: string[] = Array.isArray(field.value) ? field.value : [];
-        const availableClasses = Array.isArray(classes)
-          ? classes.filter((cls) => !selectedClassIds.includes(cls.public_id))
-          : [];
-
-        const handleRemoveClass = (classId: string) => {
-          field.onChange(selectedClassIds.filter((id) => id !== classId));
-        };
-
-        // Format class name to show master class name
-        const formatClassName = (cls: ClassOption) => {
-          // First priority: use display_name if available
-          if (cls.display_name) {
-            return cls.display_name;
-          }
-
-          // Second priority: if name already contains ' - ', it's formatted (e.g., "Pre-KG - Demo U")
-          if (cls.name.includes(' - ')) {
-            return cls.name;
-          }
-
-          // Third priority: combine master_class with section/name
-          if (cls.master_class) {
-            return `${cls.master_class} - ${cls.name}`;
-          }
-
-          // Fourth priority: combine with section if available
-          if (cls.section) {
-            return `${cls.name} - ${cls.section}`;
-          }
-
-          // Fallback: just return name
-          return cls.name;
-        };
-
-        const selectOptions = availableClasses.map((cls) => ({
-          value: cls.public_id,
-          label: formatClassName(cls),
-        }));
-
-        const getEmptyText = () => {
-          if (isLoading) {
-            return 'Loading classes...';
-          }
-          if (availableClasses.length === 0) {
-            return 'All classes selected';
-          }
-          return 'No classes available';
-        };
-
-        return (
-          <FormItem>
-            <FormLabel className="font-medium">{label}</FormLabel>
-            <div className="space-y-2">
-              {/* Searchable dropdown to add classes */}
-              <FormControl>
-                <SearchableSelect
-                  options={selectOptions}
-                  value=""
-                  onValueChange={(value) => {
-                    if (value && !selectedClassIds.includes(value)) {
-                      field.onChange([...selectedClassIds, value]);
-                    }
-                  }}
-                  placeholder={placeholder}
-                  searchPlaceholder="Search classes..."
-                  emptyText={getEmptyText()}
-                  disabled={disabled || isLoading || availableClasses.length === 0}
-                  className="border-gray-300 bg-gray-50 focus:bg-white"
-                />
-              </FormControl>
-
-              {/* Display selected classes as badges below */}
-              {selectedClassIds.length > 0 && (
-                <div className="flex max-h-[200px] flex-wrap gap-2 overflow-y-auto rounded-md border bg-gray-50 p-3">
-                  {selectedClassIds.map((classId) => {
-                    const classObj = classes.find((c) => c.public_id === classId);
-                    return (
-                      <Badge
-                        key={classId}
-                        variant="secondary"
-                        className="gap-1.5 px-3 py-1.5 text-sm"
-                      >
-                        <span>{classObj ? formatClassName(classObj) : classId}</span>
-                        {!disabled && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveClass(classId)}
-                            className="ml-1 rounded-full p-0.5 transition-colors hover:bg-gray-300"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        )}
-                      </Badge>
-                    );
-                  })}
-                </div>
-              )}
-
-              {description && <FormDescription className="text-xs">{description}</FormDescription>}
-            </div>
-            <FormMessage />
-          </FormItem>
-        );
-      }}
+      label={label}
+      placeholder={placeholder}
+      searchPlaceholder="Search classes..."
+      disabled={disabled}
+      description={description}
+      isLoading={isLoading}
+      options={options}
+      formatDisplayValue={formatDisplayValue}
+      allSelectedMessage="All classes selected"
+      noItemsMessage="No classes available"
+      loadingMessage="Loading classes..."
     />
   );
 }

@@ -85,11 +85,13 @@ export const getAttendanceReport = async (
   let totalAbsent = 0;
   let totalHalfDay = 0;
 
-  studentWise.forEach((s: any) => {
-    totalPresent += s.present_days || 0;
-    totalAbsent += s.absent_days || 0;
-    totalHalfDay += s.halfday_count || 0;
-  });
+  studentWise.forEach(
+    (s: { present_days?: number; absent_days?: number; halfday_count?: number }) => {
+      totalPresent += s.present_days || 0;
+      totalAbsent += s.absent_days || 0;
+      totalHalfDay += s.halfday_count || 0;
+    }
+  );
 
   const currentPageStudents = studentWise.length;
   const totalPossible = currentPageStudents * totalWorkingDays;
@@ -108,17 +110,29 @@ export const getAttendanceReport = async (
     avg_absent_days: Math.round(avgAbsent * 10) / 10,
     avg_half_days: Math.round(avgHalfDay * 10) / 10,
     pagination,
-    student_wise: studentWise.map((s: any) => ({
-      student_id: s.user__public_id,
-      student_name: `${s.user__first_name || ''} ${s.user__last_name || ''}`.trim(),
-      present: s.present_days || 0,
-      absent: s.absent_days || 0,
-      half_day: s.halfday_count || 0,
-      leave: 0,
-      percentage:
-        s.total_days > 0
-          ? Math.round(((s.present_days + (s.halfday_count || 0) * 0.5) / s.total_days) * 100)
-          : 0,
-    })),
+    student_wise: studentWise.map(
+      (s: {
+        user__public_id?: string;
+        user__first_name?: string;
+        user__last_name?: string;
+        present_days?: number;
+        absent_days?: number;
+        halfday_count?: number;
+        total_days?: number;
+      }) => ({
+        student_id: s.user__public_id,
+        student_name: `${s.user__first_name || ''} ${s.user__last_name || ''}`.trim(),
+        present: s.present_days || 0,
+        absent: s.absent_days || 0,
+        half_day: s.halfday_count || 0,
+        leave: 0,
+        percentage:
+          (s.total_days || 0) > 0
+            ? Math.round(
+                (((s.present_days || 0) + (s.halfday_count || 0) * 0.5) / (s.total_days || 1)) * 100
+              )
+            : 0,
+      })
+    ),
   };
 };

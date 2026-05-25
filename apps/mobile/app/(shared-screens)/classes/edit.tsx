@@ -36,7 +36,10 @@ export default function EditClassScreen() {
   );
   const teacherOpts = useMemo(() => {
     const teachers = teachersData?.teachers || [];
-    return teachers.map((t: any) => ({ value: t.public_id, label: `${t.full_name} (${t.email})` }));
+    return teachers.map((t: { public_id: string; full_name: string; email: string }) => ({
+      value: t.public_id,
+      label: `${t.full_name} (${t.email})`,
+    }));
   }, [teachersData]);
 
   const [form, setForm] = useState<ClassFormState>({
@@ -52,7 +55,17 @@ export default function EditClassScreen() {
 
   useEffect(() => {
     if (classDetail && !formLoaded) {
-      const detail = classDetail as any;
+      const detail = classDetail as {
+        class_master?: { id?: number };
+        name?: string;
+        section?: string;
+        capacity?: number;
+        class_teacher?: { public_id?: string };
+        class_teacher_id?: string;
+        room_number?: string;
+        info?: string;
+        description?: string;
+      };
       setForm({
         class_master: detail.class_master?.id?.toString() || '',
         name: detail.name || detail.section || '',
@@ -97,15 +110,16 @@ export default function EditClassScreen() {
     setErrors(fe);
     if (Object.keys(fe).length > 0) return;
 
-    const payload = buildClassPayload(form as any);
+    const payload = buildClassPayload(form as unknown as Record<string, string>);
     updateMutation.mutate(
       { publicId: id, data: payload },
       {
         onSuccess: () => {
           router.back();
         },
-        onError: (err: any) => {
-          const { fieldErrors: fe2, generalError } = parseApiErrors(err?.response?.data);
+        onError: (err: unknown) => {
+          const apiErr = err as { response?: { data?: Record<string, unknown> } };
+          const { fieldErrors: fe2, generalError } = parseApiErrors(apiErr?.response?.data);
           if (Object.keys(fe2).length > 0) {
             setErrors(fe2);
             return;

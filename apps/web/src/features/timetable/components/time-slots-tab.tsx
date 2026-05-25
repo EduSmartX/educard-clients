@@ -12,7 +12,17 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Trash2, Save, Clock, AlertTriangle, Copy, AlertCircle, Check } from 'lucide-react';
+import {
+  Plus,
+  Trash2,
+  Save,
+  Clock,
+  AlertTriangle,
+  Copy,
+  AlertCircle,
+  Check,
+  Coffee,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -33,6 +43,7 @@ import { useBulkSaveSlots, useClearDaySlots } from '../hooks/mutations';
 import {
   DAY_LABELS,
   DAY_SHORT_LABELS,
+  SLOT_TYPE,
   SLOT_TYPE_LABELS,
   BREAK_TYPES,
   ALL_DAYS,

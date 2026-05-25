@@ -1,6 +1,7 @@
 /**
  * Preference Modals - extracted from preferences/index.tsx
  * Reduces nesting depth and cognitive complexity
+ * Refactored to use generic SelectionModal components
  */
 
 import { Colors } from '@educard/shared';
@@ -9,6 +10,11 @@ import { Modal, Pressable, ScrollView, Text, TouchableOpacity, View } from 'reac
 
 import type { OrganizationPreference } from '@/features/preferences';
 import type { SaturdayOffPattern } from '@/features/holidays/api/holidays-api';
+import {
+  SingleSelectModal as GenericSingleSelectModal,
+  MultiSelectModal as GenericMultiSelectModal,
+  type SingleSelectOption,
+} from '@/components/common/SelectionModal';
 
 import { formatDropdownValue } from './constants';
 import { styles } from './styles';
@@ -23,53 +29,25 @@ interface SingleSelectModalProps {
 
 export function SingleSelectModal({ pref, onClose, onSelect }: SingleSelectModalProps) {
   if (!pref) return null;
-  const options = pref.applicable_values ?? [];
+
+  const options: SingleSelectOption[] = (pref.applicable_values ?? []).map((val) => ({
+    value: val,
+    label: formatDropdownValue(val),
+  }));
+
   const currentVal = String(pref.value);
 
   return (
-    <Modal visible transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.modalOverlay} onPress={onClose}>
-        <Pressable style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
-          <View style={styles.modalHandle} />
-          <Text style={styles.modalTitle}>{pref.display_name}</Text>
-          <ScrollView style={styles.modalList}>
-            {options.map((val) => (
-              <SingleSelectOption
-                key={val}
-                val={val}
-                isSelected={val === currentVal}
-                onPress={() => {
-                  onSelect(pref.public_id, val);
-                  onClose();
-                }}
-              />
-            ))}
-          </ScrollView>
-        </Pressable>
-      </Pressable>
-    </Modal>
-  );
-}
-
-function SingleSelectOption({
-  val,
-  isSelected,
-  onPress,
-}: {
-  val: string;
-  isSelected: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <TouchableOpacity
-      style={[styles.modalOption, isSelected && styles.modalOptionSelected]}
-      onPress={onPress}
-    >
-      <Text style={[styles.modalOptionText, isSelected && styles.modalOptionTextSelected]}>
-        {formatDropdownValue(val)}
-      </Text>
-      {isSelected && <Check size={18} color="#16a34a" />}
-    </TouchableOpacity>
+    <GenericSingleSelectModal
+      visible={true}
+      onClose={onClose}
+      title={pref.display_name}
+      options={options}
+      selectedValue={currentVal}
+      onSelect={(value) => {
+        onSelect(pref.public_id, value);
+      }}
+    />
   );
 }
 
@@ -91,64 +69,30 @@ export function MultiSelectModal({
   onSave,
 }: MultiSelectModalProps) {
   if (!pref) return null;
-  const options = pref.applicable_values ?? [];
+
+  const options: SingleSelectOption[] = (pref.applicable_values ?? []).map((val) => ({
+    value: val,
+    label: formatDropdownValue(val),
+  }));
 
   const handleToggle = (val: string) => {
     setValues((prev) => (prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val]));
   };
 
-  return (
-    <Modal visible transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.modalOverlay} onPress={onClose}>
-        <Pressable style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
-          <View style={styles.modalHandle} />
-          <Text style={styles.modalTitle}>{pref.display_name}</Text>
-          <ScrollView style={styles.modalList}>
-            {options.map((val) => (
-              <MultiSelectOption
-                key={val}
-                val={val}
-                isSelected={values.includes(val)}
-                onToggle={handleToggle}
-              />
-            ))}
-          </ScrollView>
-          <TouchableOpacity
-            style={styles.modalSaveBtn}
-            onPress={() => {
-              onSave(pref.public_id, values.join(','));
-              onClose();
-            }}
-          >
-            <Text style={styles.modalSaveBtnText}>Save ({values.length} selected)</Text>
-          </TouchableOpacity>
-        </Pressable>
-      </Pressable>
-    </Modal>
-  );
-}
+  const handleSave = () => {
+    onSave(pref.public_id, values.join(','));
+  };
 
-function MultiSelectOption({
-  val,
-  isSelected,
-  onToggle,
-}: {
-  val: string;
-  isSelected: boolean;
-  onToggle: (val: string) => void;
-}) {
   return (
-    <TouchableOpacity
-      style={[styles.modalOption, isSelected && styles.modalOptionSelected]}
-      onPress={() => onToggle(val)}
-    >
-      <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
-        {isSelected && <Check size={12} color="#fff" />}
-      </View>
-      <Text style={[styles.modalOptionText, isSelected && styles.modalOptionTextSelected]}>
-        {formatDropdownValue(val)}
-      </Text>
-    </TouchableOpacity>
+    <GenericMultiSelectModal
+      visible={true}
+      onClose={onClose}
+      title={pref.display_name}
+      options={options}
+      selectedValues={values}
+      onToggle={handleToggle}
+      onSave={handleSave}
+    />
   );
 }
 
@@ -169,37 +113,19 @@ export function SaturdayPatternModal({
   currentPattern,
   onSelect,
 }: SaturdayModalProps) {
+  const selectOptions: SingleSelectOption[] = options.map((opt) => ({
+    value: opt.value,
+    label: opt.label,
+  }));
+
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.modalOverlay} onPress={onClose}>
-        <Pressable style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
-          <View style={styles.modalHandle} />
-          <Text style={styles.modalTitle}>Saturday Off Pattern</Text>
-          <ScrollView style={styles.modalList}>
-            {options.map((opt) => {
-              const isSelected = currentPattern === opt.value;
-              return (
-                <TouchableOpacity
-                  key={opt.value}
-                  style={[styles.modalOption, isSelected && styles.modalOptionSelected]}
-                  onPress={() => {
-                    onSelect(opt.value);
-                    onClose();
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <Text
-                    style={[styles.modalOptionText, isSelected && styles.modalOptionTextSelected]}
-                  >
-                    {opt.label}
-                  </Text>
-                  {isSelected && <Check size={18} color={Colors.primary[500]} />}
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </Pressable>
-      </Pressable>
-    </Modal>
+    <GenericSingleSelectModal
+      visible={visible}
+      onClose={onClose}
+      title="Saturday Off Pattern"
+      options={selectOptions}
+      selectedValue={currentPattern || ''}
+      onSelect={(value) => onSelect(value as SaturdayOffPattern)}
+    />
   );
 }

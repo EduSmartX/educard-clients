@@ -15,12 +15,19 @@ import type {
 } from '@educard/shared';
 
 import { apiClient } from '@/api/client';
-import { isAdminRole } from '@/utils/role-utils';
+import {
+  createRoleBasedUrlResolver,
+  safeDeleteVoid,
+  bulkUploadExcel,
+  type BulkUploadResponse,
+} from '@/api/shared-api-utils';
 
 // Admin endpoints - Full CRUD operations
 const ADMIN_BASE_URL = '/classes/admin/';
 // Employee endpoints - Read-only access
 const EMPLOYEE_BASE_URL = '/classes/employee/';
+
+const getBaseUrl = createRoleBasedUrlResolver(ADMIN_BASE_URL, EMPLOYEE_BASE_URL);
 
 export type ClassListResponse = ApiListResponse<Class>;
 export type ClassDetailResponse = ApiDetailResponse<ClassDetail>;
@@ -33,22 +40,8 @@ export interface ClassQueryParams {
   page?: number;
   page_size?: number;
   ordering?: string;
-  // For filtering to only managed classes (where teacher is class teacher)
   for_student_form?: boolean;
   for_subject_form?: boolean;
-}
-
-/**
- * Get the appropriate base URL based on user role and operation type
- */
-function getBaseUrl(userRole?: string | null, isWriteOperation = false): string {
-  // Write operations always use admin endpoint
-  if (isWriteOperation) {
-    return ADMIN_BASE_URL;
-  }
-
-  // Read operations: use employee endpoint for non-admins, admin endpoint for admins
-  return isAdminRole(userRole) ? ADMIN_BASE_URL : EMPLOYEE_BASE_URL;
 }
 
 export async function getClasses(
@@ -96,16 +89,7 @@ export async function updateClass(
 }
 
 export async function deleteClass(publicId: string): Promise<void> {
-  // Always use admin endpoint for delete
-  try {
-    await apiClient.delete(`${ADMIN_BASE_URL}${publicId}/`);
-  } catch (error: unknown) {
-    const axiosError = error as { response?: { status?: number }; message?: string };
-    const status = axiosError?.response?.status;
-    if (status && status >= 200 && status < 300) return;
-    if (axiosError?.message === 'Network Error' && !axiosError?.response) return;
-    throw error;
-  }
+  return safeDeleteVoid(`${ADMIN_BASE_URL}${publicId}/`);
 }
 
 export async function restoreClass(publicId: string): Promise<ClassDetailResponse> {
@@ -132,41 +116,6 @@ export async function downloadClassTemplate(): Promise<ArrayBuffer> {
 export async function bulkUploadClasses(
   fileUri: string,
   fileName: string
-): Promise<{
-  success: boolean;
-  message: string;
-  data: {
-    created_count?: number;
-    successful_count?: number;
-    failed_count: number;
-    total_rows?: number;
-    errors: { row: number; error: string; data?: Record<string, unknown> | null }[];
-  };
-  code: number;
-}> {
-  const formData = new FormData();
-  formData.append('file', {
-    uri: fileUri,
-    name: fileName,
-    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  } as unknown as Blob);
-
-  const response = await apiClient.post<{
-    success: boolean;
-    message: string;
-    data: {
-      created_count?: number;
-      successful_count?: number;
-      failed_count: number;
-      total_rows?: number;
-      errors: { row: number; error: string; data?: Record<string, unknown> | null }[];
-    };
-    code: number;
-  }>(`${ADMIN_BASE_URL}bulk-upload/`, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
-
-  return response.data;
+): Promise<BulkUploadResponse> {
+  return bulkUploadExcel(`${ADMIN_BASE_URL}bulk-upload/`, fileUri, fileName);
 }

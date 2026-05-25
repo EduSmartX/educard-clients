@@ -59,7 +59,7 @@ export default function CreateTeacherScreen() {
   const { data: coreSubjects } = useCoreSubjects();
 
   const duplicateHandler = useDeletedDuplicateHandler<{
-    payload: any;
+    payload: Record<string, unknown>;
     deletedRecordId: string | null;
   }>();
 
@@ -112,7 +112,7 @@ export default function CreateTeacherScreen() {
   );
 
   const updateField = useCallback(
-    (field: string, value: any) => {
+    (field: string, value: string | string[]) => {
       setForm((prev) => ({ ...prev, [field]: value }));
       if (errors[field])
         setErrors((prev) => {
@@ -155,17 +155,21 @@ export default function CreateTeacherScreen() {
   }, [form, quickAdd, schema, submitCreate]);
 
   const submitCreate = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (payload: any, forceCreate: boolean) => {
       createMutation.mutate(
         { data: payload, forceCreate },
         {
-          onSuccess: (response: any) => {
+          onSuccess: (response: {
+            data?: { user?: { public_id?: string } };
+            user?: { public_id?: string };
+          }) => {
             duplicateHandler.closeDialog();
             const uid = response?.data?.user?.public_id || response?.user?.public_id;
             if (photoUri && uid) uploadProfilePhoto(uid, photoUri, 'photo.jpg').catch(() => {});
             router.back();
           },
-          onError: (err: any) => {
+          onError: (err: unknown) => {
             // Check for deleted duplicate error
             if (isDeletedDuplicateError(err)) {
               const msg = getDeletedDuplicateMessage(err);
@@ -174,8 +178,12 @@ export default function CreateTeacherScreen() {
               return;
             }
 
-            if (err?.response?.data) {
-              const { fieldErrors: fe, generalError } = parseApiErrors(err.response.data);
+            const apiErr = err as {
+              response?: { data?: Record<string, unknown> };
+              message?: string;
+            };
+            if (apiErr?.response?.data) {
+              const { fieldErrors: fe, generalError } = parseApiErrors(apiErr.response.data);
               if (Object.keys(fe).length > 0) {
                 setErrors(fe);
                 scrollRef.current?.scrollToPosition(0, 0, true);
@@ -184,7 +192,7 @@ export default function CreateTeacherScreen() {
               setApiError(generalError || 'Failed to create teacher.');
             } else {
               setApiError(
-                err?.message || 'Network error. Please check your connection and try again.'
+                apiErr?.message || 'Network error. Please check your connection and try again.'
               );
             }
           },

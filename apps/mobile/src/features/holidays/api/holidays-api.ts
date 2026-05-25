@@ -13,9 +13,12 @@ import {
   type WorkingDayPolicy,
   type WorkingDayPolicyCreatePayload,
   type SaturdayOffPatternType,
+  type ApiListResponse,
+  type ApiDetailResponse,
 } from '@educard/shared';
 
 import { apiClient } from '@/api/client';
+import { safeDeleteVoid, bulkUploadExcel, type BulkUploadResponse } from '@/api/shared-api-utils';
 
 // Re-export types for external use with backward-compatible names
 export type { Holiday, WorkingDayPolicy, HolidayTypeValue } from '@educard/shared';
@@ -30,24 +33,6 @@ export { HolidayType, HolidayTypeLabels } from '@educard/shared';
 // Note: We use manual API functions below instead of shared factory
 // because this module exports additional response wrapper types
 const _holidaysApi = createHolidaysApi({ client: apiClient });
-
-interface ApiListResponse<T> {
-  success: boolean;
-  message: string;
-  data: T[];
-  pagination?: {
-    count: number;
-    page: number;
-    page_size: number;
-    total_pages: number;
-  };
-}
-
-interface ApiDetailResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-}
 
 // ============================================================================
 // Holidays API
@@ -98,15 +83,7 @@ export async function updateHoliday(
 }
 
 export async function deleteHoliday(id: string): Promise<void> {
-  try {
-    await apiClient.delete(`/attendance/admin/holiday-calendar/${id}/`);
-  } catch (error: unknown) {
-    const axiosError = error as { response?: { status?: number }; message?: string };
-    const status = axiosError?.response?.status;
-    if (status && status >= 200 && status < 300) return;
-    if (axiosError?.message === 'Network Error' && !axiosError?.response) return;
-    throw error;
-  }
+  return safeDeleteVoid(`/attendance/admin/holiday-calendar/${id}/`);
 }
 
 // ============================================================================
@@ -167,41 +144,6 @@ export async function downloadHolidayTemplate(): Promise<ArrayBuffer> {
 export async function bulkUploadHolidays(
   fileUri: string,
   fileName: string
-): Promise<{
-  success: boolean;
-  message: string;
-  data: {
-    created_count?: number;
-    successful_count?: number;
-    failed_count: number;
-    total_rows?: number;
-    errors: { row: number; error: string; data?: Record<string, unknown> | null }[];
-  };
-  code: number;
-}> {
-  const formData = new FormData();
-  formData.append('file', {
-    uri: fileUri,
-    name: fileName,
-    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  } as unknown as Blob);
-
-  const response = await apiClient.post<{
-    success: boolean;
-    message: string;
-    data: {
-      created_count?: number;
-      successful_count?: number;
-      failed_count: number;
-      total_rows?: number;
-      errors: { row: number; error: string; data?: Record<string, unknown> | null }[];
-    };
-    code: number;
-  }>('/attendance/admin/holiday-calendar/bulk-upload/', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
-
-  return response.data;
+): Promise<BulkUploadResponse> {
+  return bulkUploadExcel('/attendance/admin/holiday-calendar/bulk-upload/', fileUri, fileName);
 }

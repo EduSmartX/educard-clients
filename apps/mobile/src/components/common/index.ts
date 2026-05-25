@@ -20,3 +20,7 @@ export { ConfirmDialog } from './ConfirmDialog';
 export { SubmitButton, CancelButton, ButtonRow } from './SubmitButton';
 export { BulkUploadModal } from './BulkUploadModal';
 export type { BulkUploadError, BulkUploadResult, BulkUploadResponse } from './BulkUploadModal';
+
+// Generic Selection Modals
+export { SingleSelectModal, MultiSelectModal, SelectionOption } from './SelectionModal';
+export type { SingleSelectOption } from './SelectionModal';

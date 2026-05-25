@@ -37,7 +37,7 @@ export default function CreateClassScreen() {
   const { data: teachersData } = useTeachers({ page_size: 100 });
 
   const duplicateHandler = useDeletedDuplicateHandler<{
-    payload: any;
+    payload: Record<string, unknown>;
     deletedRecordId: string | null;
   }>();
 
@@ -47,7 +47,10 @@ export default function CreateClassScreen() {
   );
   const teacherOpts = useMemo(() => {
     const teachers = teachersData?.teachers || [];
-    return teachers.map((t: any) => ({ value: t.public_id, label: `${t.full_name} (${t.email})` }));
+    return teachers.map((t: { public_id: string; full_name: string; email: string }) => ({
+      value: t.public_id,
+      label: `${t.full_name} (${t.email})`,
+    }));
   }, [teachersData]);
 
   const [form, setForm] = useState<ClassFormState>({
@@ -88,7 +91,7 @@ export default function CreateClassScreen() {
   );
 
   const submitCreate = useCallback(
-    (payload: any, forceCreate: boolean) => {
+    (payload: Record<string, unknown>, forceCreate: boolean) => {
       createMutation.mutate(
         { data: payload, forceCreate },
         {
@@ -126,7 +129,7 @@ export default function CreateClassScreen() {
     setErrors(fe);
     if (Object.keys(fe).length > 0) return;
 
-    const payload = buildClassPayload(form as any);
+    const payload = buildClassPayload(form as unknown as Record<string, string>);
     submitCreate(payload, false);
   }, [form, submitCreate]);
 

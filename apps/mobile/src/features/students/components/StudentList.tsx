@@ -50,10 +50,15 @@ export interface StudentListProps {
 }
 
 /** Get display name for a class, handling various data shapes */
-function getClassDisplayName(classInfo: any): string | null {
+function getClassDisplayName(
+  classInfo:
+    | { class_master_name?: string; class_master?: { name?: string }; name?: string }
+    | null
+    | undefined
+): string | null {
   if (!classInfo) return null;
   const masterName = classInfo.class_master_name || classInfo.class_master?.name;
-  return masterName ? `${masterName} - ${classInfo.name}` : classInfo.name;
+  return masterName ? `${masterName} - ${classInfo.name}` : classInfo.name || null;
 }
 
 export function StudentList({ onBack }: StudentListProps) {

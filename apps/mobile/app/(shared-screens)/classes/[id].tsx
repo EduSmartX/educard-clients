@@ -60,17 +60,19 @@ export default function ClassDetailScreen() {
         <Animated.View entering={FadeInDown.delay(300)}>
           <DetailSection title="Subjects" icon="📚">
             <ChipRow
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
-              items={c.subjects.map((s: any) => {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
-                const name = s.subject_info?.name || s.name;
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                const code = s.subject_info?.code || s.code;
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
-                const label = code ? `${name} (${code})` : String(name);
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
-                return { key: s.public_id, label };
-              })}
+              items={c.subjects.map(
+                (s: {
+                  public_id: string;
+                  name?: string;
+                  code?: string;
+                  subject_info?: { name?: string; code?: string };
+                }) => {
+                  const name = s.subject_info?.name || s.name;
+                  const code = s.subject_info?.code || s.code;
+                  const label = code ? `${name} (${code})` : String(name);
+                  return { key: s.public_id, label };
+                }
+              )}
             />
           </DetailSection>
         </Animated.View>
@@ -79,16 +81,14 @@ export default function ClassDetailScreen() {
       {c?.students?.length ? (
         <Animated.View entering={FadeInDown.delay(400)}>
           <DetailSection title={`Students (${c.students.length})`} icon="🎓">
-            {/* eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any */}
-            {c.students.map((s: any) => (
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-              <View key={s.public_id} style={extraStyles.studentRow}>
-                {/* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access */}
-                <Text style={extraStyles.studentName}>{s.full_name}</Text>
-                {/* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access */}
-                <Text style={extraStyles.studentAdm}>{s.admission_number}</Text>
-              </View>
-            ))}
+            {c.students.map(
+              (s: { public_id: string; full_name: string; admission_number: string }) => (
+                <View key={s.public_id} style={extraStyles.studentRow}>
+                  <Text style={extraStyles.studentName}>{s.full_name}</Text>
+                  <Text style={extraStyles.studentAdm}>{s.admission_number}</Text>
+                </View>
+              )
+            )}
           </DetailSection>
         </Animated.View>
       ) : null}

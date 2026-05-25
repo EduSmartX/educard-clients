@@ -11,6 +11,7 @@ import type {
 } from '@educard/shared';
 
 import { apiClient } from '@/api/client';
+import { safeDelete, bulkUploadExcel, type BulkUploadResponse } from '@/api/shared-api-utils';
 
 export type StudentListResponse = ApiListResponse<Student>;
 export type StudentDetailResponse = ApiDetailResponse<Student>;
@@ -81,18 +82,7 @@ export async function deleteStudent(
   const url = classId
     ? API_ENDPOINTS.STUDENTS.CLASS_LEVEL.DELETE(classId, publicId)
     : API_ENDPOINTS.STUDENTS.DELETE(publicId);
-  try {
-    const response = await apiClient.delete<ApiMessageResponse>(url);
-    return response.data || { success: true, message: 'Student deleted successfully' };
-  } catch (error: unknown) {
-    const axiosError = error as { response?: { status?: number }; message?: string };
-    const status = axiosError?.response?.status;
-    if (status && status >= 200 && status < 300)
-      return { success: true, message: 'Student deleted successfully' };
-    if (axiosError?.message === 'Network Error' && !axiosError?.response)
-      return { success: true, message: 'Student deleted successfully' };
-    throw error;
-  }
+  return safeDelete(url, 'Student deleted successfully');
 }
 
 export async function restoreStudent(
@@ -134,43 +124,7 @@ export async function bulkUploadStudents(
   fileUri: string,
   fileName: string,
   minimalFields = false
-): Promise<{
-  success: boolean;
-  message: string;
-  data: {
-    created_count?: number;
-    successful_count?: number;
-    failed_count: number;
-    total_rows?: number;
-    errors: { row: number; error: string; data?: Record<string, unknown> | null }[];
-  };
-  code: number;
-}> {
-  const formData = new FormData();
-  formData.append('file', {
-    uri: fileUri,
-    name: fileName,
-    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  } as unknown as Blob);
-
-  const params = minimalFields ? { minimal_fields: 'true' } : {};
-  const response = await apiClient.post<{
-    success: boolean;
-    message: string;
-    data: {
-      created_count?: number;
-      successful_count?: number;
-      failed_count: number;
-      total_rows?: number;
-      errors: { row: number; error: string; data?: Record<string, unknown> | null }[];
-    };
-    code: number;
-  }>('/students/bulk-operations/bulk_upload/', formData, {
-    params,
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
-
-  return response.data;
+): Promise<BulkUploadResponse> {
+  const params = minimalFields ? { minimal_fields: 'true' } : undefined;
+  return bulkUploadExcel('/students/bulk-operations/bulk_upload/', fileUri, fileName, params);
 }

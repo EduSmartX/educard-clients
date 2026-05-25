@@ -86,8 +86,9 @@ export default function EnterMarksScreen() {
       const studentName =
         (existing?.student_name ??
           s.full_name ??
-          (s as any).user_info?.full_name ??
-          `${(s as any).user_info?.first_name ?? ''} ${(s as any).user_info?.last_name ?? ''}`.trim()) ||
+          (s as { user_info?: { full_name?: string; first_name?: string; last_name?: string } })
+            .user_info?.full_name ??
+          `${(s as { user_info?: { first_name?: string; last_name?: string } }).user_info?.first_name ?? ''} ${(s as { user_info?: { first_name?: string; last_name?: string } }).user_info?.last_name ?? ''}`.trim()) ||
         `Student ${s.roll_number ?? s.admission_number}`;
       map[s.public_id] = {
         studentId: s.public_id,
@@ -190,7 +191,7 @@ export default function EnterMarksScreen() {
         message: `Saved marks for ${marks.length} students`,
       });
       router.back();
-    } catch (err: any) {
+    } catch (err: unknown) {
       showToast({ type: 'error', title: 'Error', message: extractApiError(err) });
     }
   };

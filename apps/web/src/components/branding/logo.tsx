@@ -56,14 +56,14 @@ export function Logo({
         {withGlow && (
           <div
             className={cn(
-              'absolute inset-0 rounded-full blur-xl opacity-50',
+              'absolute inset-0 rounded-full opacity-50 blur-xl',
               `bg-gradient-to-br ${BRANDING.LOGO_FALLBACK.BG_GRADIENT}`
             )}
           />
         )}
         <div
           className={cn(
-            'relative rounded-full flex items-center justify-center font-bold shadow-lg',
+            'relative flex items-center justify-center rounded-full font-bold shadow-lg',
             `bg-gradient-to-br ${BRANDING.LOGO_FALLBACK.BG_GRADIENT}`,
             BRANDING.LOGO_FALLBACK.TEXT_COLOR,
             sizeClasses[size],
@@ -84,14 +84,14 @@ export function Logo({
       {withGlow && (
         <div
           className={cn(
-            'absolute inset-0 rounded-full blur-2xl opacity-60',
+            'absolute inset-0 rounded-full opacity-60 blur-2xl',
             'bg-gradient-to-br from-teal-400/80 to-cyan-400/80'
           )}
         />
       )}
       <div
         className={cn(
-          'relative rounded-full overflow-hidden shadow-xl',
+          'relative overflow-hidden rounded-full shadow-xl',
           sizeClasses[size],
           withRing && 'ring-4 ring-white/50',
           'bg-white'
@@ -100,17 +100,20 @@ export function Logo({
         <img
           src={logoSrc}
           alt={`${BRANDING.APP_NAME} Logo`}
-          className="w-full h-full object-cover"
+          className="h-full w-full object-cover"
           onError={(e) => {
             // Fallback to text logo if image fails to load
             const target = e.target as HTMLImageElement;
             const parent = target.parentElement;
             if (parent) {
-              parent.innerHTML = `
-                <div class="w-full h-full flex items-center justify-center font-bold bg-gradient-to-br ${BRANDING.LOGO_FALLBACK.BG_GRADIENT} ${BRANDING.LOGO_FALLBACK.TEXT_COLOR}">
-                  ${BRANDING.LOGO_FALLBACK.TEXT}
-                </div>
-              `;
+              // Remove the image element
+              target.remove();
+
+              // Create fallback element safely
+              const fallbackDiv = document.createElement('div');
+              fallbackDiv.className = `w-full h-full flex items-center justify-center font-bold bg-gradient-to-br ${BRANDING.LOGO_FALLBACK.BG_GRADIENT} ${BRANDING.LOGO_FALLBACK.TEXT_COLOR}`;
+              fallbackDiv.textContent = BRANDING.LOGO_FALLBACK.TEXT;
+              parent.appendChild(fallbackDiv);
             }
           }}
         />
@@ -147,11 +150,11 @@ export function LogoWithText({
     <div className={cn('flex items-center gap-3', className)}>
       <Logo variant="icon" size={size} withGlow={withGlow} className={iconClassName} />
       <div className="flex flex-col">
-        <span className={cn('font-bold leading-none', textSizeClasses[size], textClassName)}>
+        <span className={cn('leading-none font-bold', textSizeClasses[size], textClassName)}>
           <span className="text-teal-600">Edu</span>
           <span className="text-gray-800">Card</span>
         </span>
-        <span className="text-xs text-gray-600 font-medium">Unlock Knowledge</span>
+        <span className="text-xs font-medium text-gray-600">Unlock Knowledge</span>
       </div>
     </div>
   );

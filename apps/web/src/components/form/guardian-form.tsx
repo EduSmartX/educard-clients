@@ -18,7 +18,7 @@ interface FieldNames {
 
 interface GuardianFormProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  form: any; // UseFormReturn from react-hook-form
+  form: any;
   required?: boolean;
   fieldPrefix?: string; // For nested form fields
   showHeader?: boolean;

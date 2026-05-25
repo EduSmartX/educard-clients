@@ -118,11 +118,12 @@ export default function ExamDashboardScreen() {
             message: `Exam status changed to ${newStatus}`,
           });
         },
-        onError: (err: any) => {
+        onError: (err: unknown) => {
+          const error = err as { message?: string };
           showToast({
             type: 'error',
             title: 'Error',
-            message: err?.message || 'Failed to update status',
+            message: error?.message || 'Failed to update status',
           });
         },
       }
@@ -178,7 +179,23 @@ export default function ExamDashboardScreen() {
     );
   };
 
-  const renderStudent = ({ item, index }: { item: any; index: number }) => {
+  const renderStudent = ({
+    item,
+    index,
+  }: {
+    item: {
+      student_public_id: string;
+      student_name: string;
+      admission_number: string;
+      summary?: {
+        is_pass: boolean | null;
+        total_obtained: number;
+        total_max: number;
+        percentage: number;
+      };
+    };
+    index: number;
+  }) => {
     const passed = item.summary?.is_pass;
     return (
       <Animated.View

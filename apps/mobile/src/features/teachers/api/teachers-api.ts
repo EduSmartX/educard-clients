@@ -17,14 +17,19 @@ import type {
 } from '@educard/shared';
 
 import { apiClient } from '@/api/client';
-// API_ENDPOINTS unused - keeping for future reference
-// import { API_ENDPOINTS } from '@/constants';
-import { isAdminRole } from '@/utils/role-utils';
+import {
+  createRoleBasedUrlResolver,
+  safeDelete,
+  bulkUploadExcel,
+  type BulkUploadResponse,
+} from '@/api/shared-api-utils';
 
 // Admin endpoints - Full CRUD operations
 const ADMIN_BASE_URL = '/teacher/admin/';
 // Employee endpoints - Read-only access (phone numbers masked)
 const EMPLOYEE_BASE_URL = '/teacher/employee/';
+
+const getBaseUrl = createRoleBasedUrlResolver(ADMIN_BASE_URL, EMPLOYEE_BASE_URL);
 
 export type TeacherListResponse = ApiListResponse<Teacher>;
 
@@ -37,19 +42,6 @@ export interface TeacherQueryParams {
   gender?: string;
   designation?: string;
   embed_images?: boolean;
-}
-
-/**
- * Get the appropriate base URL based on user role and operation type
- */
-function getBaseUrl(userRole?: string | null, isWriteOperation = false): string {
-  // Write operations always use admin endpoint
-  if (isWriteOperation) {
-    return ADMIN_BASE_URL;
-  }
-
-  // Read operations: use employee endpoint for non-admins, admin endpoint for admins
-  return isAdminRole(userRole) ? ADMIN_BASE_URL : EMPLOYEE_BASE_URL;
 }
 
 export async function getTeachers(
@@ -106,20 +98,7 @@ export async function updateTeacher(
 }
 
 export async function deleteTeacher(publicId: string): Promise<ApiMessageResponse> {
-  // Always use admin endpoint for delete
-  // 204 No Content returns empty body which can cause parsing issues on mobile
-  try {
-    const response = await apiClient.delete<ApiMessageResponse>(`${ADMIN_BASE_URL}${publicId}/`);
-    return response.data || { success: true, message: 'Teacher deleted successfully' };
-  } catch (error: unknown) {
-    const axiosError = error as { response?: { status?: number }; message?: string };
-    const status = axiosError?.response?.status;
-    if (status && status >= 200 && status < 300)
-      return { success: true, message: 'Teacher deleted successfully' };
-    if (axiosError?.message === 'Network Error' && !axiosError?.response)
-      return { success: true, message: 'Teacher deleted successfully' };
-    throw error;
-  }
+  return safeDelete(`${ADMIN_BASE_URL}${publicId}/`, 'Teacher deleted successfully');
 }
 
 export async function restoreTeacher(publicId: string): Promise<ApiDetailResponse<Teacher>> {
@@ -146,41 +125,6 @@ export async function downloadTeacherTemplate(): Promise<ArrayBuffer> {
 export async function bulkUploadTeachers(
   fileUri: string,
   fileName: string
-): Promise<{
-  success: boolean;
-  message: string;
-  data: {
-    created_count?: number;
-    successful_count?: number;
-    failed_count: number;
-    total_rows?: number;
-    errors: { row: number; error: string; data?: Record<string, unknown> | null }[];
-  };
-  code: number;
-}> {
-  const formData = new FormData();
-  formData.append('file', {
-    uri: fileUri,
-    name: fileName,
-    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  } as unknown as Blob);
-
-  const response = await apiClient.post<{
-    success: boolean;
-    message: string;
-    data: {
-      created_count?: number;
-      successful_count?: number;
-      failed_count: number;
-      total_rows?: number;
-      errors: { row: number; error: string; data?: Record<string, unknown> | null }[];
-    };
-    code: number;
-  }>(`${ADMIN_BASE_URL}bulk-upload/`, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
-
-  return response.data;
+): Promise<BulkUploadResponse> {
+  return bulkUploadExcel(`${ADMIN_BASE_URL}bulk-upload/`, fileUri, fileName);
 }

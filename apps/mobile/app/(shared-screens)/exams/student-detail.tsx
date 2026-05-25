@@ -228,47 +228,57 @@ export default function StudentDetailScreen() {
         {/* Subject-wise Marks with Horizontal Bars */}
         <Animated.View entering={FadeInDown.delay(200).springify()}>
           <Text style={s.sectionTitle}>Subject-wise Marks</Text>
-          {subjects.map((sub: any, idx: number) => {
-            const mark = student.marks?.[sub.exam_public_id];
-            return (
-              <Animated.View
-                key={sub.exam_public_id}
-                entering={FadeInDown.delay(250 + idx * 50)
-                  .springify()
-                  .damping(18)}
-                style={s.subjectCard}
-              >
-                <Text style={s.subjectName}>{sub.subject_name}</Text>
-                {!mark && <Text style={s.noMark}>No marks entered</Text>}
-                {mark?.is_absent && (
-                  <View style={s.absentBar}>
-                    <Text style={s.absentText}>ABSENT</Text>
-                  </View>
-                )}
-                {mark && !mark.is_absent && (
-                  <View style={s.marksRow}>
-                    <MarksBar
-                      obtained={mark.marks_obtained}
-                      max={mark.max_marks}
-                      pass={sub.passing_marks}
-                    />
-                    <View
-                      style={[
-                        s.markBadge,
-                        { backgroundColor: mark.is_pass ? '#dcfce7' : '#fee2e2' },
-                      ]}
-                    >
-                      <Text
-                        style={[s.markBadgeText, { color: mark.is_pass ? '#16a34a' : '#dc2626' }]}
-                      >
-                        {mark.is_pass ? 'P' : 'F'}
-                      </Text>
+          {subjects.map(
+            (
+              sub: {
+                exam_public_id: string;
+                subject_name: string;
+                max_marks: number;
+                passing_marks: number;
+              },
+              idx: number
+            ) => {
+              const mark = student.marks?.[sub.exam_public_id];
+              return (
+                <Animated.View
+                  key={sub.exam_public_id}
+                  entering={FadeInDown.delay(250 + idx * 50)
+                    .springify()
+                    .damping(18)}
+                  style={s.subjectCard}
+                >
+                  <Text style={s.subjectName}>{sub.subject_name}</Text>
+                  {!mark && <Text style={s.noMark}>No marks entered</Text>}
+                  {mark?.is_absent && (
+                    <View style={s.absentBar}>
+                      <Text style={s.absentText}>ABSENT</Text>
                     </View>
-                  </View>
-                )}
-              </Animated.View>
-            );
-          })}
+                  )}
+                  {mark && !mark.is_absent && (
+                    <View style={s.marksRow}>
+                      <MarksBar
+                        obtained={mark.marks_obtained}
+                        max={mark.max_marks}
+                        pass={sub.passing_marks}
+                      />
+                      <View
+                        style={[
+                          s.markBadge,
+                          { backgroundColor: mark.is_pass ? '#dcfce7' : '#fee2e2' },
+                        ]}
+                      >
+                        <Text
+                          style={[s.markBadgeText, { color: mark.is_pass ? '#16a34a' : '#dc2626' }]}
+                        >
+                          {mark.is_pass ? 'P' : 'F'}
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+                </Animated.View>
+              );
+            }
+          )}
         </Animated.View>
 
         {/* Total Bar */}

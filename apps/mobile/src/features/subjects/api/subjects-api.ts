@@ -17,6 +17,7 @@ import type {
 } from '@educard/shared';
 
 import { apiClient } from '@/api/client';
+import { safeDelete, bulkUploadExcel, type BulkUploadResponse } from '@/api/shared-api-utils';
 
 // Subjects use a single endpoint, backend handles permissions via can_manage field
 const BASE_URL = '/subjects/';
@@ -72,18 +73,7 @@ export async function updateSubject(
 }
 
 export async function deleteSubject(publicId: string): Promise<ApiMessageResponse> {
-  try {
-    const response = await apiClient.delete<ApiMessageResponse>(`${BASE_URL}${publicId}/`);
-    return response.data || { success: true, message: 'Subject deleted successfully' };
-  } catch (error: unknown) {
-    const axiosError = error as { response?: { status?: number }; message?: string };
-    const status = axiosError?.response?.status;
-    if (status && status >= 200 && status < 300)
-      return { success: true, message: 'Subject deleted successfully' };
-    if (axiosError?.message === 'Network Error' && !axiosError?.response)
-      return { success: true, message: 'Subject deleted successfully' };
-    throw error;
-  }
+  return safeDelete(`${BASE_URL}${publicId}/`, 'Subject deleted successfully');
 }
 
 export async function restoreSubject(publicId: string): Promise<SubjectDetailResponse> {
@@ -122,41 +112,6 @@ export async function downloadSubjectTemplate(): Promise<{
 export async function bulkUploadSubjects(
   fileUri: string,
   fileName: string
-): Promise<{
-  success: boolean;
-  message: string;
-  data: {
-    created_count?: number;
-    successful_count?: number;
-    failed_count: number;
-    total_rows?: number;
-    errors: { row: number; error: string; data?: Record<string, unknown> | null }[];
-  };
-  code: number;
-}> {
-  const formData = new FormData();
-  formData.append('file', {
-    uri: fileUri,
-    name: fileName,
-    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  } as unknown as Blob);
-
-  const response = await apiClient.post<{
-    success: boolean;
-    message: string;
-    data: {
-      created_count?: number;
-      successful_count?: number;
-      failed_count: number;
-      total_rows?: number;
-      errors: { row: number; error: string; data?: Record<string, unknown> | null }[];
-    };
-    code: number;
-  }>(`${BASE_URL}bulk-upload/`, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
-
-  return response.data;
+): Promise<BulkUploadResponse> {
+  return bulkUploadExcel(`${BASE_URL}bulk-upload/`, fileUri, fileName);
 }

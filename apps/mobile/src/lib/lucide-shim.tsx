@@ -183,8 +183,7 @@ const iconMap: Record<string, IconMapping> = {
 interface IconProps {
   size?: number;
   color?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  style?: any;
+  style?: import('react-native').StyleProp<import('react-native').TextStyle>;
 }
 
 function createIconComponent(lucideName: string) {

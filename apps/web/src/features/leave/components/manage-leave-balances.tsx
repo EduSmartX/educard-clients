@@ -97,11 +97,17 @@ function normalizeUserDetails(rawUser: Record<string, any> | undefined) {
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function parseManageableUsers(data: any): ManageableUser[] {
-  if (!data) { return []; }
-  if (Array.isArray(data.users)) { return data.users as ManageableUser[]; }
-  if (Array.isArray(data)) { return data as ManageableUser[]; }
+function parseManageableUsers(data: unknown): ManageableUser[] {
+  if (!data) {
+    return [];
+  }
+  const obj = data as Record<string, unknown>;
+  if (Array.isArray(obj.users)) {
+    return obj.users as ManageableUser[];
+  }
+  if (Array.isArray(data)) {
+    return data as ManageableUser[];
+  }
   return [];
 }
 
@@ -114,15 +120,23 @@ function resolveRawUserDetails(ctx: {
   selectedUser: string;
   students: StudentData[];
 }) {
-  if (ctx.manageOwnBalance) { return ctx.currentUser; }
-  if (ctx.apiUser) { return ctx.apiUser; }
+  if (ctx.manageOwnBalance) {
+    return ctx.currentUser;
+  }
+  if (ctx.apiUser) {
+    return ctx.apiUser;
+  }
   if (ctx.userRole === 'staff') {
     return ctx.manageableUsers.find((u) => u.public_id === ctx.selectedUser);
   }
   return ctx.students.find((s) => s.user_info.public_id === ctx.selectedUser);
 }
 
-function buildUserOptions(userRole: string, manageableUsers: ManageableUser[], students: StudentData[]) {
+function buildUserOptions(
+  userRole: string,
+  manageableUsers: ManageableUser[],
+  students: StudentData[]
+) {
   if (userRole === 'staff') {
     return manageableUsers.map((u) => ({
       label: `${u.full_name} [${u.email}]`,
@@ -138,7 +152,13 @@ function buildUserOptions(userRole: string, manageableUsers: ManageableUser[], s
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function fetchClassesData(isAdmin: boolean, teacherContext: any) {
+async function fetchClassesData(
+  isAdmin: boolean,
+  teacherContext:
+    | { class_teacher_for?: Array<{ public_id: string; name: string }> }
+    | null
+    | undefined
+) {
   if (isAdmin) {
     const response = await api.get('/classes/admin/?page=1&page_size=100&is_deleted=false');
     return response.data;
@@ -250,15 +270,9 @@ export default function ManageLeaveBalances() {
     [manageableUsersData]
   );
 
-  const classes = useMemo(
-    () => parseClasses(classesData?.data),
-    [classesData]
-  );
+  const classes = useMemo(() => parseClasses(classesData?.data), [classesData]);
 
-  const students = useMemo(
-    () => parseStudents(studentsData?.data),
-    [studentsData]
-  );
+  const students = useMemo(() => parseStudents(studentsData?.data), [studentsData]);
   const userAllocations = Array.isArray(userAllocationsData?.data)
     ? (userAllocationsData.data as LeaveAllocationForUser[])
     : [];
@@ -306,11 +320,25 @@ export default function ManageLeaveBalances() {
 
   // Get user details - either current user or selected user from API response or lists
   const rawUserDetails = useMemo(
-    () => resolveRawUserDetails({
-      manageOwnBalance, currentUser, apiUser: userBalancesData?.data?.user,
-      userRole, manageableUsers, selectedUser, students,
-    }),
-    [manageOwnBalance, currentUser, userBalancesData?.data?.user, userRole, manageableUsers, selectedUser, students]
+    () =>
+      resolveRawUserDetails({
+        manageOwnBalance,
+        currentUser,
+        apiUser: userBalancesData?.data?.user,
+        userRole,
+        manageableUsers,
+        selectedUser,
+        students,
+      }),
+    [
+      manageOwnBalance,
+      currentUser,
+      userBalancesData?.data?.user,
+      userRole,
+      manageableUsers,
+      selectedUser,
+      students,
+    ]
   );
 
   // Normalize user details to handle different API response shapes
@@ -354,7 +382,9 @@ export default function ManageLeaveBalances() {
   };
 
   const confirmDelete = () => {
-    if (!deleteDialog.balance) { return; }
+    if (!deleteDialog.balance) {
+      return;
+    }
     deleteMutation.mutate(deleteDialog.balance.public_id, {
       onSuccess: () => {
         toast.success(SuccessMessages.LEAVE.BALANCE_DELETED);
@@ -370,10 +400,7 @@ export default function ManageLeaveBalances() {
     });
   };
 
-  const columns = useMemo(
-    () => getLeaveBalanceColumns(handleEditBalance, handleDeleteBalance),
-    []
-  );
+  const columns = useMemo(() => getLeaveBalanceColumns(handleEditBalance, handleDeleteBalance), []);
 
   const handleAddBalance = () => {
     if (unallocatedLeaveTypes.length > 0) {

@@ -36,10 +36,13 @@ export interface StudentData {
  * Admin API returns `{ class_master: { id, name, code, ... } }`.
  * Teacher context returns `{ class_master: "ClassName" }`.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseClasses(data: any): ClassData[] {
-  if (!data) { return []; }
-  if (!Array.isArray(data)) { return []; }
+export function parseClasses(data: unknown): ClassData[] {
+  if (!data) {
+    return [];
+  }
+  if (!Array.isArray(data)) {
+    return [];
+  }
   return data.map((cls: Record<string, unknown>) => {
     const cm = cls.class_master;
     if (cm && typeof cm === 'object' && 'name' in cm) {
@@ -73,10 +76,16 @@ export function parseClasses(data: any): ClassData[] {
 /**
  * Parse students API response (handles nested `{ students: [...] }` or direct array).
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseStudents(data: any): StudentData[] {
-  if (!data) { return []; }
-  if (Array.isArray(data.students)) { return data.students as StudentData[]; }
-  if (Array.isArray(data)) { return data as StudentData[]; }
+export function parseStudents(data: unknown): StudentData[] {
+  if (!data) {
+    return [];
+  }
+  const obj = data as Record<string, unknown>;
+  if (Array.isArray(obj.students)) {
+    return obj.students as StudentData[];
+  }
+  if (Array.isArray(data)) {
+    return data as StudentData[];
+  }
   return [];
 }

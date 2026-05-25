@@ -10,3 +10,4 @@ export * from './deleted-duplicate-dialog';
 export * from './deleted-view-toggle';
 export { PageHeader } from './page-header';
 export * from './form-actions';
+export { ResourceListLayout } from './resource-list-layout';

@@ -6,6 +6,8 @@
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { DashboardIcon, ManageIcon, MyWorkIcon, AdminIcon, SettingsIcon } from './tab-icons';
+
 export function useTabScreenOptions() {
   const insets = useSafeAreaInsets();
   const bottomPadding = Math.max(insets.bottom, Platform.OS === 'android' ? 12 : 0);
@@ -34,3 +36,15 @@ export function useTabScreenOptions() {
     },
   };
 }
+
+/**
+ * Shared visible tab definitions used by both admin and employee layouts.
+ * Only the hidden screens differ between layouts.
+ */
+export const VISIBLE_TABS = [
+  { name: 'dashboard', title: 'Dashboard', icon: DashboardIcon },
+  { name: 'management', title: 'Manage', icon: ManageIcon },
+  { name: 'my-work', title: 'My Work', icon: MyWorkIcon },
+  { name: 'admin', title: 'Admin', icon: AdminIcon },
+  { name: 'settings', title: 'Settings', icon: SettingsIcon },
+] as const;

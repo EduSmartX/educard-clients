@@ -37,10 +37,12 @@ export default function EditSubjectScreen() {
 
   const classOpts = useMemo(() => {
     const items = classesData?.classes || [];
-    return items.map((c: any) => ({
-      value: c.public_id,
-      label: `${c.class_master?.name || ''} - ${c.name}`.trim(),
-    }));
+    return items.map(
+      (c: { public_id: string; name: string; class_master?: { name?: string } | null }) => ({
+        value: c.public_id,
+        label: `${c.class_master?.name || ''} - ${c.name}`.trim(),
+      })
+    );
   }, [classesData]);
 
   const subjectOpts = useMemo(
@@ -50,7 +52,10 @@ export default function EditSubjectScreen() {
 
   const teacherOpts = useMemo(() => {
     const teachers = teachersData?.teachers || [];
-    return teachers.map((t: any) => ({ value: t.public_id, label: `${t.full_name} (${t.email})` }));
+    return teachers.map((t: { public_id: string; full_name: string; email: string }) => ({
+      value: t.public_id,
+      label: `${t.full_name} (${t.email})`,
+    }));
   }, [teachersData]);
 
   const [form, setForm] = useState<SubjectFormState>({
@@ -65,7 +70,20 @@ export default function EditSubjectScreen() {
 
   useEffect(() => {
     if (subject && !formLoaded) {
-      const s = subject as any;
+      const s = subject as {
+        class_info?: { public_id?: string };
+        class_assigned?: { public_id?: string };
+        class_id?: string;
+        subject_info?: { id?: number };
+        subject_master?: { id?: number };
+        subject_id?: string;
+        subject_type?: string;
+        teacher_info?: { public_id?: string };
+        teacher?: { public_id?: string };
+        teacher_assigned?: { public_id?: string };
+        teacher_id?: string;
+        description?: string;
+      };
       setForm({
         class_id: s.class_info?.public_id || s.class_assigned?.public_id || s.class_id || '',
         subject_id: String(s.subject_info?.id || s.subject_master?.id || s.subject_id || ''),
@@ -96,15 +114,16 @@ export default function EditSubjectScreen() {
     setErrors(fe);
     if (Object.keys(fe).length > 0) return;
 
-    const payload = buildSubjectPayload(form as any);
+    const payload = buildSubjectPayload(form as unknown as Record<string, string>);
     updateMutation.mutate(
       { publicId: id, data: payload },
       {
         onSuccess: () => {
           router.back();
         },
-        onError: (err: any) => {
-          const { fieldErrors: fe2, generalError } = parseApiErrors(err?.response?.data);
+        onError: (err: unknown) => {
+          const apiErr = err as { response?: { data?: Record<string, unknown> } };
+          const { fieldErrors: fe2, generalError } = parseApiErrors(apiErr?.response?.data);
           if (Object.keys(fe2).length > 0) {
             setErrors(fe2);
             return;
