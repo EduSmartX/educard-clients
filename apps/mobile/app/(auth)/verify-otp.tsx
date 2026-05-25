@@ -25,7 +25,7 @@ export default function VerifyOTPScreen() {
 
   const handleOtpChange = (value: string, index: number) => {
     if (value.length > 1) {
-      value = value[value.length - 1];
+      value = value.at(-1) ?? value[0];
     }
 
     const newOtp = [...otp];

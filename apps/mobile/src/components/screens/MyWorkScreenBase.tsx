@@ -14,7 +14,6 @@ import {
   GraduationCap,
   BarChart3,
   FileText,
-  Briefcase,
 } from 'lucide-react-native';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -97,7 +96,7 @@ export function MyWorkScreenBase({ items, settingsRoute, headerIcon }: MyWorkScr
 }
 
 // Re-export icons for consumers
-export { Clock, CalendarDays, ClipboardCheck, GraduationCap, BarChart3, FileText, Briefcase };
+export { Briefcase } from 'lucide-react-native';
 
 /** Common work items shared between admin and employee */
 export const COMMON_WORK_ITEMS: WorkItem[] = [

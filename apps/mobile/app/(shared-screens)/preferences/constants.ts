@@ -67,4 +67,4 @@ export const isPositiveValue = (pref: OrganizationPreference): boolean => {
 };
 
 export const formatCategory = (cat: string) =>
-  cat.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  cat.replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase());

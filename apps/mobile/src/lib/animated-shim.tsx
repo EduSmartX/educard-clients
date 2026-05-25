@@ -96,7 +96,7 @@ function withDelay(_delay: number, animation: any) {
   return animation;
 }
 function withSequence(...animations: any[]) {
-  return animations[animations.length - 1];
+  return animations.at(-1);
 }
 function withRepeat(animation: any) {
   return animation;
@@ -116,8 +116,8 @@ const Easing = {
 function interpolate(value: number, inputRange: number[], outputRange: number[]) {
   // Simple linear interpolation
   if (inputRange.length < 2) return outputRange[0] ?? 0;
-  const ratio = (value - inputRange[0]) / (inputRange[inputRange.length - 1] - inputRange[0]);
-  return outputRange[0] + ratio * (outputRange[outputRange.length - 1] - outputRange[0]);
+  const ratio = (value - inputRange[0]) / (inputRange.at(-1)! - inputRange[0]);
+  return outputRange[0] + ratio * (outputRange.at(-1)! - outputRange[0]);
 }
 
 // runOnJS / runOnUI - just call the function

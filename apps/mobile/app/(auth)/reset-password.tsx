@@ -218,9 +218,9 @@ export default function ResetPasswordScreen() {
           </View>
           <View style={styles.requirementItem}>
             <Ionicons
-              name={/[0-9]/.test(password) ? 'checkmark-circle' : 'ellipse-outline'}
+              name={/\d/.test(password) ? 'checkmark-circle' : 'ellipse-outline'}
               size={16}
-              color={/[0-9]/.test(password) ? '#10b981' : '#9ca3af'}
+              color={/\d/.test(password) ? '#10b981' : '#9ca3af'}
             />
             <Text style={styles.requirementText}>One number</Text>
           </View>

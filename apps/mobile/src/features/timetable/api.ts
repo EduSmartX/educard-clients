@@ -2,21 +2,10 @@
  * Timetable API — Uses shared API factory
  */
 
-import {
-  createTimetableApi,
-  type ClassGroup,
-  type TimetableSlot,
-  type ClassTimetableResponse,
-  type MyTimetableResponse,
-  type ClassGroupCreatePayload,
-  type BulkSlotPayload,
-  type TimetableEntryCreatePayload,
-  type TimetableEntry,
-} from '@educard/shared';
+import { createTimetableApi } from '@educard/shared';
 
 import { apiClient } from '@/api/client';
 
-// Re-export types for convenience
 export type {
   ClassGroup,
   TimetableSlot,
@@ -26,7 +15,7 @@ export type {
   BulkSlotPayload,
   TimetableEntryCreatePayload,
   TimetableEntry,
-};
+} from '@educard/shared';
 
 // Create the API instance with mobile's axios client
 const timetableApi = createTimetableApi({ client: apiClient });

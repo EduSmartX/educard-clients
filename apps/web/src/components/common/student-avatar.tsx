@@ -70,7 +70,7 @@ export function StudentAvatar({
   const getInitials = (fullName: string): string => {
     const nameParts = fullName.trim().split(' ');
     if (nameParts.length >= 2) {
-      return `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`.toUpperCase();
+      return `${nameParts[0][0]}${nameParts.at(-1)![0]}`.toUpperCase();
     }
     return fullName.slice(0, 2).toUpperCase();
   };

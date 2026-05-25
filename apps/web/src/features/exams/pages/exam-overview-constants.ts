@@ -131,7 +131,7 @@ export function generateAiInsights(
 
   const sortedByPass = [...subjects].sort((a, b) => b.pass_percentage - a.pass_percentage);
   const bestSubject = sortedByPass[0];
-  const worstSubject = sortedByPass[sortedByPass.length - 1];
+  const worstSubject = sortedByPass.at(-1)!;
 
   if (bestSubject.pass_percentage >= 90) {
     insights.push({

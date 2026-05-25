@@ -68,14 +68,14 @@ export const strongPasswordSchema = z
 export const phoneSchema = z
   .string()
   .min(1, "Phone number is required")
-  .regex(/^[0-9]{10}$/, "Please enter a valid 10-digit phone number");
+  .regex(/^\d{10}$/, "Please enter a valid 10-digit phone number");
 
 /**
  * Optional phone schema
  */
 export const optionalPhoneSchema = z
   .string()
-  .regex(/^[0-9]{10}$/, "Please enter a valid 10-digit phone number")
+  .regex(/^\d{10}$/, "Please enter a valid 10-digit phone number")
   .optional()
   .or(z.literal(""));
 

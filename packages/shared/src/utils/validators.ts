@@ -79,7 +79,7 @@ export function isLengthInRange(
  * Validate PIN code (Indian - 6 digits)
  */
 export function isValidPinCode(pin: string): boolean {
-  const pinRegex = /^[1-9][0-9]{5}$/;
+  const pinRegex = /^[1-9]\d{5}$/;
   return pinRegex.test(pin);
 }
 
@@ -95,7 +95,7 @@ export function isValidAadhaar(aadhaar: string): boolean {
  * Validate PAN number (Indian)
  */
 export function isValidPan(pan: string): boolean {
-  const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+  const panRegex = /^[A-Z]{5}\d{4}[A-Z]$/;
   return panRegex.test(pan.toUpperCase());
 }
 

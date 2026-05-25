@@ -74,7 +74,7 @@ function AnimatedNumber({
   }
 
   // Handle undefined/null values explicitly
-  const displayValue = value !== undefined && value !== null ? value : 0;
+  const displayValue = value ?? 0;
 
   // Always animate when value is available, don't wait for scroll
   const shouldAnimate = displayValue !== undefined;

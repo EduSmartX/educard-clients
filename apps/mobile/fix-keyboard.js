@@ -113,7 +113,7 @@ files.forEach(file => {
         return `<KeyboardAwareScrollView ${newProps}>`;
       }
     );
-    content = content.replace(/<\/ScrollView>/g, '</KeyboardAwareScrollView>');
+    content = content.replaceAll('</ScrollView>', '</KeyboardAwareScrollView>');
   }
 
   if (content !== original) {

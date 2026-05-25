@@ -260,9 +260,7 @@ export function YearlyCalendarGrid({
 
                       // If no status from backend, determine it using metadata
                       // Backend now excludes weekends, so we calculate them here
-                      if (status === undefined || status === null) {
-                        status = getStatusForDate(month, day, year);
-                      }
+                      status ??= getStatusForDate(month, day, year);
 
                       const cellColor = getCellColor(status);
 

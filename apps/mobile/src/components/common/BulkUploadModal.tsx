@@ -447,7 +447,7 @@ export function BulkUploadModal({
                             {Object.entries(error.data).map(([key, value]) => (
                               <Text key={key} style={styles.errorDetailText}>
                                 <Text style={styles.errorDetailKey}>
-                                  {key.replace(/_/g, ' ')}:{' '}
+                                  {key.replaceAll('_', ' ')}:{' '}
                                 </Text>
                                 {String(value)}
                               </Text>

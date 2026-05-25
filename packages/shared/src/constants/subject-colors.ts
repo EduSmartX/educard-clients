@@ -195,7 +195,7 @@ export function getSubjectColor(
 
   let hash = 2166136261;
   for (let i = 0; i < key.length; i++) {
-    hash ^= key.charCodeAt(i);
+    hash ^= key.codePointAt(i) ?? 0;
     hash = Math.imul(hash, 16777619);
   }
   const idx = (hash >>> 0) % SUBJECT_COLOR_PALETTE.length;
@@ -225,11 +225,11 @@ export function buildSubjectColorMap(
     const key = name.trim().toLowerCase();
     const knownIdx = MASTER_SUBJECT_COLOR_INDEX[key];
 
-    if (knownIdx !== undefined) {
+    if (knownIdx === undefined) {
+      unknownSubjects.push(name);
+    } else {
       map.set(name, SUBJECT_COLOR_PALETTE[knownIdx]);
       usedIndices.add(knownIdx);
-    } else {
-      unknownSubjects.push(name);
     }
   }
 

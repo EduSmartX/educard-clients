@@ -84,7 +84,7 @@ export function useMarkAttendanceForm() {
 
       setStudents(studentRows);
       setIsViewMode(hasExisting);
-      initialStudentsRef.current = hasExisting ? JSON.parse(JSON.stringify(studentRows)) : null;
+      initialStudentsRef.current = hasExisting ? structuredClone(studentRows) : null;
     }
   }, [comprehensiveData]);
 
@@ -165,7 +165,7 @@ export function useMarkAttendanceForm() {
 
   const handleCancel = () => {
     if (initialStudentsRef.current) {
-      setStudents(JSON.parse(JSON.stringify(initialStudentsRef.current)));
+      setStudents(structuredClone(initialStudentsRef.current));
       setIsViewMode(true);
     }
   };
@@ -186,7 +186,7 @@ export function useMarkAttendanceForm() {
 
     // Update view mode and initial state after successful submit
     setIsViewMode(true);
-    initialStudentsRef.current = JSON.parse(JSON.stringify(students));
+    initialStudentsRef.current = structuredClone(students);
   };
 
   // Calculate summary stats

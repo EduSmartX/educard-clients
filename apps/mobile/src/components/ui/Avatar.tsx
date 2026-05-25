@@ -31,7 +31,7 @@ function getInitials(name: string): string {
   const parts = name.trim().split(' ').filter(Boolean);
   if (parts.length === 0) return '';
   if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  return (parts[0].charAt(0) + (parts.at(-1) ?? parts[0]).charAt(0)).toUpperCase();
 }
 
 function getColorFromName(name: string): string {
@@ -48,7 +48,7 @@ function getColorFromName(name: string): string {
 
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    hash = (name.codePointAt(i) ?? 0) + ((hash << 5) - hash);
   }
 
   return colors[Math.abs(hash) % colors.length];

@@ -329,12 +329,12 @@ export function validateAlphanumeric(
     return { isValid: true };
   }
 
-  let pattern = 'a-zA-Z0-9';
+  let pattern = String.raw`a-zA-Z0-9`;
   if (allowSpaces) {
-    pattern += '\\s';
+    pattern += String.raw`\s`;
   }
   if (allowSpecialChars) {
-    pattern += allowSpecialChars.replace(/[-[\]{}()*+?.,\\^$|#]/g, '\\$&');
+    pattern += allowSpecialChars.replace(/[-[\]{}()*+?.,\\^$|#]/g, String.raw`\$&`);
   }
 
   const regex = new RegExp(`^[${pattern}]+$`);

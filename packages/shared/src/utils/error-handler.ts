@@ -264,7 +264,7 @@ export function getErrorMessage(error: unknown, fallback?: string): string {
       }
       // Otherwise include field name
       const fieldLabel = fieldErrorKeys[0]
-        .replace(/_/g, " ")
+        .replaceAll('_', ' ')
         .replace(/\b\w/g, (l) => l.toUpperCase());
       return `${fieldLabel}: ${msg}`;
     }
@@ -277,7 +277,7 @@ export function getErrorMessage(error: unknown, fallback?: string): string {
           return msg;
         }
         const fieldLabel = key
-          .replace(/_/g, " ")
+          .replaceAll('_', ' ')
           .replace(/\b\w/g, (l) => l.toUpperCase());
         return `${fieldLabel}: ${msg}`;
       })
@@ -366,7 +366,7 @@ export function parseApiError(error: unknown): ApiError {
 
 /** Format a field name from snake_case to Title Case */
 function formatFieldLabel(fieldName: string): string {
-  return fieldName.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+  return fieldName.replaceAll('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
 /** Check if a message is self-descriptive (long or contains punctuation) */

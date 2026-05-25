@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { getTimesheetSubmissions, type TimesheetSubmission } from '../../api/attendance-api';
+import { getTimesheetSubmissions } from '../../api/attendance-api';
+
+export type { TimesheetSubmission } from '../../api/attendance-api';
 
 interface UseTimesheetSubmissionsOptions {
   employee?: string;
@@ -23,5 +25,3 @@ export function useTimesheetSubmissions(options?: UseTimesheetSubmissionsOptions
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }
-
-export type { TimesheetSubmission };

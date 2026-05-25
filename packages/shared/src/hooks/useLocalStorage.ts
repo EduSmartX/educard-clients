@@ -37,7 +37,7 @@ export function useLocalStorage<T>(
       try {
         // Allow value to be a function for functional updates
         const valueToStore =
-          value instanceof Function ? value(storedValue) : value;
+          typeof value === 'function' ? (value as (val: T) => T)(storedValue) : value;
 
         setStoredValue(valueToStore);
 

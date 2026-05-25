@@ -6,14 +6,14 @@
  * This file contains interface definitions that use those types.
  */
 
-import type { HolidayTypeValue, SaturdayOffPatternType } from '../constants/attendance';
+import type { SaturdayOffPatternType } from '../constants/attendance';
 
 // =============================================================================
 // Holiday Interfaces
 // =============================================================================
 
 // Re-export the holiday type for convenience
-export type { HolidayTypeValue as HolidayTypeEnum, SaturdayOffPatternType };
+export type { HolidayTypeValue as HolidayTypeEnum, SaturdayOffPatternType } from '../constants/attendance';
 
 export const HOLIDAY_TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   SUNDAY: { bg: '#fee2e2', text: '#dc2626' },

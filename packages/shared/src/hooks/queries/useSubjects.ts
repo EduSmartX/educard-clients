@@ -8,7 +8,7 @@
  * The shared package lists it as a peer dependency.
  */
 
-import type { SubjectsApi, SubjectListResponse, SubjectDetailResponse } from "../../api/subjects";
+import type { SubjectsApi } from "../../api/subjects";
 import type {
   CreateSubjectPayload,
   UpdateSubjectPayload,
@@ -17,7 +17,7 @@ import type {
 import { QueryKeys } from "../../constants/query-keys";
 
 // Re-export types for consumers
-export type { SubjectListResponse, SubjectDetailResponse };
+export type { SubjectListResponse, SubjectDetailResponse } from "../../api/subjects";
 
 /**
  * Query key factory for subjects
@@ -26,7 +26,7 @@ export type { SubjectListResponse, SubjectDetailResponse };
 export const subjectQueryKeys = {
   all: QueryKeys.SUBJECTS.ALL,
   lists: () => QueryKeys.SUBJECTS.LISTS(),
-  list: (params?: SubjectQueryParams) => QueryKeys.SUBJECTS.LIST(params as Record<string, unknown>),
+  list: (params?: SubjectQueryParams) => QueryKeys.SUBJECTS.LIST(params as object),
   byClass: (classId: string) => QueryKeys.SUBJECTS.BY_CLASS(classId),
   details: () => QueryKeys.SUBJECTS.DETAILS(),
   detail: (id: string) => QueryKeys.SUBJECTS.DETAIL(id),

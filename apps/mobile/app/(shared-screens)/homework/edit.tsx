@@ -200,7 +200,7 @@ export default function EditHomeworkScreen() {
             showToast({
               type: 'error',
               title: 'Validation Error',
-              message: `${firstField.replace(/_/g, ' ')}: ${message}`,
+              message: `${firstField.replaceAll('_', ' ')}: ${message}`,
             });
             return;
           }

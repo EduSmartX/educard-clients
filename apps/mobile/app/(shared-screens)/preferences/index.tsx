@@ -6,18 +6,7 @@
 import { Colors, getRoleGradient, extractApiError } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import {
-  ChevronLeft,
-  ChevronDown,
-  ChevronUp,
-  Settings,
-  RotateCcw,
-  Check,
-  X,
-  HelpCircle,
-  Calendar,
-  Eye,
-} from 'lucide-react-native';
+import { ChevronLeft, ChevronDown, ChevronUp, Settings, Calendar, Eye } from 'lucide-react-native';
 import { useState, useCallback, useRef, useMemo } from 'react';
 import {
   View,
@@ -26,12 +15,15 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  TextInput,
   Alert,
-  Keyboard,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+
+import { getCategoryConfig, formatCategory } from './constants';
+import { PreferenceItem } from './PreferenceItems';
+import { SingleSelectModal, MultiSelectModal, SaturdayPatternModal } from './PreferenceModals';
+import { styles } from './styles';
 
 import type { SaturdayOffPattern, WorkingDayPolicy } from '@/features/holidays/api/holidays-api';
 import {
@@ -49,16 +41,6 @@ import {
 import { useAuthStore } from '@/lib/auth-store';
 import { useToast } from '@/lib/toast-context';
 import { isAdminRole } from '@/utils/role-utils';
-
-import {
-  getCategoryConfig,
-  formatDropdownValue,
-  getRadioLabels,
-  isPositiveValue,
-  formatCategory,
-} from './constants';
-import { SingleSelectModal, MultiSelectModal, SaturdayPatternModal } from './PreferenceModals';
-import { styles } from './styles';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -83,18 +65,6 @@ function buildWdpCreatePayload(field: string, value: boolean | SaturdayOffPatter
         : ('SECOND_AND_FOURTH' as SaturdayOffPattern),
     effective_from: field === 'effective_from' ? (value as string) : today,
   };
-}
-
-/** Determine which render function to use for a preference */
-function getPreferenceRenderer(
-  pref: OrganizationPreference
-): 'radio' | 'choicePills' | 'choice' | 'multi' | 'text' {
-  if (pref.field_type === 'radio') return 'radio';
-  if (pref.field_type === 'choice' && pref.applicable_values) {
-    return pref.applicable_values.length === 2 ? 'choicePills' : 'choice';
-  }
-  if (pref.field_type === 'multi-choice') return 'multi';
-  return 'text';
 }
 
 /** Handle WDP update/create - extracted to reduce component complexity */
@@ -197,275 +167,6 @@ export default function OrgPreferencesScreen() {
   const handleWdpUpdate = (field: string, value: boolean | SaturdayOffPattern) =>
     performWdpUpdate(currentPolicy, field, value, updateWdpMutation, createWdpMutation, showToast);
 
-  // ── Tooltip badge ──
-  const renderTooltip = (pref: OrganizationPreference) => {
-    if (!pref.description) return null;
-    const isOpen = tooltipPref === pref.public_id;
-    return (
-      <>
-        <TouchableOpacity
-          onPress={() => setTooltipPref(isOpen ? null : pref.public_id)}
-          hitSlop={10}
-          style={styles.tooltipBadge}
-        >
-          <HelpCircle size={16} color="#7c3aed" />
-        </TouchableOpacity>
-        {isOpen && (
-          <Animated.View entering={FadeIn.duration(200)} style={styles.tooltip}>
-            <View style={styles.tooltipArrow} />
-            <Text style={styles.tooltipText}>{pref.description}</Text>
-          </Animated.View>
-        )}
-      </>
-    );
-  };
-
-  // ── Yes/No pill buttons ──
-  const renderRadioPills = (pref: OrganizationPreference) => {
-    const labels = getRadioLabels(pref);
-    if (!labels) return renderTextInput(pref);
-    const isPositive = isPositiveValue(pref);
-    return (
-      <View style={styles.prefRow}>
-        <View style={styles.prefLabelRow}>
-          {renderTooltip(pref)}
-          <Text style={styles.prefName}>{pref.display_name}</Text>
-        </View>
-        <View style={styles.pillRow}>
-          <TouchableOpacity
-            style={[
-              styles.pill,
-              isPositive && styles.pillActiveGreen,
-              !canManage && styles.pillDisabled,
-            ]}
-            onPress={() => canManage && handleUpdate(pref.public_id, labels.trueVal)}
-            disabled={updateMutation.isPending || !canManage}
-            activeOpacity={canManage ? 0.7 : 1}
-          >
-            <Text style={[styles.pillText, isPositive && styles.pillTextActive]}>
-              {labels.trueLabel}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.pill,
-              !isPositive && styles.pillActiveRed,
-              !canManage && styles.pillDisabled,
-            ]}
-            onPress={() => canManage && handleUpdate(pref.public_id, labels.falseVal)}
-            disabled={updateMutation.isPending || !canManage}
-            activeOpacity={canManage ? 0.7 : 1}
-          >
-            <Text style={[styles.pillText, !isPositive && styles.pillTextActive]}>
-              {labels.falseLabel}
-            </Text>
-          </TouchableOpacity>
-        </View>
-        {canManage && (
-          <TouchableOpacity onPress={() => handleReset(pref)} style={styles.resetLink}>
-            <RotateCcw size={11} color={Colors.gray[400]} />
-            <Text style={styles.resetLinkText}>Reset</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    );
-  };
-
-  // ── Choice dropdown ──
-  const renderChoice = (pref: OrganizationPreference) => {
-    const currentVal = String(pref.value);
-    return (
-      <View style={styles.prefRow}>
-        <View style={styles.prefLabelRow}>
-          {renderTooltip(pref)}
-          <Text style={styles.prefName}>{pref.display_name}</Text>
-        </View>
-        <TouchableOpacity
-          style={[styles.dropdown, !canManage && { opacity: 0.6 }]}
-          onPress={() => canManage && setDropdownPref(pref)}
-          activeOpacity={canManage ? 0.7 : 1}
-          disabled={!canManage}
-        >
-          <Text style={styles.dropdownText}>{formatDropdownValue(currentVal) || 'Select...'}</Text>
-          <ChevronDown size={16} color={Colors.gray[500]} />
-        </TouchableOpacity>
-        {canManage && (
-          <TouchableOpacity onPress={() => handleReset(pref)} style={styles.resetLink}>
-            <RotateCcw size={11} color={Colors.gray[400]} />
-            <Text style={styles.resetLinkText}>Reset</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    );
-  };
-
-  // ── Multi-choice ──
-  const renderMultiChoice = (pref: OrganizationPreference) => {
-    const values = Array.isArray(pref.value) ? pref.value : [];
-    return (
-      <View style={styles.prefRow}>
-        <View style={styles.prefLabelRow}>
-          {renderTooltip(pref)}
-          <Text style={styles.prefName}>{pref.display_name}</Text>
-        </View>
-        <TouchableOpacity
-          style={[styles.dropdown, !canManage && { opacity: 0.6 }]}
-          onPress={() => {
-            if (!canManage) return;
-            setMultiSelectPref(pref);
-            setMultiSelectValues([...values]);
-          }}
-          activeOpacity={canManage ? 0.7 : 1}
-          disabled={!canManage}
-        >
-          <Text style={styles.dropdownText} numberOfLines={1}>
-            {values.length > 0 ? values.map(formatDropdownValue).join(', ') : 'Select...'}
-          </Text>
-          <ChevronDown size={16} color={Colors.gray[500]} />
-        </TouchableOpacity>
-        {values.length > 0 && (
-          <View style={styles.chipRow}>
-            {values.map((v) => (
-              <View key={v} style={styles.selectedChip}>
-                <Text style={styles.selectedChipText}>{formatDropdownValue(v)}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-        {canManage && (
-          <TouchableOpacity onPress={() => handleReset(pref)} style={styles.resetLink}>
-            <RotateCcw size={11} color={Colors.gray[400]} />
-            <Text style={styles.resetLinkText}>Reset</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    );
-  };
-
-  // ── Text / Number input ──
-  const renderTextInput = (pref: OrganizationPreference) => {
-    const isEditing = editingTextPref === pref.public_id;
-    const currentVal = String(pref.value);
-    const isNumber = pref.field_type === 'number';
-    return (
-      <View style={styles.prefRow}>
-        <View style={styles.prefLabelRow}>
-          {renderTooltip(pref)}
-          <Text style={styles.prefName}>{pref.display_name}</Text>
-        </View>
-        {isEditing && canManage ? (
-          <View style={styles.textEditRow}>
-            <TextInput
-              style={styles.textInput}
-              value={editTextValue}
-              onChangeText={setEditTextValue}
-              autoFocus
-              keyboardType={isNumber ? 'numeric' : 'default'}
-              placeholder={`Enter ${pref.display_name.toLowerCase()}`}
-              placeholderTextColor={Colors.gray[400]}
-              onSubmitEditing={() => {
-                handleUpdate(pref.public_id, editTextValue);
-                setEditingTextPref(null);
-              }}
-            />
-            <TouchableOpacity
-              style={styles.textSaveBtn}
-              onPress={() => {
-                handleUpdate(pref.public_id, editTextValue);
-                setEditingTextPref(null);
-                Keyboard.dismiss();
-              }}
-            >
-              <Check size={16} color="#fff" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.textCancelBtn}
-              onPress={() => {
-                setEditingTextPref(null);
-                Keyboard.dismiss();
-              }}
-            >
-              <X size={16} color={Colors.gray[500]} />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={[styles.textValueBox, !canManage && { opacity: 0.6 }]}
-            onPress={() => {
-              if (!canManage) return;
-              setEditingTextPref(pref.public_id);
-              setEditTextValue(currentVal);
-            }}
-            activeOpacity={canManage ? 0.7 : 1}
-            disabled={!canManage}
-          >
-            <Text style={[styles.textValue, !currentVal && styles.textPlaceholder]}>
-              {currentVal || (canManage ? 'Tap to set value' : 'Not set')}
-            </Text>
-          </TouchableOpacity>
-        )}
-        {canManage && (
-          <TouchableOpacity onPress={() => handleReset(pref)} style={styles.resetLink}>
-            <RotateCcw size={11} color={Colors.gray[400]} />
-            <Text style={styles.resetLinkText}>Reset</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    );
-  };
-
-  // ── Choice pills for 2-option choices ──
-  const renderChoicePills = (pref: OrganizationPreference) => {
-    const vals = pref.applicable_values ?? [];
-    const currentVal = String(pref.value);
-    return (
-      <View style={styles.prefRow}>
-        <View style={styles.prefLabelRow}>
-          {renderTooltip(pref)}
-          <Text style={styles.prefName}>{pref.display_name}</Text>
-        </View>
-        <View style={styles.pillRow}>
-          {vals.map((val) => {
-            const isActive = val === currentVal;
-            return (
-              <TouchableOpacity
-                key={val}
-                style={[
-                  styles.pill,
-                  isActive && styles.pillActiveBlue,
-                  !canManage && styles.pillDisabled,
-                ]}
-                onPress={() => canManage && handleUpdate(pref.public_id, val)}
-                disabled={updateMutation.isPending || !canManage}
-                activeOpacity={canManage ? 0.7 : 1}
-              >
-                <Text style={[styles.pillText, isActive && styles.pillTextActive]}>{val}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-        {canManage && (
-          <TouchableOpacity onPress={() => handleReset(pref)} style={styles.resetLink}>
-            <RotateCcw size={11} color={Colors.gray[400]} />
-            <Text style={styles.resetLinkText}>Reset</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    );
-  };
-
-  // ── Render a single preference based on type ──
-  const renderPreference = (pref: OrganizationPreference) => {
-    const rendererMap = {
-      radio: renderRadioPills,
-      choicePills: renderChoicePills,
-      choice: renderChoice,
-      multi: renderMultiChoice,
-      text: renderTextInput,
-    } as const;
-    return rendererMap[getPreferenceRenderer(pref)](pref);
-  };
-
   return (
     <View style={styles.container}>
       <LinearGradient colors={adminGradient} style={styles.header}>
@@ -541,7 +242,22 @@ export default function OrgPreferencesScreen() {
                       {group.preferences.map((pref, idx) => (
                         <View key={pref.public_id}>
                           {idx > 0 && <View style={styles.divider} />}
-                          {renderPreference(pref)}
+                          <PreferenceItem
+                            pref={pref}
+                            canManage={canManage}
+                            isPending={updateMutation.isPending}
+                            tooltipPref={tooltipPref}
+                            setTooltipPref={setTooltipPref}
+                            onUpdate={handleUpdate}
+                            onReset={handleReset}
+                            editingTextPref={editingTextPref}
+                            editTextValue={editTextValue}
+                            setEditingTextPref={setEditingTextPref}
+                            setEditTextValue={setEditTextValue}
+                            setDropdownPref={setDropdownPref}
+                            setMultiSelectPref={setMultiSelectPref}
+                            setMultiSelectValues={setMultiSelectValues}
+                          />
                         </View>
                       ))}
                     </View>

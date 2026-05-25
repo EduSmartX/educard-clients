@@ -249,7 +249,7 @@ export default function TeacherTimetableScreen() {
                   {/* Period number */}
                   <View style={[styles.periodBadge, { backgroundColor: subjectColor + '20' }]}>
                     <Text style={[styles.periodBadgeText, { color: subjectColor }]}>
-                      {entry.slot_label?.replace(/[^0-9]/g, '') || index + 1}
+                      {entry.slot_label?.replace(/\D/g, '') || index + 1}
                     </Text>
                   </View>
 

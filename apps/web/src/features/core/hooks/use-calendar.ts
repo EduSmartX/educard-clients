@@ -5,7 +5,6 @@
  */
 
 import {
-  calendarKeys,
   createUseNavigateWorkingDay,
   createUseWorkingDayInfo,
 } from '@educard/shared';
@@ -17,7 +16,7 @@ export const useNavigateWorkingDay = createUseNavigateWorkingDay(navigateWorking
 export const useWorkingDayInfo = createUseWorkingDayInfo(getWorkingDayInfo);
 
 // Re-export query keys and types
-export { calendarKeys };
+export { calendarKeys } from '@educard/shared';
 export type {
   WorkingDayInfo,
   WorkingDayNavigationResult,

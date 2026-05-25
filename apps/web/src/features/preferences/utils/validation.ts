@@ -9,7 +9,7 @@
  */
 export function validateTimeFormat(time: string): string | null {
   if (!time) {return null;}
-  const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+  const timeRegex = /^([01]?\d|2[0-3]):[0-5]\d$/;
   if (!timeRegex.test(time)) {
     return 'Please enter time in HH:MM format (e.g., 14:30)';
   }
