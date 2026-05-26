@@ -20,15 +20,15 @@ void SplashScreen.preventAutoHideAsync();
 type AppSegments = ReturnType<typeof useSegments>;
 
 /** Determine the correct dashboard route for a user's role */
-function getDashboardRoute(role: string | undefined): string {
+function getDashboardRoute(role: string | undefined) {
   const normalized = role?.toLowerCase();
   if (normalized === 'teacher' || normalized === 'employee') {
-    return '/(tabs)/(employee)/dashboard';
+    return '/(tabs)/(employee)/dashboard' as const;
   }
   if (normalized === 'parent') {
-    return '/(tabs)/(parent)/dashboard';
+    return '/(tabs)/(parent)/dashboard' as const;
   }
-  return '/(tabs)/(admin)/dashboard';
+  return '/(tabs)/(admin)/dashboard' as const;
 }
 
 /** Check if the user needs to be redirected based on role and current segments */
@@ -102,7 +102,7 @@ function RootLayoutNav() {
       }, 500);
     } else if (isAuthenticated && shouldRedirectAuthenticated(segments, user?.role)) {
       isNavigating.current = true;
-      router.replace(getDashboardRoute(user?.role) as never);
+      router.replace(getDashboardRoute(user?.role));
       setTimeout(() => {
         isNavigating.current = false;
       }, 500);

@@ -24,13 +24,10 @@ export function showToast(type: ToastType, message: string): void {
 
   if (listeners.size > 0) {
     listeners.forEach((listener) => listener(type, message));
-  } else {
+  } else if (__DEV__) {
     // Fallback if ToastProvider hasn't mounted yet
-    // In production, this is silently ignored as toast system isn't ready
-    if (__DEV__) {
-      // eslint-disable-next-line no-console
-      console.log(`[Toast:${type}] ${message}`);
-    }
+    // eslint-disable-next-line no-console
+    console.log(`[Toast:${type}] ${message}`);
   }
 }
 

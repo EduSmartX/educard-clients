@@ -41,7 +41,7 @@ export function SubjectsMultiSelectField<TFieldValues extends FieldValues>({
   );
 
   const formatDisplayValue = (subjectId: number) => {
-    const subject = subjects.find((s) => s.id === subjectId);
+    const subject = subjects.find((s) => s.id === Number(subjectId));
     return subject ? `${subject.name} (${subject.code})` : String(subjectId);
   };
 
@@ -57,6 +57,7 @@ export function SubjectsMultiSelectField<TFieldValues extends FieldValues>({
       isLoading={isLoading}
       options={options}
       formatDisplayValue={formatDisplayValue}
+      parseValue={Number}
       allSelectedMessage="All subjects selected"
       noItemsMessage="No subjects available"
       loadingMessage="Loading subjects..."

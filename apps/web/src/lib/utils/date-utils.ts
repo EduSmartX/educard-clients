@@ -35,27 +35,21 @@ export function formatDate(date: DateInput, formatStr: string = 'dd MMM yyyy'): 
 /**
  * Format date and time
  */
-export function formatDateTime(
-  date: Date | string | null | undefined,
-  formatStr: string = 'dd MMM yyyy hh:mm a'
-): string {
+export function formatDateTime(date: DateInput, formatStr: string = 'dd MMM yyyy hh:mm a'): string {
   return formatDate(date, formatStr);
 }
 
 /**
  * Format time only
  */
-export function formatTime(
-  date: Date | string | null | undefined,
-  formatStr: string = 'hh:mm a'
-): string {
+export function formatTime(date: DateInput, formatStr: string = 'hh:mm a'): string {
   return formatDate(date, formatStr);
 }
 
 /**
  * Format relative time (e.g., "2 hours ago")
  */
-export function formatRelativeTime(date: Date | string | null | undefined): string {
+export function formatRelativeTime(date: DateInput): string {
   if (!date) {
     return '';
   }
@@ -69,7 +63,7 @@ export function formatRelativeTime(date: Date | string | null | undefined): stri
 /**
  * Format relative date (e.g., "yesterday at 3:00 PM")
  */
-export function formatRelativeDate(date: Date | string | null | undefined): string {
+export function formatRelativeDate(date: DateInput): string {
   if (!date) {
     return '';
   }
@@ -192,7 +186,7 @@ export function parseDate(dateStr: string | null | undefined): Date | null {
 /**
  * Format date for API (ISO format)
  */
-export function formatDateForAPI(date: Date | string | null | undefined): string {
+export function formatDateForAPI(date: DateInput): string {
   if (!date) {
     return '';
   }
@@ -233,7 +227,7 @@ export function parseLocalDate(dateStr?: string | null): Date | undefined {
 /**
  * Format datetime for API (ISO format)
  */
-export function formatDateTimeForAPI(date: Date | string | null | undefined): string {
+export function formatDateTimeForAPI(date: DateInput): string {
   if (!date) {
     return '';
   }

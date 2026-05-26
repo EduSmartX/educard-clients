@@ -35,6 +35,8 @@ interface GenericMultiSelectFieldProps<TFieldValues extends FieldValues, TValue 
   options: SelectOption[];
   /** Function to format display value for selected items */
   formatDisplayValue?: (value: TValue) => string;
+  /** Function to parse string value from select into the correct type */
+  parseValue?: (value: string) => TValue;
   /** Empty state message when all items are selected */
   allSelectedMessage?: string;
   /** Empty state message when no items are available */
@@ -56,23 +58,22 @@ export function GenericMultiSelectField<TFieldValues extends FieldValues, TValue
   isLoading = false,
   options,
   formatDisplayValue,
+  parseValue,
   allSelectedMessage = 'All items selected',
   noItemsMessage = 'No items available',
   loadingMessage = 'Loading...',
   badgeContainerClassName,
-}: GenericMultiSelectFieldProps<TFieldValues, TValue>) {
+}: Readonly<GenericMultiSelectFieldProps<TFieldValues, TValue>>) {
   return (
     <FormField
       control={control}
       name={name}
       render={({ field }) => {
         const selectedValues: TValue[] = Array.isArray(field.value) ? field.value : [];
-        const selectedValuesAsStrings = selectedValues.map(String);
+        const selectedValuesAsStrings = new Set(selectedValues.map(String));
 
         // Filter out already selected options
-        const availableOptions = options.filter(
-          (opt) => !selectedValuesAsStrings.includes(opt.value)
-        );
+        const availableOptions = options.filter((opt) => !selectedValuesAsStrings.has(opt.value));
 
         const handleRemove = (valueToRemove: TValue) => {
           field.onChange(selectedValues.filter((v) => v !== valueToRemove));
@@ -114,8 +115,10 @@ export function GenericMultiSelectField<TFieldValues extends FieldValues, TValue
                   onValueChange={(value) => {
                     if (value && !value.startsWith('__')) {
                       // Convert back to original type if needed
-                      const newValue = value as unknown as TValue;
-                      if (!selectedValuesAsStrings.includes(value)) {
+                      const newValue = parseValue
+                        ? parseValue(value)
+                        : (value as unknown as TValue);
+                      if (!selectedValuesAsStrings.has(value)) {
                         field.onChange([...selectedValues, newValue]);
                       }
                     }

@@ -96,7 +96,7 @@ export interface ComprehensiveAttendanceRecord {
   attendance_remarks: string | null;
 
   // Leave information
-  leave_status: 'approved' | 'pending' | null;
+  leave_status: LeaveStatus;
   leave_type: string | null;
   leave_reason: string | null;
   leave_start_date: string | null;
@@ -120,7 +120,7 @@ export interface StudentRow {
   afternoon_present: boolean;
   attendance_status: AttendanceStatus | undefined;
   attendance_remarks: string | null;
-  leave_status: 'approved' | 'pending' | null;
+  leave_status: LeaveStatus;
   leave_type: string | null;
   leave_reason: string | null;
   leave_start_date: string | null;
@@ -140,7 +140,7 @@ export interface StudentRow {
     display_name: string;
   };
   leave_info?: {
-    leave_status: 'approved' | 'pending' | null;
+    leave_status: LeaveStatus;
     leave_type: string | null;
     leave_reason: string | null;
   };

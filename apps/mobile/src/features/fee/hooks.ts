@@ -115,7 +115,7 @@ export function useDeleteFeeStructure() {
 export function useStudentFees(params?: StudentFeeFilters) {
   return useInfiniteQuery({
     queryKey: QueryKeys.FEE.STUDENT_FEES.INFINITE(params),
-    queryFn: ({ pageParam = 1 }) => fetchStudentFees({ ...params, page: pageParam as number }),
+    queryFn: ({ pageParam = 1 }) => fetchStudentFees({ ...params, page: pageParam }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
       lastPage.pagination.has_next ? lastPage.pagination.current_page + 1 : undefined,
@@ -215,7 +215,7 @@ export function useReviewComponentRequests() {
 export function usePayments(params?: PaymentFilters) {
   return useInfiniteQuery({
     queryKey: QueryKeys.FEE.PAYMENTS.INFINITE(params),
-    queryFn: ({ pageParam = 1 }) => fetchPayments({ ...params, page: pageParam as number }),
+    queryFn: ({ pageParam = 1 }) => fetchPayments({ ...params, page: pageParam }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
       lastPage.pagination.has_next ? lastPage.pagination.current_page + 1 : undefined,

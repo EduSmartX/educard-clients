@@ -65,7 +65,7 @@ export const teacherFormSchema = z
     joining_date: dateSchema('Joining date', false),
 
     // Subjects (array of subject IDs - integers from core subjects)
-    subjects: z.array(z.number()).optional(),
+    subjects: z.array(z.coerce.number()).optional(),
 
     // Address fields
     address_type: z

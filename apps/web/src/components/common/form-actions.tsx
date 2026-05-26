@@ -214,7 +214,12 @@ export function SaveButton({
 }
 
 /** Pre-configured Create button */
-export function CreateButton({ onClick, isLoading, disabled, className }: QuickButtonProps) {
+export function CreateButton({
+  onClick,
+  isLoading,
+  disabled,
+  className,
+}: Readonly<QuickButtonProps>) {
   return (
     <ActionButton
       label="Create"

@@ -57,7 +57,7 @@ export function HolidayFormDialog({
       setFormData({
         start_date: holiday.start_date,
         end_date: holiday.end_date || '',
-        holiday_type: holiday.holiday_type as Exclude<HolidayType, 'SUNDAY' | 'SATURDAY'>,
+        holiday_type: holiday.holiday_type,
         description: holiday.description,
       });
       setFieldErrors(undefined);

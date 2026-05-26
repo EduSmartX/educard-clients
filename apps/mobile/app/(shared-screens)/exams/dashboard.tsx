@@ -227,9 +227,7 @@ export default function ExamDashboardScreen() {
               <Text style={styles.statItem}>
                 Total: {item.summary.total_obtained}/{item.summary.total_max}
               </Text>
-              <Text style={styles.statItem}>
-                Avg: {(item.summary.percentage as number).toFixed(1)}%
-              </Text>
+              <Text style={styles.statItem}>Avg: {item.summary.percentage.toFixed(1)}%</Text>
             </View>
           )}
         </TouchableOpacity>

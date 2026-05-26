@@ -159,7 +159,7 @@ export function TeacherForm({
   useEffect(() => {
     if (initialData) {
       const formData = transformTeacherToForm(initialData);
-      form.reset(formData as TeacherFormValues);
+      form.reset(formData);
     }
   }, [initialData, form]);
 

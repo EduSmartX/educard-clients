@@ -15,8 +15,6 @@ import {
   calculateWorkingDays,
   cancelLeaveRequest,
   createLeaveRequest,
-  deleteLeaveRequest,
-  reactivateLeaveRequest,
   updateLeaveRequest,
 } from '../api';
 
@@ -71,40 +69,6 @@ export function useCancelLeaveRequest(): UseMutationResult<
 
   return useMutation({
     mutationFn: ({ publicId, data }) => cancelLeaveRequest(publicId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['leave-requests'] });
-      queryClient.invalidateQueries({ queryKey: ['leave-balances'] });
-    },
-  });
-}
-
-/**
- * Delete a leave request (soft delete)
- */
-export function useDeleteLeaveRequest(): UseMutationResult<void, Error, string> {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: deleteLeaveRequest,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['leave-requests'] });
-      queryClient.invalidateQueries({ queryKey: ['leave-balances'] });
-    },
-  });
-}
-
-/**
- * Reactivate a deleted leave request
- */
-export function useReactivateLeaveRequest(): UseMutationResult<
-  ApiSingleResponse<LeaveRequest>,
-  Error,
-  string
-> {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: reactivateLeaveRequest,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leave-requests'] });
       queryClient.invalidateQueries({ queryKey: ['leave-balances'] });

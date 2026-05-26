@@ -200,7 +200,7 @@ export const numberArraySchema = (
 ) => {
   const { required = false, minItems, maxItems } = options;
 
-  let validator = z.array(z.number());
+  let validator = z.array(z.coerce.number());
 
   if (minItems !== undefined) {
     validator = validator.min(

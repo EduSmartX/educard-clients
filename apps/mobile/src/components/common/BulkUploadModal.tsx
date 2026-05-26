@@ -67,8 +67,7 @@ function transformErrors(errors: unknown): BulkUploadError[] {
       if (typeof errorData === 'object' && errorData !== null) {
         data = errorData as Record<string, unknown>;
         const firstKey = Object.keys(data)[0];
-        errorMessage =
-          typeof data[firstKey] === 'string' ? (data[firstKey] as string) : errorMessage;
+        errorMessage = typeof data[firstKey] === 'string' ? data[firstKey] : errorMessage;
       } else if (typeof errorData === 'string') {
         errorMessage = errorData;
       }
@@ -93,7 +92,7 @@ function transformErrors(errors: unknown): BulkUploadError[] {
             ? `${errorKeys.length} validation errors`
             : errorErrors[firstErrorKey] || 'Validation error';
 
-        return { row: rowNum, error: errorMessage, data: errorErrors as Record<string, unknown> };
+        return { row: rowNum, error: errorMessage, data: errorErrors };
       }
       return {
         row: (error.row as number) || 0,

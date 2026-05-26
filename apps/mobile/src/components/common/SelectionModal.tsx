@@ -32,7 +32,7 @@ function BaseSelectionModal({
   title,
   children,
   footer,
-}: BaseSelectionModalProps) {
+}: Readonly<BaseSelectionModalProps>) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.modalOverlay} onPress={onClose}>
@@ -61,7 +61,7 @@ export function SelectionOption({
   isSelected,
   onPress,
   showCheckbox = false,
-}: SelctionOptionProps) {
+}: Readonly<SelctionOptionProps>) {
   return (
     <TouchableOpacity
       style={[styles.modalOption, isSelected && styles.modalOptionSelected]}
@@ -108,7 +108,7 @@ export function SingleSelectModal<T extends SingleSelectOption = SingleSelectOpt
   selectedValue,
   onSelect,
   formatLabel,
-}: SingleSelectModalProps<T>) {
+}: Readonly<SingleSelectModalProps<T>>) {
   return (
     <BaseSelectionModal visible={visible} onClose={onClose} title={title}>
       {options.map((option) => (
@@ -150,7 +150,7 @@ export function MultiSelectModal<T extends SingleSelectOption = SingleSelectOpti
   onSave,
   formatLabel,
   saveButtonText,
-}: MultiSelectModalProps<T>) {
+}: Readonly<MultiSelectModalProps<T>>) {
   const handleSave = () => {
     onSave?.(selectedValues);
     onClose();

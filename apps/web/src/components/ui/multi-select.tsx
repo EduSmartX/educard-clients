@@ -121,8 +121,17 @@ export function MultiSelect({
               filteredOptions.map((option) => (
                 <div
                   key={option.value}
+                  role="option"
+                  aria-selected={value.includes(option.value)}
+                  tabIndex={0}
                   className="hover:bg-muted flex cursor-pointer items-center space-x-2 rounded-sm px-2 py-1.5"
                   onClick={() => handleSelect(option.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleSelect(option.value);
+                    }
+                  }}
                 >
                   <Checkbox
                     id={option.value}

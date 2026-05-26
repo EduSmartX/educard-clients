@@ -128,7 +128,7 @@ export function SubjectsList({
       onSearch={onSearch}
       onFilterChange={onFilterChange}
       getRowKey={(row) => row.public_id}
-      headerExtra={!showDeleted ? <BulkUploadSubjectsDialog /> : undefined}
+      headerExtra={showDeleted ? undefined : <BulkUploadSubjectsDialog />}
     />
   );
 }

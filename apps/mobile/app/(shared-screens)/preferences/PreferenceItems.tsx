@@ -36,7 +36,7 @@ function TooltipBadge({
   pref,
   tooltipPref,
   setTooltipPref,
-}: Pick<PreferenceItemProps, 'pref' | 'tooltipPref' | 'setTooltipPref'>) {
+}: Readonly<Pick<PreferenceItemProps, 'pref' | 'tooltipPref' | 'setTooltipPref'>>) {
   if (!pref.description) return null;
   const isOpen = tooltipPref === pref.public_id;
   return (
@@ -62,7 +62,7 @@ function ResetButton({
   pref,
   canManage,
   onReset,
-}: Pick<PreferenceItemProps, 'pref' | 'canManage' | 'onReset'>) {
+}: Readonly<Pick<PreferenceItemProps, 'pref' | 'canManage' | 'onReset'>>) {
   if (!canManage) return null;
   return (
     <TouchableOpacity onPress={() => onReset(pref)} style={styles.resetLink}>
@@ -73,7 +73,7 @@ function ResetButton({
 }
 
 // ── Yes/No pill buttons ──
-export function RadioPillsItem(props: PreferenceItemProps) {
+export function RadioPillsItem(props: Readonly<PreferenceItemProps>) {
   const { pref, canManage, isPending, onUpdate } = props;
   const labels = getRadioLabels(pref);
   if (!labels) return <TextInputItem {...props} />;
@@ -124,7 +124,7 @@ export function RadioPillsItem(props: PreferenceItemProps) {
 }
 
 // ── Choice dropdown ──
-export function ChoiceItem(props: PreferenceItemProps) {
+export function ChoiceItem(props: Readonly<PreferenceItemProps>) {
   const { pref, canManage, setDropdownPref } = props;
   const currentVal = String(pref.value);
   return (
@@ -152,7 +152,7 @@ export function ChoiceItem(props: PreferenceItemProps) {
 }
 
 // ── Multi-choice ──
-export function MultiChoiceItem(props: PreferenceItemProps) {
+export function MultiChoiceItem(props: Readonly<PreferenceItemProps>) {
   const { pref, canManage, setMultiSelectPref, setMultiSelectValues } = props;
   const values = Array.isArray(pref.value) ? pref.value : [];
   return (
@@ -195,7 +195,7 @@ export function MultiChoiceItem(props: PreferenceItemProps) {
 }
 
 // ── Text / Number input ──
-export function TextInputItem(props: PreferenceItemProps) {
+export function TextInputItem(props: Readonly<PreferenceItemProps>) {
   const {
     pref,
     canManage,
@@ -275,7 +275,7 @@ export function TextInputItem(props: PreferenceItemProps) {
 }
 
 // ── Choice pills for 2-option choices ──
-export function ChoicePillsItem(props: PreferenceItemProps) {
+export function ChoicePillsItem(props: Readonly<PreferenceItemProps>) {
   const { pref, canManage, isPending, onUpdate } = props;
   const vals = pref.applicable_values ?? [];
   const currentVal = String(pref.value);
@@ -315,7 +315,7 @@ export function ChoicePillsItem(props: PreferenceItemProps) {
 }
 
 /** Render a single preference based on type */
-export function PreferenceItem(props: PreferenceItemProps) {
+export function PreferenceItem(props: Readonly<PreferenceItemProps>) {
   const rendererMap = {
     radio: RadioPillsItem,
     choicePills: ChoicePillsItem,

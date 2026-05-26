@@ -264,7 +264,7 @@ export function getErrorMessage(error: unknown, fallback?: string): string {
       }
       // Otherwise include field name
       const fieldLabel = fieldErrorKeys[0]
-        .replaceAll('_', ' ')
+        .replaceAll("_", " ")
         .replace(/\b\w/g, (l) => l.toUpperCase());
       return `${fieldLabel}: ${msg}`;
     }
@@ -277,7 +277,7 @@ export function getErrorMessage(error: unknown, fallback?: string): string {
           return msg;
         }
         const fieldLabel = key
-          .replaceAll('_', ' ')
+          .replaceAll("_", " ")
           .replace(/\b\w/g, (l) => l.toUpperCase());
         return `${fieldLabel}: ${msg}`;
       })
@@ -366,7 +366,9 @@ export function parseApiError(error: unknown): ApiError {
 
 /** Format a field name from snake_case to Title Case */
 function formatFieldLabel(fieldName: string): string {
-  return fieldName.replaceAll('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+  return fieldName
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
 /** Check if a message is self-descriptive (long or contains punctuation) */
@@ -518,14 +520,12 @@ export function extractApiError(
 
   // Priority 2: Extract from errors object (field-level details)
   if (data.errors && typeof data.errors === "object") {
-    const errorMessages = extractFieldErrors(
-      data.errors as Record<string, unknown>,
-    );
+    const errorMessages = extractFieldErrors(data.errors);
     if (errorMessages.length > 0) return errorMessages.join("\n");
   }
 
   // Check for top-level DRF validation errors
-  const rawData = data as Record<string, unknown>;
+  const rawData: Record<string, unknown> = data as Record<string, unknown>;
   const nfeResult = extractNonFieldErrors(rawData);
   if (nfeResult) return nfeResult;
 
@@ -588,7 +588,7 @@ export function getDeletedDuplicateMessage(error: unknown): string {
     Array.isArray(errors.non_field_errors) &&
     errors.non_field_errors.length > 0
   ) {
-    return normalize(errors.non_field_errors[0] as string);
+    return normalize(errors.non_field_errors[0]);
   }
   if (typeof errors.non_field_errors === "string") {
     return normalize(errors.non_field_errors);
@@ -597,7 +597,7 @@ export function getDeletedDuplicateMessage(error: unknown): string {
     return normalize(errors.detail);
   }
   if (Array.isArray(errors.detail) && errors.detail.length > 0) {
-    return normalize(errors.detail[0] as string);
+    return normalize(errors.detail[0]);
   }
 
   return fallback;
@@ -617,7 +617,7 @@ export function getDeletedRecordId(error: unknown): string | null {
     Array.isArray(errors.deleted_record_id) &&
     errors.deleted_record_id.length > 0
   ) {
-    return errors.deleted_record_id[0] as string;
+    return errors.deleted_record_id[0];
   }
 
   return null;

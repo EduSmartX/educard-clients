@@ -66,7 +66,7 @@ export const createLeaveAllocationSchema = (mode: 'create' | 'view' | 'edit' = '
 
       applies_to_all_roles: z.boolean().default(false),
 
-      roles: z.array(z.number()).default([]),
+      roles: z.array(z.coerce.number()).default([]),
 
       effective_from: z.date().optional(),
 

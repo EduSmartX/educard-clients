@@ -88,7 +88,7 @@ export function ResourceListLayout<TData>({
   createButtonLabel,
   emptyActionLabel,
   viewMode = 'admin',
-}: ResourceListProps<TData>) {
+}: Readonly<ResourceListProps<TData>>) {
   const isEmployeeView = viewMode === 'employee';
   const [appliedSearchQuery, setAppliedSearchQuery] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});

@@ -132,11 +132,11 @@ export default function CreateSubjectScreen() {
 
   const handleSubmit = useCallback(() => {
     setApiError(null);
-    const fe = validateAllFields(subjectFormSchema, form as unknown as Record<string, unknown>);
+    const fe = validateAllFields(subjectFormSchema, { ...form });
     setErrors(fe);
     if (Object.keys(fe).length > 0) return;
 
-    const payload = buildSubjectPayload(form as unknown as Record<string, string>);
+    const payload = buildSubjectPayload({ ...form });
     submitCreate(payload, false);
   }, [form, submitCreate]);
 

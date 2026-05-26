@@ -15,7 +15,7 @@ export default function SubjectDetailScreen() {
   const isDeleted = is_deleted === 'true';
   const { data: subject, isLoading, isError } = useSubjectDetail(id ?? '', isDeleted);
 
-  const s = subject as SubjectDetail | undefined;
+  const s = subject;
   const subjectName = s?.subject_info?.name ?? s?.name ?? '...';
   const subjectCode = s?.subject_info?.code ?? s?.code;
   const className = s?.class_info?.class_master_name ?? s?.class_info?.name;

@@ -9,7 +9,7 @@ import type { SubjectListParams } from '../types/subject';
 
 export function useSubjects(params?: SubjectListParams) {
   return useQuery({
-    queryKey: QueryKeys.SUBJECTS.LIST(params as Record<string, unknown>),
+    queryKey: QueryKeys.SUBJECTS.LIST(params),
     queryFn: () => fetchSubjects(params),
   });
 }

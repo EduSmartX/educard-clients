@@ -38,7 +38,7 @@ export function WorkingDayPolicyCard({
   isPending,
   onUpdate,
   animationDelay,
-}: WorkingDayPolicyCardProps) {
+}: Readonly<WorkingDayPolicyCardProps>) {
   const [wdpExpanded, setWdpExpanded] = useState(false);
   const [saturdayDropdownOpen, setSaturdayDropdownOpen] = useState(false);
 

@@ -110,7 +110,7 @@ export default function EditClassScreen() {
     setErrors(fe);
     if (Object.keys(fe).length > 0) return;
 
-    const payload = buildClassPayload(form as unknown as Record<string, string>);
+    const payload = buildClassPayload({ ...form });
     updateMutation.mutate(
       { publicId: id, data: payload },
       {

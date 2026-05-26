@@ -4,10 +4,6 @@
  * Refactored to use generic SelectionModal components
  */
 
-import { Colors } from '@educard/shared';
-import { Check } from 'lucide-react-native';
-import { Modal, Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-
 import type { OrganizationPreference } from '@/features/preferences';
 import type { SaturdayOffPattern } from '@/features/holidays/api/holidays-api';
 import {
@@ -17,7 +13,6 @@ import {
 } from '@/components/common/SelectionModal';
 
 import { formatDropdownValue } from './constants';
-import { styles } from './styles';
 
 // --- Single Select Modal ---
 

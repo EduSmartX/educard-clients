@@ -301,7 +301,7 @@ export default function PaymentsScreen() {
       <FilterModal
         visible={showFilterModal}
         onClose={() => setShowFilterModal(false)}
-        currentFilters={filters as unknown as Record<string, unknown>}
+        currentFilters={filters as Record<string, unknown>}
         onApply={handleApplyFilters}
         fields={PAYMENT_FILTER_FIELDS}
         title="Filter Payments"

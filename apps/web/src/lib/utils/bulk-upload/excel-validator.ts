@@ -180,7 +180,7 @@ export async function validateExcelFile(
     for (let index = 0; index < dataRows.length; index++) {
       const row = dataRows[index];
       const rowNumber = index + skipRows + 1;
-      const rowArray = row as unknown[];
+      const rowArray = row;
 
       if (
         !rowArray ||

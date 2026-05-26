@@ -129,7 +129,7 @@ export default function CreateClassScreen() {
     setErrors(fe);
     if (Object.keys(fe).length > 0) return;
 
-    const payload = buildClassPayload(form as unknown as Record<string, string>);
+    const payload = buildClassPayload({ ...form });
     submitCreate(payload, false);
   }, [form, submitCreate]);
 
