@@ -45,6 +45,7 @@ export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
 
   const debouncedCallback = useCallback(
     ((...args: Parameters<T>) => {
+      // NOSONAR
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
@@ -52,7 +53,7 @@ export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
       timeoutRef.current = setTimeout(() => {
         callbackRef.current(...args);
       }, delay);
-    }) as T, // NOSONAR
+    }) as T,
     [delay],
   );
 

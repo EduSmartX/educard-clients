@@ -31,7 +31,6 @@ export function TeachersManagement({ viewMode = 'admin' }: Readonly<TeachersMana
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState('');
-  const [, setFilters] = useState<Record<string, string>>({});
 
   // Dialog states
   const [teacherToDelete, setTeacherToDelete] = useState<Teacher | null>(null);
@@ -133,8 +132,7 @@ export function TeachersManagement({ viewMode = 'admin' }: Readonly<TeachersMana
     setCurrentPage(1); // Reset to first page on new search
   };
 
-  const handleFilterChange = (newFilters: Record<string, string>) => {
-    setFilters(newFilters);
+  const handleFilterChange = (_newFilters: Record<string, string>) => {
     setCurrentPage(1); // Reset to first page on filter change
   };
 

@@ -238,7 +238,7 @@ export default function VerifyEmailPage() {
               <span className="font-semibold text-gray-800">
                 {userDetails.first_name} {userDetails.last_name}
               </span>
-              !
+              {'!'}
             </CardDescription>
           </CardHeader>
           <CardContent className="px-8 pb-8">

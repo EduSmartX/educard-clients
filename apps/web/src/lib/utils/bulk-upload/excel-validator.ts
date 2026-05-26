@@ -184,12 +184,15 @@ export async function validateExcelFile(
 
       if (
         !rowArray ||
-        rowArray.every(
-          (cell) =>
-            cell === undefined ||
-            cell === null ||
-            (typeof cell !== 'object' && String(cell).trim() === '')
-        )
+        rowArray.every((cell) => {
+          if (cell === undefined || cell === null) {
+            return true;
+          }
+          if (typeof cell === 'object') {
+            return false;
+          }
+          return String(cell).trim() === '';
+        })
       ) {
         continue;
       }

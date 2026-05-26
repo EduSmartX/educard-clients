@@ -114,15 +114,13 @@ export function MultiSelect({
           />
         </div>
         <ScrollArea className="max-h-60 overflow-auto">
-          <div className="p-2" role="listbox" aria-multiselectable="true">
+          <div className="p-2">
             {filteredOptions.length === 0 ? (
               <p className="text-muted-foreground py-2 text-center text-sm">{emptyMessage}</p>
             ) : (
               filteredOptions.map((option) => (
                 <div
                   key={option.value}
-                  role="option"
-                  aria-selected={value.includes(option.value)}
                   tabIndex={0}
                   className="hover:bg-muted flex cursor-pointer items-center space-x-2 rounded-sm px-2 py-1.5"
                   onClick={() => handleSelect(option.value)}

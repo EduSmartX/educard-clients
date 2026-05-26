@@ -66,7 +66,7 @@ export default function CreateTeacherScreen() {
   const [quickAdd, setQuickAdd] = useState(false);
   const [addressExpanded, setAddressExpanded] = useState(false);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
-  const [, setPhotoAsset] = useState<unknown>(null);
+  const photoAssetRef = useRef<unknown>(null);
 
   const [form, setForm] = useState({
     employee_id: '',
@@ -286,7 +286,7 @@ export default function CreateTeacherScreen() {
               imageUri={photoUri}
               onImageSelected={(uri, asset) => {
                 setPhotoUri(uri);
-                setPhotoAsset(asset);
+                photoAssetRef.current = asset;
               }}
               name={`${form.first_name} ${form.last_name}`.trim()}
               gender={form.gender}

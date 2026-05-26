@@ -20,7 +20,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Save, ChevronDown, ChevronUp } from 'lucide-react-native';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Switch } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
@@ -81,7 +81,7 @@ export default function CreateStudentScreen() {
   const [addressExpanded, setAddressExpanded] = useState(false);
   const [prevSchoolExpanded, setPrevSchoolExpanded] = useState(false);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
-  const [, setPhotoAsset] = useState<unknown>(null); // prefixed with _ for unused, unknown instead of any
+  const photoAssetRef = useRef<unknown>(null);
 
   const [form, setForm] = useState({
     class_id: '',
@@ -330,7 +330,7 @@ export default function CreateStudentScreen() {
               imageUri={photoUri}
               onImageSelected={(uri, asset) => {
                 setPhotoUri(uri);
-                setPhotoAsset(asset);
+                photoAssetRef.current = asset;
               }}
               name={`${form.first_name} ${form.last_name}`.trim()}
               gender={form.gender}
