@@ -2,7 +2,6 @@
  * Subject Detail Screen — /(shared-screens)/subjects/[id]
  */
 
-import type { SubjectDetail } from '@educard/shared';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
