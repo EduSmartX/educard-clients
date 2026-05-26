@@ -44,7 +44,7 @@ export function formatDateForApi(date: DateInput): string {
 /**
  * Format date for display (MMM DD, YYYY)
  */
-export function formatDateForDisplay(date: Date | string | null | undefined): string {
+export function formatDateForDisplay(date: DateInput): string {
   if (!date) {
     return 'N/A';
   }
@@ -76,7 +76,7 @@ export function parseDateFromApi(dateString: string | null | undefined): Date | 
  * Get default form values for create mode
  */
 export function getDefaultFormValues(): LeaveAllocationFormValues {
-  return getDefaultLeaveAllocationValues() as LeaveAllocationFormValues;
+  return getDefaultLeaveAllocationValues();
 }
 
 /**
@@ -144,10 +144,7 @@ export function validateCarryForward(
 /**
  * Calculate effective period duration in days
  */
-export function calculateEffectivePeriod(
-  startDate: Date | string | null | undefined,
-  endDate: Date | string | null | undefined
-): number | null {
+export function calculateEffectivePeriod(startDate: DateInput, endDate: DateInput): number | null {
   if (!startDate) {
     return null;
   }
