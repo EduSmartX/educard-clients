@@ -114,7 +114,7 @@ export type LeaveAllocationFormValues = z.infer<ReturnType<typeof createLeaveAll
 /**
  * Default form values for create mode
  */
-export const getDefaultLeaveAllocationValues = (): Partial<LeaveAllocationFormValues> => {
+export const getDefaultLeaveAllocationValues = (): LeaveAllocationFormValues => {
   return {
     leave_type: undefined,
     name: '',

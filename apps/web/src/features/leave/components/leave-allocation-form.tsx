@@ -37,7 +37,7 @@ import {
   getFormValuesFromAllocation,
   validateCarryForward,
 } from '../utils/leave-allocation-helpers';
-import { setFormFieldErrors, parseApiError } from '@/lib/utils/error-handler';
+import { applyFieldErrors, parseApiError } from '@/lib/utils/error-handler';
 
 interface LeaveAllocationFormProps {
   mode?: 'create' | 'edit' | 'view';
@@ -224,17 +224,16 @@ export function LeaveAllocationForm({
       onSuccess?.();
     },
     onError: (error: unknown) => {
-      const { hasFieldError, nonFieldErrors } = setFormFieldErrors(error, form.setError);
-      if (hasFieldError) {
+      const { hasFieldErrors, toastMessage } = applyFieldErrors(error, form.setError);
+      if (hasFieldErrors) {
         return;
       }
 
-      const description =
-        nonFieldErrors.length > 0 ? nonFieldErrors[0] : String(parseApiError(error));
+      const description = toastMessage || String(parseApiError(error));
       toast.error(ErrorMessages.CREATE_FAILED, {
         description,
         icon: <AlertCircle className="h-4 w-4" />,
-        duration: nonFieldErrors.length > 0 ? 6000 : undefined,
+        duration: toastMessage ? 6000 : undefined,
       });
     },
   });
@@ -253,16 +252,16 @@ export function LeaveAllocationForm({
       onSuccess?.();
     },
     onError: (error: unknown) => {
-      const { hasFieldError, nonFieldErrors } = setFormFieldErrors(error, form.setError);
-      if (hasFieldError) {
+      const { hasFieldErrors, toastMessage } = applyFieldErrors(error, form.setError);
+      if (hasFieldErrors) {
         return;
       }
 
-      const description = nonFieldErrors.length > 0 ? nonFieldErrors[0] : undefined;
+      const description = toastMessage || undefined;
       toast.error(ErrorMessages.UPDATE_FAILED, {
         description,
         icon: <AlertCircle className="h-4 w-4" />,
-        duration: nonFieldErrors.length > 0 ? 6000 : undefined,
+        duration: toastMessage ? 6000 : undefined,
       });
     },
   });
