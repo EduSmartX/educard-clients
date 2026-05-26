@@ -66,7 +66,7 @@ export default function CreateTeacherScreen() {
   const [quickAdd, setQuickAdd] = useState(false);
   const [addressExpanded, setAddressExpanded] = useState(false);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
-  const [_photoAsset, setPhotoAsset] = useState<unknown>(null);
+  const [, setPhotoAsset] = useState<unknown>(null);
 
   const [form, setForm] = useState({
     employee_id: '',

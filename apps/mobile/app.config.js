@@ -1,4 +1,4 @@
-module.exports = ({ config }) => {
+module.exports = function appConfig({ config }) {
   return {
     ...config,
     android: {

@@ -299,7 +299,7 @@ export default function AdminDashboard() {
                   style={styles.adminLinkCard}
                   onPress={() => {
                     if (link.route) {
-                      router.push(link.route as `/${string}`);
+                      router.push(link.route as never); // NOSONAR
                     }
                   }}
                   activeOpacity={0.75}

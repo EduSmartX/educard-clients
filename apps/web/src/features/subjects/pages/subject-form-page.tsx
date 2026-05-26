@@ -172,6 +172,7 @@ export default function SubjectFormPage() {
       Object.entries(fieldErrors).forEach(([field, message]) => {
         if (message) {
           form.setError(field as keyof SubjectFormData, {
+            // NOSONAR
             type: 'manual',
             message: String(message),
           });

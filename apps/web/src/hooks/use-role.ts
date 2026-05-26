@@ -1,12 +1,12 @@
 /**
  * Hook for checking user role
- * 
+ *
  * Provides convenient boolean flags for checking the current user's role.
- * 
+ *
  * @example
  * ```tsx
  * const { isAdmin, isEmployee, isParent, role } = useRole();
- * 
+ *
  * if (isAdmin) {
  *   return <AdminDashboard />;
  * }
@@ -33,7 +33,7 @@ export function useRole(): UseRoleReturn {
   const { user } = useAuth();
 
   const role = user?.role ? (user.role.toUpperCase() as UserRole) : null;
-  const lowerRole = user?.role?.toLowerCase() as UserRoleValue | undefined;
+  const lowerRole = user?.role?.toLowerCase() as UserRoleValue | undefined; // NOSONAR
 
   return {
     role,

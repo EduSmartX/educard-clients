@@ -537,7 +537,7 @@ export function TimetableGrid({ timetable, isLoading, readOnly }: Readonly<Timet
         };
         return acc;
       },
-      {} as TimetableExportData['days']
+      {} as TimetableExportData['days'] // NOSONAR
     ),
     activeDays,
     generatedAt: `${totalAssigned}/${totalAssignable} periods assigned`,

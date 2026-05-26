@@ -81,7 +81,7 @@ export default function CreateStudentScreen() {
   const [addressExpanded, setAddressExpanded] = useState(false);
   const [prevSchoolExpanded, setPrevSchoolExpanded] = useState(false);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
-  const [_photoAsset, setPhotoAsset] = useState<unknown>(null); // prefixed with _ for unused, unknown instead of any
+  const [, setPhotoAsset] = useState<unknown>(null); // prefixed with _ for unused, unknown instead of any
 
   const [form, setForm] = useState({
     class_id: '',

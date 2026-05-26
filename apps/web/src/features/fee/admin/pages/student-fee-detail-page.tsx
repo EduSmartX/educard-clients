@@ -109,10 +109,10 @@ function DiscountCard({ studentFee }: Readonly<DiscountCardProps>) {
 }
 
 export function StudentFeeDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id = '' } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const { data: studentFee, isLoading } = useStudentFee(id!);
+  const { data: studentFee, isLoading } = useStudentFee(id);
   const reviewRequests = useReviewComponentRequests();
 
   // Per-component reject note state: { [component_public_id]: string }
@@ -124,14 +124,14 @@ export function StudentFeeDetailPage() {
 
   const handleApprove = (componentPublicId: string) => {
     reviewRequests.mutate({
-      id: id!,
+      id,
       data: { decisions: [{ component_public_id: componentPublicId, action: 'approve' }] },
     });
   };
 
   const handleReject = (componentPublicId: string) => {
     reviewRequests.mutate({
-      id: id!,
+      id,
       data: {
         decisions: [
           {

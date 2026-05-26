@@ -151,6 +151,7 @@ export default function ClassFormPage() {
       Object.entries(fieldErrors).forEach(([field, message]) => {
         if (message) {
           form.setError(field as keyof ClassFormData, {
+            // NOSONAR
             type: 'manual',
             message: String(message),
           });

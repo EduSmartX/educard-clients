@@ -43,6 +43,12 @@ import { useAndroidBack } from '@/hooks';
 import { PaymentModeBadge } from '../components/payment-mode-badge';
 import { usePayments, useFeeDashboard } from '../hooks';
 
+// Type-safe filter value extraction
+const getPaymentMode = (val?: string): PaymentModeType | undefined =>
+  (val || undefined) as PaymentModeType | undefined;
+const getTransactionType = (val?: string): TransactionTypeValue | undefined =>
+  (val || undefined) as TransactionTypeValue | undefined;
+
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 
 interface StatCardProps {
@@ -128,8 +134,8 @@ export default function PaymentsScreen() {
 
   const queryFilters = {
     search: appliedSearch || undefined,
-    payment_mode: (filters.payment_mode || undefined) as PaymentModeType | undefined,
-    transaction_type: (filters.transaction_type || undefined) as TransactionTypeValue | undefined,
+    payment_mode: getPaymentMode(filters.payment_mode),
+    transaction_type: getTransactionType(filters.transaction_type),
     date_from: dateFrom || undefined,
     date_to: dateTo || undefined,
   };

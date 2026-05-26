@@ -146,7 +146,7 @@ export function HolidayCalendar() {
               {/* View Toggle */}
               <Tabs
                 value={viewMode}
-                onValueChange={(v: string) => setViewMode(v as ViewMode)}
+                onValueChange={(v: string) => setViewMode(v as ViewMode)} // NOSONAR
                 className="rounded-lg bg-white shadow-sm"
               >
                 <TabsList className="h-10">

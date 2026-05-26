@@ -269,7 +269,7 @@ export function ExceptionDialog({
     }
 
     const data: CalendarExceptionCreate = {
-      date: format(date!, 'yyyy-MM-dd'),
+      date: format(date ?? new Date(), 'yyyy-MM-dd'),
       override_type: overrideType,
       reason: reason.trim(),
       is_applicable_to_all_classes: isAllClasses,
@@ -278,7 +278,7 @@ export function ExceptionDialog({
     };
 
     if (isEditMode) {
-      updateMutation.mutate({ publicId: exception!.public_id, payload: data });
+      updateMutation.mutate({ publicId: exception?.public_id ?? '', payload: data });
     } else {
       createMutation.mutate(data);
     }

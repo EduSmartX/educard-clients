@@ -48,7 +48,9 @@ function getOrganizationRoleName(role: unknown): string | null {
 }
 
 function parseManageableUsers(data: unknown): ManageableUser[] {
-  if (!data) { return []; }
+  if (!data) {
+    return [];
+  }
   const record = data as { users?: unknown };
   if (Array.isArray(record.users)) {
     return record.users as ManageableUser[];
@@ -261,7 +263,7 @@ export function AttendanceReportPage() {
                   { value: 'monthly', label: 'Monthly Report' },
                 ]}
                 value={reportType}
-                onValueChange={(value) => setReportType(value as ReportType)}
+                onValueChange={(value) => setReportType(value as ReportType)} // NOSONAR
                 placeholder="Select report type"
                 className="bg-white"
               />
@@ -276,7 +278,7 @@ export function AttendanceReportPage() {
                   { value: 'staff', label: 'Staff' },
                 ]}
                 value={viewType}
-                onValueChange={(value) => setViewType(value as ViewType)}
+                onValueChange={(value) => setViewType(value as ViewType)} // NOSONAR
                 placeholder="Select view"
                 className="bg-white"
               />

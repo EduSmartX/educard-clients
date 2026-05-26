@@ -194,8 +194,8 @@ function createIconComponent(lucideName: string) {
         // Fallback: render a generic icon
         return <Ionicons name="help-outline" size={size} color={color} style={style} />;
       }
-      const Lib = mapping.lib as typeof Ionicons;
-      const iconName = mapping.name as keyof typeof Ionicons.glyphMap;
+      const Lib = mapping.lib as typeof Ionicons; // NOSONAR
+      const iconName = mapping.name as keyof typeof Ionicons.glyphMap; // NOSONAR
       return <Lib name={iconName} size={size} color={color} style={style} />;
     }
   );

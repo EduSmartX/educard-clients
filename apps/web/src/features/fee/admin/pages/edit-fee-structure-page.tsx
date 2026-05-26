@@ -71,12 +71,12 @@ const IMPACT_MESSAGES = {
 } as const;
 
 export function EditFeeStructurePage() {
-  const { id } = useParams<{ id: string }>();
+  const { id = '' } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const feeStructureApi = createFeeStructureApi(apiClient);
 
   // Fetch existing structure
-  const { data: structure, isLoading: isStructureLoading } = useFeeStructure(id!);
+  const { data: structure, isLoading: isStructureLoading } = useFeeStructure(id);
 
   // Data for form
   const { data: classesData } = useClasses();

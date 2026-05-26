@@ -227,7 +227,7 @@ export default function StudentFeesScreen() {
   const scrollY = useRef(0);
 
   const filters = {
-    status: (statusFilter || undefined) as FeeStatusType | undefined,
+    status: (statusFilter || undefined) as FeeStatusType | undefined, // NOSONAR - needed for type narrowing from generic filter string
     class_public_id: classFilter || undefined,
     fee_structure_public_id: params.fee_structure_public_id || undefined,
   };

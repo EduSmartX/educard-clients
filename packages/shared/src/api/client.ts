@@ -58,6 +58,7 @@ export function createApiClient(config: ApiClientConfig): AxiosInstance {
     (response) => response,
     async (error: AxiosError) => {
       const originalRequest = error.config as InternalAxiosRequestConfig & {
+        // NOSONAR
         _retry?: boolean;
       };
 

@@ -114,7 +114,7 @@ export function MultiSelect({
           />
         </div>
         <ScrollArea className="max-h-60 overflow-auto">
-          <div className="p-2">
+          <div className="p-2" role="listbox" aria-multiselectable="true">
             {filteredOptions.length === 0 ? (
               <p className="text-muted-foreground py-2 text-center text-sm">{emptyMessage}</p>
             ) : (

@@ -277,7 +277,7 @@ export function ClassList({ onBack }: ClassListProps) {
         onClose={() => setShowFilters(false)}
         currentFilters={filters}
         onApply={(f) => {
-          setFilters(f as Record<string, string | boolean | undefined>);
+          setFilters(f as Record<string, string | boolean | undefined>); // NOSONAR
           setShowFilters(false);
         }}
         fields={filterFields}

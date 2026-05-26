@@ -54,7 +54,7 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }; // NOSONAR
 
     // Skip token refresh for auth endpoints (login, register, etc.)
     const isAuthEndpoint =

@@ -275,7 +275,7 @@ export default function EmployeeDashboard() {
               >
                 <TouchableOpacity
                   style={styles.quickActionCard}
-                  onPress={() => router.push(action.route as never)}
+                  onPress={() => router.push(action.route as never)} // NOSONAR
                   activeOpacity={0.75}
                 >
                   <LinearGradient

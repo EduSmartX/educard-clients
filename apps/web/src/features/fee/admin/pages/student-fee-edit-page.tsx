@@ -20,10 +20,10 @@ import { useUpdateStudentFee, useUpdateStudentFeeComponents } from '../../hooks/
 import type { StudentFeeComponentItem } from '@educard/shared';
 
 export function StudentFeeEditPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id = '' } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const { data: studentFee, isLoading } = useStudentFee(id!);
+  const { data: studentFee, isLoading } = useStudentFee(id);
   const updateStudentFee = useUpdateStudentFee();
   const updateComponents = useUpdateStudentFeeComponents();
 
@@ -61,7 +61,7 @@ export function StudentFeeEditPage() {
 
   const handleSaveDiscount = () => {
     updateStudentFee.mutate({
-      id: id!,
+      id,
       data: {
         discount_percentage: Number(discountPercentage),
         referral_name: referralName,
@@ -81,10 +81,10 @@ export function StudentFeeEditPage() {
       admin_note: componentSelections[c.fee_component_public_id]?.admin_note ?? '',
     }));
     updateComponents.mutate(
-      { id: id!, data: { components } },
+      { id, data: { components } },
       {
         onSuccess: () => {
-          navigate(ROUTES.FEES.STUDENT_FEES_VIEW.replace(':id', id!));
+          navigate(ROUTES.FEES.STUDENT_FEES_VIEW.replace(':id', id));
         },
       }
     );
@@ -124,7 +124,7 @@ export function StudentFeeEditPage() {
           },
           {
             label: 'View Details',
-            onClick: () => navigate(ROUTES.FEES.STUDENT_FEES_VIEW.replace(':id', id!)),
+            onClick: () => navigate(ROUTES.FEES.STUDENT_FEES_VIEW.replace(':id', id)),
             variant: 'outline' as const,
             icon: Pencil,
           },

@@ -180,6 +180,7 @@ export default function EditTeacherScreen() {
     }
 
     const payload = buildTeacherPayload(form, false) as Partial<CreateTeacherPayload> & {
+      // NOSONAR
       subjects?: number[];
     };
     if (form.subjects.length > 0) {

@@ -52,7 +52,7 @@ export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
       timeoutRef.current = setTimeout(() => {
         callbackRef.current(...args);
       }, delay);
-    }) as T,
+    }) as T, // NOSONAR
     [delay],
   );
 

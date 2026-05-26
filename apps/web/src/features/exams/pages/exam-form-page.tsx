@@ -98,7 +98,7 @@ function getExamFormActionsConfig(
 
 export function ExamFormPage() {
   const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
+  const { id = '' } = useParams<{ id: string }>();
   const location = useLocation();
   const { isAdmin } = useRole();
 
@@ -358,7 +358,7 @@ export function ExamFormPage() {
                 isCreate,
                 isPending,
                 () => navigate(ROUTES.EXAMS_LIST),
-                () => navigate(ROUTES.EXAMS_EDIT.replace(':id', id!))
+                () => navigate(ROUTES.EXAMS_EDIT.replace(':id', id))
               )}
             />
           </CardContent>

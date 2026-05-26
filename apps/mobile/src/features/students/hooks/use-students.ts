@@ -24,8 +24,7 @@ import {
 export const studentKeys = {
   all: QueryKeys.STUDENTS.ALL,
   lists: () => QueryKeys.STUDENTS.LISTS(),
-  list: (params?: StudentQueryParams) =>
-    QueryKeys.STUDENTS.LIST(params as Record<string, unknown> | undefined),
+  list: (params?: StudentQueryParams) => QueryKeys.STUDENTS.LIST(params),
   infinite: (params?: Omit<StudentQueryParams, 'page'>) => QueryKeys.STUDENTS.INFINITE(params),
   details: () => QueryKeys.STUDENTS.DETAILS(),
   detail: (id: string) => QueryKeys.STUDENTS.DETAIL(id),

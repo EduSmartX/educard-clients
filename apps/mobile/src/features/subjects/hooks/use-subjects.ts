@@ -24,8 +24,7 @@ import {
 export const subjectKeys = {
   all: QueryKeys.SUBJECTS.ALL,
   lists: () => QueryKeys.SUBJECTS.LISTS(),
-  list: (params?: SubjectQueryParams) =>
-    QueryKeys.SUBJECTS.LIST(params as Record<string, unknown> | undefined),
+  list: (params?: SubjectQueryParams) => QueryKeys.SUBJECTS.LIST(params),
   infinite: (params?: Omit<SubjectQueryParams, 'page'>) => QueryKeys.SUBJECTS.INFINITE(params),
   byClass: (classId: string) => QueryKeys.SUBJECTS.BY_CLASS(classId),
   details: () => QueryKeys.SUBJECTS.DETAILS(),

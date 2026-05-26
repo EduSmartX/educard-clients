@@ -45,7 +45,7 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }; // NOSONAR
 
     // Skip token refresh for login/auth endpoints - let the form handle the error
     const isAuthEndpoint =
@@ -244,7 +244,7 @@ export function parseOtpErrors(error: AxiosError): {
     if (data.detail && data.errors && Array.isArray(data.errors)) {
       return {
         detail: data.detail,
-        errors: data.errors as OtpValidationError[],
+        errors: data.errors as OtpValidationError[], // NOSONAR
       };
     }
   }

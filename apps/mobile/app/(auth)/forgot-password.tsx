@@ -13,13 +13,11 @@ type Step = 'email' | 'otp' | 'newPassword';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
-  const [_step, setStep] = useState<Step>('email'); // prefixed _ - unused for now
+  const [, setStep] = useState<Step>('email'); // NOSONAR - only setter needed
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [_newPassword, _setNewPassword] = useState(''); // prefixed _
-  const [_confirmPassword, _setConfirmPassword] = useState(''); // prefixed _
-  const [_showPassword, _setShowPassword] = useState(false); // prefixed _
-  const [_showConfirmPassword, _setShowConfirmPassword] = useState(false); // prefixed _
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
@@ -56,15 +54,15 @@ export default function ForgotPasswordScreen() {
 
   const _handleResetPassword = useCallback(async () => {
     // prefixed _ - for future use
-    if (!_newPassword || !_confirmPassword) {
+    if (!newPassword || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
-    if (_newPassword !== _confirmPassword) {
+    if (newPassword !== confirmPassword) {
       Alert.alert('Error', 'Passwords do not match');
       return;
     }
-    if (_newPassword.length < 8) {
+    if (newPassword.length < 8) {
       Alert.alert('Error', 'Password must be at least 8 characters');
       return;
     }
@@ -74,8 +72,8 @@ export default function ForgotPasswordScreen() {
       await authApi.verifyPasswordResetOtp({
         email: email.trim(),
         otp: otpCode,
-        new_password: _newPassword,
-        confirm_password: _confirmPassword,
+        new_password: newPassword,
+        confirm_password: confirmPassword,
       });
       Alert.alert('Success', 'Password reset successfully', [
         { text: 'OK', onPress: () => router.replace('/(auth)/login') },
@@ -86,7 +84,7 @@ export default function ForgotPasswordScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [email, otp, _newPassword, _confirmPassword, router]);
+  }, [email, otp, newPassword, confirmPassword, router]);
 
   const _handleOtpChange = (index: number, value: string) => {
     // prefixed _

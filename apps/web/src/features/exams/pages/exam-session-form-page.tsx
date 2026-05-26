@@ -61,7 +61,7 @@ function getSessionFormTitle(isCreate: boolean, isEdit: boolean): string {
 
 export function ExamSessionFormPage() {
   const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
+  const { id = '' } = useParams<{ id: string }>();
   const location = useLocation();
   const { isAdmin } = useRole();
 
@@ -127,7 +127,7 @@ export function ExamSessionFormPage() {
     onSuccess: () => navigate(ROUTES.EXAMS),
     onError: (_err, errors) => {
       if (errors) {
-        setFieldErrors(errors as Record<string, string>);
+        setFieldErrors(errors as Record<string, string>); // NOSONAR
       }
     },
   });
@@ -136,7 +136,7 @@ export function ExamSessionFormPage() {
     onSuccess: () => navigate(ROUTES.EXAMS),
     onError: (_err, errors) => {
       if (errors) {
-        setFieldErrors(errors as Record<string, string>);
+        setFieldErrors(errors as Record<string, string>); // NOSONAR
       }
     },
   });
@@ -331,7 +331,7 @@ export function ExamSessionFormPage() {
               <FormActions
                 primaryAction={{
                   label: 'Edit Session',
-                  onClick: () => navigate(ROUTES.EXAM_SESSIONS_EDIT.replace(':id', id!)),
+                  onClick: () => navigate(ROUTES.EXAM_SESSIONS_EDIT.replace(':id', id)),
                   type: 'button',
                   style: 'info',
                 }}

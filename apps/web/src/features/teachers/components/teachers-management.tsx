@@ -31,7 +31,7 @@ export function TeachersManagement({ viewMode = 'admin' }: Readonly<TeachersMana
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState('');
-  const [_filters, setFilters] = useState<Record<string, string>>({});
+  const [, setFilters] = useState<Record<string, string>>({});
 
   // Dialog states
   const [teacherToDelete, setTeacherToDelete] = useState<Teacher | null>(null);

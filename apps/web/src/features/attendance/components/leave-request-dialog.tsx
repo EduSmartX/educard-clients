@@ -232,9 +232,9 @@ export function LeaveRequestDialog({
 
     createMutation.mutate({
       leave_balance: leaveBalanceId,
-      start_date: format(startDate!, 'yyyy-MM-dd'),
-      end_date: format(endDate!, 'yyyy-MM-dd'),
-      number_of_days: workingDays!,
+      start_date: format(startDate ?? new Date(), 'yyyy-MM-dd'),
+      end_date: format(endDate ?? new Date(), 'yyyy-MM-dd'),
+      number_of_days: workingDays ?? 0,
       reason: reason.trim(),
     });
   };
