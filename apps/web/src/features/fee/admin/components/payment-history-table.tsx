@@ -156,6 +156,11 @@ export function PaymentHistoryTable({
       width: 180,
     },
     {
+      header: 'Class',
+      accessor: (row) => <span className="text-sm text-gray-700">{row.class_name || '-'}</span>,
+      width: 120,
+    },
+    {
       header: 'Amount',
       accessor: (row) => <AmountCell row={row} />,
       sortable: true,

@@ -312,6 +312,8 @@ export function AttendanceReportPage() {
               <MonthYearPicker
                 value={selectedDate}
                 onChange={(date) => date && setSelectedDate(date)}
+                minDate={academicYear?.start_date}
+                maxDate={academicYear?.end_date}
               />
             </div>
           </div>

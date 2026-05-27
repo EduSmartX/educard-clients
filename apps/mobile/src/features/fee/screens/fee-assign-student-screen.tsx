@@ -165,6 +165,7 @@ export default function FeeAssignStudentScreen() {
             disabled={!classId}
             loading={studentsLoading}
             searchable
+            emptyMessage="All students in this class already have fee structures assigned. Edit existing assignments if needed."
           />
 
           <FormDropdown

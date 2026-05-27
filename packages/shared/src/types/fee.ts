@@ -225,6 +225,7 @@ export interface PaymentStatus {
 export interface FeePayment {
   public_id: string;
   student_name: string;
+  class_name?: string;
   student_fee_public_id: string;
   fee_structure_name: string;
   amount: number;

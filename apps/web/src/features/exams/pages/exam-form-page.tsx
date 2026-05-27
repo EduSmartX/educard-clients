@@ -230,6 +230,8 @@ export function ExamFormPage() {
       subjectId,
       status,
       dateError,
+      startTime,
+      endTime,
     });
 
     if (Object.keys(errors).length > 0) {

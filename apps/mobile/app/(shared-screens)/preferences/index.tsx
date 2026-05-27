@@ -20,10 +20,10 @@ import {
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { getCategoryConfig, formatCategory } from './constants';
+import { getCategoryConfig, formatCategory } from './_constants';
 import { PreferenceItem } from './PreferenceItems';
 import { SingleSelectModal, MultiSelectModal } from './PreferenceModals';
-import { styles } from './styles';
+import { styles } from './_styles';
 import { WorkingDayPolicyCard } from './WorkingDayPolicyCard';
 
 import type { SaturdayOffPattern, WorkingDayPolicy } from '@/features/holidays/api/holidays-api';
@@ -227,27 +227,87 @@ export default function OrgPreferencesScreen() {
 
                   {isExpanded && (
                     <View style={styles.prefList}>
-                      {group.preferences.map((pref, idx) => (
-                        <View key={pref.public_id}>
-                          {idx > 0 && <View style={styles.divider} />}
-                          <PreferenceItem
-                            pref={pref}
-                            canManage={canManage}
-                            isPending={updateMutation.isPending}
-                            tooltipPref={tooltipPref}
-                            setTooltipPref={setTooltipPref}
-                            onUpdate={handleUpdate}
-                            onReset={handleReset}
-                            editingTextPref={editingTextPref}
-                            editTextValue={editTextValue}
-                            setEditingTextPref={setEditingTextPref}
-                            setEditTextValue={setEditTextValue}
-                            setDropdownPref={setDropdownPref}
-                            setMultiSelectPref={setMultiSelectPref}
-                            setMultiSelectValues={setMultiSelectValues}
-                          />
-                        </View>
-                      ))}
+                      {(() => {
+                        // Build parent-children groups based on depends_on
+                        const childrenByParentKey: Record<string, typeof group.preferences> = {};
+                        for (const pref of group.preferences) {
+                          if (pref.depends_on) {
+                            if (!childrenByParentKey[pref.depends_on]) {
+                              childrenByParentKey[pref.depends_on] = [];
+                            }
+                            childrenByParentKey[pref.depends_on].push(pref);
+                          }
+                        }
+
+                        // Top-level preferences: those without depends_on
+                        const topLevelPrefs = group.preferences.filter((p) => !p.depends_on);
+
+                        let itemIdx = 0;
+                        return topLevelPrefs.map((pref) => {
+                          const children = childrenByParentKey[pref.key] || [];
+                          const parentValue = Array.isArray(pref.value)
+                            ? pref.value[0]
+                            : (pref.value as string);
+                          const isParentEnabled = parentValue === 'TRUE';
+                          const currentIdx = itemIdx++;
+
+                          return (
+                            <View key={pref.public_id}>
+                              {currentIdx > 0 && <View style={styles.divider} />}
+                              <PreferenceItem
+                                pref={pref}
+                                canManage={canManage}
+                                isPending={updateMutation.isPending}
+                                tooltipPref={tooltipPref}
+                                setTooltipPref={setTooltipPref}
+                                onUpdate={handleUpdate}
+                                onReset={handleReset}
+                                editingTextPref={editingTextPref}
+                                editTextValue={editTextValue}
+                                setEditingTextPref={setEditingTextPref}
+                                setEditTextValue={setEditTextValue}
+                                setDropdownPref={setDropdownPref}
+                                setMultiSelectPref={setMultiSelectPref}
+                                setMultiSelectValues={setMultiSelectValues}
+                              />
+                              {children.length > 0 && (
+                                <View
+                                  style={{
+                                    marginLeft: 16,
+                                    borderLeftWidth: 2,
+                                    borderLeftColor: isParentEnabled ? '#bfdbfe' : '#e5e7eb',
+                                    paddingLeft: 12,
+                                    opacity: isParentEnabled ? 1 : 0.4,
+                                  }}
+                                  pointerEvents={isParentEnabled ? 'auto' : 'none'}
+                                >
+                                  {children.map((child) => (
+                                    <View key={child.public_id}>
+                                      <View style={styles.divider} />
+                                      <PreferenceItem
+                                        pref={child}
+                                        canManage={canManage && isParentEnabled}
+                                        isPending={updateMutation.isPending}
+                                        tooltipPref={tooltipPref}
+                                        setTooltipPref={setTooltipPref}
+                                        onUpdate={handleUpdate}
+                                        onReset={handleReset}
+                                        editingTextPref={editingTextPref}
+                                        editTextValue={editTextValue}
+                                        setEditingTextPref={setEditingTextPref}
+                                        setEditTextValue={setEditTextValue}
+                                        setDropdownPref={setDropdownPref}
+                                        setMultiSelectPref={setMultiSelectPref}
+                                        setMultiSelectValues={setMultiSelectValues}
+                                      />
+                                    </View>
+                                  ))}
+                                </View>
+                              )}
+                            </View>
+                          );
+                        });
+                      })()}
                     </View>
                   )}
                 </Animated.View>

@@ -6,10 +6,12 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Combobox } from '@/components/ui/combobox';
 import { Badge } from '@/components/ui/badge';
+import { MultiSelect } from '@/components/ui/multi-select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import type { OrganizationPreference } from '@/lib/api/preferences-api';
 import { FormPlaceholders } from '@/constants';
+import { useClasses } from '@/features/classes/hooks/use-classes';
 import {
   validateTimeFormat,
   validateDeadlineDay,
@@ -30,8 +32,8 @@ function FieldLabel({
   description,
 }: Readonly<{ htmlFor?: string; displayName: string; description?: string }>) {
   return (
-    <div className="flex items-center gap-2">
-      <Label htmlFor={htmlFor} className="text-gray-900">
+    <div className="flex items-center gap-1.5">
+      <Label htmlFor={htmlFor} className="text-sm text-gray-700">
         {displayName}
       </Label>
       {!!description && (
@@ -48,6 +50,75 @@ function FieldLabel({
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
+      )}
+    </div>
+  );
+}
+
+// Dynamic classes selector for homework notifications — All toggle or specific class pick
+function ClassesMultiSelect({
+  currentValues,
+  onChange,
+  disabled,
+}: Readonly<{
+  currentValues: string[];
+  onChange: (vals: string[]) => void;
+  disabled?: boolean;
+}>) {
+  const isAll = currentValues.includes('ALL');
+  const { data: classesData } = useClasses({ page_size: 100 });
+  const classes = (classesData?.data || []) as {
+    public_id: string;
+    name: string;
+    class_master?: { name: string } | null;
+  }[];
+
+  const classOptions = classes.map((cls) => ({
+    value: cls.public_id,
+    label: cls.class_master ? `${cls.class_master.name} - ${cls.name}` : cls.name,
+  }));
+
+  return (
+    <div className="w-full sm:max-w-md">
+      {/* All / Specific Classes toggle */}
+      <div className="mb-2 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => onChange(['ALL'])}
+          disabled={disabled}
+          className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+            isAll
+              ? 'border-blue-500 bg-blue-500 text-white'
+              : 'border-gray-300 bg-white text-gray-600 hover:border-blue-300'
+          }`}
+        >
+          All Classes
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange([])}
+          disabled={disabled}
+          className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+            !isAll
+              ? 'border-blue-500 bg-blue-500 text-white'
+              : 'border-gray-300 bg-white text-gray-600 hover:border-blue-300'
+          }`}
+        >
+          Select Classes
+        </button>
+      </div>
+
+      {/* Multi-select dropdown — only shown when not ALL */}
+      {!isAll && (
+        <MultiSelect
+          options={classOptions}
+          value={currentValues}
+          onChange={onChange}
+          placeholder="Select classes..."
+          searchPlaceholder="Search classes..."
+          emptyMessage="No classes found."
+          disabled={disabled}
+        />
       )}
     </div>
   );
@@ -102,8 +173,8 @@ export function PreferenceField({
       });
 
       return (
-        <div className="flex flex-col gap-3 border-b border-dotted border-gray-200 px-4 py-4 last:border-b-0 sm:flex-row sm:items-start sm:gap-0">
-          <div className="sm:w-[600px] sm:flex-shrink-0 sm:pr-8">
+        <div className="flex flex-col gap-3 border-b border-dotted border-gray-100 px-3 py-2.5 last:border-b-0 sm:flex-row sm:items-start sm:gap-0">
+          <div className="sm:w-[480px] sm:flex-shrink-0 sm:pr-8">
             <FieldLabel
               htmlFor={preference.key}
               displayName={preference.display_name}
@@ -159,8 +230,8 @@ export function PreferenceField({
       };
 
       return (
-        <div className="flex flex-col gap-3 border-b border-dotted border-gray-200 px-4 py-4 last:border-b-0 sm:flex-row sm:items-start sm:gap-0">
-          <div className="sm:w-[600px] sm:flex-shrink-0 sm:pr-8">
+        <div className="flex flex-col gap-3 border-b border-dotted border-gray-100 px-3 py-2.5 last:border-b-0 sm:flex-row sm:items-start sm:gap-0">
+          <div className="sm:w-[480px] sm:flex-shrink-0 sm:pr-8">
             <FieldLabel
               htmlFor={preference.key}
               displayName={preference.display_name}
@@ -208,8 +279,8 @@ export function PreferenceField({
       };
 
       return (
-        <div className="flex flex-col gap-3 border-b border-dotted border-gray-200 px-4 py-4 last:border-b-0 sm:flex-row sm:items-start sm:gap-0">
-          <div className="sm:w-[600px] sm:flex-shrink-0 sm:pr-8">
+        <div className="flex flex-col gap-3 border-b border-dotted border-gray-100 px-3 py-2.5 last:border-b-0 sm:flex-row sm:items-start sm:gap-0">
+          <div className="sm:w-[480px] sm:flex-shrink-0 sm:pr-8">
             <FieldLabel
               htmlFor={preference.key}
               displayName={preference.display_name}
@@ -243,8 +314,8 @@ export function PreferenceField({
 
     case 'radio': {
       return (
-        <div className="flex flex-col gap-3 border-b border-dotted border-gray-200 px-4 py-4 last:border-b-0 sm:flex-row sm:items-center sm:gap-0">
-          <div className="sm:w-[600px] sm:flex-shrink-0 sm:pr-8">
+        <div className="flex flex-col gap-3 border-b border-dotted border-gray-100 px-3 py-2.5 last:border-b-0 sm:flex-row sm:items-center sm:gap-0">
+          <div className="sm:w-[480px] sm:flex-shrink-0 sm:pr-8">
             <FieldLabel
               displayName={preference.display_name}
               description={preference.description}
@@ -285,8 +356,8 @@ export function PreferenceField({
 
     case 'choice': {
       return (
-        <div className="flex flex-col gap-3 border-b border-dotted border-gray-200 px-4 py-4 last:border-b-0 sm:flex-row sm:items-start sm:gap-0">
-          <div className="sm:w-[600px] sm:flex-shrink-0 sm:pr-8">
+        <div className="flex flex-col gap-3 border-b border-dotted border-gray-100 px-3 py-2.5 last:border-b-0 sm:flex-row sm:items-start sm:gap-0">
+          <div className="sm:w-[480px] sm:flex-shrink-0 sm:pr-8">
             <FieldLabel
               htmlFor={preference.key}
               displayName={preference.display_name}
@@ -311,10 +382,20 @@ export function PreferenceField({
     }
 
     case 'multi-choice': {
+      // For eligible classes preference, dynamically build options from API
+      const isClassesPreference = preference.key === 'eligeble_classes_for_homework_notifications';
+
+      const staticOptions = (preference.applicable_values || [])
+        .filter((option: string) => !currentMultiValues.includes(option))
+        .map((option: string) => ({
+          value: option,
+          label: option.replaceAll('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
+        }));
+
       return (
-        <div className="flex flex-col border-b border-dotted border-gray-200 px-4 py-4 last:border-b-0">
+        <div className="flex flex-col border-b border-dotted border-gray-100 px-3 py-2.5 last:border-b-0">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-0">
-            <div className="sm:w-[600px] sm:flex-shrink-0 sm:pr-8">
+            <div className="sm:w-[480px] sm:flex-shrink-0 sm:pr-8">
               <FieldLabel
                 htmlFor={preference.key}
                 displayName={preference.display_name}
@@ -322,29 +403,30 @@ export function PreferenceField({
               />
             </div>
             <div className="flex-1">
-              <SearchableSelect
-                options={(preference.applicable_values || [])
-                  .filter((option: string) => !currentMultiValues.includes(option))
-                  .map((option: string) => ({
-                    value: option,
-                    label: option
-                      .replaceAll('_', ' ')
-                      .replace(/\b\w/g, (l: string) => l.toUpperCase()),
-                  }))}
-                value={multiSelectInput}
-                onValueChange={(val: string) => {
-                  handleMultiSelectAdd(val);
-                  setMultiSelectInput('');
-                }}
-                disabled={disabled}
-                placeholder={FormPlaceholders.SELECT_OPTION}
-                className="h-11 w-full border-gray-300 bg-white text-gray-900 sm:max-w-md"
-              />
+              {isClassesPreference ? (
+                <ClassesMultiSelect
+                  currentValues={currentMultiValues}
+                  onChange={(vals) => onChange(vals)}
+                  disabled={disabled}
+                />
+              ) : (
+                <SearchableSelect
+                  options={staticOptions}
+                  value={multiSelectInput}
+                  onValueChange={(val: string) => {
+                    handleMultiSelectAdd(val);
+                    setMultiSelectInput('');
+                  }}
+                  disabled={disabled}
+                  placeholder={FormPlaceholders.SELECT_OPTION}
+                  className="h-11 w-full border-gray-300 bg-white text-gray-900 sm:max-w-md"
+                />
+              )}
             </div>
           </div>
-          {currentMultiValues.length > 0 && (
+          {!isClassesPreference && currentMultiValues.length > 0 && (
             <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:gap-0">
-              <div className="hidden sm:block sm:w-[600px] sm:flex-shrink-0 sm:pr-8"></div>
+              <div className="hidden sm:block sm:w-[480px] sm:flex-shrink-0 sm:pr-8"></div>
               <div className="flex-1">
                 <div className="flex w-full flex-wrap gap-2 sm:max-w-md">
                   {currentMultiValues.map((val: string) => (

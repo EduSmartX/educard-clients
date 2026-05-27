@@ -60,6 +60,8 @@ export const useBulkMarkAttendance = (options?: MutationOptions) => {
       queryClient.invalidateQueries({
         queryKey: attendanceKeys.comprehensiveAttendance(variables.classId, variables.payload.date),
       });
+      // Invalidate dashboard attendance stats so it reflects updated data
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'attendance-stats'] });
 
       // Show success message from API response
       const message = response?.message || SuccessMessages.ATTENDANCE.MARK_SUCCESS;

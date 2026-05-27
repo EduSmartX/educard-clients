@@ -1,4 +1,5 @@
 import { Fragment, useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { getCurrentDayIndex, formatSlotTime } from '@educard/shared';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SearchableSelect } from '@/components/ui/searchable-select';
@@ -226,125 +227,150 @@ function ByTeacherView() {
 
       {isLoading && <PageLoader />}
 
-      {!isLoading && timetableData && slotRows.length > 0 && (
-        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
-          <div
-            className="grid min-w-[700px]"
-            style={{
-              gridTemplateColumns: `90px repeat(${availableDays.length}, minmax(0, 1fr))`,
-            }}
-          >
-            {/* Header row */}
-            <div className="sticky top-0 z-10 flex items-center justify-center border-b border-gray-200 bg-gray-50 p-3">
-              <span className="text-xs font-semibold text-gray-500 uppercase">Time</span>
-            </div>
-            {availableDays.map((day) => (
+      {!isLoading &&
+        timetableData &&
+        slotRows.length > 0 &&
+        (() => {
+          // Build a color map keyed by class_name for variety
+          const classColorMap = new Map<string, (typeof PERIOD_PASTEL_COLORS)[number]>();
+          let colorIdx = 0;
+          for (const row of slotRows) {
+            for (const entry of Object.values(row.entries)) {
+              if (entry?.class_name && !classColorMap.has(entry.class_name)) {
+                classColorMap.set(
+                  entry.class_name,
+                  PERIOD_PASTEL_COLORS[colorIdx % PERIOD_PASTEL_COLORS.length]
+                );
+                colorIdx++;
+              }
+            }
+          }
+
+          return (
+            <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
               <div
-                key={day}
-                className={cn(
-                  'sticky top-0 z-10 border-b border-l border-gray-200 p-3 text-center',
-                  day === todayIndex ? 'bg-indigo-50' : 'bg-gray-50'
-                )}
+                className="grid min-w-[700px]"
+                style={{
+                  gridTemplateColumns: `90px repeat(${availableDays.length}, minmax(0, 1fr))`,
+                }}
               >
-                <div
-                  className={cn(
-                    'text-sm font-semibold',
-                    day === todayIndex ? 'text-indigo-700' : 'text-gray-700'
-                  )}
-                >
-                  {DAY_LABELS[day] ?? `Day ${day}`}
+                {/* Header row */}
+                <div className="sticky top-0 z-10 flex items-center justify-center border-b border-gray-200 bg-gray-50 p-3">
+                  <span className="text-xs font-semibold text-gray-500 uppercase">Time</span>
                 </div>
-                {day === todayIndex && (
-                  <span className="mt-0.5 inline-block rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-medium text-indigo-500">
-                    Today
-                  </span>
-                )}
-              </div>
-            ))}
-
-            {slotRows.map((row, rowIndex) => {
-              const isBreak = row.slotType === 'short_break' || row.slotType === 'long_break';
-
-              return (
-                <Fragment key={`row-${row.startTime}`}>
+                {availableDays.map((day) => (
                   <div
+                    key={day}
                     className={cn(
-                      'flex flex-col items-center justify-center border-b border-gray-100 p-2',
-                      isBreak ? 'bg-amber-50/50' : 'bg-white'
+                      'sticky top-0 z-10 border-b border-l border-gray-200 p-3 text-center',
+                      day === todayIndex ? 'bg-indigo-50' : 'bg-gray-50'
                     )}
                   >
-                    <span className="text-xs font-semibold text-gray-700">
-                      {formatSlotTime(row.startTime)}
-                    </span>
-                    <span className="text-[10px] text-gray-400">{formatSlotTime(row.endTime)}</span>
-                    {!!row.slotLabel && (
-                      <span className="mt-0.5 text-[10px] text-gray-400">{row.slotLabel}</span>
+                    <div
+                      className={cn(
+                        'text-sm font-semibold',
+                        day === todayIndex ? 'text-indigo-700' : 'text-gray-700'
+                      )}
+                    >
+                      {DAY_LABELS[day] ?? `Day ${day}`}
+                    </div>
+                    {day === todayIndex && (
+                      <span className="mt-0.5 inline-block rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-medium text-indigo-500">
+                        Today
+                      </span>
                     )}
                   </div>
+                ))}
 
-                  {availableDays.map((day) => {
-                    const entry = row.entries[String(day)];
+                {slotRows.map((row, rowIndex) => {
+                  const isBreak = row.slotType === 'short_break' || row.slotType === 'long_break';
 
-                    if (isBreak) {
-                      return (
-                        <div
-                          key={`${rowIndex}-${day}`}
-                          className="flex items-center justify-center border-b border-l border-gray-100 bg-amber-50/50 p-2"
-                        >
-                          <span className="text-xs font-medium text-amber-600">
-                            ☕ {row.slotLabel || 'Break'}
-                          </span>
-                        </div>
-                      );
-                    }
-
-                    if (!entry) {
-                      return (
-                        <div
-                          key={`${rowIndex}-${day}`}
-                          className={cn(
-                            'flex items-center justify-center border-b border-l border-gray-100 p-2',
-                            day === todayIndex ? 'bg-indigo-50/30' : 'bg-gray-50/30'
-                          )}
-                        >
-                          <span className="text-xs text-gray-400 italic">Leisure</span>
-                        </div>
-                      );
-                    }
-
-                    const periodColor =
-                      PERIOD_PASTEL_COLORS[rowIndex % PERIOD_PASTEL_COLORS.length];
-                    return (
+                  return (
+                    <Fragment key={`row-${row.startTime}`}>
                       <div
-                        key={`${rowIndex}-${day}`}
                         className={cn(
-                          'border-b border-l border-gray-100 p-1.5',
-                          day === todayIndex ? 'bg-indigo-50/20' : ''
+                          'flex flex-col items-center justify-center border-b border-gray-100 p-2',
+                          isBreak ? 'bg-amber-50/50' : 'bg-white'
                         )}
                       >
-                        <div
-                          className={cn(
-                            'h-full rounded-lg border-l-3 p-2',
-                            periodColor.bg,
-                            periodColor.border
-                          )}
-                        >
-                          <div className={cn('truncate text-xs font-semibold', periodColor.text)}>
-                            {entry.subject_name || 'Unassigned'}
-                          </div>
-                          <div className={cn('mt-0.5 truncate text-[11px]', periodColor.sub)}>
-                            {entry.class_name}
-                          </div>
-                        </div>
+                        <span className="text-xs font-semibold text-gray-700">
+                          {formatSlotTime(row.startTime)}
+                        </span>
+                        <span className="text-[10px] text-gray-400">
+                          {formatSlotTime(row.endTime)}
+                        </span>
+                        {!!row.slotLabel && (
+                          <span className="mt-0.5 text-[10px] text-gray-400">{row.slotLabel}</span>
+                        )}
                       </div>
-                    );
-                  })}
-                </Fragment>
-              );
-            })}
-          </div>
-        </div>
-      )}
+
+                      {availableDays.map((day) => {
+                        const entry = row.entries[String(day)];
+
+                        if (isBreak) {
+                          return (
+                            <div
+                              key={`${rowIndex}-${day}`}
+                              className="flex items-center justify-center border-b border-l border-gray-100 bg-amber-50/50 p-2"
+                            >
+                              <span className="text-xs font-medium text-amber-600">
+                                ☕ {row.slotLabel || 'Break'}
+                              </span>
+                            </div>
+                          );
+                        }
+
+                        if (!entry) {
+                          return (
+                            <div
+                              key={`${rowIndex}-${day}`}
+                              className={cn(
+                                'flex items-center justify-center border-b border-l border-gray-100 p-2',
+                                day === todayIndex ? 'bg-indigo-50/30' : 'bg-gray-50/30'
+                              )}
+                            >
+                              <span className="text-xs text-gray-400 italic">Leisure</span>
+                            </div>
+                          );
+                        }
+
+                        const periodColor =
+                          classColorMap.get(entry.class_name ?? '') ??
+                          PERIOD_PASTEL_COLORS[rowIndex % PERIOD_PASTEL_COLORS.length];
+                        return (
+                          <div
+                            key={`${rowIndex}-${day}`}
+                            className={cn(
+                              'border-b border-l border-gray-100 p-1.5',
+                              day === todayIndex ? 'bg-indigo-50/20' : ''
+                            )}
+                          >
+                            <div
+                              className={cn(
+                                'h-full rounded-lg border-l-3 p-2',
+                                periodColor.bg,
+                                periodColor.border
+                              )}
+                            >
+                              <div
+                                className={cn('truncate text-xs font-semibold', periodColor.text)}
+                              >
+                                {entry.subject_name || 'Unassigned'}
+                              </div>
+                              <div className={cn('mt-0.5 truncate text-[11px]', periodColor.sub)}>
+                                {entry.class_name}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </Fragment>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
 
       {!isLoading && timetableData && slotRows.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -360,11 +386,14 @@ function ByTeacherView() {
 }
 
 export default function TimetableViewPage() {
+  const [searchParams] = useSearchParams();
+  const defaultTab = searchParams.get('tab') === 'by-teacher' ? 'by-teacher' : 'by-class';
+
   return (
     <div className="space-y-6">
       <PageHeader title="View Timetable" description="View timetables by class or by teacher" />
 
-      <Tabs defaultValue="by-class" className="w-full">
+      <Tabs defaultValue={defaultTab} className="w-full">
         <TabsList>
           <TabsTrigger value="by-class" className="gap-2">
             <School className="h-4 w-4" />

@@ -35,6 +35,7 @@ import {
 import Svg, { Path } from 'react-native-svg';
 
 import { apiClient } from '@/api/client';
+import { useAcademicYearBounds } from '@/features/core';
 import { DayAttendanceModal } from '@/features/timesheets/components/DayAttendanceModal';
 import { TimesheetWeekCard } from '@/features/timesheets/components/TimesheetWeekCard';
 import { handleMutationError } from '@/lib/mutation-utils';
@@ -357,6 +358,7 @@ export default function MyTimesheetScreen() {
   const router = useRouter();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
+  const { minDate: academicStart, maxDate: academicEnd } = useAcademicYearBounds();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [refreshing, setRefreshing] = useState(false);
   const [weeks, setWeeks] = useState<WeekBlock[]>([]);
@@ -703,11 +705,16 @@ export default function MyTimesheetScreen() {
     setRefreshing(false);
   };
   const handlePreviousMonth = () => {
+    const prev = subMonths(currentDate, 1);
+    // Don't navigate before academic year start
+    if (academicStart && format(prev, 'yyyy-MM') < academicStart.slice(0, 7)) return;
     setWeeks([]);
-    setCurrentDate(subMonths(currentDate, 1));
+    setCurrentDate(prev);
   };
   const handleNextMonth = () => {
     const n = addMonths(currentDate, 1);
+    // Don't navigate past academic year end or future
+    if (academicEnd && format(n, 'yyyy-MM') > academicEnd.slice(0, 7)) return;
     if (n <= new Date()) {
       setWeeks([]);
       setCurrentDate(n);

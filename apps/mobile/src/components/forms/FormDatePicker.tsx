@@ -56,6 +56,10 @@ interface FormDatePickerProps {
   disabled?: boolean;
   minYear?: number;
   maxYear?: number;
+  /** Minimum selectable date (YYYY-MM-DD) */
+  minDate?: string;
+  /** Maximum selectable date (YYYY-MM-DD) */
+  maxDate?: string;
 }
 
 function getDaysInMonth(year: number, month: number) {
@@ -80,6 +84,8 @@ export function FormDatePicker({
   disabled,
   minYear = 1950,
   maxYear,
+  minDate,
+  maxDate,
 }: FormDatePickerProps) {
   const currentYear = new Date().getFullYear();
   const effectiveMaxYear = maxYear ?? currentYear + 5;
@@ -154,6 +160,13 @@ export function FormDatePicker({
     setSelectedDay(day);
   };
 
+  const isDayDisabled = (day: number): boolean => {
+    const dateStr = `${viewYear}-${pad(viewMonth + 1)}-${pad(day)}`;
+    if (minDate && dateStr < minDate) return true;
+    if (maxDate && dateStr > maxDate) return true;
+    return false;
+  };
+
   const selectYear = (year: number) => {
     setViewYear(year);
     setSelectedYear(year);
@@ -211,7 +224,13 @@ export function FormDatePicker({
         <Text style={styles.hint}>Format: YYYY-MM-DD</Text>
       )}
 
-      <Modal visible={visible} animationType="slide" transparent statusBarTranslucent>
+      <Modal
+        visible={visible}
+        animationType="slide"
+        transparent
+        statusBarTranslucent
+        onRequestClose={() => setVisible(false)}
+      >
         <View style={styles.overlay}>
           <View style={styles.modal}>
             {/* Header */}
@@ -270,15 +289,17 @@ export function FormDatePicker({
                           styles.dayCell,
                           isSelected(day) ? styles.dayCellSelected : undefined,
                           isToday(day) && !isSelected(day) ? styles.dayCellToday : undefined,
+                          isDayDisabled(day) ? styles.dayCellDisabled : undefined,
                         ]}
-                        onPress={() => selectDay(day)}
-                        activeOpacity={0.6}
+                        onPress={() => !isDayDisabled(day) && selectDay(day)}
+                        activeOpacity={isDayDisabled(day) ? 1 : 0.6}
                       >
                         <Text
                           style={[
                             styles.dayText,
                             isSelected(day) && styles.dayTextSelected,
                             isToday(day) && !isSelected(day) && styles.dayTextToday,
+                            isDayDisabled(day) && styles.dayTextDisabled,
                           ]}
                         >
                           {day}
@@ -463,9 +484,11 @@ const styles = StyleSheet.create({
   },
   dayCellSelected: { backgroundColor: '#0d9488' },
   dayCellToday: { borderWidth: 1.5, borderColor: '#0d9488' },
+  dayCellDisabled: { opacity: 0.3 },
   dayText: { fontSize: 14, color: '#334155' },
   dayTextSelected: { color: '#fff', fontWeight: '700' },
   dayTextToday: { color: '#0d9488', fontWeight: '600' },
+  dayTextDisabled: { color: '#cbd5e1' },
 
   // Year list
   yearList: { maxHeight: 300, paddingHorizontal: 20 },

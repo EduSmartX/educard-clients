@@ -67,10 +67,10 @@ export function useTeachers(params?: Omit<TeacherQueryParams, 'page'>) {
 /**
  * Hook to fetch teacher details
  */
-export function useTeacherDetail(publicId: string, isDeleted?: boolean) {
+export function useTeacherDetail(publicId: string, isDeleted?: boolean, userRole?: string | null) {
   return useQuery<ApiDetailResponse<TeacherDetail>, Error, TeacherDetail>({
     queryKey: [...teacherKeys.detail(publicId), isDeleted],
-    queryFn: () => getTeacherById(publicId, isDeleted),
+    queryFn: () => getTeacherById(publicId, isDeleted, userRole),
     select: (response) => response.data,
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,

@@ -28,6 +28,7 @@ import { FormDatePicker } from '@/components/forms/FormDatePicker';
 import { FormDropdown } from '@/components/forms/FormDropdown';
 import { FormInput } from '@/components/forms/FormInput';
 import { FormMultiSelect } from '@/components/forms/FormMultiSelect';
+import { AcademicYearDropdown } from '@/components/forms/AcademicYearDropdown';
 import { useClasses } from '@/features/classes';
 import { useCurrentAcademicYear } from '@/features/core';
 import { useAndroidBack } from '@/hooks';
@@ -42,14 +43,6 @@ const COMPONENT_TYPE_OPTIONS = [
   { value: ComponentType.MANDATORY, label: 'Mandatory' },
   { value: ComponentType.OPTIONAL, label: 'Optional' },
 ];
-
-const ACADEMIC_YEAR_OPTIONS = (() => {
-  const year = new Date().getFullYear();
-  return [year - 1, year, year + 1].map((y) => ({
-    value: `${y}-${y + 1}`,
-    label: `${y}-${y + 1}`,
-  }));
-})();
 
 /** Build impact message lines from class change impact response */
 function buildImpactLines(impact: {
@@ -135,7 +128,7 @@ export default function FeeStructureFormScreen() {
   // ── Form state ──────────────────────────────────────────────────────────────
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [academicYear, setAcademicYear] = useState(ACADEMIC_YEAR_OPTIONS[1]?.value ?? '');
+  const [academicYear, setAcademicYear] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [classIds, setClassIds] = useState<string[]>([]);
   const [isActive, setIsActive] = useState(true);
@@ -454,9 +447,7 @@ export default function FeeStructureFormScreen() {
             numberOfLines={3}
             style={{ height: 80, textAlignVertical: 'top' }}
           />
-          <FormDropdown
-            label="Academic Year"
-            options={ACADEMIC_YEAR_OPTIONS}
+          <AcademicYearDropdown
             value={academicYear}
             onChange={setAcademicYear}
             error={errors.academic_year}

@@ -9,12 +9,20 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { DetailScreenShell, DetailSection, DetailRow, ChipRow } from '@/components/detail';
 import { getMediaUrl } from '@/constants/config';
 import { useTeacherDetail } from '@/features/teachers';
+import { useAuthStore } from '@/lib/auth-store';
+import { isAdminRole } from '@/utils/role-utils';
 
 export default function TeacherDetailScreen() {
-  const { id, is_deleted } = useLocalSearchParams<{ id: string; is_deleted?: string }>();
+  const { id, is_deleted, thumbnail } = useLocalSearchParams<{
+    id: string;
+    is_deleted?: string;
+    thumbnail?: string;
+  }>();
   const router = useRouter();
+  const { user } = useAuthStore();
+  const isAdmin = isAdminRole(user?.role);
   const isDeleted = is_deleted === 'true';
-  const { data: teacher, isLoading, isError } = useTeacherDetail(id || '', isDeleted);
+  const { data: teacher, isLoading, isError } = useTeacherDetail(id || '', isDeleted, user?.role);
 
   // The backend handles phone masking based on permissions
   // - Admin sees full phone
@@ -24,8 +32,8 @@ export default function TeacherDetailScreen() {
   // Frontend just displays whatever backend returns
   const phoneDisplay = teacher?.user?.phone || '—';
 
-  // Get profile image URL
-  const profileImageUrl = getMediaUrl(teacher?.profile_photo_thumbnail);
+  // Use cached thumbnail from list navigation, fallback to detail response
+  const profileImageUrl = getMediaUrl(teacher?.profile_photo_thumbnail) || getMediaUrl(thumbnail);
 
   return (
     <DetailScreenShell
@@ -68,6 +76,19 @@ export default function TeacherDetailScreen() {
                 return { key: s.public_id, label };
               })}
             />
+          </DetailSection>
+        </Animated.View>
+      ) : null}
+
+      {isAdmin && teacher?.user?.address ? (
+        <Animated.View entering={FadeInDown.delay(400)}>
+          <DetailSection title="Address" icon="📍">
+            <DetailRow label="Street" value={teacher.user.address.street_address} />
+            <DetailRow label="Address Line 2" value={teacher.user.address.address_line_2} />
+            <DetailRow label="City" value={teacher.user.address.city} />
+            <DetailRow label="State" value={teacher.user.address.state} />
+            <DetailRow label="Postal Code" value={teacher.user.address.zip_code} />
+            <DetailRow label="Country" value={teacher.user.address.country} />
           </DetailSection>
         </Animated.View>
       ) : null}

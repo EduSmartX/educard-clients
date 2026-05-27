@@ -82,3 +82,15 @@ export function useCurrentAcademicYear() {
     gcTime: MASTER_GC,
   });
 }
+
+/**
+ * Returns the academic year start/end dates as strings (YYYY-MM-DD).
+ * Useful for constraining date pickers to the academic year range.
+ */
+export function useAcademicYearBounds() {
+  const { data } = useCurrentAcademicYear();
+  return {
+    minDate: data?.start_date ?? undefined,
+    maxDate: data?.end_date ?? undefined,
+  };
+}

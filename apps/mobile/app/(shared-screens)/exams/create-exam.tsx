@@ -15,7 +15,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } fr
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { FormInput, FormDropdown, FormDatePicker } from '@/components/forms';
+import { FormInput, FormDropdown, FormDatePicker, FormTimePicker } from '@/components/forms';
 import { useClasses } from '@/features/classes';
 import { useCreateExam, useExamSessions } from '@/features/exams';
 import { useSubjectsByClass } from '@/features/subjects';
@@ -113,7 +113,6 @@ export default function CreateExamScreen() {
         end_time: endTime || null,
         description: description.trim() || undefined,
       });
-      showToast({ type: 'success', title: 'Exam Created', message: 'Exam created successfully' });
       router.back();
     } catch (err: unknown) {
       showToast({ type: 'error', title: 'Error', message: extractApiError(err) });
@@ -224,19 +223,19 @@ export default function CreateExamScreen() {
             />
             <View style={st.row}>
               <View style={{ flex: 1 }}>
-                <FormInput
+                <FormTimePicker
                   label="Start Time"
                   value={startTime}
-                  onChangeText={setStartTime}
-                  placeholder="09:00 (optional)"
+                  onChange={setStartTime}
+                  placeholder="Select start time"
                 />
               </View>
               <View style={{ flex: 1 }}>
-                <FormInput
+                <FormTimePicker
                   label="End Time"
                   value={endTime}
-                  onChangeText={setEndTime}
-                  placeholder="11:00 (optional)"
+                  onChange={setEndTime}
+                  placeholder="Select end time"
                 />
               </View>
             </View>

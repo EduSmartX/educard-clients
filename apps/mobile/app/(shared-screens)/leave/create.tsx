@@ -93,11 +93,6 @@ export default function CreateLeaveAllocationScreen() {
 
     createMutation.mutate(payload, {
       onSuccess: () => {
-        showToast({
-          type: 'success',
-          title: 'Success',
-          message: 'Leave allocation created successfully.',
-        });
         router.back();
       },
       onError: (err: unknown) => {

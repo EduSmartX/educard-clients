@@ -55,7 +55,7 @@ export default function EditLeaveAllocationScreen() {
       );
 
       setForm({
-        leave_type: matchedLeaveType?.public_id ?? '',
+        leave_type: matchedLeaveType ? String(matchedLeaveType.id) : '',
         leave_type_name: allocation.leave_type_name ?? '',
         name: allocation.name ?? '',
         description: allocation.description ?? '',
@@ -112,11 +112,6 @@ export default function EditLeaveAllocationScreen() {
       { publicId: id, data: payload },
       {
         onSuccess: () => {
-          showToast({
-            type: 'success',
-            title: 'Success',
-            message: 'Leave allocation updated successfully.',
-          });
           router.back();
         },
         onError: (err: unknown) => {

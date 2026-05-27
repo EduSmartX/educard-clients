@@ -7,7 +7,15 @@ import { getRoleGradient } from '@educard/shared';
 import { EXAM_SESSION_TYPE_LABELS, type ExamSession } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, ChevronRight, Calendar, BookOpen, Plus } from 'lucide-react-native';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
+  BookOpen,
+  Plus,
+  Pencil,
+  Trash2,
+} from 'lucide-react-native';
 import { useState } from 'react';
 import {
   View,
@@ -17,10 +25,11 @@ import {
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { useExamSessions } from '@/features/exams';
+import { useExamSessions, useDeleteExamSession } from '@/features/exams';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -44,11 +53,27 @@ export default function ExamSessionsScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const { data, isLoading, refetch } = useExamSessions({ page_size: 50 });
+  const deleteSession = useDeleteExamSession();
   const sessions: ExamSession[] = data?.data ?? [];
 
   const onRefresh = () => {
     setRefreshing(true);
     void refetch().finally(() => setRefreshing(false));
+  };
+
+  const handleDelete = (session: ExamSession) => {
+    Alert.alert(
+      'Delete Session',
+      `Are you sure you want to delete "${session.name}"? This will also delete all exams and marks in this session.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => deleteSession.mutate(session.public_id),
+        },
+      ]
+    );
   };
 
   const renderSession = ({ item, index }: { item: ExamSession; index: number }) => {
@@ -99,6 +124,28 @@ export default function ExamSessionsScreen() {
           </View>
 
           <View style={styles.chevron}>
+            <TouchableOpacity
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              onPress={(e) => {
+                e.stopPropagation?.();
+                handleDelete(item);
+              }}
+              style={styles.deleteBtn}
+            >
+              <Trash2 size={14} color="#ef4444" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              onPress={(e) => {
+                e.stopPropagation?.();
+                router.push(
+                  `/(shared-screens)/exams/edit-session?sessionId=${item.public_id}` as any
+                );
+              }}
+              style={styles.editBtn}
+            >
+              <Pencil size={14} color="#7c3aed" />
+            </TouchableOpacity>
             <ChevronRight size={18} color="#cbd5e1" />
           </View>
         </TouchableOpacity>
@@ -223,7 +270,16 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 6,
   },
-  chevron: { position: 'absolute', right: 16, top: '50%' },
+  chevron: {
+    position: 'absolute',
+    right: 16,
+    top: '50%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  editBtn: { padding: 6, borderRadius: 8, backgroundColor: '#f3f0ff' },
+  deleteBtn: { padding: 6, borderRadius: 8, backgroundColor: '#fef2f2' },
 
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   loadingText: { fontSize: 14, color: '#64748b', marginTop: 12 },

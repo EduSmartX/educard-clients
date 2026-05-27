@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-misused-promises */
 /**
- * Create Exam Session Screen
+ * Edit Exam Session Screen
  */
 
 import { getRoleGradient, extractApiError } from '@educard/shared';
 import { EXAM_SESSION_TYPE_LABELS, type ExamSessionType } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, Check } from 'lucide-react-native';
 import { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
@@ -14,8 +14,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { FormInput, FormDropdown, FormDatePicker, AcademicYearDropdown } from '@/components/forms';
-import { useCurrentAcademicYear } from '@/features/core';
-import { useCreateExamSession } from '@/features/exams';
+import { useExamSession, useUpdateExamSession } from '@/features/exams';
 import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
 
@@ -26,33 +25,33 @@ const SESSION_TYPE_OPTIONS = Object.entries(EXAM_SESSION_TYPE_LABELS).map(([valu
   value,
 }));
 
-export default function CreateExamSessionScreen() {
+export default function EditExamSessionScreen() {
   const router = useRouter();
+  const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
   const { showToast } = useToast();
-  const createSession = useCreateExamSession();
-  const { data: currentAcademicYear } = useCurrentAcademicYear();
+  const { data: session, isLoading: loadingSession } = useExamSession(sessionId);
+  const updateSession = useUpdateExamSession({ onSuccess: () => router.back() });
 
   const [name, setName] = useState('');
-  const [sessionType, setSessionType] = useState<string>('unit_test');
+  const [sessionType, setSessionType] = useState<string>('');
   const [academicYear, setAcademicYear] = useState('');
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [initialized, setInitialized] = useState(false);
 
-  // Pre-fill academic year and dates from DB when loaded
+  // Populate form with existing session data
   useEffect(() => {
-    if (currentAcademicYear) {
-      if (currentAcademicYear.name && !academicYear) {
-        setAcademicYear(currentAcademicYear.name);
-      }
-      if (currentAcademicYear.start_date && !startDate) {
-        setStartDate(currentAcademicYear.start_date);
-      }
-      if (currentAcademicYear.end_date && !endDate) {
-        setEndDate(currentAcademicYear.end_date);
-      }
+    if (session && !initialized) {
+      setName(session.name ?? '');
+      setSessionType(session.session_type ?? '');
+      setAcademicYear(session.academic_year ?? '');
+      setDescription(session.description ?? '');
+      setStartDate(session.start_date ?? '');
+      setEndDate(session.end_date ?? '');
+      setInitialized(true);
     }
-  }, [currentAcademicYear, academicYear, startDate, endDate]);
+  }, [session, initialized]);
 
   const handleSubmit = async () => {
     if (!name.trim()) {
@@ -64,24 +63,34 @@ export default function CreateExamSessionScreen() {
       return;
     }
     if (!academicYear.trim()) {
-      Alert.alert('Error', 'Academic year is required (e.g., 2024-2025)');
+      Alert.alert('Error', 'Academic year is required');
       return;
     }
 
     try {
-      await createSession.mutateAsync({
-        name: name.trim(),
-        session_type: sessionType as ExamSessionType,
-        academic_year: academicYear.trim(),
-        description: description.trim() || undefined,
-        start_date: startDate || null,
-        end_date: endDate || null,
+      await updateSession.mutateAsync({
+        id: sessionId!,
+        data: {
+          name: name.trim(),
+          session_type: sessionType as ExamSessionType,
+          academic_year: academicYear.trim(),
+          description: description.trim() || undefined,
+          start_date: startDate || null,
+          end_date: endDate || null,
+        },
       });
-      router.back();
     } catch (err: any) {
       showToast({ type: 'error', title: 'Error', message: extractApiError(err) });
     }
   };
+
+  if (loadingSession) {
+    return (
+      <View style={[layoutStyles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#7c3aed" />
+      </View>
+    );
+  }
 
   return (
     <View style={layoutStyles.container}>
@@ -102,8 +111,8 @@ export default function CreateExamSessionScreen() {
               <ChevronLeft size={24} color="#fff" />
             </TouchableOpacity>
             <View style={headerStyles.titleContainer}>
-              <Text style={headerStyles.title}>New Exam Session</Text>
-              <Text style={headerStyles.subtitle}>Create a new exam session</Text>
+              <Text style={headerStyles.title}>Edit Session</Text>
+              <Text style={headerStyles.subtitle}>Update exam session details</Text>
             </View>
             <View style={{ width: 40 }} />
           </View>
@@ -158,16 +167,16 @@ export default function CreateExamSessionScreen() {
         </Animated.View>
 
         <TouchableOpacity
-          style={[st.submitBtn, createSession.isPending && st.submitBtnDisabled]}
+          style={[st.submitBtn, updateSession.isPending && st.submitBtnDisabled]}
           onPress={handleSubmit}
-          disabled={createSession.isPending}
+          disabled={updateSession.isPending}
         >
-          {createSession.isPending ? (
+          {updateSession.isPending ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
             <>
               <Check size={18} color="#fff" />
-              <Text style={st.submitText}>Create Session</Text>
+              <Text style={st.submitText}>Update Session</Text>
             </>
           )}
         </TouchableOpacity>

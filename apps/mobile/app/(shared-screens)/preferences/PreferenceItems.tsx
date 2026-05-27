@@ -9,8 +9,8 @@ import React from 'react';
 import { View, Text, TouchableOpacity, TextInput, Keyboard } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
-import { formatDropdownValue, getRadioLabels, isPositiveValue } from './constants';
-import { styles } from './styles';
+import { formatDropdownValue, getRadioLabels, isPositiveValue } from './_constants';
+import { styles } from './_styles';
 
 import type { OrganizationPreference } from '@/features/preferences';
 

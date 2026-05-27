@@ -10,8 +10,8 @@ import {
   DAY_LABELS,
   getRoleGradient,
   getSlotStatus,
-  getSubjectHexColor,
   SLOT_STATUS,
+  SUBJECT_COLOR_PALETTE,
   type TimetableEntry,
 } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -30,7 +30,7 @@ import {
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { FormDropdown } from '@/components/forms';
-import { useTeachers } from '@/features/teachers/hooks/use-teachers';
+import { useManageableUsers } from '@/hooks/use-manageable-users';
 import { useMyTimetable, useTeacherTimetable } from '@/features/timetable';
 import { useAuthStore } from '@/lib/auth-store';
 import { headerStyles, layoutStyles } from '@/styles';
@@ -42,7 +42,7 @@ const gradient = getRoleGradient('admin');
 export default function TeacherTimetableScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const _isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
+  const isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
 
   const [selectedTeacherId, setSelectedTeacherId] = useState<string>('');
   const [selectedDay, setSelectedDay] = useState<number>(() => {
@@ -51,8 +51,8 @@ export default function TeacherTimetableScreen() {
   });
   const [refreshing, setRefreshing] = useState(false);
 
-  // Fetch teachers for dropdown
-  const { data: teachersData, isLoading: teachersLoading } = useTeachers({ page_size: 200 });
+  // Fetch manageable users for teacher dropdown (only for admins)
+  const { data: manageableUsers, isLoading: usersLoading } = useManageableUsers('staff', isAdmin);
 
   // Fetch timetable
   const {
@@ -66,21 +66,22 @@ export default function TeacherTimetableScreen() {
   const timetableData = selectedTeacherId ? teacherTimetable : myTimetable;
   const isLoading = selectedTeacherId ? ttLoading : myLoading;
 
-  // Teacher options
+  // Teacher options from manageable users
   const teacherOptions = useMemo(() => {
-    const teachers = teachersData?.teachers ?? [];
-    return teachers.map((t: { public_id: string; full_name: string }) => ({
-      label: t.full_name,
-      value: t.public_id,
+    return (manageableUsers ?? []).map((u) => ({
+      label: u.full_name,
+      value: u.public_id,
     }));
-  }, [teachersData]);
+  }, [manageableUsers]);
 
-  // Auto-select first teacher
+  const dropdownLoading = usersLoading;
+
+  // Auto-select first teacher (only for admins)
   useEffect(() => {
-    if (!selectedTeacherId && teacherOptions.length > 0) {
+    if (isAdmin && !selectedTeacherId && teacherOptions.length > 0) {
       setSelectedTeacherId(teacherOptions[0].value);
     }
-  }, [teacherOptions, selectedTeacherId]);
+  }, [teacherOptions, selectedTeacherId, isAdmin]);
 
   // Day entries
   const dayEntries: TimetableEntry[] = useMemo(() => {
@@ -102,14 +103,23 @@ export default function TeacherTimetableScreen() {
       .sort((a, b) => a - b);
   }, [timetableData]);
 
-  // Unique subjects for legend
-  const subjects = useMemo(() => {
+  // Unique classes for legend & color mapping
+  const classNames = useMemo(() => {
     return [
       ...new Set(
-        dayEntries.map((e) => e.subject_name).filter((name): name is string => Boolean(name))
+        dayEntries.map((e) => e.class_name).filter((name): name is string => Boolean(name))
       ),
     ];
   }, [dayEntries]);
+
+  // Build a color map keyed by class_name using shared palette
+  const classColorMap = useMemo(() => {
+    const map = new Map<string, string>();
+    classNames.forEach((name, idx) => {
+      map.set(name, SUBJECT_COLOR_PALETTE[idx % SUBJECT_COLOR_PALETTE.length].hex);
+    });
+    return map;
+  }, [classNames]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -139,17 +149,20 @@ export default function TeacherTimetableScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />
         }
       >
-        {/* Teacher Dropdown */}
-        <View style={styles.dropdownSection}>
-          <FormDropdown
-            label="Select Teacher"
-            options={teacherOptions}
-            value={selectedTeacherId}
-            onValueChange={setSelectedTeacherId}
-            placeholder="Choose a teacher..."
-            isLoading={teachersLoading}
-          />
-        </View>
+        {/* Teacher Dropdown (admins only) */}
+        {isAdmin && (
+          <View style={styles.dropdownSection}>
+            <FormDropdown
+              label="Select Teacher"
+              options={teacherOptions}
+              value={selectedTeacherId}
+              onChange={setSelectedTeacherId}
+              placeholder="Choose a teacher..."
+              loading={dropdownLoading}
+              searchable
+            />
+          </View>
+        )}
 
         {/* Teacher Name Banner */}
         {timetableData?.teacher_name && !isLoading && (
@@ -218,7 +231,7 @@ export default function TeacherTimetableScreen() {
               const isPast = isToday && status === SLOT_STATUS.PAST;
               const isBreak = entry.slot_type === 'short_break' || entry.slot_type === 'long_break';
 
-              const subjectColor = getSubjectHexColor(entry.subject_name);
+              const classColor = classColorMap.get(entry.class_name ?? '') ?? '#6366f1';
 
               if (isBreak) {
                 return (
@@ -241,14 +254,14 @@ export default function TeacherTimetableScreen() {
                   entering={FadeInDown.delay(index * 50)}
                   style={[
                     styles.periodRow,
-                    { borderLeftColor: subjectColor },
+                    { borderLeftColor: classColor },
                     isCurrent && styles.periodRowCurrent,
                     isPast && styles.periodRowPast,
                   ]}
                 >
                   {/* Period number */}
-                  <View style={[styles.periodBadge, { backgroundColor: subjectColor + '20' }]}>
-                    <Text style={[styles.periodBadgeText, { color: subjectColor }]}>
+                  <View style={[styles.periodBadge, { backgroundColor: classColor + '20' }]}>
+                    <Text style={[styles.periodBadgeText, { color: classColor }]}>
                       {entry.slot_label?.replace(/\D/g, '') || index + 1}
                     </Text>
                   </View>
@@ -262,7 +275,7 @@ export default function TeacherTimetableScreen() {
                       </Text>
                     </View>
 
-                    <Text style={[styles.periodSubject, { color: subjectColor }]}>
+                    <Text style={[styles.periodSubject, { color: classColor }]}>
                       {entry.subject_name || 'Unassigned'}
                     </Text>
 
@@ -290,13 +303,13 @@ export default function TeacherTimetableScreen() {
           </View>
         )}
 
-        {/* Subject legend */}
-        {!isLoading && subjects.length > 0 && (
+        {/* Class legend */}
+        {!isLoading && classNames.length > 0 && (
           <View style={styles.legend}>
-            <Text style={styles.legendTitle}>SUBJECTS</Text>
+            <Text style={styles.legendTitle}>CLASSES</Text>
             <View style={styles.legendItems}>
-              {subjects.map((name) => {
-                const color = getSubjectHexColor(name);
+              {classNames.map((name) => {
+                const color = classColorMap.get(name) ?? '#6366f1';
                 return (
                   <View key={name} style={styles.legendItem}>
                     <View style={[styles.legendDot, { backgroundColor: color }]} />

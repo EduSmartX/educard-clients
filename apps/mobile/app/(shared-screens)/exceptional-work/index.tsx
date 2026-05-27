@@ -65,6 +65,7 @@ interface CalendarException {
   override_type: 'FORCE_WORKING' | 'FORCE_HOLIDAY';
   reason: string;
   is_applicable_to_all_classes: boolean;
+  is_applicable_to_all_teachers: boolean;
   classes?: { public_id: string; display_name: string }[];
   created_at: string;
 }
@@ -74,6 +75,7 @@ interface CalendarExceptionCreate {
   override_type: 'FORCE_WORKING' | 'FORCE_HOLIDAY';
   reason: string;
   is_applicable_to_all_classes: boolean;
+  is_applicable_to_all_teachers: boolean;
   classes?: string[];
 }
 
@@ -215,6 +217,7 @@ function CreateExceptionModal({
   );
   const [reason, setReason] = useState('');
   const [isAllClasses, setIsAllClasses] = useState(true);
+  const [isAllTeachers, setIsAllTeachers] = useState(true);
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
 
   const { data: classesData } = useClasses({ is_active: true });
@@ -242,6 +245,7 @@ function CreateExceptionModal({
     setOverrideType('FORCE_WORKING');
     setReason('');
     setIsAllClasses(true);
+    setIsAllTeachers(true);
     setSelectedClasses([]);
   };
 
@@ -268,6 +272,7 @@ function CreateExceptionModal({
       override_type: overrideType,
       reason: reason.trim(),
       is_applicable_to_all_classes: isAllClasses,
+      is_applicable_to_all_teachers: isAllTeachers,
       classes: isAllClasses ? [] : selectedClasses,
     });
   };
@@ -379,6 +384,23 @@ function CreateExceptionModal({
                 {isAllClasses
                   ? 'This exception will apply to all classes in the organization.'
                   : 'Select specific classes this exception applies to.'}
+              </Text>
+            </View>
+
+            <View style={modalStyles.field}>
+              <View style={modalStyles.switchRow}>
+                <Text style={modalStyles.fieldLabel}>Apply to All Teachers</Text>
+                <Switch
+                  value={isAllTeachers}
+                  onValueChange={setIsAllTeachers}
+                  trackColor={{ false: '#e5e7eb', true: '#99f6e4' }}
+                  thumbColor={isAllTeachers ? '#0d9488' : '#9ca3af'}
+                />
+              </View>
+              <Text style={modalStyles.switchHint}>
+                {isAllTeachers
+                  ? 'This exception will apply to all teachers/staff in the organization.'
+                  : 'This exception will not apply to teachers/staff attendance.'}
               </Text>
             </View>
 
@@ -535,6 +557,7 @@ function ExceptionCard({
 export default function ExceptionalWorkScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const [refreshing, setRefreshing] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<CalendarException | null>(null);
@@ -554,10 +577,12 @@ export default function ExceptionalWorkScreen() {
   const deleteMutation = useMutation({
     mutationFn: deleteCalendarException,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['calendar-exceptions'] });
+      showToast({ type: 'success', title: 'Deleted', message: 'Exception deleted successfully' });
       setDeleteTarget(null);
+      refetch();
     },
     onError: () => {
+      showToast({ type: 'error', title: 'Error', message: 'Failed to delete exception' });
       setDeleteTarget(null);
     },
   });

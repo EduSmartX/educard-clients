@@ -10,7 +10,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { SaturdayPatternModal } from './PreferenceModals';
-import { styles } from './styles';
+import { styles } from './_styles';
 
 import type { SaturdayOffPattern, WorkingDayPolicy } from '@/features/holidays/api/holidays-api';
 

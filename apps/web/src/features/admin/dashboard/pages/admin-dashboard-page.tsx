@@ -395,7 +395,8 @@ export default function AdminDashboardPage() {
   const { data: attendanceStats, isLoading: loadingAttendance } = useQuery({
     queryKey: ['dashboard', 'attendance-stats'],
     queryFn: getDashboardAttendanceStats,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 30 * 1000, // 30 seconds — dashboard should show near-real-time data
+    refetchOnWindowFocus: true,
     retry: 1,
   });
 

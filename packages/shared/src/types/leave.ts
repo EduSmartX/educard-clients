@@ -13,7 +13,7 @@ import type { AuditFields, BaseQueryParams } from "./common";
 // Leave Type Definitions
 
 export interface LeaveType {
-  public_id: string;
+  id: number;
   name: string;
   code: string;
   description?: string;

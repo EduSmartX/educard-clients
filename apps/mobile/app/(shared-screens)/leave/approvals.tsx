@@ -381,7 +381,7 @@ export default function LeaveApprovalsScreen() {
       >
         <KeyboardAwareScrollView
           style={styles.modalOverlay}
-          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
+          contentContainerStyle={styles.modalOverlayContent}
           enableOnAndroid
           extraScrollHeight={20}
           keyboardShouldPersistTaps="handled"
@@ -625,6 +625,9 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalOverlayContent: {
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,

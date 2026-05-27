@@ -185,11 +185,6 @@ export default function EnterMarksScreen() {
         exam_id: examId,
         marks,
       });
-      showToast({
-        type: 'success',
-        title: 'Success',
-        message: `Saved marks for ${marks.length} students`,
-      });
       router.back();
     } catch (err: unknown) {
       showToast({ type: 'error', title: 'Error', message: extractApiError(err) });

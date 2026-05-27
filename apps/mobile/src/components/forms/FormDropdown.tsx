@@ -23,6 +23,7 @@ interface FormDropdownProps {
   searchable?: boolean;
   disabled?: boolean;
   loading?: boolean;
+  emptyMessage?: string;
 }
 
 export function FormDropdown({
@@ -36,6 +37,7 @@ export function FormDropdown({
   searchable = true,
   disabled,
   loading,
+  emptyMessage = 'No options found',
 }: FormDropdownProps) {
   const [visible, setVisible] = useState(false);
   const [search, setSearch] = useState('');
@@ -76,7 +78,16 @@ export function FormDropdown({
       )}
 
       {visible && (
-        <Modal visible={visible} animationType="slide" transparent>
+        <Modal
+          visible={visible}
+          animationType="slide"
+          transparent
+          statusBarTranslucent
+          onRequestClose={() => {
+            setVisible(false);
+            setSearch('');
+          }}
+        >
           <View style={styles.modalOverlay}>
             <View style={styles.modal}>
               <View style={styles.modalHeader}>
@@ -122,7 +133,7 @@ export function FormDropdown({
                     </TouchableOpacity>
                   );
                 }}
-                ListEmptyComponent={<Text style={styles.empty}>No options found</Text>}
+                ListEmptyComponent={<Text style={styles.empty}>{emptyMessage}</Text>}
               />
 
               {value ? (

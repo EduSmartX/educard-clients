@@ -38,7 +38,7 @@ import {
 } from '@/components/ui/table';
 import { ROUTES, ValidationMessages } from '@/constants';
 import { formatDateForAPI } from '@/lib/utils/date-utils';
-import { useExamSessions } from '../hooks/use-exams';
+import { useExamSessions, useExams } from '../hooks/use-exams';
 import { useSubjects } from '@/features/subjects/hooks/use-subjects';
 import { useClasses } from '@/features/classes/hooks/use-classes';
 import { useRole } from '@/hooks/use-role';
@@ -76,6 +76,17 @@ function validateBulkExamForm(
   const selectedRows = subjectRows.filter((row) => row.selected);
   if (selectedRows.length === 0) {
     errors.subjects = ValidationMessages.EXAM.SELECT_AT_LEAST_ONE_SUBJECT;
+  }
+
+  // Validate start_time < end_time for each selected row
+  const timeErrors: string[] = [];
+  selectedRows.forEach((row) => {
+    if (row.start_time && row.end_time && row.start_time >= row.end_time) {
+      timeErrors.push(row.subject_name);
+    }
+  });
+  if (timeErrors.length > 0) {
+    errors.time = `End time must be after start time for: ${timeErrors.join(', ')}`;
   }
 
   const rowsWithDateErrors = selectedRows.filter((row) => row.date && row.dateError);
@@ -138,6 +149,7 @@ export function BulkExamCreatePage() {
   const [subjectRows, setSubjectRows] = useState<SubjectRow[]>([]);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [showMissingDateTimeWarning, setShowMissingDateTimeWarning] = useState(false);
+  const [showDurationWarning, setShowDurationWarning] = useState(false);
   const [pendingSubmitPayload, setPendingSubmitPayload] = useState<BulkExamCreatePayload | null>(
     null
   );
@@ -156,6 +168,12 @@ export function BulkExamCreatePage() {
     page_size: 200,
     class_assigned: classId || undefined,
   });
+
+  // Fetch existing exams for session+class to pre-populate
+  const { data: existingExamsData } = useExams(
+    sessionId && classId ? { session: sessionId, class_id: classId, page_size: 200 } : undefined
+  );
+  const existingExams = useMemo(() => existingExamsData?.data || [], [existingExamsData]);
 
   const sessionsList = useMemo(() => sessionsData?.data || [], [sessionsData]);
   const classesList = classesData?.data || [];
@@ -200,7 +218,7 @@ export function BulkExamCreatePage() {
     return undefined;
   };
 
-  // Update subject rows when class changes
+  // Update subject rows when class changes or existing exams load
   useEffect(() => {
     if (!classId || subjectsList.length === 0) {
       setSubjectRows([]);
@@ -209,20 +227,40 @@ export function BulkExamCreatePage() {
     }
     const filteredSubjects = subjectsList.filter((s) => s.class_info.public_id === classId);
     setSubjectRows(
-      filteredSubjects.map((subject) => ({
-        subject_id: subject.public_id,
-        subject_name: `${subject.subject_info.name}`,
-        selected: false,
-        max_marks: defaultMaxMarks,
-        passing_marks: defaultPassingMarks,
-        date: null,
-        start_time: '',
-        end_time: '',
-        dateError: undefined,
-      }))
+      filteredSubjects.map((subject) => {
+        // Check if an exam already exists for this subject in the selected session
+        const existing = existingExams.find((e) => e.subject_public_id === subject.public_id);
+        if (existing) {
+          return {
+            subject_id: subject.public_id,
+            subject_name: `${subject.subject_info.name}`,
+            selected: true,
+            max_marks: String(existing.max_marks),
+            passing_marks: String(existing.passing_marks),
+            date: existing.date ? new Date(existing.date) : null,
+            start_time: existing.start_time?.slice(0, 5) || '',
+            end_time: existing.end_time?.slice(0, 5) || '',
+            dateError: undefined,
+          };
+        }
+        return {
+          subject_id: subject.public_id,
+          subject_name: `${subject.subject_info.name}`,
+          selected: false,
+          max_marks: defaultMaxMarks,
+          passing_marks: defaultPassingMarks,
+          date: null,
+          start_time: '',
+          end_time: '',
+          dateError: undefined,
+        };
+      })
     );
-    setSelectAll(false);
-  }, [classId, subjectsList, defaultMaxMarks, defaultPassingMarks]);
+    const allSelected = filteredSubjects.every((s) =>
+      existingExams.some((e) => e.subject_public_id === s.public_id)
+    );
+    setSelectAll(allSelected);
+  }, [classId, subjectsList, existingExams, defaultMaxMarks, defaultPassingMarks]);
 
   // Handle select all toggle
   const handleSelectAll = (checked: boolean) => {
@@ -333,6 +371,9 @@ export function BulkExamCreatePage() {
       if (errors.dates) {
         toast.error(errors.dates);
       }
+      if (errors.time) {
+        toast.error(errors.time);
+      }
       return;
     }
 
@@ -361,11 +402,28 @@ export function BulkExamCreatePage() {
       return;
     }
 
+    // Check if any exam has duration > 5 hours
+    const hasLongDuration = selectedRows.some((row) => {
+      if (row.start_time && row.end_time) {
+        const [sh, sm] = row.start_time.split(':').map(Number);
+        const [eh, em] = row.end_time.split(':').map(Number);
+        const durationMinutes = eh * 60 + em - (sh * 60 + sm);
+        return durationMinutes > 300; // 5 hours = 300 minutes
+      }
+      return false;
+    });
+    if (hasLongDuration) {
+      setPendingSubmitPayload(payload);
+      setShowDurationWarning(true);
+      return;
+    }
+
     bulkCreateMutation.mutate(payload);
   };
 
   const handleConfirmSubmit = () => {
     setShowMissingDateTimeWarning(false);
+    setShowDurationWarning(false);
     if (pendingSubmitPayload) {
       bulkCreateMutation.mutate(pendingSubmitPayload);
       setPendingSubmitPayload(null);
@@ -374,6 +432,7 @@ export function BulkExamCreatePage() {
 
   const handleCancelSubmit = () => {
     setShowMissingDateTimeWarning(false);
+    setShowDurationWarning(false);
     setPendingSubmitPayload(null);
   };
 
@@ -747,6 +806,19 @@ export function BulkExamCreatePage() {
         warningText="Are you sure you want to continue?"
         confirmButtonText="Continue Anyway"
         cancelButtonText="Go Back"
+      />
+
+      {/* Warning Dialog for exam duration > 5 hours */}
+      <WarningConfirmationDialog
+        open={showDurationWarning}
+        onOpenChange={setShowDurationWarning}
+        onCancel={handleCancelSubmit}
+        onConfirm={handleConfirmSubmit}
+        title="Exam Duration Exceeds 5 Hours"
+        description="One or more exams have a duration greater than 5 hours. This is unusual for a single exam sitting."
+        warningText="Are you sure you want to continue with this duration?"
+        confirmButtonText="Yes, Continue"
+        cancelButtonText="Go Back & Fix"
       />
     </div>
   );

@@ -25,6 +25,7 @@ import {
   TimesheetRejectDialog,
 } from '@/features/attendance/components';
 import apiClient from '@/lib/api';
+import { useAcademicYearBounds } from '@/features/organizations/hooks/queries';
 
 interface ManageableUser {
   public_id: string;
@@ -155,6 +156,7 @@ function ActionsCell({ row, isPending, onView, onApprove, onReject }: Readonly<A
 }
 
 export default function TimesheetApprovalsPage() {
+  const { minDate: academicMinDate, maxDate: academicMaxDate } = useAcademicYearBounds();
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [selectedEmployee, setSelectedEmployee] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('SUBMITTED');
@@ -487,6 +489,8 @@ export default function TimesheetApprovalsPage() {
               <MonthYearPicker
                 value={selectedMonth}
                 onChange={(date) => date && setSelectedMonth(date)}
+                minDate={academicMinDate}
+                maxDate={academicMaxDate}
               />
             </label>
 

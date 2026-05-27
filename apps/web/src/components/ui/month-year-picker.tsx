@@ -10,6 +10,10 @@ interface MonthYearPickerProps {
   onChange: (date: Date | null) => void;
   placeholder?: string;
   className?: string;
+  /** Minimum selectable date (constrains year/month navigation) */
+  minDate?: string;
+  /** Maximum selectable date (constrains year/month navigation) */
+  maxDate?: string;
 }
 
 export function MonthYearPicker({
@@ -17,6 +21,8 @@ export function MonthYearPicker({
   onChange,
   placeholder = 'Select month',
   className,
+  minDate,
+  maxDate,
 }: MonthYearPickerProps) {
   const [currentYear, setCurrentYear] = useState(
     value ? value.getFullYear() : new Date().getFullYear()
@@ -53,6 +59,28 @@ export function MonthYearPicker({
     return value.getMonth() === monthIndex && value.getFullYear() === currentYear;
   };
 
+  const isMonthDisabled = (monthIndex: number) => {
+    const dateStr = `${currentYear}-${String(monthIndex + 1).padStart(2, '0')}`;
+    if (minDate && dateStr < minDate.slice(0, 7)) {
+      return true;
+    }
+    if (maxDate && dateStr > maxDate.slice(0, 7)) {
+      return true;
+    }
+    return false;
+  };
+
+  const isYearNavDisabled = (delta: number) => {
+    const targetYear = currentYear + delta;
+    if (minDate && targetYear < parseInt(minDate.slice(0, 4))) {
+      return true;
+    }
+    if (maxDate && targetYear > parseInt(maxDate.slice(0, 4))) {
+      return true;
+    }
+    return false;
+  };
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -72,11 +100,21 @@ export function MonthYearPicker({
         <div className="space-y-4">
           {/* Year Selector */}
           <div className="flex items-center justify-between">
-            <Button variant="outline" size="sm" onClick={() => handleYearChange(-1)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleYearChange(-1)}
+              disabled={isYearNavDisabled(-1)}
+            >
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <div className="text-sm font-semibold">{currentYear}</div>
-            <Button variant="outline" size="sm" onClick={() => handleYearChange(1)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleYearChange(1)}
+              disabled={isYearNavDisabled(1)}
+            >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -93,6 +131,7 @@ export function MonthYearPicker({
                   isSelectedMonth(index) && 'bg-primary text-primary-foreground'
                 )}
                 onClick={() => handleMonthSelect(index)}
+                disabled={isMonthDisabled(index)}
               >
                 {month.slice(0, 3)}
               </Button>

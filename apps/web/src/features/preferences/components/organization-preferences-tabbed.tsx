@@ -1,10 +1,20 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { AlertCircle, BookOpen, Calendar, Loader2, RefreshCw, Settings } from 'lucide-react';
+import {
+  AlertCircle,
+  BookOpen,
+  Calendar,
+  ChevronDown,
+  ChevronRight,
+  Code2,
+  Loader2,
+  RefreshCw,
+  Settings,
+} from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { updatePreference, type OrganizationPreference } from '@/lib/api/preferences-api';
 import { useOrganizationPreferences } from '../hooks/use-preferences';
@@ -15,20 +25,28 @@ import { CommonUiText, ErrorMessages, SuccessMessages, ToastTitles } from '@/con
 
 // Category icons mapping
 const categoryIcons: Record<string, string> = {
+  student_management: '🎓',
+  teacher_management: '👨‍🏫',
+  leave_notifications: '🏖️',
+  sms: '📱',
   attendance: '📊',
-  authentication: '🔐',
-  notifications: '🔔',
-  security: '🛡️',
-  general: '⚙️',
+  exam_notifications: '📝',
+  fee_notifications: '💰',
+  homework_notifications: '📚',
+  work_policy_notifications: '📋',
 };
 
-// Category descriptions
-const categoryDescriptions: Record<string, string> = {
-  attendance: 'Configure attendance tracking, approval workflows, and absence notifications',
-  authentication: 'Manage authentication settings, email verification, and password policies',
-  notifications: 'Control notification delivery, timing, and delivery methods',
-  security: 'Security and access control settings for your organization',
-  general: 'General organization settings and configurations',
+// Category display names
+const categoryDisplayNames: Record<string, string> = {
+  student_management: 'Student Management',
+  teacher_management: 'Teacher Management',
+  leave_notifications: 'Leave Notifications',
+  sms: 'SMS & WhatsApp Notifications',
+  attendance: 'Attendance Management',
+  exam_notifications: 'Exam Notifications',
+  fee_notifications: 'Fee Notifications',
+  homework_notifications: 'HomeWork Notifications',
+  work_policy_notifications: 'Exception WorkPolicy Notification',
 };
 
 interface PreferencesByCategoryProps {
@@ -121,105 +139,88 @@ function PreferencesByCategory({ preferences }: Readonly<PreferencesByCategoryPr
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {Object.entries(groupedPreferences).map(([category, categoryPrefs]) => {
         const hasChanges = categoryPrefs.some((pref) => pref.public_id in changedValues);
         const isSaving = categoryPrefs.some((pref) => savingStates[pref.public_id]);
 
-        // Group preferences by field type within category
-        const radioPrefs = categoryPrefs.filter((p) => p.field_type === 'radio');
-        const textPrefs = categoryPrefs.filter(
-          (p) => p.field_type === 'string' || p.field_type === 'number'
+        // Build parent-children groups based on depends_on
+        const childrenByParentKey = categoryPrefs.reduce(
+          (acc, pref) => {
+            if (pref.depends_on) {
+              if (!acc[pref.depends_on]) {
+                acc[pref.depends_on] = [];
+              }
+              acc[pref.depends_on].push(pref);
+            }
+            return acc;
+          },
+          {} as Record<string, OrganizationPreference[]>
         );
-        const timePrefs = categoryPrefs.filter((p) => p.field_type === 'time');
-        const choicePrefs = categoryPrefs.filter((p) => p.field_type === 'choice');
-        const multiChoicePrefs = categoryPrefs.filter((p) => p.field_type === 'multi-choice');
+
+        // Top-level preferences: those without a depends_on
+        const topLevelPrefs = categoryPrefs.filter((p) => !p.depends_on);
 
         return (
-          <Card key={category} className="border-gray-200 shadow-sm">
-            <CardHeader className="border-b bg-gradient-to-r from-gray-50 to-white pb-4">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white text-2xl shadow-sm">
-                    {categoryIcons[category] || '⚙️'}
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg font-semibold text-gray-900 capitalize">
-                      {category.replaceAll('_', ' ')}
-                    </CardTitle>
-                    <CardDescription className="mt-1 text-sm text-gray-500">
-                      {categoryDescriptions[category] || 'Configure settings for this category'}
-                    </CardDescription>
-                  </div>
+          <Card key={category} className="border-gray-100 shadow-sm">
+            <CardHeader className="border-b bg-gray-50/50 px-4 py-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{categoryIcons[category] || '⚙️'}</span>
+                  <CardTitle className="text-sm font-semibold text-gray-800">
+                    {categoryDisplayNames[category] || category.replaceAll('_', ' ')}
+                  </CardTitle>
                 </div>
                 {hasChanges && (
-                  <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">
+                  <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-600">
                     {categoryPrefs.filter((p) => p.public_id in changedValues).length} unsaved
-                    changes
                   </span>
                 )}
               </div>
             </CardHeader>
-            <CardContent className="p-6">
-              <div className="overflow-hidden rounded-lg border border-gray-200 bg-gray-50/50">
-                {/* Boolean/Radio Fields */}
-                {radioPrefs.map((preference) => (
-                  <PreferenceField
-                    key={preference.public_id}
-                    preference={preference}
-                    value={changedValues[preference.public_id] ?? preference.value}
-                    onChange={(value) => handlePreferenceChange(preference.public_id, value)}
-                    disabled={savingStates[preference.public_id]}
-                  />
-                ))}
+            <CardContent className="p-3">
+              <div className="divide-y divide-gray-100">
+                {topLevelPrefs.map((preference) => {
+                  const children = childrenByParentKey[preference.key] || [];
+                  const parentValue =
+                    (changedValues[preference.public_id] as string) ?? (preference.value as string);
+                  const isParentEnabled = parentValue === 'TRUE';
 
-                {/* Text/Number Fields */}
-                {textPrefs.map((preference) => (
-                  <PreferenceField
-                    key={preference.public_id}
-                    preference={preference}
-                    value={changedValues[preference.public_id] ?? preference.value}
-                    onChange={(value) => handlePreferenceChange(preference.public_id, value)}
-                    disabled={savingStates[preference.public_id]}
-                  />
-                ))}
-
-                {/* Time Picker Fields */}
-                {timePrefs.map((preference) => (
-                  <PreferenceField
-                    key={preference.public_id}
-                    preference={preference}
-                    value={changedValues[preference.public_id] ?? preference.value}
-                    onChange={(value) => handlePreferenceChange(preference.public_id, value)}
-                    disabled={savingStates[preference.public_id]}
-                  />
-                ))}
-
-                {/* Choice/Dropdown Fields */}
-                {choicePrefs.map((preference) => (
-                  <PreferenceField
-                    key={preference.public_id}
-                    preference={preference}
-                    value={changedValues[preference.public_id] ?? preference.value}
-                    onChange={(value) => handlePreferenceChange(preference.public_id, value)}
-                    disabled={savingStates[preference.public_id]}
-                  />
-                ))}
-
-                {/* Multi-Choice Fields */}
-                {multiChoicePrefs.map((preference) => (
-                  <PreferenceField
-                    key={preference.public_id}
-                    preference={preference}
-                    value={changedValues[preference.public_id] ?? preference.value}
-                    onChange={(value) => handlePreferenceChange(preference.public_id, value)}
-                    disabled={savingStates[preference.public_id]}
-                  />
-                ))}
+                  return (
+                    <div key={preference.public_id}>
+                      <PreferenceField
+                        preference={preference}
+                        value={changedValues[preference.public_id] ?? preference.value}
+                        onChange={(value) => handlePreferenceChange(preference.public_id, value)}
+                        disabled={savingStates[preference.public_id]}
+                      />
+                      {/* Compact dependent children */}
+                      {children.length > 0 && (
+                        <div
+                          className={`ml-6 border-l-2 py-1 pl-3 transition-all duration-200 ${
+                            isParentEnabled
+                              ? 'border-blue-200 opacity-100'
+                              : 'pointer-events-none border-gray-100 opacity-40'
+                          }`}
+                        >
+                          {children.map((child) => (
+                            <PreferenceField
+                              key={child.public_id}
+                              preference={child}
+                              value={changedValues[child.public_id] ?? child.value}
+                              onChange={(value) => handlePreferenceChange(child.public_id, value)}
+                              disabled={!isParentEnabled || savingStates[child.public_id]}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
 
               {hasChanges && (
-                <div className="flex items-center justify-end gap-3 border-t pt-4">
+                <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
                   <Button
                     variant="brandOutline"
                     onClick={() => {
@@ -274,6 +275,7 @@ export function OrganizationPreferencesTabbed() {
     error,
     refetch,
   } = useOrganizationPreferences();
+  const [showDebug, setShowDebug] = useState(false);
 
   if (isLoading) {
     return (
@@ -338,6 +340,55 @@ export function OrganizationPreferencesTabbed() {
           <AcademicYearSettingsForm />
         </TabsContent>
       </Tabs>
+
+      {/* Debug Panel — Inspect all preferences from the API */}
+      <div className="border-t pt-4">
+        <button
+          type="button"
+          onClick={() => setShowDebug((v) => !v)}
+          className="flex items-center gap-2 text-xs font-medium text-gray-400 transition-colors hover:text-gray-600"
+        >
+          <Code2 className="h-3.5 w-3.5" />
+          {showDebug ? 'Hide' : 'Show'} API Debug ({preferences.length} preferences loaded)
+          {showDebug ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+        </button>
+        {showDebug && (
+          <div className="mt-3 max-h-[400px] overflow-auto rounded-lg border border-gray-200 bg-gray-900 p-4 text-xs">
+            <table className="w-full text-left text-gray-300">
+              <thead className="sticky top-0 border-b border-gray-700 bg-gray-900 text-gray-400">
+                <tr>
+                  <th className="pr-4 pb-2">#</th>
+                  <th className="pr-4 pb-2">Key</th>
+                  <th className="pr-4 pb-2">Display Name</th>
+                  <th className="pr-4 pb-2">Category</th>
+                  <th className="pr-4 pb-2">Type</th>
+                  <th className="pr-4 pb-2">Value</th>
+                  <th className="pr-4 pb-2">Depends On</th>
+                </tr>
+              </thead>
+              <tbody>
+                {preferences.map((pref, idx) => (
+                  <tr key={pref.public_id} className="border-b border-gray-800 hover:bg-gray-800">
+                    <td className="py-1.5 pr-4 text-gray-500">{idx + 1}</td>
+                    <td className="py-1.5 pr-4 font-mono text-cyan-400">{pref.key}</td>
+                    <td className="py-1.5 pr-4">{pref.display_name}</td>
+                    <td className="py-1.5 pr-4">
+                      <span className="rounded bg-gray-700 px-1.5 py-0.5">{pref.category}</span>
+                    </td>
+                    <td className="py-1.5 pr-4 text-yellow-400">{pref.field_type}</td>
+                    <td className="py-1.5 pr-4 font-mono text-green-400">
+                      {Array.isArray(pref.value) ? pref.value.join(', ') : String(pref.value)}
+                    </td>
+                    <td className="py-1.5 pr-4 font-mono text-orange-400">
+                      {pref.depends_on || '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -93,6 +93,8 @@ export function validateExamFormFields(params: {
   subjectId: string;
   status: string;
   dateError: string | undefined;
+  startTime?: string;
+  endTime?: string;
 }): Record<string, string> {
   const errors: Record<string, string> = {};
 
@@ -110,6 +112,10 @@ export function validateExamFormFields(params: {
   }
   if (params.dateError) {
     errors.date = params.dateError;
+  }
+  // Validate start time is before end time
+  if (params.startTime && params.endTime && params.startTime >= params.endTime) {
+    errors.end_time = 'End time must be after start time';
   }
 
   return errors;

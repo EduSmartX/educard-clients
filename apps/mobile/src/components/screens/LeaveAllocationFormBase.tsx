@@ -92,7 +92,7 @@ export function LeaveAllocationFormBase({
   const leaveTypeOpts = useMemo(
     () =>
       (leaveTypes ?? []).map((lt: LeaveType) => ({
-        value: lt.public_id,
+        value: String(lt.id),
         label: `${lt.name} (${lt.code})`,
       })),
     [leaveTypes]

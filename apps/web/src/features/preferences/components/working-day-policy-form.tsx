@@ -35,6 +35,7 @@ import {
   updateWorkingDayPolicy,
   type CreateWorkingDayPolicyPayload,
 } from '@/lib/api/working-day-policy-api';
+import { getCurrentAcademicYear } from '@/lib/api/academic-year-api';
 import {
   workingDayPolicySchema,
   type WorkingDayPolicyFormValues,
@@ -68,10 +69,16 @@ export function WorkingDayPolicyForm() {
     retry: 1,
   });
 
+  // Fetch academic year for default dates
+  const { data: academicYear } = useQuery({
+    queryKey: ['current-academic-year'],
+    queryFn: getCurrentAcademicYear,
+  });
+
   // Set initial values when data loads
   useEffect(() => {
     if (policyData) {
-      // getCurrentWorkingDayPolicy returns WorkingDayPolicy | null
+      // Existing policy found - populate form with its values
       form.reset({
         sunday_off: policyData.sunday_off,
         saturday_off_pattern: policyData.saturday_off_pattern,
@@ -80,13 +87,21 @@ export function WorkingDayPolicyForm() {
           : new Date(),
         effective_to: policyData.effective_to ? new Date(policyData.effective_to) : null,
       });
+    } else if (policyData === null && academicYear) {
+      // No policy exists - use academic year dates as defaults
+      form.reset({
+        sunday_off: true,
+        saturday_off_pattern: SaturdayOffPattern.SECOND_ONLY,
+        effective_from: academicYear.start_date ? new Date(academicYear.start_date) : new Date(),
+        effective_to: academicYear.end_date ? new Date(academicYear.end_date) : null,
+      });
     }
-  }, [policyData, form]);
+  }, [policyData, academicYear, form]);
 
   // Create/Update mutation
   const saveMutation = useMutation({
     mutationFn: (payload: CreateWorkingDayPolicyPayload) => {
-      if (policyData) {
+      if (policyData?.public_id) {
         return updateWorkingDayPolicy(policyData.public_id, payload);
       } else {
         return createWorkingDayPolicy(payload);

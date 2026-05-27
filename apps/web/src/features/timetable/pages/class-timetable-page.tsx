@@ -4,7 +4,6 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { PageHeader } from '@/components/common';
 import { PageLoader } from '@/components/ui/loading-spinner';
@@ -14,9 +13,7 @@ import { TimetableGrid } from '../components/timetable-grid';
 import type { Class } from '@/features/classes/types';
 
 export default function ClassTimetablePage() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const classIdFromUrl = searchParams.get('class');
-  const [selectedClassId, setSelectedClassId] = useState<string>(classIdFromUrl ?? '');
+  const [selectedClassId, setSelectedClassId] = useState<string>('');
 
   // Fetch all classes for the dropdown
   const { data: classesData, isLoading: classesLoading } = useClasses({
@@ -31,13 +28,6 @@ export default function ClassTimetablePage() {
     isError,
     error,
   } = useClassTimetable(selectedClassId || undefined);
-
-  // Sync URL param
-  useEffect(() => {
-    if (selectedClassId) {
-      setSearchParams({ class: selectedClassId }, { replace: true });
-    }
-  }, [selectedClassId, setSearchParams]);
 
   // Auto-select first class if none selected
   useEffect(() => {

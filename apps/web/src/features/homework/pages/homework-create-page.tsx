@@ -393,8 +393,8 @@ export default function HomeworkCreatePage() {
                 {fields.map((field, index) => {
                   const color = getSubjectColor(field.subject_name);
                   const isEnabled = watch(`items.${index}.enabled`);
-                  // Disable checkbox if a specific subject was pre-selected via URL
-                  const isSubjectLocked = !!initialSubjectId;
+                  const isSubjectLocked =
+                    !!initialSubjectId && field.subject_public_id === initialSubjectId;
 
                   return (
                     <div

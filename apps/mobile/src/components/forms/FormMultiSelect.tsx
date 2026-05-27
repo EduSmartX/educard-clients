@@ -116,7 +116,13 @@ export function FormMultiSelect({
 
       {error && <Text style={styles.error}>{error}</Text>}
 
-      <Modal visible={visible} animationType="slide" transparent statusBarTranslucent>
+      <Modal
+        visible={visible}
+        animationType="slide"
+        transparent
+        statusBarTranslucent
+        onRequestClose={() => setVisible(false)}
+      >
         <View style={styles.overlay}>
           <View style={styles.modal}>
             {/* Header */}

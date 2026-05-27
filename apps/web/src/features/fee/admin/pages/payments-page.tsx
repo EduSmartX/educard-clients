@@ -12,7 +12,7 @@ import { SearchableSelect } from '@/components/ui/searchable-select';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Download, Filter, X, CreditCard, IndianRupee, Plus, Search } from 'lucide-react';
 import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { cn, downloadFile } from '@/lib/utils';
 import { ROUTES } from '@/constants/app-config';
 import { PageHeader } from '@/components/common';
 import { PaymentHistoryTable } from '../components/payment-history-table';
@@ -77,7 +77,45 @@ export function PaymentsPage() {
   });
 
   const handleExport = () => {
-    // TODO: Implement export
+    const payments = paymentsData?.data || [];
+    if (payments.length === 0) {
+      return;
+    }
+
+    const headers = [
+      'Receipt No',
+      'Student Name',
+      'Class',
+      'Fee Structure',
+      'Amount',
+      'Transaction Type',
+      'Payment Mode',
+      'Payment Date',
+      'UTR/Transaction ID',
+      'Remarks',
+    ];
+
+    const rows = payments.map((p) => [
+      p.receipt_number || '',
+      p.student_name || '',
+      p.class_name || '',
+      p.fee_structure_name || '',
+      p.amount,
+      p.transaction_type_display || p.transaction_type,
+      p.payment_mode_display || p.payment_mode,
+      p.payment_date ? format(new Date(p.payment_date), 'dd/MM/yyyy') : '',
+      p.utr_number || p.transaction_id || '',
+      p.remarks || '',
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const filename = `payments_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    downloadFile(blob, filename);
   };
 
   const handleDownloadReceipt = (_paymentId: string) => {

@@ -111,13 +111,6 @@ export default function ExamDashboardScreen() {
     updateExamMutation.mutate(
       { id: exam.public_id, data: { status: newStatus } },
       {
-        onSuccess: () => {
-          showToast({
-            type: 'success',
-            title: 'Status Updated',
-            message: `Exam status changed to ${newStatus}`,
-          });
-        },
         onError: (err: unknown) => {
           const error = err as { message?: string };
           showToast({

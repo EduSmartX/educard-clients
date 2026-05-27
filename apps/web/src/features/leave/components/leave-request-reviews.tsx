@@ -20,12 +20,10 @@ import { PageHeader } from '@/components/common/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { DataTable, type Column } from '@/components/ui/data-table';
 import { Combobox } from '@/components/ui/combobox';
-import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ResourceFilter, type FilterField } from '@/components/filters/resource-filter';
 import api from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/utils/date-utils';
@@ -217,20 +215,11 @@ export function LeaveRequestReviews() {
 
   const [userRole, setUserRole] = useState<UserRole>('staff');
   const [selectedClass, setSelectedClass] = useState('');
-  const [selectedUser, setSelectedUser] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('pending');
-  const [selectedLeaveType, setSelectedLeaveType] = useState('');
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
 
-  // Separate local filters from applied filters
-  const [showFilters, setShowFilters] = useState(false);
-  const [appliedFilters, setAppliedFilters] = useState({
+  // Filter state — single source of truth
+  const [showFilters, setShowFilters] = useState(true);
+  const [appliedFilters, setAppliedFilters] = useState<Record<string, string>>({
     status: 'pending',
-    leaveType: '',
-    user: '',
-    fromDate: '',
-    toDate: '',
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -247,14 +236,7 @@ export function LeaveRequestReviews() {
 
   useEffect(() => {
     setSelectedClass('');
-    setSelectedUser('');
-    setAppliedFilters({
-      status: 'pending',
-      leaveType: '',
-      user: '',
-      fromDate: '',
-      toDate: '',
-    });
+    setAppliedFilters({ status: 'pending' });
     setCurrentPage(1);
   }, [userRole]);
 
@@ -267,7 +249,7 @@ export function LeaveRequestReviews() {
     },
   });
 
-  const leaveTypes = (leaveTypesData?.data || []) as LeaveType[];
+  const leaveTypes = useMemo(() => (leaveTypesData?.data || []) as LeaveType[], [leaveTypesData]);
 
   // Fetch classes for student mode
   const { data: classesData, isLoading: isLoadingClasses } = useQuery({
@@ -291,7 +273,7 @@ export function LeaveRequestReviews() {
   const classes = useMemo(() => parseClasses(classesData?.data), [classesData]);
 
   // Fetch manageable users
-  const { data: usersData, isLoading: isLoadingUsers } = useQuery({
+  const { data: usersData } = useQuery({
     queryKey: QUERY_KEYS.users.manageable(userRole),
     queryFn: async () => {
       const response = await api.get(`/users/profile/manageable-users/?role=${userRole}`);
@@ -307,7 +289,67 @@ export function LeaveRequestReviews() {
     return usersData.data.users as ManageableUser[];
   }, [usersData]);
 
-  // Build query params - use appliedFilters instead of local state
+  // Filter fields for ResourceFilter
+  const filterFields: FilterField[] = useMemo(() => {
+    const fields: FilterField[] = [
+      {
+        name: 'status',
+        label: 'Status',
+        type: 'select',
+        options: [
+          { value: 'pending', label: 'Pending' },
+          { value: 'approved', label: 'Approved' },
+          { value: 'rejected', label: 'Rejected' },
+        ],
+        placeholder: 'Select status',
+      },
+      {
+        name: 'leave_type',
+        label: 'Leave Type',
+        type: 'select',
+        options: [
+          { value: '', label: 'All' },
+          ...leaveTypes.map((type) => ({
+            value: type.name,
+            label: `${type.name} (${type.code})`,
+          })),
+        ],
+        placeholder: 'All leave types',
+      },
+    ];
+
+    if (userRole === 'staff') {
+      fields.push({
+        name: 'user',
+        label: 'Search User',
+        type: 'combobox',
+        options: users.map((user) => ({
+          value: user.public_id,
+          label: `${user.full_name} [${user.email}]`,
+        })),
+        placeholder: FormPlaceholders.SELECT_USER,
+      });
+    }
+
+    fields.push(
+      {
+        name: 'from_date',
+        label: 'From Date',
+        type: 'date',
+        placeholder: 'From date',
+      },
+      {
+        name: 'to_date',
+        label: 'To Date',
+        type: 'date',
+        placeholder: 'To date',
+      }
+    );
+
+    return fields;
+  }, [leaveTypes, users, userRole]);
+
+  // Build query params - use appliedFilters
   const queryParams = useMemo(() => {
     const params: Record<string, string> = {
       role: userRole,
@@ -323,20 +365,20 @@ export function LeaveRequestReviews() {
       params.status = appliedFilters.status;
     }
 
-    if (appliedFilters.leaveType) {
-      params.leave_type = appliedFilters.leaveType;
+    if (appliedFilters.leave_type) {
+      params.leave_type = appliedFilters.leave_type;
     }
 
     if (appliedFilters.user) {
       params.user = appliedFilters.user;
     }
 
-    if (appliedFilters.fromDate) {
-      params.start_date__gte = appliedFilters.fromDate;
+    if (appliedFilters.from_date) {
+      params.start_date__gte = appliedFilters.from_date;
     }
 
-    if (appliedFilters.toDate) {
-      params.end_date__lte = appliedFilters.toDate;
+    if (appliedFilters.to_date) {
+      params.end_date__lte = appliedFilters.to_date;
     }
 
     return params;
@@ -422,31 +464,13 @@ export function LeaveRequestReviews() {
   };
 
   const handleResetFilters = () => {
-    setSelectedStatus('pending');
-    setSelectedLeaveType('');
-    setSelectedUser('');
-    setFromDate('');
-    setToDate('');
-    setAppliedFilters({
-      status: 'pending',
-      leaveType: '',
-      user: '',
-      fromDate: '',
-      toDate: '',
-    });
+    setAppliedFilters({ status: 'pending' });
     setCurrentPage(1);
   };
 
-  const handleApplyFilters = () => {
-    setAppliedFilters({
-      status: selectedStatus,
-      leaveType: selectedLeaveType,
-      user: selectedUser,
-      fromDate,
-      toDate,
-    });
+  const handleFilterApply = (filters: Record<string, string>) => {
+    setAppliedFilters(filters.status ? filters : { ...filters, status: 'pending' });
     setCurrentPage(1);
-    setShowFilters(false);
   };
 
   const columns: Column<LeaveRequestReview>[] = [
@@ -621,99 +645,13 @@ export function LeaveRequestReviews() {
 
           {/* Filters */}
           {showFilters && (
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Filters</CardTitle>
-                  <Button variant="ghost" size="sm" onClick={handleResetFilters}>
-                    Reset
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {/* Review Status Filter */}
-                  <div className="space-y-2">
-                    <Label>Status</Label>
-                    <SearchableSelect
-                      options={[
-                        { value: 'pending', label: 'Pending' },
-                        { value: 'approved', label: 'Approved' },
-                        { value: 'rejected', label: 'Rejected' },
-                      ]}
-                      value={selectedStatus}
-                      onValueChange={setSelectedStatus}
-                      placeholder="Select status"
-                    />
-                  </div>
-
-                  {/* Leave Type Filter */}
-                  <div className="space-y-2">
-                    <Label>Leave Type</Label>
-                    <SearchableSelect
-                      options={[
-                        { value: '', label: 'All' },
-                        ...leaveTypes.map((type) => ({
-                          value: type.name,
-                          label: `${type.name} (${type.code})`,
-                        })),
-                      ]}
-                      value={selectedLeaveType}
-                      onValueChange={setSelectedLeaveType}
-                      placeholder="All leave types"
-                    />
-                  </div>
-
-                  {/* User Filter for Staff */}
-                  {userRole === 'staff' && (
-                    <div className="space-y-2">
-                      <Label>Search User</Label>
-                      <Combobox
-                        value={selectedUser}
-                        onValueChange={setSelectedUser}
-                        options={users.map((user) => ({
-                          label: `${user.full_name} [${user.email}]`,
-                          value: user.public_id,
-                          description: user.employee_id
-                            ? `Employee ID: ${user.employee_id}`
-                            : undefined,
-                        }))}
-                        placeholder={FormPlaceholders.SELECT_USER}
-                        emptyText="No users found"
-                        searchPlaceholder={FormPlaceholders.SEARCH_USERS}
-                        disabled={isLoadingUsers}
-                      />
-                    </div>
-                  )}
-
-                  {/* From Date */}
-                  <div className="space-y-2">
-                    <Label>From Date</Label>
-                    <Input
-                      type="date"
-                      value={fromDate}
-                      onChange={(e) => setFromDate(e.target.value)}
-                    />
-                  </div>
-
-                  {/* To Date */}
-                  <div className="space-y-2">
-                    <Label>To Date</Label>
-                    <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
-                  </div>
-                </div>
-
-                {/* Apply Filters Button */}
-                <div className="flex justify-end">
-                  <Button
-                    onClick={handleApplyFilters}
-                    className="bg-blue-600 text-white hover:bg-blue-700"
-                  >
-                    Apply Filters
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <ResourceFilter
+              fields={filterFields}
+              onFilter={handleFilterApply}
+              onReset={handleResetFilters}
+              defaultValues={appliedFilters}
+              onFieldChange={(_name, _value, allFilters) => setAppliedFilters(allFilters)}
+            />
           )}
 
           {/* Leave Requests Table */}

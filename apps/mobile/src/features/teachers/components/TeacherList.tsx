@@ -177,7 +177,11 @@ export function TeacherList({ onBack }: TeacherListProps) {
   const handleView = (teacher: Teacher) => {
     router.push({
       pathname: '/(shared-screens)/teachers/[id]',
-      params: { id: teacher.public_id, ...(isDeletedView ? { is_deleted: 'true' } : {}) },
+      params: {
+        id: teacher.public_id,
+        ...(isDeletedView ? { is_deleted: 'true' } : {}),
+        ...(teacher.profile_photo_thumbnail ? { thumbnail: teacher.profile_photo_thumbnail } : {}),
+      },
     });
   };
 

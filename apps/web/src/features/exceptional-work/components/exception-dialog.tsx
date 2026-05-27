@@ -6,9 +6,10 @@ import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { AlertTriangle, Loader2, Plus, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { fetchClasses } from '@/features/classes/api/classes-api';
 import { useCreateCalendarException, useUpdateCalendarException } from '../hooks';
@@ -259,12 +260,16 @@ export function ExceptionDialog({
   const validate = (): boolean => {
     const newErrors = validateExceptionForm(date, reason, isAllClasses, selectedClasses);
     setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      focusFirstErrorField(newErrors, dateContainerRef, reasonInputRef);
+    }
     return Object.keys(newErrors).length === 0;
   };
 
   // Handle submit
   const handleSubmit = () => {
     if (!validate()) {
+      toast.error('Please fix the form errors before submitting.');
       return;
     }
 
@@ -308,6 +313,8 @@ export function ExceptionDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex h-[90vh] flex-col overflow-hidden bg-white p-0 sm:max-w-[700px]">
+        <DialogTitle className="sr-only">{dialogTitle}</DialogTitle>
+        <DialogDescription className="sr-only">{dialogDescription}</DialogDescription>
         {/* Modern Gradient Header - Fixed */}
         <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 via-violet-600 to-purple-700 p-6 text-white sm:p-8">
           <div className="flex items-start gap-4">
@@ -333,7 +340,6 @@ export function ExceptionDialog({
           setIsAllClasses={setIsAllClasses}
           isAllTeachers={isAllTeachers}
           setIsAllTeachers={setIsAllTeachers}
-          selectedClasses={selectedClasses}
           setSelectedClasses={setSelectedClasses}
           errors={errors}
           setErrors={setErrors}

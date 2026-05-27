@@ -3,7 +3,7 @@
  * Select a class → see weekly timetable grid
  */
 
-import { getRoleGradient } from '@educard/shared';
+import { getRoleGradient, getSubjectColor } from '@educard/shared';
 import {
   DAY_SHORT_LABELS,
   DAY_LABELS,
@@ -127,7 +127,19 @@ export default function TimetableScreen() {
 
   const renderSlotCard = (slot: ClassTimetableSlot, index: number) => {
     const isBreak = BREAK_TYPES.has(slot.slot_type);
-    const colors = SLOT_COLORS[slot.slot_type] ?? SLOT_COLORS.period;
+    let colors: { bg: string; border: string; text: string };
+
+    if (!isBreak && slot.subject_name) {
+      // Use subject-specific color for assigned periods
+      const subjectColor = getSubjectColor(slot.subject_name);
+      colors = {
+        bg: subjectColor.light,
+        border: subjectColor.hex,
+        text: subjectColor.hex,
+      };
+    } else {
+      colors = SLOT_COLORS[slot.slot_type] ?? SLOT_COLORS.period;
+    }
 
     const handleSlotPress = () => {
       if (isBreak || !canManage) return;
@@ -220,6 +232,38 @@ export default function TimetableScreen() {
               <Text style={headerStyles.subtitle}>Weekly class schedule</Text>
             </View>
             {canManage && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <TouchableOpacity
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                    borderRadius: 20,
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                  }}
+                  onPress={() => router.push('/(shared-screens)/timetable/teacher-timetable')}
+                >
+                  <User size={16} color="#fff" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                    borderRadius: 20,
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                  }}
+                  onPress={() => router.push('/(shared-screens)/timetable/setup')}
+                >
+                  <Settings size={16} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            )}
+            {!canManage && (
               <TouchableOpacity
                 style={{
                   flexDirection: 'row',
@@ -230,10 +274,12 @@ export default function TimetableScreen() {
                   borderRadius: 20,
                   backgroundColor: 'rgba(255,255,255,0.2)',
                 }}
-                onPress={() => router.push('/(shared-screens)/timetable/setup')}
+                onPress={() => router.push('/(shared-screens)/timetable/teacher-timetable')}
               >
-                <Plus size={16} color="#fff" />
-                <Text style={{ fontSize: 13, fontWeight: '600', color: '#fff' }}>Setup</Text>
+                <User size={16} color="#fff" />
+                <Text style={{ fontSize: 13, fontWeight: '600', color: '#fff' }}>
+                  Teacher Timetable
+                </Text>
               </TouchableOpacity>
             )}
           </View>

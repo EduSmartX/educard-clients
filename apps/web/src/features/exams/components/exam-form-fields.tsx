@@ -314,7 +314,14 @@ function DateTimeFields({
           value={endTime}
           onChange={(e) => setEndTime(e.target.value)}
           disabled={isView}
+          className={fieldErrors.end_time ? 'border-red-500' : ''}
         />
+        {fieldErrors.end_time && (
+          <div className="flex items-center gap-1 text-xs text-red-500">
+            <AlertTriangle className="h-3 w-3" />
+            <span>{fieldErrors.end_time}</span>
+          </div>
+        )}
       </div>
     </>
   );

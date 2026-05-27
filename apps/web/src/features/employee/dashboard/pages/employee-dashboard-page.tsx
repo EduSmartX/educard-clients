@@ -328,7 +328,7 @@ export default function EmployeeDashboardPage() {
             whileHover={{ y: -4, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="group cursor-pointer"
-            onClick={() => navigate('/timetable')}
+            onClick={() => navigate('/timetable/view?tab=by-teacher')}
           >
             <Card className="relative overflow-hidden border border-gray-100 shadow-sm transition-shadow duration-300 hover:shadow-xl">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/90 to-indigo-600/90 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
