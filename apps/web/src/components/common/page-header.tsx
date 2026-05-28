@@ -113,7 +113,12 @@ interface PageHeaderAction {
     | 'ghost'
     | 'destructive'
     | 'brand'
-    | 'brandOutline';
+    | 'brandOutline'
+    | 'success'
+    | 'warning'
+    | 'info'
+    | 'glass'
+    | 'link';
   className?: string;
   disabled?: boolean;
 }

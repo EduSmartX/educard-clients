@@ -233,3 +233,21 @@ export function useClassHomework(
     enabled: !!classPublicId,
   });
 }
+
+// ==================== Notifications ====================
+
+export function useSendHomeworkNotification() {
+  return useMutation({
+    mutationFn: (data: { class_public_id: string; date: string }) =>
+      homeworkApi.sendHomeworkNotification(data),
+    onSuccess: () => {
+      toast.success('Notification sent successfully');
+    },
+    onError: (error: unknown) => {
+      const message =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        'Failed to send notification';
+      toast.error(message);
+    },
+  });
+}

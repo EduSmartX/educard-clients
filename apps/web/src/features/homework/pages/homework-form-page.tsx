@@ -80,6 +80,7 @@ const homeworkSchema = z.object({
   priority: z.enum(['low', 'medium', 'high']),
   submission_type: z.enum(['online', 'offline', 'both']),
   reference_link: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+  chapter: z.string().max(255).optional().or(z.literal('')),
 });
 
 type HomeworkFormData = z.infer<typeof homeworkSchema>;
@@ -176,6 +177,7 @@ export default function HomeworkFormPage() {
       priority: 'medium',
       submission_type: 'offline',
       reference_link: '',
+      chapter: '',
     },
   });
 
@@ -197,6 +199,7 @@ export default function HomeworkFormPage() {
         priority: existingHomework.priority,
         submission_type: existingHomework.submission_type,
         reference_link: existingHomework.reference_link || '',
+        chapter: existingHomework.chapter || '',
       });
       // Load existing attachments
       if (existingHomework.attachments) {
@@ -361,6 +364,18 @@ export default function HomeworkFormPage() {
                 <CardTitle className="text-base">Basic Information</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Chapter / Unit */}
+                <div className="space-y-2">
+                  <Label htmlFor="chapter">Chapter / Unit</Label>
+                  <Input
+                    id="chapter"
+                    placeholder="e.g., Chapter 5 - Photosynthesis"
+                    {...register('chapter')}
+                    className={cn(errors.chapter && 'border-red-500')}
+                  />
+                  <FormError message={errors.chapter?.message} compact />
+                </div>
+
                 {/* Title */}
                 <div className="space-y-2">
                   <Label htmlFor="title">Title *</Label>
@@ -663,7 +678,7 @@ export default function HomeworkFormPage() {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex flex-col gap-3">
-                  <Button type="submit" disabled={isSaving} className="w-full">
+                  <Button type="submit" variant="brand" disabled={isSaving} className="w-full">
                     {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {isEditMode ? 'Save Changes' : 'Create Homework'}
                   </Button>

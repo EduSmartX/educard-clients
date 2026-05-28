@@ -610,8 +610,7 @@ export function RecordPaymentPage() {
                 <Button
                   type="submit"
                   disabled={createPayment.isPending}
-                  variant={isRefund ? 'destructive' : 'default'}
-                  className={!isRefund ? 'bg-green-600 hover:bg-green-700' : ''}
+                  variant={isRefund ? 'destructive' : 'success'}
                 >
                   {createPayment.isPending && 'Saving...'}
                   {!createPayment.isPending && isRefund && 'Issue Refund'}

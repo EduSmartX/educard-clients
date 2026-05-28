@@ -82,7 +82,7 @@ function EmptyState({ message, onCreateNew }: { message: string; onCreateNew?: (
       </h3>
       <p className="mb-6 max-w-sm text-center text-sm text-slate-500">{message}</p>
       {onCreateNew && (
-        <Button onClick={onCreateNew} className="gap-2">
+        <Button variant="brand" onClick={onCreateNew} className="gap-2">
           <Plus className="h-4 w-4" />
           Create Homework
         </Button>

@@ -288,7 +288,7 @@ export default function SubmissionReviewPage() {
             {HOMEWORK_UI.SUBMISSION_NOT_FOUND}
           </h3>
           <p className="mt-1 text-sm text-slate-500">{HOMEWORK_UI.SUBMISSION_NOT_FOUND_DESC}</p>
-          <Button className="mt-4" onClick={handleGoBack}>
+          <Button variant="outline" className="mt-4" onClick={handleGoBack}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             {HOMEWORK_UI.GO_BACK}
           </Button>

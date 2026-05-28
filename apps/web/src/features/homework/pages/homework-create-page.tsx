@@ -38,6 +38,7 @@ const homeworkItemSchema = z.object({
   subject_public_id: z.string(),
   subject_name: z.string(),
   teacher_name: z.string().optional(),
+  chapter: z.string().max(255).optional().or(z.literal('')),
   title: z.string().max(255),
   description: z.string().optional(),
   instructions: z.string().optional(),
@@ -139,6 +140,7 @@ export default function HomeworkCreatePage() {
         subject_public_id: subject.public_id,
         subject_name: subject.subject_name,
         teacher_name: subject.teacher_name,
+        chapter: '',
         title: '',
         description: '',
         instructions: '',
@@ -190,6 +192,7 @@ export default function HomeworkCreatePage() {
           title: item.title,
           description: item.description,
           instructions: item.instructions,
+          chapter: item.chapter || undefined,
           subject_public_id: item.subject_public_id,
           due_datetime: data.due_datetime.toISOString(),
           assigned_date: format(data.assigned_date, 'yyyy-MM-dd'),
@@ -448,6 +451,14 @@ export default function HomeworkCreatePage() {
                         <div className="space-y-4 p-4">
                           <div className="grid gap-4 sm:grid-cols-2">
                             <div className="space-y-2 sm:col-span-2">
+                              <Label>Chapter / Unit</Label>
+                              <Input
+                                placeholder="e.g., Chapter 5 - Photosynthesis"
+                                {...register(`items.${index}.chapter`)}
+                              />
+                            </div>
+
+                            <div className="space-y-2 sm:col-span-2">
                               <Label>Title *</Label>
                               <Input
                                 placeholder={`Enter ${field.subject_name} homework title`}
@@ -562,7 +573,7 @@ export default function HomeworkCreatePage() {
             <Button type="button" variant="outline" onClick={() => navigate(-1)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting || enabledCount === 0}>
+            <Button type="submit" variant="brand" disabled={isSubmitting || enabledCount === 0}>
               {isSubmitting ? 'Creating...' : `Create ${enabledCount} Homework`}
             </Button>
           </div>

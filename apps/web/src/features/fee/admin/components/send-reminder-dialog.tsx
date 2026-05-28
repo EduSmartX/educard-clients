@@ -173,7 +173,7 @@ export function SendReminderDialog({
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 {FEE_UI_TEXT.BUTTONS.CANCEL}
               </Button>
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" variant="brand" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {FEE_UI_TEXT.BUTTONS.SEND_REMINDER}
               </Button>

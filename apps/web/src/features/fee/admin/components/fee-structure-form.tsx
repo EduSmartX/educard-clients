@@ -377,11 +377,7 @@ export function FeeStructureForm({
           <Button type="button" variant="outline" onClick={() => form.reset()} className="px-6">
             {FEE_UI_TEXT.BUTTONS.RESET}
           </Button>
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 text-white shadow-sm hover:from-emerald-600 hover:to-teal-700"
-          >
+          <Button type="submit" variant="success" disabled={isLoading} className="px-6">
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isEditing ? FEE_UI_TEXT.BUTTONS.UPDATE : FEE_UI_TEXT.BUTTONS.CREATE}
           </Button>

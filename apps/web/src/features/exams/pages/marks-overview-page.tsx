@@ -455,7 +455,12 @@ export function MarksOverviewPage() {
                   </p>
                 </div>
                 {canEditAny && (
-                  <Button onClick={handleSave} disabled={isSaving} className="gap-2">
+                  <Button
+                    variant="success"
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="gap-2"
+                  >
                     <Save className="h-4 w-4" />
                     {isSaving ? 'Saving...' : 'Save All Marks'}
                   </Button>

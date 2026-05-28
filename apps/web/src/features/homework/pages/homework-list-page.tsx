@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
+  Bell,
   BookOpen,
   FileText,
   Clock,
@@ -36,15 +37,13 @@ import { getSubjectColor, type SubjectColorScheme } from '@educard/shared';
 import { useNavigateWorkingDay } from '@/features/core';
 import { PageHeader } from '@/components/common';
 
-import { useTeacherClasses, useHomeworkList, useDeleteHomework } from '../hooks';
+import {
+  useTeacherClasses,
+  useHomeworkList,
+  useDeleteHomework,
+  useSendHomeworkNotification,
+} from '../hooks';
 import type { Homework, HomeworkListParams } from '../types';
-
-// Helper to get yesterday's date (fallback when API fails)
-function getYesterday(): Date {
-  const date = new Date();
-  date.setDate(date.getDate() - 1);
-  return date;
-}
 
 interface SubjectHomework {
   subject: { public_id: string; subject_name: string; teacher_name?: string };
@@ -62,7 +61,7 @@ export default function HomeworkListPage() {
   const initialDate =
     initialDateParam && isValid(parseISO(initialDateParam))
       ? parseISO(initialDateParam)
-      : getYesterday();
+      : new Date(); // Default to today
   const initialTab = searchParams.get('tab') || 'all';
 
   const [selectedDate, setSelectedDate] = useState<Date>(initialDate);
@@ -236,6 +235,19 @@ export default function HomeworkListPage() {
     [deleteHomework]
   );
 
+  const sendNotification = useSendHomeworkNotification();
+  const handleSendNotification = useCallback(() => {
+    if (!selectedClass) {
+      return;
+    }
+    sendNotification.mutate({
+      class_public_id: selectedClass.public_id,
+      date: format(selectedDate, 'yyyy-MM-dd'),
+    });
+  }, [selectedClass, selectedDate, sendNotification]);
+
+  const hasPublishedHomework = viewStats.published > 0;
+
   const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
   const isYesterday = useMemo(() => {
     const yesterday = new Date();
@@ -252,7 +264,7 @@ export default function HomeworkListPage() {
           {
             label: 'Create Homework',
             onClick: handleCreateHomework,
-            variant: 'default' as const,
+            variant: 'brand' as const,
             icon: Plus,
             disabled: !selectedClass,
           },
@@ -385,6 +397,18 @@ export default function HomeworkListPage() {
         </div>
       )}
 
+      {/* Notification Info Banner */}
+      {selectedClass && hasPublishedHomework && (
+        <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300">
+          <Bell className="h-4 w-4 flex-shrink-0" />
+          <span>
+            Click <strong>"Send Notification"</strong> to notify all parents/students about today's
+            homework for this class. A single consolidated message will be sent with all published
+            subjects.
+          </span>
+        </div>
+      )}
+
       {/* Tabs & Search */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -394,14 +418,28 @@ export default function HomeworkListPage() {
             <TabsTrigger value="draft">Drafts</TabsTrigger>
           </TabsList>
 
-          <div className="relative w-full sm:w-[250px]">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-            <Input
-              placeholder="Search subjects..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
+          <div className="flex items-center gap-2">
+            {selectedClass && hasPublishedHomework && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSendNotification}
+                disabled={sendNotification.isPending}
+              >
+                <Bell className="h-4 w-4" />
+                <span>{sendNotification.isPending ? 'Sending...' : 'Send Notification'}</span>
+              </Button>
+            )}
+
+            <div className="relative w-full sm:w-[250px]">
+              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+              <Input
+                placeholder="Search subjects..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
           </div>
         </div>
 

@@ -40,7 +40,9 @@ export function LeaveAllocationFormPage({
               The leave allocation you're looking for doesn't exist or the ID is invalid.
             </p>
           </div>
-          <Button onClick={handleBackToList}>Return to Policies</Button>
+          <Button variant="outline" onClick={handleBackToList}>
+            Return to Policies
+          </Button>
         </div>
       </div>
     );

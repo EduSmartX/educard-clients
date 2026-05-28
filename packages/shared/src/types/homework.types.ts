@@ -52,6 +52,7 @@ export interface Homework {
   priority: HomeworkPriority;
   submission_type: SubmissionType;
   reference_link: string;
+  chapter: string;
   is_overdue: boolean;
   days_until_due: number | null;
   attachment_count: number;
@@ -139,6 +140,7 @@ export interface HomeworkCreatePayload {
   priority?: HomeworkPriority;
   submission_type?: SubmissionType;
   reference_link?: string;
+  chapter?: string;
 }
 
 export interface HomeworkUpdatePayload {
@@ -150,6 +152,7 @@ export interface HomeworkUpdatePayload {
   priority?: HomeworkPriority;
   submission_type?: SubmissionType;
   reference_link?: string;
+  chapter?: string;
 }
 
 export interface ReviewSubmissionPayload {

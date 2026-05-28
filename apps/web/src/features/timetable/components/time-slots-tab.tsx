@@ -583,7 +583,7 @@ function SlotEditor({
             Add periods &amp; breaks, or load from another day
           </p>
           <div className="mt-4 flex gap-2">
-            <Button size="sm" onClick={addSlot} className="bg-indigo-600 hover:bg-indigo-700">
+            <Button size="sm" variant="brand" onClick={addSlot}>
               <Plus className="mr-1 h-3.5 w-3.5" /> Add Period
             </Button>
             <Button size="sm" variant="outline" onClick={addBreak}>
