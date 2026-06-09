@@ -15,7 +15,7 @@ import {
   LucideIcon,
   Layers,
 } from 'lucide-react-native';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 
 import { HeaderProfileButton } from '@/components/common';
@@ -24,8 +24,7 @@ import { useStudents } from '@/features/students';
 import { useSubjects } from '@/features/subjects';
 import { useTeachers } from '@/features/teachers';
 import { useAuthStore } from '@/lib/auth-store';
-
-const { width } = Dimensions.get('window');
+import { useResponsive } from '@/hooks/useResponsive';
 
 export interface ManagementItem {
   id: string;
@@ -100,6 +99,7 @@ interface ManagementScreenBaseProps {
 export function ManagementScreenBase({ items, settingsRoute }: ManagementScreenBaseProps) {
   const router = useRouter();
   const { user: _user } = useAuthStore();
+  const { gridColumns, horizontalPadding, isTablet } = useResponsive();
 
   const { data: teachersData } = useTeachers({ page_size: 1 });
   const { data: studentsData } = useStudents({ page_size: 1 });
@@ -143,9 +143,9 @@ export function ManagementScreenBase({ items, settingsRoute }: ManagementScreenB
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingHorizontal: horizontalPadding }]}
       >
-        <View style={styles.gridContainer}>
+        <View style={[styles.gridContainer, { marginHorizontal: -6 }]}>
           {items.map((item, index) => (
             <Animated.View
               key={item.id}
@@ -153,10 +153,10 @@ export function ManagementScreenBase({ items, settingsRoute }: ManagementScreenB
                 .springify()
                 .damping(13)
                 .stiffness(120)}
-              style={styles.gridItem}
+              style={[styles.gridItem, { width: `${100 / gridColumns}%` as unknown as number }]}
             >
               <TouchableOpacity
-                style={styles.iconCard}
+                style={[styles.iconCard, isTablet && styles.iconCardTablet]}
                 onPress={() => router.push(item.route as Href)}
                 activeOpacity={0.8}
               >
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
   circle3: {
     position: 'absolute',
     top: 10,
-    left: width * 0.35,
+    left: '35%',
     width: 70,
     height: 70,
     borderRadius: 35,
@@ -236,9 +236,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   content: { flex: 1 },
-  scrollContent: { padding: 16, paddingBottom: 100 },
-  gridContainer: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -6 },
-  gridItem: { width: '50%', padding: 6 },
+  scrollContent: { paddingVertical: 16, paddingBottom: 100 },
+  gridContainer: { flexDirection: 'row', flexWrap: 'wrap' },
+  gridItem: { padding: 6 },
   iconCard: {
     alignItems: 'center',
     padding: 20,
@@ -250,6 +250,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 3,
+  },
+  iconCardTablet: {
+    padding: 28,
   },
   iconCircle: {
     width: 56,

@@ -56,9 +56,7 @@ interface FormDatePickerProps {
   disabled?: boolean;
   minYear?: number;
   maxYear?: number;
-  /** Minimum selectable date (YYYY-MM-DD) */
   minDate?: string;
-  /** Maximum selectable date (YYYY-MM-DD) */
   maxDate?: string;
 }
 

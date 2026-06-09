@@ -10,10 +10,8 @@
 
 import { X } from 'lucide-react-native';
 import React from 'react';
-import { View, Text, Modal, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, Modal, TouchableOpacity, StyleSheet, useWindowDimensions } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface BottomSheetModalProps {
   visible: boolean;
@@ -33,9 +31,12 @@ export function BottomSheetModal({
   subtitle,
   children,
   footer,
-  maxHeight = SCREEN_HEIGHT * 0.9,
+  maxHeight,
   showCloseButton = true,
 }: BottomSheetModalProps) {
+  const { height: screenHeight } = useWindowDimensions();
+  const resolvedMaxHeight = maxHeight ?? screenHeight * 0.9;
+
   return (
     <Modal
       visible={visible}
@@ -53,7 +54,7 @@ export function BottomSheetModal({
       >
         <TouchableOpacity style={styles.backdrop} onPress={onClose} activeOpacity={1} />
 
-        <View style={[styles.container, { maxHeight }]}>
+        <View style={[styles.container, { maxHeight: resolvedMaxHeight }]}>
           {/* Handle bar */}
           <View style={styles.handleBar} />
 

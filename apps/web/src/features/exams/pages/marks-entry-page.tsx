@@ -15,6 +15,8 @@ import {
   CheckCircle2,
   XCircle,
   Users,
+  BadgeCheck,
+  Undo2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -28,6 +30,7 @@ import { SearchableSelect } from '@/components/ui/searchable-select';
 import { PageHeader, StudentAvatar } from '@/components/common';
 import { ROUTES, ValidationMessages } from '@/constants';
 import { useExamSessions, useExams } from '../hooks/use-exams';
+import { usePublishExamMarks, useUnpublishExamMarks } from '../hooks/mutations';
 import { bulkUpsertMarks, type BulkMarkUpsertPayload } from '../api/exams-api';
 import { studentApi } from '@/lib/api/student-api';
 import type { Exam, BulkMarkEntry } from '@educard/shared';
@@ -154,6 +157,10 @@ export function MarksEntryPage() {
     },
   });
 
+  // Publish/unpublish mutations
+  const publishMarksMutation = usePublishExamMarks();
+  const unpublishMarksMutation = useUnpublishExamMarks();
+
   const handleMarkChange = (
     index: number,
     field: keyof StudentMarkEntry,
@@ -187,7 +194,7 @@ export function MarksEntryPage() {
 
   const handleSaveAll = () => {
     if (!selectedSessionId || !selectedExamId) {
-      toast.error(ValidationMessages.SELECT_SESSION_AND_EXAM);
+      toast.error('Please select a session and exam first.');
       return;
     }
 
@@ -342,19 +349,59 @@ export function MarksEntryPage() {
                 <span className="ml-2 text-xs text-gray-400">• Use ↑↓ or Enter to navigate</span>
               </p>
             </div>
-            <Button
-              variant="brand"
-              onClick={handleSaveAll}
-              disabled={isPending || markEntries.length === 0}
-              className="gap-2"
-            >
-              {isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+            <div className="flex items-center gap-2">
+              {/* Publish / Unpublish Marks Button */}
+              {selectedExam && selectedExam.is_marks_published ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => unpublishMarksMutation.mutate(selectedExamId)}
+                  disabled={unpublishMarksMutation.isPending}
+                  className="gap-1.5 border-amber-200 text-amber-700 hover:bg-amber-50"
+                  title="Unpublish marks to allow editing"
+                >
+                  {unpublishMarksMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Undo2 className="h-4 w-4" />
+                  )}
+                  Unpublish
+                </Button>
               ) : (
-                <Save className="h-4 w-4" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => publishMarksMutation.mutate(selectedExamId)}
+                  disabled={
+                    publishMarksMutation.isPending ||
+                    markEntries.length === 0 ||
+                    enteredCount < markEntries.length
+                  }
+                  className="gap-1.5 border-green-200 text-green-700 hover:bg-green-50"
+                  title="Publish marks once all students have marks entered. Results can only be sent to parents after marks are published for all exams."
+                >
+                  {publishMarksMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <BadgeCheck className="h-4 w-4" />
+                  )}
+                  Publish Marks
+                </Button>
               )}
-              Save Marks
-            </Button>
+              <Button
+                variant="brand"
+                onClick={handleSaveAll}
+                disabled={isPending || markEntries.length === 0}
+                className="gap-2"
+              >
+                {isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                Save Marks
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="p-0" ref={tableContainerRef}>
             {studentsLoading && (

@@ -30,7 +30,14 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { useClasses } from '@/features/classes';
 import type { Class } from '@/features/classes/types';
-import { useExams, useMarksOverview, useUpdateExam } from '@/features/exams';
+import {
+  useExams,
+  useMarksOverview,
+  useUpdateExam,
+  useSendExamScheduleNotification,
+  useSendExamResultsNotification,
+  useSendExamProgressNotification,
+} from '@/features/exams';
 import { useAuthStore } from '@/lib/auth-store';
 import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
@@ -78,6 +85,13 @@ export default function ExamDashboardScreen() {
   });
   const exams: Exam[] = examsData?.data ?? [];
   const allExamsCompleted = exams.length > 0 && exams.every((e) => e.status === 'completed');
+  const hasDraftExams = exams.some((e) => e.status === 'draft');
+  const hasExams = exams.length > 0;
+
+  // Notification mutations
+  const sendScheduleMutation = useSendExamScheduleNotification();
+  const sendResultsMutation = useSendExamResultsNotification();
+  const sendProgressMutation = useSendExamProgressNotification();
 
   // Fetch student marks overview
   const {
@@ -336,6 +350,51 @@ export default function ExamDashboardScreen() {
             </TouchableOpacity>
           </View>
 
+          {/* Notification Actions */}
+          {hasExams && (
+            <View style={styles.actionButtons}>
+              {!hasDraftExams && (
+                <TouchableOpacity
+                  style={[styles.actionBtn, styles.actionBtnBlue]}
+                  onPress={() =>
+                    sendScheduleMutation.mutate({ sessionId, classId: selectedClassId })
+                  }
+                  disabled={sendScheduleMutation.isPending}
+                >
+                  <Text style={styles.actionBtnText}>
+                    {sendScheduleMutation.isPending ? 'Sending...' : '📅 Send Schedule'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+              {allExamsCompleted && (
+                <>
+                  <TouchableOpacity
+                    style={[styles.actionBtn, styles.actionBtnGreen]}
+                    onPress={() =>
+                      sendResultsMutation.mutate({ sessionId, classId: selectedClassId })
+                    }
+                    disabled={sendResultsMutation.isPending}
+                  >
+                    <Text style={styles.actionBtnText}>
+                      {sendResultsMutation.isPending ? 'Sending...' : '📊 Send Results'}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.actionBtn, styles.actionBtnPurple]}
+                    onPress={() =>
+                      sendProgressMutation.mutate({ sessionId, classId: selectedClassId })
+                    }
+                    disabled={sendProgressMutation.isPending}
+                  >
+                    <Text style={styles.actionBtnText}>
+                      {sendProgressMutation.isPending ? 'Sending...' : '📈 Send Progress'}
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+          )}
+
           {/* Content */}
           {isLoading && !refreshing && (
             <View style={styles.loading}>
@@ -558,6 +617,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     marginTop: 6,
   },
+
+  // Action Buttons
+  actionButtons: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#f8fafc',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  actionBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  actionBtnBlue: { backgroundColor: '#3b82f6' },
+  actionBtnGreen: { backgroundColor: '#16a34a' },
+  actionBtnPurple: { backgroundColor: '#7c3aed' },
+  actionBtnText: { fontSize: 12, fontWeight: '700', color: '#fff' },
 
   // Status Modal
   modalOverlay: {

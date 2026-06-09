@@ -28,3 +28,4 @@ export {
 } from './useManagementContext';
 export { useFormErrors, type FormErrors } from './useFormErrors';
 export { useAndroidBack } from './useAndroidBack';
+export { useResponsive, rs, type ResponsiveInfo } from './useResponsive';

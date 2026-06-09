@@ -133,6 +133,9 @@ const ExamsListPage = lazy(() =>
 const ExamOverviewPage = lazy(() =>
   import('./features/exams/pages').then((m) => ({ default: m.ExamOverviewPage }))
 );
+const ExamSchedulePage = lazy(() =>
+  import('./features/exams/pages').then((m) => ({ default: m.ExamSchedulePage }))
+);
 const ExamSessionFormPage = lazy(() =>
   import('./features/exams/pages').then((m) => ({ default: m.ExamSessionFormPage }))
 );
@@ -304,6 +307,7 @@ function App() {
             {/* Exams & Marks */}
             <Route path={ROUTES.EXAMS} element={<ExamSessionsPage />} />
             <Route path={ROUTES.EXAMS_OVERVIEW} element={<ExamOverviewPage />} />
+            <Route path={ROUTES.EXAMS_SCHEDULE} element={<ExamSchedulePage />} />
             <Route path={ROUTES.EXAMS_LIST} element={<ExamsListPage />} />
             <Route path={ROUTES.EXAM_SESSIONS_NEW} element={<ExamSessionFormPage />} />
             <Route path={ROUTES.EXAM_SESSIONS_VIEW} element={<ExamSessionFormPage />} />

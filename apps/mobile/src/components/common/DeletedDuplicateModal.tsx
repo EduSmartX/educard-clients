@@ -6,10 +6,8 @@
 
 import { AlertTriangle, RefreshCw, Plus, X } from 'lucide-react-native';
 import React from 'react';
-import { View, Text, TouchableOpacity, Modal, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, StyleSheet } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export interface DeletedDuplicateModalProps {
   visible: boolean;
@@ -117,7 +115,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingBottom: 34,
-    maxWidth: SCREEN_WIDTH,
+    width: '100%',
   },
   header: {
     flexDirection: 'row',

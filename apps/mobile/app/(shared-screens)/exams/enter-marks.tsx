@@ -23,7 +23,13 @@ import {
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { useBulkUpsertMarks, useExamMarks } from '@/features/exams';
+import {
+  useBulkUpsertMarks,
+  useExamMarks,
+  usePublishExamMarks,
+  useUnpublishExamMarks,
+  useExam,
+} from '@/features/exams';
 import { useStudents } from '@/features/students';
 import { useToast } from '@/lib/toast-context';
 import { headerStyles, layoutStyles } from '@/styles';
@@ -63,6 +69,12 @@ export default function EnterMarksScreen() {
   const maxMarks = Number.parseInt(maxMarksStr ?? '100', 10);
   const isViewOnly = viewOnlyParam === 'true';
   const bulkUpsert = useBulkUpsertMarks();
+  const publishMarksMutation = usePublishExamMarks();
+  const unpublishMarksMutation = useUnpublishExamMarks();
+
+  // Fetch exam detail (for is_marks_published)
+  const { data: examDetail } = useExam(examId);
+  const isMarksPublished = examDetail?.is_marks_published ?? false;
 
   // Fetch existing marks
   const { data: existingMarks, isLoading: marksLoading } = useExamMarks(examId);
@@ -291,6 +303,33 @@ export default function EnterMarksScreen() {
         </View>
       )}
 
+      {/* Publish/Unpublish Marks */}
+      {!isViewOnly && (
+        <View style={st.publishRow}>
+          {isMarksPublished ? (
+            <TouchableOpacity
+              style={st.unpublishBtn}
+              onPress={() => unpublishMarksMutation.mutate(examId)}
+              disabled={unpublishMarksMutation.isPending}
+            >
+              <Text style={st.unpublishBtnText}>
+                {unpublishMarksMutation.isPending ? 'Unpublishing...' : '🔓 Unpublish Marks'}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={[st.publishBtn, enteredCount < studentList.length && st.publishBtnDisabled]}
+              onPress={() => publishMarksMutation.mutate(examId)}
+              disabled={publishMarksMutation.isPending || enteredCount < studentList.length}
+            >
+              <Text style={st.publishBtnText}>
+                {publishMarksMutation.isPending ? 'Publishing...' : '✅ Publish Marks'}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -419,6 +458,35 @@ const st = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '500',
   },
+
+  publishRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#f8fafc',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  publishBtn: {
+    flex: 1,
+    backgroundColor: '#16a34a',
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  publishBtnDisabled: {
+    backgroundColor: '#94a3b8',
+    opacity: 0.6,
+  },
+  publishBtnText: { fontSize: 13, fontWeight: '700', color: '#fff' },
+  unpublishBtn: {
+    flex: 1,
+    backgroundColor: '#f59e0b',
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  unpublishBtnText: { fontSize: 13, fontWeight: '700', color: '#fff' },
 
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center' },

@@ -7,41 +7,56 @@
 // Enums & Constants
 // =============================================================================
 
-export type ExamSessionType = 'unit_test' | 'quarterly' | 'half_yearly' | 'annual' | 'custom';
+export type ExamSessionType =
+  | "unit_test"
+  | "quarterly"
+  | "half_yearly"
+  | "annual"
+  | "custom";
 
 export const EXAM_SESSION_TYPE_LABELS: Record<ExamSessionType, string> = {
-  unit_test: 'Unit Test',
-  quarterly: 'Quarterly',
-  half_yearly: 'Half Yearly',
-  annual: 'Annual / Final Year',
-  custom: 'Custom',
+  unit_test: "Unit Test",
+  quarterly: "Quarterly",
+  half_yearly: "Half Yearly",
+  annual: "Annual / Final Year",
+  custom: "Custom",
 };
 
-export const EXAM_SESSION_TYPE_OPTIONS = Object.entries(EXAM_SESSION_TYPE_LABELS).map(
-  ([value, label]) => ({ value: value as ExamSessionType, label })
-);
+export const EXAM_SESSION_TYPE_OPTIONS = Object.entries(
+  EXAM_SESSION_TYPE_LABELS,
+).map(([value, label]) => ({ value: value as ExamSessionType, label }));
 
-export type ExamStatus = 'draft' | 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
+export type ExamStatus =
+  | "draft"
+  | "scheduled"
+  | "in_progress"
+  | "completed"
+  | "cancelled";
 
 export const EXAM_STATUS_LABELS: Record<ExamStatus, string> = {
-  draft: 'Draft',
-  scheduled: 'Scheduled',
-  in_progress: 'In Progress',
-  completed: 'Completed',
-  cancelled: 'Cancelled',
+  draft: "Draft",
+  scheduled: "Scheduled",
+  in_progress: "In Progress",
+  completed: "Completed",
+  cancelled: "Cancelled",
 };
 
-export const EXAM_STATUS_OPTIONS = Object.entries(EXAM_STATUS_LABELS).map(([value, label]) => ({
-  value: value as ExamStatus,
-  label,
-}));
+export const EXAM_STATUS_OPTIONS = Object.entries(EXAM_STATUS_LABELS).map(
+  ([value, label]) => ({
+    value: value as ExamStatus,
+    label,
+  }),
+);
 
-export const EXAM_STATUS_COLORS: Record<ExamStatus, { bg: string; text: string }> = {
-  draft: { bg: '#f1f5f9', text: '#64748b' },
-  scheduled: { bg: '#eff6ff', text: '#2563eb' },
-  in_progress: { bg: '#fef3c7', text: '#d97706' },
-  completed: { bg: '#dcfce7', text: '#16a34a' },
-  cancelled: { bg: '#fee2e2', text: '#dc2626' },
+export const EXAM_STATUS_COLORS: Record<
+  ExamStatus,
+  { bg: string; text: string }
+> = {
+  draft: { bg: "#f1f5f9", text: "#64748b" },
+  scheduled: { bg: "#eff6ff", text: "#2563eb" },
+  in_progress: { bg: "#fef3c7", text: "#d97706" },
+  completed: { bg: "#dcfce7", text: "#16a34a" },
+  cancelled: { bg: "#fee2e2", text: "#dc2626" },
 };
 
 // =============================================================================
@@ -108,6 +123,7 @@ export interface Exam {
   class_name: string;
   class_public_id: string;
   status: ExamStatus;
+  is_marks_published: boolean;
   max_marks: number;
   passing_marks: number;
   date: string | null;
@@ -242,7 +258,12 @@ export interface MarksOverviewStudent {
   roll_number: string | null;
   marks?: Record<
     string,
-    { marks_obtained: number; is_absent: boolean; max_marks: number; is_pass: boolean }
+    {
+      marks_obtained: number;
+      is_absent: boolean;
+      max_marks: number;
+      is_pass: boolean;
+    }
   >;
   summary?: {
     total_max: number;
@@ -254,7 +275,12 @@ export interface MarksOverviewStudent {
 
 export interface MarksOverviewResponse {
   session: { public_id: string; name: string; session_type: string };
-  class_info: { public_id: string; name: string; class_master_name: string; section_name: string };
+  class_info: {
+    public_id: string;
+    name: string;
+    class_master_name: string;
+    section_name: string;
+  };
   subjects: MarksOverviewSubject[];
   students: MarksOverviewStudent[];
   stats: {

@@ -1,6 +1,24 @@
 import { Circle, CheckCircle2, AlertCircle, XCircle, FileX, TrendingUp } from 'lucide-react';
 import type { ExamStatus } from '@educard/shared';
 
+// Status badge colors (border + bg + text)
+export const EXAM_STATUS_COLORS: Record<string, string> = {
+  draft: 'bg-gray-100 text-gray-700 border-gray-300',
+  scheduled: 'bg-blue-50 text-blue-700 border-blue-300',
+  in_progress: 'bg-amber-50 text-amber-700 border-amber-300',
+  completed: 'bg-green-50 text-green-700 border-green-300',
+  cancelled: 'bg-red-50 text-red-700 border-red-300',
+};
+
+// Status dot colors
+export const EXAM_STATUS_DOT_COLORS: Record<string, string> = {
+  draft: 'bg-gray-400',
+  scheduled: 'bg-blue-500',
+  in_progress: 'bg-amber-500',
+  completed: 'bg-green-500',
+  cancelled: 'bg-red-500',
+};
+
 // Status colors and icons
 export const STATUS_CONFIG: Record<
   ExamStatus,

@@ -166,6 +166,12 @@ export const adminSidebarConfig: SidebarSection[] = [
         matchPaths: [ROUTES.EXAMS_NEW, ROUTES.EXAMS_BULK_CREATE],
       },
       {
+        id: 'exam-schedule',
+        label: 'Exam Schedule',
+        icon: Calendar,
+        path: ROUTES.EXAMS_SCHEDULE,
+      },
+      {
         id: 'exam-overview',
         label: 'Exam Overview',
         icon: BarChart3,

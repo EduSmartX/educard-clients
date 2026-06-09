@@ -318,3 +318,71 @@ export async function bulkSaveAllMarks(
   }>(`${baseUrl}/marks/bulk-save-all/`, data);
   return response.data;
 }
+
+// ─── Marks Publishing ───────────────────────────────────────────────────────────
+
+export async function publishExamMarks(
+  examId: string
+): Promise<{ success: boolean; message: string; data: unknown }> {
+  const response = await apiClient.post<{
+    success: boolean;
+    message: string;
+    data: unknown;
+  }>(`${EMPLOYEE_BASE_URL}/exams/${examId}/publish-marks/`);
+  return response.data;
+}
+
+export async function unpublishExamMarks(
+  examId: string
+): Promise<{ success: boolean; message: string; data: unknown }> {
+  const response = await apiClient.post<{
+    success: boolean;
+    message: string;
+    data: unknown;
+  }>(`${EMPLOYEE_BASE_URL}/exams/${examId}/unpublish-marks/`);
+  return response.data;
+}
+
+// ─── Exam Notifications ─────────────────────────────────────────────────────────
+
+export async function sendExamScheduleNotification(
+  sessionId: string,
+  classId: string
+): Promise<{ success: boolean; message: string; data: { exam_count: number } }> {
+  const response = await apiClient.post<{
+    success: boolean;
+    message: string;
+    data: { exam_count: number };
+  }>(`${EMPLOYEE_BASE_URL}/sessions/${sessionId}/send-schedule-notification/`, {
+    class_id: classId,
+  });
+  return response.data;
+}
+
+export async function sendExamResultsNotification(
+  sessionId: string,
+  classId: string
+): Promise<{ success: boolean; message: string; data: { completed_exams: number } }> {
+  const response = await apiClient.post<{
+    success: boolean;
+    message: string;
+    data: { completed_exams: number };
+  }>(`${EMPLOYEE_BASE_URL}/sessions/${sessionId}/send-results-notification/`, {
+    class_id: classId,
+  });
+  return response.data;
+}
+
+export async function sendExamProgressNotification(
+  sessionId: string,
+  classId: string
+): Promise<{ success: boolean; message: string; data: unknown }> {
+  const response = await apiClient.post<{
+    success: boolean;
+    message: string;
+    data: unknown;
+  }>(`${EMPLOYEE_BASE_URL}/sessions/${sessionId}/send-progress-notification/`, {
+    class_id: classId,
+  });
+  return response.data;
+}

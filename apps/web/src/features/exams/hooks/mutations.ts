@@ -20,6 +20,11 @@ import {
   updateExam,
   deleteExam,
   reactivateExam,
+  sendExamScheduleNotification,
+  sendExamResultsNotification,
+  sendExamProgressNotification,
+  publishExamMarks,
+  unpublishExamMarks,
 } from '../api/exams-api';
 import { ErrorMessages, SuccessMessages } from '@/constants';
 import type {
@@ -164,8 +169,7 @@ export function useReactivateExam(options?: MutationOptions<FieldErrors>) {
 export function useUpdateExamStatus(options?: MutationOptions<FieldErrors>) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: ExamStatus }) =>
-      updateExam(id, { status }),
+    mutationFn: ({ id, status }: { id: string; status: ExamStatus }) => updateExam(id, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exams'] });
       toast.success('Exam status updated successfully');
@@ -190,6 +194,82 @@ export function useBulkUpdateExamStatusBySession(options?: MutationOptions<Field
     },
     onError: (error: Error) => {
       handleMutationError(error, 'Failed to bulk update exam statuses', options?.onError);
+    },
+  });
+}
+
+// ─── Notification Mutations ─────────────────────────────────────────────────────
+
+export function useSendExamScheduleNotification(options?: MutationOptions<FieldErrors>) {
+  return useMutation({
+    mutationFn: ({ sessionId, classId }: { sessionId: string; classId: string }) =>
+      sendExamScheduleNotification(sessionId, classId),
+    onSuccess: (data) => {
+      toast.success(data.message || 'Exam schedule notification sent successfully!');
+      options?.onSuccess?.();
+    },
+    onError: (error: Error) => {
+      handleMutationError(error, 'Failed to send exam schedule notification', options?.onError);
+    },
+  });
+}
+
+export function useSendExamResultsNotification(options?: MutationOptions<FieldErrors>) {
+  return useMutation({
+    mutationFn: ({ sessionId, classId }: { sessionId: string; classId: string }) =>
+      sendExamResultsNotification(sessionId, classId),
+    onSuccess: (data) => {
+      toast.success(data.message || 'Results notification sent successfully!');
+      options?.onSuccess?.();
+    },
+    onError: (error: Error) => {
+      handleMutationError(error, 'Failed to send results notification', options?.onError);
+    },
+  });
+}
+
+export function useSendExamProgressNotification(options?: MutationOptions<FieldErrors>) {
+  return useMutation({
+    mutationFn: ({ sessionId, classId }: { sessionId: string; classId: string }) =>
+      sendExamProgressNotification(sessionId, classId),
+    onSuccess: (data) => {
+      toast.success(data.message || 'Progress report sent to parents successfully!');
+      options?.onSuccess?.();
+    },
+    onError: (error: Error) => {
+      handleMutationError(error, 'Failed to send progress notification', options?.onError);
+    },
+  });
+}
+
+// ─── Marks Publishing Mutations ─────────────────────────────────────────────────
+
+export function usePublishExamMarks(options?: MutationOptions<FieldErrors>) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (examId: string) => publishExamMarks(examId),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['exams'] });
+      toast.success(data.message || 'Marks published successfully!');
+      options?.onSuccess?.();
+    },
+    onError: (error: Error) => {
+      handleMutationError(error, 'Failed to publish marks', options?.onError);
+    },
+  });
+}
+
+export function useUnpublishExamMarks(options?: MutationOptions<FieldErrors>) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (examId: string) => unpublishExamMarks(examId),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['exams'] });
+      toast.success(data.message || 'Marks unpublished.');
+      options?.onSuccess?.();
+    },
+    onError: (error: Error) => {
+      handleMutationError(error, 'Failed to unpublish marks', options?.onError);
     },
   });
 }

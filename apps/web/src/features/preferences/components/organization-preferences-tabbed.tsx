@@ -1,15 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  AlertCircle,
-  BookOpen,
-  Calendar,
-  ChevronDown,
-  ChevronRight,
-  Code2,
-  Loader2,
-  RefreshCw,
-  Settings,
-} from 'lucide-react';
+import { AlertCircle, BookOpen, Calendar, Loader2, RefreshCw, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -275,7 +265,6 @@ export function OrganizationPreferencesTabbed() {
     error,
     refetch,
   } = useOrganizationPreferences();
-  const [showDebug, setShowDebug] = useState(false);
 
   if (isLoading) {
     return (
@@ -340,55 +329,6 @@ export function OrganizationPreferencesTabbed() {
           <AcademicYearSettingsForm />
         </TabsContent>
       </Tabs>
-
-      {/* Debug Panel — Inspect all preferences from the API */}
-      <div className="border-t pt-4">
-        <button
-          type="button"
-          onClick={() => setShowDebug((v) => !v)}
-          className="flex items-center gap-2 text-xs font-medium text-gray-400 transition-colors hover:text-gray-600"
-        >
-          <Code2 className="h-3.5 w-3.5" />
-          {showDebug ? 'Hide' : 'Show'} API Debug ({preferences.length} preferences loaded)
-          {showDebug ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-        </button>
-        {showDebug && (
-          <div className="mt-3 max-h-[400px] overflow-auto rounded-lg border border-gray-200 bg-gray-900 p-4 text-xs">
-            <table className="w-full text-left text-gray-300">
-              <thead className="sticky top-0 border-b border-gray-700 bg-gray-900 text-gray-400">
-                <tr>
-                  <th className="pr-4 pb-2">#</th>
-                  <th className="pr-4 pb-2">Key</th>
-                  <th className="pr-4 pb-2">Display Name</th>
-                  <th className="pr-4 pb-2">Category</th>
-                  <th className="pr-4 pb-2">Type</th>
-                  <th className="pr-4 pb-2">Value</th>
-                  <th className="pr-4 pb-2">Depends On</th>
-                </tr>
-              </thead>
-              <tbody>
-                {preferences.map((pref, idx) => (
-                  <tr key={pref.public_id} className="border-b border-gray-800 hover:bg-gray-800">
-                    <td className="py-1.5 pr-4 text-gray-500">{idx + 1}</td>
-                    <td className="py-1.5 pr-4 font-mono text-cyan-400">{pref.key}</td>
-                    <td className="py-1.5 pr-4">{pref.display_name}</td>
-                    <td className="py-1.5 pr-4">
-                      <span className="rounded bg-gray-700 px-1.5 py-0.5">{pref.category}</span>
-                    </td>
-                    <td className="py-1.5 pr-4 text-yellow-400">{pref.field_type}</td>
-                    <td className="py-1.5 pr-4 font-mono text-green-400">
-                      {Array.isArray(pref.value) ? pref.value.join(', ') : String(pref.value)}
-                    </td>
-                    <td className="py-1.5 pr-4 font-mono text-orange-400">
-                      {pref.depends_on || '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
