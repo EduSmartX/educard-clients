@@ -4,7 +4,7 @@
  */
 
 import type { FeeStructureCreatePayload, Class } from '@educard/shared';
-import { ComponentType } from '@educard/shared';
+import { ComponentType, COMPONENT_TYPE_OPTIONS } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Plus, Trash2, IndianRupee, AlertTriangle } from 'lucide-react-native';
@@ -36,13 +36,6 @@ import { extractApiError } from '@/utils/api-error';
 
 import { fetchClassChangeImpact } from '../api';
 import { useFeeStructure, useCreateFeeStructure, useUpdateFeeStructure } from '../hooks';
-
-// ─── component type options ────────────────────────────────────────────────
-
-const COMPONENT_TYPE_OPTIONS = [
-  { value: ComponentType.MANDATORY, label: 'Mandatory' },
-  { value: ComponentType.OPTIONAL, label: 'Optional' },
-];
 
 /** Build impact message lines from class change impact response */
 function buildImpactLines(impact: {
@@ -544,7 +537,7 @@ export default function FeeStructureFormScreen() {
                   <View style={{ flex: 1 }}>
                     <FormDropdown
                       label="Type"
-                      options={COMPONENT_TYPE_OPTIONS}
+                      options={[...COMPONENT_TYPE_OPTIONS]}
                       value={comp.component_type}
                       onChange={(v) => updateComponent(comp.key, 'component_type', v)}
                     />

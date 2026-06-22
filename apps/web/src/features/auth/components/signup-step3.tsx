@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { AddressForm } from '@/components/form/address-form';
 import { PhoneInput } from '@/components/form/phone-input';
-import { ORGANIZATION_TYPES, BOARD_AFFILIATIONS } from '@/constants/organization-options';
+import { ORGANIZATION_TYPES, BOARD_AFFILIATIONS } from '@educard/shared';
 import { AuthActionButtons } from './auth-action-buttons';
 import type { Step3Data } from '../utils/signup.schemas';
 

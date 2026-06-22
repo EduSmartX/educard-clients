@@ -7,9 +7,9 @@
  * - Teacher (Other): View-only access
  */
 
-import { Colors, getRoleThemeColors, Student, useDebounce } from '@educard/shared';
+import { Colors, getRoleThemeColors, Student, useDebounce, API_CONFIG } from '@educard/shared';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { GraduationCap, Upload, Plus } from 'lucide-react-native';
+import { GraduationCap, Upload, Plus, Download } from 'lucide-react-native';
 import { useState, useCallback, useMemo } from 'react';
 import {
   View,
@@ -40,6 +40,7 @@ import { layoutStyles, cardStyles, avatarStyles, listStyles, textStyles } from '
 import { isAdminRole, isTeacherRole } from '@/utils/role-utils';
 
 import { downloadStudentTemplate, bulkUploadStudents } from '../api/students-api';
+import { ExportStudentsModal } from './ExportStudentsModal';
 import { useStudents, useDeleteStudent, useRestoreStudent } from '../hooks/use-students';
 
 const adminTheme = getRoleThemeColors('admin');
@@ -71,6 +72,7 @@ export function StudentList({ onBack }: StudentListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
+  const [showExport, setShowExport] = useState(false);
   const [filters, setFilters] = useState<Record<string, unknown>>({});
 
   const isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
@@ -78,7 +80,7 @@ export function StudentList({ onBack }: StudentListProps) {
 
   const debouncedSearch = useDebounce(searchQuery, 300);
   const allStudentFilterFields = useStudentFilterFields();
-  const { data: classesData } = useClasses({ page_size: 100 });
+  const { data: classesData } = useClasses({ page_size: API_CONFIG.DROPDOWN_PAGE_SIZE });
   const managedClasses = useMemo(() => classesData?.classes ?? [], [classesData?.classes]);
   const isClassTeacher = isTeacher && managedClasses.length > 0;
 
@@ -285,6 +287,7 @@ export function StudentList({ onBack }: StudentListProps) {
         actions={
           canCreateStudents
             ? [
+                { icon: Download, onPress: () => setShowExport(true) },
                 ...(canCreateStudents
                   ? [{ icon: Upload, onPress: () => setShowBulkUpload(true) }]
                   : []),
@@ -310,6 +313,9 @@ export function StudentList({ onBack }: StudentListProps) {
         customInfoMessage={bulkUploadInfoMessage}
         onUploadSuccess={() => void refetch()}
       />
+
+      {/* Export Students Modal */}
+      <ExportStudentsModal visible={showExport} onClose={() => setShowExport(false)} />
 
       <SearchBar
         value={searchQuery}
@@ -397,9 +403,9 @@ const styles = StyleSheet.create({
   classText: { fontSize: 11, color: Colors.primary[600], fontWeight: '500' },
   admText: { fontSize: 11, color: Colors.gray[500], fontWeight: '500' },
   avatarGrad: {
-    backgroundColor: '#e0e7ff',
+    backgroundColor: Colors.accent[100],
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { fontSize: 16, fontWeight: '700', color: '#6366f1' },
+  avatarText: { fontSize: 16, fontWeight: '700', color: Colors.accent[500] },
 });

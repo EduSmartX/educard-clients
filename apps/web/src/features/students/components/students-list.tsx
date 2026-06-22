@@ -6,6 +6,7 @@
 
 import { useState } from 'react';
 import { Plus, Filter, X, AlertCircle } from 'lucide-react';
+import { GENDER_OPTIONS, API_CONFIG } from '@educard/shared';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +17,7 @@ import { PageHeader, DeletedViewToggle } from '@/components/common';
 import type { StudentListItem } from '../types';
 import { getStudentColumns } from './student-table-columns';
 import { BulkUploadStudentsDialog } from './bulk-upload-students-dialog';
+import { ExportStudentsDialog } from './export-students-dialog';
 import {
   getListTitle,
   getListDescription,
@@ -65,7 +67,7 @@ export function StudentsList({
   const [showFilters, setShowFilters] = useState(false);
 
   // Fetch classes for filter options
-  const { data: classesData } = useClasses({ page_size: 100 });
+  const { data: classesData } = useClasses({ page_size: API_CONFIG.DROPDOWN_PAGE_SIZE });
   const classes = classesData?.data || [];
 
   const classOptions = classes.map((cls) => ({
@@ -93,11 +95,7 @@ export function StudentsList({
       label: 'Gender',
       type: 'select',
       placeholder: 'All genders',
-      options: [
-        { value: 'M', label: 'Male' },
-        { value: 'F', label: 'Female' },
-        { value: 'O', label: 'Other' },
-      ],
+      options: [...GENDER_OPTIONS],
     },
     {
       name: 'admission_date_from',
@@ -148,6 +146,7 @@ export function StudentsList({
               resourceName="students"
             />
           )}
+          {!showDeleted && canCreateStudents && <ExportStudentsDialog />}
           {!showDeleted && canCreateStudents && <BulkUploadStudentsDialog />}
         </div>
       </PageHeader>

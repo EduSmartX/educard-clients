@@ -23,6 +23,7 @@ import {
   BookMarked,
   ClipboardList as SubmissionsIcon,
   Eye,
+  ClipboardEdit,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
 import { ROUTES } from '@/constants/app-config';
@@ -123,10 +124,10 @@ export const employeeSidebarConfig: SidebarSection[] = [
         path: ROUTES.EXAMS_LIST,
       },
       {
-        id: 'exam-overview',
-        label: 'Exam Overview',
-        icon: BarChart3,
-        path: ROUTES.EXAMS_OVERVIEW,
+        id: 'marks-entry',
+        label: 'Enter Marks',
+        icon: ClipboardEdit,
+        path: ROUTES.MARKS_ENTRY,
       },
       {
         id: 'marks-overview',

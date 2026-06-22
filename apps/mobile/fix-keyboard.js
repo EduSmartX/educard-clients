@@ -119,11 +119,8 @@ files.forEach(file => {
   if (content !== original) {
     fs.writeFileSync(file, content);
     updated++;
-    console.log('✅ ' + file);
   } else {
     skipped++;
-    console.log('⏭️  ' + file);
   }
 });
 
-console.log(`\nDone! Updated: ${updated}, Skipped: ${skipped}`);

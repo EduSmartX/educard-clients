@@ -20,12 +20,7 @@ export {
 } from '@educard/shared';
 
 // API
-export {
-  API_ENDPOINTS,
-  buildUrl,
-  QueryKeys,
-  StatusCodes,
-} from '@educard/shared';
+export { API_ENDPOINTS, buildUrl, QueryKeys, StatusCodes } from '@educard/shared';
 
 // User & Auth
 export {
@@ -35,6 +30,7 @@ export {
   GENDER,
   GENDER_ENUM,
   GENDER_OPTIONS,
+  GENDER_OPTIONS_WITH_ALL,
   getGenderLabel,
   BLOOD_GROUP,
   BLOOD_GROUP_ENUM,
@@ -111,14 +107,8 @@ export * from './app-config';
 // Branding (logos, taglines - web-specific paths)
 export * from './branding';
 
-// Organization types and options
-export * from './organization-types';
-
 // Subject colors (UI styling)
 export * from './subject-colors';
-
-// Subject type options
-export * from './subject-constants';
 
 // Button styles (Tailwind classes - web-specific)
 export * from './button-styles';

@@ -12,7 +12,15 @@
  */
 
 import { useState, useMemo, useEffect } from 'react';
-import { Save, AlertCircle, BookOpen, Users, CheckCircle2, Loader2 } from 'lucide-react';
+import {
+  Save,
+  AlertCircle,
+  BookOpen,
+  Users,
+  CheckCircle2,
+  Loader2,
+  ShieldCheck,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -22,6 +30,7 @@ import { Badge } from '@/components/ui/badge';
 import { useExamSessions, useMarksOverview } from '../hooks/use-exams';
 import { useClasses } from '@/features/classes/hooks/use-classes';
 import { bulkSaveAllMarks } from '../api/exams-api';
+import { usePublishExamMarks } from '../hooks/mutations';
 import {
   buildStudentMarkEntries,
   buildBulkSavePayload,
@@ -220,6 +229,35 @@ export function MarksOverviewPage() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // Publish marks for all exams
+  const publishMarksMutation = usePublishExamMarks();
+
+  const handlePublishAllMarks = () => {
+    if (!subjects || subjects.length === 0) {
+      return;
+    }
+
+    // Check if all marks are entered (100% completion)
+    if (stats.completionPercent < 100) {
+      toast.error(
+        `Cannot publish: Only ${stats.completionPercent}% of marks are entered. Please enter marks for all students before publishing.`
+      );
+      return;
+    }
+
+    // Find subjects that are completed (ready for publishing)
+    const completedSubjects = subjects.filter((s) => s.status === 'completed');
+    if (completedSubjects.length === 0) {
+      toast.error('No completed exams found. Please mark exams as completed first.');
+      return;
+    }
+
+    // Publish each completed exam
+    completedSubjects.forEach((subject) => {
+      publishMarksMutation.mutate(subject.exam_public_id);
+    });
   };
 
   // Calculate statistics
@@ -443,269 +481,300 @@ export function MarksOverviewPage() {
         !isLoadingMarks &&
         subjects.length > 0 &&
         studentMarks.length > 0 && (
-          <Card className="border-2">
-            <CardHeader className="from-brand-50 to-brand-100 border-b-2 bg-gradient-to-r">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-xl">Marks Entry</CardTitle>
-                  <p className="mt-1 text-xs text-gray-500">
-                    {canEditAny
-                      ? 'Use Arrow keys, Tab, or Enter to navigate between cells'
-                      : 'View only - You can only edit marks for subjects assigned to you'}
-                  </p>
+          <>
+            <Card className="border-2">
+              <CardHeader className="from-brand-50 to-brand-100 border-b-2 bg-gradient-to-r">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-xl">Marks Entry</CardTitle>
+                    <p className="mt-1 text-xs text-gray-500">
+                      {canEditAny
+                        ? 'Use Arrow keys, Tab, or Enter to navigate between cells'
+                        : 'View only - You can only edit marks for subjects assigned to you'}
+                    </p>
+                  </div>
+                  {canEditAny && (
+                    <Button
+                      variant="success"
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      className="gap-2"
+                    >
+                      <Save className="h-4 w-4" />
+                      {isSaving ? 'Saving...' : 'Save All Marks'}
+                    </Button>
+                  )}
                 </div>
-                {canEditAny && (
-                  <Button
-                    variant="success"
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="gap-2"
-                  >
-                    <Save className="h-4 w-4" />
-                    {isSaving ? 'Saving...' : 'Save All Marks'}
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            {/* View-only banner */}
-            {!canEditAny && (
-              <div className="flex items-center gap-2 border-b border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-700">
-                <AlertCircle className="h-4 w-4" />
-                <span>
-                  You are viewing marks in read-only mode. Only teachers assigned to specific
-                  subjects can edit them.
-                </span>
-              </div>
-            )}
-            <CardContent className="p-0">
-              {/* Scrollable container with max height and sticky header */}
-              <div className="relative max-h-[70vh] overflow-auto" ref={containerRef}>
-                <table className="w-full border-collapse">
-                  <thead className="sticky top-0 z-20 bg-gray-100">
-                    <tr>
-                      <th className="sticky top-0 left-0 z-30 min-w-[80px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold">
-                        S.No
-                      </th>
-                      <th className="sticky top-0 left-[80px] z-30 min-w-[80px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold">
-                        Photo
-                      </th>
-                      <th className="sticky top-0 left-[160px] z-30 min-w-[120px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold">
-                        Roll No
-                      </th>
-                      <th className="sticky top-0 left-[280px] z-30 min-w-[200px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold">
-                        Student Name
-                      </th>
-                      {subjects.map((subject) => {
-                        const colors = getSubjectColor(subject.subject_name);
-                        return (
-                          <th
-                            key={subject.exam_public_id}
-                            className={`border-2 ${colors.border} p-3 text-center font-semibold ${colors.header} sticky top-0 z-20 min-w-[150px]`}
-                          >
-                            <div className="space-y-1">
-                              <div className={`font-bold ${colors.text}`}>
-                                {subject.subject_name}
-                              </div>
-                              <div className="text-xs text-gray-600">
-                                Max: {subject.max_marks} | Pass: {subject.passing_marks}
-                              </div>
-                              {!!subject.date && (
-                                <div className="text-xs text-gray-500">
-                                  {new Date(subject.date).toLocaleDateString()}
-                                </div>
-                              )}
-                            </div>
-                          </th>
-                        );
-                      })}
-                      {/* Total & Percentage columns */}
-                      <th className="sticky top-0 z-20 min-w-[100px] border-2 border-gray-300 bg-emerald-200 p-3 text-center font-semibold">
-                        <div className="space-y-1">
-                          <div className="font-bold text-emerald-800">Total</div>
-                          <div className="text-xs text-gray-600">
-                            Max: {subjects.reduce((s, sub) => s + sub.max_marks, 0)}
-                          </div>
-                        </div>
-                      </th>
-                      <th className="sticky top-0 z-20 min-w-[90px] border-2 border-gray-300 bg-amber-200 p-3 text-center font-semibold">
-                        <div className="font-bold text-amber-800">%</div>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {studentMarks.map((student, rowIndex) => (
-                      <tr
-                        key={student.studentId}
-                        className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
-                      >
-                        <td className="sticky left-0 z-10 border-2 border-gray-300 bg-inherit p-3 text-center font-medium">
-                          {rowIndex + 1}
-                        </td>
-                        <td className="sticky left-[80px] z-10 border-2 border-gray-300 bg-inherit p-3">
-                          <StudentAvatar
-                            name={student.name}
-                            photoUrl={student.photo}
-                            gender={student.gender}
-                            size="md"
-                          />
-                        </td>
-                        <td className="sticky left-[160px] z-10 border-2 border-gray-300 bg-inherit p-3 font-medium">
-                          {student.rollNumber}
-                        </td>
-                        <td className="sticky left-[280px] z-10 border-2 border-gray-300 bg-inherit p-3 font-medium">
-                          {student.name}
-                        </td>
-                        {subjects.map((subject, colIndex) => {
+              </CardHeader>
+              {/* View-only banner */}
+              {!canEditAny && (
+                <div className="flex items-center gap-2 border-b border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-700">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>
+                    You are viewing marks in read-only mode. Only teachers assigned to specific
+                    subjects can edit them.
+                  </span>
+                </div>
+              )}
+              <CardContent className="p-0">
+                {/* Scrollable container with max height and sticky header */}
+                <div className="relative max-h-[70vh] overflow-auto" ref={containerRef}>
+                  <table className="w-full border-collapse">
+                    <thead className="sticky top-0 z-20 bg-gray-100">
+                      <tr>
+                        <th className="sticky top-0 left-0 z-30 min-w-[80px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold">
+                          S.No
+                        </th>
+                        <th className="sticky top-0 left-[80px] z-30 min-w-[80px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold">
+                          Photo
+                        </th>
+                        <th className="sticky top-0 left-[160px] z-30 min-w-[120px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold">
+                          Roll No
+                        </th>
+                        <th className="sticky top-0 left-[280px] z-30 min-w-[200px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold">
+                          Student Name
+                        </th>
+                        {subjects.map((subject) => {
                           const colors = getSubjectColor(subject.subject_name);
-                          const markValue = student.marks[subject.exam_public_id] || '';
-                          const numMark = Number.parseFloat(markValue);
-                          const isPassing =
-                            !Number.isNaN(numMark) && numMark >= subject.passing_marks;
-                          const isFailing =
-                            markValue &&
-                            markValue !== 'AB' &&
-                            !Number.isNaN(numMark) &&
-                            numMark < subject.passing_marks;
-                          const isAbsent = markValue === 'AB';
-                          const editable = isSubjectEditable(subject.subject_public_id);
-
                           return (
-                            <td
+                            <th
                               key={subject.exam_public_id}
-                              className={`border-2 ${colors.border} p-2 ${colors.bg}`}
+                              className={`border-2 ${colors.border} p-3 text-center font-semibold ${colors.header} sticky top-0 z-20 min-w-[150px]`}
                             >
-                              <Input
-                                type="text"
-                                value={markValue}
-                                data-row={rowIndex}
-                                data-col={colIndex}
-                                onKeyDown={handleKeyDown}
-                                disabled={!editable}
-                                onChange={(e) =>
-                                  handleMarksChange(
-                                    student.studentId,
-                                    subject.exam_public_id,
-                                    e.target.value,
-                                    subject.max_marks
-                                  )
-                                }
-                                className={`text-center font-semibold ${getMarkInputStyle({ editable, isAbsent, isPassing, isFailing: !!isFailing })}`}
-                                placeholder="--"
-                              />
-                            </td>
+                              <div className="space-y-1">
+                                <div className={`font-bold ${colors.text}`}>
+                                  {subject.subject_name}
+                                </div>
+                                <div className="text-xs text-gray-600">
+                                  Max: {subject.max_marks} | Pass: {subject.passing_marks}
+                                </div>
+                                {!!subject.date && (
+                                  <div className="text-xs text-gray-500">
+                                    {new Date(subject.date).toLocaleDateString()}
+                                  </div>
+                                )}
+                              </div>
+                            </th>
                           );
                         })}
-                        {/* Total marks cell */}
-                        {(() => {
-                          const t = studentTotals[student.studentId];
-                          if (!t || t.subjectsAttempted === 0) {
+                        {/* Total & Percentage columns */}
+                        <th className="sticky top-0 z-20 min-w-[100px] border-2 border-gray-300 bg-emerald-200 p-3 text-center font-semibold">
+                          <div className="space-y-1">
+                            <div className="font-bold text-emerald-800">Total</div>
+                            <div className="text-xs text-gray-600">
+                              Max: {subjects.reduce((s, sub) => s + sub.max_marks, 0)}
+                            </div>
+                          </div>
+                        </th>
+                        <th className="sticky top-0 z-20 min-w-[90px] border-2 border-gray-300 bg-amber-200 p-3 text-center font-semibold">
+                          <div className="font-bold text-amber-800">%</div>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {studentMarks.map((student, rowIndex) => (
+                        <tr
+                          key={student.studentId}
+                          className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+                        >
+                          <td className="sticky left-0 z-10 border-2 border-gray-300 bg-inherit p-3 text-center font-medium">
+                            {rowIndex + 1}
+                          </td>
+                          <td className="sticky left-[80px] z-10 border-2 border-gray-300 bg-inherit p-3">
+                            <StudentAvatar
+                              name={student.name}
+                              photoUrl={student.photo}
+                              gender={student.gender}
+                              size="md"
+                            />
+                          </td>
+                          <td className="sticky left-[160px] z-10 border-2 border-gray-300 bg-inherit p-3 font-medium">
+                            {student.rollNumber}
+                          </td>
+                          <td className="sticky left-[280px] z-10 border-2 border-gray-300 bg-inherit p-3 font-medium">
+                            {student.name}
+                          </td>
+                          {subjects.map((subject, colIndex) => {
+                            const colors = getSubjectColor(subject.subject_name);
+                            const markValue = student.marks[subject.exam_public_id] || '';
+                            const numMark = Number.parseFloat(markValue);
+                            const isPassing =
+                              !Number.isNaN(numMark) && numMark >= subject.passing_marks;
+                            const isFailing =
+                              markValue &&
+                              markValue !== 'AB' &&
+                              !Number.isNaN(numMark) &&
+                              numMark < subject.passing_marks;
+                            const isAbsent = markValue === 'AB';
+                            const editable = isSubjectEditable(subject.subject_public_id);
+
+                            return (
+                              <td
+                                key={subject.exam_public_id}
+                                className={`border-2 ${colors.border} p-2 ${colors.bg}`}
+                              >
+                                <Input
+                                  type="text"
+                                  value={markValue}
+                                  data-row={rowIndex}
+                                  data-col={colIndex}
+                                  onKeyDown={handleKeyDown}
+                                  disabled={!editable}
+                                  onChange={(e) =>
+                                    handleMarksChange(
+                                      student.studentId,
+                                      subject.exam_public_id,
+                                      e.target.value,
+                                      subject.max_marks
+                                    )
+                                  }
+                                  className={`text-center font-semibold ${getMarkInputStyle({ editable, isAbsent, isPassing, isFailing: !!isFailing })}`}
+                                  placeholder="--"
+                                />
+                              </td>
+                            );
+                          })}
+                          {/* Total marks cell */}
+                          {(() => {
+                            const t = studentTotals[student.studentId];
+                            if (!t || t.subjectsAttempted === 0) {
+                              return (
+                                <>
+                                  <td className="border-2 border-gray-300 bg-emerald-50 p-3 text-center font-medium text-gray-400">
+                                    --
+                                  </td>
+                                  <td className="border-2 border-gray-300 bg-amber-50 p-3 text-center font-medium text-gray-400">
+                                    --
+                                  </td>
+                                </>
+                              );
+                            }
+                            const pct = t.percentage;
+                            const getPctColor = (p: number) => {
+                              if (p >= 75) {
+                                return 'text-green-700 bg-green-50';
+                              }
+                              if (p >= 50) {
+                                return 'text-amber-700 bg-amber-50';
+                              }
+                              if (p >= 35) {
+                                return 'text-orange-700 bg-orange-50';
+                              }
+                              return 'text-red-700 bg-red-50';
+                            };
+                            const pctColor = getPctColor(pct);
                             return (
                               <>
-                                <td className="border-2 border-gray-300 bg-emerald-50 p-3 text-center font-medium text-gray-400">
-                                  --
+                                <td className="border-2 border-gray-300 bg-emerald-50 p-3 text-center font-bold text-emerald-800">
+                                  {t.total}
+                                  <span className="text-xs font-normal text-gray-500">
+                                    /{t.maxTotal}
+                                  </span>
                                 </td>
-                                <td className="border-2 border-gray-300 bg-amber-50 p-3 text-center font-medium text-gray-400">
-                                  --
+                                <td
+                                  className={`border-2 border-gray-300 p-3 text-center font-bold ${pctColor}`}
+                                >
+                                  {pct}%
                                 </td>
                               </>
                             );
-                          }
-                          const pct = t.percentage;
-                          const getPctColor = (p: number) => {
-                            if (p >= 75) {
-                              return 'text-green-700 bg-green-50';
-                            }
-                            if (p >= 50) {
-                              return 'text-amber-700 bg-amber-50';
-                            }
-                            if (p >= 35) {
-                              return 'text-orange-700 bg-orange-50';
-                            }
-                            return 'text-red-700 bg-red-50';
-                          };
-                          const pctColor = getPctColor(pct);
+                          })()}
+                        </tr>
+                      ))}
+                    </tbody>
+                    {/* Analytics Footer */}
+                    <tfoot>
+                      <tr className="bg-gray-200 font-semibold">
+                        <td
+                          colSpan={4}
+                          className="sticky left-0 z-10 border-2 border-gray-300 bg-gray-200 p-3 text-right"
+                        >
+                          📊 Analytics
+                        </td>
+                        {subjects.map((subject) => {
+                          const st = subjectStats[subject.exam_public_id];
+                          const colors = getSubjectColor(subject.subject_name);
                           return (
-                            <>
-                              <td className="border-2 border-gray-300 bg-emerald-50 p-3 text-center font-bold text-emerald-800">
-                                {t.total}
-                                <span className="text-xs font-normal text-gray-500">
-                                  /{t.maxTotal}
-                                </span>
-                              </td>
-                              <td
-                                className={`border-2 border-gray-300 p-3 text-center font-bold ${pctColor}`}
-                              >
-                                {pct}%
-                              </td>
-                            </>
-                          );
-                        })()}
-                      </tr>
-                    ))}
-                  </tbody>
-                  {/* Analytics Footer */}
-                  <tfoot>
-                    <tr className="bg-gray-200 font-semibold">
-                      <td
-                        colSpan={4}
-                        className="sticky left-0 z-10 border-2 border-gray-300 bg-gray-200 p-3 text-right"
-                      >
-                        📊 Analytics
-                      </td>
-                      {subjects.map((subject) => {
-                        const st = subjectStats[subject.exam_public_id];
-                        const colors = getSubjectColor(subject.subject_name);
-                        return (
-                          <td
-                            key={subject.exam_public_id}
-                            className={`border-2 ${colors.border} p-2 ${colors.bg} text-center text-xs`}
-                          >
-                            <div className="space-y-0.5">
-                              <div className="font-bold text-red-600">AB: {st?.absent || 0}</div>
-                              <div className="text-gray-600">
-                                Entered: {st?.entered || 0}/{st?.total || 0}
+                            <td
+                              key={subject.exam_public_id}
+                              className={`border-2 ${colors.border} p-2 ${colors.bg} text-center text-xs`}
+                            >
+                              <div className="space-y-0.5">
+                                <div className="font-bold text-red-600">AB: {st?.absent || 0}</div>
+                                <div className="text-gray-600">
+                                  Entered: {st?.entered || 0}/{st?.total || 0}
+                                </div>
+                                <div className="font-medium text-blue-700">Avg: {st?.avg || 0}</div>
                               </div>
-                              <div className="font-medium text-blue-700">Avg: {st?.avg || 0}</div>
-                            </div>
-                          </td>
-                        );
-                      })}
-                      <td className="border-2 border-gray-300 bg-emerald-100 p-2 text-center text-xs">
-                        <div className="font-bold text-emerald-700">
-                          Class Avg:{' '}
-                          {(() => {
-                            const vals = Object.values(studentTotals).filter(
-                              (t) => t.subjectsAttempted > 0
-                            );
-                            if (vals.length === 0) {
-                              return '--';
-                            }
-                            const avg = vals.reduce((s, t) => s + t.total, 0) / vals.length;
-                            return Math.round(avg * 100) / 100;
-                          })()}
-                        </div>
-                      </td>
-                      <td className="border-2 border-gray-300 bg-amber-100 p-2 text-center text-xs">
-                        <div className="font-bold text-amber-700">
-                          Avg:{' '}
-                          {(() => {
-                            const vals = Object.values(studentTotals).filter(
-                              (t) => t.subjectsAttempted > 0
-                            );
-                            if (vals.length === 0) {
-                              return '--';
-                            }
-                            const avg = vals.reduce((s, t) => s + t.percentage, 0) / vals.length;
-                            return `${Math.round(avg * 100) / 100}%`;
-                          })()}
-                        </div>
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
+                            </td>
+                          );
+                        })}
+                        <td className="border-2 border-gray-300 bg-emerald-100 p-2 text-center text-xs">
+                          <div className="font-bold text-emerald-700">
+                            Class Avg:{' '}
+                            {(() => {
+                              const vals = Object.values(studentTotals).filter(
+                                (t) => t.subjectsAttempted > 0
+                              );
+                              if (vals.length === 0) {
+                                return '--';
+                              }
+                              const avg = vals.reduce((s, t) => s + t.total, 0) / vals.length;
+                              return Math.round(avg * 100) / 100;
+                            })()}
+                          </div>
+                        </td>
+                        <td className="border-2 border-gray-300 bg-amber-100 p-2 text-center text-xs">
+                          <div className="font-bold text-amber-700">
+                            Avg:{' '}
+                            {(() => {
+                              const vals = Object.values(studentTotals).filter(
+                                (t) => t.subjectsAttempted > 0
+                              );
+                              if (vals.length === 0) {
+                                return '--';
+                              }
+                              const avg = vals.reduce((s, t) => s + t.percentage, 0) / vals.length;
+                              return `${Math.round(avg * 100) / 100}%`;
+                            })()}
+                          </div>
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Publish All Marks Button */}
+            {canEditAny && (
+              <div className="flex items-center justify-between rounded-lg border-2 border-dashed border-green-300 bg-green-50 p-4">
+                <div className="flex items-center gap-3">
+                  <ShieldCheck className="h-5 w-5 text-green-600" />
+                  <div>
+                    <p className="font-medium text-green-800">Marks entered for all students?</p>
+                    <p className="text-sm text-green-600">
+                      Publish marks to make results available. This confirms marks entry is complete
+                      for all exams.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="success"
+                  onClick={handlePublishAllMarks}
+                  disabled={publishMarksMutation.isPending || stats.completionPercent < 100}
+                  className="gap-2"
+                >
+                  {publishMarksMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="h-4 w-4" />
+                  )}
+                  Publish All Marks
+                </Button>
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </>
         )}
     </div>
   );

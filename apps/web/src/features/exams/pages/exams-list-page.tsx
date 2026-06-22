@@ -144,6 +144,10 @@ export function ExamsListPage() {
               }
             }
           : undefined,
+        onEnterMarks: (e) =>
+          navigate(
+            `${ROUTES.MARKS_ENTRY}?session=${e.session_public_id}&class=${e.class_public_id}&exam=${e.public_id}`
+          ),
         isDeletedView: showDeleted,
       }),
     [navigate, showDeleted, isAdmin]

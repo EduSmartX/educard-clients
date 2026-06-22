@@ -68,6 +68,7 @@ export interface ExamSession {
   name: string;
   session_type: ExamSessionType;
   academic_year: string;
+  academic_year_public_id: string;
   description: string;
   start_date: string | null;
   end_date: string | null;

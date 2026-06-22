@@ -41,6 +41,7 @@ import {
   useRejectLeave,
   type LeaveRequest,
 } from '@/features/leave';
+import { useScreenFilters } from '@/hooks/useScreenFilters';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -62,12 +63,26 @@ const STATUS_COLORS: Record<string, { bg: string; text: string; dot: string }> =
 export default function LeaveApprovalsScreen() {
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
-  const [statusFilter, setStatusFilter] = useState('pending');
-  const [searchText, setSearchText] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
+
+  // Filter/search state — persisted across back-navigation via Zustand
+  const {
+    filters,
+    search: searchQuery,
+    setFilter,
+    setSearch,
+    resetFilters: clearAllFilters,
+  } = useScreenFilters('LeaveApprovals', {
+    status: 'pending',
+    dateFrom: '',
+    dateTo: '',
+  });
+
+  const statusFilter = filters.status;
+  const dateFrom = filters.dateFrom;
+  const dateTo = filters.dateTo;
+
+  const [searchText, setSearchText] = useState(searchQuery);
   const [showFilters, setShowFilters] = useState(false);
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
 
   // Approve confirmation
   const [approveTarget, setApproveTarget] = useState<LeaveRequest | null>(null);
@@ -103,14 +118,14 @@ export default function LeaveApprovalsScreen() {
   }, [refetch]);
 
   const handleSearch = () => {
-    setSearchQuery(searchText.trim());
+    setSearch(searchText.trim());
   };
 
   const clearFilters = () => {
     setSearchText('');
-    setSearchQuery('');
-    setDateFrom('');
-    setDateTo('');
+    setSearch('');
+    setFilter('dateFrom', '');
+    setFilter('dateTo', '');
   };
 
   const hasActiveFilters = !!searchQuery || !!dateFrom || !!dateTo;
@@ -284,7 +299,7 @@ export default function LeaveApprovalsScreen() {
           <TouchableOpacity
             key={f.value}
             style={[styles.chip, statusFilter === f.value && { backgroundColor: f.color }]}
-            onPress={() => setStatusFilter(f.value)}
+            onPress={() => setFilter('status', f.value)}
           >
             <Text style={[styles.chipText, statusFilter === f.value && styles.chipTextActive]}>
               {f.label}
@@ -310,7 +325,7 @@ export default function LeaveApprovalsScreen() {
             <TouchableOpacity
               onPress={() => {
                 setSearchText('');
-                setSearchQuery('');
+                setSearch('');
               }}
             >
               <X size={16} color="#94a3b8" />

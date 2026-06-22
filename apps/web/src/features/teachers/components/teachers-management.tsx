@@ -15,6 +15,7 @@ import TeacherFormPage from '../pages/teacher-form-page';
 import type { Teacher } from '../types';
 import { DeleteConfirmationDialog, ReactivateConfirmationDialog } from '@/components/common';
 import { useDeletedView } from '@/hooks/use-deleted-view';
+import { useFilterParams } from '@/hooks/use-filter-params';
 
 type PageMode = 'list' | 'create' | 'edit' | 'view';
 
@@ -27,10 +28,15 @@ export function TeachersManagement({ viewMode = 'admin' }: Readonly<TeachersMana
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [searchQuery, setSearchQuery] = useState('');
+  // Filter/search/pagination state — persisted in URL search params
+  const {
+    search: searchQuery,
+    page: currentPage,
+    pageSize,
+    setSearch: setSearchQuery,
+    setPage: setCurrentPage,
+    setPageSize,
+  } = useFilterParams({}, { defaultPageSize: 10 });
 
   // Dialog states
   const [teacherToDelete, setTeacherToDelete] = useState<Teacher | null>(null);
@@ -124,12 +130,10 @@ export function TeachersManagement({ viewMode = 'admin' }: Readonly<TeachersMana
 
   const handlePageSizeChange = (newPageSize: number) => {
     setPageSize(newPageSize);
-    setCurrentPage(1); // Reset to first page when page size changes
   };
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    setCurrentPage(1); // Reset to first page on new search
   };
 
   const handleFilterChange = (_newFilters: Record<string, string>) => {

@@ -191,6 +191,30 @@ export async function bulkUpsertMarks(
   return response.data;
 }
 
+// Fetch existing marks for a specific exam (by-exam endpoint)
+
+export interface ExamMarkEntry {
+  public_id: string;
+  student_public_id: string;
+  student_name: string;
+  student_admission_number: string;
+  student_roll_number: string;
+  marks_obtained: number | null;
+  is_absent: boolean;
+}
+
+export async function fetchMarksByExam(
+  examId: string
+): Promise<{ success: boolean; message: string; data: ExamMarkEntry[] }> {
+  const baseUrl = getMarksBaseUrl();
+  const response = await apiClient.get<{
+    success: boolean;
+    message: string;
+    data: ExamMarkEntry[];
+  }>(`${baseUrl}/marks/by-exam/`, { params: { exam_id: examId } });
+  return response.data;
+}
+
 // Marks Overview API
 
 export interface MarksOverviewSubject {

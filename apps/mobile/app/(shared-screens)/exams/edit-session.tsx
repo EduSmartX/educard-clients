@@ -45,7 +45,7 @@ export default function EditExamSessionScreen() {
     if (session && !initialized) {
       setName(session.name ?? '');
       setSessionType(session.session_type ?? '');
-      setAcademicYear(session.academic_year ?? '');
+      setAcademicYear(session.academic_year_public_id ?? '');
       setDescription(session.description ?? '');
       setStartDate(session.start_date ?? '');
       setEndDate(session.end_date ?? '');

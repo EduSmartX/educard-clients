@@ -1,5 +1,5 @@
 /**
- * Exam Schedule Page
+ * Exam Notifications Page
  *
  * Per-session, per-class view with:
  * - Calendar date blocks on the left
@@ -76,10 +76,23 @@ export function ExamSchedulePage() {
     const completed = exams.filter((e) => e.status === 'completed').length;
     const draft = exams.filter((e) => e.status === 'draft').length;
     const cancelled = exams.filter((e) => e.status === 'cancelled').length;
+    const scheduled = exams.filter(
+      (e) => e.status === 'scheduled' || e.status === 'in_progress' || e.status === 'completed'
+    ).length;
     const nonCancelled = total - cancelled;
-    const canSendSchedule = draft === 0 && nonCancelled > 0;
+
+    // 1. Send Schedule: ALL exams must be scheduled (none in draft)
+    const canSendSchedule = draft === 0 && nonCancelled > 0 && scheduled === nonCancelled;
+
+    // 2. All completed: every non-cancelled exam has status 'completed'
     const allCompleted = completed === nonCancelled && nonCancelled > 0;
+
+    // 3. All marks published: teacher confirmed marks for all completed exams
+    const completedExams = exams.filter((e) => e.status === 'completed');
+    const allMarksPublished = allCompleted && completedExams.every((e) => e.is_marks_published);
+
     const progressPercent = nonCancelled > 0 ? Math.round((completed / nonCancelled) * 100) : 0;
+
     return {
       total,
       completed,
@@ -87,6 +100,7 @@ export function ExamSchedulePage() {
       nonCancelled,
       canSendSchedule,
       allCompleted,
+      allMarksPublished,
       progressPercent,
     };
   }, [exams]);
@@ -134,58 +148,75 @@ export function ExamSchedulePage() {
     <div className="space-y-6">
       {/* Header with Actions */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <PageHeader title="Exam Schedule" icon={Calendar} description="View exam schedule" />
+        <PageHeader
+          title="Exam Notifications"
+          icon={Calendar}
+          description="View exam schedule and send notifications"
+        />
 
-        {/* Action Buttons */}
+        {/* Action Buttons — always visible when data loaded, disabled when criteria not met */}
         {hasData && isAdmin && (
           <div className="flex flex-wrap items-center gap-2">
-            {stats.canSendSchedule && (
-              <Button
-                size="sm"
-                className="gap-1.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-sm hover:from-purple-600 hover:to-purple-700"
-                onClick={handleSendSchedule}
-                disabled={sendScheduleMutation.isPending}
-              >
-                {sendScheduleMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-                Send Schedule
-              </Button>
-            )}
-            {stats.allCompleted && (
-              <>
-                <Button
-                  size="sm"
-                  className="gap-1.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-sm hover:from-green-600 hover:to-emerald-700"
-                  onClick={handleSendResults}
-                  disabled={sendResultsMutation.isPending}
-                  title="Send results published notification to parents & staff"
-                >
-                  {sendResultsMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Award className="h-4 w-4" />
-                  )}
-                  Publish Results
-                </Button>
-                <Button
-                  size="sm"
-                  className="gap-1.5 bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-sm hover:from-indigo-600 hover:to-violet-700"
-                  onClick={handleSendProgress}
-                  disabled={sendProgressMutation.isPending}
-                  title="Send each parent their child's marks, percentage, grade & pass/fail status"
-                >
-                  {sendProgressMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <BarChart3 className="h-4 w-4" />
-                  )}
-                  Send Progress
-                </Button>
-              </>
-            )}
+            <Button
+              size="sm"
+              className="gap-1.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-sm hover:from-purple-600 hover:to-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={handleSendSchedule}
+              disabled={!stats.canSendSchedule || sendScheduleMutation.isPending}
+              title={
+                stats.draft > 0
+                  ? `Cannot send: ${stats.draft} exam(s) still in draft. Schedule them first.`
+                  : stats.nonCancelled === 0
+                    ? 'No exams found'
+                    : 'Send exam schedule notification to parents & staff'
+              }
+            >
+              {sendScheduleMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              Send Schedule
+            </Button>
+            <Button
+              size="sm"
+              className="gap-1.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-sm hover:from-green-600 hover:to-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={handleSendResults}
+              disabled={!stats.allMarksPublished || sendResultsMutation.isPending}
+              title={
+                !stats.allCompleted
+                  ? `Cannot send: ${stats.nonCancelled - stats.completed} exam(s) not yet completed.`
+                  : !stats.allMarksPublished
+                    ? 'Cannot send: Marks not published for all exams. Publish marks first.'
+                    : 'Send results published notification to parents & staff'
+              }
+            >
+              {sendResultsMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Award className="h-4 w-4" />
+              )}
+              Publish Results
+            </Button>
+            <Button
+              size="sm"
+              className="gap-1.5 bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-sm hover:from-indigo-600 hover:to-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={handleSendProgress}
+              disabled={!stats.allMarksPublished || sendProgressMutation.isPending}
+              title={
+                !stats.allCompleted
+                  ? `Cannot send: ${stats.nonCancelled - stats.completed} exam(s) not yet completed.`
+                  : !stats.allMarksPublished
+                    ? 'Cannot send: Marks not published for all exams. Publish marks first.'
+                    : "Send each parent their child's individual marks, percentage, grade & pass/fail status"
+              }
+            >
+              {sendProgressMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <BarChart3 className="h-4 w-4" />
+              )}
+              Send Progress Reports
+            </Button>
           </div>
         )}
       </div>
@@ -266,6 +297,13 @@ export function ExamSchedulePage() {
                     {stats.draft} exam(s) still in draft — schedule them to send notifications
                   </p>
                 )}
+                {stats.allCompleted && !stats.allMarksPublished && (
+                  <p className="mt-2 flex items-center gap-1 text-xs text-amber-600">
+                    <AlertCircle className="h-3 w-3" />
+                    Marks not published for all subjects — publish marks from the Marks Entry page
+                    to enable notifications
+                  </p>
+                )}
               </>
             ) : (
               <div className="flex h-full items-center justify-center py-4">
@@ -285,7 +323,7 @@ export function ExamSchedulePage() {
               {!selectedSessionId ? 'Select an Exam Session' : 'Select a Class'}
             </h3>
             <p className="mt-1 text-sm text-gray-400">
-              Choose both a session and class to view the exam schedule
+              Choose both a session and class to view the exam schedule and send notifications
             </p>
           </CardContent>
         </Card>

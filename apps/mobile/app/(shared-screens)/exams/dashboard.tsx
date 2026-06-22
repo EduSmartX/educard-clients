@@ -85,6 +85,9 @@ export default function ExamDashboardScreen() {
   });
   const exams: Exam[] = examsData?.data ?? [];
   const allExamsCompleted = exams.length > 0 && exams.every((e) => e.status === 'completed');
+  const allMarksPublished =
+    allExamsCompleted &&
+    exams.filter((e) => e.status === 'completed').every((e) => e.is_marks_published);
   const hasDraftExams = exams.some((e) => e.status === 'draft');
   const hasExams = exams.length > 0;
 
@@ -367,30 +370,30 @@ export default function ExamDashboardScreen() {
                 </TouchableOpacity>
               )}
               {allExamsCompleted && (
-                <>
-                  <TouchableOpacity
-                    style={[styles.actionBtn, styles.actionBtnGreen]}
-                    onPress={() =>
-                      sendResultsMutation.mutate({ sessionId, classId: selectedClassId })
-                    }
-                    disabled={sendResultsMutation.isPending}
-                  >
-                    <Text style={styles.actionBtnText}>
-                      {sendResultsMutation.isPending ? 'Sending...' : '📊 Send Results'}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.actionBtn, styles.actionBtnPurple]}
-                    onPress={() =>
-                      sendProgressMutation.mutate({ sessionId, classId: selectedClassId })
-                    }
-                    disabled={sendProgressMutation.isPending}
-                  >
-                    <Text style={styles.actionBtnText}>
-                      {sendProgressMutation.isPending ? 'Sending...' : '📈 Send Progress'}
-                    </Text>
-                  </TouchableOpacity>
-                </>
+                <TouchableOpacity
+                  style={[styles.actionBtn, styles.actionBtnGreen]}
+                  onPress={() =>
+                    sendResultsMutation.mutate({ sessionId, classId: selectedClassId })
+                  }
+                  disabled={sendResultsMutation.isPending}
+                >
+                  <Text style={styles.actionBtnText}>
+                    {sendResultsMutation.isPending ? 'Sending...' : '📊 Publish Results'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+              {allMarksPublished && (
+                <TouchableOpacity
+                  style={[styles.actionBtn, styles.actionBtnPurple]}
+                  onPress={() =>
+                    sendProgressMutation.mutate({ sessionId, classId: selectedClassId })
+                  }
+                  disabled={sendProgressMutation.isPending}
+                >
+                  <Text style={styles.actionBtnText}>
+                    {sendProgressMutation.isPending ? 'Sending...' : '📈 Send Progress'}
+                  </Text>
+                </TouchableOpacity>
               )}
             </View>
           )}

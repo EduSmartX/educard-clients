@@ -32,10 +32,8 @@ export function AcademicYearDropdown({
   const options = useMemo(() => {
     if (!currentAcademicYear) return [];
 
-    // Build options from current academic year
-    // Include current year and optionally adjacent years
-    const currentName = currentAcademicYear.name;
-    const opts = [{ label: currentName, value: currentName }];
+    // Build options from current academic year using public_id as value
+    const opts = [{ label: currentAcademicYear.name, value: currentAcademicYear.public_id }];
 
     return opts;
   }, [currentAcademicYear]);

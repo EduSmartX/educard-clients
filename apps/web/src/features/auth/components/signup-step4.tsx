@@ -1,5 +1,6 @@
 import { ArrowLeft, CheckCircle2, User } from 'lucide-react';
 import type { UseFormReturn } from 'react-hook-form';
+import { GENDER_OPTIONS } from '@educard/shared';
 import { FormPlaceholders } from '@/constants';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -76,11 +77,7 @@ export function SignupStep4({ form, formData, isLoading, onSubmit, onBack }: Sig
             Gender
           </Label>
           <SearchableSelect
-            options={[
-              { value: 'M', label: 'Male' },
-              { value: 'F', label: 'Female' },
-              { value: 'O', label: 'Other' },
-            ]}
+            options={[...GENDER_OPTIONS]}
             value={form.watch('gender') || ''}
             onValueChange={(value: string) => form.setValue('gender', value)}
             placeholder="Select Gender"
