@@ -142,13 +142,15 @@ export const phoneValidator: FieldValidator = (value, row, fieldLabel) => {
 const DATE_YYYYMMDD = /^\d{4}-\d{2}-\d{2}$/;
 const DATE_DDMMYYYY = /^\d{2}-\d{2}-\d{4}$/;
 
-/** Parse a date string in YYYY-MM-DD or DD-MM-YYYY format */
-function parseDateString(dateStr: string): Date | null {
-  if (DATE_YYYYMMDD.test(dateStr)) {
+export type DateFormat = 'YYYY-MM-DD' | 'DD-MM-YYYY';
+
+/** Parse a date string. When `format` is given, only that exact format is accepted. */
+function parseDateString(dateStr: string, format?: DateFormat): Date | null {
+  if ((!format || format === 'YYYY-MM-DD') && DATE_YYYYMMDD.test(dateStr)) {
     const d = new Date(dateStr);
     return Number.isNaN(d.getTime()) ? null : d;
   }
-  if (DATE_DDMMYYYY.test(dateStr)) {
+  if ((!format || format === 'DD-MM-YYYY') && DATE_DDMMYYYY.test(dateStr)) {
     const [day, month, year] = dateStr.split('-');
     const d = new Date(`${year}-${month}-${day}`);
     return Number.isNaN(d.getTime()) ? null : d;
@@ -157,14 +159,17 @@ function parseDateString(dateStr: string): Date | null {
 }
 
 /**
- * Date validator with format YYYY-MM-DD
+ * Date validator. Pass `format` to enforce the exact format the backend importer
+ * accepts for that template (teacher uses DD-MM-YYYY; student/holiday use YYYY-MM-DD).
  * @param notInFuture - If true, date must not be in the future
  * @param maxFutureMonths - Max months in the future allowed (for dates like admission date)
+ * @param format - Restrict the accepted date format to match the backend
  */
 export const dateValidator = (options?: {
   notInFuture?: boolean;
   maxFutureMonths?: number;
   minAge?: number;
+  format?: DateFormat;
 }): FieldValidator => {
   return (value, row, fieldLabel) => {
     if (!value || String(value).trim() === '') {
@@ -177,12 +182,18 @@ export const dateValidator = (options?: {
       return null;
     }
 
-    const date = parseDateString(dateStr);
+    const date = parseDateString(dateStr, options?.format);
     if (!date) {
+      const expected =
+        options?.format === 'DD-MM-YYYY'
+          ? 'DD-MM-YYYY (e.g., 15-01-2024)'
+          : options?.format === 'YYYY-MM-DD'
+            ? 'YYYY-MM-DD (e.g., 2024-01-15)'
+            : 'YYYY-MM-DD (e.g., 2024-01-15) or DD-MM-YYYY';
       return {
         row,
         field: fieldLabel,
-        message: `Invalid date format. Use YYYY-MM-DD (e.g., 2024-01-15) or DD-MM-YYYY`,
+        message: `Invalid date format. Use ${expected}`,
       };
     }
 

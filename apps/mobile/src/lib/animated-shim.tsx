@@ -116,8 +116,17 @@ const Easing = {
 function interpolate(value: number, inputRange: number[], outputRange: number[]) {
   // Simple linear interpolation
   if (inputRange.length < 2) return outputRange[0] ?? 0;
-  const ratio = (value - inputRange[0]) / (inputRange.at(-1)! - inputRange[0]);
-  return outputRange[0] + ratio * (outputRange.at(-1)! - outputRange[0]);
+  const firstInput = inputRange[0] ?? 0;
+  const lastInput = inputRange[inputRange.length - 1] ?? firstInput;
+  const firstOutput = outputRange[0] ?? 0;
+  const lastOutput = outputRange[outputRange.length - 1] ?? firstOutput;
+
+  if (lastInput === firstInput) {
+    return firstOutput;
+  }
+
+  const ratio = (value - firstInput) / (lastInput - firstInput);
+  return firstOutput + ratio * (lastOutput - firstOutput);
 }
 
 // runOnJS / runOnUI - just call the function

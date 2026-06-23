@@ -11,8 +11,8 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { ChevronLeft, TrendingUp, BarChart3 } from '@/lib/lucide-shim';
 
 import { ReportTab } from './ReportTab';
-import { SummaryTab } from './SummaryTab';
 import { styles } from './styles';
+import { SummaryTab } from './SummaryTab';
 
 export default function AttendanceScreen() {
   const router = useRouter();

@@ -7,6 +7,7 @@
 import { View, StyleSheet } from 'react-native';
 
 import { useResponsive } from '@/hooks/useResponsive';
+
 import { StatCard, type StatCardProps } from './StatCard';
 
 export interface StatsGridProps {

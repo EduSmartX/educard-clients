@@ -3,8 +3,8 @@
  * Allows authenticated users to change their email with OTP verification
  */
 
-import { useMemo } from 'react';
 import { Mail } from 'lucide-react-native';
+import { useMemo } from 'react';
 
 import { authApi } from '@/api/auth';
 import {

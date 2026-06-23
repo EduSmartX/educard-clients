@@ -10,6 +10,13 @@ export const HOLIDAY_TYPE_CONFIG: Record<
     darkBg: '#fee2e2',
     icon: '🏛️',
   },
+  STATE_HOLIDAY: {
+    label: 'State Holiday',
+    color: '#dc2626',
+    bg: '#fef2f2',
+    darkBg: '#fee2e2',
+    icon: '🏛️',
+  },
   FESTIVAL: {
     label: 'Festival',
     color: '#ea580c',
@@ -44,6 +51,7 @@ export const HOLIDAY_TYPE_CONFIG: Record<
 
 export const HOLIDAY_TYPE_OPTIONS = [
   { value: 'NATIONAL_HOLIDAY', label: '🏛️ National Holiday' },
+  { value: 'STATE_HOLIDAY', label: '🏛️ State Holiday' },
   { value: 'FESTIVAL', label: '🎉 Festival' },
   { value: 'ORGANIZATION_HOLIDAY', label: '🏢 Organization Holiday' },
   { value: 'OTHER', label: '📌 Other' },

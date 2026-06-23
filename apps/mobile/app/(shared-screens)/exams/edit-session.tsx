@@ -66,10 +66,14 @@ export default function EditExamSessionScreen() {
       Alert.alert('Error', 'Academic year is required');
       return;
     }
+    if (!sessionId) {
+      Alert.alert('Error', 'Missing session id');
+      return;
+    }
 
     try {
       await updateSession.mutateAsync({
-        id: sessionId!,
+        id: sessionId,
         data: {
           name: name.trim(),
           session_type: sessionType as ExamSessionType,
@@ -79,7 +83,7 @@ export default function EditExamSessionScreen() {
           end_date: endDate || null,
         },
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       showToast({ type: 'error', title: 'Error', message: extractApiError(err) });
     }
   };

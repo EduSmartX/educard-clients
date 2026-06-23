@@ -3,6 +3,7 @@ import {
   APP_INFO,
   ORGANIZATION_TYPES,
   BOARD_AFFILIATIONS,
+  GENDER_OPTIONS,
   SIGNUP_STEP_TITLES,
 } from '@educard/shared';
 import type { SignupStep } from '@educard/shared';
@@ -21,6 +22,7 @@ import {
   Phone,
   ChevronDown,
   AlertCircle,
+  CheckCircle2,
 } from 'lucide-react-native';
 import { useState, useCallback } from 'react';
 import {
@@ -43,8 +45,8 @@ import type { OrganizationRegistrationData } from '@/api';
 import { AddressForm, type AddressData } from '@/components/forms';
 import { useModal } from '@/components/ui';
 
-import { styles } from './signup-styles';
 import { ProgressSteps, isValidPhone, getIconColor } from './signup-components';
+import { styles } from './signup-styles';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const logoImage: ImageSourcePropType =
@@ -94,12 +96,16 @@ export default function SignupScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [canTeachSubject, setCanTeachSubject] = useState(true);
+  const [employeeId, setEmployeeId] = useState('');
+  const [gender, setGender] = useState('');
 
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
   // Dropdown states
   const [showOrgTypeDropdown, setShowOrgTypeDropdown] = useState(false);
   const [showBoardDropdown, setShowBoardDropdown] = useState(false);
+  const [showGenderDropdown, setShowGenderDropdown] = useState(false);
 
   // Field errors
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -275,6 +281,12 @@ export default function SignupScreen() {
     if (password !== confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
+    if (canTeachSubject && !employeeId.trim()) {
+      newErrors.employeeId = 'Employee ID is required';
+    }
+    if (canTeachSubject && !gender) {
+      newErrors.gender = 'Gender is required';
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -301,9 +313,18 @@ export default function SignupScreen() {
           password: password,
           password2: confirmPassword,
           notification_opt_in: true,
+          can_teach_subject: canTeachSubject,
           phone: phoneNumber.trim() || undefined,
+          gender: gender || undefined,
         },
       };
+
+      // Add teacher info when the admin can also teach a subject
+      if (canTeachSubject) {
+        registrationData.teacher_info = {
+          employee_id: employeeId.trim(),
+        };
+      }
 
       // Add address info if any field is filled
       const hasAddress =
@@ -345,6 +366,9 @@ export default function SignupScreen() {
     lastName,
     password,
     confirmPassword,
+    canTeachSubject,
+    employeeId,
+    gender,
     orgName,
     orgType,
     orgEmail,
@@ -970,6 +994,115 @@ export default function SignupScreen() {
           </View>
         )}
       </View>
+
+      {/* Can Teach Subject Toggle */}
+      <TouchableOpacity
+        style={styles.toggleContainer}
+        onPress={() => setCanTeachSubject(!canTeachSubject)}
+      >
+        <View style={[styles.checkbox, canTeachSubject && styles.checkboxChecked]}>
+          {canTeachSubject && <CheckCircle2 size={16} color="#fff" />}
+        </View>
+        <Text style={styles.toggleText}>I can also teach a subject (create my teacher profile)</Text>
+      </TouchableOpacity>
+
+      {canTeachSubject && (
+        <>
+          <View style={styles.inputWrapper}>
+            <Text style={styles.inputLabel}>Employee ID *</Text>
+            <View
+              style={[
+                styles.inputContainer,
+                focusedInput === 'employeeId' && styles.inputFocused,
+                errors.employeeId && styles.inputError,
+              ]}
+            >
+              <Shield
+                size={18}
+                color={getIconColor(!!errors.employeeId, focusedInput === 'employeeId')}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="EMP-001"
+                placeholderTextColor={Colors.gray[400]}
+                value={employeeId}
+                onChangeText={(v) => {
+                  setEmployeeId(v);
+                  clearError('employeeId');
+                }}
+                autoCapitalize="characters"
+                onFocus={() => setFocusedInput('employeeId')}
+                onBlur={() => setFocusedInput(null)}
+              />
+            </View>
+            {!!errors.employeeId && (
+              <View style={styles.errorRow}>
+                <AlertCircle size={12} color="#ef4444" />
+                <Text style={styles.errorTextSmall}>{errors.employeeId}</Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.inputWrapper}>
+            <Text style={styles.inputLabel}>Gender *</Text>
+            <TouchableOpacity
+              style={[styles.dropdownButton, errors.gender && styles.inputError]}
+              onPress={() => setShowGenderDropdown(true)}
+            >
+              <Text style={gender ? styles.dropdownText : styles.dropdownPlaceholder}>
+                {GENDER_OPTIONS.find((g) => g.value === gender)?.label || 'Select gender'}
+              </Text>
+              <ChevronDown size={20} color={Colors.gray[400]} />
+            </TouchableOpacity>
+            {!!errors.gender && (
+              <View style={styles.errorRow}>
+                <AlertCircle size={12} color="#ef4444" />
+                <Text style={styles.errorTextSmall}>{errors.gender}</Text>
+              </View>
+            )}
+          </View>
+        </>
+      )}
+
+      {/* Gender Dropdown Modal */}
+      <Modal visible={showGenderDropdown} transparent animationType="fade">
+        <TouchableOpacity
+          style={styles.dropdownOverlay}
+          activeOpacity={1}
+          onPress={() => setShowGenderDropdown(false)}
+        >
+          <View style={styles.dropdownModal}>
+            <Text style={styles.dropdownTitle}>Select Gender</Text>
+            <FlatList
+              data={[...GENDER_OPTIONS]}
+              keyExtractor={(item) => item.value}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.dropdownItem,
+                    gender === item.value && styles.dropdownItemSelected,
+                  ]}
+                  onPress={() => {
+                    setGender(item.value);
+                    clearError('gender');
+                    setShowGenderDropdown(false);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.dropdownItemText,
+                      gender === item.value && styles.dropdownItemTextSelected,
+                    ]}
+                  >
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
 
       {/* Action Buttons */}
       <View style={styles.buttonRow}>

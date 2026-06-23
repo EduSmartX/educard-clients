@@ -44,8 +44,8 @@ import { isAdminRole } from '@/utils/role-utils';
 import { CalendarView } from './CalendarView';
 import { HolidayDetailPopup } from './HolidayDetailPopup';
 import { HolidayFormModal } from './HolidayFormModal';
-import { TableItem } from './TableItem';
 import { styles } from './styles';
+import { TableItem } from './TableItem';
 import { generateWeekendHolidays } from './utils';
 
 const adminGradient = getRoleGradient('admin');

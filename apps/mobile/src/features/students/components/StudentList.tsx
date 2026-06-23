@@ -40,8 +40,9 @@ import { layoutStyles, cardStyles, avatarStyles, listStyles, textStyles } from '
 import { isAdminRole, isTeacherRole } from '@/utils/role-utils';
 
 import { downloadStudentTemplate, bulkUploadStudents } from '../api/students-api';
-import { ExportStudentsModal } from './ExportStudentsModal';
 import { useStudents, useDeleteStudent, useRestoreStudent } from '../hooks/use-students';
+
+import { ExportStudentsModal } from './ExportStudentsModal';
 
 const adminTheme = getRoleThemeColors('admin');
 

@@ -4,10 +4,7 @@
  * Uses shared hook factories with mobile-specific API implementation
  */
 
-import {
-  createUseNavigateWorkingDay,
-  createUseWorkingDayInfo,
-} from '@educard/shared';
+import { createUseNavigateWorkingDay, createUseWorkingDayInfo } from '@educard/shared';
 
 import { navigateWorkingDay, getWorkingDayInfo } from './api';
 

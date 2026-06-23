@@ -85,14 +85,14 @@ export const STUDENT_COLUMNS: ColumnConfig[] = [
     name: 'Admission Date (YYYY-MM-DD)',
     required: false,
     description: 'Date of admission in YYYY-MM-DD format (e.g., 2024-01-15) (Optional)',
-    validator: dateValidator({ maxFutureMonths: 6 }),
+    validator: dateValidator({ maxFutureMonths: 6, format: 'YYYY-MM-DD' }),
   },
   {
     key: 'date_of_birth',
     name: 'Date of Birth (YYYY-MM-DD)',
     required: false,
     description: "Student's date of birth in YYYY-MM-DD format (e.g., 2010-05-20) (Optional)",
-    validator: dateValidator({ notInFuture: true, minAge: 3 }),
+    validator: dateValidator({ notInFuture: true, minAge: 3, format: 'YYYY-MM-DD' }),
   },
   {
     key: 'gender',

@@ -10,7 +10,11 @@ import { Label } from '@/components/ui/label';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { cn } from '@/lib/utils';
 import { Plus, Trash2 } from 'lucide-react';
-import type { FeeComponent, ComponentTypeValue, COMPONENT_TYPE_OPTIONS } from '@educard/shared';
+import {
+  COMPONENT_TYPE_OPTIONS,
+  type FeeComponent,
+  type ComponentTypeValue,
+} from '@educard/shared';
 import { FeeAmount } from './fee-amount';
 
 export interface ComponentEntry {

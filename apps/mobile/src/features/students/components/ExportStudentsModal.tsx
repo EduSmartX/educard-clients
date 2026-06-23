@@ -240,7 +240,9 @@ export function ExportStudentsModal({ visible, onClose }: ExportStudentsModalPro
             <View style={styles.footer}>
               <TouchableOpacity
                 style={[styles.exportBtn, isExporting && styles.exportBtnDisabled]}
-                onPress={handleExport}
+                onPress={() => {
+                  void handleExport();
+                }}
                 disabled={isExporting || (sendEmail && !emailInput.trim())}
                 activeOpacity={0.8}
               >

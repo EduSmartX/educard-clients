@@ -112,7 +112,11 @@ export default function ExamDashboardScreen() {
       permissions.is_admin ||
       permissions.is_class_teacher ||
       permissions.editable_subject_ids === null;
-    return hasFullAccess || permissions!.editable_subject_ids!.includes(subjectPublicId);
+    return (
+      hasFullAccess ||
+      (Array.isArray(permissions?.editable_subject_ids) &&
+        permissions.editable_subject_ids.includes(subjectPublicId))
+    );
   };
 
   const onRefresh = () => {

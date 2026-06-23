@@ -5,14 +5,14 @@
  * like homework, attendance, timetable, etc.
  */
 
-import { apiClient } from '@/api/client';
-
 import type {
   WorkingDayInfo,
   WorkingDayInfoParams,
   WorkingDayNavigationParams,
   WorkingDayNavigationResult,
 } from '@educard/shared';
+
+import { apiClient } from '@/api/client';
 
 const BASE_URL = '/core/calendar';
 

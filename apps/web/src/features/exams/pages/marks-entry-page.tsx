@@ -228,6 +228,35 @@ export function MarksEntryPage() {
   const publishMarksMutation = usePublishExamMarks();
   const unpublishMarksMutation = useUnpublishExamMarks();
 
+  // Handler for publishing all exams in session/class
+  const handlePublishAllMarks = useCallback(async () => {
+    if (!selectedSessionId || !selectedClassId) {
+      toast.error('Please select a session and class first.');
+      return;
+    }
+
+    // Get all completed exams for this session and class
+    const examsToPublish = filteredExams.filter(
+      (e) => e.status === 'completed' && !e.is_marks_published
+    );
+
+    if (examsToPublish.length === 0) {
+      toast.info('All exams are already published for this class.');
+      return;
+    }
+
+    // Publish all exams sequentially
+    try {
+      for (const exam of examsToPublish) {
+        await publishMarksMutation.mutateAsync(exam.public_id);
+      }
+      toast.success(`Successfully published marks for ${examsToPublish.length} exam(s)!`);
+      queryClient.invalidateQueries({ queryKey: ['exams'] });
+    } catch (error) {
+      toast.error('Some exams failed to publish. Please check and try again.');
+    }
+  }, [selectedSessionId, selectedClassId, filteredExams, publishMarksMutation, queryClient]);
+
   const handleMarkChange = (
     index: number,
     field: keyof StudentMarkRow,
@@ -427,7 +456,7 @@ export function MarksEntryPage() {
       {/* Marks Table */}
       {selectedExamId && !isDataLoading && markEntries.length > 0 && (
         <Card className="border shadow-sm">
-          <CardHeader className="bg-muted/30 flex flex-row items-center justify-between border-b px-6 py-4">
+          <CardHeader className="bg-muted/30 border-b px-6 py-4">
             <div>
               <CardTitle className="text-lg">Student Marks</CardTitle>
               <p className="text-muted-foreground mt-1 text-sm">
@@ -441,63 +470,6 @@ export function MarksEntryPage() {
                 )}
                 <span className="ml-2 text-xs text-gray-400">• Use ↑↓ or Enter to navigate</span>
               </p>
-            </div>
-            <div className="flex items-center gap-2">
-              {selectedExam?.is_marks_published ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => unpublishMarksMutation.mutate(selectedExamId)}
-                  disabled={unpublishMarksMutation.isPending}
-                  className="gap-1.5 border-amber-200 text-amber-700 hover:bg-amber-50"
-                  title="Unpublish marks to allow editing"
-                >
-                  {unpublishMarksMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Undo2 className="h-4 w-4" />
-                  )}
-                  Unpublish
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => publishMarksMutation.mutate(selectedExamId)}
-                  disabled={
-                    publishMarksMutation.isPending ||
-                    markEntries.length === 0 ||
-                    enteredCount < markEntries.length
-                  }
-                  className="gap-1.5 border-green-200 text-green-700 hover:bg-green-50"
-                  title={
-                    enteredCount < markEntries.length
-                      ? `Enter marks for all ${markEntries.length} students before publishing`
-                      : 'Publish marks — results can be sent after all exams are published'
-                  }
-                >
-                  {publishMarksMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <BadgeCheck className="h-4 w-4" />
-                  )}
-                  Publish Marks
-                </Button>
-              )}
-
-              <Button
-                variant="brand"
-                onClick={handleSaveAll}
-                disabled={isPending || markEntries.length === 0}
-                className="gap-2"
-              >
-                {isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4" />
-                )}
-                Save Marks
-              </Button>
             </div>
           </CardHeader>
           <CardContent className="p-0" ref={tableContainerRef}>
@@ -591,6 +563,77 @@ export function MarksEntryPage() {
               </table>
             </div>
           </CardContent>
+          {/* Action Buttons Footer */}
+          <div className="border-t bg-gray-50/50 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                {enteredCount < markEntries.length ? (
+                  <span className="text-amber-600 font-medium">
+                    ⚠ Complete all entries ({markEntries.length - enteredCount} remaining) to enable publishing
+                  </span>
+                ) : (
+                  <span className="text-green-600 font-medium">
+                    ✓ All entries completed — ready to publish
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                {selectedExam?.is_marks_published ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => unpublishMarksMutation.mutate(selectedExamId)}
+                    disabled={unpublishMarksMutation.isPending}
+                    className="gap-2 border-amber-200 text-amber-700 hover:bg-amber-50"
+                    title="Unpublish marks to allow editing"
+                  >
+                    {unpublishMarksMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Undo2 className="h-4 w-4" />
+                    )}
+                    Unpublish
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    onClick={handlePublishAllMarks}
+                    disabled={
+                      publishMarksMutation.isPending ||
+                      markEntries.length === 0 ||
+                      enteredCount < markEntries.length
+                    }
+                    className="gap-2 border-green-200 text-green-700 hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title={
+                      enteredCount < markEntries.length
+                        ? `Enter marks for all ${markEntries.length} students (either marks or AB) before publishing`
+                        : 'Publish marks for all exams in this session and class'
+                    }
+                  >
+                    {publishMarksMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <BadgeCheck className="h-4 w-4" />
+                    )}
+                    Publish Marks
+                  </Button>
+                )}
+
+                <Button
+                  variant="brand"
+                  onClick={handleSaveAll}
+                  disabled={isPending || markEntries.length === 0}
+                  className="gap-2"
+                >
+                  {isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
+                  Save Marks
+                </Button>
+              </div>
+            </div>
+          </div>
         </Card>
       )}
 

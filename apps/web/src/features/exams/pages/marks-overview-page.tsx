@@ -234,7 +234,7 @@ export function MarksOverviewPage() {
   // Publish marks for all exams
   const publishMarksMutation = usePublishExamMarks();
 
-  const handlePublishAllMarks = () => {
+  const handlePublishAllMarks = async () => {
     if (!subjects || subjects.length === 0) {
       return;
     }
@@ -254,10 +254,17 @@ export function MarksOverviewPage() {
       return;
     }
 
-    // Publish each completed exam
-    completedSubjects.forEach((subject) => {
-      publishMarksMutation.mutate(subject.exam_public_id);
-    });
+    // Publish each completed exam sequentially
+    try {
+      for (const subject of completedSubjects) {
+        await publishMarksMutation.mutateAsync(subject.exam_public_id);
+      }
+      toast.success(`Successfully published marks for ${completedSubjects.length} exam(s)!`);
+      queryClient.invalidateQueries({ queryKey: ['exams'] });
+      queryClient.invalidateQueries({ queryKey: ['marks-overview'] });
+    } catch (error) {
+      toast.error('Some exams failed to publish. Please check and try again.');
+    }
   };
 
   // Calculate statistics

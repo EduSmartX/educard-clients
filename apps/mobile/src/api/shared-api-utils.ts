@@ -3,9 +3,10 @@
  * Eliminates duplicate patterns across teachers-api, subjects-api, classes-api, etc.
  */
 
+import type { ApiMessageResponse } from '@educard/shared';
+
 import { apiClient } from '@/api/client';
 import { isAdminRole } from '@/utils/role-utils';
-import type { ApiMessageResponse } from '@educard/shared';
 
 /**
  * Creates a role-based URL resolver for features with admin/employee endpoints

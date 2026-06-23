@@ -16,8 +16,8 @@ export default function ForgotPasswordScreen() {
   const [, setStep] = useState<Step>('email'); // NOSONAR - only setter needed
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [newPassword, setNewPassword] = useState(''); // NOSONAR - used in future password reset step
-  const [confirmPassword, setConfirmPassword] = useState(''); // NOSONAR - used in future password reset step
+  const [newPassword, _setNewPassword] = useState(''); // NOSONAR - used in future password reset step
+  const [confirmPassword, _setConfirmPassword] = useState(''); // NOSONAR - used in future password reset step
   const [isLoading, setIsLoading] = useState(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
 

@@ -6,9 +6,9 @@
 
 import { useMemo } from 'react';
 
-import { FormDropdown } from './FormDropdown';
-
 import { useCurrentAcademicYear } from '@/features/core';
+
+import { FormDropdown } from './FormDropdown';
 
 interface AcademicYearDropdownProps {
   value: string;

@@ -20,6 +20,7 @@ export const HOLIDAY_TYPE_COLORS: Record<string, { bg: string; text: string }> =
   SATURDAY: { bg: '#fef3c7', text: '#d97706' },
   SECOND_SATURDAY: { bg: '#fef3c7', text: '#d97706' },
   NATIONAL_HOLIDAY: { bg: '#dbeafe', text: '#2563eb' },
+  STATE_HOLIDAY: { bg: '#dbeafe', text: '#2563eb' },
   FESTIVAL: { bg: '#fce7f3', text: '#db2777' },
   ORGANIZATION_HOLIDAY: { bg: '#dcfce7', text: '#16a34a' },
   OTHER: { bg: '#f3f4f6', text: '#6b7280' },

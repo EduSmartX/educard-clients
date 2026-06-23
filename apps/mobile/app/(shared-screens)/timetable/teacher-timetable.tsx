@@ -30,8 +30,8 @@ import {
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { FormDropdown } from '@/components/forms';
-import { useManageableUsers } from '@/hooks/use-manageable-users';
 import { useMyTimetable, useTeacherTimetable } from '@/features/timetable';
+import { useManageableUsers } from '@/hooks/use-manageable-users';
 import { useAuthStore } from '@/lib/auth-store';
 import { headerStyles, layoutStyles } from '@/styles';
 import { formatTime } from '@/utils/format-time';

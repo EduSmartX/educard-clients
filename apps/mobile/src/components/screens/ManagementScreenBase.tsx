@@ -23,8 +23,8 @@ import { useClasses } from '@/features/classes';
 import { useStudents } from '@/features/students';
 import { useSubjects } from '@/features/subjects';
 import { useTeachers } from '@/features/teachers';
-import { useAuthStore } from '@/lib/auth-store';
 import { useResponsive } from '@/hooks/useResponsive';
+import { useAuthStore } from '@/lib/auth-store';
 
 export interface ManagementItem {
   id: string;

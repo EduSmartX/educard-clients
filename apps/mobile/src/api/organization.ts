@@ -24,6 +24,7 @@ export interface AdminInfo {
   password: string;
   password2: string; // Confirm password
   notification_opt_in: boolean;
+  can_teach_subject: boolean;
   phone?: string;
   gender?: string;
 }
@@ -39,10 +40,15 @@ export interface AddressInfo {
   longitude?: string;
 }
 
+export interface TeacherInfo {
+  employee_id: string;
+}
+
 export interface OrganizationRegistrationData {
   organization_info: OrganizationInfo;
   admin_info: AdminInfo;
   address_info?: AddressInfo;
+  teacher_info?: TeacherInfo;
 }
 
 export interface OrganizationRegistrationResponse {

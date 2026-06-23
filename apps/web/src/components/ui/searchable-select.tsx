@@ -1,20 +1,25 @@
 /**
  * Searchable Select Component
- * A Select component with built-in search functionality for large option lists
- * Auto-shows search when options > 5 (configurable), with scrollable content
+ * A combobox (Popover + cmdk Command) with built-in search filtering for large
+ * option lists. Search auto-shows when options exceed `showSearchThreshold`.
+ *
+ * Built on a Popover (not a native Select) so that:
+ *  - typing reliably filters the list (Radix Select hijacks keystrokes), and
+ *  - the dropdown renders above any parent popover/dialog via its own z-index.
  */
 
 import * as React from 'react';
+import { Check, ChevronDown } from 'lucide-react';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { Search } from 'lucide-react';
 
 export interface SearchableSelectOption {
   value: string;
@@ -45,93 +50,70 @@ export function SearchableSelect({
   disabled = false,
   showSearchThreshold = 5,
 }: SearchableSelectProps) {
-  const [searchQuery, setSearchQuery] = React.useState('');
   const [open, setOpen] = React.useState(false);
-  const inputRef = React.useRef<HTMLInputElement>(null);
-
-  const filteredOptions = React.useMemo(() => {
-    if (!searchQuery) {
-      return options;
-    }
-
-    return options.filter(
-      (option) =>
-        option.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        option.value.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [options, searchQuery]);
 
   const selectedOption = options.find((option) => option.value === value);
   const showSearch = options.length > showSearchThreshold;
 
-  // Auto-focus search input when dropdown opens
-  React.useEffect(() => {
-    if (open && inputRef.current && showSearch) {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
-    }
-  }, [open, showSearch]);
-
-  // Reset search when dropdown closes
-  React.useEffect(() => {
-    if (!open) {
-      setSearchQuery('');
-    }
-  }, [open]);
-
   return (
-    <Select
-      value={value}
-      onValueChange={(newValue) => {
-        onValueChange?.(newValue);
-        setSearchQuery('');
-        setOpen(false);
-      }}
-      disabled={disabled}
-      open={open}
-      onOpenChange={setOpen}
-    >
-      <SelectTrigger className={cn('w-full', className)}>
-        <SelectValue placeholder={placeholder}>
-          {selectedOption ? selectedOption.label : placeholder}
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent className="max-h-[300px]">
-        {showSearch && (
-          <div className="bg-popover sticky top-0 z-10 border-b px-2 pt-1 pb-2">
-            <div className="relative">
-              <Search className="text-muted-foreground absolute top-1/2 left-2 h-4 w-4 -translate-y-1/2" />
-              <Input
-                ref={inputRef}
-                placeholder={searchPlaceholder}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-8 pl-8"
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => {
-                  e.stopPropagation();
-                  if (e.key === 'Escape') {
-                    setOpen(false);
-                    setSearchQuery('');
-                  }
-                }}
-              />
-            </div>
-          </div>
-        )}
-        <div className="max-h-[240px] overflow-y-auto p-1">
-          {filteredOptions.length === 0 ? (
-            <div className="text-muted-foreground py-6 text-center text-sm">{emptyText}</div>
-          ) : (
-            filteredOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value} disabled={option.disabled}>
-                {option.label}
-              </SelectItem>
-            ))
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          role="combobox"
+          aria-expanded={open}
+          disabled={disabled}
+          className={cn(
+            'flex h-11 w-full items-center justify-between rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm ring-offset-white transition-all duration-200 hover:border-primary/30 focus:border-primary focus:ring-4 focus:ring-primary/10 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50',
+            className
           )}
-        </div>
-      </SelectContent>
-    </Select>
+        >
+          <span className={cn('truncate', !selectedOption && 'text-slate-400')}>
+            {selectedOption ? selectedOption.label : placeholder}
+          </span>
+          <ChevronDown className="ml-2 h-4 w-4 shrink-0 text-slate-400" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-[var(--radix-popover-trigger-width)] p-0"
+        align="start"
+        sideOffset={4}
+      >
+        <Command
+          filter={(itemValue, search, keywords) => {
+            const haystack = `${itemValue} ${(keywords ?? []).join(' ')}`.toLowerCase();
+            return haystack.includes(search.toLowerCase()) ? 1 : 0;
+          }}
+        >
+          {showSearch && <CommandInput placeholder={searchPlaceholder} />}
+          <CommandList>
+            <CommandEmpty>{emptyText}</CommandEmpty>
+            <CommandGroup>
+              {options.map((option) => (
+                <CommandItem
+                  key={option.value}
+                  value={option.value}
+                  keywords={[option.label]}
+                  disabled={option.disabled}
+                  onSelect={() => {
+                    onValueChange?.(option.value);
+                    setOpen(false);
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      'mr-2 h-4 w-4 shrink-0 text-violet-600',
+                      value === option.value ? 'opacity-100' : 'opacity-0'
+                    )}
+                    strokeWidth={2.5}
+                  />
+                  <span className="truncate">{option.label}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }

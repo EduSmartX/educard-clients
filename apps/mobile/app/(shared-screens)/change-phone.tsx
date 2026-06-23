@@ -3,8 +3,8 @@
  * Allows authenticated users to change their phone number with OTP verification
  */
 
-import { useMemo } from 'react';
 import { Phone } from 'lucide-react-native';
+import { useMemo } from 'react';
 
 import { authApi } from '@/api/auth';
 import {

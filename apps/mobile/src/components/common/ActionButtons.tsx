@@ -8,15 +8,6 @@ import { Eye, Edit3, Trash2, LucideIcon } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 
-interface ActionButtonProps {
-  icon: LucideIcon;
-  color: string;
-  bgColor: string;
-  hoverBgColor: string;
-  onPress: () => void;
-  disabled?: boolean;
-}
-
 interface ActionButtonsProps {
   onView?: () => void;
   onEdit?: () => void;

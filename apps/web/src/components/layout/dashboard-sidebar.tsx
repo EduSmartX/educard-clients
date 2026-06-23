@@ -182,11 +182,10 @@ export function DashboardSidebar({
     <div className="flex h-full flex-col bg-white">
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-4 py-6">
-        {filteredSections.map((section) => (
+        {filteredSections.map((section, index) => (
           <CollapsibleSection
-            key={section.title}
+            key={`${section.title ?? 'section'}-${index}`}
             section={section}
-            sectionIndex={filteredSections.indexOf(section)}
             onNavigate={onNavigate}
             theme={theme}
           />
@@ -201,12 +200,10 @@ export function DashboardSidebar({
 
 function CollapsibleSection({
   section,
-  sectionIndex,
   onNavigate,
   theme,
 }: {
   section: SidebarSection;
-  sectionIndex: number;
   onNavigate?: () => void;
   theme: ThemeConfig;
 }) {
@@ -240,7 +237,7 @@ function CollapsibleSection({
   // Sections without titles are always expanded (Dashboard, Calendar, Analytics)
   if (!section.title) {
     return (
-      <div key={sectionIndex} className="mb-6">
+      <div className="mb-6">
         <div className="space-y-1">
           {section.items.map((item) => (
             <SidebarNavItem
@@ -259,8 +256,9 @@ function CollapsibleSection({
   }
 
   return (
-    <div key={sectionIndex} className="mb-4">
+    <div className="mb-4">
       <button
+        type="button"
         onClick={() => setIsExpanded((prev) => !prev)}
         className="group mb-2 flex w-full items-center justify-between rounded-lg px-3 py-1.5 transition-colors hover:bg-slate-50"
       >

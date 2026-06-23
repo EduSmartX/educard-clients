@@ -70,7 +70,6 @@ export default function LeaveApprovalsScreen() {
     search: searchQuery,
     setFilter,
     setSearch,
-    resetFilters: clearAllFilters,
   } = useScreenFilters('LeaveApprovals', {
     status: 'pending',
     dateFrom: '',
@@ -116,6 +115,20 @@ export default function LeaveApprovalsScreen() {
     setRefreshing(true);
     void refetch().finally(() => setRefreshing(false));
   }, [refetch]);
+
+  const setDateFrom = useCallback(
+    (value: string) => {
+      setFilter('dateFrom', value);
+    },
+    [setFilter]
+  );
+
+  const setDateTo = useCallback(
+    (value: string) => {
+      setFilter('dateTo', value);
+    },
+    [setFilter]
+  );
 
   const handleSearch = () => {
     setSearch(searchText.trim());

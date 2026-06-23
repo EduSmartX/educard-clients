@@ -17,7 +17,10 @@ export interface AdminInfo {
   email: string;
   password: string;
   password2: string;
+  phone_number?: string;
+  gender?: string;
   notification_opt_in: boolean;
+  can_teach_subject: boolean;
 }
 
 export interface AddressInfo {
@@ -31,10 +34,15 @@ export interface AddressInfo {
   longitude?: string;
 }
 
+export interface TeacherInfo {
+  employee_id: string;
+}
+
 export interface OrganizationRegistrationData {
   organization_info: OrganizationInfo;
   admin_info: AdminInfo;
   address_info?: AddressInfo;
+  teacher_info?: TeacherInfo;
 }
 
 export interface OrganizationRegistrationResponse {

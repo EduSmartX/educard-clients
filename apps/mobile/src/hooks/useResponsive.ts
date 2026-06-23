@@ -1,5 +1,5 @@
-import { useWindowDimensions } from 'react-native';
 import { useMemo } from 'react';
+import { useWindowDimensions } from 'react-native';
 
 export interface ResponsiveInfo {
   width: number;

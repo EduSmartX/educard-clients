@@ -28,6 +28,7 @@ export function ProgressBar({
     teal: { primary: '#0d9488', bg: '#ccfbf1' },
   };
   const c = colorStyles[color] || colorStyles.blue;
+  const progressWidth = `${percentage || 0}%`;
 
   return (
     <View style={styles.progressCard}>
@@ -49,10 +50,7 @@ export function ProgressBar({
 
       <View style={styles.progressBarBg}>
         <View
-          style={[
-            styles.progressBarFill,
-            { width: `${percentage || 0}%` as any, backgroundColor: c.primary },
-          ]}
+          style={[styles.progressBarFill, { width: progressWidth, backgroundColor: c.primary }]}
         />
       </View>
 

@@ -62,10 +62,20 @@ export const step4Schema = z
     password: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string(),
     notificationOptIn: z.boolean().default(true),
+    canTeachSubject: z.boolean().default(true),
+    employeeId: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ['confirmPassword'],
+  })
+  .refine((data) => !data.canTeachSubject || !!data.employeeId?.trim(), {
+    message: 'Employee ID is required',
+    path: ['employeeId'],
+  })
+  .refine((data) => !data.canTeachSubject || !!data.gender?.trim(), {
+    message: 'Gender is required',
+    path: ['gender'],
   });
 
 export type Step1Data = z.infer<typeof step1Schema>;

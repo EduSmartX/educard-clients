@@ -52,7 +52,9 @@ function processSingleField(
   fieldMap: Record<string, string>,
   fieldErrors: Record<string, string>,
 ): void {
-  if (SKIP_KEYS.has(key)) return;
+  if (SKIP_KEYS.has(key)) {
+    return;
+  }
 
   if (Array.isArray(value)) {
     const mapped = fieldMap[key] || key;

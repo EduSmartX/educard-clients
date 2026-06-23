@@ -79,7 +79,15 @@ export function buildOrganizationRegistrationPayload(completeData: CompleteSignu
       password: completeData.password,
       password2: completeData.confirmPassword,
       notification_opt_in: completeData.notificationOptIn,
+      can_teach_subject: completeData.canTeachSubject,
     },
+    ...(completeData.canTeachSubject
+      ? {
+          teacher_info: {
+            employee_id: completeData.employeeId?.trim() || '',
+          },
+        }
+      : {}),
     ...(completeData.streetAddress &&
     completeData.city &&
     completeData.state &&
