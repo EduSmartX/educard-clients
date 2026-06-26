@@ -32,7 +32,7 @@ const getDefaultApiUrl = () => {
 
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: process.env.EXPO_PUBLIC_API_URL?.trim() ?? getDefaultApiUrl(),
+  BASE_URL: (process.env.EXPO_PUBLIC_API_URL as string | undefined)?.trim() ?? getDefaultApiUrl(),
   TIMEOUT: 30000,
   DEFAULT_PAGE_SIZE: 15,
 } as const;

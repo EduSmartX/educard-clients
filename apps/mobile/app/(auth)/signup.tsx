@@ -1003,7 +1003,9 @@ export default function SignupScreen() {
         <View style={[styles.checkbox, canTeachSubject && styles.checkboxChecked]}>
           {canTeachSubject && <CheckCircle2 size={16} color="#fff" />}
         </View>
-        <Text style={styles.toggleText}>I can also teach a subject (create my teacher profile)</Text>
+        <Text style={styles.toggleText}>
+          I can also teach a subject (create my teacher profile)
+        </Text>
       </TouchableOpacity>
 
       {canTeachSubject && (
@@ -1102,7 +1104,6 @@ export default function SignupScreen() {
           </View>
         </TouchableOpacity>
       </Modal>
-
 
       {/* Action Buttons */}
       <View style={styles.buttonRow}>
