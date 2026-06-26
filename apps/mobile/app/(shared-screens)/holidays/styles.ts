@@ -1,5 +1,7 @@
 import { Colors } from '@educard/shared';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, type DimensionValue } from 'react-native';
+
+const CALENDAR_CELL_WIDTH: DimensionValue = '14.28%';
 
 export const styles = StyleSheet.create({
   loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
@@ -44,7 +46,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   calHeaderCell: {
-    width: '14.28%' as any,
+    width: CALENDAR_CELL_WIDTH,
     alignItems: 'center',
   },
   calHeaderText: {
@@ -58,7 +60,7 @@ export const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   calCell: {
-    width: '14.28%' as any,
+    width: CALENDAR_CELL_WIDTH,
     minHeight: 58,
     alignItems: 'center',
     justifyContent: 'center',
@@ -68,7 +70,7 @@ export const styles = StyleSheet.create({
     borderColor: '#f1f5f9',
   },
   calCellEmpty: {
-    width: '14.28%' as any,
+    width: CALENDAR_CELL_WIDTH,
     minHeight: 58,
     alignItems: 'center',
     justifyContent: 'center',

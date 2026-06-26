@@ -15,6 +15,7 @@ import {
   AlertTriangle,
   CopyCheck,
   ChevronDown,
+  Send,
 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -27,7 +28,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { PageHeader, FormActions, WarningConfirmationDialog } from '@/components/common';
+import { PageHeader, WarningConfirmationDialog } from '@/components/common';
 import {
   Table,
   TableBody,
@@ -37,6 +38,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ROUTES, ValidationMessages } from '@/constants';
+import { Badge } from '@/components/ui/badge';
 import { formatDateForAPI } from '@/lib/utils/date-utils';
 import { useExamSessions, useExams } from '../hooks/use-exams';
 import { useSubjects } from '@/features/subjects/hooks/use-subjects';
@@ -56,6 +58,7 @@ interface SubjectRow {
   date: Date | null;
   start_time: string;
   end_time: string;
+  status: string;
   dateError?: string; // Date validation error message
 }
 
@@ -240,6 +243,7 @@ export function BulkExamCreatePage() {
             date: existing.date ? new Date(existing.date) : null,
             start_time: existing.start_time?.slice(0, 5) || '',
             end_time: existing.end_time?.slice(0, 5) || '',
+            status: existing.status || 'draft',
             dateError: undefined,
           };
         }
@@ -252,6 +256,7 @@ export function BulkExamCreatePage() {
           date: null,
           start_time: '',
           end_time: '',
+          status: 'draft',
           dateError: undefined,
         };
       })
@@ -363,6 +368,10 @@ export function BulkExamCreatePage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    handleSubmitWithStatus('scheduled');
+  };
+
+  const handleSubmitWithStatus = (submitStatus: 'draft' | 'scheduled') => {
     setFieldErrors({});
 
     const errors = validateBulkExamForm(sessionId, classId, subjectRows);
@@ -391,15 +400,18 @@ export function BulkExamCreatePage() {
     const payload: BulkExamCreatePayload = {
       session_id: sessionId,
       class_id: classId,
-      status: 'scheduled', // Default status
+      status: submitStatus,
       exams,
     };
 
-    const hasIncomplete = selectedRows.some((row) => !row.date || !row.start_time);
-    if (hasIncomplete) {
-      setPendingSubmitPayload(payload);
-      setShowMissingDateTimeWarning(true);
-      return;
+    // Only warn about missing dates if scheduling
+    if (submitStatus === 'scheduled') {
+      const hasIncomplete = selectedRows.some((row) => !row.date || !row.start_time);
+      if (hasIncomplete) {
+        setPendingSubmitPayload(payload);
+        setShowMissingDateTimeWarning(true);
+        return;
+      }
     }
 
     // Check if any exam has duration > 5 hours
@@ -530,13 +542,25 @@ export function BulkExamCreatePage() {
                 {/* Default Max Marks */}
                 <div className="space-y-2">
                   <Label htmlFor="default_max_marks">Default Max Marks</Label>
+                  <Input
+                    id="default_max_marks"
+                    type="number"
+                    min="1"
+                    value={defaultMaxMarks}
+                    onChange={(e) => setDefaultMaxMarks(e.target.value)}
+                  />
+                </div>
+
+                {/* Default Passing Marks */}
+                <div className="space-y-2">
+                  <Label htmlFor="default_passing_marks">Default Passing Marks</Label>
                   <div className="flex gap-2">
                     <Input
-                      id="default_max_marks"
+                      id="default_passing_marks"
                       type="number"
-                      min="1"
-                      value={defaultMaxMarks}
-                      onChange={(e) => setDefaultMaxMarks(e.target.value)}
+                      min="0"
+                      value={defaultPassingMarks}
+                      onChange={(e) => setDefaultPassingMarks(e.target.value)}
                     />
                     <Button
                       type="button"
@@ -548,18 +572,6 @@ export function BulkExamCreatePage() {
                       Apply All
                     </Button>
                   </div>
-                </div>
-
-                {/* Default Passing Marks */}
-                <div className="space-y-2">
-                  <Label htmlFor="default_passing_marks">Default Passing Marks</Label>
-                  <Input
-                    id="default_passing_marks"
-                    type="number"
-                    min="0"
-                    value={defaultPassingMarks}
-                    onChange={(e) => setDefaultPassingMarks(e.target.value)}
-                  />
                 </div>
               </div>
             </CardContent>
@@ -607,6 +619,7 @@ export function BulkExamCreatePage() {
                         <TableHead className="w-40">Date</TableHead>
                         <TableHead className="w-28">Start Time</TableHead>
                         <TableHead className="w-28">End Time</TableHead>
+                        <TableHead className="w-28">Status</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -767,6 +780,38 @@ export function BulkExamCreatePage() {
                               )}
                             </div>
                           </TableCell>
+                          <TableCell>
+                            {(() => {
+                              const statusConfig: Record<
+                                string,
+                                { className: string; label: string }
+                              > = {
+                                draft: { className: 'bg-gray-100 text-gray-600', label: 'Draft' },
+                                scheduled: {
+                                  className: 'bg-blue-100 text-blue-800',
+                                  label: 'Scheduled',
+                                },
+                                in_progress: {
+                                  className: 'bg-amber-100 text-amber-800',
+                                  label: 'In Progress',
+                                },
+                                completed: {
+                                  className: 'bg-green-100 text-green-800',
+                                  label: 'Completed',
+                                },
+                                cancelled: {
+                                  className: 'bg-red-100 text-red-800',
+                                  label: 'Cancelled',
+                                },
+                              };
+                              const config = statusConfig[row.status] || statusConfig.draft;
+                              return (
+                                <Badge variant="secondary" className={config.className}>
+                                  {config.label}
+                                </Badge>
+                              );
+                            })()}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -780,18 +825,33 @@ export function BulkExamCreatePage() {
           </Card>
 
           {/* Actions */}
-          <FormActions
-            primaryAction={{
-              label: `Create ${selectedCount} Exam(s)`,
-              type: 'submit',
-              isLoading: isPending,
-              disabled: selectedCount === 0,
-            }}
-            secondaryAction={{
-              label: 'Cancel',
-              onClick: () => navigate(ROUTES.EXAMS_LIST),
-            }}
-          />
+          <div className="flex items-center justify-end gap-3">
+            <Button type="button" variant="outline" onClick={() => navigate(ROUTES.EXAMS_LIST)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={selectedCount === 0 || isPending}
+              onClick={() => handleSubmitWithStatus('draft')}
+            >
+              {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Create {selectedCount} Exam(s)
+            </Button>
+            <Button
+              type="button"
+              disabled={selectedCount === 0 || isPending}
+              onClick={() => handleSubmitWithStatus('scheduled')}
+              className="gap-2"
+            >
+              {isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              Create & Schedule
+            </Button>
+          </div>
         </form>
       )}
 

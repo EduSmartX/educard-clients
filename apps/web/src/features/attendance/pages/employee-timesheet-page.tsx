@@ -277,7 +277,11 @@ export function EmployeeTimesheetPage() {
     const set = new Set<string>();
     const descriptions = attendanceData?.holiday_descriptions || {};
     Object.entries(descriptions).forEach(([dateKey, info]: [string, { type?: string }]) => {
-      if (info?.type === 'official_holiday' || info?.type === 'holiday') {
+      if (
+        info?.type === 'official_holiday' ||
+        info?.type === 'holiday' ||
+        info?.type === 'weekend'
+      ) {
         set.add(dateKey);
       }
     });

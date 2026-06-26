@@ -13,13 +13,11 @@ import {
 } from '@/components/screens/LeaveAllocationFormBase';
 import { useLeaveTypes, useRoleTypes, useCurrentAcademicYear } from '@/features/core';
 import { useCreateLeaveAllocation } from '@/features/leave';
-import { useToast } from '@/lib/toast-context';
 
 type FieldErrors = Record<string, string>;
 
 export default function CreateLeaveAllocationScreen() {
   const router = useRouter();
-  const { showToast } = useToast();
   const createMutation = useCreateLeaveAllocation();
   const { data: leaveTypes, isLoading: leaveTypesLoading } = useLeaveTypes();
   const { data: roleTypes } = useRoleTypes();
@@ -99,7 +97,7 @@ export default function CreateLeaveAllocationScreen() {
         setApiError(extractApiError(err, 'Failed to create leave allocation'));
       },
     });
-  }, [form, validate, createMutation, router, showToast]);
+  }, [form, validate, createMutation, router]);
 
   return (
     <LeaveAllocationFormBase

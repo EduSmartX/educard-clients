@@ -74,6 +74,7 @@ export default function EditHomeworkScreen() {
   const [dueTime, setDueTime] = useState('17:00');
   const [priority, setPriority] = useState<string>(HOMEWORK_PRIORITY.MEDIUM);
   const [submissionType, setSubmissionType] = useState<string>(SUBMISSION_TYPE.OFFLINE);
+  const [chapter, setChapter] = useState('');
   const [referenceLink, setReferenceLink] = useState('');
   const [status, setStatus] = useState<string>(HOMEWORK_STATUS.PUBLISHED);
   const [attachments, setAttachments] = useState<SelectedFile[]>([]);
@@ -103,6 +104,7 @@ export default function EditHomeworkScreen() {
       setPriority(homework.priority || HOMEWORK_PRIORITY.MEDIUM);
       setSubmissionType(homework.submission_type || SUBMISSION_TYPE.OFFLINE);
       setReferenceLink(homework.reference_link || '');
+      setChapter(homework.chapter || '');
       setStatus(homework.status || HOMEWORK_STATUS.PUBLISHED);
       setInitialized(true);
     }
@@ -174,6 +176,7 @@ export default function EditHomeworkScreen() {
       priority: priority as HomeworkPriority,
       submission_type: submissionType as SubmissionType,
       reference_link: referenceLink.trim() || undefined,
+      chapter: chapter.trim() || undefined,
     };
 
     updateMutation.mutate(
@@ -286,6 +289,22 @@ export default function EditHomeworkScreen() {
             <Text style={styles.readonlyText}>
               {homework.class_name} - {homework.subject_name}
             </Text>
+          </View>
+        </Animated.View>
+
+        {/* Chapter / Unit */}
+        <Animated.View entering={FadeInDown.delay(125)} style={styles.section}>
+          <Text style={styles.sectionTitle}>Chapter / Unit</Text>
+          <View style={styles.inputWrapper}>
+            <BookOpen size={18} color={Colors.gray[400]} />
+            <TextInput
+              style={styles.input}
+              placeholder="e.g., Chapter 5 - Photosynthesis"
+              placeholderTextColor={Colors.gray[400]}
+              value={chapter}
+              onChangeText={setChapter}
+              maxLength={255}
+            />
           </View>
         </Animated.View>
 

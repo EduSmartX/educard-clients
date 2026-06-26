@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { GENDER_OPTIONS, BLOOD_GROUP_OPTIONS } from '@educard/shared';
 import {
   FormControl,
   FormDescription,
@@ -307,17 +308,6 @@ export function DateInputField<T extends FieldValues>({
 /**
  * Blood Group Field
  */
-const BLOOD_GROUP_OPTIONS = [
-  { value: 'A+', label: 'A+' },
-  { value: 'A-', label: 'A-' },
-  { value: 'B+', label: 'B+' },
-  { value: 'B-', label: 'B-' },
-  { value: 'AB+', label: 'AB+' },
-  { value: 'AB-', label: 'AB-' },
-  { value: 'O+', label: 'O+' },
-  { value: 'O-', label: 'O-' },
-];
-
 interface BloodGroupFieldProps<T extends FieldValues> {
   control: Control<T>;
   name: Path<T>;
@@ -339,7 +329,7 @@ export function BloodGroupField<T extends FieldValues>({
       placeholder="Select blood group"
       disabled={disabled}
       required={required}
-      options={BLOOD_GROUP_OPTIONS}
+      options={[...BLOOD_GROUP_OPTIONS]}
     />
   );
 }
@@ -347,12 +337,6 @@ export function BloodGroupField<T extends FieldValues>({
 /**
  * Gender Field
  */
-const GENDER_OPTIONS = [
-  { value: 'M', label: 'Male' },
-  { value: 'F', label: 'Female' },
-  { value: 'O', label: 'Other' },
-];
-
 interface GenderFieldProps<T extends FieldValues> {
   control: Control<T>;
   name: Path<T>;
@@ -374,7 +358,7 @@ export function GenderField<T extends FieldValues>({
       placeholder="Select gender"
       disabled={disabled}
       required={required}
-      options={GENDER_OPTIONS}
+      options={[...GENDER_OPTIONS]}
     />
   );
 }

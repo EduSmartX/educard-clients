@@ -6,7 +6,6 @@ import type {
   UpdateStudentPayload,
   StudentQueryParams,
   BulkUploadResult,
-  ExportStudentsResult,
   ExportStudentsPayload,
 } from '../types';
 import type { ApiListResponse, ApiDetailResponse } from '@/lib/utils/api-response-handler';
@@ -156,13 +155,10 @@ export async function bulkUploadStudents(file: File): Promise<BulkUploadResult> 
   return response.data;
 }
 
-export async function exportStudents(
-  payload: ExportStudentsPayload = {}
-): Promise<ExportStudentsResult> {
-  const response = await api.post<ExportStudentsResult>(
-    `${STUDENTS_BULK_BASE}/export_students_data/`,
-    payload
-  );
+export async function exportStudents(payload: ExportStudentsPayload = {}): Promise<Blob> {
+  const response = await api.post(`${STUDENTS_BULK_BASE}/export_students_data/`, payload, {
+    responseType: 'blob',
+  });
   return response.data;
 }
 

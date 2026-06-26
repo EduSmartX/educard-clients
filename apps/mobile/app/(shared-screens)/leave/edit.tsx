@@ -14,14 +14,12 @@ import {
 } from '@/components/screens/LeaveAllocationFormBase';
 import { useLeaveTypes, useRoleTypes } from '@/features/core';
 import { useLeaveAllocationDetail, useUpdateLeaveAllocation } from '@/features/leave';
-import { useToast } from '@/lib/toast-context';
 import { layoutStyles } from '@/styles';
 
 type FieldErrors = Record<string, string>;
 
 export default function EditLeaveAllocationScreen() {
   const router = useRouter();
-  const { showToast } = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: detail, isLoading: detailLoading } = useLeaveAllocationDetail(id ?? '');
   const updateMutation = useUpdateLeaveAllocation();
@@ -119,7 +117,7 @@ export default function EditLeaveAllocationScreen() {
         },
       }
     );
-  }, [form, validate, updateMutation, id, router, showToast]);
+  }, [form, validate, updateMutation, id, router]);
 
   if (detailLoading || !formLoaded) {
     return (

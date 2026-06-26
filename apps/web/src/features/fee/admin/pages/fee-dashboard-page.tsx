@@ -60,13 +60,13 @@ export function FeeDashboardPage() {
           {
             label: 'Fee Structures',
             onClick: () => navigate(ROUTES.FEES.STRUCTURES),
-            variant: 'outline' as const,
+            variant: 'secondary' as const,
             icon: FileText,
           },
           {
             label: 'New Structure',
             onClick: () => navigate(ROUTES.FEES.STRUCTURES_NEW),
-            variant: 'default' as const,
+            variant: 'brand' as const,
             icon: Plus,
           },
         ]}

@@ -42,8 +42,8 @@ export default function CreateExamSessionScreen() {
   // Pre-fill academic year and dates from DB when loaded
   useEffect(() => {
     if (currentAcademicYear) {
-      if (currentAcademicYear.name && !academicYear) {
-        setAcademicYear(currentAcademicYear.name);
+      if (currentAcademicYear.public_id && !academicYear) {
+        setAcademicYear(currentAcademicYear.public_id);
       }
       if (currentAcademicYear.start_date && !startDate) {
         setStartDate(currentAcademicYear.start_date);

@@ -10,26 +10,25 @@ import { Label } from '@/components/ui/label';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { cn } from '@/lib/utils';
 import { Plus, Trash2 } from 'lucide-react';
-import type { FeeComponent, ComponentType } from '@educard/shared';
+import {
+  COMPONENT_TYPE_OPTIONS,
+  type FeeComponent,
+  type ComponentTypeValue,
+} from '@educard/shared';
 import { FeeAmount } from './fee-amount';
-
-const COMPONENT_TYPE_OPTIONS = [
-  { value: 'mandatory', label: 'Mandatory' },
-  { value: 'optional', label: 'Optional' },
-];
 
 export interface ComponentEntry {
   name: string;
   amount: number;
-  component_type: ComponentType;
+  component_type: ComponentTypeValue;
 }
 
 interface FeeComponentsEditorProps {
   value: FeeComponent;
   onChange: (components: FeeComponent) => void;
   /** Track component types externally - map of component name to type */
-  componentTypes?: Record<string, ComponentType>;
-  onComponentTypesChange?: (types: Record<string, ComponentType>) => void;
+  componentTypes?: Record<string, ComponentTypeValue>;
+  onComponentTypesChange?: (types: Record<string, ComponentTypeValue>) => void;
   disabled?: boolean;
   errors?: string[];
   className?: string;
@@ -46,7 +45,7 @@ export function FeeComponentsEditor({
 }: FeeComponentsEditorProps) {
   const [newComponentName, setNewComponentName] = useState('');
   const [newComponentAmount, setNewComponentAmount] = useState('');
-  const [newComponentType, setNewComponentType] = useState<ComponentType>('mandatory');
+  const [newComponentType, setNewComponentType] = useState<ComponentTypeValue>('mandatory');
 
   const components = Object.entries(value || {});
   const totalAmount = components.reduce((sum, [, amount]) => sum + amount, 0);
@@ -98,7 +97,7 @@ export function FeeComponentsEditor({
     });
   };
 
-  const handleUpdateType = (componentName: string, type: ComponentType) => {
+  const handleUpdateType = (componentName: string, type: ComponentTypeValue) => {
     onComponentTypesChange?.({
       ...componentTypes,
       [componentName]: type,
@@ -117,9 +116,9 @@ export function FeeComponentsEditor({
               </span>
               <div className="flex items-center gap-2">
                 <SearchableSelect
-                  options={COMPONENT_TYPE_OPTIONS}
+                  options={[...COMPONENT_TYPE_OPTIONS]}
                   value={componentTypes[name] || 'mandatory'}
-                  onValueChange={(val: string) => handleUpdateType(name, val as ComponentType)}
+                  onValueChange={(val: string) => handleUpdateType(name, val as ComponentTypeValue)}
                   disabled={disabled}
                   className="h-8 w-28 text-xs"
                 />
@@ -169,9 +168,9 @@ export function FeeComponentsEditor({
                 Type
               </Label>
               <SearchableSelect
-                options={COMPONENT_TYPE_OPTIONS}
+                options={[...COMPONENT_TYPE_OPTIONS]}
                 value={newComponentType}
-                onValueChange={(val: string) => setNewComponentType(val as ComponentType)}
+                onValueChange={(val: string) => setNewComponentType(val as ComponentTypeValue)}
                 className="mt-1"
               />
             </div>

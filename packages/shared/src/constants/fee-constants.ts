@@ -75,6 +75,14 @@ export const ComponentType = {
 export type ComponentTypeValue =
   (typeof ComponentType)[keyof typeof ComponentType];
 
+/**
+ * Component type options for form dropdowns
+ */
+export const COMPONENT_TYPE_OPTIONS = [
+  { value: ComponentType.MANDATORY, label: "Mandatory" },
+  { value: ComponentType.OPTIONAL, label: "Optional" },
+] as const;
+
 // Component Approval Status
 export const ComponentApprovalStatus = {
   APPROVED: "approved",

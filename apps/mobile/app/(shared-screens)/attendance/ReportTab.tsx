@@ -108,7 +108,7 @@ export function ReportTab() {
       );
 
       if (moreData.student_wise) {
-        setAllStudents((prev) => [...(prev || []), ...moreData.student_wise!]);
+        setAllStudents((prev) => [...(prev || []), ...(moreData.student_wise ?? [])]);
         setCurrentPage(nextPage);
       }
     } catch {
@@ -182,7 +182,14 @@ export function ReportTab() {
   return (
     <ScrollView
       contentContainerStyle={styles.tabContent}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => {
+            void handleRefresh();
+          }}
+        />
+      }
       showsVerticalScrollIndicator={false}
     >
       {/* Class Selector */}
@@ -590,7 +597,9 @@ export function ReportTab() {
               {hasMorePages && (
                 <TouchableOpacity
                   style={styles.loadMoreButton}
-                  onPress={handleLoadMore}
+                  onPress={() => {
+                    void handleLoadMore();
+                  }}
                   disabled={isLoadingMore}
                   activeOpacity={0.7}
                 >

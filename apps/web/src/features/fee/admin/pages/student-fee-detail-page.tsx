@@ -181,9 +181,8 @@ export function StudentFeeDetailPage() {
                     navigate(
                       `${ROUTES.FEES.PAYMENT_NEW_FOR_STUDENT.replace(':id', id || '')}?mode=refund`
                     ),
-                  variant: 'outline' as const,
+                  variant: 'warning' as const,
                   icon: RefreshCw,
-                  className: 'border-orange-300 text-orange-700 hover:bg-orange-50',
                 },
               ]
             : []),
@@ -194,16 +193,15 @@ export function StudentFeeDetailPage() {
                   label: 'Record Payment',
                   onClick: () =>
                     navigate(ROUTES.FEES.PAYMENT_NEW_FOR_STUDENT.replace(':id', id || '')),
-                  variant: 'outline' as const,
+                  variant: 'success' as const,
                   icon: CreditCard,
-                  className: 'border-green-300 text-green-700 hover:bg-green-50',
                 },
               ]
             : []),
           {
             label: 'Edit',
             onClick: () => navigate(ROUTES.FEES.STUDENT_FEES_EDIT.replace(':id', id || '')),
-            variant: 'outline' as const,
+            variant: 'brand' as const,
             icon: Pencil,
           },
         ]}

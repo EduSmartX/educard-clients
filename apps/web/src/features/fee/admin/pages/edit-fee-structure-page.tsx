@@ -211,7 +211,7 @@ export function EditFeeStructurePage() {
         <p className="text-muted-foreground mt-2">
           The fee structure you're looking for doesn't exist.
         </p>
-        <Button className="mt-4" asChild>
+        <Button variant="outline" className="mt-4" asChild>
           <Link to={ROUTES.FEES.STRUCTURES}>Back to Structures</Link>
         </Button>
       </div>

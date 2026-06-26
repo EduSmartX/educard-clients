@@ -11,12 +11,12 @@ import { LogBox } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-// Suppress harmless React Native internal warning from reanimated/gestures
-LogBox.ignoreLogs(['viewIsDescendantOf']);
-
 import { useAuthStore } from '@/lib/auth-store';
 import { queryClient } from '@/lib/query-client';
 import { ToastProvider } from '@/lib/toast-context';
+
+// Suppress harmless React Native internal warning from reanimated/gestures
+LogBox.ignoreLogs(['viewIsDescendantOf']);
 
 // Keep splash screen visible while loading
 void SplashScreen.preventAutoHideAsync();

@@ -14,10 +14,7 @@ import { Form } from '@/components/ui/form';
 import { TextInputField, SelectField } from '@/components/form/form-fields';
 import { useUpdateOrganization } from '../hooks/mutations';
 import type { Organization } from '../api/organization-api';
-import {
-  ORGANIZATION_TYPE_OPTIONS,
-  BOARD_AFFILIATION_OPTIONS,
-} from '@/constants/organization-types';
+import { ORGANIZATION_TYPES, BOARD_AFFILIATIONS } from '@educard/shared';
 import { CommonUiText, FormPlaceholders } from '@/constants';
 import { STANDARD_FORM_VALIDATION_CONFIG } from '@/lib/utils/form-validation';
 
@@ -114,7 +111,7 @@ export function OrganizationInfoForm({
                 name="organization_type"
                 label="Organization Type"
                 placeholder={FormPlaceholders.SELECT_OPTION}
-                options={ORGANIZATION_TYPE_OPTIONS}
+                options={[...ORGANIZATION_TYPES]}
               />
 
               <SelectField
@@ -122,7 +119,7 @@ export function OrganizationInfoForm({
                 name="board_affiliation"
                 label="Board Affiliation"
                 placeholder={FormPlaceholders.SELECT_OPTION}
-                options={BOARD_AFFILIATION_OPTIONS}
+                options={[...BOARD_AFFILIATIONS]}
               />
 
               <TextInputField

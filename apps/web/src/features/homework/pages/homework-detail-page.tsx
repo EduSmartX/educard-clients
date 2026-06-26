@@ -3,7 +3,7 @@
  * View homework details, attachments, videos, and submissions
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -15,6 +15,9 @@ import {
   ExternalLink,
   Pencil,
   AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  BookOpen,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -23,12 +26,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DeleteConfirmationDialog, PageHeader } from '@/components/common';
+import { DeleteConfirmationDialog } from '@/components/common';
 import { cn } from '@/lib/utils';
 import { getMediaUrl } from '@/lib/utils/media-utils';
 
 import { SubmissionTable } from '../components';
-import { useHomeworkDetail, useHomeworkSubmissions, useDeleteHomework } from '../hooks';
+import {
+  useHomeworkDetail,
+  useHomeworkSubmissions,
+  useDeleteHomework,
+  useHomeworkList,
+} from '../hooks';
 
 export default function HomeworkDetailPage() {
   const { id: publicId } = useParams<{ id: string }>();
@@ -43,6 +51,31 @@ export default function HomeworkDetailPage() {
   const { data: submissionsData, isLoading: isLoadingSubmissions } = useHomeworkSubmissions(
     publicId || ''
   );
+
+  // Fetch homework list for the same class & date to enable prev/next navigation
+  const { data: homeworkList } = useHomeworkList(
+    homework
+      ? {
+          class_public_id: homework.class_public_id,
+          assigned_date: homework.assigned_date,
+        }
+      : undefined
+  );
+
+  // Compute prev/next homework for same class
+  const { prevHomework, nextHomework } = useMemo(() => {
+    if (!homeworkList || !publicId) {
+      return { prevHomework: null, nextHomework: null };
+    }
+    const currentIndex = homeworkList.findIndex((h) => h.public_id === publicId);
+    if (currentIndex === -1) {
+      return { prevHomework: null, nextHomework: null };
+    }
+    return {
+      prevHomework: currentIndex > 0 ? homeworkList[currentIndex - 1] : null,
+      nextHomework: currentIndex < homeworkList.length - 1 ? homeworkList[currentIndex + 1] : null,
+    };
+  }, [homeworkList, publicId]);
 
   // Mutations
   const deleteMutation = useDeleteHomework();
@@ -76,7 +109,7 @@ export default function HomeworkDetailPage() {
         <p className="mt-1 text-sm text-slate-500">
           The homework you're looking for doesn't exist.
         </p>
-        <Button onClick={handleBack} className="mt-4">
+        <Button variant="outline" onClick={handleBack} className="mt-4">
           Go Back
         </Button>
       </div>
@@ -92,18 +125,70 @@ export default function HomeworkDetailPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={homework.title}
-        description={`${homework.subject_name} • ${homework.class_name}`}
-        actions={[
-          {
-            label: 'Edit',
-            onClick: handleEdit,
-            variant: 'outline' as const,
-            icon: Pencil,
-          },
-        ]}
-      />
+      {/* Top Header Row: Title + Dates + Edit */}
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl font-bold text-slate-900">{homework.title}</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            {homework.subject_name} • {homework.class_name}
+          </p>
+          {!!homework.chapter && (
+            <div className="mt-2 flex items-center gap-2">
+              <Badge variant="outline" className="gap-1 text-xs">
+                <BookOpen className="h-3 w-3" />
+                {homework.chapter}
+              </Badge>
+            </div>
+          )}
+        </div>
+
+        {/* Dates inline */}
+        <div className="flex items-center gap-4">
+          {!!homework.assigned_date && (
+            <div className="flex items-center gap-2 rounded-lg border bg-green-50 px-3 py-2">
+              <Calendar className="h-4 w-4 text-green-600" />
+              <div>
+                <p className="text-[10px] font-medium text-green-600 uppercase">Homework For</p>
+                <p className="text-sm font-semibold text-green-800">
+                  {format(new Date(homework.assigned_date), 'EEE, MMM d, yyyy')}
+                </p>
+              </div>
+            </div>
+          )}
+          <div
+            className={cn(
+              'flex items-center gap-2 rounded-lg border px-3 py-2',
+              homework.is_overdue ? 'bg-red-50' : 'bg-blue-50'
+            )}
+          >
+            <Calendar
+              className={cn('h-4 w-4', homework.is_overdue ? 'text-red-600' : 'text-blue-600')}
+            />
+            <div>
+              <p
+                className={cn(
+                  'text-[10px] font-medium uppercase',
+                  homework.is_overdue ? 'text-red-600' : 'text-blue-600'
+                )}
+              >
+                Due Date
+              </p>
+              <p
+                className={cn(
+                  'text-sm font-semibold',
+                  homework.is_overdue ? 'text-red-800' : 'text-blue-800'
+                )}
+              >
+                {format(new Date(homework.due_datetime), 'MMM d, yyyy h:mm a')}
+              </p>
+            </div>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleEdit} className="gap-1">
+            <Pencil className="h-4 w-4" />
+            Edit
+          </Button>
+        </div>
+      </div>
 
       {/* Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -216,59 +301,8 @@ export default function HomeworkDetailPage() {
               )}
             </div>
 
-            {/* Sidebar */}
+            {/* Sidebar - Only Submissions + Details */}
             <div className="space-y-6">
-              {/* Assigned Date Card */}
-              {!!homework.assigned_date && (
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-100 text-green-600">
-                        <Calendar className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-slate-500">Homework For</p>
-                        <p className="font-semibold">
-                          {format(new Date(homework.assigned_date), 'EEEE, MMMM d, yyyy')}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Due Date Card */}
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={cn(
-                        'flex h-12 w-12 items-center justify-center rounded-xl',
-                        homework.is_overdue
-                          ? 'bg-red-100 text-red-600'
-                          : 'bg-blue-100 text-blue-600'
-                      )}
-                    >
-                      <Calendar className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-500">Due Date</p>
-                      <p className="font-semibold">
-                        {format(new Date(homework.due_datetime), 'MMMM d, yyyy')}
-                      </p>
-                      <p className="text-sm text-slate-500">
-                        at {format(new Date(homework.due_datetime), 'h:mm a')}
-                      </p>
-                    </div>
-                  </div>
-                  {!!homework.is_overdue && (
-                    <Badge variant="destructive" className="mt-3 w-full justify-center">
-                      Overdue
-                    </Badge>
-                  )}
-                </CardContent>
-              </Card>
-
               {/* Submission Stats */}
               {isPublished && homework.submission_stats && (
                 <Card>
@@ -319,23 +353,39 @@ export default function HomeworkDetailPage() {
                 <CardHeader>
                   <CardTitle className="text-base">Details</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Assigned By</span>
-                    <span className="font-medium">{homework.assigned_by_name}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Submission Type</span>
-                    <span className="font-medium capitalize">
-                      {homework.submission_type.replace('_', ' ')}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Created</span>
-                    <span className="font-medium">
-                      {format(new Date(homework.created_at), 'MMM d, yyyy')}
-                    </span>
-                  </div>
+                <CardContent className="text-sm">
+                  <dl className="space-y-3">
+                    <div className="flex">
+                      <dt className="w-36 shrink-0 text-slate-500">Priority</dt>
+                      <dd className="font-semibold text-slate-800">
+                        : {homework.priority.charAt(0).toUpperCase() + homework.priority.slice(1)}
+                      </dd>
+                    </div>
+                    <div className="flex">
+                      <dt className="w-36 shrink-0 text-slate-500">Assigned By</dt>
+                      <dd className="font-semibold text-slate-800">
+                        : {homework.assigned_by_name}
+                      </dd>
+                    </div>
+                    <div className="flex">
+                      <dt className="w-36 shrink-0 text-slate-500">Submission Type</dt>
+                      <dd className="font-semibold text-slate-800 capitalize">
+                        : {homework.submission_type.replace('_', ' ')}
+                      </dd>
+                    </div>
+                    <div className="flex">
+                      <dt className="w-36 shrink-0 text-slate-500">Status</dt>
+                      <dd className="font-semibold text-slate-800 capitalize">
+                        : {homework.status}
+                      </dd>
+                    </div>
+                    <div className="flex">
+                      <dt className="w-36 shrink-0 text-slate-500">Created</dt>
+                      <dd className="font-semibold text-slate-800">
+                        : {format(new Date(homework.created_at), 'MMM d, yyyy')}
+                      </dd>
+                    </div>
+                  </dl>
                 </CardContent>
               </Card>
             </div>
@@ -351,6 +401,42 @@ export default function HomeworkDetailPage() {
           />
         </TabsContent>
       </Tabs>
+
+      {/* Prev / Next Navigation */}
+      {(prevHomework || nextHomework) && (
+        <div className="flex items-center justify-between border-t pt-6">
+          {prevHomework ? (
+            <Button
+              variant="outline"
+              onClick={() => navigate(`/homework/${prevHomework.public_id}`)}
+              className="gap-2 border-blue-200 bg-blue-50 hover:border-blue-300 hover:bg-blue-100"
+            >
+              <ChevronLeft className="h-4 w-4 text-blue-600" />
+              <div className="text-left">
+                <p className="text-[10px] text-blue-600 uppercase">Previous</p>
+                <p className="text-sm font-medium text-blue-900">{prevHomework.subject_name}</p>
+              </div>
+            </Button>
+          ) : (
+            <div />
+          )}
+          {nextHomework ? (
+            <Button
+              variant="outline"
+              onClick={() => navigate(`/homework/${nextHomework.public_id}`)}
+              className="gap-2 border-green-200 bg-green-50 hover:border-green-300 hover:bg-green-100"
+            >
+              <div className="text-right">
+                <p className="text-[10px] text-green-600 uppercase">Next</p>
+                <p className="text-sm font-medium text-green-900">{nextHomework.subject_name}</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-green-600" />
+            </Button>
+          ) : (
+            <div />
+          )}
+        </div>
+      )}
 
       {/* Delete Confirmation */}
       <DeleteConfirmationDialog

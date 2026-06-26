@@ -125,7 +125,7 @@ export function StudentFeeEditPage() {
           {
             label: 'View Details',
             onClick: () => navigate(ROUTES.FEES.STUDENT_FEES_VIEW.replace(':id', id)),
-            variant: 'outline' as const,
+            variant: 'secondary' as const,
             icon: Pencil,
           },
         ]}

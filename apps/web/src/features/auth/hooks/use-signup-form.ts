@@ -187,7 +187,12 @@ export function useSignupForm() {
 
   const step4Form = useForm<Step4Data>({
     resolver: zodResolver(step4Schema),
-    defaultValues: { ...formData, notificationOptIn: true } as Step4Data,
+    defaultValues: {
+      ...formData,
+      notificationOptIn: true,
+      canTeachSubject: true,
+      employeeId: '',
+    } as Step4Data,
   });
 
   // Watch adminEmail and sync to orgEmail when toggle is on

@@ -186,7 +186,11 @@ export type StudentBulkUploadResult = BulkUploadResult;
 
 export interface ExportStudentsPayload {
   class_id?: string;
-  email_addresses?: string[];
+  class_ids?: string[];
+  gender?: string;
+  search?: string;
+  send_email?: boolean;
+  emails?: string[];
 }
 
 export interface ExportStudentsResult {

@@ -68,7 +68,7 @@ export function FeeStructuresPage() {
           {
             label: FEE_UI_TEXT.BUTTONS.CREATE,
             onClick: () => navigate(ROUTES.FEES.STRUCTURES_NEW),
-            variant: 'default' as const,
+            variant: 'brand' as const,
             icon: Plus,
           },
         ]}

@@ -1,5 +1,6 @@
 import { ArrowLeft, CheckCircle2, User } from 'lucide-react';
 import type { UseFormReturn } from 'react-hook-form';
+import { GENDER_OPTIONS } from '@educard/shared';
 import { FormPlaceholders } from '@/constants';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,6 +24,7 @@ interface SignupStep4Props {
 }
 
 export function SignupStep4({ form, formData, isLoading, onSubmit, onBack }: SignupStep4Props) {
+  const canTeach = form.watch('canTeachSubject');
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
       <div className="mb-4 flex items-center gap-2 text-teal-700">
@@ -73,14 +75,10 @@ export function SignupStep4({ form, formData, isLoading, onSubmit, onBack }: Sig
 
         <div className="space-y-2">
           <Label htmlFor="gender" className="text-sm font-semibold text-gray-700">
-            Gender
+            Gender {canTeach && <span className="text-red-500">*</span>}
           </Label>
           <SearchableSelect
-            options={[
-              { value: 'M', label: 'Male' },
-              { value: 'F', label: 'Female' },
-              { value: 'O', label: 'Other' },
-            ]}
+            options={[...GENDER_OPTIONS]}
             value={form.watch('gender') || ''}
             onValueChange={(value: string) => form.setValue('gender', value)}
             placeholder="Select Gender"
@@ -132,6 +130,37 @@ export function SignupStep4({ form, formData, isLoading, onSubmit, onBack }: Sig
           I want to receive email notifications about important updates
         </Label>
       </div>
+
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          id="canTeachSubject"
+          defaultChecked
+          className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+          {...form.register('canTeachSubject')}
+        />
+        <Label htmlFor="canTeachSubject" className="text-sm text-gray-700">
+          I can also teach a subject (create my teacher profile)
+        </Label>
+      </div>
+
+      {canTeach && (
+        <div className="space-y-4 rounded-lg border border-teal-200 bg-teal-50/50 p-4">
+          <h4 className="text-sm font-semibold text-teal-800">Teacher Details</h4>
+          <div className="space-y-2">
+            <Label htmlFor="employeeId" className="text-sm font-semibold text-gray-700">
+              Employee ID <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="employeeId"
+              placeholder="e.g. EMP-001"
+              className="h-12 border-2 border-gray-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
+              error={form.formState.errors.employeeId?.message}
+              {...form.register('employeeId')}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Registration Summary */}
       <div className="rounded-lg border border-teal-200 bg-teal-50 p-5">

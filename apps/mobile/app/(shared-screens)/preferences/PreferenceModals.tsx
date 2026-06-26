@@ -4,13 +4,13 @@
  * Refactored to use generic SelectionModal components
  */
 
-import type { OrganizationPreference } from '@/features/preferences';
-import type { SaturdayOffPattern } from '@/features/holidays/api/holidays-api';
 import {
   SingleSelectModal as GenericSingleSelectModal,
   MultiSelectModal as GenericMultiSelectModal,
   type SingleSelectOption,
 } from '@/components/common/SelectionModal';
+import type { SaturdayOffPattern } from '@/features/holidays/api/holidays-api';
+import type { OrganizationPreference } from '@/features/preferences';
 
 import { formatDropdownValue } from './_constants';
 

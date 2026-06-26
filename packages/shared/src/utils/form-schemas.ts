@@ -273,6 +273,7 @@ export const adminInfoSchema = z
     password: strongPasswordSchema,
     password2: z.string().min(1, "Please confirm your password"),
     notification_opt_in: z.boolean().default(true),
+    can_teach_subject: z.boolean().default(true),
   })
   .refine((data) => data.password === data.password2, {
     message: "Passwords don't match",

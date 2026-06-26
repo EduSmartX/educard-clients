@@ -91,8 +91,8 @@ export const TEACHER_COLUMNS: ColumnConfig[] = [
     key: 'joining_date',
     name: 'Joining Date (DD-MM-YYYY)',
     required: false,
-    description: 'Date of joining the organization',
-    validator: dateValidator({ maxFutureMonths: 6 }),
+    description: 'Date of joining the organization in DD-MM-YYYY format (e.g., 15-01-2024)',
+    validator: dateValidator({ maxFutureMonths: 6, format: 'DD-MM-YYYY' }),
   },
   {
     key: 'designation',
@@ -120,8 +120,8 @@ export const TEACHER_COLUMNS: ColumnConfig[] = [
     key: 'date_of_birth',
     name: 'Date of Birth (DD-MM-YYYY)',
     required: false,
-    description: "Teacher's date of birth",
-    validator: dateValidator({ notInFuture: true, minAge: 18 }),
+    description: "Teacher's date of birth in DD-MM-YYYY format (e.g., 20-05-1990)",
+    validator: dateValidator({ notInFuture: true, minAge: 18, format: 'DD-MM-YYYY' }),
   },
   {
     key: 'blood_group',

@@ -27,6 +27,7 @@ import { useDeleteExamSession, useReactivateExamSession } from '../hooks/mutatio
 import { createExamSessionColumns } from '../components/exam-session-columns';
 import { useDeletedView } from '@/hooks/use-deleted-view';
 import { useRole } from '@/hooks/use-role';
+import { useAcademicYears } from '@/features/organizations/hooks/queries';
 import {
   EXAM_SESSION_TYPE_OPTIONS,
   EXAM_SESSION_TYPE_LABELS,
@@ -102,6 +103,8 @@ export function ExamSessionsPage() {
   const [academicYearFilter, setAcademicYearFilter] = useState<string>('');
   const [sessionToDelete, setSessionToDelete] = useState<ExamSession | undefined>();
   const [sessionToReactivate, setSessionToReactivate] = useState<ExamSession | undefined>();
+
+  const { data: academicYears = [] } = useAcademicYears();
 
   const { showDeleted, toggleDeletedView } = useDeletedView({
     onPageChange: setPage,
@@ -248,9 +251,10 @@ export function ExamSessionsPage() {
             <SearchableSelect
               options={[
                 { value: 'all', label: 'All Years' },
-                { value: '2025-2026', label: '2025-2026' },
-                { value: '2024-2025', label: '2024-2025' },
-                { value: '2023-2024', label: '2023-2024' },
+                ...academicYears.map((y) => ({
+                  value: y.public_id,
+                  label: `${y.name}${y.is_current ? ' (Current)' : ''}`,
+                })),
               ]}
               value={academicYearFilter || 'all'}
               onValueChange={(value) => {

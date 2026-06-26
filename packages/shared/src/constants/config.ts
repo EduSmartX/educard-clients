@@ -7,6 +7,8 @@ export const API_CONFIG = {
   BASE_URL: "http://localhost:8000/api",
   TIMEOUT: 30000,
   DEFAULT_PAGE_SIZE: 15,
+  /** Page size for dropdown/select data fetching (classes, teachers, etc.) */
+  DROPDOWN_PAGE_SIZE: 100,
 } as const;
 
 // App Info

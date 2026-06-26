@@ -28,6 +28,11 @@ import {
   createExam,
   updateExam,
   deleteExam,
+  publishExamMarks,
+  unpublishExamMarks,
+  sendExamScheduleNotification,
+  sendExamResultsNotification,
+  sendExamProgressNotification,
 } from './api';
 
 export function useExamSessions(params?: Record<string, unknown>, userRole?: string | null) {
@@ -202,6 +207,84 @@ export function useDeleteExam(options?: MutationOptions) {
     },
     onError: (error: unknown) => {
       handleMutationError(error, 'Failed to delete exam', options?.onError);
+    },
+  });
+}
+
+// ─── Marks Publishing ───────────────────────────────────────────────────────────
+
+export function usePublishExamMarks(options?: MutationOptions) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (examId: string) => publishExamMarks(examId),
+    onSuccess: () => {
+      showToast('success', 'Marks published successfully');
+      void qc.invalidateQueries({ queryKey: ['exams'] });
+      void qc.invalidateQueries({ queryKey: ['marks-overview'] });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to publish marks', options?.onError);
+    },
+  });
+}
+
+export function useUnpublishExamMarks(options?: MutationOptions) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (examId: string) => unpublishExamMarks(examId),
+    onSuccess: () => {
+      showToast('success', 'Marks unpublished successfully');
+      void qc.invalidateQueries({ queryKey: ['exams'] });
+      void qc.invalidateQueries({ queryKey: ['marks-overview'] });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to unpublish marks', options?.onError);
+    },
+  });
+}
+
+// ─── Exam Notifications ─────────────────────────────────────────────────────────
+
+export function useSendExamScheduleNotification(options?: MutationOptions) {
+  return useMutation({
+    mutationFn: ({ sessionId, classId }: { sessionId: string; classId: string }) =>
+      sendExamScheduleNotification(sessionId, classId),
+    onSuccess: () => {
+      showToast('success', 'Schedule notification sent successfully');
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to send schedule notification', options?.onError);
+    },
+  });
+}
+
+export function useSendExamResultsNotification(options?: MutationOptions) {
+  return useMutation({
+    mutationFn: ({ sessionId, classId }: { sessionId: string; classId: string }) =>
+      sendExamResultsNotification(sessionId, classId),
+    onSuccess: () => {
+      showToast('success', 'Results notification sent successfully');
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to send results notification', options?.onError);
+    },
+  });
+}
+
+export function useSendExamProgressNotification(options?: MutationOptions) {
+  return useMutation({
+    mutationFn: ({ sessionId, classId }: { sessionId: string; classId: string }) =>
+      sendExamProgressNotification(sessionId, classId),
+    onSuccess: () => {
+      showToast('success', 'Progress report notification sent successfully');
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to send progress notification', options?.onError);
     },
   });
 }

@@ -220,7 +220,9 @@ export function buildSubjectColorMap(
   const unknownSubjects: string[] = [];
 
   for (const name of subjectNames) {
-    if (!name || map.has(name)) continue;
+    if (!name || map.has(name)) {
+      continue;
+    }
 
     const key = name.trim().toLowerCase();
     const knownIdx = MASTER_SUBJECT_COLOR_INDEX[key];
@@ -235,7 +237,9 @@ export function buildSubjectColorMap(
 
   let nextFree = 0;
   for (const name of unknownSubjects) {
-    if (map.has(name)) continue;
+    if (map.has(name)) {
+      continue;
+    }
 
     while (
       usedIndices.has(nextFree) &&

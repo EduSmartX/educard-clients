@@ -157,3 +157,10 @@ export async function fetchClassHomework(
   });
   return response.data.data;
 }
+
+export async function sendHomeworkNotification(data: {
+  class_public_id: string;
+  date: string;
+}): Promise<void> {
+  await api.post(`${BASE_URL}/notify/`, data);
+}

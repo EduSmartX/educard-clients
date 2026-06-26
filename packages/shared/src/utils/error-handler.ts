@@ -382,7 +382,9 @@ const META_FIELDS = new Set(["success", "code", "data", "message"]);
 
 /** Process an array field value into error messages */
 function processArrayFieldValue(fieldName: string, value: unknown[]): string[] {
-  if (value.length === 0) return [];
+  if (value.length === 0) {
+    return [];
+  }
   if (NON_FIELD_KEYS.has(fieldName)) {
     return value.filter((v) => typeof v === "string") as string[];
   }
@@ -433,7 +435,9 @@ function extractFieldErrors(errors: Record<string, unknown>): string[] {
   const errorMessages: string[] = [];
 
   Object.entries(errors).forEach(([fieldName, value]) => {
-    if (SKIP_FIELDS.has(fieldName)) return;
+    if (SKIP_FIELDS.has(fieldName)) {
+      return;
+    }
 
     if (Array.isArray(value)) {
       errorMessages.push(...processArrayFieldValue(fieldName, value));
@@ -453,7 +457,9 @@ function extractFieldErrors(errors: Record<string, unknown>): string[] {
 function extractTopLevelErrors(rawData: Record<string, unknown>): string[] {
   const topLevelErrors: string[] = [];
   Object.entries(rawData).forEach(([fieldName, value]) => {
-    if (SKIP_FIELDS.has(fieldName) || META_FIELDS.has(fieldName)) return;
+    if (SKIP_FIELDS.has(fieldName) || META_FIELDS.has(fieldName)) {
+      return;
+    }
     if (
       Array.isArray(value) &&
       value.length > 0 &&
@@ -516,27 +522,37 @@ export function extractApiError(
 
   // Priority 1: Backend sends a specific "message" field
   const directMessage = extractDataMessage(data);
-  if (directMessage) return directMessage;
+  if (directMessage) {
+    return directMessage;
+  }
 
   // Priority 2: Extract from errors object (field-level details)
   if (data.errors && typeof data.errors === "object") {
     const errorMessages = extractFieldErrors(data.errors);
-    if (errorMessages.length > 0) return errorMessages.join("\n");
+    if (errorMessages.length > 0) {
+      return errorMessages.join("\n");
+    }
   }
 
   // Check for top-level DRF validation errors
   const rawData: Record<string, unknown> = data as Record<string, unknown>;
   const nfeResult = extractNonFieldErrors(rawData);
-  if (nfeResult) return nfeResult;
+  if (nfeResult) {
+    return nfeResult;
+  }
 
   // Check for top-level field errors
   if (!data.errors && !data.detail && !data.message) {
     const topLevelErrors = extractTopLevelErrors(rawData);
-    if (topLevelErrors.length > 0) return topLevelErrors.join("\n");
+    if (topLevelErrors.length > 0) {
+      return topLevelErrors.join("\n");
+    }
   }
 
   // Check for detail field (common in DRF errors)
-  if (data.detail && typeof data.detail === "string") return data.detail;
+  if (data.detail && typeof data.detail === "string") {
+    return data.detail;
+  }
 
   return fallback;
 }

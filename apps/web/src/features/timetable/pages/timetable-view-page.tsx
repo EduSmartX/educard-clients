@@ -16,6 +16,8 @@ import { DAY_LABELS, type TimetableEntry, type TeacherSlotRow } from '../types';
 import type { Class } from '@/features/classes/types';
 import { PERIOD_PASTEL_COLORS } from '../constants';
 
+const SELF_TEACHER_OPTION = '__self_timetable__';
+
 function ByClassView() {
   const [selectedClassId, setSelectedClassId] = useState<string>('');
 
@@ -97,7 +99,9 @@ function ByClassView() {
 
 function ByTeacherView() {
   const { isAdmin } = useRole();
-  const [selectedTeacherId, setSelectedTeacherId] = useState<string>('');
+  const [selectedTeacherId, setSelectedTeacherId] = useState<string>(
+    isAdmin ? '' : SELF_TEACHER_OPTION
+  );
 
   const { data: manageableTeachers, isLoading: teachersLoading } = useManageableUsers('teacher');
 
@@ -109,10 +113,13 @@ function ByTeacherView() {
     isLoading: timetableLoading,
     isError,
     error,
-  } = useTeacherTimetable(selectedTeacherId || undefined);
+  } = useTeacherTimetable(
+    selectedTeacherId && selectedTeacherId !== SELF_TEACHER_OPTION ? selectedTeacherId : undefined
+  );
 
-  const timetableData = selectedTeacherId ? teacherTimetable : myTimetable;
-  const isLoading = selectedTeacherId ? timetableLoading : myLoading;
+  const isSelfView = selectedTeacherId === SELF_TEACHER_OPTION;
+  const timetableData = isSelfView ? myTimetable : teacherTimetable;
+  const isLoading = isSelfView ? myLoading : timetableLoading;
 
   useEffect(() => {
     if (isAdmin && !selectedTeacherId && teachers.length > 0) {
@@ -120,10 +127,20 @@ function ByTeacherView() {
     }
   }, [teachers, selectedTeacherId, isAdmin]);
 
-  const teacherOptions = useMemo(
-    () => teachers.map((t) => ({ value: t.public_id, label: t.full_name })),
-    [teachers]
-  );
+  useEffect(() => {
+    if (!isAdmin && !selectedTeacherId) {
+      setSelectedTeacherId(SELF_TEACHER_OPTION);
+    }
+  }, [isAdmin, selectedTeacherId]);
+
+  const teacherOptions = useMemo(() => {
+    const options = teachers.map((t) => ({ value: t.public_id, label: t.full_name }));
+    const myLabel = myTimetable?.teacher_name
+      ? `${myTimetable.teacher_name} (My Timetable)`
+      : 'My Timetable';
+
+    return [{ value: SELF_TEACHER_OPTION, label: myLabel }, ...options];
+  }, [teachers, myTimetable?.teacher_name]);
 
   const { slotRows, availableDays } = useMemo(() => {
     if (!timetableData?.days) {
@@ -167,7 +184,27 @@ function ByTeacherView() {
     return { slotRows: rows, availableDays: days };
   }, [timetableData]);
 
-  if (isError && selectedTeacherId) {
+  const [selectedDay, setSelectedDay] = useState<number | 'all'>('all');
+
+  useEffect(() => {
+    if (availableDays.length === 0) {
+      setSelectedDay('all');
+      return;
+    }
+
+    const today = getCurrentDayIndex();
+    setSelectedDay((prev) => {
+      if (prev !== 'all' && availableDays.includes(prev)) {
+        return prev;
+      }
+      if (availableDays.includes(today)) {
+        return today;
+      }
+      return availableDays[0];
+    });
+  }, [availableDays]);
+
+  if (isError && selectedTeacherId && selectedTeacherId !== SELF_TEACHER_OPTION) {
     const errorMsg =
       (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
       (error as Error)?.message ||
@@ -195,6 +232,8 @@ function ByTeacherView() {
   }
 
   const todayIndex = getCurrentDayIndex();
+  const visibleDays =
+    selectedDay === 'all' ? availableDays : availableDays.filter((day) => day === selectedDay);
 
   return (
     <div className="space-y-5">
@@ -227,150 +266,182 @@ function ByTeacherView() {
 
       {isLoading && <PageLoader />}
 
-      {!isLoading &&
-        timetableData &&
-        slotRows.length > 0 &&
-        (() => {
-          // Build a color map keyed by class_name for variety
-          const classColorMap = new Map<string, (typeof PERIOD_PASTEL_COLORS)[number]>();
-          let colorIdx = 0;
-          for (const row of slotRows) {
-            for (const entry of Object.values(row.entries)) {
-              if (entry?.class_name && !classColorMap.has(entry.class_name)) {
-                classColorMap.set(
-                  entry.class_name,
-                  PERIOD_PASTEL_COLORS[colorIdx % PERIOD_PASTEL_COLORS.length]
-                );
-                colorIdx++;
+      {!isLoading && timetableData && slotRows.length > 0 && (
+        <div className="space-y-3">
+          {availableDays.length > 1 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedDay('all')}
+                className={cn(
+                  'rounded-full border px-3 py-1 text-xs font-semibold transition-colors',
+                  selectedDay === 'all'
+                    ? 'border-indigo-300 bg-indigo-100 text-indigo-700'
+                    : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                )}
+              >
+                All Days
+              </button>
+              {availableDays.map((day) => (
+                <button
+                  key={day}
+                  type="button"
+                  onClick={() => setSelectedDay(day)}
+                  className={cn(
+                    'rounded-full border px-3 py-1 text-xs font-semibold transition-colors',
+                    selectedDay === day
+                      ? 'border-indigo-300 bg-indigo-100 text-indigo-700'
+                      : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                  )}
+                >
+                  {DAY_LABELS[day] ?? `Day ${day}`}
+                  {day === todayIndex ? ' (Today)' : ''}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {(() => {
+            const classColorMap = new Map<string, (typeof PERIOD_PASTEL_COLORS)[number]>();
+            let colorIdx = 0;
+            for (const row of slotRows) {
+              for (const entry of Object.values(row.entries)) {
+                if (entry?.class_name && !classColorMap.has(entry.class_name)) {
+                  classColorMap.set(
+                    entry.class_name,
+                    PERIOD_PASTEL_COLORS[colorIdx % PERIOD_PASTEL_COLORS.length]
+                  );
+                  colorIdx++;
+                }
               }
             }
-          }
 
-          return (
-            <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
-              <div
-                className="grid min-w-[700px]"
-                style={{
-                  gridTemplateColumns: `90px repeat(${availableDays.length}, minmax(0, 1fr))`,
-                }}
-              >
-                {/* Header row */}
-                <div className="sticky top-0 z-10 flex items-center justify-center border-b border-gray-200 bg-gray-50 p-3">
-                  <span className="text-xs font-semibold text-gray-500 uppercase">Time</span>
-                </div>
-                {availableDays.map((day) => (
-                  <div
-                    key={day}
-                    className={cn(
-                      'sticky top-0 z-10 border-b border-l border-gray-200 p-3 text-center',
-                      day === todayIndex ? 'bg-indigo-50' : 'bg-gray-50'
-                    )}
-                  >
+            return (
+              <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+                <div
+                  className="grid min-w-[700px]"
+                  style={{
+                    gridTemplateColumns: `90px repeat(${visibleDays.length}, minmax(0, 1fr))`,
+                  }}
+                >
+                  <div className="sticky top-0 z-10 flex items-center justify-center border-b border-gray-200 bg-gray-50 p-3">
+                    <span className="text-xs font-semibold text-gray-500 uppercase">Time</span>
+                  </div>
+                  {visibleDays.map((day) => (
                     <div
+                      key={day}
                       className={cn(
-                        'text-sm font-semibold',
-                        day === todayIndex ? 'text-indigo-700' : 'text-gray-700'
+                        'sticky top-0 z-10 border-b border-l border-gray-200 p-3 text-center',
+                        day === todayIndex ? 'bg-indigo-50' : 'bg-gray-50'
                       )}
                     >
-                      {DAY_LABELS[day] ?? `Day ${day}`}
-                    </div>
-                    {day === todayIndex && (
-                      <span className="mt-0.5 inline-block rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-medium text-indigo-500">
-                        Today
-                      </span>
-                    )}
-                  </div>
-                ))}
-
-                {slotRows.map((row, rowIndex) => {
-                  const isBreak = row.slotType === 'short_break' || row.slotType === 'long_break';
-
-                  return (
-                    <Fragment key={`row-${row.startTime}`}>
                       <div
                         className={cn(
-                          'flex flex-col items-center justify-center border-b border-gray-100 p-2',
-                          isBreak ? 'bg-amber-50/50' : 'bg-white'
+                          'text-sm font-semibold',
+                          day === todayIndex ? 'text-indigo-700' : 'text-gray-700'
                         )}
                       >
-                        <span className="text-xs font-semibold text-gray-700">
-                          {formatSlotTime(row.startTime)}
-                        </span>
-                        <span className="text-[10px] text-gray-400">
-                          {formatSlotTime(row.endTime)}
-                        </span>
-                        {!!row.slotLabel && (
-                          <span className="mt-0.5 text-[10px] text-gray-400">{row.slotLabel}</span>
-                        )}
+                        {DAY_LABELS[day] ?? `Day ${day}`}
                       </div>
+                      {day === todayIndex && (
+                        <span className="mt-0.5 inline-block rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-medium text-indigo-500">
+                          Today
+                        </span>
+                      )}
+                    </div>
+                  ))}
 
-                      {availableDays.map((day) => {
-                        const entry = row.entries[String(day)];
+                  {slotRows.map((row, rowIndex) => {
+                    const isBreak = row.slotType === 'short_break' || row.slotType === 'long_break';
 
-                        if (isBreak) {
-                          return (
-                            <div
-                              key={`${rowIndex}-${day}`}
-                              className="flex items-center justify-center border-b border-l border-gray-100 bg-amber-50/50 p-2"
-                            >
-                              <span className="text-xs font-medium text-amber-600">
-                                ☕ {row.slotLabel || 'Break'}
-                              </span>
-                            </div>
-                          );
-                        }
+                    return (
+                      <Fragment key={`row-${row.startTime}`}>
+                        <div
+                          className={cn(
+                            'flex flex-col items-center justify-center border-b border-gray-100 p-2',
+                            isBreak ? 'bg-amber-50/50' : 'bg-white'
+                          )}
+                        >
+                          <span className="text-xs font-semibold text-gray-700">
+                            {formatSlotTime(row.startTime)}
+                          </span>
+                          <span className="text-[10px] text-gray-400">
+                            {formatSlotTime(row.endTime)}
+                          </span>
+                          {!!row.slotLabel && (
+                            <span className="mt-0.5 text-[10px] text-gray-400">{row.slotLabel}</span>
+                          )}
+                        </div>
 
-                        if (!entry) {
+                        {visibleDays.map((day) => {
+                          const entry = row.entries[String(day)];
+
+                          if (isBreak) {
+                            return (
+                              <div
+                                key={`${rowIndex}-${day}`}
+                                className="flex items-center justify-center border-b border-l border-gray-100 bg-amber-50/50 p-2"
+                              >
+                                <span className="text-xs font-medium text-amber-600">
+                                  ☕ {row.slotLabel || 'Break'}
+                                </span>
+                              </div>
+                            );
+                          }
+
+                          if (!entry) {
+                            return (
+                              <div
+                                key={`${rowIndex}-${day}`}
+                                className={cn(
+                                  'flex items-center justify-center border-b border-l border-gray-100 p-2',
+                                  day === todayIndex ? 'bg-indigo-50/30' : 'bg-gray-50/30'
+                                )}
+                              >
+                                <span className="text-xs text-gray-400 italic">Leisure</span>
+                              </div>
+                            );
+                          }
+
+                          const periodColor =
+                            classColorMap.get(entry.class_name ?? '') ??
+                            PERIOD_PASTEL_COLORS[rowIndex % PERIOD_PASTEL_COLORS.length];
                           return (
                             <div
                               key={`${rowIndex}-${day}`}
                               className={cn(
-                                'flex items-center justify-center border-b border-l border-gray-100 p-2',
-                                day === todayIndex ? 'bg-indigo-50/30' : 'bg-gray-50/30'
-                              )}
-                            >
-                              <span className="text-xs text-gray-400 italic">Leisure</span>
-                            </div>
-                          );
-                        }
-
-                        const periodColor =
-                          classColorMap.get(entry.class_name ?? '') ??
-                          PERIOD_PASTEL_COLORS[rowIndex % PERIOD_PASTEL_COLORS.length];
-                        return (
-                          <div
-                            key={`${rowIndex}-${day}`}
-                            className={cn(
-                              'border-b border-l border-gray-100 p-1.5',
-                              day === todayIndex ? 'bg-indigo-50/20' : ''
-                            )}
-                          >
-                            <div
-                              className={cn(
-                                'h-full rounded-lg border-l-3 p-2',
-                                periodColor.bg,
-                                periodColor.border
+                                'border-b border-l border-gray-100 p-1.5',
+                                day === todayIndex ? 'bg-indigo-50/20' : ''
                               )}
                             >
                               <div
-                                className={cn('truncate text-xs font-semibold', periodColor.text)}
+                                className={cn(
+                                  'h-full rounded-lg border-l-3 p-2',
+                                  periodColor.bg,
+                                  periodColor.border
+                                )}
                               >
-                                {entry.subject_name || 'Unassigned'}
-                              </div>
-                              <div className={cn('mt-0.5 truncate text-[11px]', periodColor.sub)}>
-                                {entry.class_name}
+                                <div
+                                  className={cn('truncate text-xs font-semibold', periodColor.text)}
+                                >
+                                  {entry.subject_name || 'Unassigned'}
+                                </div>
+                                <div className={cn('mt-0.5 truncate text-[11px]', periodColor.sub)}>
+                                  {entry.class_name}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </Fragment>
-                  );
-                })}
+                          );
+                        })}
+                      </Fragment>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          );
-        })()}
+            );
+          })()}
+        </div>
+      )}
 
       {!isLoading && timetableData && slotRows.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center">

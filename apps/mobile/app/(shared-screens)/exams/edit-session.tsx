@@ -45,7 +45,7 @@ export default function EditExamSessionScreen() {
     if (session && !initialized) {
       setName(session.name ?? '');
       setSessionType(session.session_type ?? '');
-      setAcademicYear(session.academic_year ?? '');
+      setAcademicYear(session.academic_year_public_id ?? '');
       setDescription(session.description ?? '');
       setStartDate(session.start_date ?? '');
       setEndDate(session.end_date ?? '');
@@ -66,10 +66,14 @@ export default function EditExamSessionScreen() {
       Alert.alert('Error', 'Academic year is required');
       return;
     }
+    if (!sessionId) {
+      Alert.alert('Error', 'Missing session id');
+      return;
+    }
 
     try {
       await updateSession.mutateAsync({
-        id: sessionId!,
+        id: sessionId,
         data: {
           name: name.trim(),
           session_type: sessionType as ExamSessionType,
@@ -79,7 +83,7 @@ export default function EditExamSessionScreen() {
           end_date: endDate || null,
         },
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       showToast({ type: 'error', title: 'Error', message: extractApiError(err) });
     }
   };

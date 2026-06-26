@@ -13,6 +13,7 @@ import { useDeleteClass, useReactivateClass } from '../hooks/mutations';
 import { ClassesList } from './classes-list';
 import { ROUTES } from '@/constants/app-config';
 import { useDeletedView } from '@/hooks/use-deleted-view';
+import { useFilterParams } from '@/hooks/use-filter-params';
 import type { Class } from '../types';
 
 interface ClassesManagementProps {
@@ -23,11 +24,18 @@ export function ClassesManagement({ viewMode = 'admin' }: Readonly<ClassesManage
   const isEmployeeView = viewMode === 'employee';
   const navigate = useNavigate();
 
-  // Pagination state
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState<Record<string, string>>({});
+  // Filter/search/pagination state — persisted in URL search params
+  const {
+    filters,
+    search: searchQuery,
+    page,
+    pageSize,
+    setFilter: _setFilter,
+    setFilters,
+    setSearch: setSearchQuery,
+    setPage,
+    setPageSize,
+  } = useFilterParams({ academic_year: '' }, { defaultPageSize: 10 });
 
   // Dialog states
   const [classToDelete, setClassToDelete] = useState<Class | undefined>();
@@ -111,17 +119,14 @@ export function ClassesManagement({ viewMode = 'admin' }: Readonly<ClassesManage
 
   const handlePageSizeChange = (newPageSize: number) => {
     setPageSize(newPageSize);
-    setPage(1); // Reset to first page when page size changes
   };
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    setPage(1); // Reset to first page on new search
   };
 
   const handleFilterChange = (newFilters: Record<string, string>) => {
     setFilters(newFilters);
-    setPage(1); // Reset to first page on filter change
   };
 
   return (

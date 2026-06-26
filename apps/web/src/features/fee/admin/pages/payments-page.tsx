@@ -189,14 +189,13 @@ export function PaymentsPage() {
           {
             label: 'Record Payment',
             onClick: () => navigate(ROUTES.FEES.PAYMENT_NEW),
-            variant: 'default' as const,
+            variant: 'brand' as const,
             icon: Plus,
-            className: 'bg-green-600 hover:bg-green-700',
           },
           {
             label: 'Export',
             onClick: handleExport,
-            variant: 'outline' as const,
+            variant: 'secondary' as const,
             icon: Download,
           },
         ]}

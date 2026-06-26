@@ -31,8 +31,8 @@ import {
   PartyPopper,
 } from '@/lib/lucide-shim';
 
-import { StatCard } from './StatCard';
 import { ProgressBar } from './ProgressBar';
+import { StatCard } from './StatCard';
 import { styles } from './styles';
 
 export function SummaryTab() {
@@ -88,7 +88,12 @@ export function SummaryTab() {
       <View style={styles.errorContainer}>
         <XCircle size={48} color="#ef4444" />
         <Text style={styles.errorText}>Failed to load data</Text>
-        <TouchableOpacity onPress={handleRefresh} style={styles.retryButton}>
+        <TouchableOpacity
+          onPress={() => {
+            void handleRefresh();
+          }}
+          style={styles.retryButton}
+        >
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
       </View>
@@ -133,7 +138,14 @@ export function SummaryTab() {
   return (
     <ScrollView
       contentContainerStyle={styles.tabContent}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => {
+            void handleRefresh();
+          }}
+        />
+      }
       showsVerticalScrollIndicator={false}
     >
       {/* Date Navigation */}

@@ -9,7 +9,7 @@
  * - Subject color legend at the bottom
  */
 
-import { useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { formatSlotTime } from '@educard/shared';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,7 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { SearchableSelect } from '@/components/ui/searchable-select';
-import { AlertTriangle, BookOpen, Clock, Coffee, Plus, User, X } from 'lucide-react';
+import { AlertTriangle, BookOpen, Clock, Coffee, Copy, Plus, User, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSubjects } from '@/features/subjects/hooks/use-subjects';
 import { useRole } from '@/hooks/use-role';
@@ -56,6 +56,12 @@ interface TimetableGridProps {
   isLoading?: boolean;
   readOnly?: boolean;
 }
+
+type CopySource = {
+  subjectPublicId: string;
+  subjectName: string;
+  teacherName: string | null;
+};
 
 function getActiveDays(days: Record<string, ClassTimetableSlot[]>): number[] {
   return Object.keys(days)
@@ -136,7 +142,11 @@ function AssignmentPopover({
       }}
     >
       <PopoverTrigger asChild>
-        <button className="flex h-full w-full flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-indigo-200/60 bg-indigo-50/30 px-2 py-3 transition-all hover:border-indigo-400 hover:bg-indigo-50 hover:shadow-sm">
+        <button
+          type="button"
+          data-timetable-cell="true"
+          className="flex h-full w-full flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-indigo-200/60 bg-indigo-50/30 px-2 py-3 transition-all hover:border-indigo-400 hover:bg-indigo-50 hover:shadow-sm"
+        >
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100/80">
             <Plus className="h-4 w-4 text-indigo-400" />
           </div>
@@ -321,12 +331,18 @@ function PeriodCell({
   classPublicId,
   onChanged,
   isAdmin,
+  copySource,
+  onStartCopy,
+  onQuickCopy,
 }: {
   slot: ClassTimetableSlot;
   color: SubjectColorScheme;
   classPublicId: string;
   onChanged: () => void;
   isAdmin: boolean;
+  copySource: CopySource | null;
+  onStartCopy: (source: CopySource) => void;
+  onQuickCopy: (slot: ClassTimetableSlot) => void;
 }) {
   const deleteEntry = useDeleteEntry(classPublicId, { onSuccess: onChanged });
 
@@ -339,26 +355,65 @@ function PeriodCell({
         </div>
       );
     }
+    if (copySource) {
+      return (
+        <button
+          type="button"
+          data-timetable-cell="true"
+          onClick={() => onQuickCopy(slot)}
+          className="flex h-full w-full flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-indigo-300 bg-indigo-50/70 px-2 py-3 text-center transition-all hover:border-indigo-500 hover:bg-indigo-50 hover:shadow-sm"
+          title={`Copy ${copySource.subjectName} here`}
+        >
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100/90">
+            <Copy className="h-4 w-4 text-indigo-500" />
+          </div>
+          <span className="text-[10px] font-semibold text-indigo-500">Paste</span>
+          <span className="max-w-full truncate text-[9px] text-indigo-400">
+            {copySource.subjectName}
+          </span>
+        </button>
+      );
+    }
+
     return <AssignmentPopover slot={slot} classPublicId={classPublicId} onAssigned={onChanged} />;
   }
 
   return (
     <div
-      className={`group relative flex h-full flex-col rounded-xl border border-l-4 ${color.border} ${color.bg} px-3 py-2.5 transition-all hover:shadow-md`}
+      data-timetable-cell="true"
+      className={`group relative flex h-full flex-col rounded-xl border border-l-4 ${color.border} ${color.bg} px-3 py-2.5 transition-all hover:shadow-md ${
+        copySource?.subjectPublicId === slot.subject_public_id ? 'ring-2 ring-indigo-400 ring-offset-2' : ''
+      }`}
     >
       {isAdmin && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (slot.entry_public_id) {
-              deleteEntry.mutate(slot.entry_public_id);
-            }
-          }}
-          className="absolute -top-1.5 -right-1.5 z-10 hidden h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white shadow-sm transition-all group-hover:flex hover:bg-red-600"
-          title="Remove assignment"
-        >
-          <X className="h-3 w-3" />
-        </button>
+        <>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onStartCopy({
+                subjectPublicId: slot.subject_public_id ?? '',
+                subjectName: slot.subject_name ?? '',
+                teacherName: slot.teacher_name,
+              });
+            }}
+            className="absolute -top-1.5 right-6 z-10 hidden h-5 w-5 items-center justify-center rounded-full bg-indigo-500 text-white shadow-sm transition-all group-hover:flex hover:bg-indigo-600"
+            title="Copy this subject to other periods"
+          >
+            <Copy className="h-3 w-3" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (slot.entry_public_id) {
+                deleteEntry.mutate(slot.entry_public_id);
+              }
+            }}
+            className="absolute -top-1.5 -right-1.5 z-10 hidden h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white shadow-sm transition-all group-hover:flex hover:bg-red-600"
+            title="Remove assignment"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </>
       )}
 
       <span className={`text-[10px] font-semibold ${color.text} opacity-60`}>
@@ -389,6 +444,12 @@ function PeriodCell({
           📍 {slot.room}
         </span>
       )}
+
+      {isAdmin && copySource?.subjectPublicId === slot.subject_public_id && (
+        <span className="mt-2 inline-flex self-start rounded-full bg-indigo-500/10 px-2 py-0.5 text-[9px] font-semibold text-indigo-600">
+          Copy source
+        </span>
+      )}
     </div>
   );
 }
@@ -416,6 +477,10 @@ function TimetableGridSkeleton() {
 export function TimetableGrid({ timetable, isLoading, readOnly }: Readonly<TimetableGridProps>) {
   const { isAdmin: isAdminRole } = useRole();
   const isAdmin = isAdminRole && !readOnly;
+  const qc = useQueryClient();
+  const copyEntry = useCreateEntry(timetable.class_public_id);
+  const [copySource, setCopySource] = useState<CopySource | null>(null);
+  const timetableAreaRef = useRef<HTMLDivElement | null>(null);
   const activeDays = useMemo(
     () => (timetable.days ? getActiveDays(timetable.days) : []),
     [timetable.days]
@@ -433,6 +498,75 @@ export function TimetableGrid({ timetable, isLoading, readOnly }: Readonly<Timet
     }
     return buildSubjectColorMap(allNames);
   }, [timetable.days]);
+
+  const handleStartCopy = useCallback((source: CopySource) => {
+    setCopySource(source);
+    toast.message(`Copying ${source.subjectName}. Click empty slots to paste it.`);
+  }, []);
+
+  const handleQuickCopy = useCallback(
+    async (slot: ClassTimetableSlot) => {
+      if (!copySource?.subjectPublicId) {
+        return;
+      }
+
+      try {
+        const result = await copyEntry.mutateAsync({
+          slot_public_id: slot.public_id,
+          day_of_week: slot.day_of_week,
+          class_public_id: timetable.class_public_id,
+          subject_public_id: copySource.subjectPublicId,
+        });
+
+        if (result.warnings?.length) {
+          toast.warning(result.warnings[0] ?? 'Assignment saved with warnings.');
+          await qc.invalidateQueries({ queryKey: timetableKeys.classTimetable(timetable.class_public_id) });
+        }
+      } catch {
+        // Mutation errors are surfaced by the shared mutation handler.
+      }
+    },
+    [copyEntry, copySource?.subjectPublicId, qc, timetable.class_public_id]
+  );
+
+  const handleCancelCopy = useCallback(() => {
+    setCopySource(null);
+  }, []);
+
+  useEffect(() => {
+    if (!copySource) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) {
+        return;
+      }
+
+      if (target.closest('[data-copy-preserve="true"]')) {
+        return;
+      }
+
+      if (!target.closest('[data-timetable-cell="true"]')) {
+        setCopySource(null);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setCopySource(null);
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [copySource]);
 
   const handleChanged = useCallback(() => {}, []);
 
@@ -575,7 +709,28 @@ export function TimetableGrid({ timetable, isLoading, readOnly }: Readonly<Timet
       </CardHeader>
 
       <CardContent className="overflow-x-auto p-3 sm:p-5">
-        <div className="min-w-[700px]">
+        <div ref={timetableAreaRef} className="min-w-[700px]">
+          {copySource && (
+            <div
+              data-copy-preserve="true"
+              className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-indigo-200 bg-indigo-50 px-3 py-2"
+            >
+              <div className="text-sm text-indigo-700">
+                <span className="font-semibold">Copy mode:</span> {copySource.subjectName}
+                {copySource.teacherName ? ` · ${copySource.teacherName}` : ''}
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-8 border-indigo-200 bg-white text-xs text-indigo-700 hover:bg-indigo-50"
+                onClick={handleCancelCopy}
+              >
+                Cancel copy
+              </Button>
+            </div>
+          )}
+
           {/* Day headers */}
           <div className="mb-2 grid gap-1.5" style={gridStyle(activeDays.length)}>
             <div className="flex items-center justify-center rounded-lg bg-indigo-600 px-2 py-3.5 shadow-sm">
@@ -643,6 +798,9 @@ export function TimetableGrid({ timetable, isLoading, readOnly }: Readonly<Timet
                         classPublicId={timetable.class_public_id}
                         onChanged={handleChanged}
                         isAdmin={isAdmin}
+                        copySource={copySource}
+                        onStartCopy={handleStartCopy}
+                        onQuickCopy={handleQuickCopy}
                       />
                     </div>
                   );

@@ -3,7 +3,7 @@
  * Matches the Exam interface: session_name, subject_name, class_name, status, etc.
  */
 
-import { Eye, Pencil, Trash2, RotateCcw } from 'lucide-react';
+import { Eye, Pencil, Trash2, RotateCcw, ClipboardEdit } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Column } from '@/components/ui/data-table';
@@ -20,6 +20,7 @@ interface CreateColumnsParams {
   onView: (exam: Exam) => void;
   onEdit?: (exam: Exam) => void;
   onDelete?: (exam: Exam) => void;
+  onEnterMarks?: (exam: Exam) => void;
   isDeletedView?: boolean;
 }
 
@@ -43,6 +44,7 @@ export function createExamColumns({
   onView,
   onEdit,
   onDelete,
+  onEnterMarks,
   isDeletedView = false,
 }: CreateColumnsParams): Column<Exam>[] {
   return [
@@ -178,6 +180,19 @@ export function createExamColumns({
               >
                 <Eye className="h-4 w-4" />
               </Button>
+              {onEnterMarks && exam.status === 'completed' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEnterMarks(exam);
+                  }}
+                  title="Enter Marks"
+                >
+                  <ClipboardEdit className="h-4 w-4 text-blue-600" />
+                </Button>
+              )}
               {onEdit && (
                 <Button
                   variant="ghost"

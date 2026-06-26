@@ -7,11 +7,10 @@ import { Colors, getRoleGradient, extractApiError } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, ChevronDown, ChevronUp, Settings, Eye } from 'lucide-react-native';
-import { useState, useCallback, useRef, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
@@ -19,12 +18,6 @@ import {
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-
-import { getCategoryConfig, formatCategory } from './_constants';
-import { PreferenceItem } from './PreferenceItems';
-import { SingleSelectModal, MultiSelectModal } from './PreferenceModals';
-import { styles } from './_styles';
-import { WorkingDayPolicyCard } from './WorkingDayPolicyCard';
 
 import type { SaturdayOffPattern, WorkingDayPolicy } from '@/features/holidays/api/holidays-api';
 import {
@@ -42,6 +35,12 @@ import {
 import { useAuthStore } from '@/lib/auth-store';
 import { useToast } from '@/lib/toast-context';
 import { isAdminRole } from '@/utils/role-utils';
+
+import { getCategoryConfig, formatCategory } from './_constants';
+import { styles } from './_styles';
+import { PreferenceItem } from './PreferenceItems';
+import { SingleSelectModal, MultiSelectModal } from './PreferenceModals';
+import { WorkingDayPolicyCard } from './WorkingDayPolicyCard';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -88,7 +87,6 @@ async function performWdpUpdate(
 export default function OrgPreferencesScreen() {
   const router = useRouter();
   const { showToast } = useToast();
-  const scrollRef = useRef<ScrollView>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [tooltipPref, setTooltipPref] = useState<string | null>(null);
@@ -186,7 +184,6 @@ export default function OrgPreferencesScreen() {
             </View>
           )}
           <KeyboardAwareScrollView
-            ref={scrollRef as any}
             style={styles.scrollView}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}

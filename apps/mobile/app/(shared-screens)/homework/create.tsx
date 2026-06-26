@@ -108,6 +108,7 @@ export default function CreateHomeworkScreen() {
   const [dueTime, setDueTime] = useState('17:00');
   const [priority, setPriority] = useState<string>(HOMEWORK_PRIORITY.MEDIUM);
   const [submissionType, setSubmissionType] = useState<string>(SUBMISSION_TYPE.OFFLINE);
+  const [chapter, setChapter] = useState('');
   const [referenceLink, setReferenceLink] = useState('');
   const [status, setStatus] = useState<string>(HOMEWORK_STATUS.PUBLISHED);
   const [attachments, setAttachments] = useState<SelectedFile[]>([]);
@@ -194,6 +195,7 @@ export default function CreateHomeworkScreen() {
       priority: priority as HomeworkPriority,
       submission_type: submissionType as SubmissionType,
       reference_link: referenceLink.trim() || undefined,
+      chapter: chapter.trim() || undefined,
     };
 
     createMutation.mutate(payload, {
@@ -319,6 +321,22 @@ export default function CreateHomeworkScreen() {
             )}
           </Animated.View>
         )}
+
+        {/* Chapter / Unit */}
+        <Animated.View entering={FadeInDown.delay(175)} style={styles.section}>
+          <Text style={styles.sectionTitle}>Chapter / Unit</Text>
+          <View style={styles.inputWrapper}>
+            <BookOpen size={18} color={Colors.gray[400]} />
+            <TextInput
+              style={styles.input}
+              placeholder="e.g., Chapter 5 - Photosynthesis"
+              placeholderTextColor={Colors.gray[400]}
+              value={chapter}
+              onChangeText={setChapter}
+              maxLength={255}
+            />
+          </View>
+        </Animated.View>
 
         {/* Title */}
         <Animated.View entering={FadeInDown.delay(200)} style={styles.section}>

@@ -13,6 +13,7 @@ import { parseISO } from 'date-fns';
 
 type SupportedHolidayType =
   | 'NATIONAL_HOLIDAY'
+  | 'STATE_HOLIDAY'
   | 'FESTIVAL'
   | 'ORGANIZATION_HOLIDAY'
   | 'SECOND_SATURDAY'
@@ -37,6 +38,7 @@ interface HolidayFormFieldsProps {
 
 const HOLIDAY_TYPES: SupportedHolidayType[] = [
   'NATIONAL_HOLIDAY',
+  'STATE_HOLIDAY',
   'FESTIVAL',
   'ORGANIZATION_HOLIDAY',
   'SECOND_SATURDAY',

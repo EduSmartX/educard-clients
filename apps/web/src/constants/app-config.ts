@@ -241,7 +241,7 @@ export const ROUTES = {
   SUBJECTS_VIEW: '/subjects/:id',
   SUBJECTS_EDIT: '/subjects/:id/edit',
   EXAMS: '/exams',
-  EXAMS_OVERVIEW: '/exams/overview',
+  EXAMS_SCHEDULE: '/exams/schedule',
   EXAM_SESSIONS: '/exams/sessions',
   EXAM_SESSIONS_NEW: '/exams/sessions/new',
   EXAM_SESSIONS_VIEW: '/exams/sessions/:id',

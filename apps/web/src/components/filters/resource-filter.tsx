@@ -324,7 +324,7 @@ export function ResourceFilter({
           </div>
 
           <div className="flex gap-2 pt-2">
-            <Button onClick={handleApplyFilters} size="sm">
+            <Button variant="brand" onClick={handleApplyFilters} size="sm">
               <Filter className="mr-2 h-4 w-4" />
               Apply Filters
             </Button>

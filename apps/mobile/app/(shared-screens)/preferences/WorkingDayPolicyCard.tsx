@@ -9,10 +9,10 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { SaturdayPatternModal } from './PreferenceModals';
-import { styles } from './_styles';
-
 import type { SaturdayOffPattern, WorkingDayPolicy } from '@/features/holidays/api/holidays-api';
+
+import { styles } from './_styles';
+import { SaturdayPatternModal } from './PreferenceModals';
 
 const SATURDAY_OPTIONS: { label: string; value: SaturdayOffPattern }[] = [
   { label: 'No Saturdays Off', value: 'NONE' },

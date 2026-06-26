@@ -200,7 +200,7 @@ function FeeCard({ fee }: Readonly<FeeCardProps>) {
           <Button variant="outline" size="sm" asChild>
             <Link to={`/parent/fees/${fee.id}`}>View Details</Link>
           </Button>
-          <Button size="sm" asChild>
+          <Button variant="brand" size="sm" asChild>
             <Link to={`/parent/fees/${fee.id}/pay`}>
               <CreditCard className="mr-2 h-4 w-4" />
               Pay Now

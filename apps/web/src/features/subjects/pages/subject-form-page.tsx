@@ -337,7 +337,6 @@ export default function SubjectFormPage() {
             onClick: handleBackToList,
             variant: 'outline' as const,
             icon: X,
-            className: 'border-2 border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700',
           },
         ],
       };
@@ -356,14 +355,12 @@ export default function SubjectFormPage() {
               onClick: handleBackToList,
               variant: 'outline' as const,
               icon: X,
-              className: 'border-2 border-gray-400 text-gray-700 hover:bg-gray-100',
             },
             {
               label: 'Reactivate',
               onClick: handleReactivateClick,
-              variant: 'default' as const,
+              variant: 'success' as const,
               icon: RefreshCw,
-              className: 'bg-green-600 hover:bg-green-700',
             },
           ],
         };
@@ -380,12 +377,11 @@ export default function SubjectFormPage() {
             onClick: handleBackToList,
             variant: 'outline' as const,
             icon: X,
-            className: 'border-2 border-gray-400 text-gray-700 hover:bg-gray-100',
           },
           {
             label: 'Edit',
             onClick: handleSwitchToEdit,
-            variant: 'default' as const,
+            variant: 'brand' as const,
             icon: Edit,
           },
         ],
@@ -403,7 +399,6 @@ export default function SubjectFormPage() {
           onClick: handleBackToList,
           variant: 'outline' as const,
           icon: X,
-          className: 'border-2 border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700',
         },
       ],
     };

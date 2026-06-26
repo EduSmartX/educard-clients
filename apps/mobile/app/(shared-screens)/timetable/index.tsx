@@ -13,7 +13,7 @@ import {
 } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ChevronLeft, Clock, BookOpen, User, Settings, Plus } from 'lucide-react-native';
+import { ChevronLeft, Clock, BookOpen, User, Settings } from 'lucide-react-native';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import {
   View,

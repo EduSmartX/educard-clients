@@ -35,6 +35,12 @@ export function getHolidayTypeColor(type: HolidayType): HolidayColors {
       badge: 'bg-red-100 text-red-700 border-red-200',
       border: 'border-red-200',
     },
+    STATE_HOLIDAY: {
+      bg: 'bg-red-50',
+      text: 'text-red-700',
+      badge: 'bg-red-100 text-red-700 border-red-200',
+      border: 'border-red-200',
+    },
     FESTIVAL: {
       bg: 'bg-orange-50',
       text: 'text-orange-700',
@@ -67,6 +73,7 @@ export function formatHolidayType(type: HolidayType): string {
     SATURDAY: 'Saturday',
     SECOND_SATURDAY: '2nd Saturday',
     NATIONAL_HOLIDAY: 'National Holiday',
+    STATE_HOLIDAY: 'State Holiday',
     FESTIVAL: 'Festival',
     ORGANIZATION_HOLIDAY: 'Organization Holiday',
     OTHER: 'Other',

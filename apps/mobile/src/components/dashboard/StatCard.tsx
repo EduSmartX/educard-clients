@@ -5,13 +5,12 @@
 
 import { LinearGradient } from 'expo-linear-gradient';
 import { TrendingUp, TrendingDown, type LucideIcon } from 'lucide-react-native';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = (width - 48) / 2;
-
 export interface StatCardProps {
+  /** Unique ID for key prop */
+  id?: string;
   /** Display title */
   title: string;
   /** Value to display (string for flexibility - can be number, percentage, text) */
@@ -80,7 +79,7 @@ export function StatCard({
 
 const styles = StyleSheet.create({
   card: {
-    width: CARD_WIDTH,
+    flex: 1,
     borderRadius: 18,
     overflow: 'hidden',
     shadowOffset: { width: 0, height: 8 },

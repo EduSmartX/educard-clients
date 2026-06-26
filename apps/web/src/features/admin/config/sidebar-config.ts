@@ -29,6 +29,7 @@ import {
   Receipt,
   CreditCard,
   Eye,
+  ClipboardEdit,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
 import { ROUTES } from '@/constants/app-config';
@@ -166,10 +167,16 @@ export const adminSidebarConfig: SidebarSection[] = [
         matchPaths: [ROUTES.EXAMS_NEW, ROUTES.EXAMS_BULK_CREATE],
       },
       {
-        id: 'exam-overview',
-        label: 'Exam Overview',
-        icon: BarChart3,
-        path: ROUTES.EXAMS_OVERVIEW,
+        id: 'exam-schedule',
+        label: 'Exam Notifications',
+        icon: Calendar,
+        path: ROUTES.EXAMS_SCHEDULE,
+      },
+      {
+        id: 'marks-entry',
+        label: 'Enter Marks',
+        icon: ClipboardEdit,
+        path: ROUTES.MARKS_ENTRY,
       },
       {
         id: 'marks-overview',

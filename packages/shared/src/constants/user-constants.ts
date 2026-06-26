@@ -69,6 +69,14 @@ export const GENDER_OPTIONS = [
 ] as const;
 
 /**
+ * Gender options with "All" for filter dropdowns (export, search, etc.)
+ */
+export const GENDER_OPTIONS_WITH_ALL = [
+  { value: "", label: "All" },
+  ...GENDER_OPTIONS,
+] as const;
+
+/**
  * Helper function to get gender label from value
  */
 export function getGenderLabel(value: string): string {

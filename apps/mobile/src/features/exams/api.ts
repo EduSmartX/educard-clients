@@ -173,3 +173,67 @@ export async function fetchExamMarks(examId: string): Promise<Mark[]> {
   );
   return res.data.data;
 }
+
+// ─── Marks Publishing ───────────────────────────────────────────────────────────
+
+export async function publishExamMarks(
+  examId: string
+): Promise<{ success: boolean; message: string; data: unknown }> {
+  const res = await apiClient.post<{ success: boolean; message: string; data: unknown }>(
+    `${EMPLOYEE_BASE}/exams/${examId}/publish-marks/`
+  );
+  return res.data;
+}
+
+export async function unpublishExamMarks(
+  examId: string
+): Promise<{ success: boolean; message: string; data: unknown }> {
+  const res = await apiClient.post<{ success: boolean; message: string; data: unknown }>(
+    `${EMPLOYEE_BASE}/exams/${examId}/unpublish-marks/`
+  );
+  return res.data;
+}
+
+// ─── Exam Notifications ─────────────────────────────────────────────────────────
+
+export async function sendExamScheduleNotification(
+  sessionId: string,
+  classId: string
+): Promise<{ success: boolean; message: string; data: { exam_count: number } }> {
+  const res = await apiClient.post<{
+    success: boolean;
+    message: string;
+    data: { exam_count: number };
+  }>(`${EMPLOYEE_BASE}/sessions/${sessionId}/send-schedule-notification/`, {
+    class_id: classId,
+  });
+  return res.data;
+}
+
+export async function sendExamResultsNotification(
+  sessionId: string,
+  classId: string
+): Promise<{ success: boolean; message: string; data: { completed_exams: number } }> {
+  const res = await apiClient.post<{
+    success: boolean;
+    message: string;
+    data: { completed_exams: number };
+  }>(`${EMPLOYEE_BASE}/sessions/${sessionId}/send-results-notification/`, {
+    class_id: classId,
+  });
+  return res.data;
+}
+
+export async function sendExamProgressNotification(
+  sessionId: string,
+  classId: string
+): Promise<{ success: boolean; message: string; data: unknown }> {
+  const res = await apiClient.post<{
+    success: boolean;
+    message: string;
+    data: unknown;
+  }>(`${EMPLOYEE_BASE}/sessions/${sessionId}/send-progress-notification/`, {
+    class_id: classId,
+  });
+  return res.data;
+}

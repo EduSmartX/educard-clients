@@ -46,6 +46,7 @@ const homeworkSchema = z.object({
   priority: z.enum(['low', 'medium', 'high']),
   submission_type: z.enum(['online', 'offline', 'both']),
   reference_link: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+  chapter: z.string().max(255).optional().or(z.literal('')),
 });
 
 type HomeworkFormData = z.infer<typeof homeworkSchema>;
@@ -90,6 +91,7 @@ export const HomeworkForm = memo(
         priority: initialData?.priority || 'medium',
         submission_type: initialData?.submission_type || 'online',
         reference_link: initialData?.reference_link || '',
+        chapter: initialData?.chapter || '',
       },
     });
 
@@ -132,6 +134,21 @@ export const HomeworkForm = memo(
           </DialogHeader>
 
           <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
+            {/* Chapter / Unit */}
+            <div className="space-y-2">
+              <Label htmlFor="chapter">Chapter / Unit (Optional)</Label>
+              <Input
+                id="chapter"
+                placeholder="e.g., Chapter 5 - Photosynthesis"
+                className={cn(errors.chapter && 'border-red-500')}
+                {...register('chapter')}
+              />
+              <FormError message={errors.chapter?.message} compact />
+              <p className="text-muted-foreground text-xs">
+                Specify the chapter or unit for this homework
+              </p>
+            </div>
+
             {/* Title */}
             <div className="space-y-2">
               <Label htmlFor="title">Title *</Label>
@@ -311,7 +328,7 @@ export const HomeworkForm = memo(
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" variant="brand" disabled={isSubmitting}>
                 {isSubmitting && 'Saving...'}
                 {!isSubmitting && mode === 'create' && 'Create Homework'}
                 {!isSubmitting && mode !== 'create' && 'Save Changes'}

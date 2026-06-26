@@ -101,7 +101,7 @@ export function ExamSessionFormPage() {
     }
     const currentYear = academicYears.find((y) => y.is_current);
     if (currentYear) {
-      setAcademicYear(currentYear.name);
+      setAcademicYear(currentYear.public_id);
     }
   }, [isCreate, academicYears, academicYear, sessionType]);
 
@@ -119,7 +119,7 @@ export function ExamSessionFormPage() {
   // Set academic year after academicYears list loads (needed for Select to match)
   useEffect(() => {
     if (existingSession && academicYears.length > 0 && !academicYear) {
-      setAcademicYear(existingSession.academic_year);
+      setAcademicYear(existingSession.academic_year_public_id);
     }
   }, [existingSession, academicYears, academicYear]);
 
@@ -248,12 +248,16 @@ export function ExamSessionFormPage() {
                   Academic Year <span className="text-red-500">*</span>
                 </Label>
                 {isView ? (
-                  <Input value={academicYear || '-'} disabled className="bg-gray-50" />
+                  <Input
+                    value={existingSession?.academic_year || '-'}
+                    disabled
+                    className="bg-gray-50"
+                  />
                 ) : (
                   <SearchableSelect
                     key={`academic-year-${academicYear || 'empty'}`}
                     options={academicYears.map((year) => ({
-                      value: year.name,
+                      value: year.public_id,
                       label: `${year.name}${year.is_current ? ' (Current)' : ''}`,
                     }))}
                     value={academicYear || ''}

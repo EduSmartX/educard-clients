@@ -128,3 +128,37 @@ export async function bulkUploadStudents(
   const params = minimalFields ? { minimal_fields: 'true' } : undefined;
   return bulkUploadExcel('/students/bulk-operations/bulk_upload/', fileUri, fileName, params);
 }
+
+/**
+ * Export students data payload
+ */
+export interface ExportStudentsPayload {
+  class_id?: string;
+  class_ids?: string[];
+  gender?: string;
+  search?: string;
+  send_email?: boolean;
+  emails?: string[];
+}
+
+/**
+ * Export students data as Excel and optionally send via email.
+ * Returns the file saved to device.
+ */
+export async function exportStudentsData(
+  payload: ExportStudentsPayload = {}
+): Promise<{ success: boolean; message: string; filePath?: string }> {
+  const { downloadAndSaveTemplate } = await import('@/utils/download-template');
+
+  const response = await apiClient.post(
+    '/students/bulk-operations/export_students_data/',
+    payload,
+    {
+      responseType: 'arraybuffer',
+    }
+  );
+
+  const timestamp = new Date().toISOString().slice(0, 10);
+  const fileName = `students_export_${timestamp}.xlsx`;
+  return downloadAndSaveTemplate(response.data as ArrayBuffer, fileName);
+}
