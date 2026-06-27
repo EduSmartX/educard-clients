@@ -8,18 +8,18 @@ import { View, StyleSheet } from 'react-native';
 
 import { useResponsive } from '@/hooks/useResponsive';
 
-import { StatCard, type StatCardProps } from './StatCard';
+import { StatCard, type StatCardData } from './StatCard';
 
 export interface StatsGridProps {
   /** Array of stat card configurations */
-  stats: StatCardProps[];
+  stats: StatCardData[];
 }
 
 export function StatsGrid({ stats }: StatsGridProps) {
   const { statColumns, horizontalPadding } = useResponsive();
 
   // Group stats into rows
-  const rows: StatCardProps[][] = [];
+  const rows: StatCardData[][] = [];
   for (let i = 0; i < stats.length; i += statColumns) {
     rows.push(stats.slice(i, i + statColumns));
   }

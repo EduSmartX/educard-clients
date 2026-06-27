@@ -53,7 +53,7 @@ function NotificationActions({
   sendScheduleMutation,
   sendResultsMutation,
   sendProgressMutation,
-}: {
+}: Readonly<{
   hasDraftExams: boolean;
   allExamsCompleted: boolean;
   allMarksPublished: boolean;
@@ -62,7 +62,7 @@ function NotificationActions({
   sendScheduleMutation: ReturnType<typeof useSendExamScheduleNotification>;
   sendResultsMutation: ReturnType<typeof useSendExamResultsNotification>;
   sendProgressMutation: ReturnType<typeof useSendExamProgressNotification>;
-}) {
+}>) {
   return (
     <View style={styles.actionButtons}>
       {!hasDraftExams && (

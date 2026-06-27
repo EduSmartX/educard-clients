@@ -55,7 +55,7 @@ export function createHolidaysApi(config: HolidaysApiConfig) {
 
     async listHolidays(params?: HolidayListParams): Promise<{
       data: Holiday[];
-      pagination?: ApiListResponse<Holiday>["pagination"];
+      pagination: ApiListResponse<Holiday>["pagination"];
     }> {
       const queryParams = new URLSearchParams();
       if (params?.from_date) {

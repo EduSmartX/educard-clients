@@ -254,19 +254,13 @@ export function ExportStudentsModal({ visible, onClose }: ExportStudentsModalPro
                   }
                   style={styles.exportBtnGradient}
                 >
-                  {isExporting ? (
-                    <ActivityIndicator color={Colors.text.inverse} size="small" />
-                  ) : sendEmail ? (
-                    <Mail size={20} color={Colors.text.inverse} />
-                  ) : (
-                    <Download size={20} color={Colors.text.inverse} />
-                  )}
+                  {isExporting && <ActivityIndicator color={Colors.text.inverse} size="small" />}
+                  {!isExporting && sendEmail && <Mail size={20} color={Colors.text.inverse} />}
+                  {!isExporting && !sendEmail && <Download size={20} color={Colors.text.inverse} />}
                   <Text style={styles.exportBtnText}>
-                    {isExporting
-                      ? 'Exporting...'
-                      : sendEmail
-                        ? 'Download & Email'
-                        : 'Download Excel'}
+                    {isExporting && 'Exporting...'}
+                    {!isExporting && sendEmail && 'Download & Email'}
+                    {!isExporting && !sendEmail && 'Download Excel'}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>

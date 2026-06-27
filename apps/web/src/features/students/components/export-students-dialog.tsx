@@ -216,14 +216,12 @@ export function ExportStudentsDialog({
             disabled={isExporting || (sendEmail && !emailInput.trim())}
             className="gap-2"
           >
-            {isExporting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : sendEmail ? (
-              <Mail className="h-4 w-4" />
-            ) : (
-              <Download className="h-4 w-4" />
-            )}
-            {isExporting ? 'Exporting...' : sendEmail ? 'Download & Email' : 'Download'}
+            {isExporting && <Loader2 className="h-4 w-4 animate-spin" />}
+            {!isExporting && sendEmail && <Mail className="h-4 w-4" />}
+            {!isExporting && !sendEmail && <Download className="h-4 w-4" />}
+            {isExporting && 'Exporting...'}
+            {!isExporting && sendEmail && 'Download & Email'}
+            {!isExporting && !sendEmail && 'Download'}
           </Button>
         </DialogFooter>
       </DialogContent>

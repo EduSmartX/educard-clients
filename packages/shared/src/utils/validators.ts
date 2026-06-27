@@ -8,7 +8,7 @@
  * Validate email format
  */
 export function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailRegex = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
   return emailRegex.test(email);
 }
 
@@ -106,12 +106,14 @@ export function isValidPan(pan: string): boolean {
 export function validateDateRange(
   startDate: string | Date | null | undefined,
   endDate: string | Date | null | undefined,
-  startLabel: string = 'Start date',
-  endLabel: string = 'End date'
+  startLabel: string = "Start date",
+  endLabel: string = "End date",
 ): string | null {
-  if (!startDate || !endDate) {return null;}
-  const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
-  const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
+  if (!startDate || !endDate) {
+    return null;
+  }
+  const start = typeof startDate === "string" ? new Date(startDate) : startDate;
+  const end = typeof endDate === "string" ? new Date(endDate) : endDate;
   start.setHours(0, 0, 0, 0);
   end.setHours(0, 0, 0, 0);
   if (end < start) {

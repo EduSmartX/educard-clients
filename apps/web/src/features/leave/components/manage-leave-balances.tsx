@@ -358,7 +358,7 @@ export default function ManageLeaveBalances() {
     .map((allocation) => ({
       public_id: allocation.public_id,
       leave_type_name: allocation.leave_type_name,
-      leave_type_code: /\(([^)]+)\)/.exec(allocation.leave_type_name)?.[1] || 'N/A',
+      leave_type_code: /\(([^()]+)\)/.exec(allocation.leave_type_name)?.[1] || 'N/A',
       display_name: allocation.leave_type_name,
       total_days: Number.parseFloat(allocation.total_days),
       max_carry_forward_days: Number.parseFloat(allocation.max_carry_forward_days),

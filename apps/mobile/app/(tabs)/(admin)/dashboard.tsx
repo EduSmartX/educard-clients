@@ -33,7 +33,7 @@ import {
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 
-import { TodaySchedule, StatsGrid, type StatCardProps } from '@/components/dashboard';
+import { TodaySchedule, StatsGrid, type StatCardData } from '@/components/dashboard';
 import { getMediaUrl } from '@/constants/config';
 import { useDashboardAttendanceStats, useAttendanceDisplay } from '@/features/attendance/hooks';
 import { useClasses } from '@/features/classes';
@@ -155,7 +155,7 @@ export default function AdminDashboard() {
   const getAttendanceDisplay = useAttendanceDisplay(attendanceStats);
 
   // Build stats configuration with current values
-  const statsConfig: StatCardProps[] = useMemo(
+  const statsConfig: StatCardData[] = useMemo(
     () => [
       {
         id: 'students',

@@ -9,8 +9,6 @@ import { View, Text, StyleSheet } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 
 export interface StatCardProps {
-  /** Unique ID for key prop */
-  id?: string;
   /** Display title */
   title: string;
   /** Value to display (string for flexibility - can be number, percentage, text) */
@@ -27,6 +25,11 @@ export interface StatCardProps {
   trend?: 'up' | 'down';
   /** Optional trend value (e.g., "+5%") */
   trendValue?: string;
+}
+
+/** StatCardProps with an id field for use in lists/grids */
+export interface StatCardData extends StatCardProps {
+  id?: string;
 }
 
 export function StatCard({

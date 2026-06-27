@@ -94,7 +94,7 @@ function TeacherFields({
   setFocusedInput,
   showGenderDropdown,
   setShowGenderDropdown,
-}: {
+}: Readonly<{
   employeeId: string;
   setEmployeeId: (v: string) => void;
   gender: string;
@@ -105,7 +105,7 @@ function TeacherFields({
   setFocusedInput: (v: string | null) => void;
   showGenderDropdown: boolean;
   setShowGenderDropdown: (v: boolean) => void;
-}) {
+}>) {
   return (
     <>
       <View style={styles.inputWrapper}>
@@ -267,7 +267,7 @@ export default function SignupScreen() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Email validation
-  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/.test(email);
 
   // Clear error on field change
   const clearError = (field: string) => {

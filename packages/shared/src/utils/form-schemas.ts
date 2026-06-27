@@ -11,7 +11,7 @@ import { GENDER_ENUM, BLOOD_GROUP_ENUM } from "../constants/user-constants";
 /**
  * Email validation regex
  */
-export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const EMAIL_REGEX = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
 
 /**
  * Indian phone number regex (10 digits starting with 6-9)

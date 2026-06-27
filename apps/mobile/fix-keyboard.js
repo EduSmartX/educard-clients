@@ -72,7 +72,7 @@ files.forEach(file => {
 
   // Step 3: Replace <KeyboardAvoidingView ...>\n<ScrollView ...> with <KeyboardAwareScrollView ...>
   content = content.replace(
-    /<KeyboardAvoidingView[\s\S]*?>\s*\n(\s*)<ScrollView([^>]*)>/g,
+    /<KeyboardAvoidingView[^>]*>[ \t]*\n(\s*)<ScrollView([^>]*)>/g,
     (match, indent, scrollProps) => {
       // Keep contentContainerStyle and keyboardShouldPersistTaps from ScrollView
       let props = scrollProps.trim();
@@ -91,7 +91,7 @@ files.forEach(file => {
 
   // Step 4: Replace </ScrollView>\n</KeyboardAvoidingView> with </KeyboardAwareScrollView>
   content = content.replace(
-    /(\s*)<\/ScrollView>\s*\n\s*<\/KeyboardAvoidingView>/g,
+    /(\s*)<\/ScrollView>[ \t]*\n[ \t]*<\/KeyboardAvoidingView>/g,
     '$1</KeyboardAwareScrollView>'
   );
 

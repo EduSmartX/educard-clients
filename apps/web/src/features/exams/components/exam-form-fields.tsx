@@ -275,9 +275,11 @@ function MarksFields({
   setMaxMarks,
   passingMarks,
   setPassingMarks,
-}: Pick<
-  ExamFormFieldsProps,
-  'isView' | 'maxMarks' | 'setMaxMarks' | 'passingMarks' | 'setPassingMarks'
+}: Readonly<
+  Pick<
+    ExamFormFieldsProps,
+    'isView' | 'maxMarks' | 'setMaxMarks' | 'passingMarks' | 'setPassingMarks'
+  >
 >) {
   return (
     <>

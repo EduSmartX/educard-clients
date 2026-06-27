@@ -27,11 +27,22 @@ export function useResponsive(): ResponsiveInfo {
     const isLargeTablet = width >= LARGE_TABLET_BREAKPOINT;
     const isLandscape = width > height;
 
-    const gridColumns = isLargeTablet ? 4 : isTablet ? 3 : 2;
-    const statColumns = isLargeTablet ? 4 : isTablet ? 4 : 2;
+    let gridColumns = 2;
+    if (isLargeTablet) {
+      gridColumns = 4;
+    } else if (isTablet) {
+      gridColumns = 3;
+    }
+
+    const statColumns = isLargeTablet || isTablet ? 4 : 2;
     const formColumns = isTablet ? 2 : 1;
 
-    const horizontalPadding = isLargeTablet ? 32 : isTablet ? 24 : 16;
+    let horizontalPadding = 16;
+    if (isLargeTablet) {
+      horizontalPadding = 32;
+    } else if (isTablet) {
+      horizontalPadding = 24;
+    }
 
     const fontScale = isTablet ? 1.1 : 1;
 

@@ -38,7 +38,7 @@ export const maxLength = (label: string, max: number): ValidationRule => ({
 
 /** Valid email */
 export const email = (label = 'Email'): ValidationRule => ({
-  validate: (v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(toString(v).trim()),
+  validate: (v) => !v || /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/.test(toString(v).trim()),
   message: `${label} must be a valid email address`,
 });
 

@@ -3,7 +3,7 @@
  * Factory pattern for platform-agnostic API calls
  */
 
-import type { AxiosInstance } from 'axios';
+import type { AxiosInstance } from "axios";
 
 // =============================================================================
 // Internal Types (not exported - use types from ../types/leave.ts)
@@ -79,7 +79,7 @@ interface LeaveAllocationQueryParams {
 }
 
 // Leave Request Types
-type LeaveRequestStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
+type LeaveRequestStatus = "pending" | "approved" | "rejected" | "cancelled";
 
 interface LeaveRequest {
   public_id: string;
@@ -172,37 +172,39 @@ export function createLeaveApi(config: LeaveApiConfig) {
 
     async listAllocations(params?: LeaveAllocationQueryParams): Promise<{
       data: LeaveAllocation[];
-      pagination?: ApiListResponse<LeaveAllocation>['pagination'];
+      pagination: ApiListResponse<LeaveAllocation>["pagination"];
     }> {
       const res = await client.get<ApiListResponse<LeaveAllocation>>(
-        '/leave/admin/allocations/',
-        { params }
+        "/leave/admin/allocations/",
+        { params },
       );
       return { data: res.data.data, pagination: res.data.pagination };
     },
 
     async getAllocation(publicId: string): Promise<LeaveAllocation> {
       const res = await client.get<ApiDetailResponse<LeaveAllocation>>(
-        `/leave/admin/allocations/${publicId}/`
+        `/leave/admin/allocations/${publicId}/`,
       );
       return res.data.data;
     },
 
-    async createAllocation(data: LeaveAllocationCreatePayload): Promise<LeaveAllocation> {
+    async createAllocation(
+      data: LeaveAllocationCreatePayload,
+    ): Promise<LeaveAllocation> {
       const res = await client.post<ApiDetailResponse<LeaveAllocation>>(
-        '/leave/admin/allocations/',
-        data
+        "/leave/admin/allocations/",
+        data,
       );
       return res.data.data;
     },
 
     async updateAllocation(
       publicId: string,
-      data: LeaveAllocationUpdatePayload
+      data: LeaveAllocationUpdatePayload,
     ): Promise<LeaveAllocation> {
       const res = await client.patch<ApiDetailResponse<LeaveAllocation>>(
         `/leave/admin/allocations/${publicId}/`,
-        data
+        data,
       );
       return res.data.data;
     },
@@ -211,10 +213,17 @@ export function createLeaveApi(config: LeaveApiConfig) {
       try {
         await client.delete(`/leave/admin/allocations/${publicId}/`);
       } catch (error: unknown) {
-        const axiosError = error as { response?: { status?: number }; message?: string };
+        const axiosError = error as {
+          response?: { status?: number };
+          message?: string;
+        };
         const status = axiosError?.response?.status;
-        if (status && status >= 200 && status < 300) {return;}
-        if (axiosError?.message === 'Network Error' && !axiosError?.response) {return;}
+        if (status && status >= 200 && status < 300) {
+          return;
+        }
+        if (axiosError?.message === "Network Error" && !axiosError?.response) {
+          return;
+        }
         throw error;
       }
     },
@@ -223,13 +232,15 @@ export function createLeaveApi(config: LeaveApiConfig) {
     // Leave Allocations (Employee - Read Only)
     // =========================================================================
 
-    async listEmployeeAllocations(params?: LeaveAllocationQueryParams): Promise<{
+    async listEmployeeAllocations(
+      params?: LeaveAllocationQueryParams,
+    ): Promise<{
       data: LeaveAllocation[];
-      pagination?: ApiListResponse<LeaveAllocation>['pagination'];
+      pagination: ApiListResponse<LeaveAllocation>["pagination"];
     }> {
       const res = await client.get<ApiListResponse<LeaveAllocation>>(
-        '/leave/employee/allocations/',
-        { params }
+        "/leave/employee/allocations/",
+        { params },
       );
       return { data: res.data.data, pagination: res.data.pagination };
     },
@@ -240,40 +251,40 @@ export function createLeaveApi(config: LeaveApiConfig) {
 
     async listReviews(params?: LeaveReviewQueryParams): Promise<{
       data: LeaveRequest[];
-      pagination?: ApiListResponse<LeaveRequest>['pagination'];
+      pagination: ApiListResponse<LeaveRequest>["pagination"];
     }> {
       const res = await client.get<ApiListResponse<LeaveRequest>>(
-        '/leave/employee/reviews/',
-        { params }
+        "/leave/employee/reviews/",
+        { params },
       );
       return { data: res.data.data, pagination: res.data.pagination };
     },
 
     async getReview(publicId: string): Promise<LeaveRequest> {
       const res = await client.get<ApiDetailResponse<LeaveRequest>>(
-        `/leave/employee/reviews/${publicId}/`
+        `/leave/employee/reviews/${publicId}/`,
       );
       return res.data.data;
     },
 
     async approveRequest(
       publicId: string,
-      data?: { review_comments?: string }
+      data?: { review_comments?: string },
     ): Promise<LeaveRequest> {
       const res = await client.post<ApiDetailResponse<LeaveRequest>>(
         `/leave/employee/reviews/${publicId}/approve/`,
-        data ?? {}
+        data ?? {},
       );
       return res.data.data;
     },
 
     async rejectRequest(
       publicId: string,
-      data?: { review_comments?: string }
+      data?: { review_comments?: string },
     ): Promise<LeaveRequest> {
       const res = await client.post<ApiDetailResponse<LeaveRequest>>(
         `/leave/employee/reviews/${publicId}/reject/`,
-        data ?? {}
+        data ?? {},
       );
       return res.data.data;
     },
@@ -284,7 +295,7 @@ export function createLeaveApi(config: LeaveApiConfig) {
 
     async getMyBalances(): Promise<LeaveBalanceSummary[]> {
       const res = await client.get<ApiDetailResponse<LeaveBalanceSummary[]>>(
-        '/leave/employee/balances/my-balance/'
+        "/leave/employee/balances/my-balance/",
       );
       return res.data.data;
     },
@@ -295,26 +306,28 @@ export function createLeaveApi(config: LeaveApiConfig) {
       status?: string;
     }): Promise<{
       data: LeaveRequest[];
-      pagination?: ApiListResponse<LeaveRequest>['pagination'];
+      pagination: ApiListResponse<LeaveRequest>["pagination"];
     }> {
       const res = await client.get<ApiListResponse<LeaveRequest>>(
-        '/leave/user/requests/',
-        { params }
+        "/leave/user/requests/",
+        { params },
       );
       return { data: res.data.data, pagination: res.data.pagination };
     },
 
-    async createRequest(data: CreateLeaveRequestPayload): Promise<LeaveRequest> {
+    async createRequest(
+      data: CreateLeaveRequestPayload,
+    ): Promise<LeaveRequest> {
       const res = await client.post<ApiDetailResponse<LeaveRequest>>(
-        '/leave/user/requests/',
-        data
+        "/leave/user/requests/",
+        data,
       );
       return res.data.data;
     },
 
     async cancelRequest(publicId: string): Promise<LeaveRequest> {
       const res = await client.post<ApiDetailResponse<LeaveRequest>>(
-        `/leave/user/requests/${publicId}/cancel/`
+        `/leave/user/requests/${publicId}/cancel/`,
       );
       return res.data.data;
     },
@@ -325,11 +338,11 @@ export function createLeaveApi(config: LeaveApiConfig) {
 
     async calculateWorkingDays(
       startDate: string,
-      endDate: string
+      endDate: string,
     ): Promise<{ working_days: number; holidays: string[] }> {
       const res = await client.post<
         ApiDetailResponse<{ working_days: number; holidays: string[] }>
-      >('/leave/employee/calculate-working-days/', {
+      >("/leave/employee/calculate-working-days/", {
         start_date: startDate,
         end_date: endDate,
       });

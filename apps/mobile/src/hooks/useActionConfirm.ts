@@ -12,7 +12,7 @@ import { showToast } from '@/utils/toast';
 interface UseActionConfirmOptions<T = string> {
   title: string;
   confirmText?: string;
-  confirmVariant?: ConfirmDialogProps['confirmVariant'];
+  confirmVariant: ConfirmDialogProps['confirmVariant'];
   makeMessage: (displayName: string) => string;
   runAction: (data: T) => Promise<unknown>;
   successMessage?: (displayName: string) => string;

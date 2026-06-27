@@ -28,7 +28,7 @@ import {
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 
-import { TodaySchedule, StatsGrid, type StatCardProps } from '@/components/dashboard';
+import { TodaySchedule, StatsGrid, type StatCardData } from '@/components/dashboard';
 import { useDashboardAttendanceStats, useAttendanceDisplay } from '@/features/attendance/hooks';
 import { useClasses } from '@/features/classes';
 import { useStudents } from '@/features/students';
@@ -136,7 +136,7 @@ export default function EmployeeDashboard() {
 
   // Build stats configuration for Teacher dashboard
   // Shows: Students, Classes, Attendance, My Classes Today
-  const statsConfig: StatCardProps[] = useMemo(
+  const statsConfig: StatCardData[] = useMemo(
     () => [
       {
         id: 'students',

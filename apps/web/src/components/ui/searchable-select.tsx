@@ -61,7 +61,7 @@ export function SearchableSelect({
       <PopoverTrigger asChild>
         <button
           type="button"
-          role="combobox"
+          aria-haspopup="listbox"
           aria-expanded={open}
           aria-controls={listboxId}
           disabled={disabled}

@@ -3,7 +3,7 @@
  * Factory pattern for platform-agnostic API calls
  */
 
-import type { AxiosInstance } from 'axios';
+import type { AxiosInstance } from "axios";
 import type {
   ExamSession,
   ExamSessionListParams,
@@ -18,7 +18,7 @@ import type {
   BulkMarkUpsertPayload,
   MarksOverviewResponse,
   BulkSaveAllMarksPayload,
-} from '../types/exam';
+} from "../types/exam";
 
 // =============================================================================
 // Types
@@ -56,11 +56,13 @@ export interface ExamsApiConfig {
 // Endpoints
 // =============================================================================
 
-const ADMIN_BASE = '/exams/admin';
-const EMPLOYEE_BASE = '/exams/employee';
+const ADMIN_BASE = "/exams/admin";
+const EMPLOYEE_BASE = "/exams/employee";
 
 function getBaseUrl(isAdmin: boolean, isWriteOperation = false): string {
-  if (isWriteOperation) {return ADMIN_BASE;}
+  if (isWriteOperation) {
+    return ADMIN_BASE;
+  }
   return isAdmin ? ADMIN_BASE : EMPLOYEE_BASE;
 }
 
@@ -78,28 +80,39 @@ export function createExamsApi(config: ExamsApiConfig) {
 
     async listSessions(params?: ExamSessionListParams): Promise<{
       data: ExamSession[];
-      pagination?: ApiListResponse<ExamSession>['pagination'];
+      pagination: ApiListResponse<ExamSession>["pagination"];
     }> {
       const baseUrl = getBaseUrl(isAdminUser());
-      const res = await client.get<ApiListResponse<ExamSession>>(`${baseUrl}/sessions/`, { params });
+      const res = await client.get<ApiListResponse<ExamSession>>(
+        `${baseUrl}/sessions/`,
+        { params },
+      );
       return { data: res.data.data, pagination: res.data.pagination };
     },
 
     async getSession(publicId: string): Promise<ExamSession> {
       const baseUrl = getBaseUrl(isAdminUser());
-      const res = await client.get<ApiDetailResponse<ExamSession>>(`${baseUrl}/sessions/${publicId}/`);
+      const res = await client.get<ApiDetailResponse<ExamSession>>(
+        `${baseUrl}/sessions/${publicId}/`,
+      );
       return res.data.data;
     },
 
     async createSession(data: ExamSessionCreatePayload): Promise<ExamSession> {
-      const res = await client.post<ApiDetailResponse<ExamSession>>(`${ADMIN_BASE}/sessions/`, data);
+      const res = await client.post<ApiDetailResponse<ExamSession>>(
+        `${ADMIN_BASE}/sessions/`,
+        data,
+      );
       return res.data.data;
     },
 
-    async updateSession(publicId: string, data: ExamSessionUpdatePayload): Promise<ExamSession> {
+    async updateSession(
+      publicId: string,
+      data: ExamSessionUpdatePayload,
+    ): Promise<ExamSession> {
       const res = await client.patch<ApiDetailResponse<ExamSession>>(
         `${ADMIN_BASE}/sessions/${publicId}/`,
-        data
+        data,
       );
       return res.data.data;
     },
@@ -110,18 +123,24 @@ export function createExamsApi(config: ExamsApiConfig) {
 
     async reactivateSession(publicId: string): Promise<ExamSession> {
       const res = await client.post<ApiDetailResponse<ExamSession>>(
-        `${ADMIN_BASE}/sessions/${publicId}/activate/`
+        `${ADMIN_BASE}/sessions/${publicId}/activate/`,
       );
       return res.data.data;
     },
 
     async bulkUpdateExamStatusBySession(
       sessionId: string,
-      status: string
+      status: string,
     ): Promise<{ updated_count: number; status: string; session_id: string }> {
       const res = await client.post<
-        ApiDetailResponse<{ updated_count: number; status: string; session_id: string }>
-      >(`${ADMIN_BASE}/sessions/${sessionId}/bulk-update-exam-status/`, { status });
+        ApiDetailResponse<{
+          updated_count: number;
+          status: string;
+          session_id: string;
+        }>
+      >(`${ADMIN_BASE}/sessions/${sessionId}/bulk-update-exam-status/`, {
+        status,
+      });
       return res.data.data;
     },
 
@@ -131,31 +150,44 @@ export function createExamsApi(config: ExamsApiConfig) {
 
     async listExams(params?: ExamListParams): Promise<{
       data: Exam[];
-      pagination?: ApiListResponse<Exam>['pagination'];
+      pagination: ApiListResponse<Exam>["pagination"];
     }> {
       const baseUrl = getBaseUrl(isAdminUser());
-      const res = await client.get<ApiListResponse<Exam>>(`${baseUrl}/exams/`, { params });
+      const res = await client.get<ApiListResponse<Exam>>(`${baseUrl}/exams/`, {
+        params,
+      });
       return { data: res.data.data, pagination: res.data.pagination };
     },
 
     async getExam(publicId: string): Promise<Exam> {
       const baseUrl = getBaseUrl(isAdminUser());
-      const res = await client.get<ApiDetailResponse<Exam>>(`${baseUrl}/exams/${publicId}/`);
+      const res = await client.get<ApiDetailResponse<Exam>>(
+        `${baseUrl}/exams/${publicId}/`,
+      );
       return res.data.data;
     },
 
     async createExam(data: ExamCreatePayload): Promise<Exam> {
-      const res = await client.post<ApiDetailResponse<Exam>>(`${ADMIN_BASE}/exams/`, data);
+      const res = await client.post<ApiDetailResponse<Exam>>(
+        `${ADMIN_BASE}/exams/`,
+        data,
+      );
       return res.data.data;
     },
 
     async bulkCreateExams(data: BulkExamCreatePayload): Promise<Exam[]> {
-      const res = await client.post<ApiDetailResponse<Exam[]>>(`${ADMIN_BASE}/exams/bulk-create/`, data);
+      const res = await client.post<ApiDetailResponse<Exam[]>>(
+        `${ADMIN_BASE}/exams/bulk-create/`,
+        data,
+      );
       return res.data.data;
     },
 
     async updateExam(publicId: string, data: ExamUpdatePayload): Promise<Exam> {
-      const res = await client.patch<ApiDetailResponse<Exam>>(`${ADMIN_BASE}/exams/${publicId}/`, data);
+      const res = await client.patch<ApiDetailResponse<Exam>>(
+        `${ADMIN_BASE}/exams/${publicId}/`,
+        data,
+      );
       return res.data.data;
     },
 
@@ -164,7 +196,9 @@ export function createExamsApi(config: ExamsApiConfig) {
     },
 
     async reactivateExam(publicId: string): Promise<Exam> {
-      const res = await client.post<ApiDetailResponse<Exam>>(`${ADMIN_BASE}/exams/${publicId}/activate/`);
+      const res = await client.post<ApiDetailResponse<Exam>>(
+        `${ADMIN_BASE}/exams/${publicId}/activate/`,
+      );
       return res.data.data;
     },
 
@@ -173,16 +207,19 @@ export function createExamsApi(config: ExamsApiConfig) {
     // =========================================================================
 
     async getExamMarks(examId: string): Promise<Mark[]> {
-      const res = await client.get<ApiDetailResponse<Mark[]>>(`${EMPLOYEE_BASE}/marks/by-exam/`, {
-        params: { exam_id: examId },
-      });
+      const res = await client.get<ApiDetailResponse<Mark[]>>(
+        `${EMPLOYEE_BASE}/marks/by-exam/`,
+        {
+          params: { exam_id: examId },
+        },
+      );
       return res.data.data;
     },
 
     async bulkUpsertMarks(data: BulkMarkUpsertPayload): Promise<Mark[]> {
       const res = await client.post<{ success: boolean; data: Mark[] }>(
         `${EMPLOYEE_BASE}/marks/bulk-upsert/`,
-        data
+        data,
       );
       return res.data.data;
     },
@@ -193,15 +230,17 @@ export function createExamsApi(config: ExamsApiConfig) {
     }): Promise<MarksOverviewResponse> {
       const res = await client.get<ApiDetailResponse<MarksOverviewResponse>>(
         `${EMPLOYEE_BASE}/marks/overview/`,
-        { params }
+        { params },
       );
       return res.data.data;
     },
 
-    async bulkSaveAllMarks(data: BulkSaveAllMarksPayload): Promise<{ count: number }> {
+    async bulkSaveAllMarks(
+      data: BulkSaveAllMarksPayload,
+    ): Promise<{ count: number }> {
       const res = await client.post<ApiDetailResponse<{ count: number }>>(
         `${EMPLOYEE_BASE}/marks/bulk-save-all/`,
-        data
+        data,
       );
       return res.data.data;
     },

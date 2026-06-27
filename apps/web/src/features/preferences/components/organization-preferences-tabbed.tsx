@@ -43,6 +43,54 @@ interface PreferencesByCategoryProps {
   preferences: OrganizationPreference[];
 }
 
+function PreferenceWithChildren({
+  preference,
+  children,
+  changedValues,
+  savingStates,
+  handlePreferenceChange,
+}: Readonly<{
+  preference: OrganizationPreference;
+  children: OrganizationPreference[];
+  changedValues: Record<string, string | string[]>;
+  savingStates: Record<string, boolean>;
+  handlePreferenceChange: (publicId: string, value: string | string[]) => void;
+}>) {
+  const parentValue =
+    (changedValues[preference.public_id] as string) ?? (preference.value as string);
+  const isParentEnabled = parentValue === 'TRUE';
+
+  return (
+    <div key={preference.public_id}>
+      <PreferenceField
+        preference={preference}
+        value={changedValues[preference.public_id] ?? preference.value}
+        onChange={(value) => handlePreferenceChange(preference.public_id, value)}
+        disabled={savingStates[preference.public_id]}
+      />
+      {children.length > 0 && (
+        <div
+          className={`ml-6 border-l-2 py-1 pl-3 transition-all duration-200 ${
+            isParentEnabled
+              ? 'border-blue-200 opacity-100'
+              : 'pointer-events-none border-gray-100 opacity-40'
+          }`}
+        >
+          {children.map((child) => (
+            <PreferenceField
+              key={child.public_id}
+              preference={child}
+              value={changedValues[child.public_id] ?? child.value}
+              onChange={(value) => handlePreferenceChange(child.public_id, value)}
+              disabled={!isParentEnabled || savingStates[child.public_id]}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PreferencesByCategory({ preferences }: Readonly<PreferencesByCategoryProps>) {
   const queryClient = useQueryClient();
   const [savingStates, setSavingStates] = useState<Record<string, boolean>>({});
@@ -172,39 +220,15 @@ function PreferencesByCategory({ preferences }: Readonly<PreferencesByCategoryPr
               <div className="divide-y divide-gray-100">
                 {topLevelPrefs.map((preference) => {
                   const children = childrenByParentKey[preference.key] || [];
-                  const parentValue =
-                    (changedValues[preference.public_id] as string) ?? (preference.value as string);
-                  const isParentEnabled = parentValue === 'TRUE';
-
                   return (
-                    <div key={preference.public_id}>
-                      <PreferenceField
-                        preference={preference}
-                        value={changedValues[preference.public_id] ?? preference.value}
-                        onChange={(value) => handlePreferenceChange(preference.public_id, value)}
-                        disabled={savingStates[preference.public_id]}
-                      />
-                      {/* Compact dependent children */}
-                      {children.length > 0 && (
-                        <div
-                          className={`ml-6 border-l-2 py-1 pl-3 transition-all duration-200 ${
-                            isParentEnabled
-                              ? 'border-blue-200 opacity-100'
-                              : 'pointer-events-none border-gray-100 opacity-40'
-                          }`}
-                        >
-                          {children.map((child) => (
-                            <PreferenceField
-                              key={child.public_id}
-                              preference={child}
-                              value={changedValues[child.public_id] ?? child.value}
-                              onChange={(value) => handlePreferenceChange(child.public_id, value)}
-                              disabled={!isParentEnabled || savingStates[child.public_id]}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    <PreferenceWithChildren
+                      key={preference.public_id}
+                      preference={preference}
+                      children={children}
+                      changedValues={changedValues}
+                      savingStates={savingStates}
+                      handlePreferenceChange={handlePreferenceChange}
+                    />
                   );
                 })}
               </div>

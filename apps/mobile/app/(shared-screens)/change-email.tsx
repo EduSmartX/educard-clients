@@ -29,7 +29,7 @@ export default function ChangeEmailScreen() {
       keyboardType: 'email-address',
       validate: (value, currentValue) => {
         if (!value) return 'Please enter your new email address';
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const emailRegex = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
         if (!emailRegex.test(value)) return 'Please enter a valid email address';
         if (value.toLowerCase() === currentValue?.toLowerCase())
           return 'New email must be different from your current email';

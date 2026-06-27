@@ -125,6 +125,10 @@ function PaymentActionsCell({
   );
 }
 
+function ClassCell({ row }: Readonly<{ row: FeePayment }>) {
+  return <span className="text-sm text-gray-700">{row.class_name || '-'}</span>;
+}
+
 export function PaymentHistoryTable({
   data,
   isLoading,
@@ -157,7 +161,7 @@ export function PaymentHistoryTable({
     },
     {
       header: 'Class',
-      accessor: (row) => <span className="text-sm text-gray-700">{row.class_name || '-'}</span>,
+      accessor: (row) => <ClassCell row={row} />,
       width: 120,
     },
     {

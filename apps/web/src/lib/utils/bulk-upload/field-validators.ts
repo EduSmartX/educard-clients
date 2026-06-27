@@ -67,7 +67,7 @@ export const emailValidator: FieldValidator = (value, row, fieldLabel) => {
     return { row, field: fieldLabel, message: `${fieldLabel} is required` };
   }
   const emailStr = String(value).trim();
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailRegex = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
   if (!emailRegex.test(emailStr)) {
     return { row, field: fieldLabel, message: `Invalid email format: "${emailStr}"` };
   }
@@ -85,7 +85,7 @@ export const optionalEmailValidator: FieldValidator = (value, row, fieldLabel) =
     return null; // Email is optional
   }
   const emailStr = String(value).trim();
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailRegex = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
   if (!emailRegex.test(emailStr)) {
     return { row, field: fieldLabel, message: `Invalid email format: "${emailStr}"` };
   }
@@ -113,7 +113,7 @@ export const supervisorEmailValidator: FieldValidator = (value, row, fieldLabel)
   }
   // Extract email from format "Name (email@example.com)"
   let email = emailStr;
-  const emailRegex = /\(([^)@]+@[^)]+)\)/;
+  const emailRegex = /\(([^()@]+@[^()]+)\)/;
   const match = emailRegex.exec(emailStr);
   if (match) {
     email = match[1];
@@ -352,7 +352,7 @@ export const teacherInfoValidator: FieldValidator = (value, row, fieldLabel) => 
   }
   const info = String(value).trim();
   // Check if it contains email in parentheses
-  const emailInParenRegex = /\(([^)@]+@[^)]+)\)/;
+  const emailInParenRegex = /\(([^()@]+@[^()]+)\)/;
   const match = emailInParenRegex.exec(info);
   if (!match) {
     // Could be just an email

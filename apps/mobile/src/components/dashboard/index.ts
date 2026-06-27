@@ -4,5 +4,5 @@
  */
 
 export { TodaySchedule } from './TodaySchedule';
-export { StatCard, type StatCardProps } from './StatCard';
+export { StatCard, type StatCardProps, type StatCardData } from './StatCard';
 export { StatsGrid, type StatsGridProps } from './StatsGrid';

@@ -204,11 +204,11 @@ function ClassSelectionGrid({
   classes,
   selectedClasses,
   onToggle,
-}: {
+}: Readonly<{
   classes: any[];
   selectedClasses: string[];
   onToggle: (classId: string) => void;
-}) {
+}>) {
   return (
     <View style={modalStyles.field}>
       <Text style={modalStyles.fieldLabel}>Select Classes *</Text>
