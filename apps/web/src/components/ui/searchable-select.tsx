@@ -51,6 +51,7 @@ export function SearchableSelect({
   showSearchThreshold = 5,
 }: SearchableSelectProps) {
   const [open, setOpen] = React.useState(false);
+  const listboxId = React.useId();
 
   const selectedOption = options.find((option) => option.value === value);
   const showSearch = options.length > showSearchThreshold;
@@ -62,9 +63,10 @@ export function SearchableSelect({
           type="button"
           role="combobox"
           aria-expanded={open}
+          aria-controls={listboxId}
           disabled={disabled}
           className={cn(
-            'flex h-11 w-full items-center justify-between rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm ring-offset-white transition-all duration-200 hover:border-primary/30 focus:border-primary focus:ring-4 focus:ring-primary/10 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50',
+            'hover:border-primary/30 focus:border-primary focus:ring-primary/10 flex h-11 w-full items-center justify-between rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm ring-offset-white transition-all duration-200 focus:ring-4 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50',
             className
           )}
         >
@@ -75,6 +77,7 @@ export function SearchableSelect({
         </button>
       </PopoverTrigger>
       <PopoverContent
+        id={listboxId}
         className="w-[var(--radix-popover-trigger-width)] p-0"
         align="start"
         sideOffset={4}

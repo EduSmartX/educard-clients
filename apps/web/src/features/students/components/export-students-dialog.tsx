@@ -92,14 +92,14 @@ export function ExportStudentsDialog({
       const blob = await exportStudents(payload);
 
       // Trigger browser download
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.download = `students_export_${new Date().toISOString().slice(0, 10)}.xlsx`;
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      link.remove();
+      globalThis.URL.revokeObjectURL(url);
 
       if (sendEmail && emailInput.trim()) {
         toast.success('Export downloaded and email sent successfully!');

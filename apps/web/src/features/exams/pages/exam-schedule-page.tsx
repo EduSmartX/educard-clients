@@ -45,6 +45,21 @@ import {
 import { EXAM_STATUS_COLORS, EXAM_STATUS_DOT_COLORS } from './exam-overview-constants';
 import { ROUTES } from '@/constants';
 
+function formatExamTime(
+  startTime: string | null | undefined,
+  endTime: string | null | undefined
+): string {
+  if (startTime && endTime) {
+    const start = format(new Date(`2000-01-01T${startTime}`), 'hh:mm a');
+    const end = format(new Date(`2000-01-01T${endTime}`), 'hh:mm a');
+    return `${start} - ${end}`;
+  }
+  if (startTime) {
+    return format(new Date(`2000-01-01T${startTime}`), 'hh:mm a');
+  }
+  return '—';
+}
+
 export function ExamSchedulePage() {
   const { isAdmin } = useRole();
   const navigate = useNavigate();
@@ -144,6 +159,36 @@ export function ExamSchedulePage() {
 
   const hasData = selectedSessionId && selectedClassId && !isLoading && exams.length > 0;
 
+  const getScheduleTitle = () => {
+    if (stats.draft > 0) {
+      return `Cannot send: ${stats.draft} exam(s) still in draft. Schedule them first.`;
+    }
+    if (stats.nonCancelled === 0) {
+      return 'No exams found';
+    }
+    return 'Send exam schedule notification to parents & staff';
+  };
+
+  const getResultsTitle = () => {
+    if (!stats.allCompleted) {
+      return `Cannot send: ${stats.nonCancelled - stats.completed} exam(s) not yet completed.`;
+    }
+    if (!stats.allMarksPublished) {
+      return 'Cannot send: Marks not published for all exams. Publish marks first.';
+    }
+    return 'Send results published notification to parents & staff';
+  };
+
+  const getProgressTitle = () => {
+    if (!stats.allCompleted) {
+      return `Cannot send: ${stats.nonCancelled - stats.completed} exam(s) not yet completed.`;
+    }
+    if (!stats.allMarksPublished) {
+      return 'Cannot send: Marks not published for all exams. Publish marks first.';
+    }
+    return "Send each parent their child's individual marks, percentage, grade & pass/fail status";
+  };
+
   return (
     <div className="space-y-6">
       {/* Header with Actions */}
@@ -162,13 +207,7 @@ export function ExamSchedulePage() {
               className="gap-1.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-sm hover:from-purple-600 hover:to-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
               onClick={handleSendSchedule}
               disabled={!stats.canSendSchedule || sendScheduleMutation.isPending}
-              title={
-                stats.draft > 0
-                  ? `Cannot send: ${stats.draft} exam(s) still in draft. Schedule them first.`
-                  : stats.nonCancelled === 0
-                    ? 'No exams found'
-                    : 'Send exam schedule notification to parents & staff'
-              }
+              title={getScheduleTitle()}
             >
               {sendScheduleMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -182,13 +221,7 @@ export function ExamSchedulePage() {
               className="gap-1.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-sm hover:from-green-600 hover:to-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
               onClick={handleSendResults}
               disabled={!stats.allMarksPublished || sendResultsMutation.isPending}
-              title={
-                !stats.allCompleted
-                  ? `Cannot send: ${stats.nonCancelled - stats.completed} exam(s) not yet completed.`
-                  : !stats.allMarksPublished
-                    ? 'Cannot send: Marks not published for all exams. Publish marks first.'
-                    : 'Send results published notification to parents & staff'
-              }
+              title={getResultsTitle()}
             >
               {sendResultsMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -202,13 +235,7 @@ export function ExamSchedulePage() {
               className="gap-1.5 bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-sm hover:from-indigo-600 hover:to-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
               onClick={handleSendProgress}
               disabled={!stats.allMarksPublished || sendProgressMutation.isPending}
-              title={
-                !stats.allCompleted
-                  ? `Cannot send: ${stats.nonCancelled - stats.completed} exam(s) not yet completed.`
-                  : !stats.allMarksPublished
-                    ? 'Cannot send: Marks not published for all exams. Publish marks first.'
-                    : "Send each parent their child's individual marks, percentage, grade & pass/fail status"
-              }
+              title={getProgressTitle()}
             >
               {sendProgressMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -320,7 +347,7 @@ export function ExamSchedulePage() {
           <CardContent>
             <FileText className="mx-auto h-12 w-12 text-gray-300" />
             <h3 className="mt-4 text-lg font-medium text-gray-600">
-              {!selectedSessionId ? 'Select an Exam Session' : 'Select a Class'}
+              {selectedSessionId ? 'Select a Class' : 'Select an Exam Session'}
             </h3>
             <p className="mt-1 text-sm text-gray-400">
               Choose both a session and class to view the exam schedule and send notifications
@@ -369,9 +396,9 @@ export function ExamSchedulePage() {
 // ─── Exam Card Component ────────────────────────────────────────────────────────
 
 interface ExamCardProps {
-  exam: Exam;
-  isAdmin: boolean;
-  onEdit: () => void;
+  readonly exam: Exam;
+  readonly isAdmin: boolean;
+  readonly onEdit: () => void;
 }
 
 function ExamCard({ exam, isAdmin, onEdit }: ExamCardProps) {
@@ -409,11 +436,7 @@ function ExamCard({ exam, isAdmin, onEdit }: ExamCardProps) {
               <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
                 <span className="flex items-center gap-1">
                   <Clock className="h-3.5 w-3.5" />
-                  {exam.start_time && exam.end_time
-                    ? `${format(new Date(`2000-01-01T${exam.start_time}`), 'hh:mm a')} - ${format(new Date(`2000-01-01T${exam.end_time}`), 'hh:mm a')}`
-                    : exam.start_time
-                      ? format(new Date(`2000-01-01T${exam.start_time}`), 'hh:mm a')
-                      : '—'}
+                  {formatExamTime(exam.start_time, exam.end_time)}
                 </span>
                 <span className="flex items-center gap-1">
                   <FileText className="h-3.5 w-3.5" />

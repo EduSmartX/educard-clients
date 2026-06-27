@@ -72,10 +72,10 @@ export function MonthYearPicker({
 
   const isYearNavDisabled = (delta: number) => {
     const targetYear = currentYear + delta;
-    if (minDate && targetYear < parseInt(minDate.slice(0, 4))) {
+    if (minDate && targetYear < Number.parseInt(minDate.slice(0, 4))) {
       return true;
     }
-    if (maxDate && targetYear > parseInt(maxDate.slice(0, 4))) {
+    if (maxDate && targetYear > Number.parseInt(maxDate.slice(0, 4))) {
       return true;
     }
     return false;

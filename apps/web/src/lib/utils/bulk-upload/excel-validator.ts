@@ -191,7 +191,10 @@ export async function validateExcelFile(
           if (typeof cell === 'object') {
             return false;
           }
-          return String(cell).trim() === '';
+          if (typeof cell === 'string') {
+            return cell.trim() === '';
+          }
+          return false;
         })
       ) {
         continue;

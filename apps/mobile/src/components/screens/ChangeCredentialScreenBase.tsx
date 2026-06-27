@@ -204,7 +204,7 @@ export function ChangeCredentialScreenBase({ config }: Props) {
                 isSendingOtp && styles.buttonDisabled,
               ]}
               onPress={() => {
-                void handleSendOtp();
+                handleSendOtp();
               }}
               disabled={isSendingOtp}
             >
@@ -257,7 +257,7 @@ export function ChangeCredentialScreenBase({ config }: Props) {
               ) : (
                 <TouchableOpacity
                   onPress={() => {
-                    void handleSendOtp();
+                    handleSendOtp();
                   }}
                   disabled={isSendingOtp}
                 >
@@ -275,7 +275,7 @@ export function ChangeCredentialScreenBase({ config }: Props) {
                   isUpdating && styles.buttonDisabled,
                 ]}
                 onPress={() => {
-                  void handleUpdate();
+                  handleUpdate();
                 }}
                 disabled={isUpdating}
               >

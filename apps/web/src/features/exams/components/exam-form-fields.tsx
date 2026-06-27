@@ -73,7 +73,17 @@ function SessionField({
   sessionsList,
   selectedSession,
   fieldErrors,
-}: ExamFormFieldsProps) {
+}: Pick<
+  ExamFormFieldsProps,
+  | 'isView'
+  | 'isEdit'
+  | 'existingExam'
+  | 'sessionId'
+  | 'setSessionId'
+  | 'sessionsList'
+  | 'selectedSession'
+  | 'fieldErrors'
+>) {
   return (
     <div className="space-y-2">
       <Label htmlFor="session_id">
@@ -120,7 +130,17 @@ function ClassField({
   setSubjectId,
   classesList,
   fieldErrors,
-}: ExamFormFieldsProps) {
+}: Pick<
+  ExamFormFieldsProps,
+  | 'isView'
+  | 'isEdit'
+  | 'existingExam'
+  | 'classId'
+  | 'setClassId'
+  | 'setSubjectId'
+  | 'classesList'
+  | 'fieldErrors'
+>) {
   return (
     <div className="space-y-2">
       <Label htmlFor="class_id">
@@ -162,7 +182,19 @@ function SubjectField({
   selectedSubject,
   checkDuplicateExam,
   fieldErrors,
-}: ExamFormFieldsProps) {
+}: Pick<
+  ExamFormFieldsProps,
+  | 'isView'
+  | 'isEdit'
+  | 'existingExam'
+  | 'classId'
+  | 'subjectId'
+  | 'setSubjectId'
+  | 'subjectsList'
+  | 'selectedSubject'
+  | 'checkDuplicateExam'
+  | 'fieldErrors'
+>) {
   return (
     <div className="space-y-2">
       <Label htmlFor="subject_id">
@@ -202,7 +234,12 @@ function SubjectField({
   );
 }
 
-function StatusField({ isView, status, setStatus, fieldErrors }: ExamFormFieldsProps) {
+function StatusField({
+  isView,
+  status,
+  setStatus,
+  fieldErrors,
+}: Pick<ExamFormFieldsProps, 'isView' | 'status' | 'setStatus' | 'fieldErrors'>) {
   return (
     <div className="space-y-2">
       <Label htmlFor="status">
@@ -238,7 +275,10 @@ function MarksFields({
   setMaxMarks,
   passingMarks,
   setPassingMarks,
-}: ExamFormFieldsProps) {
+}: Pick<
+  ExamFormFieldsProps,
+  'isView' | 'maxMarks' | 'setMaxMarks' | 'passingMarks' | 'setPassingMarks'
+>) {
   return (
     <>
       <div className="space-y-2">
@@ -277,7 +317,18 @@ function DateTimeFields({
   setEndTime,
   fieldErrors,
   dateError,
-}: ExamFormFieldsProps) {
+}: Pick<
+  ExamFormFieldsProps,
+  | 'isView'
+  | 'examDate'
+  | 'onExamDateChange'
+  | 'startTime'
+  | 'setStartTime'
+  | 'endTime'
+  | 'setEndTime'
+  | 'fieldErrors'
+  | 'dateError'
+>) {
   return (
     <>
       <div className="space-y-2">

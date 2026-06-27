@@ -11,12 +11,12 @@ import { useCurrentAcademicYear } from '@/features/core';
 import { FormDropdown } from './FormDropdown';
 
 interface AcademicYearDropdownProps {
-  value: string;
-  onChange: (value: string) => void;
-  label?: string;
-  placeholder?: string;
-  required?: boolean;
-  error?: string;
+  readonly value: string;
+  readonly onChange: (value: string) => void;
+  readonly label?: string;
+  readonly placeholder?: string;
+  readonly required?: boolean;
+  readonly error?: string;
 }
 
 export function AcademicYearDropdown({

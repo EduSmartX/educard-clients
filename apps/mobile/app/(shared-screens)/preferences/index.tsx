@@ -44,6 +44,114 @@ import { WorkingDayPolicyCard } from './WorkingDayPolicyCard';
 
 const adminGradient = getRoleGradient('admin');
 
+function PreferenceGroupContent({
+  preferences,
+  canManage,
+  updateMutation,
+  tooltipPref,
+  setTooltipPref,
+  handleUpdate,
+  handleReset,
+  editingTextPref,
+  editTextValue,
+  setEditingTextPref,
+  setEditTextValue,
+  setDropdownPref,
+  setMultiSelectPref,
+  setMultiSelectValues,
+}: {
+  preferences: OrganizationPreference[];
+  canManage: boolean;
+  updateMutation: ReturnType<typeof useUpdatePreference>;
+  tooltipPref: string | null;
+  setTooltipPref: (v: string | null) => void;
+  handleUpdate: (publicId: string, value: string | string[]) => void;
+  handleReset: (pref: OrganizationPreference) => void;
+  editingTextPref: string | null;
+  editTextValue: string;
+  setEditingTextPref: (v: string | null) => void;
+  setEditTextValue: (v: string) => void;
+  setDropdownPref: (v: OrganizationPreference | null) => void;
+  setMultiSelectPref: (v: OrganizationPreference | null) => void;
+  setMultiSelectValues: (v: string[]) => void;
+}) {
+  const childrenByParentKey: Record<string, typeof preferences> = {};
+  for (const pref of preferences) {
+    if (pref.depends_on) {
+      if (!childrenByParentKey[pref.depends_on]) {
+        childrenByParentKey[pref.depends_on] = [];
+      }
+      childrenByParentKey[pref.depends_on].push(pref);
+    }
+  }
+
+  const topLevelPrefs = preferences.filter((p) => !p.depends_on);
+
+  let itemIdx = 0;
+  return topLevelPrefs.map((pref) => {
+    const children = childrenByParentKey[pref.key] || [];
+    const parentValue = Array.isArray(pref.value) ? pref.value[0] : (pref.value as string);
+    const isParentEnabled = parentValue === 'TRUE';
+    const currentIdx = itemIdx++;
+
+    return (
+      <View key={pref.public_id}>
+        {currentIdx > 0 && <View style={styles.divider} />}
+        <PreferenceItem
+          pref={pref}
+          canManage={canManage}
+          isPending={updateMutation.isPending}
+          tooltipPref={tooltipPref}
+          setTooltipPref={setTooltipPref}
+          onUpdate={handleUpdate}
+          onReset={handleReset}
+          editingTextPref={editingTextPref}
+          editTextValue={editTextValue}
+          setEditingTextPref={setEditingTextPref}
+          setEditTextValue={setEditTextValue}
+          setDropdownPref={setDropdownPref}
+          setMultiSelectPref={setMultiSelectPref}
+          setMultiSelectValues={setMultiSelectValues}
+        />
+        {children.length > 0 && (
+          <View
+            style={{
+              marginLeft: 16,
+              borderLeftWidth: 2,
+              borderLeftColor: isParentEnabled ? '#bfdbfe' : '#e5e7eb',
+              paddingLeft: 12,
+              opacity: isParentEnabled ? 1 : 0.4,
+            }}
+            pointerEvents={isParentEnabled ? 'auto' : 'none'}
+          >
+            {children.map((child) => (
+              <View key={child.public_id}>
+                <View style={styles.divider} />
+                <PreferenceItem
+                  pref={child}
+                  canManage={canManage && isParentEnabled}
+                  isPending={updateMutation.isPending}
+                  tooltipPref={tooltipPref}
+                  setTooltipPref={setTooltipPref}
+                  onUpdate={handleUpdate}
+                  onReset={handleReset}
+                  editingTextPref={editingTextPref}
+                  editTextValue={editTextValue}
+                  setEditingTextPref={setEditingTextPref}
+                  setEditTextValue={setEditTextValue}
+                  setDropdownPref={setDropdownPref}
+                  setMultiSelectPref={setMultiSelectPref}
+                  setMultiSelectValues={setMultiSelectValues}
+                />
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+    );
+  });
+}
+
 /** Build WDP create payload - extracted to reduce component complexity */
 function buildWdpCreatePayload(field: string, value: boolean | SaturdayOffPattern) {
   const today = new Date().toISOString().split('T')[0];
@@ -224,87 +332,22 @@ export default function OrgPreferencesScreen() {
 
                   {isExpanded && (
                     <View style={styles.prefList}>
-                      {(() => {
-                        // Build parent-children groups based on depends_on
-                        const childrenByParentKey: Record<string, typeof group.preferences> = {};
-                        for (const pref of group.preferences) {
-                          if (pref.depends_on) {
-                            if (!childrenByParentKey[pref.depends_on]) {
-                              childrenByParentKey[pref.depends_on] = [];
-                            }
-                            childrenByParentKey[pref.depends_on].push(pref);
-                          }
-                        }
-
-                        // Top-level preferences: those without depends_on
-                        const topLevelPrefs = group.preferences.filter((p) => !p.depends_on);
-
-                        let itemIdx = 0;
-                        return topLevelPrefs.map((pref) => {
-                          const children = childrenByParentKey[pref.key] || [];
-                          const parentValue = Array.isArray(pref.value)
-                            ? pref.value[0]
-                            : (pref.value as string);
-                          const isParentEnabled = parentValue === 'TRUE';
-                          const currentIdx = itemIdx++;
-
-                          return (
-                            <View key={pref.public_id}>
-                              {currentIdx > 0 && <View style={styles.divider} />}
-                              <PreferenceItem
-                                pref={pref}
-                                canManage={canManage}
-                                isPending={updateMutation.isPending}
-                                tooltipPref={tooltipPref}
-                                setTooltipPref={setTooltipPref}
-                                onUpdate={handleUpdate}
-                                onReset={handleReset}
-                                editingTextPref={editingTextPref}
-                                editTextValue={editTextValue}
-                                setEditingTextPref={setEditingTextPref}
-                                setEditTextValue={setEditTextValue}
-                                setDropdownPref={setDropdownPref}
-                                setMultiSelectPref={setMultiSelectPref}
-                                setMultiSelectValues={setMultiSelectValues}
-                              />
-                              {children.length > 0 && (
-                                <View
-                                  style={{
-                                    marginLeft: 16,
-                                    borderLeftWidth: 2,
-                                    borderLeftColor: isParentEnabled ? '#bfdbfe' : '#e5e7eb',
-                                    paddingLeft: 12,
-                                    opacity: isParentEnabled ? 1 : 0.4,
-                                  }}
-                                  pointerEvents={isParentEnabled ? 'auto' : 'none'}
-                                >
-                                  {children.map((child) => (
-                                    <View key={child.public_id}>
-                                      <View style={styles.divider} />
-                                      <PreferenceItem
-                                        pref={child}
-                                        canManage={canManage && isParentEnabled}
-                                        isPending={updateMutation.isPending}
-                                        tooltipPref={tooltipPref}
-                                        setTooltipPref={setTooltipPref}
-                                        onUpdate={handleUpdate}
-                                        onReset={handleReset}
-                                        editingTextPref={editingTextPref}
-                                        editTextValue={editTextValue}
-                                        setEditingTextPref={setEditingTextPref}
-                                        setEditTextValue={setEditTextValue}
-                                        setDropdownPref={setDropdownPref}
-                                        setMultiSelectPref={setMultiSelectPref}
-                                        setMultiSelectValues={setMultiSelectValues}
-                                      />
-                                    </View>
-                                  ))}
-                                </View>
-                              )}
-                            </View>
-                          );
-                        });
-                      })()}
+                      <PreferenceGroupContent
+                        preferences={group.preferences}
+                        canManage={canManage}
+                        updateMutation={updateMutation}
+                        tooltipPref={tooltipPref}
+                        setTooltipPref={setTooltipPref}
+                        handleUpdate={handleUpdate}
+                        handleReset={handleReset}
+                        editingTextPref={editingTextPref}
+                        editTextValue={editTextValue}
+                        setEditingTextPref={setEditingTextPref}
+                        setEditTextValue={setEditTextValue}
+                        setDropdownPref={setDropdownPref}
+                        setMultiSelectPref={setMultiSelectPref}
+                        setMultiSelectValues={setMultiSelectValues}
+                      />
                     </View>
                   )}
                 </Animated.View>

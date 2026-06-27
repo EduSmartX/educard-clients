@@ -27,8 +27,8 @@ import { useClasses } from '@/features/classes/hooks/use-classes';
 import { exportStudentsData, type ExportStudentsPayload } from '../api/students-api';
 
 interface ExportStudentsModalProps {
-  visible: boolean;
-  onClose: () => void;
+  readonly visible: boolean;
+  readonly onClose: () => void;
 }
 
 export function ExportStudentsModal({ visible, onClose }: ExportStudentsModalProps) {

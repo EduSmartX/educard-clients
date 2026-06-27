@@ -263,6 +263,7 @@ export function MarksOverviewPage() {
       queryClient.invalidateQueries({ queryKey: ['exams'] });
       queryClient.invalidateQueries({ queryKey: ['marks-overview'] });
     } catch (error) {
+      console.error('Failed to publish marks:', error);
       toast.error('Some exams failed to publish. Please check and try again.');
     }
   };

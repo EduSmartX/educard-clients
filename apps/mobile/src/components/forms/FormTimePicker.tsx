@@ -8,13 +8,13 @@ import { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, Modal, StyleSheet, FlatList, Platform } from 'react-native';
 
 interface FormTimePickerProps {
-  label: string;
-  value: string; // HH:MM format (24h)
-  onChange: (value: string) => void;
-  placeholder?: string;
-  required?: boolean;
-  error?: string;
-  disabled?: boolean;
+  readonly label: string;
+  readonly value: string; // HH:MM format (24h)
+  readonly onChange: (value: string) => void;
+  readonly placeholder?: string;
+  readonly required?: boolean;
+  readonly error?: string;
+  readonly disabled?: boolean;
 }
 
 const HOURS_12 = Array.from({ length: 12 }, (_, i) => i + 1); // 1-12
@@ -87,7 +87,7 @@ export function FormTimePicker({
       {label && (
         <Text style={styles.label}>
           {label}
-          {required && <Text style={styles.required}> *</Text>}
+          {required ? <Text style={styles.required}> *</Text> : null}
         </Text>
       )}
 

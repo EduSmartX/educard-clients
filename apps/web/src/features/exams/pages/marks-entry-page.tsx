@@ -253,6 +253,7 @@ export function MarksEntryPage() {
       toast.success(`Successfully published marks for ${examsToPublish.length} exam(s)!`);
       queryClient.invalidateQueries({ queryKey: ['exams'] });
     } catch (error) {
+      console.error('Failed to publish marks:', error);
       toast.error('Some exams failed to publish. Please check and try again.');
     }
   }, [selectedSessionId, selectedClassId, filteredExams, publishMarksMutation, queryClient]);
@@ -568,11 +569,12 @@ export function MarksEntryPage() {
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-600">
                 {enteredCount < markEntries.length ? (
-                  <span className="text-amber-600 font-medium">
-                    ⚠ Complete all entries ({markEntries.length - enteredCount} remaining) to enable publishing
+                  <span className="font-medium text-amber-600">
+                    ⚠ Complete all entries ({markEntries.length - enteredCount} remaining) to enable
+                    publishing
                   </span>
                 ) : (
-                  <span className="text-green-600 font-medium">
+                  <span className="font-medium text-green-600">
                     ✓ All entries completed — ready to publish
                   </span>
                 )}
@@ -602,7 +604,7 @@ export function MarksEntryPage() {
                       markEntries.length === 0 ||
                       enteredCount < markEntries.length
                     }
-                    className="gap-2 border-green-200 text-green-700 hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="gap-2 border-green-200 text-green-700 hover:bg-green-50 disabled:cursor-not-allowed disabled:opacity-50"
                     title={
                       enteredCount < markEntries.length
                         ? `Enter marks for all ${markEntries.length} students (either marks or AB) before publishing`

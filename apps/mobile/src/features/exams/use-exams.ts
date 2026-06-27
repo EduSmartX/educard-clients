@@ -219,8 +219,8 @@ export function usePublishExamMarks(options?: MutationOptions) {
     mutationFn: (examId: string) => publishExamMarks(examId),
     onSuccess: () => {
       showToast('success', 'Marks published successfully');
-      void qc.invalidateQueries({ queryKey: ['exams'] });
-      void qc.invalidateQueries({ queryKey: ['marks-overview'] });
+      qc.invalidateQueries({ queryKey: ['exams'] });
+      qc.invalidateQueries({ queryKey: ['marks-overview'] });
       options?.onSuccess?.();
     },
     onError: (error: unknown) => {
@@ -235,8 +235,8 @@ export function useUnpublishExamMarks(options?: MutationOptions) {
     mutationFn: (examId: string) => unpublishExamMarks(examId),
     onSuccess: () => {
       showToast('success', 'Marks unpublished successfully');
-      void qc.invalidateQueries({ queryKey: ['exams'] });
-      void qc.invalidateQueries({ queryKey: ['marks-overview'] });
+      qc.invalidateQueries({ queryKey: ['exams'] });
+      qc.invalidateQueries({ queryKey: ['marks-overview'] });
       options?.onSuccess?.();
     },
     onError: (error: unknown) => {

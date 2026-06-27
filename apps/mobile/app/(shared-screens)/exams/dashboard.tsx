@@ -44,6 +44,64 @@ import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
 
+function NotificationActions({
+  hasDraftExams,
+  allExamsCompleted,
+  allMarksPublished,
+  sessionId,
+  classId,
+  sendScheduleMutation,
+  sendResultsMutation,
+  sendProgressMutation,
+}: {
+  hasDraftExams: boolean;
+  allExamsCompleted: boolean;
+  allMarksPublished: boolean;
+  sessionId: string;
+  classId: string;
+  sendScheduleMutation: ReturnType<typeof useSendExamScheduleNotification>;
+  sendResultsMutation: ReturnType<typeof useSendExamResultsNotification>;
+  sendProgressMutation: ReturnType<typeof useSendExamProgressNotification>;
+}) {
+  return (
+    <View style={styles.actionButtons}>
+      {!hasDraftExams && (
+        <TouchableOpacity
+          style={[styles.actionBtn, styles.actionBtnBlue]}
+          onPress={() => sendScheduleMutation.mutate({ sessionId, classId })}
+          disabled={sendScheduleMutation.isPending}
+        >
+          <Text style={styles.actionBtnText}>
+            {sendScheduleMutation.isPending ? 'Sending...' : '📅 Send Schedule'}
+          </Text>
+        </TouchableOpacity>
+      )}
+      {allExamsCompleted && (
+        <TouchableOpacity
+          style={[styles.actionBtn, styles.actionBtnGreen]}
+          onPress={() => sendResultsMutation.mutate({ sessionId, classId })}
+          disabled={sendResultsMutation.isPending}
+        >
+          <Text style={styles.actionBtnText}>
+            {sendResultsMutation.isPending ? 'Sending...' : '📊 Publish Results'}
+          </Text>
+        </TouchableOpacity>
+      )}
+      {allMarksPublished && (
+        <TouchableOpacity
+          style={[styles.actionBtn, styles.actionBtnPurple]}
+          onPress={() => sendProgressMutation.mutate({ sessionId, classId })}
+          disabled={sendProgressMutation.isPending}
+        >
+          <Text style={styles.actionBtnText}>
+            {sendProgressMutation.isPending ? 'Sending...' : '📈 Send Progress'}
+          </Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
+
 export default function ExamDashboardScreen() {
   const router = useRouter();
   const { showToast } = useToast();
@@ -359,47 +417,16 @@ export default function ExamDashboardScreen() {
 
           {/* Notification Actions */}
           {hasExams && (
-            <View style={styles.actionButtons}>
-              {!hasDraftExams && (
-                <TouchableOpacity
-                  style={[styles.actionBtn, styles.actionBtnBlue]}
-                  onPress={() =>
-                    sendScheduleMutation.mutate({ sessionId, classId: selectedClassId })
-                  }
-                  disabled={sendScheduleMutation.isPending}
-                >
-                  <Text style={styles.actionBtnText}>
-                    {sendScheduleMutation.isPending ? 'Sending...' : '📅 Send Schedule'}
-                  </Text>
-                </TouchableOpacity>
-              )}
-              {allExamsCompleted && (
-                <TouchableOpacity
-                  style={[styles.actionBtn, styles.actionBtnGreen]}
-                  onPress={() =>
-                    sendResultsMutation.mutate({ sessionId, classId: selectedClassId })
-                  }
-                  disabled={sendResultsMutation.isPending}
-                >
-                  <Text style={styles.actionBtnText}>
-                    {sendResultsMutation.isPending ? 'Sending...' : '📊 Publish Results'}
-                  </Text>
-                </TouchableOpacity>
-              )}
-              {allMarksPublished && (
-                <TouchableOpacity
-                  style={[styles.actionBtn, styles.actionBtnPurple]}
-                  onPress={() =>
-                    sendProgressMutation.mutate({ sessionId, classId: selectedClassId })
-                  }
-                  disabled={sendProgressMutation.isPending}
-                >
-                  <Text style={styles.actionBtnText}>
-                    {sendProgressMutation.isPending ? 'Sending...' : '📈 Send Progress'}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
+            <NotificationActions
+              hasDraftExams={hasDraftExams}
+              allExamsCompleted={allExamsCompleted}
+              allMarksPublished={allMarksPublished}
+              sessionId={sessionId}
+              classId={selectedClassId}
+              sendScheduleMutation={sendScheduleMutation}
+              sendResultsMutation={sendResultsMutation}
+              sendProgressMutation={sendProgressMutation}
+            />
           )}
 
           {/* Content */}

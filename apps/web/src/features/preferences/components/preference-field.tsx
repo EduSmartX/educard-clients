@@ -99,9 +99,9 @@ function ClassesMultiSelect({
           onClick={() => onChange([])}
           disabled={disabled}
           className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-            !isAll
-              ? 'border-blue-500 bg-blue-500 text-white'
-              : 'border-gray-300 bg-white text-gray-600 hover:border-blue-300'
+            isAll
+              ? 'border-gray-300 bg-white text-gray-600 hover:border-blue-300'
+              : 'border-blue-500 bg-blue-500 text-white'
           }`}
         >
           Select Classes

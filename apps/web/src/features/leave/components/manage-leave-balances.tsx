@@ -151,7 +151,6 @@ function buildUserOptions(
   }));
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function fetchClassesData(
   isAdmin: boolean,
   teacherContext:

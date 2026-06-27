@@ -88,12 +88,12 @@ export function useFilterParams<TDefaults extends Record<string, string>>(
 
   const page = useMemo(() => {
     const p = searchParams.get(pageKey);
-    return p ? Math.max(1, parseInt(p, 10) || defaultPage) : defaultPage;
+    return p ? Math.max(1, Number.parseInt(p, 10) || defaultPage) : defaultPage;
   }, [searchParams, pageKey, defaultPage]);
 
   const pageSize = useMemo(() => {
     const ps = searchParams.get(pageSizeKey);
-    return ps ? Math.max(1, parseInt(ps, 10) || defaultPageSize) : defaultPageSize;
+    return ps ? Math.max(1, Number.parseInt(ps, 10) || defaultPageSize) : defaultPageSize;
   }, [searchParams, pageSizeKey, defaultPageSize]);
 
   // ── Helpers ─────────────────────────────────────────────────────────────────

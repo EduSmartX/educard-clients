@@ -76,8 +76,8 @@ export const useFilterStore = create<FilterStoreState>((set) => ({
           ...partial,
           // Merge filters if provided
           filters: {
-            ...(state.screens[screenKey]?.filters ?? {}),
-            ...(partial.filters ?? {}),
+            ...state.screens[screenKey]?.filters,
+            ...partial.filters,
           },
         },
       },

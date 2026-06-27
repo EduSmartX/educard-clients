@@ -48,6 +48,162 @@ import { useModal } from '@/components/ui';
 import { ProgressSteps, isValidPhone, getIconColor } from './signup-components';
 import { styles } from './signup-styles';
 
+function validateStep4Fields(fields: {
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  password: string;
+  confirmPassword: string;
+  canTeachSubject: boolean;
+  employeeId: string;
+  gender: string;
+}): Record<string, string> {
+  const errors: Record<string, string> = {};
+  if (!fields.firstName.trim()) {
+    errors.firstName = 'First name is required';
+  }
+  if (!fields.lastName.trim()) {
+    errors.lastName = 'Last name is required';
+  }
+  if (fields.phoneNumber && !isValidPhone(fields.phoneNumber)) {
+    errors.phoneNumber = 'Phone must be a valid 10-digit mobile number';
+  }
+  if (!fields.password || fields.password.length < 8) {
+    errors.password = 'Password must be at least 8 characters';
+  }
+  if (fields.password !== fields.confirmPassword) {
+    errors.confirmPassword = 'Passwords do not match';
+  }
+  if (fields.canTeachSubject && !fields.employeeId.trim()) {
+    errors.employeeId = 'Employee ID is required';
+  }
+  if (fields.canTeachSubject && !fields.gender) {
+    errors.gender = 'Gender is required';
+  }
+  return errors;
+}
+
+function TeacherFields({
+  employeeId,
+  setEmployeeId,
+  gender,
+  setGender,
+  errors,
+  clearError,
+  focusedInput,
+  setFocusedInput,
+  showGenderDropdown,
+  setShowGenderDropdown,
+}: {
+  employeeId: string;
+  setEmployeeId: (v: string) => void;
+  gender: string;
+  setGender: (v: string) => void;
+  errors: Record<string, string>;
+  clearError: (field: string) => void;
+  focusedInput: string | null;
+  setFocusedInput: (v: string | null) => void;
+  showGenderDropdown: boolean;
+  setShowGenderDropdown: (v: boolean) => void;
+}) {
+  return (
+    <>
+      <View style={styles.inputWrapper}>
+        <Text style={styles.inputLabel}>Employee ID *</Text>
+        <View
+          style={[
+            styles.inputContainer,
+            focusedInput === 'employeeId' && styles.inputFocused,
+            errors.employeeId && styles.inputError,
+          ]}
+        >
+          <Shield
+            size={18}
+            color={getIconColor(!!errors.employeeId, focusedInput === 'employeeId')}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="EMP-001"
+            placeholderTextColor={Colors.gray[400]}
+            value={employeeId}
+            onChangeText={(v) => {
+              setEmployeeId(v);
+              clearError('employeeId');
+            }}
+            autoCapitalize="characters"
+            onFocus={() => setFocusedInput('employeeId')}
+            onBlur={() => setFocusedInput(null)}
+          />
+        </View>
+        {!!errors.employeeId && (
+          <View style={styles.errorRow}>
+            <AlertCircle size={12} color="#ef4444" />
+            <Text style={styles.errorTextSmall}>{errors.employeeId}</Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.inputWrapper}>
+        <Text style={styles.inputLabel}>Gender *</Text>
+        <TouchableOpacity
+          style={[styles.dropdownButton, errors.gender && styles.inputError]}
+          onPress={() => setShowGenderDropdown(true)}
+        >
+          <Text style={gender ? styles.dropdownText : styles.dropdownPlaceholder}>
+            {GENDER_OPTIONS.find((g) => g.value === gender)?.label || 'Select gender'}
+          </Text>
+          <ChevronDown size={20} color={Colors.gray[400]} />
+        </TouchableOpacity>
+        {!!errors.gender && (
+          <View style={styles.errorRow}>
+            <AlertCircle size={12} color="#ef4444" />
+            <Text style={styles.errorTextSmall}>{errors.gender}</Text>
+          </View>
+        )}
+      </View>
+
+      {/* Gender Dropdown Modal */}
+      <Modal visible={showGenderDropdown} transparent animationType="fade">
+        <TouchableOpacity
+          style={styles.dropdownOverlay}
+          activeOpacity={1}
+          onPress={() => setShowGenderDropdown(false)}
+        >
+          <View style={styles.dropdownModal}>
+            <Text style={styles.dropdownTitle}>Select Gender</Text>
+            <FlatList
+              data={[...GENDER_OPTIONS]}
+              keyExtractor={(item) => item.value}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.dropdownItem,
+                    gender === item.value && styles.dropdownItemSelected,
+                  ]}
+                  onPress={() => {
+                    setGender(item.value);
+                    clearError('gender');
+                    setShowGenderDropdown(false);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.dropdownItemText,
+                      gender === item.value && styles.dropdownItemTextSelected,
+                    ]}
+                  >
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
+    </>
+  );
+}
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const logoImage: ImageSourcePropType =
   require('../../assets/images/educard-logo.jpg') as ImageSourcePropType;
@@ -264,29 +420,16 @@ export default function SignupScreen() {
 
   // Step 4: Final Registration
   const handleStep4Submit = useCallback(async () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!firstName.trim()) {
-      newErrors.firstName = 'First name is required';
-    }
-    if (!lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
-    }
-    if (phoneNumber && !isValidPhone(phoneNumber)) {
-      newErrors.phoneNumber = 'Phone must be a valid 10-digit mobile number';
-    }
-    if (!password || password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
-    }
-    if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-    if (canTeachSubject && !employeeId.trim()) {
-      newErrors.employeeId = 'Employee ID is required';
-    }
-    if (canTeachSubject && !gender) {
-      newErrors.gender = 'Gender is required';
-    }
+    const newErrors = validateStep4Fields({
+      firstName,
+      lastName,
+      phoneNumber,
+      password,
+      confirmPassword,
+      canTeachSubject,
+      employeeId,
+      gender,
+    });
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -1009,101 +1152,19 @@ export default function SignupScreen() {
       </TouchableOpacity>
 
       {canTeachSubject && (
-        <>
-          <View style={styles.inputWrapper}>
-            <Text style={styles.inputLabel}>Employee ID *</Text>
-            <View
-              style={[
-                styles.inputContainer,
-                focusedInput === 'employeeId' && styles.inputFocused,
-                errors.employeeId && styles.inputError,
-              ]}
-            >
-              <Shield
-                size={18}
-                color={getIconColor(!!errors.employeeId, focusedInput === 'employeeId')}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="EMP-001"
-                placeholderTextColor={Colors.gray[400]}
-                value={employeeId}
-                onChangeText={(v) => {
-                  setEmployeeId(v);
-                  clearError('employeeId');
-                }}
-                autoCapitalize="characters"
-                onFocus={() => setFocusedInput('employeeId')}
-                onBlur={() => setFocusedInput(null)}
-              />
-            </View>
-            {!!errors.employeeId && (
-              <View style={styles.errorRow}>
-                <AlertCircle size={12} color="#ef4444" />
-                <Text style={styles.errorTextSmall}>{errors.employeeId}</Text>
-              </View>
-            )}
-          </View>
-
-          <View style={styles.inputWrapper}>
-            <Text style={styles.inputLabel}>Gender *</Text>
-            <TouchableOpacity
-              style={[styles.dropdownButton, errors.gender && styles.inputError]}
-              onPress={() => setShowGenderDropdown(true)}
-            >
-              <Text style={gender ? styles.dropdownText : styles.dropdownPlaceholder}>
-                {GENDER_OPTIONS.find((g) => g.value === gender)?.label || 'Select gender'}
-              </Text>
-              <ChevronDown size={20} color={Colors.gray[400]} />
-            </TouchableOpacity>
-            {!!errors.gender && (
-              <View style={styles.errorRow}>
-                <AlertCircle size={12} color="#ef4444" />
-                <Text style={styles.errorTextSmall}>{errors.gender}</Text>
-              </View>
-            )}
-          </View>
-        </>
+        <TeacherFields
+          employeeId={employeeId}
+          setEmployeeId={setEmployeeId}
+          gender={gender}
+          setGender={setGender}
+          errors={errors}
+          clearError={clearError}
+          focusedInput={focusedInput}
+          setFocusedInput={setFocusedInput}
+          showGenderDropdown={showGenderDropdown}
+          setShowGenderDropdown={setShowGenderDropdown}
+        />
       )}
-
-      {/* Gender Dropdown Modal */}
-      <Modal visible={showGenderDropdown} transparent animationType="fade">
-        <TouchableOpacity
-          style={styles.dropdownOverlay}
-          activeOpacity={1}
-          onPress={() => setShowGenderDropdown(false)}
-        >
-          <View style={styles.dropdownModal}>
-            <Text style={styles.dropdownTitle}>Select Gender</Text>
-            <FlatList
-              data={[...GENDER_OPTIONS]}
-              keyExtractor={(item) => item.value}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[
-                    styles.dropdownItem,
-                    gender === item.value && styles.dropdownItemSelected,
-                  ]}
-                  onPress={() => {
-                    setGender(item.value);
-                    clearError('gender');
-                    setShowGenderDropdown(false);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.dropdownItemText,
-                      gender === item.value && styles.dropdownItemTextSelected,
-                    ]}
-                  >
-                    {item.label}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-        </TouchableOpacity>
-      </Modal>
 
       {/* Action Buttons */}
       <View style={styles.buttonRow}>

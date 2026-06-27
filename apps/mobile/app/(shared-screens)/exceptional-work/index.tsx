@@ -200,6 +200,48 @@ function DatePickerModal({
   );
 }
 
+function ClassSelectionGrid({
+  classes,
+  selectedClasses,
+  onToggle,
+}: {
+  classes: any[];
+  selectedClasses: string[];
+  onToggle: (classId: string) => void;
+}) {
+  return (
+    <View style={modalStyles.field}>
+      <Text style={modalStyles.fieldLabel}>Select Classes *</Text>
+      <View style={modalStyles.classesGrid}>
+        {classes.length === 0 ? (
+          <Text style={modalStyles.noClassesText}>No classes available</Text>
+        ) : (
+          classes.map((cls: any) => (
+            <TouchableOpacity
+              key={cls.public_id}
+              style={[
+                modalStyles.classChip,
+                selectedClasses.includes(cls.public_id) && modalStyles.classChipSelected,
+              ]}
+              onPress={() => onToggle(cls.public_id)}
+            >
+              <Text
+                style={[
+                  modalStyles.classChipText,
+                  selectedClasses.includes(cls.public_id) && modalStyles.classChipTextSelected,
+                ]}
+              >
+                {cls.display_name || cls.name}
+              </Text>
+              {selectedClasses.includes(cls.public_id) && <Check size={14} color="#0d9488" />}
+            </TouchableOpacity>
+          ))
+        )}
+      </View>
+    </View>
+  );
+}
+
 function CreateExceptionModal({
   visible,
   onClose,
@@ -405,38 +447,11 @@ function CreateExceptionModal({
             </View>
 
             {!isAllClasses && (
-              <View style={modalStyles.field}>
-                <Text style={modalStyles.fieldLabel}>Select Classes *</Text>
-                <View style={modalStyles.classesGrid}>
-                  {classes.length === 0 ? (
-                    <Text style={modalStyles.noClassesText}>No classes available</Text>
-                  ) : (
-                    classes.map((cls: any) => (
-                      <TouchableOpacity
-                        key={cls.public_id}
-                        style={[
-                          modalStyles.classChip,
-                          selectedClasses.includes(cls.public_id) && modalStyles.classChipSelected,
-                        ]}
-                        onPress={() => toggleClassSelection(cls.public_id)}
-                      >
-                        <Text
-                          style={[
-                            modalStyles.classChipText,
-                            selectedClasses.includes(cls.public_id) &&
-                              modalStyles.classChipTextSelected,
-                          ]}
-                        >
-                          {cls.display_name || cls.name}
-                        </Text>
-                        {selectedClasses.includes(cls.public_id) && (
-                          <Check size={14} color="#0d9488" />
-                        )}
-                      </TouchableOpacity>
-                    ))
-                  )}
-                </View>
-              </View>
+              <ClassSelectionGrid
+                classes={classes}
+                selectedClasses={selectedClasses}
+                onToggle={toggleClassSelection}
+              />
             )}
           </ScrollView>
 

@@ -27,16 +27,16 @@ export function StatsGrid({ stats }: StatsGridProps) {
   return (
     <View style={[styles.grid, { paddingHorizontal: horizontalPadding }]}>
       {rows.map((row, rowIndex) => (
-        <View key={rowIndex} style={styles.row}>
+        <View key={row[0]?.id ?? `row-${rowIndex}`} style={styles.row}>
           {row.map((stat, index) => (
-            <View key={stat.id || index} style={styles.cell}>
+            <View key={stat.id || `stat-${rowIndex}-${index}`} style={styles.cell}>
               <StatCard {...stat} animationIndex={rowIndex * statColumns + index} />
             </View>
           ))}
           {/* Fill empty cells to maintain alignment */}
           {row.length < statColumns &&
             Array.from({ length: statColumns - row.length }).map((_, i) => (
-              <View key={`empty-${i}`} style={styles.cell} />
+              <View key={`empty-${rowIndex}-${i}`} style={styles.cell} />
             ))}
         </View>
       ))}

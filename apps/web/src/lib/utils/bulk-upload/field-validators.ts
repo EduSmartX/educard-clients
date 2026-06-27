@@ -113,12 +113,12 @@ export const supervisorEmailValidator: FieldValidator = (value, row, fieldLabel)
   }
   // Extract email from format "Name (email@example.com)"
   let email = emailStr;
-  const emailRegex = /\(([^)]+@[^)]+)\)/;
+  const emailRegex = /\(([^)@]+@[^)]+)\)/;
   const match = emailRegex.exec(emailStr);
   if (match) {
     email = match[1];
   }
-  const validEmailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const validEmailRegex = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
   if (!validEmailRegex.test(email)) {
     return { row, field: fieldLabel, message: `Invalid supervisor email format: "${emailStr}"` };
   }
@@ -158,6 +158,52 @@ function parseDateString(dateStr: string, format?: DateFormat): Date | null {
   return null;
 }
 
+function getExpectedDateFormat(fmt?: DateFormat): string {
+  if (fmt === 'DD-MM-YYYY') {
+    return 'DD-MM-YYYY (e.g., 15-01-2024)';
+  }
+  if (fmt === 'YYYY-MM-DD') {
+    return 'YYYY-MM-DD (e.g., 2024-01-15)';
+  }
+  return 'YYYY-MM-DD (e.g., 2024-01-15) or DD-MM-YYYY';
+}
+
+function validateDateConstraints(
+  date: Date,
+  row: number,
+  fieldLabel: string,
+  options?: { notInFuture?: boolean; maxFutureMonths?: number; minAge?: number }
+): ValidationError | null {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (options?.notInFuture && date >= today) {
+    return { row, field: fieldLabel, message: `${fieldLabel} must be in the past` };
+  }
+
+  if (options?.maxFutureMonths !== undefined) {
+    const maxDate = new Date();
+    maxDate.setMonth(maxDate.getMonth() + options.maxFutureMonths);
+    if (date > maxDate) {
+      return {
+        row,
+        field: fieldLabel,
+        message: `${fieldLabel} cannot be more than ${options.maxFutureMonths} months in the future`,
+      };
+    }
+  }
+
+  if (options?.minAge !== undefined) {
+    const minAgeDate = new Date();
+    minAgeDate.setFullYear(minAgeDate.getFullYear() - options.minAge);
+    if (date > minAgeDate) {
+      return { row, field: fieldLabel, message: `Must be at least ${options.minAge} years old` };
+    }
+  }
+
+  return null;
+}
+
 /**
  * Date validator. Pass `format` to enforce the exact format the backend importer
  * accepts for that template (teacher uses DD-MM-YYYY; student/holiday use YYYY-MM-DD).
@@ -184,47 +230,14 @@ export const dateValidator = (options?: {
 
     const date = parseDateString(dateStr, options?.format);
     if (!date) {
-      const expected =
-        options?.format === 'DD-MM-YYYY'
-          ? 'DD-MM-YYYY (e.g., 15-01-2024)'
-          : options?.format === 'YYYY-MM-DD'
-            ? 'YYYY-MM-DD (e.g., 2024-01-15)'
-            : 'YYYY-MM-DD (e.g., 2024-01-15) or DD-MM-YYYY';
       return {
         row,
         field: fieldLabel,
-        message: `Invalid date format. Use ${expected}`,
+        message: `Invalid date format. Use ${getExpectedDateFormat(options?.format)}`,
       };
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (options?.notInFuture && date >= today) {
-      return { row, field: fieldLabel, message: `${fieldLabel} must be in the past` };
-    }
-
-    if (options?.maxFutureMonths !== undefined) {
-      const maxDate = new Date();
-      maxDate.setMonth(maxDate.getMonth() + options.maxFutureMonths);
-      if (date > maxDate) {
-        return {
-          row,
-          field: fieldLabel,
-          message: `${fieldLabel} cannot be more than ${options.maxFutureMonths} months in the future`,
-        };
-      }
-    }
-
-    if (options?.minAge !== undefined) {
-      const minAgeDate = new Date();
-      minAgeDate.setFullYear(minAgeDate.getFullYear() - options.minAge);
-      if (date > minAgeDate) {
-        return { row, field: fieldLabel, message: `Must be at least ${options.minAge} years old` };
-      }
-    }
-
-    return null;
+    return validateDateConstraints(date, row, fieldLabel, options);
   };
 };
 
@@ -339,11 +352,11 @@ export const teacherInfoValidator: FieldValidator = (value, row, fieldLabel) => 
   }
   const info = String(value).trim();
   // Check if it contains email in parentheses
-  const emailInParenRegex = /\(([^)]+@[^)]+)\)/;
+  const emailInParenRegex = /\(([^)@]+@[^)]+)\)/;
   const match = emailInParenRegex.exec(info);
   if (!match) {
     // Could be just an email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
     if (!emailRegex.test(info)) {
       return {
         row,

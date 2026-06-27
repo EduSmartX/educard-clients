@@ -117,9 +117,9 @@ function interpolate(value: number, inputRange: number[], outputRange: number[])
   // Simple linear interpolation
   if (inputRange.length < 2) return outputRange[0] ?? 0;
   const firstInput = inputRange[0] ?? 0;
-  const lastInput = inputRange[inputRange.length - 1] ?? firstInput;
+  const lastInput = inputRange.at(-1) ?? firstInput;
   const firstOutput = outputRange[0] ?? 0;
-  const lastOutput = outputRange[outputRange.length - 1] ?? firstOutput;
+  const lastOutput = outputRange.at(-1) ?? firstOutput;
 
   if (lastInput === firstInput) {
     return firstOutput;
