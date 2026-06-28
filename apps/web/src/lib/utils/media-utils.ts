@@ -7,13 +7,13 @@
  * Backend origin derived from VITE_API_BASE_URL.
  *
  * VITE_API_BASE_URL is like "http://localhost:8000/api" (local)
- * or "https://educard-backend-zgz9.onrender.com/api" (prod).
+ * or "https://educard-backend-api-272236662775.asia-south1.run.app/api" (prod).
  *
  * We strip the "/api" suffix to get the bare origin so we can
  * prepend it to media paths like "/media/attachments/...".
  */
 const BACKEND_ORIGIN = (
-  import.meta.env.VITE_API_BASE_URL || 'https://educard-backend-zgz9.onrender.com/api'
+  import.meta.env.VITE_API_BASE_URL || 'https://educard-backend-api-272236662775.asia-south1.run.app/api'
 ).replace(/\/api\/?$/, '');
 
 /**

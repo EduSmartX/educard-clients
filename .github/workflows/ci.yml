@@ -182,7 +182,7 @@ jobs:
       - name: Build web application
         run: pnpm build:web
         env:
-          VITE_API_URL: https://api.example.com
+          VITE_API_URL: https://educard-backend-api-272236662775.asia-south1.run.app/api
 
       - name: Upload build artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

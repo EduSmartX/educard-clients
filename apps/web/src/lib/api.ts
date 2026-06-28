@@ -4,7 +4,7 @@ import { ErrorMessages } from '@/constants';
 
 // API Base URL from environment
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'https://educard-backend-zgz9.onrender.com/api';
+  import.meta.env.VITE_API_BASE_URL || 'https://educard-backend-api-272236662775.asia-south1.run.app/api';
 
 // Define proper types for API error responses
 interface ApiErrorResponse {

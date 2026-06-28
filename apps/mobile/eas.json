@@ -27,7 +27,7 @@
       },
       "env": {
         "APP_VARIANT": "preview",
-        "EXPO_PUBLIC_API_URL": "https://educard-backend-zgz9.onrender.com/api"
+        "EXPO_PUBLIC_API_URL": "https://educard-backend-api-272236662775.asia-south1.run.app/api"
       },
       "channel": "preview"
     },
