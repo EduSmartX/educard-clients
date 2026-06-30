@@ -34,11 +34,20 @@ export interface User {
   public_id: string;
   username: string;
   email: string;
+  phone?: string;
   role: string;
   full_name: string;
   profile_image?: string;
   is_active?: boolean;
   is_verified?: boolean;
+  is_email_verified?: boolean;
+  is_mobile_verified?: boolean;
+  // Guardian fields (for student/parent roles)
+  guardian_name?: string;
+  guardian_phone?: string;
+  guardian_email?: string;
+  guardian_email_verified?: boolean;
+  guardian_phone_verified?: boolean;
 }
 
 export interface Organization {
