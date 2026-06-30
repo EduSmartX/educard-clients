@@ -1,23 +1,17 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants';
+import { tokenManager } from '@/lib/token-manager';
 
 export function useStorageListener() {
   const navigate = useNavigate();
 
   useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
-      // If access_token is removed in another tab, logout this tab too
-      if (event.key === 'access_token' && event.newValue === null) {
-        // Redirect to login page
-        window.location.href = ROUTES.AUTH.LOGIN;
-      }
-
-      // Listen for explicit logout events (e.g., password change)
+      // Listen for explicit logout events (e.g., password change in another tab)
       if (event.key === 'logout-event') {
-        // Clear all storage
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
+        // Clear in-memory token and localStorage user data
+        tokenManager.clear();
         localStorage.removeItem('user');
         localStorage.removeItem('organization');
         // Redirect to login
@@ -36,8 +30,7 @@ export function useStorageListener() {
   // Prevent back button navigation after logout
   useEffect(() => {
     const handlePopState = () => {
-      const accessToken = localStorage.getItem('access_token');
-      if (!accessToken) {
+      if (!tokenManager.isAuthenticated()) {
         window.history.pushState(null, '', ROUTES.AUTH.LOGIN);
         navigate(ROUTES.AUTH.LOGIN, { replace: true });
       }

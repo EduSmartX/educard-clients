@@ -11,6 +11,7 @@ import { getMediaUrl } from '@/lib/utils/media-utils';
 import { getThemeConfig } from '@/lib/utils/theme-utils';
 import { cn } from '@/lib/utils';
 import { useTeacherManagementContext } from '@/features/leave/hooks/use-teacher-management-context';
+import { tokenManager } from '@/lib/token-manager';
 
 /**
  * Protected Layout - Wraps all authenticated pages with header and sidebar.
@@ -23,8 +24,7 @@ export function ProtectedLayout() {
 
   useStorageListener();
 
-  const accessToken = localStorage.getItem('access_token');
-  if (!accessToken || !user) {
+  if (!tokenManager.isAuthenticated() || !user) {
     return <Navigate to={ROUTES.AUTH.LOGIN} replace />;
   }
 

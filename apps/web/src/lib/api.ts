@@ -1,10 +1,12 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { toast } from 'sonner';
 import { ErrorMessages } from '@/constants';
+import { tokenManager } from '@/lib/token-manager';
 
 // API Base URL from environment
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'https://educard-backend-api-272236662775.asia-south1.run.app/api';
+  import.meta.env.VITE_API_BASE_URL ||
+  'https://educard-backend-api-272236662775.asia-south1.run.app/api';
 
 // Define proper types for API error responses
 interface ApiErrorResponse {
@@ -22,15 +24,16 @@ interface ApiErrorResponse {
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: 30000,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request interceptor - Add auth token
+// Request interceptor - Add auth token from memory
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem('access_token');
+    const token = tokenManager.getAccessToken();
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -58,17 +61,15 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = localStorage.getItem('refresh_token');
-        if (!refreshToken) {
-          throw new Error('No refresh token');
-        }
-
-        const response = await axios.post(`${API_BASE_URL}/auth/refresh/`, {
-          refresh: refreshToken,
-        });
+        // Refresh uses HttpOnly cookie automatically (withCredentials)
+        const response = await axios.post(
+          `${API_BASE_URL}/auth/token/refresh/`,
+          {},
+          { withCredentials: true }
+        );
 
         const { access } = response.data;
-        localStorage.setItem('access_token', access);
+        tokenManager.setAccessToken(access);
 
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${access}`;
@@ -76,8 +77,7 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         // Refresh token failed, logout user completely
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
+        tokenManager.clear();
         localStorage.removeItem('user');
         localStorage.removeItem('organization');
 

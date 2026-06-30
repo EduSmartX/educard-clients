@@ -1,9 +1,6 @@
 import api from '../api';
+import { tokenManager } from '@/lib/token-manager';
 import { getParsedLocalStorageItem } from '@/lib/utils/storage';
-
-// TODO: [SECURITY] Move refresh_token to HttpOnly Secure SameSite cookie (requires backend support).
-// TODO: [SECURITY] Move access_token to in-memory storage to prevent XSS theft from localStorage.
-// See: https://auth0.com/docs/secure/tokens/token-storage#browser-in-memory-scenarios
 
 // Types
 export interface LoginCredentials {
@@ -101,10 +98,9 @@ export const authApi = {
    */
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     const { data } = await api.post('/auth/login/', credentials);
-    // Store tokens and user data
+    // Store access token in memory (refresh token is set as HttpOnly cookie by backend)
     if (data.tokens?.access) {
-      localStorage.setItem('access_token', data.tokens.access);
-      localStorage.setItem('refresh_token', data.tokens.refresh);
+      tokenManager.setAccessToken(data.tokens.access);
       localStorage.setItem('user', JSON.stringify(data.user));
       if (data.organization) {
         localStorage.setItem('organization', JSON.stringify(data.organization));
@@ -118,10 +114,9 @@ export const authApi = {
    */
   signup: async (signupData: SignupData): Promise<AuthResponse> => {
     const { data } = await api.post('/auth/register/', signupData);
-    // Store tokens and user data if registration is successful
+    // Store access token in memory (refresh token is set as HttpOnly cookie by backend)
     if (data.tokens?.access) {
-      localStorage.setItem('access_token', data.tokens.access);
-      localStorage.setItem('refresh_token', data.tokens.refresh);
+      tokenManager.setAccessToken(data.tokens.access);
       localStorage.setItem('user', JSON.stringify(data.user));
       if (data.organization) {
         localStorage.setItem('organization', JSON.stringify(data.organization));
@@ -135,21 +130,12 @@ export const authApi = {
    */
   logout: async (): Promise<void> => {
     try {
-      const accessToken = localStorage.getItem('access_token');
-      const refreshToken = localStorage.getItem('refresh_token');
-
-      if (accessToken && refreshToken) {
-        await api.post('/auth/logout/', {
-          access: accessToken,
-          refresh: refreshToken,
-        });
-      }
+      await api.post('/auth/logout/', {});
     } catch {
       // Ignore logout API errors
     } finally {
-      // Clear all localStorage
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
+      // Clear in-memory token and localStorage user data
+      tokenManager.clear();
       localStorage.removeItem('user');
       localStorage.removeItem('organization');
     }
@@ -158,12 +144,11 @@ export const authApi = {
   /**
    * Refresh access token
    */
-  refreshToken: async (refreshToken: string): Promise<{ access: string }> => {
-    const { data } = await api.post('/auth/token/refresh/', {
-      refresh: refreshToken,
-    });
+  refreshToken: async (): Promise<{ access: string }> => {
+    // Refresh token is sent automatically via HttpOnly cookie (withCredentials)
+    const { data } = await api.post('/auth/token/refresh/', {});
     if (data.access) {
-      localStorage.setItem('access_token', data.access);
+      tokenManager.setAccessToken(data.access);
     }
     return data;
   },
@@ -270,8 +255,7 @@ export const authApi = {
    * Check if user is authenticated
    */
   isAuthenticated: (): boolean => {
-    const token = localStorage.getItem('access_token');
-    return !!token;
+    return tokenManager.isAuthenticated();
   },
 
   /**

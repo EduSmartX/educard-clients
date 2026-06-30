@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { Mail, Lock, LogIn, UserCircle2 } from 'lucide-react';
 import { authApi, type LoginCredentials } from '@/lib/api/auth-api';
+import { tokenManager } from '@/lib/token-manager';
 import { CommonUiText, ErrorMessages, FormPlaceholders, SuccessMessages } from '@/constants';
 import { ROUTES } from '@/constants/app-config';
 import { BRANDING } from '@/constants/branding';
@@ -29,9 +30,8 @@ export default function LoginPage() {
   const [loginError, setLoginError] = useState<string | null>(null);
 
   useEffect(() => {
-    const accessToken = localStorage.getItem('access_token');
     const storedUser = localStorage.getItem('user');
-    if (accessToken && storedUser) {
+    if (tokenManager.isAuthenticated() && storedUser) {
       try {
         const user = JSON.parse(storedUser);
         const route = getDashboardRoute(user?.role);

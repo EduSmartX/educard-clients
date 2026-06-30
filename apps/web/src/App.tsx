@@ -4,6 +4,7 @@ import { ROUTES } from './constants/app-config';
 // Lazy load pages for better performance
 import { lazy, Suspense } from 'react';
 import { PageLoader } from './components/ui/loading-spinner';
+import { useAuthInit } from './hooks/use-auth-init';
 
 // Protected Layout - Renders header once for all authenticated pages
 import { ProtectedLayout } from './components/layout/protected-layout';
@@ -227,6 +228,12 @@ const ProfilePage = lazy(() => import('./features/profile/pages/profile-page'));
 const ComingSoonPage = lazy(() => import('./pages/coming-soon-page'));
 
 function App() {
+  const { isReady } = useAuthInit();
+
+  if (!isReady) {
+    return <PageLoader />;
+  }
+
   return (
     <div className="bg-background min-h-screen font-sans antialiased">
       <Suspense fallback={<PageLoader />}>
