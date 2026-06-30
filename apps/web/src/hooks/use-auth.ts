@@ -5,9 +5,17 @@ export interface User {
   public_id: string;
   username: string;
   email: string;
+  phone?: string;
   role: string;
   full_name: string;
   profile_image?: string;
+  is_email_verified?: boolean;
+  is_mobile_verified?: boolean;
+  guardian_name?: string;
+  guardian_phone?: string;
+  guardian_email?: string;
+  guardian_email_verified?: boolean;
+  guardian_phone_verified?: boolean;
 }
 
 export interface Organization {

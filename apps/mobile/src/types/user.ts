@@ -16,6 +16,14 @@ export interface User {
   profile_image?: string;
   organization?: Organization;
   is_active?: boolean;
+  is_email_verified?: boolean;
+  is_mobile_verified?: boolean;
+  // Guardian fields (for student/parent roles)
+  guardian_name?: string;
+  guardian_phone?: string;
+  guardian_email?: string;
+  guardian_email_verified?: boolean;
+  guardian_phone_verified?: boolean;
   created_at?: string;
   updated_at?: string;
 }

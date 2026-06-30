@@ -32,6 +32,8 @@ import { useMyLeaveBalancesSummary } from '@/features/leave/hooks/use-leave-bala
 import { useTimesheetSubmissions } from '@/features/attendance/hooks';
 import { useEmployeeAttendance } from '@/features/attendance/hooks/queries/use-employee-attendance';
 import { useAuth } from '@/hooks/use-auth';
+import { VerificationBanner } from '@/components/dashboard';
+import { ROUTES } from '@/constants/app-config';
 import { DAY_LABELS, type TimetableEntry } from '@/features/timetable/types';
 import { getSubjectColor } from '@/constants/subject-colors';
 
@@ -158,6 +160,8 @@ export default function EmployeeDashboardPage() {
   const { user } = useAuth();
   const greeting = getGreeting();
   const firstName = user?.full_name?.split(' ')[0] || 'Teacher';
+
+  const handleVerifyEmail = () => navigate(ROUTES.EMPLOYEE.PROFILE);
 
   const { data: timetableData, isLoading: loadingTimetable } = useMyTimetable();
   const { data: leaveData, isLoading: loadingLeave } = useMyLeaveBalancesSummary();
@@ -312,6 +316,9 @@ export default function EmployeeDashboardPage() {
           )}
         </div>
       </motion.div>
+
+      {/* Verification Banner */}
+      {user && <VerificationBanner user={user} onVerifyEmail={handleVerifyEmail} />}
 
       {/* Stats Cards */}
       <section>

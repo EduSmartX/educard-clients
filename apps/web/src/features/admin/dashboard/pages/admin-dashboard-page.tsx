@@ -28,6 +28,7 @@ import {
   CreditCard,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { VerificationBanner } from '@/components/dashboard';
 import { useAuth } from '@/hooks/use-auth';
 import { ROUTES } from '@/constants/app-config';
 import { useQuery } from '@tanstack/react-query';
@@ -382,8 +383,11 @@ function SectionHeader({
 
 export default function AdminDashboardPage() {
   const { user, organization } = useAuth();
+  const navigate = useNavigate();
   const firstName = user?.full_name?.split(' ')[0] || 'Admin';
   const greeting = getGreeting();
+
+  const handleVerifyEmail = () => navigate(ROUTES.PROFILE);
 
   const { data: teachersData, isLoading: loadingTeachers } = useTeachers({
     page_size: 1,
@@ -470,6 +474,9 @@ export default function AdminDashboardPage() {
           </motion.div>
         </div>
       </motion.div>
+
+      {/* Verification Banner */}
+      {user && <VerificationBanner user={user} onVerifyEmail={handleVerifyEmail} />}
 
       <section>
         <SectionHeader icon={BarChart3} title="Statistics" delay={0.2} />
