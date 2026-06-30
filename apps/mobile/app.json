@@ -18,7 +18,7 @@
       "infoPlist": {
         "NSCameraUsageDescription": "EduCard uses the camera to scan documents and capture photos.",
         "NSPhotoLibraryUsageDescription": "EduCard needs access to your photos to upload profile pictures.",
-        "UIBackgroundModes": ["remote-notification", "remote-notification"]
+        "UIBackgroundModes": ["remote-notification"]
       }
     },
     "android": {
@@ -27,12 +27,8 @@
         "backgroundColor": "#3B82F6"
       },
       "package": "com.educard.app",
-      "usesCleartextTraffic": true,
+      "usesCleartextTraffic": false,
       "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.RECEIVE_BOOT_COMPLETED",
-        "android.permission.VIBRATE",
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.RECEIVE_BOOT_COMPLETED",

@@ -16,7 +16,7 @@
     "lint": "pnpm -r lint",
     "lint:fix": "pnpm -r lint:fix",
     "typecheck": "pnpm -r typecheck",
-    "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules",
+    "clean": "node -e \"const fs=require('fs');['node_modules','apps/web/node_modules','apps/mobile/node_modules','packages/shared/node_modules'].forEach(d=>{if(fs.existsSync(d)){fs.rmSync(d,{recursive:true,force:true})}})\"",
     "prepare": "husky"
   },
   "devDependencies": {

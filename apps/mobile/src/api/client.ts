@@ -58,10 +58,10 @@ apiClient.interceptors.response.use(
 
     // Skip token refresh for auth endpoints (login, register, etc.)
     const isAuthEndpoint =
-      originalRequest.url?.includes('/auth/login') ??
-      originalRequest.url?.includes('/auth/register') ??
-      originalRequest.url?.includes('/auth/token') ??
-      originalRequest.url?.includes('/organizations/register') ??
+      originalRequest.url?.includes('/auth/login') ||
+      originalRequest.url?.includes('/auth/register') ||
+      originalRequest.url?.includes('/auth/token') ||
+      originalRequest.url?.includes('/organizations/register') ||
       originalRequest.url?.includes('/organizations/otp');
 
     // Handle 401 - Token expired (but not for auth endpoints)

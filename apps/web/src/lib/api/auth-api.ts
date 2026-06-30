@@ -1,6 +1,10 @@
 import api from '../api';
 import { getParsedLocalStorageItem } from '@/lib/utils/storage';
 
+// TODO: [SECURITY] Move refresh_token to HttpOnly Secure SameSite cookie (requires backend support).
+// TODO: [SECURITY] Move access_token to in-memory storage to prevent XSS theft from localStorage.
+// See: https://auth0.com/docs/secure/tokens/token-storage#browser-in-memory-scenarios
+
 // Types
 export interface LoginCredentials {
   username: string;
