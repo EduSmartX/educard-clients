@@ -11,6 +11,9 @@ import { ProtectedLayout } from './components/layout/protected-layout';
 
 // Public pages
 const HomePage = lazy(() => import('./pages/home-page'));
+const PrivacyPolicyPage = lazy(() => import('./pages/privacy-policy-page'));
+const TermsOfServicePage = lazy(() => import('./pages/terms-of-service-page'));
+const ContactPage = lazy(() => import('./pages/contact-page'));
 
 // Auth pages
 const LoginPage = lazy(() => import('./features/auth/pages/login-page'));
@@ -240,6 +243,10 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+          <Route path="/terms-and-conditions" element={<TermsOfServicePage />} />
+          <Route path="/contact" element={<ContactPage />} />
           <Route path={ROUTES.AUTH.LOGIN} element={<LoginPage />} />
           <Route path={ROUTES.AUTH.SIGNUP} element={<SignupPage />} />
           <Route path={ROUTES.AUTH.REGISTRATION_SUCCESS} element={<RegistrationSuccessPage />} />

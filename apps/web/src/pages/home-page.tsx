@@ -186,7 +186,7 @@ export default function HomePage() {
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
       rating: 5,
       review:
-        'EduCard has revolutionized how we manage our school. The attendance tracking and parent communication features have saved us countless hours.',
+        'EduCard Technologies has revolutionized how we manage our school. The attendance tracking and parent communication features have saved us countless hours.',
     },
     {
       name: 'Michael Chen',
@@ -204,7 +204,7 @@ export default function HomePage() {
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emily',
       rating: 5,
       review:
-        "We've seen a 40% reduction in administrative overhead since adopting EduCard. The leave management system alone has paid for itself.",
+        "We've seen a 40% reduction in administrative overhead since adopting EduCard Technologies. The leave management system alone has paid for itself.",
     },
     {
       name: 'James Williams',
@@ -222,7 +222,7 @@ export default function HomePage() {
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Priya',
       rating: 5,
       review:
-        "EduCard's class scheduling feature has eliminated conflicts and confusion. Teachers love the intuitive interface.",
+        "EduCard Technologies' class scheduling feature has eliminated conflicts and confusion. Teachers love the intuitive interface.",
     },
     {
       name: 'Robert Anderson',
@@ -231,7 +231,7 @@ export default function HomePage() {
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Robert',
       rating: 5,
       review:
-        'We rolled out EduCard across 12 schools in our district. The centralized management and reporting capabilities are transformative.',
+        'We rolled out EduCard Technologies across 12 schools in our district. The centralized management and reporting capabilities are transformative.',
     },
   ];
 
@@ -249,6 +249,39 @@ export default function HomePage() {
 
   return (
     <div className="flex min-h-screen w-full flex-col overflow-x-hidden">
+      {/* ─── STICKY HEADER / NAVBAR ─── */}
+      <header className="fixed top-0 right-0 left-0 z-50 border-b border-white/10 bg-white/80 backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-12">
+          <div className="flex items-center gap-2">
+            <GraduationCap className="text-primary h-7 w-7" />
+            <div className="flex flex-col">
+              <span className="text-base leading-tight font-bold">{COMPANY_NAME}</span>
+              <span className="text-muted-foreground text-[10px] leading-tight font-medium uppercase">
+                {BRANDING.LEGAL_ENTITY_NAME}
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-sm"
+              onClick={() => navigate(ROUTES.AUTH.LOGIN)}
+            >
+              Login
+            </Button>
+            <Button
+              variant="brand"
+              size="sm"
+              className="text-sm"
+              onClick={() => navigate(ROUTES.AUTH.SIGNUP)}
+            >
+              Get Started
+            </Button>
+          </div>
+        </div>
+      </header>
+
       {/* ─── HERO SECTION — Parallax + Fade ─── */}
       <div ref={heroRef} className="relative min-h-[100vh] w-full overflow-hidden">
         {/* Animated background gradient */}
@@ -657,28 +690,37 @@ export default function HomePage() {
           <div className="flex flex-col items-center justify-center gap-6">
             <div className="flex items-center justify-center gap-2">
               <GraduationCap className="text-primary h-8 w-8" />
-              <span className="text-xl font-bold">{COMPANY_NAME}</span>
+              <div className="flex flex-col items-center">
+                <span className="text-xl font-bold">{COMPANY_NAME}</span>
+                <span className="text-muted-foreground text-[11px] font-medium uppercase">
+                  {BRANDING.LEGAL_ENTITY_NAME}
+                </span>
+              </div>
+            </div>
+            <p className="text-muted-foreground max-w-md text-center text-xs leading-relaxed">
+              {BRANDING.CONTACT.ADDRESS}
+            </p>
+            <div className="text-muted-foreground flex flex-wrap items-center justify-center gap-4 text-xs">
+              <span>📧 {BRANDING.CONTACT.EMAIL}</span>
+              <span>📞 {BRANDING.CONTACT.PHONE}</span>
             </div>
             <p className="text-muted-foreground text-center text-sm">{BRANDING.COPYRIGHT.TEXT}</p>
             <div className="flex flex-wrap justify-center gap-6">
-              {['Privacy Policy', 'Terms of Service', 'Contact'].map((link) => (
+              {[
+                { label: 'Privacy Policy', path: '/privacy-policy' },
+                { label: 'Terms of Service', path: '/terms-of-service' },
+                { label: 'Contact', path: '/contact' },
+              ].map((link) => (
                 <button
-                  key={link}
+                  key={link.label}
                   type="button"
                   className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+                  onClick={() => navigate(link.path)}
                 >
-                  {link}
+                  {link.label}
                 </button>
               ))}
             </div>
-            {BRANDING.CONTACT.EMAIL && (
-              <a
-                href={`mailto:${BRANDING.CONTACT.EMAIL}`}
-                className="text-primary text-sm hover:underline"
-              >
-                {BRANDING.CONTACT.EMAIL}
-              </a>
-            )}
           </div>
         </div>
       </footer>
