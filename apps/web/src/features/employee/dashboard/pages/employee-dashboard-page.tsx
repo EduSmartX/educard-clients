@@ -318,7 +318,13 @@ export default function EmployeeDashboardPage() {
       </motion.div>
 
       {/* Verification Banner */}
-      {user && <VerificationBanner user={user} onVerifyEmail={handleVerifyEmail} />}
+      {user && (
+        <VerificationBanner
+          user={user}
+          onVerifyEmail={handleVerifyEmail}
+          onVerifyPhone={handleVerifyEmail}
+        />
+      )}
 
       {/* Stats Cards */}
       <section>
