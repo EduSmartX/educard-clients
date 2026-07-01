@@ -6,10 +6,13 @@
  */
 
 import { useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import { Users, BarChart3, CalendarDays, Bell, Clock, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { VerificationBanner } from '@/components/dashboard';
 import { useAuth } from '@/hooks/use-auth';
+import { ROUTES } from '@/constants/app-config';
 
 const STAGGER_CHILDREN = {
   hidden: { opacity: 0 },
@@ -86,8 +89,10 @@ const STATS = [
 
 export default function ParentDashboardPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const greeting = getGreeting();
   const firstName = user?.full_name?.split(' ')[0] || 'Parent';
+  const handleVerifyEmail = () => navigate(ROUTES.PARENT.PROFILE);
 
   const formattedDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -98,6 +103,15 @@ export default function ParentDashboardPage() {
 
   return (
     <div className="container mx-auto max-w-5xl space-y-8 px-3 py-4 sm:p-6">
+      {/* Verification Banner */}
+      {user && (
+        <VerificationBanner
+          user={user}
+          onVerifyEmail={handleVerifyEmail}
+          onVerifyPhone={handleVerifyEmail}
+        />
+      )}
+
       {/* Animated Greeting Banner */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -106,7 +120,7 @@ export default function ParentDashboardPage() {
         className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 p-6 text-white shadow-2xl shadow-violet-500/20 sm:p-8"
       >
         <motion.div
-          className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"
+          className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"
           animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
           transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
         />
@@ -175,10 +189,14 @@ export default function ParentDashboardPage() {
               className="group cursor-pointer"
             >
               <Card className="relative overflow-hidden border border-gray-100 shadow-sm transition-shadow duration-300 hover:shadow-xl">
-                <div className={`absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 ${stat.gradient}`} />
+                <div
+                  className={`absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 ${stat.gradient}`}
+                />
                 <CardContent className="relative z-10 p-5">
                   <div className="flex items-center gap-4">
-                    <div className={`shrink-0 rounded-xl p-3 ${stat.iconBg} transition-transform duration-300 group-hover:scale-110`}>
+                    <div
+                      className={`shrink-0 rounded-xl p-3 ${stat.iconBg} transition-transform duration-300 group-hover:scale-110`}
+                    >
                       <Icon className="h-6 w-6 text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -213,11 +231,15 @@ export default function ParentDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <p><strong>Role:</strong> Parent / Guardian</p>
-              <p><strong>Access Level:</strong> Parent/Guardian</p>
-              <p className="text-sm text-muted-foreground">
-                As a parent, you can view your children&apos;s attendance, apply for leave on their behalf,
-                and stay updated with school activities and notifications.
+              <p>
+                <strong>Role:</strong> Parent / Guardian
+              </p>
+              <p>
+                <strong>Access Level:</strong> Parent/Guardian
+              </p>
+              <p className="text-muted-foreground text-sm">
+                As a parent, you can view your children&apos;s attendance, apply for leave on their
+                behalf, and stay updated with school activities and notifications.
               </p>
             </div>
           </CardContent>

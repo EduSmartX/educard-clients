@@ -106,21 +106,24 @@ export const getCurrentLocationAddress = async (apiKey?: string): Promise<Locati
     const locationData = await reverseGeocode(latitude, longitude, apiKey);
     return locationData;
   } catch (error) {
-    if (error instanceof GeolocationPositionError) {
-      switch (error.code) {
-        case error.PERMISSION_DENIED:
+    // GeolocationPositionError is not available as a constructor for instanceof checks
+    // Check for the code property instead
+    if (error && typeof error === 'object' && 'code' in error) {
+      const geoError = error as GeolocationPositionError;
+      switch (geoError.code) {
+        case 1: // PERMISSION_DENIED
           throw new Error(
             'Location permission denied. Please enable location access in your browser settings.',
             { cause: error }
           );
-        case error.POSITION_UNAVAILABLE:
+        case 2: // POSITION_UNAVAILABLE
           throw new Error('Location information unavailable. Please try again.', { cause: error });
-        case error.TIMEOUT:
+        case 3: // TIMEOUT
           throw new Error('Location request timed out. Please try again.', { cause: error });
-        default:
-          throw new Error('Unable to get your location. Please try again.', { cause: error });
       }
     }
-    throw error;
+    throw error instanceof Error
+      ? error
+      : new Error('Unable to get your location. Please try again.');
   }
 };

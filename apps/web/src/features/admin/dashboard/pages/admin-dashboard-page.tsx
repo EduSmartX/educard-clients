@@ -476,7 +476,13 @@ export default function AdminDashboardPage() {
       </motion.div>
 
       {/* Verification Banner */}
-      {user && <VerificationBanner user={user} onVerifyEmail={handleVerifyEmail} />}
+      {user && (
+        <VerificationBanner
+          user={user}
+          onVerifyEmail={handleVerifyEmail}
+          onVerifyPhone={handleVerifyEmail}
+        />
+      )}
 
       <section>
         <SectionHeader icon={BarChart3} title="Statistics" delay={0.2} />
