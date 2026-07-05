@@ -308,7 +308,6 @@ export function TeacherList({ onBack }: TeacherListProps) {
         description="Upload multiple teachers at once using an Excel template"
         downloadTemplate={downloadTeacherTemplate}
         uploadFile={bulkUploadTeachers}
-        templateFileName="teachers_template.xlsx"
         onUploadSuccess={() => void refetch()}
       />
 

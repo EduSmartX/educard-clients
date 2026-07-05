@@ -141,8 +141,8 @@ function AttendanceIcon({
   morningPresent,
   afternoonPresent,
 }: {
-  morningPresent: boolean;
-  afternoonPresent: boolean;
+  readonly morningPresent: boolean;
+  readonly afternoonPresent: boolean;
 }) {
   if (morningPresent && afternoonPresent) {
     return (

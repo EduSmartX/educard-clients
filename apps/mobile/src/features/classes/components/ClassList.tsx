@@ -254,7 +254,6 @@ export function ClassList({ onBack }: ClassListProps) {
         description="Upload multiple classes at once using an Excel template"
         downloadTemplate={downloadClassTemplate}
         uploadFile={bulkUploadClasses}
-        templateFileName="classes_template.xlsx"
         onUploadSuccess={() => void refetch()}
       />
 
