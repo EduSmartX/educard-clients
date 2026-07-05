@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { Mail, Lock, LogIn, UserCircle2 } from 'lucide-react';
-import { authApi, type LoginCredentials } from '@/lib/api/auth-api';
+import { authApi, isProfileSelectionResponse, type LoginCredentials } from '@/lib/api/auth-api';
 import { tokenManager } from '@/lib/token-manager';
 import { CommonUiText, ErrorMessages, FormPlaceholders, SuccessMessages } from '@/constants';
 import { ROUTES } from '@/constants/app-config';
@@ -57,6 +57,17 @@ export default function LoginPage() {
     setLoginError(null);
     try {
       const response = await authApi.login(formData as LoginCredentials);
+
+      if (isProfileSelectionResponse(response)) {
+        navigate(ROUTES.AUTH.SELECT_PROFILE, {
+          state: {
+            selectionToken: response.selection_token,
+            profiles: response.profiles,
+            organization: response.organization,
+          },
+        });
+        return;
+      }
 
       if (
         response.organization &&

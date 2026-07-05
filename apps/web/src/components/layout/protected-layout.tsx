@@ -37,6 +37,7 @@ export function ProtectedLayout() {
 
   const isAdmin = user?.role === USER_ROLES.ADMIN;
   const isSupervisor = isAdmin || managementContext?.can_review_requests || false;
+  const isStudent = user?.role === USER_ROLES.STUDENT;
 
   return (
     <div className={cn('min-h-screen', theme.mainBgGradient)}>
@@ -48,6 +49,7 @@ export function ProtectedLayout() {
         userRole={userRoleFormatted}
         userAvatar={avatarUrl}
         notificationCount={3}
+        showSwitchProfile={isStudent}
       />
 
       <DashboardLayout

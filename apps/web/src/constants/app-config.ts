@@ -221,6 +221,7 @@ export const ROUTES = {
     RESET_PASSWORD: '/auth/reset-password',
     VERIFY_EMAIL: '/auth/verify-email',
     ORGANIZATION_NOT_APPROVED: '/auth/organization-not-approved',
+    SELECT_PROFILE: '/auth/select-profile',
   },
   // Common routes (role-agnostic)
   ORGANIZATION: '/organization',
@@ -383,6 +384,7 @@ export const ROUTES = {
       HISTORY: '/parent/leave/history',
     },
     PROFILE: '/parent/profile',
+    SWITCH_PROFILE: '/parent/switch-profile',
   },
   PROFILE: '/profile',
 } as const;

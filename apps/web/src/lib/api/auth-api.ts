@@ -100,13 +100,55 @@ export interface PasswordResetVerifyData {
   confirm_password: string;
 }
 
+// Multi-profile student login (shared login email across student accounts)
+export interface ProfileSummary {
+  public_id: string;
+  full_name: string;
+  class_name: string;
+  roll_number: string;
+  is_current?: boolean;
+}
+
+export interface ProfileSelectionResponse {
+  message: string;
+  requires_profile_selection: true;
+  selection_token: string;
+  profiles: ProfileSummary[];
+  organization?: Organization;
+}
+
+export interface SelectProfileData {
+  selection_token: string;
+  user_public_id: string;
+}
+
+export interface SwitchProfileData {
+  user_public_id: string;
+}
+
+export function isProfileSelectionResponse(
+  response: AuthResponse | ProfileSelectionResponse
+): response is ProfileSelectionResponse {
+  return 'requires_profile_selection' in response && response.requires_profile_selection === true;
+}
+
 // API Functions
 export const authApi = {
   /**
-   * Login with email/username and password
+   * Login with email/username and password.
+   *
+   * When the login email is shared by 2+ active student accounts, the
+   * backend returns a `ProfileSelectionResponse` instead of tokens - no
+   * data is persisted in that case, the caller must complete login via
+   * `selectProfile()`.
    */
-  login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
+  login: async (
+    credentials: LoginCredentials
+  ): Promise<AuthResponse | ProfileSelectionResponse> => {
     const { data } = await api.post('/auth/login/', credentials);
+    if (data.requires_profile_selection) {
+      return data as ProfileSelectionResponse;
+    }
     // Store access token in memory (refresh token is set as HttpOnly cookie by backend)
     if (data.tokens?.access) {
       tokenManager.setAccessToken(data.tokens.access);
@@ -116,6 +158,47 @@ export const authApi = {
       }
     }
     return data;
+  },
+
+  /**
+   * Complete login by selecting one of the profiles returned by `login()`
+   * for a shared login email.
+   */
+  selectProfile: async (selectionData: SelectProfileData): Promise<AuthResponse> => {
+    const { data } = await api.post('/auth/select-profile/', selectionData);
+    if (data.tokens?.access) {
+      tokenManager.setAccessToken(data.tokens.access);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      if (data.organization) {
+        localStorage.setItem('organization', JSON.stringify(data.organization));
+      }
+    }
+    return data;
+  },
+
+  /**
+   * Switch the current authenticated student session to another active
+   * student profile that shares the same login email. No password required.
+   */
+  switchProfile: async (switchData: SwitchProfileData): Promise<AuthResponse> => {
+    const { data } = await api.post('/auth/switch-profile/', switchData);
+    if (data.tokens?.access) {
+      tokenManager.setAccessToken(data.tokens.access);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      if (data.organization) {
+        localStorage.setItem('organization', JSON.stringify(data.organization));
+      }
+    }
+    return data;
+  },
+
+  /**
+   * List active student profiles linked to the current student's login
+   * email, for the "switch profile" picker.
+   */
+  getLinkedProfiles: async (): Promise<ProfileSummary[]> => {
+    const { data } = await api.get('/auth/linked-profiles/');
+    return data.data?.profiles ?? [];
   },
 
   /**
