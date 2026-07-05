@@ -97,43 +97,43 @@ export function TimetablePdfExport({
 
   return (
     <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant={buttonVariant} size={buttonSize} className={className}>
-            <Download className="mr-2 h-4 w-4" />
-            Export / Print
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          className="w-60 rounded-xl border-2 border-indigo-100 bg-white p-2 shadow-xl"
+      <DropdownMenuTrigger asChild>
+        <Button variant={buttonVariant} size={buttonSize} className={className}>
+          <Download className="mr-2 h-4 w-4" />
+          Export / Print
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        className="w-60 rounded-xl border-2 border-indigo-100 bg-white p-2 shadow-xl"
+      >
+        <DropdownMenuItem
+          onClick={() => handleQuickPrint('color')}
+          className="cursor-pointer rounded-lg px-3 py-2.5 hover:bg-purple-50 focus:bg-purple-50"
         >
-          <DropdownMenuItem
-            onClick={() => handleQuickPrint('color')}
-            className="cursor-pointer rounded-lg px-3 py-2.5 hover:bg-purple-50 focus:bg-purple-50"
-          >
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100">
-              <Palette className="h-4 w-4 text-purple-600" />
-            </div>
-            <div className="ml-3">
-              <p className="font-medium text-gray-900">Print with Colors</p>
-              <p className="text-xs text-gray-500">As displayed on screen</p>
-            </div>
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => handleQuickPrint('bw')}
-            className="cursor-pointer rounded-lg px-3 py-2.5 hover:bg-gray-50 focus:bg-gray-50"
-          >
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100">
-              <FileText className="h-4 w-4 text-gray-600" />
-            </div>
-            <div className="ml-3">
-              <p className="font-medium text-gray-900">Print Black & White</p>
-              <p className="text-xs text-gray-500">For standard printing</p>
-            </div>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    );
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100">
+            <Palette className="h-4 w-4 text-purple-600" />
+          </div>
+          <div className="ml-3">
+            <p className="font-medium text-gray-900">Print with Colors</p>
+            <p className="text-xs text-gray-500">As displayed on screen</p>
+          </div>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => handleQuickPrint('bw')}
+          className="cursor-pointer rounded-lg px-3 py-2.5 hover:bg-gray-50 focus:bg-gray-50"
+        >
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100">
+            <FileText className="h-4 w-4 text-gray-600" />
+          </div>
+          <div className="ml-3">
+            <p className="font-medium text-gray-900">Print Black & White</p>
+            <p className="text-xs text-gray-500">For standard printing</p>
+          </div>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }
 
 function generatePrintableHTML(data: TimetableExportData, mode: 'color' | 'bw'): string {

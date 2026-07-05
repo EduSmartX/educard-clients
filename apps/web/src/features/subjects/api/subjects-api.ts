@@ -45,7 +45,7 @@ export async function fetchSubjects(params?: SubjectListParams): Promise<ApiList
 
   const url = queryParams.toString() ? `${BASE_URL}/?${queryParams}` : `${BASE_URL}/`;
   const response = await apiClient.get<ApiListResponse<Subject>>(url);
-  
+
   // Backend handles can_manage field, default to true for UI
   if (response.data.data) {
     response.data.data = response.data.data.map((subject) => ({
@@ -53,7 +53,7 @@ export async function fetchSubjects(params?: SubjectListParams): Promise<ApiList
       can_manage: subject.can_manage ?? true,
     }));
   }
-  
+
   return response.data;
 }
 

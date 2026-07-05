@@ -31,7 +31,7 @@ import { parseError } from '@educard/shared';
 export function applyFieldErrors<TFieldValues extends FieldValues>(
   error: unknown,
   setError: UseFormSetError<TFieldValues>,
-  fieldMap?: Record<string, string>,
+  fieldMap?: Record<string, string>
 ): {
   hasFieldErrors: boolean;
   fieldErrorCount: number;
@@ -73,7 +73,7 @@ export function applyFieldErrors<TFieldValues extends FieldValues>(
 export function setFormFieldErrors<TFieldValues extends FieldValues>(
   error: unknown,
   setError: UseFormSetError<TFieldValues>,
-  fieldMap?: Record<string, Path<TFieldValues>>,
+  fieldMap?: Record<string, Path<TFieldValues>>
 ): {
   hasFieldError: boolean;
   fieldErrors: string[];

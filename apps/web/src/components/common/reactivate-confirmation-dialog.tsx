@@ -44,12 +44,12 @@ export function ReactivateConfirmationDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="overflow-hidden border-0 p-0 bg-gradient-to-br from-green-50/50 via-white to-emerald-50/50">
+      <AlertDialogContent className="overflow-hidden border-0 bg-gradient-to-br from-green-50/50 via-white to-emerald-50/50 p-0">
         {/* Header with gradient background */}
         <div className="relative overflow-hidden bg-gradient-to-r from-green-500 via-emerald-500 to-green-500 px-6 py-6">
           {/* Decorative circles */}
-          <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/5 blur-2xl" />
-          <div className="absolute -left-8 -bottom-8 h-32 w-32 rounded-full bg-white/5 blur-2xl" />
+          <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full bg-white/5 blur-2xl" />
+          <div className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-white/5 blur-2xl" />
 
           <AlertDialogHeader className="relative">
             <div className="flex items-center gap-3">
@@ -86,11 +86,11 @@ export function ReactivateConfirmationDialog({
         </div>
 
         {/* Footer */}
-        <div className="bg-gradient-to-r from-green-50/30 to-emerald-50/30 px-6 py-4 border-t border-green-100">
+        <div className="border-t border-green-100 bg-gradient-to-r from-green-50/30 to-emerald-50/30 px-6 py-4">
           <AlertDialogFooter>
             <AlertDialogCancel
               disabled={isReactivating}
-              className="border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-200 font-medium"
+              className="border-2 border-gray-300 bg-white font-medium text-gray-700 transition-all duration-200 hover:scale-105 hover:border-gray-400 hover:bg-gray-50 hover:shadow-md active:scale-95"
             >
               Cancel
             </AlertDialogCancel>
@@ -100,7 +100,7 @@ export function ReactivateConfirmationDialog({
                 onConfirm();
               }}
               disabled={isReactivating}
-              className="bg-gradient-to-r from-green-600 to-emerald-600 text-white border-2 border-green-700 hover:from-green-700 hover:to-emerald-700 hover:border-green-800 hover:shadow-lg hover:shadow-green-500/50 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:shadow-md transition-all duration-200 font-semibold"
+              className="border-2 border-green-700 bg-gradient-to-r from-green-600 to-emerald-600 font-semibold text-white transition-all duration-200 hover:scale-105 hover:border-green-800 hover:from-green-700 hover:to-emerald-700 hover:shadow-lg hover:shadow-green-500/50 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:shadow-md"
             >
               {isReactivating ? (
                 <>

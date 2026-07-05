@@ -120,7 +120,9 @@ export interface AcademicYear {
  * Get all academic years for the organization
  */
 export async function getAcademicYears(): Promise<ApiResponse<AcademicYear[]>> {
-  const response = await api.get<ApiResponse<AcademicYear[]>>('/organization-preferences/academic-years/');
+  const response = await api.get<ApiResponse<AcademicYear[]>>(
+    '/organization-preferences/academic-years/'
+  );
   return response.data;
 }
 
@@ -128,6 +130,8 @@ export async function getAcademicYears(): Promise<ApiResponse<AcademicYear[]>> {
  * Get current academic year for the organization
  */
 export async function getCurrentAcademicYear(): Promise<ApiResponse<AcademicYear>> {
-  const response = await api.get<ApiResponse<AcademicYear>>('/organization-preferences/current-academic-year/');
+  const response = await api.get<ApiResponse<AcademicYear>>(
+    '/organization-preferences/current-academic-year/'
+  );
   return response.data;
 }

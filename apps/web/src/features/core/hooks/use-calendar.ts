@@ -4,10 +4,7 @@
  * Uses shared hook factories with web-specific API implementation
  */
 
-import {
-  createUseNavigateWorkingDay,
-  createUseWorkingDayInfo,
-} from '@educard/shared';
+import { createUseNavigateWorkingDay, createUseWorkingDayInfo } from '@educard/shared';
 
 import { navigateWorkingDay, getWorkingDayInfo } from '../api/calendar-api';
 

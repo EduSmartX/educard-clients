@@ -42,7 +42,9 @@ export function Combobox({
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   const filteredOptions = React.useMemo(() => {
-    if (!searchQuery) {return options;}
+    if (!searchQuery) {
+      return options;
+    }
 
     return options.filter(
       (option) =>
@@ -82,7 +84,7 @@ export function Combobox({
       </SelectTrigger>
       <SelectContent>
         {options.length > 10 && (
-          <div className="px-2 pb-2 sticky top-0 bg-white z-10">
+          <div className="sticky top-0 z-10 bg-white px-2 pb-2">
             <Input
               ref={inputRef}
               placeholder={searchPlaceholder}
@@ -103,7 +105,7 @@ export function Combobox({
           </div>
         )}
         {filteredOptions.length === 0 ? (
-          <div className="py-6 text-center text-sm text-muted-foreground">{emptyText}</div>
+          <div className="text-muted-foreground py-6 text-center text-sm">{emptyText}</div>
         ) : (
           filteredOptions.map((option) => (
             <SelectItem key={option.value} value={option.value}>

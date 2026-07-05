@@ -8,14 +8,10 @@ const alertVariants = cva(
     variants: {
       variant: {
         default: 'bg-slate-50 border-slate-200 text-slate-700',
-        destructive:
-          'bg-rose-50 border-rose-200 text-rose-700 [&>svg]:text-rose-600',
-        success:
-          'bg-emerald-50 border-emerald-200 text-emerald-700 [&>svg]:text-emerald-600',
-        warning:
-          'bg-amber-50 border-amber-200 text-amber-700 [&>svg]:text-amber-600',
-        info:
-          'bg-blue-50 border-blue-200 text-blue-700 [&>svg]:text-blue-600',
+        destructive: 'bg-rose-50 border-rose-200 text-rose-700 [&>svg]:text-rose-600',
+        success: 'bg-emerald-50 border-emerald-200 text-emerald-700 [&>svg]:text-emerald-600',
+        warning: 'bg-amber-50 border-amber-200 text-amber-700 [&>svg]:text-amber-600',
+        info: 'bg-blue-50 border-blue-200 text-blue-700 [&>svg]:text-blue-600',
       },
     },
     defaultVariants: {
@@ -49,7 +45,11 @@ const AlertDescription = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn('text-sm leading-relaxed [&_p]:leading-relaxed', className)} {...props} />
+  <div
+    ref={ref}
+    className={cn('text-sm leading-relaxed [&_p]:leading-relaxed', className)}
+    {...props}
+  />
 ));
 AlertDescription.displayName = 'AlertDescription';
 

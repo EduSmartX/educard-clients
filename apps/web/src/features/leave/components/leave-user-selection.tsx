@@ -19,8 +19,12 @@ interface ClassOption {
 }
 
 function getPlaceholder(userRole: string, selectedClass: string): string {
-  if (userRole === 'staff') { return 'Select a staff member'; }
-  if (selectedClass) { return 'Select a student'; }
+  if (userRole === 'staff') {
+    return 'Select a staff member';
+  }
+  if (selectedClass) {
+    return 'Select a student';
+  }
   return 'First select a class';
 }
 

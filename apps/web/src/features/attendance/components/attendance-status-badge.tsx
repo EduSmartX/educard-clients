@@ -10,11 +10,7 @@ interface AttendanceStatusBadgeProps {
  * Reusable badge component for displaying attendance status
  * with consistent color coding across the application
  */
-export function AttendanceStatusBadge({ 
-  status, 
-  label, 
-  className 
-}: AttendanceStatusBadgeProps) {
+export function AttendanceStatusBadge({ status, label, className }: AttendanceStatusBadgeProps) {
   const getStatusStyle = () => {
     switch (status) {
       case 'present':

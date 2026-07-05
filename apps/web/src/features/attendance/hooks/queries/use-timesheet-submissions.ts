@@ -13,12 +13,14 @@ interface UseTimesheetSubmissionsOptions {
 
 export function useTimesheetSubmissions(options?: UseTimesheetSubmissionsOptions) {
   // Map 'status' to 'submission_status' for the API
-  const apiParams = options ? {
-    ...options,
-    submission_status: options.status,
-    status: undefined, // Remove the original status
-  } : undefined;
-  
+  const apiParams = options
+    ? {
+        ...options,
+        submission_status: options.status,
+        status: undefined, // Remove the original status
+      }
+    : undefined;
+
   return useQuery({
     queryKey: ['timesheet-submissions', options],
     queryFn: () => getTimesheetSubmissions(apiParams),

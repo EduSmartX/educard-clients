@@ -369,7 +369,9 @@ function ByTeacherView() {
                             {formatSlotTime(row.endTime)}
                           </span>
                           {!!row.slotLabel && (
-                            <span className="mt-0.5 text-[10px] text-gray-400">{row.slotLabel}</span>
+                            <span className="mt-0.5 text-[10px] text-gray-400">
+                              {row.slotLabel}
+                            </span>
                           )}
                         </div>
 

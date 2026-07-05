@@ -13,7 +13,8 @@
  * prepend it to media paths like "/media/attachments/...".
  */
 const BACKEND_ORIGIN = (
-  import.meta.env.VITE_API_BASE_URL || 'https://educard-backend-api-272236662775.asia-south1.run.app/api'
+  import.meta.env.VITE_API_BASE_URL ||
+  'https://educard-backend-api-272236662775.asia-south1.run.app/api'
 ).replace(/\/api\/?$/, '');
 
 /**

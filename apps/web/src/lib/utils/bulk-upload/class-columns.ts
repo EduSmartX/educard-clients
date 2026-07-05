@@ -70,19 +70,19 @@ export const CLASS_DUPLICATE_CHECKS: DuplicateCheckConfig[] = [
  * Get column config by field key
  */
 export function getClassColumnByKey(key: string): ColumnConfig | undefined {
-  return CLASS_COLUMNS.find(col => col.key === key);
+  return CLASS_COLUMNS.find((col) => col.key === key);
 }
 
 /**
  * Get mandatory class columns
  */
 export function getMandatoryClassColumns(): ColumnConfig[] {
-  return CLASS_COLUMNS.filter(col => col.required);
+  return CLASS_COLUMNS.filter((col) => col.required);
 }
 
 /**
  * Get optional class columns
  */
 export function getOptionalClassColumns(): ColumnConfig[] {
-  return CLASS_COLUMNS.filter(col => !col.required);
+  return CLASS_COLUMNS.filter((col) => !col.required);
 }

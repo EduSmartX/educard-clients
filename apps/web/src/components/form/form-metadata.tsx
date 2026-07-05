@@ -47,13 +47,13 @@ export function FormMetadata({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: 0.1 }}
     >
-      <Card className={cn('bg-gradient-to-br from-gray-50 to-slate-50 border-gray-200', className)}>
+      <Card className={cn('border-gray-200 bg-gradient-to-br from-gray-50 to-slate-50', className)}>
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {/* Created Information */}
             {(createdBy || createdAt) && (
               <div className="space-y-2">
-                <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                <h4 className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                   <div className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-100">
                     <Calendar className="h-3.5 w-3.5 text-blue-600" />
                   </div>
@@ -66,7 +66,9 @@ export function FormMetadata({
                       <span className="font-medium">{createdBy}</span>
                     </div>
                   )}
-                  {createdAt && <div className="text-sm text-gray-500">{formatDate(createdAt)}</div>}
+                  {createdAt && (
+                    <div className="text-sm text-gray-500">{formatDate(createdAt)}</div>
+                  )}
                 </div>
               </div>
             )}
@@ -74,7 +76,7 @@ export function FormMetadata({
             {/* Updated Information */}
             {(updatedBy || updatedAt) && (
               <div className="space-y-2">
-                <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                <h4 className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                   <div className="flex h-6 w-6 items-center justify-center rounded-md bg-green-100">
                     <Calendar className="h-3.5 w-3.5 text-green-600" />
                   </div>
@@ -87,7 +89,9 @@ export function FormMetadata({
                       <span className="font-medium">{updatedBy}</span>
                     </div>
                   )}
-                  {updatedAt && <div className="text-sm text-gray-500">{formatDate(updatedAt)}</div>}
+                  {updatedAt && (
+                    <div className="text-sm text-gray-500">{formatDate(updatedAt)}</div>
+                  )}
                 </div>
               </div>
             )}

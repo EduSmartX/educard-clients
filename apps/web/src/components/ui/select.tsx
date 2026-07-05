@@ -19,8 +19,8 @@ const SelectTrigger = React.forwardRef<
     <SelectPrimitive.Trigger
       ref={ref}
       className={cn(
-        'flex h-11 w-full items-center justify-between rounded-xl border-2 bg-white px-4 py-2.5 text-sm ring-offset-white placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200 border-slate-200 hover:border-primary/30',
-        error && 'border-rose-400 focus:ring-rose-500/10 focus:border-rose-500',
+        'focus:ring-primary/10 focus:border-primary hover:border-primary/30 flex h-11 w-full items-center justify-between rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm ring-offset-white transition-all duration-200 placeholder:text-slate-400 focus:ring-4 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50',
+        error && 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/10',
         className
       )}
       {...props}
@@ -31,9 +31,13 @@ const SelectTrigger = React.forwardRef<
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
     {error && (
-      <p className="text-rose-500 text-sm font-medium mt-2 flex items-center gap-1.5">
-        <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+      <p className="mt-2 flex items-center gap-1.5 text-sm font-medium text-rose-500">
+        <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+          <path
+            fillRule="evenodd"
+            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+            clipRule="evenodd"
+          />
         </svg>
         {error}
       </p>
@@ -78,7 +82,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        'relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-xl border border-slate-100 bg-white text-slate-900 shadow-soft-lg animate-in fade-in-0 zoom-in-95',
+        'shadow-soft-lg animate-in fade-in-0 zoom-in-95 relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-xl border border-slate-100 bg-white text-slate-900',
         position === 'popper' && 'translate-y-1',
         className
       )}
@@ -107,7 +111,7 @@ const SelectLabel = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.Label
     ref={ref}
-    className={cn('py-1.5 pl-8 pr-2 text-sm font-semibold text-gray-700', className)}
+    className={cn('py-1.5 pr-2 pl-8 text-sm font-semibold text-gray-700', className)}
     {...props}
   />
 ));
@@ -138,7 +142,7 @@ const SelectItem = React.forwardRef<
     <SelectPrimitive.Item
       ref={ref}
       className={cn(
-        'relative flex w-full cursor-pointer select-none items-center rounded-lg py-2.5 pl-9 pr-3 text-sm outline-none focus:bg-violet-50 focus:text-violet-900 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 transition-colors hover:bg-slate-50',
+        'relative flex w-full cursor-pointer items-center rounded-lg py-2.5 pr-3 pl-9 text-sm transition-colors outline-none select-none hover:bg-slate-50 focus:bg-violet-50 focus:text-violet-900 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
         className
       )}
       {...(safeProps as React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>)}

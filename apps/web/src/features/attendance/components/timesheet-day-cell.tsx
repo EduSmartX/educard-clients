@@ -31,7 +31,10 @@ interface TimesheetDayCellProps {
   isClickable: boolean;
   stateClassName: string;
   onDateClick: (date: Date, state: DayState) => void;
-  getHolidayLabels: (info: HolidayInfo | undefined) => { shortLabel: string; fullDescription: string };
+  getHolidayLabels: (info: HolidayInfo | undefined) => {
+    shortLabel: string;
+    fullDescription: string;
+  };
   getMobileStateBgColor: (state: DayState) => string;
 }
 
@@ -42,13 +45,26 @@ function DayIcon({
   leaveInfo,
   holidayInfo,
   getHolidayLabels,
-}: Pick<TimesheetDayCellProps, 'state' | 'record' | 'leaveInfo' | 'holidayInfo' | 'getHolidayLabels'>) {
+}: Pick<
+  TimesheetDayCellProps,
+  'state' | 'record' | 'leaveInfo' | 'holidayInfo' | 'getHolidayLabels'
+>) {
   if (state === 'leave-approved' || state === 'leave-pending') {
     return <LeaveIcon state={state} leaveInfo={leaveInfo} />;
   }
 
-  if (record && !record.is_leave && record.morning_present !== undefined && record.afternoon_present !== undefined) {
-    return <AttendanceIcon morningPresent={record.morning_present} afternoonPresent={record.afternoon_present} />;
+  if (
+    record &&
+    !record.is_leave &&
+    record.morning_present !== undefined &&
+    record.afternoon_present !== undefined
+  ) {
+    return (
+      <AttendanceIcon
+        morningPresent={record.morning_present}
+        afternoonPresent={record.afternoon_present}
+      />
+    );
   }
 
   if (state === 'present') {
@@ -99,10 +115,14 @@ function LeaveIcon({ state, leaveInfo }: { state: DayState; leaveInfo: LeaveInfo
     <Tooltip>
       <TooltipTrigger asChild>
         <div className="flex w-full cursor-help flex-col items-center gap-0.5">
-          <div className={`h-6 w-6 rounded-full ${bgClass} flex items-center justify-center shadow-sm`}>
+          <div
+            className={`h-6 w-6 rounded-full ${bgClass} flex items-center justify-center shadow-sm`}
+          >
             <X className="h-4 w-4 stroke-[3] text-white" />
           </div>
-          <span className={`text-[10px] ${textClass} w-full px-0.5 text-center leading-tight font-extrabold break-words`}>
+          <span
+            className={`text-[10px] ${textClass} w-full px-0.5 text-center leading-tight font-extrabold break-words`}
+          >
             {truncatedName}
           </span>
         </div>
@@ -117,7 +137,13 @@ function LeaveIcon({ state, leaveInfo }: { state: DayState; leaveInfo: LeaveInfo
   );
 }
 
-function AttendanceIcon({ morningPresent, afternoonPresent }: { morningPresent: boolean; afternoonPresent: boolean }) {
+function AttendanceIcon({
+  morningPresent,
+  afternoonPresent,
+}: {
+  morningPresent: boolean;
+  afternoonPresent: boolean;
+}) {
   if (morningPresent && afternoonPresent) {
     return (
       <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500">
@@ -136,8 +162,18 @@ function AttendanceIcon({ morningPresent, afternoonPresent }: { morningPresent: 
   return (
     <div className="relative h-6 w-6">
       <svg viewBox="0 0 24 24" className="h-full w-full">
-        <path d="M 2 12 A 10 10 0 0 0 22 12 Z" fill={afternoonPresent ? '#22c55e' : '#ef4444'} stroke="white" strokeWidth="0.5" />
-        <path d="M 2 12 A 10 10 0 0 1 22 12 Z" fill={morningPresent ? '#22c55e' : '#ef4444'} stroke="white" strokeWidth="0.5" />
+        <path
+          d="M 2 12 A 10 10 0 0 0 22 12 Z"
+          fill={afternoonPresent ? '#22c55e' : '#ef4444'}
+          stroke="white"
+          strokeWidth="0.5"
+        />
+        <path
+          d="M 2 12 A 10 10 0 0 1 22 12 Z"
+          fill={morningPresent ? '#22c55e' : '#ef4444'}
+          stroke="white"
+          strokeWidth="0.5"
+        />
       </svg>
     </div>
   );
@@ -149,12 +185,17 @@ function MobileDayContent({
   state,
   record,
   getMobileStateBgColor,
-}: Omit<Pick<TimesheetDayCellProps, 'date' | 'dateKey' | 'state' | 'record' | 'getMobileStateBgColor'>, 'dateKey'>) {
+}: Omit<
+  Pick<TimesheetDayCellProps, 'date' | 'dateKey' | 'state' | 'record' | 'getMobileStateBgColor'>,
+  'dateKey'
+>) {
   const bgColor = getMobileStateBgColor(state);
 
   if (state === 'holiday') {
     return (
-      <div className={`flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold ${bgColor}`}>
+      <div
+        className={`flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold ${bgColor}`}
+      >
         H
       </div>
     );
@@ -171,8 +212,14 @@ function MobileDayContent({
     return (
       <div className="relative flex h-7 w-7 items-center justify-center">
         <svg viewBox="0 0 28 28" className="absolute inset-0 h-full w-full">
-          <path d="M 0 14 A 14 14 0 0 1 28 14 Z" fill={record.morning_present ? '#22c55e' : '#ef4444'} />
-          <path d="M 0 14 A 14 14 0 0 0 28 14 Z" fill={record.afternoon_present ? '#22c55e' : '#ef4444'} />
+          <path
+            d="M 0 14 A 14 14 0 0 1 28 14 Z"
+            fill={record.morning_present ? '#22c55e' : '#ef4444'}
+          />
+          <path
+            d="M 0 14 A 14 14 0 0 0 28 14 Z"
+            fill={record.afternoon_present ? '#22c55e' : '#ef4444'}
+          />
         </svg>
         <span className="relative text-[10px] font-bold text-white">{format(date, 'd')}</span>
       </div>
@@ -180,7 +227,9 @@ function MobileDayContent({
   }
 
   return (
-    <div className={`flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold ${bgColor}`}>
+    <div
+      className={`flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold ${bgColor}`}
+    >
       {format(date, 'd')}
     </div>
   );

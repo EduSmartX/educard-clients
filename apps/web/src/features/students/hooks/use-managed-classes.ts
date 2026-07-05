@@ -6,17 +6,17 @@ import type { Class } from '@/features/classes/types';
 
 /**
  * Hook to fetch managed classes for the current teacher
- * 
+ *
  * Returns classes where the current user is the class teacher.
  * - Admins get all classes
  * - Teachers get only classes they manage
  * - Other roles get empty array
- * 
+ *
  * @returns Query result with managed classes array
  */
 export function useManagedClasses() {
   const { user } = useAuth();
-  
+
   return useQuery<Class[], Error>({
     queryKey: ['managed-classes', user?.public_id],
     queryFn: async () => {

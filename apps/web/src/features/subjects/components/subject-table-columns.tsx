@@ -84,7 +84,7 @@ export function createSubjectListColumns({
                     e.stopPropagation();
                     onView(subject);
                   }}
-                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                  className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
                   title="View details"
                 >
                   <Eye className="h-4 w-4" />
@@ -97,7 +97,7 @@ export function createSubjectListColumns({
                       e.stopPropagation();
                       onDelete(subject);
                     }}
-                    className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                    className="text-green-600 hover:bg-green-50 hover:text-green-700"
                     title="Restore Subject"
                   >
                     <RotateCcw className="h-4 w-4" />

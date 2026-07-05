@@ -8,8 +8,18 @@ import { resolveDayState } from '@/features/attendance/utils/calendar-day-state'
 import { DayIcon } from './day-icon';
 
 const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
 interface MonthlyCalendarCardProps {
@@ -92,9 +102,7 @@ export function MonthlyCalendarCard({
                 className={`flex aspect-square flex-col items-center justify-between rounded border p-1 transition ${bgColor}`}
               >
                 <div className="w-full text-center">
-                  <div className="text-[7px] font-medium text-gray-500">
-                    {format(date, 'EEE')}
-                  </div>
+                  <div className="text-[7px] font-medium text-gray-500">{format(date, 'EEE')}</div>
                   <div className={`text-xs font-bold ${textColor}`}>{format(date, 'd')}</div>
                 </div>
                 <div className="flex w-full flex-1 flex-col items-center justify-center">

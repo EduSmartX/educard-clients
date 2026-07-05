@@ -63,7 +63,8 @@ export const STUDENT_COLUMNS: ColumnConfig[] = [
     key: 'supervisor_email',
     name: 'Supervisor Email',
     required: false,
-    description: "Supervisor from dropdown (Class Teacher listed first, then other teachers alphabetically). Defaults to Class Teacher if not provided (Optional)",
+    description:
+      'Supervisor from dropdown (Class Teacher listed first, then other teachers alphabetically). Defaults to Class Teacher if not provided (Optional)',
     validator: supervisorEmailValidator,
   },
   {
@@ -165,19 +166,19 @@ export const STUDENT_DUPLICATE_CHECKS: DuplicateCheckConfig[] = [
  * Get column config by field key
  */
 export function getStudentColumnByKey(key: string): ColumnConfig | undefined {
-  return STUDENT_COLUMNS.find(col => col.key === key);
+  return STUDENT_COLUMNS.find((col) => col.key === key);
 }
 
 /**
  * Get mandatory student columns
  */
 export function getMandatoryStudentColumns(): ColumnConfig[] {
-  return STUDENT_COLUMNS.filter(col => col.required);
+  return STUDENT_COLUMNS.filter((col) => col.required);
 }
 
 /**
  * Get optional student columns
  */
 export function getOptionalStudentColumns(): ColumnConfig[] {
-  return STUDENT_COLUMNS.filter(col => !col.required);
+  return STUDENT_COLUMNS.filter((col) => !col.required);
 }

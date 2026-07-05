@@ -103,7 +103,7 @@ export const roleThemes: Record<RoleTheme, ThemeConfig> = {
  */
 export function getRoleTheme(userRole?: string): RoleTheme {
   const role = userRole?.toLowerCase() || '';
-  
+
   if (role.includes('admin') || role.includes('administrator')) {
     return 'admin';
   }
@@ -116,7 +116,7 @@ export function getRoleTheme(userRole?: string): RoleTheme {
   if (role.includes('student')) {
     return 'student';
   }
-  
+
   return 'admin'; // Default to admin theme
 }
 

@@ -20,22 +20,12 @@ export function LeaveRequestsFilterHeader({
   return (
     <div className="flex items-center gap-2">
       {activeFiltersCount > 0 && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onReset}
-          className="h-8 px-2 text-xs"
-        >
+        <Button variant="ghost" size="sm" onClick={onReset} className="h-8 px-2 text-xs">
           <X className="mr-1 h-3 w-3" />
           Clear ({activeFiltersCount})
         </Button>
       )}
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={onToggleFilters}
-        className="gap-2"
-      >
+      <Button variant="outline" size="sm" onClick={onToggleFilters} className="gap-2">
         <Filter className="h-4 w-4" />
         Filters
         {activeFiltersCount > 0 && (

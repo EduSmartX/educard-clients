@@ -15,9 +15,7 @@ function DonutChart({ stats }: Readonly<{ stats: AttendanceStats }>) {
   const total = present + absent + leaves;
 
   if (total === 0) {
-    return (
-      <circle cx="50" cy="50" r="40" fill="none" stroke="#e5e7eb" strokeWidth="20" />
-    );
+    return <circle cx="50" cy="50" r="40" fill="none" stroke="#e5e7eb" strokeWidth="20" />;
   }
 
   const circumference = 2 * Math.PI * 40;
@@ -29,21 +27,36 @@ function DonutChart({ stats }: Readonly<{ stats: AttendanceStats }>) {
     <>
       {present > 0 && (
         <circle
-          cx="50" cy="50" r="40" fill="none" stroke="#22c55e" strokeWidth="20"
+          cx="50"
+          cy="50"
+          r="40"
+          fill="none"
+          stroke="#22c55e"
+          strokeWidth="20"
           strokeDasharray={`${presentLength} ${circumference - presentLength}`}
           strokeDashoffset={0}
         />
       )}
       {absent > 0 && (
         <circle
-          cx="50" cy="50" r="40" fill="none" stroke="#ef4444" strokeWidth="20"
+          cx="50"
+          cy="50"
+          r="40"
+          fill="none"
+          stroke="#ef4444"
+          strokeWidth="20"
           strokeDasharray={`${absentLength} ${circumference - absentLength}`}
           strokeDashoffset={-presentLength}
         />
       )}
       {leaves > 0 && (
         <circle
-          cx="50" cy="50" r="40" fill="none" stroke="#f97316" strokeWidth="20"
+          cx="50"
+          cy="50"
+          r="40"
+          fill="none"
+          stroke="#f97316"
+          strokeWidth="20"
           strokeDasharray={`${leaveLength} ${circumference - leaveLength}`}
           strokeDashoffset={-(presentLength + absentLength)}
         />
@@ -53,9 +66,10 @@ function DonutChart({ stats }: Readonly<{ stats: AttendanceStats }>) {
 }
 
 export function AttendanceInsightsPanel({ stats }: Readonly<{ stats: AttendanceStats }>) {
-  const overallPercent = stats.total_working_days > 0
-    ? Math.round((stats.total_present / stats.total_working_days) * 100)
-    : 0;
+  const overallPercent =
+    stats.total_working_days > 0
+      ? Math.round((stats.total_present / stats.total_working_days) * 100)
+      : 0;
 
   return (
     <div className="space-y-4">

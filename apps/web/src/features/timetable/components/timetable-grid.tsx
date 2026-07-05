@@ -382,7 +382,9 @@ function PeriodCell({
     <div
       data-timetable-cell="true"
       className={`group relative flex h-full flex-col rounded-xl border border-l-4 ${color.border} ${color.bg} px-3 py-2.5 transition-all hover:shadow-md ${
-        copySource?.subjectPublicId === slot.subject_public_id ? 'ring-2 ring-indigo-400 ring-offset-2' : ''
+        copySource?.subjectPublicId === slot.subject_public_id
+          ? 'ring-2 ring-indigo-400 ring-offset-2'
+          : ''
       }`}
     >
       {isAdmin && (
@@ -520,7 +522,9 @@ export function TimetableGrid({ timetable, isLoading, readOnly }: Readonly<Timet
 
         if (result.warnings?.length) {
           toast.warning(result.warnings[0] ?? 'Assignment saved with warnings.');
-          await qc.invalidateQueries({ queryKey: timetableKeys.classTimetable(timetable.class_public_id) });
+          await qc.invalidateQueries({
+            queryKey: timetableKeys.classTimetable(timetable.class_public_id),
+          });
         }
       } catch {
         // Mutation errors are surfaced by the shared mutation handler.

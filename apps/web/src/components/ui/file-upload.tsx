@@ -93,8 +93,7 @@ async function buildValidatedFiles(
       type: file.type,
       status: uploadMode === 'instant' ? 'uploading' : 'pending',
       progress: uploadMode === 'instant' ? 0 : undefined,
-      ...(file.type.startsWith('image/') &&
-        showPreview && { preview: URL.createObjectURL(file) }),
+      ...(file.type.startsWith('image/') && showPreview && { preview: URL.createObjectURL(file) }),
     };
     validatedFiles.push(uploadedFile);
   }
@@ -136,7 +135,11 @@ export const FileUpload = memo(
 
         // Validate and create UploadedFile entries
         const validatedFiles = await buildValidatedFiles(
-          acceptedFiles, validator, uploadMode, showPreview, errors
+          acceptedFiles,
+          validator,
+          uploadMode,
+          showPreview,
+          errors
         );
 
         setValidationErrors(errors);
@@ -228,9 +231,7 @@ export const FileUpload = memo(
               )}
             </p>
             {helperText && (
-              <p className={cn('text-muted-foreground mt-1', 'text-xs')}>
-                {helperText}
-              </p>
+              <p className={cn('text-muted-foreground mt-1', 'text-xs')}>{helperText}</p>
             )}
           </div>
         )}
@@ -345,9 +346,7 @@ const FileItem = memo(({ file, onRemove, showProgress, compact, allowReorder }: 
       <div className="min-w-0 flex-1">
         <p className={cn('truncate font-medium', compact ? 'text-xs' : 'text-sm')}>{file.name}</p>
         <div className="flex items-center gap-2">
-          <p className={cn('text-muted-foreground text-xs')}>
-            {formatFileSize(file.size)}
-          </p>
+          <p className={cn('text-muted-foreground text-xs')}>{formatFileSize(file.size)}</p>
           {hasError && file.error && <span className="text-destructive text-xs">{file.error}</span>}
         </div>
 
