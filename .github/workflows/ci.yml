@@ -112,7 +112,7 @@ jobs:
         run: pnpm --filter @educard/mobile lint
 
       - name: Check formatting
-        run: pnpm --filter @educard/mobile format -- --check "**/*.{ts,tsx,json}"
+        run: pnpm --filter @educard/mobile format:check
 
   typecheck:
     name: Type Checking (All)
