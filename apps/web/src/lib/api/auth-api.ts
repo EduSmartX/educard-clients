@@ -132,6 +132,22 @@ export function isProfileSelectionResponse(
   return 'requires_profile_selection' in response && response.requires_profile_selection === true;
 }
 
+/**
+ * Persist the access token (in memory) and user/organization (in localStorage)
+ * from a successful `AuthResponse`. Shared by `login()`, `selectProfile()`,
+ * `switchProfile()`, and `signup()` so the storage logic stays in one place.
+ */
+function persistAuthResponse(data: AuthResponse): void {
+  if (!data.tokens?.access) {
+    return;
+  }
+  tokenManager.setAccessToken(data.tokens.access);
+  localStorage.setItem('user', JSON.stringify(data.user));
+  if (data.organization) {
+    localStorage.setItem('organization', JSON.stringify(data.organization));
+  }
+}
+
 // API Functions
 export const authApi = {
   /**
@@ -149,14 +165,7 @@ export const authApi = {
     if (data.requires_profile_selection) {
       return data as ProfileSelectionResponse;
     }
-    // Store access token in memory (refresh token is set as HttpOnly cookie by backend)
-    if (data.tokens?.access) {
-      tokenManager.setAccessToken(data.tokens.access);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      if (data.organization) {
-        localStorage.setItem('organization', JSON.stringify(data.organization));
-      }
-    }
+    persistAuthResponse(data);
     return data;
   },
 
@@ -166,13 +175,7 @@ export const authApi = {
    */
   selectProfile: async (selectionData: SelectProfileData): Promise<AuthResponse> => {
     const { data } = await api.post('/auth/select-profile/', selectionData);
-    if (data.tokens?.access) {
-      tokenManager.setAccessToken(data.tokens.access);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      if (data.organization) {
-        localStorage.setItem('organization', JSON.stringify(data.organization));
-      }
-    }
+    persistAuthResponse(data);
     return data;
   },
 
@@ -182,13 +185,7 @@ export const authApi = {
    */
   switchProfile: async (switchData: SwitchProfileData): Promise<AuthResponse> => {
     const { data } = await api.post('/auth/switch-profile/', switchData);
-    if (data.tokens?.access) {
-      tokenManager.setAccessToken(data.tokens.access);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      if (data.organization) {
-        localStorage.setItem('organization', JSON.stringify(data.organization));
-      }
-    }
+    persistAuthResponse(data);
     return data;
   },
 
@@ -206,14 +203,7 @@ export const authApi = {
    */
   signup: async (signupData: SignupData): Promise<AuthResponse> => {
     const { data } = await api.post('/auth/register/', signupData);
-    // Store access token in memory (refresh token is set as HttpOnly cookie by backend)
-    if (data.tokens?.access) {
-      tokenManager.setAccessToken(data.tokens.access);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      if (data.organization) {
-        localStorage.setItem('organization', JSON.stringify(data.organization));
-      }
-    }
+    persistAuthResponse(data);
     return data;
   },
 

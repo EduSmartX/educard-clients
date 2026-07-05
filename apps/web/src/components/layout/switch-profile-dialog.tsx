@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { GraduationCap, LogIn } from 'lucide-react';
 import { authApi, type ProfileSummary } from '@/lib/api/auth-api';
+import { ROUTES } from '@/constants/app-config';
 import {
   Dialog,
   DialogContent,
@@ -50,7 +51,9 @@ export function SwitchProfileDialog({ open, onOpenChange }: SwitchProfileDialogP
     try {
       await authApi.switchProfile({ user_public_id: profile.public_id });
       toast.success(`Switched to ${profile.full_name}.`);
-      window.location.href = '/parent/dashboard';
+      // Full page reload (rather than client-side navigate) so all auth
+      // context / React Query caches reset for the newly-switched profile.
+      window.location.href = ROUTES.PARENT.DASHBOARD;
     } catch (error) {
       const apiError = error as { response?: { data?: { message?: string } } };
       toast.error(apiError?.response?.data?.message || 'Unable to switch profile.');

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
@@ -26,8 +26,13 @@ export default function SelectProfilePage() {
   const selectionToken = state?.selectionToken;
   const profiles = state?.profiles ?? [];
 
+  useEffect(() => {
+    if (!selectionToken || profiles.length === 0) {
+      navigate(ROUTES.AUTH.LOGIN, { replace: true });
+    }
+  }, [selectionToken, profiles.length, navigate]);
+
   if (!selectionToken || profiles.length === 0) {
-    navigate(ROUTES.AUTH.LOGIN, { replace: true });
     return null;
   }
 
