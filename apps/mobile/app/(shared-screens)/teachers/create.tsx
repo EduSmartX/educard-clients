@@ -138,22 +138,6 @@ export default function CreateTeacherScreen() {
     [form, schema]
   );
 
-  const handleSubmit = useCallback(() => {
-    setApiError(null);
-    const fieldErrors = validateAllFields(schema, form);
-    setErrors(fieldErrors);
-    if (Object.keys(fieldErrors).length > 0) {
-      scrollRef.current?.scrollToPosition(0, 0, true);
-      return;
-    }
-
-    const payload = buildTeacherPayload(form, quickAdd);
-    if (!quickAdd && form.subjects.length > 0) {
-      payload.subjects = form.subjects.map(Number);
-    }
-    submitCreate(payload, false);
-  }, [form, quickAdd, schema, submitCreate]);
-
   const submitCreate = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (payload: any, forceCreate: boolean) => {
@@ -201,6 +185,22 @@ export default function CreateTeacherScreen() {
     },
     [createMutation, router, photoUri, duplicateHandler]
   );
+
+  const handleSubmit = useCallback(() => {
+    setApiError(null);
+    const fieldErrors = validateAllFields(schema, form);
+    setErrors(fieldErrors);
+    if (Object.keys(fieldErrors).length > 0) {
+      scrollRef.current?.scrollToPosition(0, 0, true);
+      return;
+    }
+
+    const payload = buildTeacherPayload(form, quickAdd);
+    if (!quickAdd && form.subjects.length > 0) {
+      payload.subjects = form.subjects.map(Number);
+    }
+    submitCreate(payload, false);
+  }, [form, quickAdd, schema, submitCreate]);
 
   const handleReactivate = useCallback(() => {
     const recordId = duplicateHandler.pendingData?.deletedRecordId;

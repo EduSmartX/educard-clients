@@ -51,6 +51,7 @@ interface BulkUploadModalProps {
   uploadFile: (fileUri: string, fileName: string) => Promise<BulkUploadResponse>;
   onUploadSuccess?: (result: BulkUploadResult) => void;
   customInfoMessage?: string;
+  templateFileName?: string;
 }
 
 function transformErrors(errors: unknown): BulkUploadError[] {

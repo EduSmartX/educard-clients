@@ -28,7 +28,7 @@ export function ProgressBar({
     teal: { primary: '#0d9488', bg: '#ccfbf1' },
   };
   const c = colorStyles[color] || colorStyles.blue;
-  const progressWidth = `${percentage || 0}%`;
+  const progressWidth: `${number}%` = `${percentage || 0}%`;
 
   return (
     <View style={styles.progressCard}>

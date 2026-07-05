@@ -192,9 +192,10 @@ export default function EditTeacherScreen() {
         onSuccess: () => {
           router.back();
         },
-        onError: (err: Error & { response?: { data?: unknown } }) => {
-          if (err.response?.data) {
-            const { fieldErrors: fe, generalError } = parseApiErrors(err.response.data);
+        onError: (err: unknown) => {
+          const apiErr = err as { response?: { data?: Record<string, unknown> }; message?: string };
+          if (apiErr.response?.data) {
+            const { fieldErrors: fe, generalError } = parseApiErrors(apiErr.response.data);
             if (Object.keys(fe).length > 0) {
               setErrors(fe);
               scrollRef.current?.scrollToPosition(0, 0, true);
@@ -202,7 +203,7 @@ export default function EditTeacherScreen() {
             }
             setApiError(generalError ?? 'Failed to update teacher.');
           } else {
-            setApiError(err.message ?? 'Network error.');
+            setApiError(apiErr.message ?? 'Network error.');
           }
         },
       }

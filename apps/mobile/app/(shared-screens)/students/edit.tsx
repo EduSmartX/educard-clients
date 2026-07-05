@@ -190,8 +190,9 @@ export default function EditStudentScreen() {
         onSuccess: () => {
           router.back();
         },
-        onError: (err: Error & { response?: { data?: unknown } }) => {
-          const { fieldErrors: fe, generalError } = parseApiErrors(err?.response?.data);
+        onError: (err: unknown) => {
+          const apiErr = err as { response?: { data?: Record<string, unknown> } };
+          const { fieldErrors: fe, generalError } = parseApiErrors(apiErr?.response?.data);
           if (Object.keys(fe).length > 0) {
             setErrors(fe);
             return;

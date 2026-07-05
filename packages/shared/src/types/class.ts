@@ -71,6 +71,8 @@ export interface ClassDetail extends Class {
   teachers: ClassTeacher[];
   students: ClassStudent[];
   subjects?: ClassSubject[];
+  is_full?: boolean;
+  available_seats?: number;
 }
 
 export interface ClassSummary {

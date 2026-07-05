@@ -5,7 +5,7 @@
  */
 
 // Type definitions
-type FormValue = string | number | boolean | null | undefined;
+type FormValue = string | number | boolean | string[] | null | undefined;
 type FormValues = Record<string, FormValue>;
 export type ApiErrorData = Record<string, unknown>;
 

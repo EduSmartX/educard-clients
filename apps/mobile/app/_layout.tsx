@@ -21,8 +21,6 @@ LogBox.ignoreLogs(['viewIsDescendantOf']);
 // Keep splash screen visible while loading
 void SplashScreen.preventAutoHideAsync();
 
-type AppSegments = ReturnType<typeof useSegments>;
-
 /** Determine the correct dashboard route for a user's role */
 function getDashboardRoute(role: string | undefined) {
   const normalized = role?.toLowerCase();
@@ -36,10 +34,13 @@ function getDashboardRoute(role: string | undefined) {
 }
 
 /** Check if the user needs to be redirected based on role and current segments */
-function shouldRedirectAuthenticated(segments: AppSegments, role: string | undefined): boolean {
+function shouldRedirectAuthenticated(
+  segments: readonly string[],
+  role: string | undefined
+): boolean {
   const inAuthGroup = segments[0] === '(auth)';
   const inSharedScreens = segments[0] === '(shared-screens)';
-  const inModals = segments[0] === ('(modals)' as (typeof segments)[0]);
+  const inModals = segments[0] === '(modals)';
 
   // Allow shared screens and modals for all authenticated users
   if (inSharedScreens || inModals) return false;

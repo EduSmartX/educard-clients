@@ -36,12 +36,7 @@ export function useStudentFilterFields(): FilterField[] {
   const { data: classesData } = useClasses({ page_size: 100 });
 
   return useMemo(() => {
-    interface ClassItem {
-      public_id: string;
-      name: string;
-      class_master?: { name: string };
-    }
-    const classOptions = (classesData?.classes ?? []).map((c: ClassItem) => ({
+    const classOptions = (classesData?.classes ?? []).map((c) => ({
       value: c.public_id,
       label: `${c.class_master?.name ?? ''} - ${c.name}`.trim(),
     }));

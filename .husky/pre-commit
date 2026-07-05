@@ -16,10 +16,14 @@ echo "🔎 Running ESLint (web app, zero warnings allowed)..."
 cd apps/web && pnpm run check:lint || { echo "❌ ESLint errors/warnings in apps/web"; exit 1; }
 cd ../..
 
-# NOTE: Mobile app lint and typecheck temporarily disabled due to pre-existing issues
-# TODO: Fix lint/TypeScript errors and re-enable
-# echo "🔎 Running lint (mobile app)..."
-# cd apps/mobile && pnpm run lint || { echo "❌ ESLint errors in apps/mobile"; exit 1; }
-# cd ../..
+# 4. ESLint (mobile app) - zero warnings allowed, same rule CI enforces
+echo "🔎 Running ESLint (mobile app, zero warnings allowed)..."
+cd apps/mobile && pnpm run lint || { echo "❌ ESLint errors/warnings in apps/mobile"; exit 1; }
+cd ../..
+
+# 5. TypeScript type-check mobile app
+echo "🔎 Running TypeScript type-check (mobile app)..."
+cd apps/mobile && pnpm run typecheck || { echo "❌ TypeScript errors in apps/mobile"; exit 1; }
+cd ../..
 
 echo "✅ All pre-commit checks passed!"
