@@ -11,6 +11,11 @@ echo "🔎 Running TypeScript type-check (shared package)..."
 cd packages/shared && pnpm run typecheck || { echo "❌ TypeScript errors in packages/shared"; exit 1; }
 cd ../..
 
+# 3. ESLint (web app) - zero warnings allowed, same rule CI enforces
+echo "🔎 Running ESLint (web app, zero warnings allowed)..."
+cd apps/web && pnpm run check:lint || { echo "❌ ESLint errors/warnings in apps/web"; exit 1; }
+cd ../..
+
 # NOTE: Mobile app lint and typecheck temporarily disabled due to pre-existing issues
 # TODO: Fix lint/TypeScript errors and re-enable
 # echo "🔎 Running lint (mobile app)..."

@@ -75,7 +75,7 @@ jobs:
           key: modules-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Run ESLint (zero warnings allowed)
-        run: pnpm --filter @educard/web lint -- --max-warnings=0
+        run: pnpm --filter @educard/web run check:lint
 
       - name: Check formatting
         run: pnpm --filter @educard/web format:check
