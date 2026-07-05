@@ -14,7 +14,7 @@ import { ROUTES } from '@/constants/app-config';
  * Redirects non-admin users to their respective dashboards
  */
 export function AdminRoute() {
-  const { isAdmin, isEmployee, isParent, isStudent, isLoading } = useRole();
+  const { isAdmin, isEmployee, isStudent, isLoading } = useRole();
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -25,7 +25,7 @@ export function AdminRoute() {
     if (isEmployee) {
       return <Navigate to={ROUTES.EMPLOYEE.DASHBOARD} replace />;
     }
-    if (isParent || isStudent) {
+    if (isStudent) {
       return <Navigate to={ROUTES.PARENT.DASHBOARD} replace />;
     }
     // Not logged in or invalid role
@@ -40,7 +40,7 @@ export function AdminRoute() {
  * Redirects non-employee users to their respective dashboards
  */
 export function EmployeeRoute() {
-  const { isAdmin, isEmployee, isParent, isStudent, isLoading } = useRole();
+  const { isAdmin, isEmployee, isStudent, isLoading } = useRole();
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -51,7 +51,7 @@ export function EmployeeRoute() {
     if (isAdmin) {
       return <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />;
     }
-    if (isParent || isStudent) {
+    if (isStudent) {
       return <Navigate to={ROUTES.PARENT.DASHBOARD} replace />;
     }
     // Not logged in or invalid role
@@ -62,20 +62,20 @@ export function EmployeeRoute() {
 }
 
 /**
- * ParentRoute - Allow Parent and Student roles
+ * ParentRoute - Allow Student role
  *
- * Student accounts reuse the Parent portal UI - there is no dedicated
- * Student role UI, since parents/guardians log in using the student's
- * account on their child's behalf.
+ * Student accounts reuse the Parent portal UI - there is no Parent role
+ * or dedicated Student role UI; there is only the Student role, whose
+ * accounts are logged into by parents/guardians on their child's behalf.
  */
 export function ParentRoute() {
-  const { isAdmin, isEmployee, isParent, isStudent, isLoading } = useRole();
+  const { isAdmin, isEmployee, isStudent, isLoading } = useRole();
 
   if (isLoading) {
     return <div>Loading...</div>;
   }
 
-  if (!isParent && !isStudent) {
+  if (!isStudent) {
     // Redirect to appropriate dashboard based on role
     if (isAdmin) {
       return <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />;
@@ -95,7 +95,7 @@ export function ParentRoute() {
  * Used for the root protected route
  */
 export function RoleBasedRedirect() {
-  const { isAdmin, isEmployee, isParent, isStudent } = useRole();
+  const { isAdmin, isEmployee, isStudent } = useRole();
 
   if (isAdmin) {
     return <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />;
@@ -105,7 +105,7 @@ export function RoleBasedRedirect() {
     return <Navigate to={ROUTES.EMPLOYEE.DASHBOARD} replace />;
   }
 
-  if (isParent || isStudent) {
+  if (isStudent) {
     return <Navigate to={ROUTES.PARENT.DASHBOARD} replace />;
   }
 

@@ -11,7 +11,6 @@ const ROLE_DISPLAY_NAMES: Record<string, string> = {
   [USER_ROLES.TEACHER]: 'Teacher',
   [USER_ROLES.STAFF]: 'Staff',
   [USER_ROLES.STUDENT]: 'Student',
-  [USER_ROLES.PARENT]: 'Parent',
 };
 
 /**
@@ -28,8 +27,9 @@ export function formatRole(role?: string | null): string {
  * Get the dashboard route for a given role.
  *
  * Students are routed to the Parent portal dashboard - there is no
- * dedicated Student role UI, since student accounts are logged into by
- * parents/guardians on their child's behalf.
+ * Parent role or dedicated Student role UI; there is only the Student
+ * role, whose accounts are logged into by parents/guardians on their
+ * child's behalf.
  */
 export function getDashboardRoute(role?: string | null): string {
   const normalizedRole = role?.toLowerCase();
@@ -39,7 +39,6 @@ export function getDashboardRoute(role?: string | null): string {
     case USER_ROLES.TEACHER:
     case USER_ROLES.STAFF:
       return ROUTES.EMPLOYEE.DASHBOARD;
-    case USER_ROLES.PARENT:
     case USER_ROLES.STUDENT:
       return ROUTES.PARENT.DASHBOARD;
     default:
@@ -90,24 +89,11 @@ export function isEmployeeUser(): boolean {
 }
 
 /**
- * Check if the current user is a parent
- */
-export function isParentUser(): boolean {
-  const role = getUserRole();
-  return role === USER_ROLES_UPPER.PARENT;
-}
-
-/**
  * Get the appropriate API base path based on user role
  * @param adminPath - The path for admin users
  * @param employeePath - The path for employee users
- * @param parentPath - Optional path for parent users
  */
-export function getRoleBasedPath(
-  adminPath: string,
-  employeePath: string,
-  parentPath?: string
-): string {
+export function getRoleBasedPath(adminPath: string, employeePath: string): string {
   const role = getUserRole();
 
   if (role === USER_ROLES_UPPER.ADMIN) {
@@ -116,10 +102,6 @@ export function getRoleBasedPath(
 
   if (role === USER_ROLES_UPPER.TEACHER || role === USER_ROLES_UPPER.STAFF) {
     return employeePath;
-  }
-
-  if (role === USER_ROLES_UPPER.PARENT && parentPath) {
-    return parentPath;
   }
 
   // Default to employee path if role is unknown

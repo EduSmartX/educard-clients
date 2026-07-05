@@ -46,7 +46,7 @@ function getPendingVerifications(user: User): PendingVerification[] {
   }
 
   // For students/parents — check guardian verification
-  if (user.role === USER_ROLES.STUDENT || user.role === USER_ROLES.PARENT) {
+  if (user.role === USER_ROLES.STUDENT) {
     if (!user.guardian_email_verified) {
       // Skip if same as user email (already shown above)
       if (user.guardian_email && user.guardian_email !== user.email) {

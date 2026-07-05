@@ -29,7 +29,7 @@ function getDashboardRoute(role: string | undefined) {
   if (normalized === 'teacher' || normalized === 'employee') {
     return '/(tabs)/(employee)/dashboard' as const;
   }
-  if (normalized === 'parent') {
+  if (normalized === 'student') {
     return '/(tabs)/(parent)/dashboard' as const;
   }
   return '/(tabs)/(admin)/dashboard' as const;
@@ -47,7 +47,10 @@ function shouldRedirectAuthenticated(segments: AppSegments, role: string | undef
   const normalized = role?.toLowerCase();
   const isAdmin = normalized === 'admin';
   const isTeacher = normalized === 'teacher' || normalized === 'employee';
-  const isParent = normalized === 'parent';
+  // Note: there is no Parent role - student accounts are logged into by
+  // parents/guardians on their child's behalf and reuse the Parent tab
+  // group, so this only ever needs to check isStudent.
+  const isStudent = normalized === 'student';
 
   const inAdminTabs = segments[0] === '(tabs)' && segments[1] === '(admin)';
   const inEmployeeTabs = segments[0] === '(tabs)' && segments[1] === '(employee)';
@@ -57,7 +60,7 @@ function shouldRedirectAuthenticated(segments: AppSegments, role: string | undef
     inAuthGroup ||
     (isAdmin && !inAdminTabs) ||
     (isTeacher && !inEmployeeTabs) ||
-    (isParent && !inParentTabs)
+    (isStudent && !inParentTabs)
   );
 }
 
