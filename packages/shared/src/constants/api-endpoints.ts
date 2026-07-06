@@ -95,6 +95,45 @@ export const API_ENDPOINTS = {
     ASSIGN_PARENT: (id: string) => `/students/${id}/assign-parent/`,
   },
 
+  // Student Portal - self-service endpoints for the authenticated student user
+  // Each module mounts its own `student/...` sub-path under its own app prefix
+  // (there is no single unified `/student/` namespace on the backend).
+  STUDENT_PORTAL: {
+    DASHBOARD: "/students/student/dashboard/",
+    ATTENDANCE: {
+      SUMMARY: "/attendance/student/summary/",
+      CALENDAR: "/attendance/student/calendar/",
+      YEARLY_REPORT: "/attendance/student/yearly-report/",
+    },
+    EXAMS: {
+      SESSIONS: "/exams/student/sessions/",
+      SESSION_DETAIL: (publicId: string) =>
+        `/exams/student/sessions/${publicId}/`,
+    },
+    FEE: {
+      SUMMARY: "/fee/student/summary/",
+      PAYMENTS: "/fee/student/payments/",
+      COMPONENTS: "/fee/student/components/",
+      COMPONENT_OPT_OUT: (publicId: string) =>
+        `/fee/student/components/${publicId}/opt-out/`,
+      COMPONENT_OPT_IN: (publicId: string) =>
+        `/fee/student/components/${publicId}/opt-in/`,
+    },
+    TIMETABLE: "/timetable/student/",
+    HOMEWORK: {
+      LIST: "/homework/student/",
+      DETAIL: (publicId: string) => `/homework/student/${publicId}/`,
+      SUBMIT: (publicId: string) => `/homework/student/${publicId}/submit/`,
+    },
+    LEAVE: {
+      ENABLED: "/leave/student/enabled/",
+      BALANCE: "/leave/student/balance/",
+      REQUESTS: "/leave/student/requests/",
+      REQUEST_DETAIL: (publicId: string) =>
+        `/leave/student/requests/${publicId}/`,
+    },
+  },
+
   TEACHERS: {
     // Admin endpoints - Full CRUD operations
     ADMIN: {

@@ -26,7 +26,7 @@ export function AdminRoute() {
       return <Navigate to={ROUTES.EMPLOYEE.DASHBOARD} replace />;
     }
     if (isStudent) {
-      return <Navigate to={ROUTES.PARENT.DASHBOARD} replace />;
+      return <Navigate to={ROUTES.STUDENT.DASHBOARD} replace />;
     }
     // Not logged in or invalid role
     return <Navigate to={ROUTES.AUTH.LOGIN} replace />;
@@ -52,7 +52,7 @@ export function EmployeeRoute() {
       return <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />;
     }
     if (isStudent) {
-      return <Navigate to={ROUTES.PARENT.DASHBOARD} replace />;
+      return <Navigate to={ROUTES.STUDENT.DASHBOARD} replace />;
     }
     // Not logged in or invalid role
     return <Navigate to={ROUTES.AUTH.LOGIN} replace />;
@@ -91,6 +91,35 @@ export function ParentRoute() {
 }
 
 /**
+ * StudentRoute - Only allow Student role
+ *
+ * Guards the dedicated Student Portal (`/student/*`) pages. Distinct from
+ * `ParentRoute`, which guards the earlier parent-facing dashboard reused by
+ * student accounts. Redirects non-student users to their respective dashboards.
+ */
+export function StudentRoute() {
+  const { isAdmin, isEmployee, isStudent, isLoading } = useRole();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isStudent) {
+    // Redirect to appropriate dashboard based on role
+    if (isAdmin) {
+      return <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />;
+    }
+    if (isEmployee) {
+      return <Navigate to={ROUTES.EMPLOYEE.DASHBOARD} replace />;
+    }
+    // Not logged in or invalid role
+    return <Navigate to={ROUTES.AUTH.LOGIN} replace />;
+  }
+
+  return <Outlet />;
+}
+
+/**
  * RoleBasedRedirect - Redirect to appropriate dashboard based on role
  * Used for the root protected route
  */
@@ -106,7 +135,7 @@ export function RoleBasedRedirect() {
   }
 
   if (isStudent) {
-    return <Navigate to={ROUTES.PARENT.DASHBOARD} replace />;
+    return <Navigate to={ROUTES.STUDENT.DASHBOARD} replace />;
   }
 
   // Fallback to login if no valid role

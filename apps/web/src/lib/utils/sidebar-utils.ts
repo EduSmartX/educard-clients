@@ -5,6 +5,7 @@
 import { adminSidebarConfig } from '@/features/admin/config/sidebar-config';
 import { employeeSidebarConfig } from '@/features/employee/config/sidebar-config';
 import { parentSidebarConfig } from '@/features/parent/config/sidebar-config';
+import { studentSidebarConfig } from '@/features/student/config/sidebar-config';
 import { getStoredUserRole } from '@/lib/utils/storage';
 
 export function getSidebarConfig() {
@@ -21,6 +22,8 @@ export function getSidebarConfig() {
       return employeeSidebarConfig;
     case 'parent':
       return parentSidebarConfig;
+    case 'student':
+      return studentSidebarConfig;
     default:
       return adminSidebarConfig;
   }

@@ -35,6 +35,9 @@ const EmployeeRoute = lazy(() =>
 const ParentRoute = lazy(() =>
   import('./components/guards/role-guards').then((m) => ({ default: m.ParentRoute }))
 );
+const StudentRoute = lazy(() =>
+  import('./components/guards/role-guards').then((m) => ({ default: m.StudentRoute }))
+);
 
 // Role-specific dashboards
 const AdminDashboardPage = lazy(
@@ -47,6 +50,9 @@ const EmployeeTeachersPage = lazy(() => import('./features/employee/pages/employ
 const EmployeeClassesPage = lazy(() => import('./features/employee/pages/employee-classes-page'));
 const ParentDashboardPage = lazy(
   () => import('./features/parent/dashboard/pages/parent-dashboard-page')
+);
+const StudentDashboardPage = lazy(
+  () => import('./features/student/dashboard/pages/student-dashboard-page')
 );
 
 // Student pages
@@ -287,6 +293,10 @@ function App() {
 
             <Route path="/parent" element={<ParentRoute />}>
               <Route path="dashboard" element={<ParentDashboardPage />} />
+            </Route>
+
+            <Route path="/student" element={<StudentRoute />}>
+              <Route path="dashboard" element={<StudentDashboardPage />} />
             </Route>
 
             {/* Students */}
