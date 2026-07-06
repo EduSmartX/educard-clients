@@ -37,6 +37,27 @@ export const passwordChangeSchema = z
 export type PasswordChangeFormData = z.infer<typeof passwordChangeSchema>;
 
 /**
+ * Sync Profiles Schema (parent-initiated, OTP-verified multi-profile linking)
+ */
+export const syncProfilesSchema = z
+  .object({
+    otp: z.string().min(6, 'OTP must be 6 digits').max(6),
+    set_new_password: z.boolean(),
+    new_password: z.string().optional(),
+    confirm_password: z.string().optional(),
+  })
+  .refine((data) => !data.set_new_password || (data.new_password?.length ?? 0) >= 8, {
+    message: 'Password must be at least 8 characters',
+    path: ['new_password'],
+  })
+  .refine((data) => !data.set_new_password || data.new_password === data.confirm_password, {
+    message: 'Passwords do not match',
+    path: ['confirm_password'],
+  });
+
+export type SyncProfilesFormData = z.infer<typeof syncProfilesSchema>;
+
+/**
  * Address Update Schema
  */
 export const addressUpdateSchema = z.object({

@@ -9,11 +9,13 @@ import { toast } from 'sonner';
 import {
   changePassword,
   deleteMyProfilePhoto,
+  requestProfileSyncOtp,
   sendOTP,
   updateEmail,
   updatePhone,
   updateProfile,
   uploadMyProfilePhoto,
+  verifyProfileSync,
 } from '../api/profile-api';
 import { authApi } from '@/lib/api/auth-api';
 import { ROUTES } from '@/constants/app-config';
@@ -25,6 +27,7 @@ import type {
   UpdateEmailPayload,
   UpdatePhonePayload,
   UpdateProfilePayload,
+  VerifyProfileSyncPayload,
 } from '../types/profile.types';
 
 /**
@@ -125,6 +128,33 @@ export function useUpdatePhone() {
     },
     onError: (error: Error) => {
       toast.error(getErrorMessage(error, ErrorMessages.PROFILE.UPDATE_PHONE_FAILED));
+    },
+  });
+}
+
+/**
+ * Hook to request a profile-sync OTP (sent to the student's own login email)
+ */
+export function useRequestProfileSyncOtp() {
+  return useMutation({
+    mutationFn: () => requestProfileSyncOtp(),
+    onSuccess: (data) => {
+      toast.success(data.message || SuccessMessages.PROFILE.SYNC_OTP_SENT);
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error, ErrorMessages.PROFILE.REQUEST_SYNC_OTP_FAILED));
+    },
+  });
+}
+
+/**
+ * Hook to verify the profile-sync OTP and link accounts sharing this email
+ */
+export function useVerifyProfileSync() {
+  return useMutation({
+    mutationFn: (payload: VerifyProfileSyncPayload) => verifyProfileSync(payload),
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error, ErrorMessages.PROFILE.SYNC_PROFILES_FAILED));
     },
   });
 }

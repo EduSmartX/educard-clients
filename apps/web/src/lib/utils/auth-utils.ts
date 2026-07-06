@@ -26,7 +26,7 @@ export function formatRole(role?: string | null): string {
 /**
  * Get the dashboard route for a given role.
  *
- * Students are routed to the Parent portal dashboard - there is no
+ * Students are routed to the dedicated Student Portal dashboard - there is no
  * Parent role or dedicated Student role UI; there is only the Student
  * role, whose accounts are logged into by parents/guardians on their
  * child's behalf.
@@ -40,7 +40,7 @@ export function getDashboardRoute(role?: string | null): string {
     case USER_ROLES.STAFF:
       return ROUTES.EMPLOYEE.DASHBOARD;
     case USER_ROLES.STUDENT:
-      return ROUTES.PARENT.DASHBOARD;
+      return ROUTES.STUDENT.DASHBOARD;
     default:
       return '/';
   }

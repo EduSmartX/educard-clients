@@ -386,5 +386,17 @@ export const ROUTES = {
     PROFILE: '/parent/profile',
     SWITCH_PROFILE: '/parent/switch-profile',
   },
+  STUDENT: {
+    DASHBOARD: '/student/dashboard',
+    ATTENDANCE: '/student/attendance',
+    EXAMS: '/student/exams',
+    EXAM_SESSION_DETAIL: '/student/exams/:publicId',
+    FEE: '/student/fee',
+    FEE_COMPONENTS: '/student/fee/components',
+    TIMETABLE: '/student/timetable',
+    HOMEWORK: '/student/homework',
+    HOMEWORK_DETAIL: '/student/homework/:publicId',
+    LEAVE: '/student/leave',
+  },
   PROFILE: '/profile',
 } as const;

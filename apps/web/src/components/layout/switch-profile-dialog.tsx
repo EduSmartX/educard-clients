@@ -53,7 +53,7 @@ export function SwitchProfileDialog({ open, onOpenChange }: SwitchProfileDialogP
       toast.success(`Switched to ${profile.full_name}.`);
       // Full page reload (rather than client-side navigate) so all auth
       // context / React Query caches reset for the newly-switched profile.
-      globalThis.location.href = ROUTES.PARENT.DASHBOARD;
+      globalThis.location.href = ROUTES.STUDENT.DASHBOARD;
     } catch (error) {
       const apiError = error as { response?: { data?: { message?: string } } };
       toast.error(apiError?.response?.data?.message || 'Unable to switch profile.');

@@ -245,6 +245,10 @@ export const ErrorMessages = {
     PHOTO_UPLOAD_FAILED: "Failed to upload profile photo. Please try again.",
     PHOTO_DELETE_FAILED: "Failed to delete profile photo. Please try again.",
     PHOTO_FETCH_FAILED: "Failed to load profile photo.",
+    REQUEST_SYNC_OTP_FAILED:
+      "Failed to send verification code. Please try again.",
+    SYNC_PROFILES_FAILED:
+      "Failed to sync profiles. Please check the code and try again.",
   },
 
   LOCATION_UNAVAILABLE: "Unable to get location.",
@@ -445,6 +449,8 @@ export const SuccessMessages = {
     OTP_SENT: "OTP sent successfully.",
     PHOTO_UPLOADED: "Profile photo uploaded successfully.",
     PHOTO_DELETED: "Profile photo removed successfully.",
+    SYNC_OTP_SENT: "Verification code sent to your email.",
+    PROFILES_SYNCED: "Profiles synced successfully.",
   },
 
   AUTH: {
