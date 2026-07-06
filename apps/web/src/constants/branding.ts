@@ -8,7 +8,8 @@
 export const BRANDING = {
   // Company/Product Name
   APP_NAME: 'EduCard',
-  COMPANY_NAME: 'EduCard',
+  COMPANY_NAME: 'EduCard Technologies',
+  LEGAL_ENTITY_NAME: 'EDUCARD TECHNOLOGIES',
 
   // Taglines and Descriptions
   TAGLINE: 'Modern Multi-Tenant School Management System',
@@ -57,23 +58,24 @@ export const BRANDING = {
   // Copyright and Legal
   COPYRIGHT: {
     YEAR: new Date().getFullYear(),
-    OWNER: 'EduCard',
-    TEXT: `© ${new Date().getFullYear()} EduCard. All rights reserved.`,
+    OWNER: 'EDUCARD TECHNOLOGIES',
+    TEXT: `© ${new Date().getFullYear()} EDUCARD TECHNOLOGIES. All rights reserved.`,
   },
 
   // Contact Information
   CONTACT: {
-    EMAIL: 'support@educard.com',
-    PHONE: '+91 1800-123-4567',
-    ADDRESS: '123 Education Street, Tech City, TC 12345',
+    EMAIL: 'support@educard.info',
+    PHONE: '+91 8985920421',
+    ADDRESS:
+      '1st Floor, 9-100-1-D6, Saraswathi Nagar, Near Sai Baba Temple, Madanapalle, Annamayya District, Andhra Pradesh - 517325',
   },
 
   // Social Media (optional)
   SOCIAL: {
-    TWITTER: 'https://twitter.com/educard',
-    FACEBOOK: 'https://facebook.com/educard',
-    LINKEDIN: 'https://linkedin.com/company/educard',
-    INSTAGRAM: 'https://instagram.com/educard',
+    TWITTER: '',
+    FACEBOOK: '',
+    LINKEDIN: '',
+    INSTAGRAM: '',
   },
 
   // App Metadata
