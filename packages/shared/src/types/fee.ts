@@ -39,6 +39,7 @@ export interface FeeStructure {
   public_id: string;
   name: string;
   academic_year: string;
+  academic_year_public_id?: string;
   description: string;
   class_public_ids: string[];
   class_names: string[];
@@ -72,8 +73,9 @@ export interface FeeStructureListItem {
 
 export interface FeeStructureCreatePayload {
   name: string;
-  academic_year: string;
+  academic_year_public_id: string;
   description?: string;
+  total_amount?: number;
   class_public_ids?: string[];
   components: FeeComponentCreatePayload[];
   due_date: string;
@@ -82,8 +84,9 @@ export interface FeeStructureCreatePayload {
 
 export interface FeeStructureUpdatePayload {
   name?: string;
-  academic_year?: string;
+  academic_year_public_id?: string;
   description?: string;
+  total_amount?: number;
   class_public_ids?: string[];
   components?: FeeComponentCreatePayload[];
   due_date?: string;

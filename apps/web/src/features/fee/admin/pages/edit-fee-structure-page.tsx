@@ -191,10 +191,13 @@ export function EditFeeStructurePage() {
     display_name: cls.display_name,
   }));
 
-  // Academic years list
+  // Academic years list - pass public_id as value, name as label
   const academicYears = academicYearsData?.length
-    ? academicYearsData.map((ay: { name: string }) => ay.name)
-    : ['2024-2025', '2025-2026', '2026-2027'];
+    ? academicYearsData.map((ay: { public_id: string; name: string }) => ({
+        value: ay.public_id,
+        label: ay.name,
+      }))
+    : [];
 
   if (isStructureLoading) {
     return (

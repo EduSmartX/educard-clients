@@ -25,7 +25,7 @@ export interface TeacherManagementContext {
 
 export function useTeacherManagementContext() {
   const { user } = useAuth();
-  const isAdmin = user?.role === USER_ROLES.ADMIN;
+  const isAdminOrTeacher = user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.TEACHER;
 
   return useQuery({
     queryKey: [QUERY_KEYS.leave.teacherContext],
@@ -34,6 +34,6 @@ export function useTeacherManagementContext() {
       return response.data?.data as TeacherManagementContext;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
-    enabled: !isAdmin, // Only fetch for non-admin users (teachers)
+    enabled: isAdminOrTeacher, // Only fetch for admins and teachers
   });
 }
