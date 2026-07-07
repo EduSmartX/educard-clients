@@ -243,6 +243,7 @@ export interface MarksOverviewSubject {
   max_marks: number;
   passing_marks: number;
   status: string;
+  is_marks_published?: boolean;
   total_students: number;
   appeared: number;
   absent: number;

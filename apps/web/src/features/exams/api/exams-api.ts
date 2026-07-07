@@ -224,6 +224,7 @@ export interface MarksOverviewSubject {
   max_marks: number;
   passing_marks: number;
   status: string;
+  is_marks_published: boolean;
   date: string | null;
   // Analytics fields
   total_students: number;

@@ -234,12 +234,15 @@ export function MarksOverviewPage() {
   // Publish marks for all exams
   const publishMarksMutation = usePublishExamMarks();
 
-  const handlePublishAllMarks = async () => {
-    if (!subjects || subjects.length === 0) {
+  // Save & Publish: saves all marks first, then publishes all completed exams
+  const [isPublishing, setIsPublishing] = useState(false);
+
+  const handleSaveAndPublish = async () => {
+    if (!selectedSessionId || !selectedClassId || subjects.length === 0) {
+      toast.error('Please select a session and class first');
       return;
     }
 
-    // Check if all marks are entered (100% completion)
     if (stats.completionPercent < 100) {
       toast.error(
         `Cannot publish: Only ${stats.completionPercent}% of marks are entered. Please enter marks for all students before publishing.`
@@ -247,24 +250,43 @@ export function MarksOverviewPage() {
       return;
     }
 
-    // Find subjects that are completed (ready for publishing)
-    const completedSubjects = subjects.filter((s) => s.status === 'completed');
-    if (completedSubjects.length === 0) {
-      toast.error('No completed exams found. Please mark exams as completed first.');
+    const studentsPayload = buildBulkSavePayload(studentMarks, subjects);
+    if (studentsPayload.length === 0) {
+      toast.warning('No marks to save');
       return;
     }
 
-    // Publish each completed exam sequentially
+    setIsPublishing(true);
     try {
+      // Step 1: Save all marks
+      await bulkSaveAllMarks({
+        session_id: selectedSessionId,
+        class_id: selectedClassId,
+        students: studentsPayload,
+      });
+
+      // Step 2: Publish all completed exams
+      const completedSubjects = subjects.filter((s) => s.status === 'completed');
+      if (completedSubjects.length === 0) {
+        toast.error('No completed exams found. Please mark exams as completed first.');
+        setIsPublishing(false);
+        return;
+      }
+
       for (const subject of completedSubjects) {
         await publishMarksMutation.mutateAsync(subject.exam_public_id);
       }
-      toast.success(`Successfully published marks for ${completedSubjects.length} exam(s)!`);
-      queryClient.invalidateQueries({ queryKey: ['exams'] });
+
       queryClient.invalidateQueries({ queryKey: ['marks-overview'] });
+      queryClient.invalidateQueries({ queryKey: ['exams'] });
+      toast.success(
+        `Marks saved and published for ${completedSubjects.length} exam(s) successfully!`
+      );
     } catch (error) {
-      console.error('Failed to publish marks:', error);
-      toast.error('Some exams failed to publish. Please check and try again.');
+      console.error('Save & Publish failed:', error);
+      toast.error('Failed to save and publish. Please try again.');
+    } finally {
+      setIsPublishing(false);
     }
   };
 
@@ -501,17 +523,6 @@ export function MarksOverviewPage() {
                         : 'View only - You can only edit marks for subjects assigned to you'}
                     </p>
                   </div>
-                  {canEditAny && (
-                    <Button
-                      variant="success"
-                      onClick={handleSave}
-                      disabled={isSaving}
-                      className="gap-2"
-                    >
-                      <Save className="h-4 w-4" />
-                      {isSaving ? 'Saving...' : 'Save All Marks'}
-                    </Button>
-                  )}
                 </div>
               </CardHeader>
               {/* View-only banner */}
@@ -552,6 +563,11 @@ export function MarksOverviewPage() {
                               <div className="space-y-1">
                                 <div className={`font-bold ${colors.text}`}>
                                   {subject.subject_name}
+                                  {subject.is_marks_published && (
+                                    <span className="ml-1 text-xs text-green-700" title="Published">
+                                      🔒
+                                    </span>
+                                  )}
                                 </div>
                                 <div className="text-xs text-gray-600">
                                   Max: {subject.max_marks} | Pass: {subject.passing_marks}
@@ -614,7 +630,9 @@ export function MarksOverviewPage() {
                               !Number.isNaN(numMark) &&
                               numMark < subject.passing_marks;
                             const isAbsent = markValue === 'AB';
-                            const editable = isSubjectEditable(subject.subject_public_id);
+                            const editable =
+                              isSubjectEditable(subject.subject_public_id) &&
+                              !subject.is_marks_published;
 
                             return (
                               <td
@@ -754,32 +772,51 @@ export function MarksOverviewPage() {
               </CardContent>
             </Card>
 
-            {/* Publish All Marks Button */}
+            {/* Action Buttons Footer */}
             {canEditAny && (
               <div className="flex items-center justify-between rounded-lg border-2 border-dashed border-green-300 bg-green-50 p-4">
                 <div className="flex items-center gap-3">
                   <ShieldCheck className="h-5 w-5 text-green-600" />
                   <div>
-                    <p className="font-medium text-green-800">Marks entered for all students?</p>
+                    <p className="font-medium text-green-800">
+                      {stats.completionPercent === 100
+                        ? 'All marks entered — ready to publish'
+                        : `${stats.completionPercent}% complete — enter all marks to enable publishing`}
+                    </p>
                     <p className="text-sm text-green-600">
-                      Publish marks to make results available. This confirms marks entry is complete
-                      for all exams.
+                      Save marks to preserve your entries. Save &amp; Publish to finalize results.
                     </p>
                   </div>
                 </div>
-                <Button
-                  variant="success"
-                  onClick={handlePublishAllMarks}
-                  disabled={publishMarksMutation.isPending || stats.completionPercent < 100}
-                  className="gap-2"
-                >
-                  {publishMarksMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <CheckCircle2 className="h-4 w-4" />
-                  )}
-                  Publish All Marks
-                </Button>
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={handleSave}
+                    disabled={isSaving || isPublishing}
+                    className="gap-2"
+                  >
+                    <Save className="h-4 w-4" />
+                    {isSaving ? 'Saving...' : 'Save'}
+                  </Button>
+                  <Button
+                    variant="success"
+                    onClick={handleSaveAndPublish}
+                    disabled={
+                      isSaving ||
+                      isPublishing ||
+                      publishMarksMutation.isPending ||
+                      stats.completionPercent < 100
+                    }
+                    className="gap-2"
+                  >
+                    {isPublishing || publishMarksMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="h-4 w-4" />
+                    )}
+                    Save &amp; Publish
+                  </Button>
+                </div>
               </div>
             )}
           </>
