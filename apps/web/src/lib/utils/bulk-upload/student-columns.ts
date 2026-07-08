@@ -117,20 +117,6 @@ export const STUDENT_COLUMNS: ColumnConfig[] = [
     validator: optionalTextValidator(100),
   },
   {
-    key: 'guardian_phone',
-    name: 'Guardian Phone',
-    required: false,
-    description: "Guardian's phone number (Optional)",
-    validator: phoneValidator,
-  },
-  {
-    key: 'guardian_email',
-    name: 'Guardian Email',
-    required: false,
-    description: "Guardian's email address (Optional)",
-    validator: optionalEmailValidator,
-  },
-  {
     key: 'guardian_relationship',
     name: 'Guardian Relationship',
     required: false,

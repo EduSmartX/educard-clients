@@ -10,6 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
   Form,
   FormControl,
@@ -45,10 +46,11 @@ import { FormMetadata } from '@/components/form/form-metadata';
 import { DeletedDuplicateDialog } from '@/components/common';
 import { useDeletedDuplicateHandler } from '@/hooks/use-deleted-duplicate-handler';
 import {
-  RELATIONSHIP_OPTIONS,
   CommonUiText,
   ErrorMessages,
   FormPlaceholders,
+  RELATIONSHIP,
+  RELATIONSHIP_OPTIONS,
   SuccessMessages,
   ToastTitles,
   USER_ROLES,
@@ -87,6 +89,7 @@ export function StudentForm({
   const [isAddressExpanded, setIsAddressExpanded] = useState(false);
   const [isPreviousSchoolExpanded, setIsPreviousSchoolExpanded] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [usesCustomGuardianRelationship, setUsesCustomGuardianRelationship] = useState(false);
 
   const { user } = useAuth();
   const isTeacher = user?.role === USER_ROLES.TEACHER;
@@ -158,6 +161,14 @@ export function StudentForm({
 
   useEffect(() => {
     if (initialData && (mode === 'edit' || mode === 'view')) {
+      const normalizedRelationship = (initialData.guardian_relationship || '').trim().toLowerCase();
+      const isPresetRelationship = RELATIONSHIP_OPTIONS.some(
+        (option) => option.value !== RELATIONSHIP.OTHER && option.value === normalizedRelationship
+      );
+
+      setUsesCustomGuardianRelationship(
+        Boolean(initialData.guardian_relationship) && !isPresetRelationship
+      );
       form.reset(getStudentFormValuesFromInitialData(initialData), { keepDefaultValues: false });
     }
   }, [initialData, mode, form]);
@@ -529,49 +540,66 @@ export function StudentForm({
                     validationType="name"
                     validationOptions={{ fieldName: 'Guardian name' }}
                   />
-                  <TextInputField
-                    control={form.control}
-                    name="guardian_phone"
-                    label="Guardian Phone"
-                    placeholder={FormPlaceholders.ENTER_GUARDIAN_PHONE}
-                    disabled={isViewMode || !isClassSelected}
-                    validationType="phone"
-                  />
-                  <TextInputField
-                    control={form.control}
-                    name="guardian_email"
-                    label="Guardian Email"
-                    type="email"
-                    placeholder={FormPlaceholders.ENTER_GUARDIAN_EMAIL}
-                    disabled={isViewMode || !isClassSelected}
-                    validationType="email"
-                  />
                   <FormField
                     control={form.control}
                     name="guardian_relationship"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Relationship</FormLabel>
-                        <FormControl>
-                          <SearchableSelect
-                            key={`${initialData?.public_id}-${field.value}`}
-                            options={RELATIONSHIP_OPTIONS.map((option) => ({
-                              value: option.value,
-                              label: option.label,
-                            }))}
-                            value={field.value}
-                            onValueChange={(value: string) => {
-                              field.onChange(value);
-                              field.onBlur();
-                              void form.trigger('guardian_relationship');
-                            }}
-                            placeholder="Select relationship"
-                            disabled={isViewMode || !isClassSelected}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    render={({ field }) =>
+                      (() => {
+                        const relationshipValue =
+                          typeof field.value === 'string' ? field.value : '';
+                        const normalizedRelationshipValue = relationshipValue.trim().toLowerCase();
+                        const usesPresetRelationship = RELATIONSHIP_OPTIONS.some(
+                          (option) =>
+                            option.value !== RELATIONSHIP.OTHER &&
+                            option.value === normalizedRelationshipValue
+                        );
+                        const selectedRelationship = usesCustomGuardianRelationship
+                          ? RELATIONSHIP.OTHER
+                          : usesPresetRelationship
+                            ? normalizedRelationshipValue
+                            : relationshipValue
+                              ? RELATIONSHIP.OTHER
+                              : '';
+
+                        return (
+                          <FormItem>
+                            <FormLabel>Relationship</FormLabel>
+                            <FormControl>
+                              <div className="space-y-3">
+                                <SearchableSelect
+                                  key={`${initialData?.public_id || 'new'}-${selectedRelationship}`}
+                                  options={RELATIONSHIP_OPTIONS.map((option) => ({
+                                    value: option.value,
+                                    label: option.label,
+                                  }))}
+                                  value={selectedRelationship}
+                                  onValueChange={(value: string) => {
+                                    const isOtherSelected = value === RELATIONSHIP.OTHER;
+
+                                    setUsesCustomGuardianRelationship(isOtherSelected);
+                                    field.onChange(isOtherSelected ? '' : value);
+                                    field.onBlur();
+                                    void form.trigger('guardian_relationship');
+                                  }}
+                                  placeholder="Select relationship"
+                                  disabled={isViewMode || !isClassSelected}
+                                />
+                                {selectedRelationship === RELATIONSHIP.OTHER && (
+                                  <Input
+                                    value={relationshipValue}
+                                    onChange={(event) => field.onChange(event.target.value)}
+                                    onBlur={field.onBlur}
+                                    placeholder="e.g. Uncle, Aunt, Brother"
+                                    disabled={isViewMode || !isClassSelected}
+                                  />
+                                )}
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      })()
+                    }
                   />
                 </CardContent>
               </Card>

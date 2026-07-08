@@ -125,8 +125,6 @@ export const studentFullSchema = studentQuickSchema.extend({
   admission_number: optionalString(),
   admission_date: optionalDate(),
   guardian_name: optionalString(),
-  guardian_phone: phoneField("Guardian phone"),
-  guardian_email: optionalEmail(),
   guardian_relationship: optionalString(),
   medical_conditions: optionalString(),
   description: optionalString(),

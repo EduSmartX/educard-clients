@@ -144,21 +144,6 @@ export const studentFormSchema = z
       .max(255, 'Guardian name must not exceed 255 characters')
       .or(z.literal('')),
 
-    guardian_phone: z
-      .string()
-      .transform(phoneTransform)
-      .refine((val) => val === '' || /^\d{10}$/.test(val), {
-        message: 'Guardian phone must be exactly 10 digits',
-      })
-      .or(z.literal('')),
-
-    guardian_email: z
-      .string()
-      .max(255, 'Guardian email must not exceed 255 characters')
-      .email('Invalid email format')
-      .transform(lowercaseTransform)
-      .or(z.literal('')),
-
     guardian_relationship: z
       .string()
       .max(100, 'Relationship must not exceed 100 characters')
@@ -195,20 +180,6 @@ export const studentFormSchema = z
     ...createAddressSchema(false),
   })
   .superRefine((data, ctx) => {
-    // Guardian contact validation: if name provided, phone OR email required
-    if (data.guardian_name && !data.guardian_phone && !data.guardian_email) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Guardian phone or email is required when guardian name is provided',
-        path: ['guardian_phone'],
-      });
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Guardian phone or email is required when guardian name is provided',
-        path: ['guardian_email'],
-      });
-    }
-
     // Self-supervision prevention: student email ≠ supervisor email
     if (data.email && data.supervisor_email && data.email === data.supervisor_email) {
       ctx.addIssue({
