@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   Briefcase,
   CheckSquare,
+  RotateCcw,
   Clock,
   ClipboardList,
   FileText,
@@ -164,7 +165,13 @@ export const adminSidebarConfig: SidebarSection[] = [
         label: 'Exams',
         icon: FileText,
         path: ROUTES.EXAMS_LIST,
-        matchPaths: [ROUTES.EXAMS_NEW, ROUTES.EXAMS_BULK_CREATE],
+        matchPaths: [ROUTES.EXAMS_NEW, ROUTES.EXAMS_BULK_CREATE, ROUTES.EXAMS_STATUS_CONTROL],
+      },
+      {
+        id: 'exam-status-control',
+        label: 'Status Control',
+        icon: RotateCcw,
+        path: ROUTES.EXAMS_STATUS_CONTROL,
       },
       {
         id: 'exam-schedule',

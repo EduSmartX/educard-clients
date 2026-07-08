@@ -6,3 +6,4 @@ export { BulkExamCreatePage } from './bulk-exam-create-page';
 export { MarksEntryPage } from './marks-entry-page';
 export { MarksOverviewPage } from './marks-overview-page';
 export { ExamSchedulePage } from './exam-schedule-page';
+export { ExamStatusControlPage } from './exam-status-control-page';

@@ -24,6 +24,7 @@ import {
   ClipboardList as SubmissionsIcon,
   Eye,
   ClipboardEdit,
+  RotateCcw,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
 import { ROUTES } from '@/constants/app-config';
@@ -122,6 +123,13 @@ export const employeeSidebarConfig: SidebarSection[] = [
         label: 'Exams',
         icon: FileText,
         path: ROUTES.EXAMS_LIST,
+        matchPaths: [ROUTES.EXAMS_STATUS_CONTROL],
+      },
+      {
+        id: 'exam-status-control',
+        label: 'Status Control',
+        icon: RotateCcw,
+        path: ROUTES.EXAMS_STATUS_CONTROL,
       },
       {
         id: 'marks-entry',

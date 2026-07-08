@@ -60,12 +60,17 @@ export function buildBulkSavePayload(
       const markValue = student.marks[subject.exam_public_id];
       if (markValue !== undefined && markValue !== '') {
         const isAbsent = markValue.toUpperCase() === 'AB';
-        const marksObtained = isAbsent ? 0 : Number.parseFloat(markValue) || 0;
-        examMarks.push({
-          exam_id: subject.exam_public_id,
-          marks_obtained: marksObtained,
-          is_absent: isAbsent,
-        });
+        if (isAbsent) {
+          examMarks.push({
+            exam_id: subject.exam_public_id,
+            is_absent: true,
+          });
+        } else {
+          examMarks.push({
+            exam_id: subject.exam_public_id,
+            marks_obtained: Number.parseFloat(markValue) || 0,
+          });
+        }
       }
     });
 

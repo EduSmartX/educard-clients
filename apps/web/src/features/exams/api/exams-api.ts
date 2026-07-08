@@ -178,16 +178,26 @@ export interface BulkMarkUpsertPayload {
   session_id: string;
   exam_id: string;
   marks: BulkMarkEntry[];
+  publish_after_save?: boolean;
+}
+
+export interface BulkUpsertPublishSummary {
+  marks: Mark[];
+  published_exams_count: number;
+  already_published_count: number;
+  skipped_count: number;
+  skipped_reasons: Array<{ exam_id: string; reason: string }>;
 }
 
 export async function bulkUpsertMarks(
   data: BulkMarkUpsertPayload
-): Promise<{ success: boolean; message: string; data: Mark[] }> {
+): Promise<{ success: boolean; message: string; data: Mark[] | BulkUpsertPublishSummary }> {
   const baseUrl = getBaseUrl();
-  const response = await apiClient.post<{ success: boolean; message: string; data: Mark[] }>(
-    `${baseUrl}/marks/bulk-upsert/`,
-    data
-  );
+  const response = await apiClient.post<{
+    success: boolean;
+    message: string;
+    data: Mark[] | BulkUpsertPublishSummary;
+  }>(`${baseUrl}/marks/bulk-upsert/`, data);
   return response.data;
 }
 
@@ -316,8 +326,8 @@ export async function fetchMarksOverview(
 
 export interface StudentExamMark {
   exam_id: string;
-  marks_obtained: number | null;
-  is_absent: boolean;
+  marks_obtained?: number | null;
+  is_absent?: boolean;
 }
 
 export interface StudentMarksEntry {
@@ -329,18 +339,67 @@ export interface BulkSaveAllMarksPayload {
   session_id: string;
   class_id: string;
   students: StudentMarksEntry[];
+  publish_after_save?: boolean;
+}
+
+export interface BulkSaveAllMarksResponseData {
+  count: number;
+  published_exams_count?: number;
+  already_published_count?: number;
+  skipped_count?: number;
+  skipped_reasons?: Array<{ exam_id: string; reason: string }>;
 }
 
 export async function bulkSaveAllMarks(
   data: BulkSaveAllMarksPayload
-): Promise<{ success: boolean; message: string; data: { count: number } }> {
+): Promise<{ success: boolean; message: string; data: BulkSaveAllMarksResponseData }> {
   // Always use employee endpoint for marks (supports both admin and teacher roles)
   const baseUrl = getMarksBaseUrl();
   const response = await apiClient.post<{
     success: boolean;
     message: string;
-    data: { count: number };
+    data: BulkSaveAllMarksResponseData;
   }>(`${baseUrl}/marks/bulk-save-all/`, data);
+  return response.data;
+}
+
+export interface MarksOverviewSessionClassPayload {
+  session_id: string;
+  class_id: string;
+}
+
+export interface PublishAllMarksResponseData {
+  published_exams_count: number;
+  already_published_count: number;
+  skipped_count: number;
+  skipped_reasons: Array<{ exam_id: string; reason: string }>;
+}
+
+export async function publishAllMarksForClassSession(
+  data: MarksOverviewSessionClassPayload
+): Promise<{ success: boolean; message: string; data: PublishAllMarksResponseData }> {
+  const baseUrl = getMarksBaseUrl();
+  const response = await apiClient.post<{
+    success: boolean;
+    message: string;
+    data: PublishAllMarksResponseData;
+  }>(`${baseUrl}/marks/publish-all/`, data);
+  return response.data;
+}
+
+export interface UnpublishAllMarksResponseData {
+  unpublished_exams_count: number;
+}
+
+export async function unpublishAllMarksForClassSession(
+  data: MarksOverviewSessionClassPayload
+): Promise<{ success: boolean; message: string; data: UnpublishAllMarksResponseData }> {
+  const baseUrl = getMarksBaseUrl();
+  const response = await apiClient.post<{
+    success: boolean;
+    message: string;
+    data: UnpublishAllMarksResponseData;
+  }>(`${baseUrl}/marks/unpublish-all/`, data);
   return response.data;
 }
 

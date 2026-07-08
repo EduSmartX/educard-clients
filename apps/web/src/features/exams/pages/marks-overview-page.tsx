@@ -20,17 +20,22 @@ import {
   CheckCircle2,
   Loader2,
   ShieldCheck,
+  Upload,
+  Undo2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { PageHeader, StudentAvatar } from '@/components/common';
+import { PageHeader, StudentAvatar, WarningConfirmationDialog } from '@/components/common';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Badge } from '@/components/ui/badge';
 import { useExamSessions, useMarksOverview } from '../hooks/use-exams';
 import { useClasses } from '@/features/classes/hooks/use-classes';
-import { bulkSaveAllMarks } from '../api/exams-api';
-import { usePublishExamMarks } from '../hooks/mutations';
+import {
+  bulkSaveAllMarks,
+  publishAllMarksForClassSession,
+  unpublishAllMarksForClassSession,
+} from '../api/exams-api';
 import {
   buildStudentMarkEntries,
   buildBulkSavePayload,
@@ -123,6 +128,11 @@ export function MarksOverviewPage() {
   const [selectedClassId, setSelectedClassId] = useState<string>('');
   const [studentMarks, setStudentMarks] = useState<StudentMarkEntry[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [isPublishingOnly, setIsPublishingOnly] = useState(false);
+  const [isUnpublishing, setIsUnpublishing] = useState(false);
+  const [showPublishConfirm, setShowPublishConfirm] = useState(false);
+  const [showUnpublishConfirm, setShowUnpublishConfirm] = useState(false);
 
   // Fetch sessions and classes (always fetch these)
   const { data: sessionsData } = useExamSessions({ page: 1, page_size: 100 });
@@ -143,15 +153,31 @@ export function MarksOverviewPage() {
   // Extract data from marks overview response
   const marksOverview = marksOverviewData?.data;
   const subjects = useMemo(() => marksOverview?.subjects || [], [marksOverview]);
+  const completedSubjects = useMemo(
+    () => subjects.filter((subject) => subject.status === 'completed'),
+    [subjects]
+  );
   const permissions = marksOverview?.permissions;
+  const canManagePublish = useMemo(
+    () => !!permissions && (permissions.is_admin || permissions.is_class_teacher),
+    [permissions]
+  );
+  const hasPublishedCompleted = useMemo(
+    () => completedSubjects.some((subject) => subject.is_marks_published),
+    [completedSubjects]
+  );
+  const hasUnpublishedCompleted = useMemo(
+    () => completedSubjects.some((subject) => !subject.is_marks_published),
+    [completedSubjects]
+  );
 
   // Helper to check if a subject is editable
   const isSubjectEditable = (subjectPublicId: string): boolean => {
     if (!permissions) {
       return true;
     }
-    if (permissions.is_admin || permissions.is_class_teacher) {
-      return true;
+    if (!permissions.is_admin && !permissions.is_class_teacher) {
+      return false;
     }
     if (permissions.editable_subject_ids === null) {
       return true;
@@ -160,23 +186,26 @@ export function MarksOverviewPage() {
   };
 
   // Check if user can edit ANY marks
-  const canEditAny = useMemo(() => !permissions || permissions.can_edit, [permissions]);
+  const canEditAny = useMemo(
+    () => !permissions || permissions.is_admin || permissions.is_class_teacher,
+    [permissions]
+  );
 
   // Keyboard navigation for the marks grid
   const { containerRef, handleKeyDown } = useGridKeyboardNavigation({
     rows: studentMarks.length,
-    cols: subjects.length,
+    cols: completedSubjects.length,
     wrap: false,
   });
 
   // Initialize/update student marks when marks overview data changes
   useEffect(() => {
-    if (marksOverview?.students && marksOverview.subjects.length > 0) {
+    if (marksOverview?.students && completedSubjects.length > 0) {
       setStudentMarks(buildStudentMarkEntries(marksOverview.students));
     } else {
       setStudentMarks([]);
     }
-  }, [marksOverview]);
+  }, [marksOverview, completedSubjects]);
 
   // Handle marks change
   const handleMarksChange = (
@@ -204,12 +233,12 @@ export function MarksOverviewPage() {
   const queryClient = useQueryClient();
 
   const handleSave = async () => {
-    if (!selectedSessionId || !selectedClassId || subjects.length === 0) {
+    if (!selectedSessionId || !selectedClassId || completedSubjects.length === 0) {
       toast.error('Please select a session and class first');
       return;
     }
 
-    const studentsPayload = buildBulkSavePayload(studentMarks, subjects);
+    const studentsPayload = buildBulkSavePayload(studentMarks, completedSubjects);
     if (studentsPayload.length === 0) {
       toast.warning('No marks to save');
       return;
@@ -231,14 +260,8 @@ export function MarksOverviewPage() {
     }
   };
 
-  // Publish marks for all exams
-  const publishMarksMutation = usePublishExamMarks();
-
-  // Save & Publish: saves all marks first, then publishes all completed exams
-  const [isPublishing, setIsPublishing] = useState(false);
-
   const handleSaveAndPublish = async () => {
-    if (!selectedSessionId || !selectedClassId || subjects.length === 0) {
+    if (!selectedSessionId || !selectedClassId || completedSubjects.length === 0) {
       toast.error('Please select a session and class first');
       return;
     }
@@ -250,7 +273,7 @@ export function MarksOverviewPage() {
       return;
     }
 
-    const studentsPayload = buildBulkSavePayload(studentMarks, subjects);
+    const studentsPayload = buildBulkSavePayload(studentMarks, completedSubjects);
     if (studentsPayload.length === 0) {
       toast.warning('No marks to save');
       return;
@@ -258,47 +281,109 @@ export function MarksOverviewPage() {
 
     setIsPublishing(true);
     try {
-      // Step 1: Save all marks
-      await bulkSaveAllMarks({
+      const result = await bulkSaveAllMarks({
         session_id: selectedSessionId,
         class_id: selectedClassId,
         students: studentsPayload,
+        publish_after_save: true,
       });
-
-      // Step 2: Publish all completed exams
-      const completedSubjects = subjects.filter((s) => s.status === 'completed');
-      if (completedSubjects.length === 0) {
-        toast.error('No completed exams found. Please mark exams as completed first.');
-        setIsPublishing(false);
-        return;
-      }
-
-      for (const subject of completedSubjects) {
-        await publishMarksMutation.mutateAsync(subject.exam_public_id);
-      }
 
       queryClient.invalidateQueries({ queryKey: ['marks-overview'] });
       queryClient.invalidateQueries({ queryKey: ['exams'] });
+      const summary = result.data;
+      const published = summary.published_exams_count ?? 0;
+      const alreadyPublished = summary.already_published_count ?? 0;
+      const skipped = summary.skipped_count ?? 0;
       toast.success(
-        `Marks saved and published for ${completedSubjects.length} exam(s) successfully!`
+        `Marks saved. Published ${published} exam(s), ${alreadyPublished} already published, ${skipped} skipped.`
       );
-    } catch (error) {
-      console.error('Save & Publish failed:', error);
+    } catch {
       toast.error('Failed to save and publish. Please try again.');
     } finally {
       setIsPublishing(false);
     }
   };
 
+  const handlePublishOnly = async () => {
+    if (!selectedSessionId || !selectedClassId || completedSubjects.length === 0) {
+      toast.error('Please select a session and class first');
+      return;
+    }
+
+    if (stats.completionPercent < 100) {
+      toast.error(
+        `Cannot publish: Only ${stats.completionPercent}% of marks are entered. Please enter marks for all students before publishing.`
+      );
+      return;
+    }
+
+    if (!hasUnpublishedCompleted) {
+      toast.success('All completed exams are already published.');
+      return;
+    }
+
+    setIsPublishingOnly(true);
+    try {
+      const result = await publishAllMarksForClassSession({
+        session_id: selectedSessionId,
+        class_id: selectedClassId,
+      });
+      const publishedCount = result.data.published_exams_count ?? 0;
+      const alreadyPublishedCount = result.data.already_published_count ?? 0;
+      const skippedCount = result.data.skipped_count ?? 0;
+
+      queryClient.invalidateQueries({ queryKey: ['marks-overview'] });
+      queryClient.invalidateQueries({ queryKey: ['exams'] });
+      toast.success(
+        `Published ${publishedCount} exam(s). ${alreadyPublishedCount} already published, ${skippedCount} skipped.`
+      );
+      setShowPublishConfirm(false);
+    } catch {
+      toast.error('Failed to publish marks. Please try again.');
+    } finally {
+      setIsPublishingOnly(false);
+    }
+  };
+
+  const handleUnpublish = async () => {
+    if (!selectedSessionId || !selectedClassId || completedSubjects.length === 0) {
+      toast.error('Please select a session and class first');
+      return;
+    }
+
+    if (!hasPublishedCompleted) {
+      toast.success('No published exams found to unpublish.');
+      return;
+    }
+
+    setIsUnpublishing(true);
+    try {
+      const result = await unpublishAllMarksForClassSession({
+        session_id: selectedSessionId,
+        class_id: selectedClassId,
+      });
+      const unpublishedCount = result.data.unpublished_exams_count ?? 0;
+
+      queryClient.invalidateQueries({ queryKey: ['marks-overview'] });
+      queryClient.invalidateQueries({ queryKey: ['exams'] });
+      toast.success(`Unpublished ${unpublishedCount} exam(s) successfully.`);
+      setShowUnpublishConfirm(false);
+    } catch {
+      toast.error('Failed to unpublish one or more exams. Please try again.');
+    } finally {
+      setIsUnpublishing(false);
+    }
+  };
+
   // Calculate statistics
   const stats = useMemo(() => {
     const totalStudents = studentMarks.length;
-    const totalExams = subjects.length;
+    const totalExams = completedSubjects.length;
     let filledCount = 0;
     let totalCells = 0;
 
     studentMarks.forEach((student) => {
-      subjects.forEach((subject) => {
+      completedSubjects.forEach((subject) => {
         totalCells++;
         if (student.marks[subject.exam_public_id]) {
           filledCount++;
@@ -309,7 +394,7 @@ export function MarksOverviewPage() {
     const completionPercent = totalCells > 0 ? Math.round((filledCount / totalCells) * 100) : 0;
 
     return { totalStudents, totalExams, filledCount, totalCells, completionPercent };
-  }, [studentMarks, subjects]);
+  }, [studentMarks, completedSubjects]);
 
   // Per-subject analytics
   const subjectStats = useMemo(() => {
@@ -317,7 +402,7 @@ export function MarksOverviewPage() {
       string,
       { absent: number; entered: number; total: number; avg: number }
     > = {};
-    subjects.forEach((subject) => {
+    completedSubjects.forEach((subject) => {
       let absent = 0;
       let entered = 0;
       let sum = 0;
@@ -338,7 +423,7 @@ export function MarksOverviewPage() {
       };
     });
     return statsMap;
-  }, [studentMarks, subjects]);
+  }, [studentMarks, completedSubjects]);
 
   // Per-student totals
   const studentTotals = useMemo(() => {
@@ -357,7 +442,7 @@ export function MarksOverviewPage() {
       let maxTotal = 0;
       let attempted = 0;
       let absentCount = 0;
-      subjects.forEach((subject) => {
+      completedSubjects.forEach((subject) => {
         const val = student.marks[subject.exam_public_id];
         if (val === 'AB') {
           absentCount++;
@@ -376,7 +461,7 @@ export function MarksOverviewPage() {
       };
     });
     return totalsMap;
-  }, [studentMarks, subjects]);
+  }, [studentMarks, completedSubjects]);
 
   // Get selected session info for display
   const selectedSession = sessionsList.find((s) => s.public_id === selectedSessionId);
@@ -496,6 +581,23 @@ export function MarksOverviewPage() {
         selectedClassId &&
         !isLoadingMarks &&
         subjects.length > 0 &&
+        completedSubjects.length === 0 && (
+          <Card>
+            <CardContent className="py-20">
+              <div className="text-center text-gray-500">
+                <AlertCircle className="mx-auto mb-4 h-16 w-16 text-amber-500" />
+                <p className="text-lg font-medium text-gray-700">Exams not yet completed</p>
+                <p className="mt-1 text-sm text-gray-500">
+                  Marks can be entered from this page only after exams are marked as completed.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      {selectedSessionId &&
+        selectedClassId &&
+        !isLoadingMarks &&
+        completedSubjects.length > 0 &&
         studentMarks.length === 0 && (
           <Card>
             <CardContent className="py-20">
@@ -509,7 +611,7 @@ export function MarksOverviewPage() {
       {selectedSessionId &&
         selectedClassId &&
         !isLoadingMarks &&
-        subjects.length > 0 &&
+        completedSubjects.length > 0 &&
         studentMarks.length > 0 && (
           <>
             <Card className="border-2">
@@ -553,7 +655,7 @@ export function MarksOverviewPage() {
                         <th className="sticky top-0 left-[280px] z-30 min-w-[200px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold">
                           Student Name
                         </th>
-                        {subjects.map((subject) => {
+                        {completedSubjects.map((subject) => {
                           const colors = getSubjectColor(subject.subject_name);
                           return (
                             <th
@@ -586,7 +688,7 @@ export function MarksOverviewPage() {
                           <div className="space-y-1">
                             <div className="font-bold text-emerald-800">Total</div>
                             <div className="text-xs text-gray-600">
-                              Max: {subjects.reduce((s, sub) => s + sub.max_marks, 0)}
+                              Max: {completedSubjects.reduce((s, sub) => s + sub.max_marks, 0)}
                             </div>
                           </div>
                         </th>
@@ -618,7 +720,7 @@ export function MarksOverviewPage() {
                           <td className="sticky left-[280px] z-10 border-2 border-gray-300 bg-inherit p-3 font-medium">
                             {student.name}
                           </td>
-                          {subjects.map((subject, colIndex) => {
+                          {completedSubjects.map((subject, colIndex) => {
                             const colors = getSubjectColor(subject.subject_name);
                             const markValue = student.marks[subject.exam_public_id] || '';
                             const numMark = Number.parseFloat(markValue);
@@ -717,7 +819,7 @@ export function MarksOverviewPage() {
                         >
                           📊 Analytics
                         </td>
-                        {subjects.map((subject) => {
+                        {completedSubjects.map((subject) => {
                           const st = subjectStats[subject.exam_public_id];
                           const colors = getSubjectColor(subject.subject_name);
                           return (
@@ -789,10 +891,46 @@ export function MarksOverviewPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
+                  {canManagePublish && hasUnpublishedCompleted && (
+                    <Button
+                      variant="success"
+                      onClick={() => setShowPublishConfirm(true)}
+                      disabled={
+                        isSaving ||
+                        isPublishing ||
+                        isPublishingOnly ||
+                        isUnpublishing ||
+                        stats.completionPercent < 100
+                      }
+                      className="gap-2"
+                    >
+                      {isPublishingOnly ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4" />
+                      )}
+                      Publish
+                    </Button>
+                  )}
+                  {canManagePublish && !hasUnpublishedCompleted && hasPublishedCompleted && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowUnpublishConfirm(true)}
+                      disabled={isSaving || isPublishing || isPublishingOnly || isUnpublishing}
+                      className="gap-2 border-amber-200 text-amber-700 hover:bg-amber-50"
+                    >
+                      {isUnpublishing ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Undo2 className="h-4 w-4" />
+                      )}
+                      Unpublish
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     onClick={handleSave}
-                    disabled={isSaving || isPublishing}
+                    disabled={isSaving || isPublishing || isPublishingOnly || isUnpublishing}
                     className="gap-2"
                   >
                     <Save className="h-4 w-4" />
@@ -804,12 +942,13 @@ export function MarksOverviewPage() {
                     disabled={
                       isSaving ||
                       isPublishing ||
-                      publishMarksMutation.isPending ||
+                      isPublishingOnly ||
+                      isUnpublishing ||
                       stats.completionPercent < 100
                     }
                     className="gap-2"
                   >
-                    {isPublishing || publishMarksMutation.isPending ? (
+                    {isPublishing ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <CheckCircle2 className="h-4 w-4" />
@@ -818,6 +957,34 @@ export function MarksOverviewPage() {
                   </Button>
                 </div>
               </div>
+            )}
+
+            {canManagePublish && (
+              <WarningConfirmationDialog
+                open={showPublishConfirm}
+                onOpenChange={setShowPublishConfirm}
+                onConfirm={handlePublishOnly}
+                title="Publish Completed Subjects"
+                description={`Publish marks for all completed subjects in this session/class without saving again.`}
+                warningText="After publishing, marks become locked until unpublished."
+                confirmButtonText="Publish"
+                cancelButtonText="Cancel"
+                isLoading={isPublishingOnly}
+              />
+            )}
+
+            {canManagePublish && (
+              <WarningConfirmationDialog
+                open={showUnpublishConfirm}
+                onOpenChange={setShowUnpublishConfirm}
+                onConfirm={handleUnpublish}
+                title="Unpublish Completed Subjects"
+                description="Unpublish marks for all currently published completed subjects in this class."
+                warningText="This will re-enable editing for those subjects."
+                confirmButtonText="Unpublish"
+                cancelButtonText="Cancel"
+                isLoading={isUnpublishing}
+              />
             )}
           </>
         )}

@@ -222,7 +222,7 @@ export interface Mark {
 
 export interface BulkMarkEntry {
   student_id: string;
-  marks_obtained: number;
+  marks_obtained?: number | null;
   is_absent?: boolean;
 }
 

@@ -14,7 +14,15 @@ import {
 
 import { Colors } from '@/constants/colors';
 
-type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'outline'
+  | 'ghost'
+  | 'danger'
+  | 'success'
+  | 'warning'
+  | 'info';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps extends TouchableOpacityProps {
@@ -50,6 +58,18 @@ const variantStyles: Record<ButtonVariant, { bg: string; text: string; border?: 
     bg: 'bg-danger-500',
     text: 'text-white',
   },
+  success: {
+    bg: 'bg-success-500',
+    text: 'text-white',
+  },
+  warning: {
+    bg: 'bg-warning-500',
+    text: 'text-white',
+  },
+  info: {
+    bg: 'bg-info-500',
+    text: 'text-white',
+  },
 };
 
 const sizeStyles: Record<ButtonSize, { container: string; text: string; icon: number }> = {
@@ -76,6 +96,9 @@ const iconColors: Record<ButtonVariant, string> = {
   outline: Colors.primary[500],
   ghost: Colors.secondary[600],
   danger: Colors.text.inverse,
+  success: Colors.text.inverse,
+  warning: Colors.text.inverse,
+  info: Colors.text.inverse,
 };
 
 export function Button({
@@ -103,7 +126,9 @@ export function Button({
     >
       {loading ? (
         <ActivityIndicator
-          color={variant === 'primary' || variant === 'danger' ? '#fff' : Colors.primary[500]}
+          color={
+            variant === 'outline' || variant === 'ghost' ? Colors.primary[500] : Colors.text.inverse
+          }
           size="small"
         />
       ) : (

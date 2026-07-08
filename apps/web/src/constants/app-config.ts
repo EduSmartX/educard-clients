@@ -249,6 +249,7 @@ export const ROUTES = {
   EXAM_SESSIONS_VIEW: '/exams/sessions/:id',
   EXAM_SESSIONS_EDIT: '/exams/sessions/:id/edit',
   EXAMS_LIST: '/exams/list',
+  EXAMS_STATUS_CONTROL: '/exams/status-control',
   EXAMS_NEW: '/exams/new',
   EXAMS_BULK_CREATE: '/exams/bulk-create',
   EXAMS_VIEW: '/exams/:id',

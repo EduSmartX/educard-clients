@@ -35,9 +35,6 @@ const EmployeeRoute = lazy(() =>
 const ParentRoute = lazy(() =>
   import('./components/guards/role-guards').then((m) => ({ default: m.ParentRoute }))
 );
-const StudentRoute = lazy(() =>
-  import('./components/guards/role-guards').then((m) => ({ default: m.StudentRoute }))
-);
 
 // Role-specific dashboards
 const AdminDashboardPage = lazy(
@@ -50,9 +47,6 @@ const EmployeeTeachersPage = lazy(() => import('./features/employee/pages/employ
 const EmployeeClassesPage = lazy(() => import('./features/employee/pages/employee-classes-page'));
 const ParentDashboardPage = lazy(
   () => import('./features/parent/dashboard/pages/parent-dashboard-page')
-);
-const StudentDashboardPage = lazy(
-  () => import('./features/student/dashboard/pages/student-dashboard-page')
 );
 
 // Student pages
@@ -140,6 +134,9 @@ const ExamsListPage = lazy(() =>
 );
 const ExamSchedulePage = lazy(() =>
   import('./features/exams/pages').then((m) => ({ default: m.ExamSchedulePage }))
+);
+const ExamStatusControlPage = lazy(() =>
+  import('./features/exams/pages').then((m) => ({ default: m.ExamStatusControlPage }))
 );
 const ExamSessionFormPage = lazy(() =>
   import('./features/exams/pages').then((m) => ({ default: m.ExamSessionFormPage }))
@@ -230,7 +227,6 @@ const RecordPaymentPage = lazy(() =>
 
 // Profile
 const ProfilePage = lazy(() => import('./features/profile/pages/profile-page'));
-const SetNewPasswordPage = lazy(() => import('./features/auth/pages/set-new-password-page'));
 
 // Coming Soon
 const ComingSoonPage = lazy(() => import('./pages/coming-soon-page'));
@@ -296,10 +292,6 @@ function App() {
               <Route path="dashboard" element={<ParentDashboardPage />} />
             </Route>
 
-            <Route path="/student" element={<StudentRoute />}>
-              <Route path="dashboard" element={<StudentDashboardPage />} />
-            </Route>
-
             {/* Students */}
             <Route path={ROUTES.STUDENTS} element={<StudentsListPage />} />
             <Route path={ROUTES.STUDENTS_NEW} element={<StudentFormPage />} />
@@ -328,6 +320,7 @@ function App() {
             <Route path={ROUTES.EXAMS} element={<ExamSessionsPage />} />
             <Route path={ROUTES.EXAMS_SCHEDULE} element={<ExamSchedulePage />} />
             <Route path={ROUTES.EXAMS_LIST} element={<ExamsListPage />} />
+            <Route path={ROUTES.EXAMS_STATUS_CONTROL} element={<ExamStatusControlPage />} />
             <Route path={ROUTES.EXAM_SESSIONS_NEW} element={<ExamSessionFormPage />} />
             <Route path={ROUTES.EXAM_SESSIONS_VIEW} element={<ExamSessionFormPage />} />
             <Route path={ROUTES.EXAM_SESSIONS_EDIT} element={<ExamSessionFormPage />} />
@@ -377,9 +370,6 @@ function App() {
 
             {/* Profile */}
             <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
-
-            {/* Mandatory first-login password change */}
-            <Route path={ROUTES.SET_NEW_PASSWORD} element={<SetNewPasswordPage />} />
 
             {/* Calendar - Coming Soon */}
             <Route

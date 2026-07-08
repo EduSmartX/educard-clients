@@ -38,7 +38,7 @@ import { PageHeader, StudentAvatar } from '@/components/common';
 import { ROUTES, ValidationMessages } from '@/constants';
 import { useExamSessions, useExams } from '../hooks/use-exams';
 import { useClasses } from '@/features/classes/hooks/use-classes';
-import { usePublishExamMarks, useUnpublishExamMarks } from '../hooks/mutations';
+import { useUnpublishExamMarks } from '../hooks/mutations';
 import {
   bulkUpsertMarks,
   fetchMarksByExam,
@@ -223,8 +223,7 @@ export function MarksEntryPage() {
     },
   });
 
-  // Publish / unpublish
-  const publishMarksMutation = usePublishExamMarks();
+  // Unpublish only; publish can now be triggered by bulk-upsert with publish_after_save.
   const unpublishMarksMutation = useUnpublishExamMarks();
 
   // Handler: Save & Publish — saves marks first, then publishes the selected exam
@@ -255,36 +254,32 @@ export function MarksEntryPage() {
       return;
     }
 
-    const marks: BulkMarkEntry[] = validEntries.map((e) => ({
-      student_id: e.student_id,
-      marks_obtained: e.is_absent ? 0 : Number(e.marks_obtained),
-      is_absent: e.is_absent,
-    }));
+    const marks: BulkMarkEntry[] = validEntries.map((e) =>
+      e.is_absent
+        ? {
+            student_id: e.student_id,
+            is_absent: true,
+          }
+        : {
+            student_id: e.student_id,
+            marks_obtained: Number(e.marks_obtained),
+          }
+    );
 
     try {
-      // Step 1: Save marks
       await bulkUpsertMutation.mutateAsync({
         session_id: selectedSessionId,
         exam_id: selectedExamId,
         marks,
+        publish_after_save: true,
       });
-
-      // Step 2: Publish
-      await publishMarksMutation.mutateAsync(selectedExamId);
       queryClient.invalidateQueries({ queryKey: ['exams'] });
       toast.success('Marks saved and published successfully!');
     } catch (error) {
       console.error('Save & Publish failed:', error);
       // Individual error toasts already shown by mutation hooks
     }
-  }, [
-    selectedSessionId,
-    selectedExamId,
-    markEntries,
-    bulkUpsertMutation,
-    publishMarksMutation,
-    queryClient,
-  ]);
+  }, [selectedSessionId, selectedExamId, markEntries, bulkUpsertMutation, queryClient]);
 
   const handleMarkChange = (
     index: number,
@@ -337,11 +332,17 @@ export function MarksEntryPage() {
       return;
     }
 
-    const marks: BulkMarkEntry[] = validEntries.map((e) => ({
-      student_id: e.student_id,
-      marks_obtained: e.is_absent ? 0 : Number(e.marks_obtained),
-      is_absent: e.is_absent,
-    }));
+    const marks: BulkMarkEntry[] = validEntries.map((e) =>
+      e.is_absent
+        ? {
+            student_id: e.student_id,
+            is_absent: true,
+          }
+        : {
+            student_id: e.student_id,
+            marks_obtained: Number(e.marks_obtained),
+          }
+    );
 
     bulkUpsertMutation.mutate(
       {
@@ -667,7 +668,6 @@ export function MarksEntryPage() {
                     onClick={handleSaveAndPublish}
                     disabled={
                       bulkUpsertMutation.isPending ||
-                      publishMarksMutation.isPending ||
                       markEntries.length === 0 ||
                       enteredCount < markEntries.length
                     }
@@ -678,7 +678,7 @@ export function MarksEntryPage() {
                         : 'Save marks and publish results'
                     }
                   >
-                    {bulkUpsertMutation.isPending || publishMarksMutation.isPending ? (
+                    {bulkUpsertMutation.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <BadgeCheck className="h-4 w-4" />

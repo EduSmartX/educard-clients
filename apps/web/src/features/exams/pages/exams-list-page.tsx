@@ -9,7 +9,7 @@
 
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Plus, Download } from 'lucide-react';
+import { FileText, Plus, Download, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
@@ -178,6 +178,14 @@ export function ExamsListPage() {
               >
                 <Download className="h-4 w-4" />
                 Export
+              </Button>
+              <Button
+                onClick={() => navigate(ROUTES.EXAMS_STATUS_CONTROL)}
+                variant="info"
+                className="gap-2"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Update Status
               </Button>
               {isAdmin && (
                 <>
