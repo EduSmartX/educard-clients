@@ -9,6 +9,21 @@ export const step1Schema = z.object({
   orgEmail: z.string().email('Please enter a valid organization email'),
 });
 
+/**
+ * Step 1 schema, parameterized by whether "Same as Admin" is toggled on.
+ * When the toggle is off, the organization email must be different from
+ * the administrator email (they should only match when explicitly synced).
+ */
+export const createStep1Schema = (useSameEmail: boolean) =>
+  step1Schema.refine(
+    (data) =>
+      useSameEmail || data.adminEmail.trim().toLowerCase() !== data.orgEmail.trim().toLowerCase(),
+    {
+      message: 'Organization email must be different from the administrator email',
+      path: ['orgEmail'],
+    }
+  );
+
 export const step2Schema = z.object({
   adminOtp: z.string().length(6, 'OTP must be 6 digits'),
   orgOtp: z.string().optional(),

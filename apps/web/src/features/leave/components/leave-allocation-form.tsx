@@ -373,7 +373,7 @@ export function LeaveAllocationForm({
   }
 
   // Empty state - No leave types available
-  if (!leaveTypes || leaveTypes.length === 0) {
+  if (!Array.isArray(leaveTypes) || leaveTypes.length === 0) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <Alert className="max-w-md">
@@ -396,7 +396,7 @@ export function LeaveAllocationForm({
   }
 
   // Empty state - No organization roles available
-  if (!organizationRoles || organizationRoles.length === 0) {
+  if (!Array.isArray(organizationRoles) || organizationRoles.length === 0) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <Alert className="max-w-md">

@@ -281,6 +281,9 @@ export function buildSubjectPayload(form: FormValues): Record<string, unknown> {
     ...stripEmpty({
       teacher_id: form.teacher_id || undefined,
       description: safeTrim(form.description),
+      display_order: form.display_order
+        ? Number(form.display_order)
+        : undefined,
     }),
   };
 }

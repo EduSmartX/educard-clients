@@ -18,6 +18,7 @@ import type { StudentListItem } from '../types';
 import { getStudentColumns } from './student-table-columns';
 import { BulkUploadStudentsDialog } from './bulk-upload-students-dialog';
 import { ExportStudentsDialog } from './export-students-dialog';
+import { ResetClassPasswordsDialog } from './reset-class-passwords-dialog';
 import {
   getListTitle,
   getListDescription,
@@ -148,6 +149,7 @@ export function StudentsList({
           )}
           {!showDeleted && canCreateStudents && <ExportStudentsDialog />}
           {!showDeleted && canCreateStudents && <BulkUploadStudentsDialog />}
+          {!showDeleted && canCreateStudents && <ResetClassPasswordsDialog />}
         </div>
       </PageHeader>
 

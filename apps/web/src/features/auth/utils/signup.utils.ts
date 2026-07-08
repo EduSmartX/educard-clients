@@ -8,6 +8,42 @@ export const SIGNUP_STEP_TITLES = [
   'Administrator Setup',
 ] as const;
 
+/** How long to wait before allowing another OTP send/resend for the same email(s). */
+export const OTP_RESEND_COOLDOWN_SECONDS =
+  Number(import.meta.env.VITE_OTP_RESEND_COOLDOWN_SECONDS) || 120; // default 2 minutes
+
+/** Format seconds into MM:SS for the resend-cooldown countdown display. */
+export function formatResendCountdown(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+export interface OtpSentEmails {
+  adminEmail?: string;
+  orgEmail?: string;
+}
+
+/** Skip resending OTPs if emails are unchanged and still within the cooldown. */
+export function shouldSkipOtpResend(params: {
+  data: Step1Data;
+  useSameEmail: boolean;
+  lastSentEmails: OtpSentEmails | null;
+  lastSentAt: number | null;
+}): boolean {
+  const { data, useSameEmail, lastSentEmails, lastSentAt } = params;
+  if (!lastSentEmails || lastSentAt === null) {
+    return false;
+  }
+
+  const resolvedOrgEmail = useSameEmail ? data.adminEmail : data.orgEmail;
+  const emailsUnchanged =
+    lastSentEmails.adminEmail === data.adminEmail && lastSentEmails.orgEmail === resolvedOrgEmail;
+  const withinCooldown = Date.now() - lastSentAt < OTP_RESEND_COOLDOWN_SECONDS * 1000;
+
+  return emailsUnchanged && withinCooldown;
+}
+
 export function buildOtpSendRequests(useSameEmail: boolean, data: Step1Data) {
   if (useSameEmail) {
     return [

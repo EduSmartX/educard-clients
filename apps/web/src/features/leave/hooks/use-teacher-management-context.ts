@@ -34,6 +34,6 @@ export function useTeacherManagementContext() {
       return response.data?.data as TeacherManagementContext;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
-    enabled: isAdminOrTeacher, // Only fetch for admins and teachers
+    enabled: isAdminOrTeacher && !user?.force_password_reset,
   });
 }

@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { DashboardHeader } from './dashboard-header';
 import { DashboardLayout } from './dashboard-layout';
 import { useAuth } from '../../hooks/use-auth';
@@ -21,11 +21,16 @@ export function ProtectedLayout() {
   const { user, organization } = useAuth();
   const { data: profilePhoto } = useMyProfilePhoto();
   const { data: managementContext } = useTeacherManagementContext();
+  const location = useLocation();
 
   useStorageListener();
 
   if (!tokenManager.isAuthenticated() || !user) {
     return <Navigate to={ROUTES.AUTH.LOGIN} replace />;
+  }
+
+  if (user.force_password_reset && location.pathname !== ROUTES.SET_NEW_PASSWORD) {
+    return <Navigate to={ROUTES.SET_NEW_PASSWORD} replace />;
   }
 
   // Get role-based theme

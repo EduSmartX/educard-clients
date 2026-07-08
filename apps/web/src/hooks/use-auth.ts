@@ -16,6 +16,7 @@ export interface User {
   guardian_email?: string;
   guardian_email_verified?: boolean;
   guardian_phone_verified?: boolean;
+  force_password_reset?: boolean;
 }
 
 export interface Organization {

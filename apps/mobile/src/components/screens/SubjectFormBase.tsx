@@ -21,6 +21,7 @@ export interface SubjectFormState {
   subject_type: 'core' | 'elective' | 'language';
   teacher_id: string;
   description: string;
+  display_order: string;
 }
 
 export type FieldErrors = Record<string, string>;
@@ -146,6 +147,15 @@ export function SubjectFormBase({
               placeholder="Optional description"
               multiline
               numberOfLines={3}
+            />
+            <FormInput
+              label="Display Order (Optional)"
+              value={form.display_order}
+              onChangeText={(v) => updateField('display_order', v)}
+              error={errors.display_order}
+              placeholder="e.g. 1 (lower appears first)"
+              keyboardType="numeric"
+              maxLength={5}
             />
           </FormSection>
         </Animated.View>

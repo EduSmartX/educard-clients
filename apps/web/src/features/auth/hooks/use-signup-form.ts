@@ -4,15 +4,15 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import type { AxiosError } from 'axios';
-import { sendOtps, verifyOtp } from '@/lib/api/otp-api';
+import { resendOtp, sendOtps, verifyOtp } from '@/lib/api/otp-api';
 import { registerOrganization } from '@/lib/api/organization-api';
 import { parseOtpErrors } from '@/lib/api';
 import { getErrorMessage } from '@/lib/utils/error-handler';
 import { ROUTES } from '@/constants/app-config';
 import { ErrorMessages, SuccessMessages } from '@/constants';
 import {
+  createStep1Schema,
   createStep3Schema,
-  step1Schema,
   step2Schema,
   step4Schema,
   type CompleteSignupData,
@@ -28,7 +28,24 @@ import {
   getOtpSendSuccessMessage,
   getOtpVerifyBlockingMessage,
   normalizeStep3DataForSave,
+  OTP_RESEND_COOLDOWN_SECONDS,
+  shouldSkipOtpResend,
+  type OtpSentEmails,
 } from '../utils/signup.utils';
+
+/** Start a 1-second-tick countdown (in seconds) used to gate OTP resends. */
+function startResendCooldown(setCooldown: React.Dispatch<React.SetStateAction<number>>) {
+  setCooldown(OTP_RESEND_COOLDOWN_SECONDS);
+  const timer = setInterval(() => {
+    setCooldown((prev) => {
+      if (prev <= 1) {
+        clearInterval(timer);
+        return 0;
+      }
+      return prev - 1;
+    });
+  }, 1000);
+}
 
 /** Handle OTP send errors with field-level mapping */
 function handleStep1Error(
@@ -87,11 +104,56 @@ async function performStep1Submit(params: {
   data: Step1Data;
   useSameEmail: boolean;
   step1Form: ReturnType<typeof useForm<Step1Data>>;
+  step2Form: ReturnType<typeof useForm<Step2Data>>;
   setIsLoading: (v: boolean) => void;
   setFormData: React.Dispatch<React.SetStateAction<Partial<CompleteSignupData>>>;
   setCurrentStep: (step: SignupStep) => void;
+  otpSentEmails: OtpSentEmails | null;
+  otpSentAt: number | null;
+  setOtpSentEmails: (v: OtpSentEmails) => void;
+  setOtpSentAt: (v: number) => void;
+  setAdminOtpVerified: (v: boolean) => void;
+  setOrgOtpVerified: (v: boolean) => void;
+  setAdminResendCooldown: React.Dispatch<React.SetStateAction<number>>;
+  setOrgResendCooldown: React.Dispatch<React.SetStateAction<number>>;
 }) {
-  const { data, useSameEmail, step1Form, setIsLoading, setFormData, setCurrentStep } = params;
+  const {
+    data,
+    useSameEmail,
+    step1Form,
+    step2Form,
+    setIsLoading,
+    setFormData,
+    setCurrentStep,
+    otpSentEmails,
+    otpSentAt,
+    setOtpSentEmails,
+    setOtpSentAt,
+    setAdminOtpVerified,
+    setOrgOtpVerified,
+    setAdminResendCooldown,
+    setOrgResendCooldown,
+  } = params;
+
+  const updatedData = useSameEmail ? { ...data, orgEmail: data.adminEmail } : data;
+
+  // Skip resending if unchanged and still within cooldown
+  if (
+    shouldSkipOtpResend({
+      data,
+      useSameEmail,
+      lastSentEmails: otpSentEmails,
+      lastSentAt: otpSentAt,
+    })
+  ) {
+    setFormData((prev) => ({ ...prev, ...updatedData }));
+    toast.info(
+      'Verification codes were already sent recently. Check your inbox, or wait to resend.'
+    );
+    setCurrentStep(2);
+    return;
+  }
+
   setIsLoading(true);
   try {
     const emails = buildOtpSendRequests(useSameEmail, data);
@@ -105,7 +167,19 @@ async function performStep1Submit(params: {
       return;
     }
 
-    const updatedData = useSameEmail ? { ...data, orgEmail: data.adminEmail } : data;
+    // Reset stale verified state/OTP fields for the new codes
+    setAdminOtpVerified(false);
+    setOrgOtpVerified(false);
+    step2Form.setValue('adminOtp', '');
+    step2Form.setValue('orgOtp', '');
+    step2Form.clearErrors();
+    setOtpSentEmails({ adminEmail: updatedData.adminEmail, orgEmail: updatedData.orgEmail });
+    setOtpSentAt(Date.now());
+    startResendCooldown(setAdminResendCooldown);
+    if (!useSameEmail) {
+      startResendCooldown(setOrgResendCooldown);
+    }
+
     setFormData((prev) => ({ ...prev, ...updatedData }));
     toast.success(getOtpSendSuccessMessage(useSameEmail, data));
     setCurrentStep(2);
@@ -165,9 +239,15 @@ export function useSignupForm() {
   const [verifyingAdmin, setVerifyingAdmin] = useState(false);
   const [verifyingOrg, setVerifyingOrg] = useState(false);
 
+  // Last emails/time an OTP was sent, to gate the resend cooldown
+  const [otpSentEmails, setOtpSentEmails] = useState<OtpSentEmails | null>(null);
+  const [otpSentAt, setOtpSentAt] = useState<number | null>(null);
+  const [adminResendCooldown, setAdminResendCooldown] = useState(0);
+  const [orgResendCooldown, setOrgResendCooldown] = useState(0);
+
   // Step forms
   const step1Form = useForm<Step1Data>({
-    resolver: zodResolver(step1Schema),
+    resolver: zodResolver(createStep1Schema(useSameEmail)),
     defaultValues: formData as Step1Data,
   });
 
@@ -210,9 +290,18 @@ export function useSignupForm() {
       data,
       useSameEmail,
       step1Form,
+      step2Form,
       setIsLoading,
       setFormData,
       setCurrentStep,
+      otpSentEmails,
+      otpSentAt,
+      setOtpSentEmails,
+      setOtpSentAt,
+      setAdminOtpVerified,
+      setOrgOtpVerified,
+      setAdminResendCooldown,
+      setOrgResendCooldown,
     });
   };
 
@@ -241,6 +330,38 @@ export function useSignupForm() {
 
   const handleVerifyAdminOtp = () => handleVerifyOtp('admin');
   const handleVerifyOrgOtp = () => handleVerifyOtp('org');
+
+  // Resend OTP, resetting verified state/entered code for that field
+  const handleResendOtp = async (type: 'admin' | 'org') => {
+    const email = type === 'admin' ? formData.adminEmail : formData.orgEmail;
+    if (!email) {
+      return;
+    }
+
+    const otpField = type === 'admin' ? ('adminOtp' as const) : ('orgOtp' as const);
+    const category = type === 'admin' ? ('admin' as const) : ('organization' as const);
+    const setVerified = type === 'admin' ? setAdminOtpVerified : setOrgOtpVerified;
+    const setCooldown = type === 'admin' ? setAdminResendCooldown : setOrgResendCooldown;
+
+    try {
+      const result = await resendOtp(email, category, 'organization_registration');
+      if (result.success) {
+        setVerified(false);
+        step2Form.setValue(otpField, '');
+        step2Form.clearErrors(otpField);
+        setOtpSentAt(Date.now());
+        startResendCooldown(setCooldown);
+        toast.success(`New verification code sent to ${email}`);
+      } else {
+        toast.error(result.message || ErrorMessages.AUTH.SEND_OTP_FAILED);
+      }
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, ErrorMessages.AUTH.SEND_OTP_FAILED));
+    }
+  };
+
+  const handleResendAdminOtp = () => handleResendOtp('admin');
+  const handleResendOrgOtp = () => handleResendOtp('org');
 
   const handleStep2Submit = (data: Step2Data) => {
     const isVerified = useSameEmail ? adminOtpVerified : adminOtpVerified && orgOtpVerified;
@@ -305,6 +426,8 @@ export function useSignupForm() {
     orgOtpVerified,
     verifyingAdmin,
     verifyingOrg,
+    adminResendCooldown,
+    orgResendCooldown,
 
     // Forms
     step1Form,
@@ -319,6 +442,8 @@ export function useSignupForm() {
     handleStep4Submit,
     handleVerifyAdminOtp,
     handleVerifyOrgOtp,
+    handleResendAdminOtp,
+    handleResendOrgOtp,
     goToPreviousStep,
     navigate,
 

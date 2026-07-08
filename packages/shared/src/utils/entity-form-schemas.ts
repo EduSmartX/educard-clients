@@ -172,6 +172,7 @@ export const subjectFormSchema = z.object({
     .default("core"),
   teacher_id: optionalString(),
   description: optionalString(),
+  display_order: optionalString(),
 });
 
 // Validation Helper — Validate a single field against a Zod schema

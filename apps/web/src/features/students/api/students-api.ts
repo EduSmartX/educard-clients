@@ -7,6 +7,7 @@ import type {
   StudentQueryParams,
   BulkUploadResult,
   ExportStudentsPayload,
+  ResetClassPasswordsPayload,
 } from '../types';
 import type { ApiListResponse, ApiDetailResponse } from '@/lib/utils/api-response-handler';
 
@@ -129,6 +130,30 @@ export async function reactivateStudent(classId: string, publicId: string): Prom
     `${CLASS_STUDENTS_BASE(classId)}${publicId}/activate/`
   );
   return response.data.data;
+}
+
+// Bulk reset passwords for all active students in a class, returns credentials Excel file
+export interface ResetClassPasswordsResult {
+  blob: Blob;
+  filename: string;
+}
+
+export async function resetClassPasswords(
+  classId: string,
+  payload: ResetClassPasswordsPayload
+): Promise<ResetClassPasswordsResult> {
+  const response = await api.post(`${CLASS_STUDENTS_BASE(classId)}reset-passwords/`, payload, {
+    responseType: 'blob',
+  });
+
+  const disposition = response.headers?.['content-disposition'] as string | undefined;
+  const filenameMatch = disposition?.match(/filename="?([^"]+)"?/);
+  const fallbackName = `class_credentials_${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+  return {
+    blob: response.data,
+    filename: filenameMatch?.[1] ?? fallbackName,
+  };
 }
 
 // Bulk operations

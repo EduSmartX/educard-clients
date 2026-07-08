@@ -83,6 +83,7 @@ export default function CreateSubjectScreen() {
     subject_type: 'core',
     teacher_id: '',
     description: '',
+    display_order: '',
   });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [apiError, setApiError] = useState<string | null>(null);

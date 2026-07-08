@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AuthActionButtons } from './auth-action-buttons';
 import type { Step2Data } from '../utils/signup.schemas';
+import { formatResendCountdown } from '../utils/signup.utils';
 
 interface SignupStep2Props {
   form: UseFormReturn<Step2Data>;
@@ -15,6 +16,8 @@ interface SignupStep2Props {
   orgOtpVerified: boolean;
   verifyingAdmin: boolean;
   verifyingOrg: boolean;
+  adminResendCooldown: number;
+  orgResendCooldown: number;
   otpSentMessage: string;
   adminOtpLabel: string;
   adminOtpIcon: string;
@@ -22,6 +25,8 @@ interface SignupStep2Props {
   adminVerifyBtnClass: string;
   onVerifyAdmin: () => void;
   onVerifyOrg: () => void;
+  onResendAdmin: () => void;
+  onResendOrg: () => void;
   onSubmit: (data: Step2Data) => void;
   onBack: () => void;
 }
@@ -34,6 +39,8 @@ export function SignupStep2({
   orgOtpVerified,
   verifyingAdmin,
   verifyingOrg,
+  adminResendCooldown,
+  orgResendCooldown,
   otpSentMessage,
   adminOtpLabel,
   adminOtpIcon,
@@ -41,6 +48,8 @@ export function SignupStep2({
   adminVerifyBtnClass,
   onVerifyAdmin,
   onVerifyOrg,
+  onResendAdmin,
+  onResendOrg,
   onSubmit,
   onBack,
 }: SignupStep2Props) {
@@ -117,6 +126,25 @@ export function SignupStep2({
           <Mail className="h-4 w-4" />
           Sent to: <span className="font-medium text-gray-700">{formData.adminEmail}</span>
         </p>
+
+        {!adminOtpVerified && (
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-gray-500">Didn't get the code?</p>
+            {adminResendCooldown > 0 ? (
+              <p className="text-xs font-medium text-gray-500">
+                Resend available in {formatResendCountdown(adminResendCooldown)}
+              </p>
+            ) : (
+              <button
+                type="button"
+                onClick={onResendAdmin}
+                className="text-xs font-semibold text-teal-600 hover:text-teal-700 hover:underline"
+              >
+                Resend OTP
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Organization OTP - Only show if different emails */}
@@ -176,6 +204,25 @@ export function SignupStep2({
             <Building2 className="h-4 w-4" />
             Sent to: <span className="font-medium text-gray-700">{formData.orgEmail}</span>
           </p>
+
+          {!orgOtpVerified && (
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-gray-500">Didn't get the code?</p>
+              {orgResendCooldown > 0 ? (
+                <p className="text-xs font-medium text-gray-500">
+                  Resend available in {formatResendCountdown(orgResendCooldown)}
+                </p>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onResendOrg}
+                  className="text-xs font-semibold text-cyan-600 hover:text-cyan-700 hover:underline"
+                >
+                  Resend OTP
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
 

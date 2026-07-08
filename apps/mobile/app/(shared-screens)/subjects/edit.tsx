@@ -64,6 +64,7 @@ export default function EditSubjectScreen() {
     subject_type: 'core',
     teacher_id: '',
     description: '',
+    display_order: '',
   });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [apiError, setApiError] = useState<string | null>(null);
@@ -83,6 +84,7 @@ export default function EditSubjectScreen() {
         teacher_assigned?: { public_id?: string };
         teacher_id?: string;
         description?: string;
+        display_order?: number;
       };
       setForm({
         class_id: s.class_info?.public_id || s.class_assigned?.public_id || s.class_id || '',
@@ -90,6 +92,7 @@ export default function EditSubjectScreen() {
         subject_type: (s.subject_type as 'core' | 'elective' | 'language') || 'core',
         teacher_id: s.teacher_info?.public_id || s.teacher?.public_id || s.teacher_id || '',
         description: s.description || '',
+        display_order: s.display_order !== undefined ? String(s.display_order) : '',
       });
       setFormLoaded(true);
     }

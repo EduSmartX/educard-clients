@@ -30,6 +30,7 @@ export interface Subject {
   teacher_info: TeacherInfo | null;
   subject_type: SubjectType;
   description: string;
+  display_order: number;
   created_at: string;
   updated_at: string;
   created_by_public_id: string | null;
@@ -55,6 +56,7 @@ export interface SubjectFormData {
   subject_type?: SubjectType;
   teacher_id?: string;
   description?: string;
+  display_order?: string;
 }
 
 export interface SubjectCreatePayload {
@@ -63,12 +65,14 @@ export interface SubjectCreatePayload {
   subject_type?: SubjectType;
   teacher_id?: string | null;
   description?: string;
+  display_order?: number;
 }
 
 export interface SubjectUpdatePayload {
   subject_type?: SubjectType;
   teacher_id?: string | null;
   description?: string;
+  display_order?: number;
 }
 
 export interface SubjectBulkUploadPayload {

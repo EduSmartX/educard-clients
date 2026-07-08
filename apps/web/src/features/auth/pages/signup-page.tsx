@@ -35,6 +35,8 @@ export default function SignupPage() {
     orgOtpVerified,
     verifyingAdmin,
     verifyingOrg,
+    adminResendCooldown,
+    orgResendCooldown,
     step1Form,
     step2Form,
     step3Form,
@@ -45,6 +47,8 @@ export default function SignupPage() {
     handleStep4Submit,
     handleVerifyAdminOtp,
     handleVerifyOrgOtp,
+    handleResendAdminOtp,
+    handleResendOrgOtp,
     goToPreviousStep,
     navigate,
     otpSentMessage,
@@ -148,6 +152,8 @@ export default function SignupPage() {
                 orgOtpVerified={orgOtpVerified}
                 verifyingAdmin={verifyingAdmin}
                 verifyingOrg={verifyingOrg}
+                adminResendCooldown={adminResendCooldown}
+                orgResendCooldown={orgResendCooldown}
                 otpSentMessage={otpSentMessage}
                 adminOtpLabel={adminOtpLabel}
                 adminOtpIcon={adminOtpIcon}
@@ -155,6 +161,8 @@ export default function SignupPage() {
                 adminVerifyBtnClass={adminVerifyBtnClass}
                 onVerifyAdmin={handleVerifyAdminOtp}
                 onVerifyOrg={handleVerifyOrgOtp}
+                onResendAdmin={handleResendAdminOtp}
+                onResendOrg={handleResendOrgOtp}
                 onSubmit={handleStep2Submit}
                 onBack={goToPreviousStep}
               />

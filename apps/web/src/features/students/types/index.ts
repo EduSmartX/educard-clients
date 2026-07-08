@@ -25,6 +25,7 @@ export type {
   StudentBulkUploadResult,
   ExportStudentsPayload,
   ExportStudentsResult,
+  ResetClassPasswordsPayload,
 } from '@educard/shared';
 
 // Re-export common types used in student module

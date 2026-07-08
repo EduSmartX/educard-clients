@@ -4,6 +4,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/hooks/use-auth';
 import { getUserProfile, getMyProfilePhoto } from '../api/profile-api';
 
 /**
@@ -21,9 +22,12 @@ export function useUserProfile() {
  * Hook to fetch current user's profile photo
  */
 export function useMyProfilePhoto() {
+  const { user } = useAuth();
+
   return useQuery({
     queryKey: ['profile-photo', 'me'],
     queryFn: () => getMyProfilePhoto(),
     select: (data) => data.data,
+    enabled: !user?.force_password_reset,
   });
 }

@@ -49,6 +49,7 @@ export interface SubjectItem extends AuditFields {
   teacher?: SubjectTeacher | null;
   is_active?: boolean;
   can_manage?: boolean;
+  display_order?: number;
 }
 
 // Alias for backward compatibility and cleaner imports
@@ -76,6 +77,7 @@ export interface CreateSubjectPayload {
   teacher_id?: string;
   description?: string;
   subject_type?: SubjectTypeValue;
+  display_order?: number;
 }
 
 export interface UpdateSubjectPayload {
@@ -83,6 +85,7 @@ export interface UpdateSubjectPayload {
   description?: string;
   subject_type?: SubjectTypeValue;
   is_active?: boolean;
+  display_order?: number;
 }
 
 // Query Parameters

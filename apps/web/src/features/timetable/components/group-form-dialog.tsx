@@ -28,7 +28,7 @@ interface GroupFormDialogProps {
 export function GroupFormDialog({ open, onOpenChange, editGroup }: Readonly<GroupFormDialogProps>) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [displayOrder, setDisplayOrder] = useState(0);
+  const [displayOrder, setDisplayOrder] = useState('');
 
   const createMutation = useCreateClassGroup();
   const updateMutation = useUpdateClassGroup();
@@ -38,12 +38,16 @@ export function GroupFormDialog({ open, onOpenChange, editGroup }: Readonly<Grou
     if (open) {
       setName(editGroup?.name ?? '');
       setDescription(editGroup?.description ?? '');
-      setDisplayOrder(editGroup?.display_order ?? 0);
+      setDisplayOrder(editGroup?.display_order ? String(editGroup.display_order) : '');
     }
   }, [open, editGroup]);
 
   const handleSubmit = useCallback(() => {
-    const data = { name, description, display_order: displayOrder };
+    const data = {
+      name,
+      description,
+      display_order: displayOrder ? Number(displayOrder) : 0,
+    };
     if (editGroup) {
       updateMutation.mutate(
         { publicId: editGroup.public_id, data },
@@ -101,7 +105,7 @@ export function GroupFormDialog({ open, onOpenChange, editGroup }: Readonly<Grou
               type="number"
               min={0}
               value={displayOrder}
-              onChange={(e) => setDisplayOrder(Number(e.target.value))}
+              onChange={(e) => setDisplayOrder(e.target.value)}
               className="mt-1 w-24"
             />
           </div>

@@ -33,6 +33,11 @@ function getDashboardRoute(role: string | undefined) {
   return '/(tabs)/(admin)/dashboard' as const;
 }
 
+/** Check if the current segments are the mandatory force-password-change screen */
+function isForcePasswordChangeScreen(segments: readonly string[]): boolean {
+  return segments[0] === '(shared-screens)' && segments[1] === 'force-password-change';
+}
+
 /** Check if the user needs to be redirected based on role and current segments */
 function shouldRedirectAuthenticated(
   segments: readonly string[],
@@ -105,6 +110,16 @@ function RootLayoutNav() {
     if (!isAuthenticated && !inAuthGroup) {
       isNavigating.current = true;
       router.replace('/(auth)/login');
+      setTimeout(() => {
+        isNavigating.current = false;
+      }, 500);
+    } else if (
+      isAuthenticated &&
+      user?.force_password_reset &&
+      !isForcePasswordChangeScreen(segments)
+    ) {
+      isNavigating.current = true;
+      router.replace('/(shared-screens)/force-password-change');
       setTimeout(() => {
         isNavigating.current = false;
       }, 500);

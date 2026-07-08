@@ -34,6 +34,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import {
   ToastTitles,
@@ -64,6 +65,10 @@ const subjectSchema = z.object({
   subject_type: z.enum(['core', 'elective', 'language']).optional().default('core'),
   teacher_id: z.string().optional(),
   description: z.string().optional(),
+  display_order: z
+    .string()
+    .optional()
+    .refine((val) => !val || /^\d+$/.test(val), 'Display order must be a valid number'),
 });
 type SubjectFormData = z.infer<typeof subjectSchema>;
 
@@ -129,6 +134,7 @@ export default function SubjectFormPage() {
       subject_type: 'core',
       teacher_id: '',
       description: '',
+      display_order: '',
     },
   });
 
@@ -143,6 +149,7 @@ export default function SubjectFormPage() {
           subject_type: (subject.subject_type as 'core' | 'elective' | 'language') || 'core',
           teacher_id: teacherId,
           description: subject.description || '',
+          display_order: subject.display_order ? String(subject.display_order) : '',
         },
         {
           keepDefaultValues: false,
@@ -280,6 +287,7 @@ export default function SubjectFormPage() {
           subject_type: pendingData.subject_type || 'core',
           teacher_id: pendingData.teacher_id || undefined,
           description: pendingData.description || undefined,
+          display_order: pendingData.display_order ? Number(pendingData.display_order) : undefined,
         },
         forceCreate: true,
       });
@@ -296,6 +304,7 @@ export default function SubjectFormPage() {
           subject_type: data.subject_type || 'core',
           teacher_id: data.teacher_id || undefined,
           description: data.description || undefined,
+          display_order: data.display_order ? Number(data.display_order) : undefined,
         },
       });
     } else {
@@ -306,6 +315,7 @@ export default function SubjectFormPage() {
           subject_type: data.subject_type || 'core',
           teacher_id: data.teacher_id || undefined,
           description: data.description || undefined,
+          display_order: data.display_order ? Number(data.display_order) : undefined,
         },
       });
     }
@@ -582,6 +592,30 @@ export default function SubjectFormPage() {
                     )}
                   />
                 </div>
+
+                {/* Display Order */}
+                <FormField
+                  control={form.control}
+                  name="display_order"
+                  render={({ field, fieldState }) => (
+                    <FormItem
+                      ref={fieldState.error && !firstErrorRef.current ? firstErrorRef : null}
+                      className="md:w-1/2 md:pr-2"
+                    >
+                      <FormLabel>Display Order (Optional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={0}
+                          placeholder="e.g. 1 (lower appears first)"
+                          disabled={isPending || mode === 'view'}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 {/* Description */}
                 <FormField
