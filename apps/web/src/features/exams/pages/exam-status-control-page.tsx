@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, FileText, Loader2, RotateCcw } from 'lucide-react';
+import { CheckCircle2, FileText, Info, Loader2, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { SearchableSelect } from '@/components/ui/searchable-select';
 import { PageHeader } from '@/components/common';
 import { ROUTES } from '@/constants';
 import { useClasses } from '@/features/classes/hooks/use-classes';
+import { useRole } from '@/hooks/use-role';
 import { useExamSessions, useExams } from '../hooks/use-exams';
 import { useBulkUpdateExamStatuses, useUpdateExamStatus } from '../hooks/mutations';
 import { ExamStatusChangeConfirmationDialog } from '../components/exam-status-change-confirmation-dialog';
@@ -51,6 +52,7 @@ function isBackwardTransition(fromStatus: ExamStatus, toStatus: ExamStatus) {
 
 export function ExamStatusControlPage() {
   const navigate = useNavigate();
+  const { isAdmin } = useRole();
 
   const [selectedSessionId, setSelectedSessionId] = useState('');
   const [selectedClassId, setSelectedClassId] = useState('');
@@ -59,7 +61,16 @@ export function ExamStatusControlPage() {
   const [singleTargetStatus, setSingleTargetStatus] = useState<Record<string, ExamStatus>>({});
 
   const { data: sessionsData } = useExamSessions({ page: 1, page_size: 100 });
-  const { data: classesData } = useClasses({ page: 1, page_size: 200 });
+  const { data: classesData } = useClasses({
+    page: 1,
+    page_size: 200,
+    ...(isAdmin ? {} : { my_classes_only: true }),
+  });
+
+  const statusOptions = useMemo(
+    () => EXAM_STATUS_OPTIONS.filter((o) => o.value !== 'in_progress'),
+    []
+  );
 
   const shouldFetchExams = Boolean(selectedSessionId && selectedClassId);
   const { data: examsData, isLoading } = useExams(
@@ -248,6 +259,15 @@ export function ExamStatusControlPage() {
         </CardContent>
       </Card>
 
+      {!isAdmin && classes.length === 0 && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="flex items-center gap-2 py-8 text-sm text-blue-700">
+            <Info className="h-4 w-4 shrink-0" />
+            You are not a class teacher. Only class teachers can update exam statuses.
+          </CardContent>
+        </Card>
+      )}
+
       {shouldFetchExams && (
         <>
           <Card className="border shadow-sm">
@@ -261,7 +281,7 @@ export function ExamStatusControlPage() {
                 </div>
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                   <SearchableSelect
-                    options={EXAM_STATUS_OPTIONS.map((option) => ({
+                    options={statusOptions.map((option) => ({
                       value: option.value,
                       label: option.label,
                     }))}
@@ -334,7 +354,7 @@ export function ExamStatusControlPage() {
                       </div>
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                         <SearchableSelect
-                          options={EXAM_STATUS_OPTIONS.map((option) => ({
+                          options={statusOptions.map((option) => ({
                             value: option.value,
                             label: option.label,
                           }))}

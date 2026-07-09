@@ -10,11 +10,14 @@ export type {
   ClassGroup,
   TimetableSlot,
   ClassTimetableResponse,
+  ClassTimetableDateResponse,
   MyTimetableResponse,
   ClassGroupCreatePayload,
   BulkSlotPayload,
   TimetableEntryCreatePayload,
   TimetableEntry,
+  TimetableOverride,
+  TimetableOverrideUpsertPayload,
 } from '@educard/shared';
 
 // Create the API instance with mobile's axios client
@@ -26,6 +29,10 @@ export const fetchSlots = timetableApi.listSlots;
 export const fetchClassTimetable = timetableApi.getClassTimetable;
 export const fetchMyTimetable = timetableApi.getMyTimetable;
 export const fetchTeacherTimetable = timetableApi.getTeacherTimetable;
+export const fetchClassTimetableForDate = timetableApi.getClassTimetableForDate;
+export const fetchClassOverrides = timetableApi.listClassOverrides;
+export const upsertOverride = timetableApi.upsertOverride;
+export const deleteOverride = timetableApi.deleteOverride;
 export const createClassGroup = timetableApi.createClassGroup;
 export const updateClassGroup = timetableApi.updateClassGroup;
 export const deleteClassGroup = timetableApi.deleteClassGroup;

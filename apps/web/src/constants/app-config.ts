@@ -282,6 +282,7 @@ export const ROUTES = {
   TIMETABLE: '/timetable',
   TIMETABLE_SETUP: '/timetable/setup',
   TIMETABLE_VIEW: '/timetable/view',
+  TIMETABLE_OVERRIDES: '/timetable/overrides',
   // Homework
   HOMEWORK: '/homework',
   HOMEWORK_NEW: '/homework/new',

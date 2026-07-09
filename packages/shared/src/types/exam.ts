@@ -151,6 +151,7 @@ export interface ExamListParams {
   class_id?: string;
   subject?: string;
   is_deleted?: boolean;
+  my_exams_only?: boolean;
 }
 
 export interface ExamCreatePayload {

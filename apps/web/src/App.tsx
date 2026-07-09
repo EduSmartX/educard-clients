@@ -167,6 +167,9 @@ const ExceptionalWorkPage = lazy(() => import('./pages/exceptional-work-page'));
 const ClassTimetablePage = lazy(() => import('./features/timetable/pages/class-timetable-page'));
 const TimetableSetupPage = lazy(() => import('./features/timetable/pages/timetable-setup-page'));
 const TimetableViewPage = lazy(() => import('./features/timetable/pages/timetable-view-page'));
+const TimetableOverridePage = lazy(
+  () => import('./features/timetable/pages/timetable-override-page')
+);
 
 // Homework
 const HomeworkListPage = lazy(() => import('./features/homework/pages/homework-list-page'));
@@ -352,6 +355,7 @@ function App() {
             <Route path={ROUTES.TIMETABLE} element={<ClassTimetablePage />} />
             <Route path={ROUTES.TIMETABLE_SETUP} element={<TimetableSetupPage />} />
             <Route path={ROUTES.TIMETABLE_VIEW} element={<TimetableViewPage />} />
+            <Route path={ROUTES.TIMETABLE_OVERRIDES} element={<TimetableOverridePage />} />
 
             {/* Homework */}
             <Route path={ROUTES.HOMEWORK} element={<HomeworkListPage />} />

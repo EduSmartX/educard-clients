@@ -13,7 +13,7 @@ import {
 } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ChevronLeft, Clock, BookOpen, User, Settings } from 'lucide-react-native';
+import { ChevronLeft, Clock, BookOpen, User, Settings, CalendarRange } from 'lucide-react-native';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import {
   View,
@@ -246,6 +246,25 @@ export default function TimetableScreen() {
                   onPress={() => router.push('/(shared-screens)/timetable/teacher-timetable')}
                 >
                   <User size={16} color="#fff" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                    borderRadius: 20,
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                  }}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/(shared-screens)/timetable/override-day',
+                      params: { classId: selectedClassId || '' },
+                    })
+                  }
+                >
+                  <CalendarRange size={16} color="#fff" />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={{

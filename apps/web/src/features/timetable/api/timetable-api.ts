@@ -13,7 +13,11 @@ import type {
   TimetableEntry,
   TimetableEntryCreatePayload,
   ClassTimetableResponse,
+  ClassTimetableDateResponse,
+  ClassTimetableWeekResponse,
   MyTimetableResponse,
+  TimetableOverride,
+  TimetableOverrideUpsertPayload,
 } from '../types';
 
 // Base URLs
@@ -125,6 +129,54 @@ export async function fetchClassTimetable(classPublicId: string): Promise<ClassT
     `${baseUrl}/class/${classPublicId}/timetable/`
   );
   return response.data.data;
+}
+
+export async function fetchClassTimetableForDate(
+  classPublicId: string,
+  date: string
+): Promise<ClassTimetableDateResponse> {
+  const response = await api.get<ApiResponse<ClassTimetableDateResponse>>(
+    `${EMPLOYEE_BASE}/class/${classPublicId}/timetable/date/`,
+    { params: { date } }
+  );
+  return response.data.data;
+}
+
+export async function fetchClassTimetableForWeek(
+  classPublicId: string,
+  date: string
+): Promise<ClassTimetableWeekResponse> {
+  const response = await api.get<ApiResponse<ClassTimetableWeekResponse>>(
+    `${EMPLOYEE_BASE}/class/${classPublicId}/timetable/week/`,
+    { params: { date } }
+  );
+  return response.data.data;
+}
+
+export async function fetchClassOverrides(
+  classPublicId: string,
+  date?: string
+): Promise<TimetableOverride[]> {
+  const response = await api.get<ApiResponse<TimetableOverride[]>>(
+    `${EMPLOYEE_BASE}/class/${classPublicId}/overrides/`,
+    { params: date ? { date } : {} }
+  );
+  return response.data.data;
+}
+
+export async function upsertTimetableOverride(
+  classPublicId: string,
+  data: TimetableOverrideUpsertPayload
+): Promise<TimetableOverride> {
+  const response = await api.post<ApiResponse<TimetableOverride>>(
+    `${EMPLOYEE_BASE}/class/${classPublicId}/overrides/`,
+    data
+  );
+  return response.data.data;
+}
+
+export async function deleteTimetableOverride(overridePublicId: string): Promise<void> {
+  await api.delete(`${EMPLOYEE_BASE}/overrides/${overridePublicId}/`);
 }
 
 export async function fetchMyTimetable(): Promise<MyTimetableResponse> {

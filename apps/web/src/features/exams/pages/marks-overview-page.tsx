@@ -668,10 +668,11 @@ export function MarksOverviewPage() {
               {/* View-only banner */}
               {!canEditAny && (
                 <div className="flex items-center gap-2 border-b border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-700">
-                  <AlertCircle className="h-4 w-4" />
+                  <AlertCircle className="h-4 w-4 shrink-0" />
                   <span>
-                    You are viewing marks in read-only mode. Only teachers assigned to specific
-                    subjects can edit them.
+                    You are not a class teacher or admin, so you cannot edit marks here. To enter
+                    marks for your assigned subjects, go to the <strong>Enter Marks</strong> page
+                    from the sidebar.
                   </span>
                 </div>
               )}

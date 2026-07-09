@@ -48,6 +48,8 @@ import {
 } from '../api/exams-api';
 import { fetchStudents } from '@/features/students/api/students-api';
 import type { Exam, BulkMarkEntry } from '@educard/shared';
+import { getErrorMessage } from '@/lib/utils/error-handler';
+import { useRole } from '@/hooks/use-role';
 
 interface StudentMarkRow {
   student_id: string;
@@ -64,6 +66,7 @@ export function MarksEntryPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
+  const { isAdmin } = useRole();
 
   // Pre-select from URL params (from exams list page redirect)
   const initialSessionId = searchParams.get('session') || '';
@@ -82,6 +85,7 @@ export function MarksEntryPage() {
     page: 1,
     page_size: 200,
     session: selectedSessionId || undefined,
+    ...(isAdmin ? {} : { my_exams_only: true }),
   });
 
   const sessions = sessionsData?.data || [];
@@ -223,8 +227,8 @@ export function MarksEntryPage() {
       queryClient.invalidateQueries({ queryKey: ['marks'] });
       queryClient.invalidateQueries({ queryKey: ['marks-by-exam', selectedExamId] });
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to save marks');
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to save marks'));
     },
   });
   const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();

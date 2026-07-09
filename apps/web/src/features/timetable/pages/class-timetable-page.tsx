@@ -4,15 +4,22 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { CalendarRange } from 'lucide-react';
 import { SearchableSelect } from '@/components/ui/searchable-select';
+import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/common';
 import { PageLoader } from '@/components/ui/loading-spinner';
+import { ROUTES } from '@/constants/app-config';
 import { useClasses } from '@/features/classes/hooks/use-classes';
+import { useRole } from '@/hooks/use-role';
 import { useClassTimetable } from '../hooks/queries';
 import { TimetableGrid } from '../components/timetable-grid';
 import type { Class } from '@/features/classes/types';
 
 export default function ClassTimetablePage() {
+  const navigate = useNavigate();
+  const { isAdmin } = useRole();
   const [selectedClassId, setSelectedClassId] = useState<string>('');
 
   // Fetch all classes for the dropdown
@@ -42,6 +49,16 @@ export default function ClassTimetablePage() {
     <div className="space-y-6">
       {/* Page Header */}
       <PageHeader title="Timetable" description="View the weekly timetable for any class">
+        {isAdmin && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate(ROUTES.TIMETABLE_OVERRIDES)}
+          >
+            <CalendarRange className="mr-2 h-4 w-4" />
+            Period Overrides
+          </Button>
+        )}
         {/* Class Selector */}
         <div className="w-full sm:w-72">
           {classesLoading ? (

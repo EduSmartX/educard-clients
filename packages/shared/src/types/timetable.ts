@@ -250,6 +250,81 @@ export interface ClassTimetableResponse {
   days: Record<string, ClassTimetableSlot[]>;
 }
 
+export type TimetableOverrideType = "substitute" | "cancelled" | "extra_class";
+
+export interface TimetableOverride {
+  override_public_id: string;
+  original_entry_public_id: string;
+  override_date: string;
+  override_type: TimetableOverrideType;
+  substitute_assignment_type: "subject" | "other";
+  substitute_teacher_public_id: string | null;
+  substitute_teacher_name: string | null;
+  substitute_subject_public_id: string | null;
+  substitute_subject_name: string | null;
+  substitute_other_period_type: string | null;
+  substitute_other_label: string | null;
+  substitute_other_notes: string;
+  extra_class_start_time: string | null;
+  extra_class_end_time: string | null;
+  reason: string;
+}
+
+export interface ClassTimetableDateSlot {
+  slot_public_id: string;
+  slot_number: number;
+  slot_type: string;
+  label: string;
+  start_time: string;
+  end_time: string;
+  duration_minutes: number;
+  is_break: boolean;
+  entry_public_id: string | null;
+  subject_name: string | null;
+  teacher_name: string | null;
+  room: string;
+  is_cancelled: boolean;
+  override: TimetableOverride | null;
+}
+
+export interface ClassTimetableDateResponse {
+  class: string;
+  class_public_id: string;
+  date: string;
+  day_of_week: number;
+  slots: ClassTimetableDateSlot[];
+}
+
+export interface ClassTimetableWeekDay {
+  date: string;
+  day_of_week: number;
+  slots: ClassTimetableDateSlot[];
+}
+
+export interface ClassTimetableWeekResponse {
+  class: string;
+  class_public_id: string;
+  anchor_date: string;
+  week_start: string;
+  week_end: string;
+  days: ClassTimetableWeekDay[];
+}
+
+export interface TimetableOverrideUpsertPayload {
+  original_entry_public_id: string;
+  override_date: string;
+  override_type: TimetableOverrideType;
+  substitute_assignment_type?: "subject" | "other";
+  substitute_teacher_public_id?: string | null;
+  substitute_subject_public_id?: string | null;
+  substitute_other_period_type?: string;
+  substitute_other_label?: string;
+  substitute_other_notes?: string;
+  extra_class_start_time?: string | null;
+  extra_class_end_time?: string | null;
+  reason?: string;
+}
+
 // =============================================================================
 // Teacher Timetable View Types (My Timetable)
 // =============================================================================

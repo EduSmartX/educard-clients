@@ -9,8 +9,10 @@ export {
   type BulkSlotItem,
   type TimetableEntryUpdatePayload,
   type ClassTimetableSlot,
+  type ClassTimetableDateSlot,
   type TimetableSlotListParams,
   type TimetableEntryListParams,
+  type TimetableOverrideType,
   // Constants
   DAY_LABELS,
   DAY_SHORT_LABELS,

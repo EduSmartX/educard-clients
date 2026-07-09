@@ -30,6 +30,7 @@ import {
   Receipt,
   CreditCard,
   Eye,
+  CalendarRange,
   ClipboardEdit,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
@@ -101,6 +102,12 @@ export const adminSidebarConfig: SidebarSection[] = [
         label: 'View Timetable',
         icon: Eye,
         path: ROUTES.TIMETABLE_VIEW,
+      },
+      {
+        id: 'day-overrides',
+        label: 'Period Overrides',
+        icon: CalendarRange,
+        path: ROUTES.TIMETABLE_OVERRIDES,
       },
     ],
   },

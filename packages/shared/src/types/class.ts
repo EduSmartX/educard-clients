@@ -120,4 +120,5 @@ export interface ClassQueryParams extends BaseQueryParams {
   grade?: string;
   academic_year?: string;
   is_active?: boolean;
+  my_classes_only?: boolean;
 }
