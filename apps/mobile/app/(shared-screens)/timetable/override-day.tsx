@@ -36,7 +36,6 @@ const adminGradient = getRoleGradient('admin');
 const OVERRIDE_TYPE_OPTIONS: { label: string; value: TimetableOverrideType }[] = [
   { label: 'Substitute', value: 'substitute' },
   { label: 'Cancelled', value: 'cancelled' },
-  { label: 'Rescheduled', value: 'rescheduled' },
   { label: 'Extra Class', value: 'extra_class' },
 ];
 
