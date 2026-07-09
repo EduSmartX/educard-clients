@@ -17,55 +17,63 @@ export const DAY_OF_WEEK = {
 } as const;
 
 export const DAY_LABELS: Record<number, string> = {
-  0: 'Monday',
-  1: 'Tuesday',
-  2: 'Wednesday',
-  3: 'Thursday',
-  4: 'Friday',
-  5: 'Saturday',
-  6: 'Sunday',
+  0: "Monday",
+  1: "Tuesday",
+  2: "Wednesday",
+  3: "Thursday",
+  4: "Friday",
+  5: "Saturday",
+  6: "Sunday",
 };
 
 export const DAY_SHORT_LABELS: Record<number, string> = {
-  0: 'Mon',
-  1: 'Tue',
-  2: 'Wed',
-  3: 'Thu',
-  4: 'Fri',
-  5: 'Sat',
-  6: 'Sun',
+  0: "Mon",
+  1: "Tue",
+  2: "Wed",
+  3: "Thu",
+  4: "Fri",
+  5: "Sat",
+  6: "Sun",
 };
 
 export const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
 export const WEEKDAYS = [0, 1, 2, 3, 4] as const;
 
 export const SLOT_TYPE = {
-  PERIOD: 'period',
-  LUNCH_BREAK: 'lunch_break',
-  SHORT_BREAK: 'short_break',
-  ASSEMBLY: 'assembly',
-  FREE_PERIOD: 'free_period',
-  SPECIAL: 'special',
+  PERIOD: "period",
+  LUNCH_BREAK: "lunch_break",
+  SHORT_BREAK: "short_break",
+  ASSEMBLY: "assembly",
+  FREE_PERIOD: "free_period",
+  SPECIAL: "special",
 } as const;
 
-export type SlotType = 'period' | 'lunch_break' | 'short_break' | 'assembly' | 'free_period' | 'special';
+export type SlotType =
+  | "period"
+  | "lunch_break"
+  | "short_break"
+  | "assembly"
+  | "free_period"
+  | "special";
 
 export const SLOT_TYPE_LABELS: Record<string, string> = {
-  period: 'Period',
-  lunch_break: 'Lunch Break',
-  short_break: 'Short Break',
-  assembly: 'Assembly',
-  free_period: 'Free Period',
-  special: 'Special',
+  period: "Period",
+  lunch_break: "Lunch Break",
+  short_break: "Short Break",
+  assembly: "Assembly",
+  free_period: "Free Period",
+  special: "Special",
 };
 
-export const SLOT_TYPE_OPTIONS = Object.entries(SLOT_TYPE_LABELS).map(([value, label]) => ({
-  value: value as SlotType,
-  label,
-}));
+export const SLOT_TYPE_OPTIONS = Object.entries(SLOT_TYPE_LABELS).map(
+  ([value, label]) => ({
+    value: value as SlotType,
+    label,
+  }),
+);
 
-export const BREAK_TYPES = new Set(['lunch_break', 'short_break', 'assembly']);
-export const ASSIGNABLE_TYPES = new Set(['period', 'free_period', 'special']);
+export const BREAK_TYPES = new Set(["lunch_break", "short_break", "assembly"]);
+export const ASSIGNABLE_TYPES = new Set(["period", "free_period", "special"]);
 
 /** Check if a slot type is a break */
 export function isBreakSlot(slotType: string): boolean {
@@ -74,7 +82,9 @@ export function isBreakSlot(slotType: string): boolean {
 
 /** Get day label from day number */
 export function getDayLabel(dayNumber: number, short = false): string {
-  return short ? DAY_SHORT_LABELS[dayNumber] || '' : DAY_LABELS[dayNumber] || '';
+  return short
+    ? DAY_SHORT_LABELS[dayNumber] || ""
+    : DAY_LABELS[dayNumber] || "";
 }
 
 /** Get slot type label */
@@ -169,6 +179,7 @@ export interface TimetableEntry {
   end_time: string;
   slot_label: string;
   slot_type: string;
+  group_name: string;
   class_public_id: string;
   class_name: string;
   subject_public_id: string | null;

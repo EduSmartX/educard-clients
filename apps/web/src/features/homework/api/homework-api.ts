@@ -73,6 +73,21 @@ export async function createHomework(data: HomeworkCreatePayload): Promise<Homew
   return response.data.data;
 }
 
+export interface BulkCreateHomeworkResponse {
+  created: HomeworkDetail[];
+  created_count: number;
+  errors: Array<{ index: number; error: string }>;
+}
+
+export async function bulkCreateHomework(
+  items: HomeworkCreatePayload[]
+): Promise<BulkCreateHomeworkResponse> {
+  const response = await api.post<ApiResponse<BulkCreateHomeworkResponse>>(`${BASE_URL}/bulk/`, {
+    items,
+  });
+  return response.data.data;
+}
+
 export async function updateHomework(
   publicId: string,
   data: HomeworkUpdatePayload

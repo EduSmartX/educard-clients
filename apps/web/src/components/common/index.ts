@@ -8,6 +8,7 @@ export * from './warning-confirmation-dialog';
 export * from './how-it-works-dialog';
 export * from './deleted-duplicate-dialog';
 export * from './deleted-view-toggle';
+export * from './header-action-rows';
 export { PageHeader } from './page-header';
 export * from './form-actions';
 export { ResourceListLayout } from './resource-list-layout';

@@ -7,16 +7,19 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { DeleteConfirmationDialog, ReactivateConfirmationDialog } from '@/components/common';
-import { ErrorMessages } from '@/constants';
+import { ErrorMessages, USER_ROLES } from '@/constants';
 import { useSubjects } from '../hooks/use-subjects';
 import { useDeleteSubject, useReactivateSubject } from '../hooks/mutations';
+import { useManagedClassesForSubjects } from '../hooks/use-managed-classes';
 import { SubjectsList } from './index';
 import { ROUTES } from '@/constants/app-config';
 import { useDeletedView } from '@/hooks/use-deleted-view';
+import { useAuth } from '@/hooks/use-auth';
 import type { Subject } from '../types';
 
 export function SubjectsManagement() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // Pagination state
   const [page, setPage] = useState(1);
@@ -32,6 +35,14 @@ export function SubjectsManagement() {
   const { showDeleted, toggleDeletedView } = useDeletedView({
     onPageChange: setPage,
   });
+
+  const { data: managedClasses = [], isLoading: isManagedClassesLoading } =
+    useManagedClassesForSubjects();
+  const isAdmin = user?.role === USER_ROLES.ADMIN;
+  const isSubjectClassTeacher = user?.role === USER_ROLES.TEACHER && managedClasses.length > 0;
+  const isTeacherWithoutManagedClasses =
+    user?.role === USER_ROLES.TEACHER && !isManagedClassesLoading && managedClasses.length === 0;
+  const canCreateSubjects = user?.role === USER_ROLES.ADMIN || isSubjectClassTeacher;
 
   // Fetch subjects
   const { data, isLoading, error } = useSubjects({
@@ -140,6 +151,9 @@ export function SubjectsManagement() {
         onPageSizeChange={handlePageSizeChange}
         onSearch={handleSearch}
         onFilterChange={handleFilterChange}
+        canCreateSubjects={canCreateSubjects}
+        isTeacherWithoutManagedClasses={isTeacherWithoutManagedClasses}
+        isAdmin={isAdmin}
       />
 
       {/* Delete Confirmation Dialog */}

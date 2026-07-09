@@ -24,6 +24,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { ErrorMessages, SuccessMessages } from '@/constants';
 import { downloadFile } from '@/lib/utils';
+import { useCriticalOperation } from '@/providers/critical-operation-provider';
 
 // Generic error type for bulk uploads
 export interface BulkUploadError {
@@ -67,6 +68,7 @@ interface BulkUploadDialogProps {
   triggerLabel?: string;
   triggerVariant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'destructive';
   triggerClassName?: string;
+  triggerDisabled?: boolean;
 
   // API functions
   downloadTemplate: () => Promise<Blob>;
@@ -88,6 +90,12 @@ interface BulkUploadDialogProps {
   // Optional callback after successful upload
   onUploadSuccess?: (result: BulkUploadResult) => void;
 
+  // Optional critical operation overlay configuration
+  criticalOperationOptions?: {
+    title?: string;
+    description?: string;
+  };
+
   // Optional custom alert/info message to display
   customInfoMessage?: string;
 
@@ -101,6 +109,7 @@ export function BulkUploadDialog({
   triggerLabel = 'Bulk Upload',
   triggerVariant = 'outline',
   triggerClassName = '',
+  triggerDisabled = false,
   downloadTemplate,
   uploadFile,
   invalidateQueryKeys,
@@ -113,6 +122,7 @@ export function BulkUploadDialog({
   onUploadSuccess,
   customInfoMessage,
   validateFile,
+  criticalOperationOptions,
 }: Readonly<BulkUploadDialogProps>) {
   const [open, setOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -121,6 +131,7 @@ export function BulkUploadDialog({
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
 
   // Reset file selection
   const resetFileInput = useCallback(() => {
@@ -328,17 +339,30 @@ export function BulkUploadDialog({
     setUploadResult(null);
     setIsUploading(true);
 
+    if (criticalOperationOptions) {
+      beginCriticalOperation({
+        title: criticalOperationOptions.title,
+        description: criticalOperationOptions.description,
+      });
+    }
+
     // Run client-side validation if provided
     const validationFailure = await runClientValidation(selectedFile);
     if (validationFailure) {
       if (validationFailure.failed_count === -1) {
         // Validation threw an error
         setIsUploading(false);
+        if (criticalOperationOptions) {
+          endCriticalOperation();
+        }
         return;
       }
       setUploadResult(validationFailure);
       setIsUploading(false);
       toast.error(`Validation failed: ${validationFailure.failed_count} error(s) found`);
+      if (criticalOperationOptions) {
+        endCriticalOperation();
+      }
       return;
     }
 
@@ -384,6 +408,9 @@ export function BulkUploadDialog({
       }
     } finally {
       setIsUploading(false);
+      if (criticalOperationOptions) {
+        endCriticalOperation();
+      }
     }
   };
 
@@ -400,6 +427,7 @@ export function BulkUploadDialog({
         <Button
           variant={triggerVariant}
           size="sm"
+          disabled={triggerDisabled}
           className={`gap-1.5 shadow-md transition-all duration-200 hover:shadow-lg ${triggerClassName}`}
         >
           <Upload className="h-4 w-4" />

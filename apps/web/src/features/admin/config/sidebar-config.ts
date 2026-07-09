@@ -143,6 +143,12 @@ export const adminSidebarConfig: SidebarSection[] = [
         path: ROUTES.FEES.STUDENT_FEES,
       },
       {
+        id: 'fee-component-requests',
+        label: 'Component Change Requests',
+        icon: ClipboardCheck,
+        path: ROUTES.FEES.COMPONENT_REQUESTS,
+      },
+      {
         id: 'fee-payments',
         label: 'Payments',
         icon: CreditCard,

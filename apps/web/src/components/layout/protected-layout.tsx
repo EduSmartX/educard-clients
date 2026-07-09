@@ -12,6 +12,7 @@ import { getThemeConfig } from '@/lib/utils/theme-utils';
 import { cn } from '@/lib/utils';
 import { useTeacherManagementContext } from '@/features/leave/hooks/use-teacher-management-context';
 import { tokenManager } from '@/lib/token-manager';
+import { CriticalOperationProvider } from '@/providers/critical-operation-provider';
 
 /**
  * Protected Layout - Wraps all authenticated pages with header and sidebar.
@@ -45,25 +46,27 @@ export function ProtectedLayout() {
   const isStudent = user?.role === USER_ROLES.STUDENT;
 
   return (
-    <div className={cn('min-h-screen', theme.mainBgGradient)}>
-      <DashboardHeader
-        organizationName={organization?.name}
-        organizationLogo={organization?.logo}
-        userName={user?.full_name || user?.username}
-        username={user?.username}
-        userRole={userRoleFormatted}
-        userAvatar={avatarUrl}
-        notificationCount={3}
-        showSwitchProfile={isStudent}
-      />
+    <CriticalOperationProvider>
+      <div className={cn('min-h-screen', theme.mainBgGradient)}>
+        <DashboardHeader
+          organizationName={organization?.name}
+          organizationLogo={organization?.logo}
+          userName={user?.full_name || user?.username}
+          username={user?.username}
+          userRole={userRoleFormatted}
+          userAvatar={avatarUrl}
+          notificationCount={3}
+          showSwitchProfile={isStudent}
+        />
 
-      <DashboardLayout
-        sidebarSections={getSidebarConfig()}
-        userRole={userRoleFormatted}
-        isSupervisor={isSupervisor}
-      >
-        <Outlet />
-      </DashboardLayout>
-    </div>
+        <DashboardLayout
+          sidebarSections={getSidebarConfig()}
+          userRole={userRoleFormatted}
+          isSupervisor={isSupervisor}
+        >
+          <Outlet />
+        </DashboardLayout>
+      </div>
+    </CriticalOperationProvider>
   );
 }

@@ -32,7 +32,13 @@ async function uploadSubjectsFile(file: File) {
   return response.data;
 }
 
-export function BulkUploadSubjectsDialog() {
+interface BulkUploadSubjectsDialogProps {
+  triggerDisabled?: boolean;
+}
+
+export function BulkUploadSubjectsDialog({
+  triggerDisabled = false,
+}: Readonly<BulkUploadSubjectsDialogProps>) {
   const { user } = useAuth();
   const isTeacher = user?.role === USER_ROLES.TEACHER;
 
@@ -42,6 +48,7 @@ export function BulkUploadSubjectsDialog() {
       description="Upload multiple subjects at once using an Excel template"
       triggerLabel="Bulk Upload"
       triggerVariant="outline"
+      triggerDisabled={triggerDisabled}
       downloadTemplate={downloadSubjectsTemplate}
       uploadFile={uploadSubjectsFile}
       invalidateQueryKeys={['subjects']}

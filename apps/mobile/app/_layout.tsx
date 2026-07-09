@@ -14,6 +14,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/lib/auth-store';
 import { queryClient } from '@/lib/query-client';
 import { ToastProvider } from '@/lib/toast-context';
+import { CriticalOperationProvider } from '@/providers/critical-operation-context';
 
 // Suppress harmless React Native internal warning from reanimated/gestures
 LogBox.ignoreLogs(['viewIsDescendantOf']);
@@ -153,9 +154,11 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <ToastProvider>
-            <RootLayoutNav />
-          </ToastProvider>
+          <CriticalOperationProvider>
+            <ToastProvider>
+              <RootLayoutNav />
+            </ToastProvider>
+          </CriticalOperationProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

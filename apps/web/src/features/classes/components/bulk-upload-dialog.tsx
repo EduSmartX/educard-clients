@@ -43,6 +43,10 @@ export function BulkUploadDialog() {
       invalidateQueryKeys={['classes']}
       templateFileName="classes_template.xlsx"
       acceptedFileTypes=".xlsx,.xls"
+      criticalOperationOptions={{
+        title: 'Uploading classes',
+        description: 'Please keep this page open until the class import completes.',
+      }}
     />
   );
 }

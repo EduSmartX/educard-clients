@@ -5,7 +5,7 @@
  * (/fees/students/:id/payment/new).
  */
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -36,6 +36,7 @@ import { FeeStatusBadge } from '../../components/fee-status-badge';
 import { FeeAmount } from '../../components/fee-amount';
 import { useStudentFee, useStudentFees } from '../../hooks/use-fee-queries';
 import { useCreatePayment } from '../../hooks/use-fee-mutations';
+import { useClasses } from '@/features/classes/hooks/use-classes';
 import {
   PaymentMode,
   PAYMENT_MODE_OPTIONS,
@@ -99,8 +100,20 @@ export function RecordPaymentPage() {
   const preloadId = id ?? searchParams.get('student_fee') ?? undefined;
   const isRefundMode = searchParams.get('mode') === 'refund';
 
+  const [classFilter, setClassFilter] = useState<string>();
+
   const { data: preloadedFee, isLoading: feeLoading } = useStudentFee(preloadId);
-  const { data: allFeesData } = useStudentFees(preloadId ? undefined : { page_size: 200 });
+  const { data: classesData } = useClasses();
+  const shouldLoadStudentFees = !preloadId && !!classFilter;
+  const { data: allFeesData } = useStudentFees(
+    shouldLoadStudentFees
+      ? {
+          class_public_id: classFilter,
+          page_size: 200,
+        }
+      : undefined,
+    shouldLoadStudentFees
+  );
 
   const createPayment = useCreatePayment();
 
@@ -323,30 +336,56 @@ export function RecordPaymentPage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-              {/* Student Fee Selector (only when not pre-loaded) */}
+              {/* Class + Student Fee Selectors (only when not pre-loaded) */}
               {!preloadId && (
-                <FormField
-                  control={form.control}
-                  name="student_fee_public_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Student Fee</FormLabel>
-                      <FormControl>
-                        <SearchableSelect
-                          options={(allFeesData?.data ?? []).map((f) => ({
-                            value: f.public_id,
-                            label: `${f.student_name} — ${f.class_name} — ${f.fee_structure_name}`,
-                          }))}
-                          value={field.value}
-                          onValueChange={field.onChange}
-                          placeholder="Search for a student..."
-                          searchPlaceholder="Type student name..."
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <>
+                  <div className="space-y-2">
+                    <FormLabel>Class</FormLabel>
+                    <SearchableSelect
+                      options={(classesData?.data ?? []).map((cls) => {
+                        let label = cls.display_name;
+                        if (!label) {
+                          const masterName = cls.class_master?.name;
+                          label = masterName ? `${masterName} - ${cls.name}` : cls.name;
+                        }
+                        return { value: cls.public_id, label };
+                      })}
+                      value={classFilter}
+                      onValueChange={(val) => {
+                        setClassFilter(val || undefined);
+                        form.setValue('student_fee_public_id', '');
+                      }}
+                      placeholder="Select class..."
+                      searchPlaceholder="Search class..."
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="student_fee_public_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Student</FormLabel>
+                        <FormControl>
+                          <SearchableSelect
+                            options={(allFeesData?.data ?? []).map((f) => ({
+                              value: f.public_id,
+                              label: `${f.student_name} — ${f.fee_structure_name}`,
+                            }))}
+                            value={field.value || undefined}
+                            onValueChange={field.onChange}
+                            placeholder={
+                              !classFilter ? 'Select a class first...' : 'Search for a student...'
+                            }
+                            searchPlaceholder="Type student name..."
+                            disabled={!classFilter}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
               )}
 
               {/* Transaction Type Toggle */}

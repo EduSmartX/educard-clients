@@ -19,6 +19,7 @@ import { SearchableSelect } from '@/components/ui/searchable-select';
 import { useFormContext, type Control, type FieldValues, type Path } from 'react-hook-form';
 import { getValidator, type ValidationResult } from '@/lib/utils/field-validators';
 import { formatPhoneNumber, getTenDigitPhoneNumber } from '@/lib/phone-utils';
+import { formatLocalDate, parseLocalDate } from '@/lib/utils/date-utils';
 
 /**
  * Text Input Field Props
@@ -110,8 +111,8 @@ export function TextInputField<T extends FieldValues>({
                 disabled={disabled}
                 readOnly={readOnly}
                 placeholder={isPhone ? placeholder || '999-999-9999' : placeholder}
-                max={max instanceof Date ? max.toISOString().split('T')[0] : max}
-                min={min instanceof Date ? min.toISOString().split('T')[0] : min}
+                max={max instanceof Date ? formatLocalDate(max) : max}
+                min={min instanceof Date ? formatLocalDate(min) : min}
                 onChange={(e) => {
                   if (isPhone) {
                     // Format display, store clean 10 digits
@@ -234,7 +235,7 @@ function toDateOrUndefined(value: Date | string | undefined): Date | undefined {
     return value;
   }
   if (value) {
-    return new Date(value);
+    return parseLocalDate(value) ?? new Date(value);
   }
   return undefined;
 }
@@ -255,7 +256,7 @@ export function DateInputField<T extends FieldValues>({
   const form = useFormContext<T>();
 
   const handleDateChange = (date: Date | null, onChange: (value: string) => void) => {
-    const dateString = date ? date.toISOString().split('T')[0] : '';
+    const dateString = date ? formatLocalDate(date) : '';
     onChange(dateString);
 
     // Clear previous error
@@ -285,7 +286,7 @@ export function DateInputField<T extends FieldValues>({
           </FormLabel>
           <FormControl>
             <DatePicker
-              value={field.value ? new Date(field.value) : null}
+              value={field.value ? (parseLocalDate(String(field.value)) ?? null) : null}
               onChange={(date) => handleDateChange(date, field.onChange)}
               placeholder={`Select ${label.toLowerCase()}`}
               disabled={disabled}

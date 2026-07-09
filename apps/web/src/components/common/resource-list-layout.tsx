@@ -63,6 +63,14 @@ export interface ResourceListProps<TData> {
   emptyActionLabel?: string;
   /** View mode for conditional rendering */
   viewMode?: 'admin' | 'employee';
+  /** Whether create action is allowed */
+  canCreate?: boolean;
+  /** Show create button even when disabled */
+  showDisabledCreateButton?: boolean;
+  /** Disable create button */
+  createButtonDisabled?: boolean;
+  /** Optional eligibility info message */
+  eligibilityMessage?: string;
 }
 
 // --- Component ---
@@ -88,6 +96,10 @@ export function ResourceListLayout<TData>({
   createButtonLabel,
   emptyActionLabel,
   viewMode = 'admin',
+  canCreate = true,
+  showDisabledCreateButton = false,
+  createButtonDisabled = false,
+  eligibilityMessage,
 }: Readonly<ResourceListProps<TData>>) {
   const isEmployeeView = viewMode === 'employee';
   const [appliedSearchQuery, setAppliedSearchQuery] = useState('');
@@ -143,6 +155,8 @@ export function ResourceListLayout<TData>({
 
   const hasActiveFilters = Object.keys(filters).length > 0;
   const hasSearchOrFilters = !!(appliedSearchQuery || hasActiveFilters);
+  const shouldShowCreateButton =
+    !showDeleted && !isEmployeeView && (canCreate || showDisabledCreateButton);
 
   return (
     <div className="space-y-6">
@@ -155,7 +169,7 @@ export function ResourceListLayout<TData>({
             : getListDescription(resourceName, showDeleted)
         }
         actions={[
-          ...(!showDeleted && !isEmployeeView
+          ...(shouldShowCreateButton
             ? [
                 {
                   label:
@@ -164,6 +178,7 @@ export function ResourceListLayout<TData>({
                   onClick: onCreateNew,
                   variant: 'brand' as const,
                   icon: Plus,
+                  disabled: createButtonDisabled,
                 },
               ]
             : []),
@@ -180,6 +195,13 @@ export function ResourceListLayout<TData>({
           {headerExtra}
         </div>
       </PageHeader>
+
+      {!!eligibilityMessage && !showDeleted && (
+        <Alert className="border-amber-200 bg-amber-50">
+          <AlertCircle className="h-4 w-4 text-amber-700" />
+          <AlertDescription className="text-amber-900">{eligibilityMessage}</AlertDescription>
+        </Alert>
+      )}
 
       {/* Search and Filter Bar */}
       <Card>
@@ -261,7 +283,12 @@ export function ResourceListLayout<TData>({
             onPageSizeChange={onPageSizeChange}
             emptyMessage={getEmptyMessage(resourceName, hasSearchOrFilters, showDeleted)}
             emptyAction={
-              !error && !showDeleted && !hasSearchOrFilters && data.length === 0
+              !error &&
+              !showDeleted &&
+              canCreate &&
+              !createButtonDisabled &&
+              !hasSearchOrFilters &&
+              data.length === 0
                 ? {
                     label:
                       emptyActionLabel ||

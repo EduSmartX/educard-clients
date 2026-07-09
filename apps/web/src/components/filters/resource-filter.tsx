@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Badge } from '@/components/ui/badge';
+import { formatLocalDate, parseLocalDate } from '@/lib/utils/date-utils';
 
 export interface FilterField {
   name: string;
@@ -153,9 +154,9 @@ export function ResourceFilter({
                         From Date
                       </Label>
                       <DatePicker
-                        value={filters[startName] ? new Date(filters[startName] as string) : null}
+                        value={parseLocalDate(filters[startName] as string) ?? null}
                         onChange={(date) => {
-                          const dateString = date ? date.toISOString().split('T')[0] : '';
+                          const dateString = date ? formatLocalDate(date) : '';
                           handleFilterChange(startName, dateString);
                         }}
                         placeholder="Select start date"
@@ -169,16 +170,14 @@ export function ResourceFilter({
                         To Date
                       </Label>
                       <DatePicker
-                        value={filters[endName] ? new Date(filters[endName] as string) : null}
+                        value={parseLocalDate(filters[endName] as string) ?? null}
                         onChange={(date) => {
-                          const dateString = date ? date.toISOString().split('T')[0] : '';
+                          const dateString = date ? formatLocalDate(date) : '';
                           handleFilterChange(endName, dateString);
                         }}
                         placeholder="Select end date"
                         disabled={field.disabled}
-                        minDate={
-                          filters[startName] ? new Date(filters[startName] as string) : undefined
-                        }
+                        minDate={parseLocalDate(filters[startName] as string) ?? undefined}
                       />
                     </div>
                   </div>
@@ -307,9 +306,9 @@ export function ResourceFilter({
 
                   {field.type === 'date' && (
                     <DatePicker
-                      value={filters[field.name] ? new Date(filters[field.name] as string) : null}
+                      value={parseLocalDate(filters[field.name] as string) ?? null}
                       onChange={(date) => {
-                        const dateString = date ? date.toISOString().split('T')[0] : '';
+                        const dateString = date ? formatLocalDate(date) : '';
                         handleFilterChange(field.name, dateString);
                       }}
                       placeholder={field.placeholder || 'Select date'}

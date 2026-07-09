@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCriticalOperation } from '@/providers/critical-operation-provider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -126,6 +127,7 @@ export function MarksEntryPage() {
 
   // Mark entries state
   const [markEntries, setMarkEntries] = useState<StudentMarkRow[]>([]);
+  const [isMarksPublishedLocally, setIsMarksPublishedLocally] = useState(false);
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
   // Keyboard navigation
@@ -197,6 +199,7 @@ export function MarksEntryPage() {
     setSelectedClassId('');
     setSelectedExamId('');
     setMarkEntries([]);
+    setIsMarksPublishedLocally(false);
   }, []);
 
   // Handler: when class changes from user interaction, reset exam
@@ -204,11 +207,13 @@ export function MarksEntryPage() {
     setSelectedClassId(val);
     setSelectedExamId('');
     setMarkEntries([]);
+    setIsMarksPublishedLocally(false);
   }, []);
 
   // Handler: when exam/subject changes from user interaction
   const handleExamChange = useCallback((val: string) => {
     setSelectedExamId(val);
+    setIsMarksPublishedLocally(false);
   }, []);
 
   // Bulk upsert mutation
@@ -222,6 +227,7 @@ export function MarksEntryPage() {
       toast.error(error.message || 'Failed to save marks');
     },
   });
+  const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
 
   // Unpublish only; publish can now be triggered by bulk-upsert with publish_after_save.
   const unpublishMarksMutation = useUnpublishExamMarks();
@@ -266,6 +272,10 @@ export function MarksEntryPage() {
           }
     );
 
+    beginCriticalOperation({
+      title: 'Saving marks',
+      description: 'Please keep this page open until the save completes.',
+    });
     try {
       await bulkUpsertMutation.mutateAsync({
         session_id: selectedSessionId,
@@ -273,13 +283,24 @@ export function MarksEntryPage() {
         marks,
         publish_after_save: true,
       });
+      setIsMarksPublishedLocally(true);
       queryClient.invalidateQueries({ queryKey: ['exams'] });
       toast.success('Marks saved and published successfully!');
     } catch (error) {
       console.error('Save & Publish failed:', error);
       // Individual error toasts already shown by mutation hooks
+    } finally {
+      endCriticalOperation();
     }
-  }, [selectedSessionId, selectedExamId, markEntries, bulkUpsertMutation, queryClient]);
+  }, [
+    selectedSessionId,
+    selectedExamId,
+    markEntries,
+    bulkUpsertMutation,
+    queryClient,
+    beginCriticalOperation,
+    endCriticalOperation,
+  ]);
 
   const handleMarkChange = (
     index: number,
@@ -353,6 +374,10 @@ export function MarksEntryPage() {
       {
         onSuccess: () => {
           toast.success('Marks saved successfully!');
+          endCriticalOperation();
+        },
+        onError: () => {
+          endCriticalOperation();
         },
       }
     );
@@ -360,6 +385,7 @@ export function MarksEntryPage() {
 
   const isPending = bulkUpsertMutation.isPending;
   const isDataLoading = studentsLoading || existingMarksLoading;
+  const isMarksLocked = !!selectedExam?.is_marks_published || isMarksPublishedLocally;
 
   // Stats
   const enteredCount = markEntries.filter((e) => e.marks_obtained || e.is_absent).length;
@@ -613,7 +639,7 @@ export function MarksEntryPage() {
           <div className="border-t bg-gray-50/50 px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-600">
-                {selectedExam?.is_marks_published ? (
+                {isMarksLocked ? (
                   <span className="font-medium text-blue-600">
                     🔒 Marks published — unpublish to allow editing
                   </span>
@@ -649,9 +675,7 @@ export function MarksEntryPage() {
                 <Button
                   variant="outline"
                   onClick={handleSaveAll}
-                  disabled={
-                    isPending || markEntries.length === 0 || !!selectedExam?.is_marks_published
-                  }
+                  disabled={isPending || markEntries.length === 0 || isMarksLocked}
                   className="gap-2"
                 >
                   {isPending ? (
@@ -662,20 +686,23 @@ export function MarksEntryPage() {
                   Save
                 </Button>
 
-                {!selectedExam?.is_marks_published && (
+                {!isMarksLocked && (
                   <Button
                     variant="brand"
                     onClick={handleSaveAndPublish}
                     disabled={
                       bulkUpsertMutation.isPending ||
                       markEntries.length === 0 ||
-                      enteredCount < markEntries.length
+                      enteredCount < markEntries.length ||
+                      isMarksLocked
                     }
                     className="gap-2"
                     title={
-                      enteredCount < markEntries.length
-                        ? `Enter marks for all ${markEntries.length} students before publishing`
-                        : 'Save marks and publish results'
+                      isMarksLocked
+                        ? 'Marks are already published'
+                        : enteredCount < markEntries.length
+                          ? `Enter marks for all ${markEntries.length} students before publishing`
+                          : 'Save marks and publish results'
                     }
                   >
                     {bulkUpsertMutation.isPending ? (

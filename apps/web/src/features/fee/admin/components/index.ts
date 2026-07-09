@@ -9,3 +9,5 @@ export { PaymentFormDialog } from './payment-form-dialog';
 export { PaymentHistoryTable } from './payment-history-table';
 export { FeeDashboardStats } from './fee-dashboard-stats';
 export { SendReminderDialog } from './send-reminder-dialog';
+export { StudentFeeDiscountSection } from './student-fee-discount-section';
+export { StudentFeeComponentsSection } from './student-fee-components-section';

@@ -268,7 +268,7 @@ function ByTeacherView() {
 
       {!isLoading && timetableData && slotRows.length > 0 && (
         <div className="space-y-3">
-          {availableDays.length > 1 && (
+          {availableDays.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
@@ -418,18 +418,46 @@ function ByTeacherView() {
                             >
                               <div
                                 className={cn(
-                                  'h-full rounded-lg border-l-3 p-2',
+                                  'flex h-full flex-col rounded-lg border-l-3 px-3 py-2',
                                   periodColor.bg,
                                   periodColor.border
                                 )}
                               >
-                                <div
-                                  className={cn('truncate text-xs font-semibold', periodColor.text)}
-                                >
-                                  {entry.subject_name || 'Unassigned'}
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className="flex min-w-0 items-baseline gap-2">
+                                    <span
+                                      className={cn('truncate text-sm font-bold', periodColor.text)}
+                                    >
+                                      {entry.class_name}
+                                    </span>
+                                    <span className={cn('truncate text-xs', periodColor.sub)}>
+                                      {entry.subject_name || 'Unassigned'}
+                                    </span>
+                                  </div>
+                                  <span
+                                    className={cn(
+                                      'shrink-0 rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-semibold',
+                                      periodColor.text
+                                    )}
+                                  >
+                                    {row.slotLabel || 'Period'}
+                                  </span>
                                 </div>
-                                <div className={cn('mt-0.5 truncate text-[11px]', periodColor.sub)}>
-                                  {entry.class_name}
+
+                                <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[10px]">
+                                  <span className="rounded-full bg-white/70 px-2 py-0.5 font-medium text-slate-600">
+                                    {formatSlotTime(row.startTime)} – {formatSlotTime(row.endTime)}
+                                  </span>
+                                  {!!entry.group_name && (
+                                    <span className="rounded-full bg-white/70 px-2 py-0.5 font-medium text-slate-600">
+                                      {entry.group_name}
+                                    </span>
+                                  )}
+                                  {!!entry.room && (
+                                    <span className="rounded-full bg-white/70 px-2 py-0.5 font-medium text-slate-600">
+                                      📍 {entry.room}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             </div>

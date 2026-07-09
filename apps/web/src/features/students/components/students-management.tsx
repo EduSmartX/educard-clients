@@ -20,6 +20,17 @@ import { useAuth } from '@/hooks/use-auth';
 
 type PageMode = 'list' | 'create' | 'edit' | 'view';
 
+function areFiltersEqual(a: Record<string, string>, b: Record<string, string>): boolean {
+  const aKeys = Object.keys(a);
+  const bKeys = Object.keys(b);
+
+  if (aKeys.length !== bKeys.length) {
+    return false;
+  }
+
+  return aKeys.every((key) => a[key] === b[key]);
+}
+
 export function StudentsManagement() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -43,15 +54,18 @@ export function StudentsManagement() {
   });
 
   // Fetch managed classes for class teacher permissions
-  const { data: managedClasses = [] } = useManagedClasses();
+  const { data: managedClasses = [], isLoading: isManagedClassesLoading } = useManagedClasses();
 
   // Determine if user can create students
   const isClassTeacher = user?.role === USER_ROLES.TEACHER && managedClasses.length > 0;
+  const isTeacherWithoutManagedClasses =
+    user?.role === USER_ROLES.TEACHER && !isManagedClassesLoading && managedClasses.length === 0;
   const canCreateStudents = user?.role === USER_ROLES.ADMIN || isClassTeacher;
+  const searchParamsString = searchParams.toString();
 
   // Sync filters with URL query params
   useEffect(() => {
-    const params = Object.fromEntries(searchParams.entries());
+    const params = Object.fromEntries(new URLSearchParams(searchParamsString).entries());
     const newFilters: Record<string, string> = {};
 
     if (params.class_assigned__public_id) {
@@ -66,12 +80,12 @@ export function StudentsManagement() {
     if (params.admission_date_to) {
       newFilters.admission_date_to = params.admission_date_to;
     }
-    if (params.search) {
-      setSearchQuery(params.search);
-    }
-
-    setFilters(newFilters);
-  }, [searchParams]);
+    const nextSearchQuery = params.search || '';
+    setSearchQuery((prev: string) => (prev === nextSearchQuery ? prev : nextSearchQuery));
+    setFilters((prev: Record<string, string>) =>
+      areFiltersEqual(prev, newFilters) ? prev : newFilters
+    );
+  }, [searchParamsString]);
 
   // Update URL when filters change
   useEffect(() => {
@@ -81,17 +95,18 @@ export function StudentsManagement() {
       params.set('search', searchQuery);
     }
 
-    Object.entries(filters).forEach(([key, value]) => {
+    for (const key of Object.keys(filters)) {
+      const value = filters[key];
       if (value) {
         params.set(key, value);
       }
-    });
+    }
 
     const newSearch = params.toString();
-    if (newSearch !== searchParams.toString()) {
+    if (newSearch !== searchParamsString) {
       setSearchParams(params, { replace: true });
     }
-  }, [searchQuery, filters, setSearchParams, searchParams]);
+  }, [searchQuery, filters, setSearchParams, searchParamsString]);
 
   // Determine page mode from URL
   const getPageMode = (): PageMode => {
@@ -237,6 +252,7 @@ export function StudentsManagement() {
         onFilterChange={handleFilterChange}
         canCreateStudents={canCreateStudents}
         isClassTeacher={isClassTeacher}
+        isTeacherWithoutManagedClasses={isTeacherWithoutManagedClasses}
       />
 
       {!showDeleted && (

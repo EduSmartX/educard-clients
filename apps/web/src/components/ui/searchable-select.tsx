@@ -55,6 +55,7 @@ export function SearchableSelect({
 
   const selectedOption = options.find((option) => option.value === value);
   const showSearch = options.length > showSearchThreshold;
+  const safeOptions = options.filter((opt) => opt.value !== null && opt.label !== null);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -92,7 +93,7 @@ export function SearchableSelect({
           <CommandList>
             <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup>
-              {options.map((option) => (
+              {safeOptions.map((option) => (
                 <CommandItem
                   key={option.value}
                   value={option.value}

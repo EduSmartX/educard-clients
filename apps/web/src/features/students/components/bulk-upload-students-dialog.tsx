@@ -38,7 +38,13 @@ async function uploadStudentsFile(file: File, minimalFields: boolean = false) {
   return response.data;
 }
 
-export function BulkUploadStudentsDialog() {
+interface BulkUploadStudentsDialogProps {
+  triggerDisabled?: boolean;
+}
+
+export function BulkUploadStudentsDialog({
+  triggerDisabled = false,
+}: Readonly<BulkUploadStudentsDialogProps>) {
   const [isMinimalFields, setIsMinimalFields] = useState(false);
   const { user } = useAuth();
   const isTeacher = user?.role === USER_ROLES.TEACHER;
@@ -58,6 +64,7 @@ export function BulkUploadStudentsDialog() {
       description="Upload multiple students at once using an Excel template"
       triggerLabel="Bulk Upload"
       triggerVariant="outline"
+      triggerDisabled={triggerDisabled}
       triggerClassName="border-2 border-blue-500 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
       downloadTemplate={() => downloadStudentsTemplate(isMinimalFields)}
       uploadFile={(file) => uploadStudentsFile(file, isMinimalFields)}
@@ -72,6 +79,10 @@ export function BulkUploadStudentsDialog() {
       onMinimalFieldsChange={setIsMinimalFields}
       minimalFieldsLabel="Only Required Fields (Student ID, Name, Gender, Class)"
       customInfoMessage={isTeacher ? InfoMessages.CLASS_TEACHER.BULK_UPLOAD_STUDENTS : undefined}
+      criticalOperationOptions={{
+        title: 'Uploading students',
+        description: 'Please keep this page open until the student import completes.',
+      }}
     />
   );
 }

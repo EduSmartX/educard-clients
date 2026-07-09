@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useCriticalOperation } from '@/providers/critical-operation-provider';
 import { useManagedClasses } from '../hooks/use-managed-classes';
 import { resetClassPasswords } from '../api/students-api';
 
@@ -47,10 +48,12 @@ async function extractErrorMessage(error: unknown, fallback: string): Promise<st
 interface ResetClassPasswordsDialogProps {
   /** Trigger button variant */
   triggerVariant?: 'default' | 'outline' | 'ghost';
+  triggerDisabled?: boolean;
 }
 
 export function ResetClassPasswordsDialog({
   triggerVariant = 'outline',
+  triggerDisabled = false,
 }: Readonly<ResetClassPasswordsDialogProps>) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,6 +64,7 @@ export function ResetClassPasswordsDialog({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const { data: managedClasses = [] } = useManagedClasses();
+  const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
 
   const classOptions = managedClasses.map((cls) => ({
     value: cls.public_id,
@@ -89,6 +93,10 @@ export function ResetClassPasswordsDialog({
     }
 
     setIsSubmitting(true);
+    beginCriticalOperation({
+      title: 'Resetting class passwords',
+      description: 'Please keep this page open until the credential file finishes downloading.',
+    });
 
     try {
       const { blob, filename } = await resetClassPasswords(classId, {
@@ -117,6 +125,7 @@ export function ResetClassPasswordsDialog({
       toast.error(message);
     } finally {
       setIsSubmitting(false);
+      endCriticalOperation();
     }
   };
 
@@ -131,7 +140,7 @@ export function ResetClassPasswordsDialog({
       }}
     >
       <DialogTrigger asChild>
-        <Button variant={triggerVariant} className="gap-2">
+        <Button variant={triggerVariant} className="gap-2" disabled={triggerDisabled}>
           <KeyRound className="h-4 w-4" />
           Reset Passwords
         </Button>

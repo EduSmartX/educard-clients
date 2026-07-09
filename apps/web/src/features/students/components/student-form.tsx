@@ -96,11 +96,13 @@ export function StudentForm({
 
   // Fetch classes for selection
   // For teachers in create mode, only fetch classes where they are class teacher
-  const { data: classesData } = useClasses({
+  const { data: classesData, isLoading: isClassesLoading } = useClasses({
     page_size: 100,
     ...(isTeacher && mode === 'create' ? { for_student_form: true } : {}),
   });
   const classes = useMemo<Class[]>(() => classesData?.data || [], [classesData]);
+  const isTeacherWithoutManagedClasses =
+    isTeacher && mode === 'create' && !isClassesLoading && classes.length === 0;
 
   // Supervisors (teachers) for supervisor dropdown
   const { supervisors, isLoading: isSupervisorsLoading } = useSupervisors();
@@ -313,6 +315,18 @@ export function StudentForm({
   // Watch class selection to enable/disable form fields
   const selectedClassId = form.watch('class_id');
   const isClassSelected = mode !== 'create' || !!selectedClassId;
+
+  if (isTeacherWithoutManagedClasses) {
+    return (
+      <Alert className="border-amber-200 bg-amber-50">
+        <Info className="h-4 w-4 text-amber-700" />
+        <AlertDescription className="text-amber-900">
+          You are not eligible to add any student because you are not assigned as class teacher for
+          any class.
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <>

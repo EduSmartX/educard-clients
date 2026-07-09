@@ -228,8 +228,6 @@ export function buildStudentPayload(
       payload,
       stripEmpty({
         guardian_name: safeTrim(form.guardian_name),
-        guardian_phone: safeTrim(form.guardian_phone),
-        guardian_email: safeTrim(form.guardian_email),
         guardian_relationship: form.guardian_relationship || undefined,
         medical_conditions: safeTrim(form.medical_conditions),
         description: safeTrim(form.description),

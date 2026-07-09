@@ -214,6 +214,11 @@ const StudentFeeEditPage = lazy(() =>
     default: m.StudentFeeEditPage,
   }))
 );
+const StudentFeeComponentRequestsPage = lazy(() =>
+  import('./features/fee/admin/pages/student-fee-component-requests-page').then((m) => ({
+    default: m.StudentFeeComponentRequestsPage,
+  }))
+);
 const FeePaymentsPage = lazy(() =>
   import('./features/fee/admin/pages/payments-page').then((m) => ({
     default: m.PaymentsPage,
@@ -362,6 +367,10 @@ function App() {
             <Route path={ROUTES.FEES.STRUCTURES_NEW} element={<CreateFeeStructurePage />} />
             <Route path={ROUTES.FEES.STRUCTURES_EDIT} element={<EditFeeStructurePage />} />
             <Route path={ROUTES.FEES.STUDENT_FEES} element={<StudentFeesPage />} />
+            <Route
+              path={ROUTES.FEES.COMPONENT_REQUESTS}
+              element={<StudentFeeComponentRequestsPage />}
+            />
             <Route path={ROUTES.FEES.STUDENT_FEES_VIEW} element={<StudentFeeDetailPage />} />
             <Route path={ROUTES.FEES.STUDENT_FEES_EDIT} element={<StudentFeeEditPage />} />
             <Route path={ROUTES.FEES.PAYMENTS} element={<FeePaymentsPage />} />

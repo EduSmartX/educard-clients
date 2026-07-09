@@ -15,6 +15,7 @@ import {
   Calendar,
   IndianRupee,
   Pencil,
+  SlidersHorizontal,
   CreditCard,
   CheckCircle,
   XCircle,
@@ -198,10 +199,32 @@ export function StudentFeeDetailPage() {
                 },
               ]
             : []),
+          ...(pendingComponents.length > 0
+            ? [
+                {
+                  label: `Review Change Requests (${pendingComponents.length})`,
+                  onClick: () => navigate(ROUTES.FEES.COMPONENT_REQUESTS),
+                  variant: 'warning' as const,
+                  icon: Clock,
+                },
+              ]
+            : []),
           {
-            label: 'Edit',
-            onClick: () => navigate(ROUTES.FEES.STUDENT_FEES_EDIT.replace(':id', id || '')),
-            variant: 'brand' as const,
+            label: 'Modify Components',
+            onClick: () =>
+              navigate(
+                `${ROUTES.FEES.STUDENT_FEES_EDIT.replace(':id', id || '')}?section=components`
+              ),
+            variant: 'secondary' as const,
+            icon: SlidersHorizontal,
+          },
+          {
+            label: 'Student Discount',
+            onClick: () =>
+              navigate(
+                `${ROUTES.FEES.STUDENT_FEES_EDIT.replace(':id', id || '')}?section=discount`
+              ),
+            variant: 'default' as const,
             icon: Pencil,
           },
         ]}
@@ -417,33 +440,51 @@ export function StudentFeeDetailPage() {
               {studentFee.components.map((component: StudentFeeComponentItem, idx: number) => (
                 <div
                   key={component.public_id || idx}
-                  className="flex items-center justify-between rounded-lg border p-3"
+                  className="flex items-start justify-between rounded-lg border p-3"
                 >
                   <div>
                     <div className="font-medium">{component.name}</div>
-                    <div className="text-muted-foreground text-sm">
-                      {component.component_type === 'mandatory' ? 'Mandatory' : 'Optional'}
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      <Badge
+                        variant={component.component_type === 'mandatory' ? 'secondary' : 'outline'}
+                        className="text-xs"
+                      >
+                        {component.component_type === 'mandatory' ? 'Mandatory' : 'Optional'}
+                      </Badge>
+                      <Badge
+                        variant={component.is_selected ? 'default' : 'secondary'}
+                        className="text-xs"
+                      >
+                        {component.is_selected ? 'Selected' : 'Not Selected'}
+                      </Badge>
+                      {component.approval_status === ComponentApprovalStatus.PENDING && (
+                        <Badge
+                          variant="outline"
+                          className="border-amber-400 text-xs text-amber-700"
+                        >
+                          Pending Review
+                        </Badge>
+                      )}
+                      {component.approval_status === ComponentApprovalStatus.REJECTED && (
+                        <Badge variant="outline" className="border-red-400 text-xs text-red-700">
+                          Rejected
+                        </Badge>
+                      )}
                     </div>
+                    {!!component.request_note && (
+                      <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-800">
+                        Parent note: {component.request_note}
+                      </div>
+                    )}
                   </div>
                   <div className="flex flex-col items-end gap-1 text-right">
                     <div className="font-semibold">
                       ₹{component.amount?.toLocaleString('en-IN')}
                     </div>
-                    <Badge
-                      variant={component.is_selected ? 'default' : 'secondary'}
-                      className="text-xs"
-                    >
-                      {component.is_selected ? 'Selected' : 'Not Selected'}
-                    </Badge>
-                    {component.approval_status === ComponentApprovalStatus.PENDING && (
-                      <Badge variant="outline" className="border-amber-400 text-xs text-amber-700">
-                        Pending Review
-                      </Badge>
-                    )}
-                    {component.approval_status === ComponentApprovalStatus.REJECTED && (
-                      <Badge variant="outline" className="border-red-400 text-xs text-red-700">
-                        Rejected
-                      </Badge>
+                    {!!component.admin_note && (
+                      <div className="text-muted-foreground max-w-56 text-xs">
+                        Admin note: {component.admin_note}
+                      </div>
                     )}
                   </div>
                 </div>

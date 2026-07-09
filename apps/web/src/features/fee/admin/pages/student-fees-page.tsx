@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { SearchableSelect } from '@/components/ui/searchable-select';
-import { Download, Search, Filter, X, Plus } from 'lucide-react';
+import { Download, Search, Filter, X, Plus, ClipboardCheck } from 'lucide-react';
 import { ROUTES } from '@/constants/app-config';
 import { StudentFeeTable } from '../components/student-fee-table';
 import { SendReminderDialog } from '../components/send-reminder-dialog';
@@ -112,6 +112,12 @@ export function StudentFeesPage() {
         title="Student Fees"
         description="View and manage student fee records"
         actions={[
+          {
+            label: 'Component Change Requests',
+            onClick: () => navigate(ROUTES.FEES.COMPONENT_REQUESTS),
+            variant: 'warning' as const,
+            icon: ClipboardCheck,
+          },
           {
             label: 'Record Payment',
             onClick: () => navigate(ROUTES.FEES.PAYMENT_NEW),

@@ -29,6 +29,9 @@ interface SubjectsListProps {
   onPageSizeChange?: (pageSize: number) => void;
   onSearch?: (query: string) => void;
   onFilterChange?: (filters: Record<string, string>) => void;
+  canCreateSubjects?: boolean;
+  isTeacherWithoutManagedClasses?: boolean;
+  isAdmin?: boolean;
 }
 
 export function SubjectsList({
@@ -46,6 +49,9 @@ export function SubjectsList({
   onPageSizeChange,
   onSearch,
   onFilterChange,
+  canCreateSubjects = true,
+  isTeacherWithoutManagedClasses = false,
+  isAdmin = false,
 }: SubjectsListProps) {
   // Fetch data for filter dropdowns
   const { data: classesData } = useClasses({ page: 1, page_size: 100 });
@@ -110,6 +116,8 @@ export function SubjectsList({
     isDeletedView: showDeleted,
   });
 
+  const showBulkUpload = !showDeleted && canCreateSubjects;
+
   return (
     <ResourceListLayout<Subject>
       resourceName="Subjects"
@@ -128,7 +136,25 @@ export function SubjectsList({
       onSearch={onSearch}
       onFilterChange={onFilterChange}
       getRowKey={(row) => row.public_id}
-      headerExtra={showDeleted ? undefined : <BulkUploadSubjectsDialog />}
+      headerExtra={
+        showBulkUpload ? (
+          isAdmin ? (
+            <div className="flex basis-full justify-end gap-2">
+              <BulkUploadSubjectsDialog />
+            </div>
+          ) : (
+            <BulkUploadSubjectsDialog />
+          )
+        ) : undefined
+      }
+      canCreate={canCreateSubjects}
+      showDisabledCreateButton={false}
+      createButtonDisabled={false}
+      eligibilityMessage={
+        isTeacherWithoutManagedClasses
+          ? 'You are not eligible to add any subject because you are not assigned as class teacher for any class.'
+          : undefined
+      }
     />
   );
 }

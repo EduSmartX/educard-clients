@@ -170,6 +170,7 @@ export interface StudentFeeListItem {
   is_overdue: boolean;
   selected_component_count: number;
   total_component_count: number;
+  pending_approvals?: number;
   last_payment_date: string | null;
   created_at: string;
 }
@@ -342,6 +343,7 @@ export interface StudentFeeFilters {
   class_public_id?: string;
   student_public_id?: string;
   fee_structure_public_id?: string;
+  has_pending_component_requests?: boolean;
   paid_percentage_lt?: number;
   paid_percentage_gte?: number;
   page?: number;

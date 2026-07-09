@@ -37,6 +37,7 @@ import { apiClient } from '@/api/client';
 import { ConfirmDialog } from '@/components/common';
 import { FormDatePicker } from '@/components/forms/FormDatePicker';
 import { handleMutationError } from '@/lib/mutation-utils';
+import { useCriticalOperation } from '@/providers/critical-operation-context';
 import { headerStyles, layoutStyles } from '@/styles';
 import { showToast } from '@/utils/toast';
 
@@ -106,6 +107,7 @@ export default function TimesheetApprovalsScreen() {
     item: null,
   });
   const [returnComment, setReturnComment] = useState('');
+  const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
 
   const queryParams = useMemo(() => {
     const p: Record<string, string> = { view_type: 'staff' };
@@ -187,6 +189,10 @@ export default function TimesheetApprovalsScreen() {
 
   const confirmApprove = () => {
     if (approveTarget) {
+      beginCriticalOperation({
+        title: 'Approving timesheet',
+        description: 'Please keep this screen open until the review completes.',
+      });
       reviewMutation.mutate(
         {
           publicId: approveTarget.public_id,
@@ -195,6 +201,7 @@ export default function TimesheetApprovalsScreen() {
         {
           onSuccess: () => setApproveTarget(null),
           onError: () => setApproveTarget(null),
+          onSettled: () => endCriticalOperation(),
         }
       );
     }
@@ -211,6 +218,10 @@ export default function TimesheetApprovalsScreen() {
       Alert.alert('Comment Required', 'Please provide a reason for rejecting.');
       return;
     }
+    beginCriticalOperation({
+      title: 'Rejecting timesheet',
+      description: 'Please keep this screen open until the review completes.',
+    });
     reviewMutation.mutate(
       {
         publicId: returnModal.item.public_id,
@@ -222,6 +233,7 @@ export default function TimesheetApprovalsScreen() {
           setReturnModal({ visible: false, item: null });
           setReturnComment('');
         },
+        onSettled: () => endCriticalOperation(),
       }
     );
   };

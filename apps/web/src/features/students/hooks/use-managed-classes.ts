@@ -20,8 +20,11 @@ export function useManagedClasses() {
   return useQuery<Class[], Error>({
     queryKey: ['managed-classes', user?.public_id],
     queryFn: async () => {
-      // Fetch all classes (backend will filter based on user role)
-      const response = await fetchClasses({ is_deleted: false });
+      // Keep behavior aligned with student form permission filtering
+      const response = await fetchClasses({
+        is_deleted: false,
+        for_student_form: true,
+      });
       return response.data;
     },
     enabled: !!user && (user.role === USER_ROLES.ADMIN || user.role === USER_ROLES.TEACHER),

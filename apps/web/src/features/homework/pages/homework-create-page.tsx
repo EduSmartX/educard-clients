@@ -28,9 +28,15 @@ import { ROUTES } from '@/constants/app-config';
 import { PageHeader } from '@/components/common';
 import { getSubjectColor, HOMEWORK_UI } from '@educard/shared';
 import { toast } from 'sonner';
+import { useCriticalOperation } from '@/providers/critical-operation-provider';
 
 import { FileUpload, FILE_UPLOAD_PRESETS, type UploadedFile } from '@/components/ui/file-upload';
-import { useTeacherClasses, useCreateHomework, useUploadAttachment } from '../hooks';
+import {
+  useTeacherClasses,
+  useCreateHomework,
+  useBulkCreateHomework,
+  useUploadAttachment,
+} from '../hooks';
 import { HOMEWORK_PRIORITY_OPTIONS, SUBMISSION_TYPE_OPTIONS } from '../types';
 
 const homeworkItemSchema = z.object({
@@ -102,7 +108,9 @@ export default function HomeworkCreatePage() {
 
   const { data: teacherClasses = [], isLoading: isLoadingClasses } = useTeacherClasses();
   const createMutation = useCreateHomework();
+  const bulkCreateMutation = useBulkCreateHomework();
   const uploadMutation = useUploadAttachment();
+  const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -183,51 +191,96 @@ export default function HomeworkCreatePage() {
       return;
     }
 
+    const buildPayload = (item: (typeof enabledItems)[0]) => ({
+      title: item.title,
+      description: item.description,
+      instructions: item.instructions,
+      chapter: item.chapter || undefined,
+      subject_public_id: item.subject_public_id,
+      due_datetime: data.due_datetime.toISOString(),
+      assigned_date: format(data.assigned_date, 'yyyy-MM-dd'),
+      status: data.status,
+      priority: item.priority,
+      submission_type: item.submission_type,
+      reference_link: item.reference_link || undefined,
+    });
+
     let successCount = 0;
     let errorCount = 0;
+    const isBulkCreate = enabledItems.length > 1;
 
-    for (const item of enabledItems) {
-      try {
-        const result = await createMutation.mutateAsync({
-          title: item.title,
-          description: item.description,
-          instructions: item.instructions,
-          chapter: item.chapter || undefined,
-          subject_public_id: item.subject_public_id,
-          due_datetime: data.due_datetime.toISOString(),
-          assigned_date: format(data.assigned_date, 'yyyy-MM-dd'),
-          status: data.status,
-          priority: item.priority,
-          submission_type: item.submission_type,
-          reference_link: item.reference_link || undefined,
-        });
+    if (isBulkCreate) {
+      beginCriticalOperation({
+        title: 'Creating homework',
+        description: `Creating ${enabledItems.length} homework assignments. Please wait...`,
+      });
+    }
 
-        const files = uploadedFiles[item.subject_public_id] || [];
-        for (const file of files) {
-          await uploadMutation.mutateAsync({
-            homeworkPublicId: result.public_id,
-            file: file.file,
-          });
+    try {
+      if (enabledItems.length === 1) {
+        // Single homework - use single API call
+        const item = enabledItems[0];
+        try {
+          const result = await createMutation.mutateAsync(buildPayload(item));
+
+          const files = uploadedFiles[item.subject_public_id] || [];
+          for (const file of files) {
+            await uploadMutation.mutateAsync({
+              homeworkPublicId: result.public_id,
+              file: file.file,
+            });
+          }
+          successCount = 1;
+        } catch {
+          errorCount = 1;
         }
+      } else {
+        // Multiple homeworks - use bulk API call
+        try {
+          const payloads = enabledItems.map(buildPayload);
+          const result = await bulkCreateMutation.mutateAsync(payloads);
+          successCount = result.created_count;
+          errorCount = result.errors.length;
 
-        successCount++;
-      } catch {
-        errorCount++;
+          // Upload attachments for successfully created homework
+          for (const created of result.created) {
+            const item = enabledItems.find(
+              (i) => i.subject_public_id === created.subject_public_id
+            );
+            if (!item) {
+              continue;
+            }
+            const files = uploadedFiles[item.subject_public_id] || [];
+            for (const file of files) {
+              await uploadMutation.mutateAsync({
+                homeworkPublicId: created.public_id,
+                file: file.file,
+              });
+            }
+          }
+        } catch {
+          errorCount = enabledItems.length;
+        }
       }
-    }
 
-    if (successCount > 0) {
-      toast.success(`Created ${successCount} homework assignment${successCount > 1 ? 's' : ''}`);
-      // Navigate back with the same class and assigned date to maintain state
-      const params = new URLSearchParams();
-      if (selectedClassId) {
-        params.set('class', selectedClassId);
+      if (successCount > 0) {
+        toast.success(`Created ${successCount} homework assignment${successCount > 1 ? 's' : ''}`);
+        const params = new URLSearchParams();
+        if (selectedClassId) {
+          params.set('class', selectedClassId);
+        }
+        params.set('date', format(data.assigned_date, 'yyyy-MM-dd'));
+        navigate(`${ROUTES.HOMEWORK}?${params.toString()}`);
       }
-      params.set('date', format(data.assigned_date, 'yyyy-MM-dd'));
-      navigate(`${ROUTES.HOMEWORK}?${params.toString()}`);
-    }
-    if (errorCount > 0) {
-      toast.error(`Failed to create ${errorCount} homework assignment${errorCount > 1 ? 's' : ''}`);
+      if (errorCount > 0) {
+        toast.error(
+          `Failed to create ${errorCount} homework assignment${errorCount > 1 ? 's' : ''}`
+        );
+      }
+    } finally {
+      if (isBulkCreate) {
+        endCriticalOperation();
+      }
     }
   };
 
@@ -574,7 +627,7 @@ export default function HomeworkCreatePage() {
               Cancel
             </Button>
             <Button type="submit" variant="brand" disabled={isSubmitting || enabledCount === 0}>
-              {isSubmitting ? 'Creating...' : `Create ${enabledCount} Homework`}
+              {isSubmitting ? 'Creating...' : 'Create Homework'}
             </Button>
           </div>
         </form>

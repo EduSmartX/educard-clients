@@ -98,6 +98,21 @@ export function useCreateHomework() {
   });
 }
 
+export function useBulkCreateHomework() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (items: HomeworkCreatePayload[]) => homeworkApi.bulkCreateHomework(items),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: homeworkKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: homeworkKeys.dashboard() });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || HOMEWORK_UI.FAILED_TO_CREATE);
+    },
+  });
+}
+
 export function useUpdateHomework() {
   const queryClient = useQueryClient();
 

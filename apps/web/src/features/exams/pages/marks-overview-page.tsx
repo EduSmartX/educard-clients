@@ -29,6 +29,7 @@ import { Input } from '@/components/ui/input';
 import { PageHeader, StudentAvatar, WarningConfirmationDialog } from '@/components/common';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { useExamSessions, useMarksOverview } from '../hooks/use-exams';
 import { useClasses } from '@/features/classes/hooks/use-classes';
 import {
@@ -44,6 +45,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { useGridKeyboardNavigation } from '@/hooks/use-grid-keyboard-navigation';
 import { toast } from 'sonner';
+import { useCriticalOperation } from '@/providers/critical-operation-provider';
 
 // Subject color schemes (same as exam overview)
 const SUBJECT_COLORS = [
@@ -133,6 +135,8 @@ export function MarksOverviewPage() {
   const [isUnpublishing, setIsUnpublishing] = useState(false);
   const [showPublishConfirm, setShowPublishConfirm] = useState(false);
   const [showUnpublishConfirm, setShowUnpublishConfirm] = useState(false);
+  const [publishedStateOverride, setPublishedStateOverride] = useState<boolean | null>(null);
+  const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
 
   // Fetch sessions and classes (always fetch these)
   const { data: sessionsData } = useExamSessions({ page: 1, page_size: 100 });
@@ -170,6 +174,13 @@ export function MarksOverviewPage() {
     () => completedSubjects.some((subject) => !subject.is_marks_published),
     [completedSubjects]
   );
+  const effectiveHasPublishedCompleted =
+    publishedStateOverride === null ? hasPublishedCompleted : publishedStateOverride;
+  const effectiveHasUnpublishedCompleted =
+    publishedStateOverride === null ? hasUnpublishedCompleted : !publishedStateOverride;
+  const isMarksLocked =
+    publishedStateOverride === true ||
+    (publishedStateOverride === null && hasPublishedCompleted && !hasUnpublishedCompleted);
 
   // Helper to check if a subject is editable
   const isSubjectEditable = (subjectPublicId: string): boolean => {
@@ -245,6 +256,10 @@ export function MarksOverviewPage() {
     }
 
     setIsSaving(true);
+    beginCriticalOperation({
+      title: 'Saving marks',
+      description: 'Please keep this page open until the marks save completes.',
+    });
     try {
       const result = await bulkSaveAllMarks({
         session_id: selectedSessionId,
@@ -257,6 +272,7 @@ export function MarksOverviewPage() {
       toast.error('Failed to save marks');
     } finally {
       setIsSaving(false);
+      endCriticalOperation();
     }
   };
 
@@ -280,6 +296,10 @@ export function MarksOverviewPage() {
     }
 
     setIsPublishing(true);
+    beginCriticalOperation({
+      title: 'Saving and publishing marks',
+      description: 'Please keep this page open until the publish completes.',
+    });
     try {
       const result = await bulkSaveAllMarks({
         session_id: selectedSessionId,
@@ -287,6 +307,7 @@ export function MarksOverviewPage() {
         students: studentsPayload,
         publish_after_save: true,
       });
+      setPublishedStateOverride(true);
 
       queryClient.invalidateQueries({ queryKey: ['marks-overview'] });
       queryClient.invalidateQueries({ queryKey: ['exams'] });
@@ -301,6 +322,7 @@ export function MarksOverviewPage() {
       toast.error('Failed to save and publish. Please try again.');
     } finally {
       setIsPublishing(false);
+      endCriticalOperation();
     }
   };
 
@@ -323,11 +345,16 @@ export function MarksOverviewPage() {
     }
 
     setIsPublishingOnly(true);
+    beginCriticalOperation({
+      title: 'Publishing marks',
+      description: 'Please keep this page open until the publish completes.',
+    });
     try {
       const result = await publishAllMarksForClassSession({
         session_id: selectedSessionId,
         class_id: selectedClassId,
       });
+      setPublishedStateOverride(true);
       const publishedCount = result.data.published_exams_count ?? 0;
       const alreadyPublishedCount = result.data.already_published_count ?? 0;
       const skippedCount = result.data.skipped_count ?? 0;
@@ -342,6 +369,7 @@ export function MarksOverviewPage() {
       toast.error('Failed to publish marks. Please try again.');
     } finally {
       setIsPublishingOnly(false);
+      endCriticalOperation();
     }
   };
 
@@ -357,11 +385,16 @@ export function MarksOverviewPage() {
     }
 
     setIsUnpublishing(true);
+    beginCriticalOperation({
+      title: 'Unpublishing marks',
+      description: 'Please keep this page open until the unpublish completes.',
+    });
     try {
       const result = await unpublishAllMarksForClassSession({
         session_id: selectedSessionId,
         class_id: selectedClassId,
       });
+      setPublishedStateOverride(false);
       const unpublishedCount = result.data.unpublished_exams_count ?? 0;
 
       queryClient.invalidateQueries({ queryKey: ['marks-overview'] });
@@ -372,6 +405,7 @@ export function MarksOverviewPage() {
       toast.error('Failed to unpublish one or more exams. Please try again.');
     } finally {
       setIsUnpublishing(false);
+      endCriticalOperation();
     }
   };
 
@@ -490,6 +524,7 @@ export function MarksOverviewPage() {
                 onValueChange={(value) => {
                   setSelectedSessionId(value);
                   setSelectedClassId('');
+                  setPublishedStateOverride(null);
                 }}
                 placeholder="Select session"
                 searchPlaceholder="Search sessions..."
@@ -506,7 +541,10 @@ export function MarksOverviewPage() {
                   label: `${cls.class_master?.name || 'Unknown'} - ${cls.name}`,
                 }))}
                 value={selectedClassId}
-                onValueChange={setSelectedClassId}
+                onValueChange={(value) => {
+                  setSelectedClassId(value);
+                  setPublishedStateOverride(null);
+                }}
                 disabled={!selectedSessionId}
                 placeholder={selectedSessionId ? 'Select class' : 'Select session first'}
                 searchPlaceholder="Search classes..."
@@ -876,22 +914,40 @@ export function MarksOverviewPage() {
 
             {/* Action Buttons Footer */}
             {canEditAny && (
-              <div className="flex items-center justify-between rounded-lg border-2 border-dashed border-green-300 bg-green-50 p-4">
+              <div
+                className={cn(
+                  'flex items-center justify-between rounded-lg border-2 border-dashed p-4',
+                  isMarksLocked ? 'border-blue-300 bg-blue-50' : 'border-green-300 bg-green-50'
+                )}
+              >
                 <div className="flex items-center gap-3">
-                  <ShieldCheck className="h-5 w-5 text-green-600" />
+                  <ShieldCheck
+                    className={cn('h-5 w-5', isMarksLocked ? 'text-blue-600' : 'text-green-600')}
+                  />
                   <div>
-                    <p className="font-medium text-green-800">
-                      {stats.completionPercent === 100
-                        ? 'All marks entered — ready to publish'
-                        : `${stats.completionPercent}% complete — enter all marks to enable publishing`}
+                    <p
+                      className={cn(
+                        'font-medium',
+                        isMarksLocked ? 'text-blue-800' : 'text-green-800'
+                      )}
+                    >
+                      {isMarksLocked
+                        ? '🔒 All marks published — unpublish to allow editing'
+                        : stats.completionPercent === 100
+                          ? 'All marks entered — ready to publish'
+                          : `${stats.completionPercent}% complete — enter all marks to enable publishing`}
                     </p>
-                    <p className="text-sm text-green-600">
-                      Save marks to preserve your entries. Save &amp; Publish to finalize results.
+                    <p
+                      className={cn('text-sm', isMarksLocked ? 'text-blue-600' : 'text-green-600')}
+                    >
+                      {isMarksLocked
+                        ? 'Marks are locked. Unpublish to make changes.'
+                        : 'Save marks to preserve your entries. Save & Publish to finalize results.'}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  {canManagePublish && hasUnpublishedCompleted && (
+                  {canManagePublish && effectiveHasUnpublishedCompleted && !isMarksLocked && (
                     <Button
                       variant="success"
                       onClick={() => setShowPublishConfirm(true)}
@@ -900,7 +956,8 @@ export function MarksOverviewPage() {
                         isPublishing ||
                         isPublishingOnly ||
                         isUnpublishing ||
-                        stats.completionPercent < 100
+                        stats.completionPercent < 100 ||
+                        isMarksLocked
                       }
                       className="gap-2"
                     >
@@ -912,49 +969,59 @@ export function MarksOverviewPage() {
                       Publish
                     </Button>
                   )}
-                  {canManagePublish && !hasUnpublishedCompleted && hasPublishedCompleted && (
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowUnpublishConfirm(true)}
-                      disabled={isSaving || isPublishing || isPublishingOnly || isUnpublishing}
-                      className="gap-2 border-amber-200 text-amber-700 hover:bg-amber-50"
-                    >
-                      {isUnpublishing ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Undo2 className="h-4 w-4" />
-                      )}
-                      Unpublish
-                    </Button>
-                  )}
+                  {canManagePublish &&
+                    !effectiveHasUnpublishedCompleted &&
+                    effectiveHasPublishedCompleted && (
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowUnpublishConfirm(true)}
+                        disabled={isSaving || isPublishing || isPublishingOnly || isUnpublishing}
+                        className="gap-2 border-amber-200 text-amber-700 hover:bg-amber-50"
+                      >
+                        {isUnpublishing ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Undo2 className="h-4 w-4" />
+                        )}
+                        Unpublish
+                      </Button>
+                    )}
                   <Button
                     variant="outline"
                     onClick={handleSave}
-                    disabled={isSaving || isPublishing || isPublishingOnly || isUnpublishing}
-                    className="gap-2"
-                  >
-                    <Save className="h-4 w-4" />
-                    {isSaving ? 'Saving...' : 'Save'}
-                  </Button>
-                  <Button
-                    variant="success"
-                    onClick={handleSaveAndPublish}
                     disabled={
                       isSaving ||
                       isPublishing ||
                       isPublishingOnly ||
                       isUnpublishing ||
-                      stats.completionPercent < 100
+                      isMarksLocked
                     }
                     className="gap-2"
                   >
-                    {isPublishing ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <CheckCircle2 className="h-4 w-4" />
-                    )}
-                    Save &amp; Publish
+                    <Save className="h-4 w-4" />
+                    {isSaving ? 'Saving...' : 'Save'}
                   </Button>
+                  {!isMarksLocked && (
+                    <Button
+                      variant="success"
+                      onClick={handleSaveAndPublish}
+                      disabled={
+                        isSaving ||
+                        isPublishing ||
+                        isPublishingOnly ||
+                        isUnpublishing ||
+                        stats.completionPercent < 100
+                      }
+                      className="gap-2"
+                    >
+                      {isPublishing ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="h-4 w-4" />
+                      )}
+                      Save &amp; Publish
+                    </Button>
+                  )}
                 </div>
               </div>
             )}

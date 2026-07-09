@@ -296,6 +296,7 @@ export const ROUTES = {
     STRUCTURES_NEW: '/fees/structures/new',
     STRUCTURES_EDIT: '/fees/structures/:id/edit',
     STUDENT_FEES: '/fees/students',
+    COMPONENT_REQUESTS: '/fees/students/component-requests',
     STUDENT_FEES_VIEW: '/fees/students/:id',
     STUDENT_FEES_EDIT: '/fees/students/:id/edit',
     PAYMENTS: '/fees/payments',
