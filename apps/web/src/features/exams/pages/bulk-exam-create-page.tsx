@@ -46,6 +46,7 @@ import { useClasses } from '@/features/classes/hooks/use-classes';
 import { useRole } from '@/hooks/use-role';
 import { bulkCreateExams } from '../api/exams-api';
 import { validateAttendanceDate } from '@/features/attendance/api/attendance-api';
+import { useCriticalOperation } from '@/providers/critical-operation-provider';
 import type { BulkExamCreatePayload, BulkExamItem } from '@educard/shared';
 
 // Subject row state for the table
@@ -135,6 +136,7 @@ export function BulkExamCreatePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { isAdmin } = useRole();
+  const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
 
   // Non-admin users cannot access bulk create
   useEffect(() => {
@@ -347,6 +349,7 @@ export function BulkExamCreatePage() {
   const bulkCreateMutation = useMutation({
     mutationFn: bulkCreateExams,
     onSuccess: (data) => {
+      endCriticalOperation();
       toast.success(`Successfully created ${data.length} exam(s)`);
       queryClient.invalidateQueries({ queryKey: ['exams'] });
       navigate(ROUTES.EXAMS_LIST);
@@ -356,6 +359,7 @@ export function BulkExamCreatePage() {
         response?: { data?: { message?: string; errors?: Record<string, string[]> } };
       }
     ) => {
+      endCriticalOperation();
       const respData = error.response?.data;
       const allMessages = respData?.errors ? Object.values(respData.errors).flat() : [];
       if (allMessages.length > 0) {
@@ -430,6 +434,10 @@ export function BulkExamCreatePage() {
       return;
     }
 
+    beginCriticalOperation({
+      title: 'Creating exams',
+      description: 'Saving bulk exam schedule and updating existing exams. Please wait...',
+    });
     bulkCreateMutation.mutate(payload);
   };
 
@@ -437,6 +445,10 @@ export function BulkExamCreatePage() {
     setShowMissingDateTimeWarning(false);
     setShowDurationWarning(false);
     if (pendingSubmitPayload) {
+      beginCriticalOperation({
+        title: 'Creating exams',
+        description: 'Saving bulk exam schedule and updating existing exams. Please wait...',
+      });
       bulkCreateMutation.mutate(pendingSubmitPayload);
       setPendingSubmitPayload(null);
     }

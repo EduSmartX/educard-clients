@@ -182,8 +182,13 @@ export interface TimetableEntry {
   group_name: string;
   class_public_id: string;
   class_name: string;
+  assignment_type: "subject" | "other";
   subject_public_id: string | null;
   subject_name: string | null;
+  other_period_type: string | null;
+  other_label: string | null;
+  coordinator_public_id: string | null;
+  coordinator_name: string | null;
   teacher_public_id: string | null;
   teacher_name: string | null;
   room: string;
@@ -194,7 +199,11 @@ export interface TimetableEntryCreatePayload {
   slot_public_id: string;
   day_of_week: number;
   class_public_id: string;
+  assignment_type?: "subject" | "other";
   subject_public_id?: string | null;
+  coordinator_public_id?: string | null;
+  other_period_type?: string;
+  other_label?: string;
   room?: string;
   notes?: string;
 }
@@ -221,10 +230,15 @@ export interface ClassTimetableSlot {
   label: string;
   duration_minutes: number;
   is_break: boolean;
+  assignment_type: "subject" | "other";
   subject_name: string | null;
+  coordinator_public_id: string | null;
+  coordinator_name: string | null;
   teacher_name: string | null;
   teacher_public_id: string | null;
   subject_public_id: string | null;
+  other_period_type: string | null;
+  other_label: string | null;
   room: string;
   notes: string;
 }

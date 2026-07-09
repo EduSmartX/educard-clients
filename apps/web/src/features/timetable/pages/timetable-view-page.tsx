@@ -103,7 +103,7 @@ function ByTeacherView() {
     isAdmin ? '' : SELF_TEACHER_OPTION
   );
 
-  const { data: manageableTeachers, isLoading: teachersLoading } = useManageableUsers('teacher');
+  const { data: manageableTeachers, isLoading: teachersLoading } = useManageableUsers('staff');
 
   const teachers = useMemo(() => manageableTeachers ?? [], [manageableTeachers]);
   const { data: myTimetable, isLoading: myLoading } = useMyTimetable();
@@ -134,7 +134,10 @@ function ByTeacherView() {
   }, [isAdmin, selectedTeacherId]);
 
   const teacherOptions = useMemo(() => {
-    const options = teachers.map((t) => ({ value: t.public_id, label: t.full_name }));
+    const options = teachers.map((t) => ({
+      value: t.public_id,
+      label: t.role_display ? `${t.full_name} (${t.role_display})` : t.full_name,
+    }));
     const myLabel = myTimetable?.teacher_name
       ? `${myTimetable.teacher_name} (My Timetable)`
       : 'My Timetable';

@@ -3,7 +3,7 @@
  * Main orchestrator component following teachers-management.tsx pattern
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ROUTES } from '@/constants/app-config';
@@ -36,6 +36,7 @@ export function StudentsManagement() {
   const { id } = useParams<{ id: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
+  const isApplyingUrlState = useRef(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -81,14 +82,29 @@ export function StudentsManagement() {
       newFilters.admission_date_to = params.admission_date_to;
     }
     const nextSearchQuery = params.search || '';
+
+    const shouldUpdateSearch = searchQuery !== nextSearchQuery;
+    const shouldUpdateFilters = !areFiltersEqual(filters, newFilters);
+
+    if (!shouldUpdateSearch && !shouldUpdateFilters) {
+      return;
+    }
+
+    isApplyingUrlState.current = true;
+
     setSearchQuery((prev: string) => (prev === nextSearchQuery ? prev : nextSearchQuery));
     setFilters((prev: Record<string, string>) =>
       areFiltersEqual(prev, newFilters) ? prev : newFilters
     );
-  }, [searchParamsString]);
+  }, [searchParamsString, searchQuery, filters]);
 
   // Update URL when filters change
   useEffect(() => {
+    if (isApplyingUrlState.current) {
+      isApplyingUrlState.current = false;
+      return;
+    }
+
     const params = new URLSearchParams();
 
     if (searchQuery) {
