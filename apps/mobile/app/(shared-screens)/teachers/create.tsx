@@ -5,6 +5,8 @@
 
 import {
   getRoleGradient,
+  ADDRESS_TYPE,
+  ADDRESS_TYPE_OPTIONS,
   GENDER_OPTIONS,
   BLOOD_GROUP_OPTIONS,
   teacherQuickSchema,
@@ -85,6 +87,7 @@ export default function CreateTeacherScreen() {
     joining_date: '',
     supervisor_email: '',
     subjects: [] as string[],
+    address_type: ADDRESS_TYPE.USER_CURRENT,
     street_address: '',
     city: '',
     state: '',
@@ -461,6 +464,16 @@ export default function CreateTeacherScreen() {
             </TouchableOpacity>
             {addressExpanded && (
               <View style={s.collapseBody}>
+                <FormDropdown
+                  label="Address Type"
+                  options={ADDRESS_TYPE_OPTIONS.map((o) => ({
+                    value: o.value,
+                    label: o.label,
+                  }))}
+                  value={form.address_type}
+                  onChange={(v) => updateField('address_type', v)}
+                  placeholder="Select address type"
+                />
                 <FormInput
                   label="Street Address"
                   value={form.street_address}

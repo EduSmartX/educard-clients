@@ -5,6 +5,8 @@
 
 import { User, Lock, Mail, Phone, MapPin, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PageHeader } from '@/components/common';
@@ -19,6 +21,25 @@ import { SyncProfilesForm } from '../components/sync-profiles-form';
 
 export default function ProfilePage() {
   const { isStudent } = useRole();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const activeTab = useMemo(() => {
+    const allowedTabs = isStudent
+      ? ['profile', 'password', 'email', 'phone', 'address', 'sync-profiles']
+      : ['profile', 'password', 'email', 'phone', 'address'];
+    const requestedTab = searchParams.get('tab') || 'profile';
+    return allowedTabs.includes(requestedTab) ? requestedTab : 'profile';
+  }, [isStudent, searchParams]);
+
+  const handleTabChange = (value: string) => {
+    const nextParams = new URLSearchParams(searchParams);
+    if (value === 'profile') {
+      nextParams.delete('tab');
+    } else {
+      nextParams.set('tab', value);
+    }
+    setSearchParams(nextParams, { replace: true });
+  };
 
   return (
     <motion.div
@@ -33,7 +54,7 @@ export default function ProfilePage() {
       />
 
       <Card>
-        <Tabs defaultValue="profile" className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className={`grid h-auto w-full ${isStudent ? 'grid-cols-6' : 'grid-cols-5'}`}>
             <TabsTrigger value="profile" className="flex items-center gap-2 py-3">
               <User className="h-4 w-4" />

@@ -3,10 +3,11 @@
  * Update email with OTP verification
  */
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Mail, Send } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,10 +35,15 @@ type EmailFormValues = z.infer<typeof emailSchema>;
 
 export function EmailUpdateForm() {
   const { data: profile } = useUserProfile();
+  const [searchParams] = useSearchParams();
   const sendOTPMutation = useSendOTP();
   const updateEmailMutation = useUpdateEmail();
   const [otpSent, setOtpSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const hasPrefilledFromDashboard = useRef(false);
+
+  const isDashboardVerificationFlow =
+    searchParams.get('from') === 'dashboard' && searchParams.get('tab') === 'email';
 
   const form = useForm<EmailFormValues>({
     resolver: zodResolver(emailSchema),
@@ -46,6 +52,17 @@ export function EmailUpdateForm() {
       otp: '',
     },
   });
+
+  useEffect(() => {
+    if (!isDashboardVerificationFlow || hasPrefilledFromDashboard.current) {
+      return;
+    }
+    const currentEmail = profile?.email?.trim();
+    if (currentEmail) {
+      form.setValue('new_email', currentEmail, { shouldValidate: true });
+    }
+    hasPrefilledFromDashboard.current = true;
+  }, [form, isDashboardVerificationFlow, profile?.email]);
 
   const startCountdownTimer = (minutes: number) => {
     setCountdown(minutes * 60);
@@ -92,7 +109,9 @@ export function EmailUpdateForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base font-medium">Update Email Address</CardTitle>
+        <CardTitle className="text-base font-medium">
+          {isDashboardVerificationFlow ? 'Verify Email Address' : 'Update Email Address'}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
@@ -103,7 +122,9 @@ export function EmailUpdateForm() {
             Email address is verified: {profile?.is_email_verified ? 'Yes' : 'No'}
           </p>
           <p className="mt-2 text-xs text-blue-700">
-            An OTP will be sent to your new email for verification
+            {isDashboardVerificationFlow
+              ? 'An OTP will be sent to this email address for verification'
+              : 'An OTP will be sent to your new email for verification'}
           </p>
         </div>
 
@@ -115,7 +136,8 @@ export function EmailUpdateForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    New Email Address <span className="text-red-500">*</span>
+                    {isDashboardVerificationFlow ? 'Email Address' : 'New Email Address'}{' '}
+                    <span className="text-red-500">*</span>
                   </FormLabel>
                   <div className="flex gap-2">
                     <FormControl>
@@ -147,7 +169,9 @@ export function EmailUpdateForm() {
                         OTP sent! Expires in {formatCountdown(countdown)}
                       </span>
                     ) : (
-                      'Click the button to send OTP to this email'
+                      isDashboardVerificationFlow
+                        ? 'Click the button to send OTP for email verification'
+                        : 'Click the button to send OTP to this email'
                     )}
                   </FormDescription>
                   <FormMessage />
@@ -172,7 +196,11 @@ export function EmailUpdateForm() {
                         {...field}
                       />
                     </FormControl>
-                    <FormDescription>Enter the OTP sent to your new email</FormDescription>
+                      <FormDescription>
+                        {isDashboardVerificationFlow
+                          ? 'Enter the OTP sent to this email address'
+                          : 'Enter the OTP sent to your new email'}
+                      </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -201,7 +229,7 @@ export function EmailUpdateForm() {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
                 <Mail className="mr-2 h-4 w-4" />
-                {CommonUiText.UPDATE_EMAIL}
+                {isDashboardVerificationFlow ? 'Verify Email' : CommonUiText.UPDATE_EMAIL}
               </Button>
             </div>
           </form>

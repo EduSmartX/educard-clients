@@ -178,6 +178,7 @@ export function buildTeacherPayload(
     );
 
     const addr = stripEmpty({
+      address_type: safeTrim(form.address_type),
       street_address: safeTrim(form.street_address),
       city: safeTrim(form.city),
       state: safeTrim(form.state),
@@ -185,7 +186,7 @@ export function buildTeacherPayload(
       country: safeTrim(form.country),
     });
     if (Object.keys(addr).length > 0) {
-      user.address = { ...addr, address_type: "user_current" };
+      user.address = { ...addr, address_type: form.address_type || "user_current" };
     }
   }
 

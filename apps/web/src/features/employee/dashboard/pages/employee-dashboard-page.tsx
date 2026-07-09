@@ -161,7 +161,8 @@ export default function EmployeeDashboardPage() {
   const greeting = getGreeting();
   const firstName = user?.full_name?.split(' ')[0] || 'Teacher';
 
-  const handleVerifyEmail = () => navigate(ROUTES.EMPLOYEE.PROFILE);
+  const handleVerifyEmail = () => navigate(`${ROUTES.PROFILE}?tab=email&from=dashboard`);
+  const handleVerifyPhone = () => navigate(`${ROUTES.PROFILE}?tab=phone&from=dashboard`);
 
   const { data: timetableData, isLoading: loadingTimetable } = useMyTimetable();
   const { data: leaveData, isLoading: loadingLeave } = useMyLeaveBalancesSummary();
@@ -322,7 +323,7 @@ export default function EmployeeDashboardPage() {
         <VerificationBanner
           user={user}
           onVerifyEmail={handleVerifyEmail}
-          onVerifyPhone={handleVerifyEmail}
+          onVerifyPhone={handleVerifyPhone}
         />
       )}
 

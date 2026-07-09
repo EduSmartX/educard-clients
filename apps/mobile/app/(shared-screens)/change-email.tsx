@@ -4,6 +4,7 @@
  */
 
 import { Mail } from 'lucide-react-native';
+import { useLocalSearchParams } from 'expo-router';
 import { useMemo } from 'react';
 
 import { authApi } from '@/api/auth';
@@ -15,23 +16,26 @@ import { useAuthStore } from '@/lib/auth-store';
 
 export default function ChangeEmailScreen() {
   const { user } = useAuthStore();
+  const params = useLocalSearchParams<{ mode?: string; from?: string }>();
+  const isVerifyMode = params.mode === 'verify' && params.from === 'dashboard';
 
   const config: ChangeCredentialConfig = useMemo(
     () => ({
-      title: 'Change Email',
-      subtitle: 'Update your email address',
+      title: isVerifyMode ? 'Verify Email' : 'Change Email',
+      subtitle: isVerifyMode ? 'Verify your email address' : 'Update your email address',
       gradientColors: ['#10b981', '#059669'] as const,
       inputIcon: Mail,
       currentLabel: 'Current Email',
       currentValue: user?.email,
-      placeholder: 'Enter new email',
-      inputLabel: 'New Email Address',
+      placeholder: isVerifyMode ? 'Enter your email' : 'Enter new email',
+      inputLabel: isVerifyMode ? 'Email Address' : 'New Email Address',
+      initialValue: isVerifyMode ? (user?.email ?? '') : '',
       keyboardType: 'email-address',
       validate: (value, currentValue) => {
         if (!value) return 'Please enter your new email address';
         const emailRegex = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
         if (!emailRegex.test(value)) return 'Please enter a valid email address';
-        if (value.toLowerCase() === currentValue?.toLowerCase())
+        if (!isVerifyMode && value.toLowerCase() === currentValue?.toLowerCase())
           return 'New email must be different from your current email';
         return null;
       },
@@ -44,11 +48,13 @@ export default function ChangeEmailScreen() {
         ...(u as object),
         email: (result as { email?: string }).email || value,
       }),
-      successTitle: 'Email Updated',
-      successMessage: 'Your email has been updated successfully.',
-      updateButtonLabel: 'Update Email',
+      successTitle: isVerifyMode ? 'Email Verified' : 'Email Updated',
+      successMessage: isVerifyMode
+        ? 'Your email has been verified successfully.'
+        : 'Your email has been updated successfully.',
+      updateButtonLabel: isVerifyMode ? 'Verify Email' : 'Update Email',
     }),
-    [user?.email]
+    [isVerifyMode, user?.email]
   );
 
   return <ChangeCredentialScreenBase config={config} />;

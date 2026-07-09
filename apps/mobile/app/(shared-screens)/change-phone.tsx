@@ -4,6 +4,7 @@
  */
 
 import { Phone } from 'lucide-react-native';
+import { useLocalSearchParams } from 'expo-router';
 import { useMemo } from 'react';
 
 import { authApi } from '@/api/auth';
@@ -15,23 +16,26 @@ import { useAuthStore } from '@/lib/auth-store';
 
 export default function ChangePhoneScreen() {
   const { user } = useAuthStore();
+  const params = useLocalSearchParams<{ mode?: string; from?: string }>();
+  const isVerifyMode = params.mode === 'verify' && params.from === 'dashboard';
 
   const config: ChangeCredentialConfig = useMemo(
     () => ({
-      title: 'Change Phone',
-      subtitle: 'Update your phone number',
+      title: isVerifyMode ? 'Verify Phone' : 'Change Phone',
+      subtitle: isVerifyMode ? 'Verify your phone number' : 'Update your phone number',
       gradientColors: ['#8b5cf6', '#7c3aed'] as const,
       inputIcon: Phone,
       currentLabel: 'Current Phone',
       currentValue: user?.phone,
-      placeholder: 'Enter new phone number',
-      inputLabel: 'New Phone Number',
+      placeholder: isVerifyMode ? 'Enter your phone number' : 'Enter new phone number',
+      inputLabel: isVerifyMode ? 'Phone Number' : 'New Phone Number',
+      initialValue: isVerifyMode ? (user?.phone ?? '') : '',
       keyboardType: 'phone-pad',
       validate: (value, currentValue) => {
         if (!value) return 'Please enter your new phone number';
         const phoneDigits = value.replace(/\D/g, '');
         if (phoneDigits.length < 10) return 'Please enter a valid phone number';
-        if (value === currentValue)
+        if (!isVerifyMode && value === currentValue)
           return 'New phone number must be different from your current number';
         return null;
       },
@@ -44,11 +48,13 @@ export default function ChangePhoneScreen() {
         ...(u as object),
         phone: (result as { phone?: string }).phone || value,
       }),
-      successTitle: 'Phone Updated',
-      successMessage: 'Your phone number has been updated successfully.',
-      updateButtonLabel: 'Update Phone',
+      successTitle: isVerifyMode ? 'Phone Verified' : 'Phone Updated',
+      successMessage: isVerifyMode
+        ? 'Your phone number has been verified successfully.'
+        : 'Your phone number has been updated successfully.',
+      updateButtonLabel: isVerifyMode ? 'Verify Phone' : 'Update Phone',
     }),
-    [user?.phone]
+    [isVerifyMode, user?.phone]
   );
 
   return <ChangeCredentialScreenBase config={config} />;

@@ -33,7 +33,7 @@ import {
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 
-import { TodaySchedule, StatsGrid, type StatCardData } from '@/components/dashboard';
+import { TodaySchedule, StatsGrid, VerificationBanner, type StatCardData } from '@/components/dashboard';
 import { getMediaUrl } from '@/constants/config';
 import { useDashboardAttendanceStats, useAttendanceDisplay } from '@/features/attendance/hooks';
 import { useClasses } from '@/features/classes';
@@ -274,6 +274,18 @@ export default function AdminDashboard() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#10b981" />
         }
       >
+        {user && (
+          <VerificationBanner
+            user={user}
+            onVerifyEmail={() =>
+              router.push('/(shared-screens)/change-email?mode=verify&from=dashboard' as never)
+            }
+            onVerifyPhone={() =>
+              router.push('/(shared-screens)/change-phone?mode=verify&from=dashboard' as never)
+            }
+          />
+        )}
+
         {/* Stats Grid - uses shared component */}
         <StatsGrid stats={statsConfig} />
 

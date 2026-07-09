@@ -372,7 +372,7 @@ export const ROUTES = {
       SUBMISSIONS: '/homework/submissions',
       SUBMISSION_REVIEW: '/homework/:homeworkId/submissions/:submissionId/review',
     },
-    PROFILE: '/employee/profile',
+    PROFILE: '/profile',
   },
   TEACHER: {
     MY_CLASSES: '/teacher/classes',
@@ -387,7 +387,7 @@ export const ROUTES = {
       APPLY: '/parent/leave/apply',
       HISTORY: '/parent/leave/history',
     },
-    PROFILE: '/parent/profile',
+    PROFILE: '/profile',
     SWITCH_PROFILE: '/parent/switch-profile',
   },
   STUDENT: {
