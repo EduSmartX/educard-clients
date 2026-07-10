@@ -1,9 +1,9 @@
 # ============================================
-# Pre-commit checks (like Python's pre-commit)
+# Pre-commit checks
 # ============================================
 
-# 1. Lint-staged: Prettier formatting on staged files
-echo "🔍 Running lint-staged (Prettier formatting)..."
+# 1. Lint-staged: Prettier + ESLint on staged files only
+echo "🔍 Running lint-staged (Prettier + ESLint on staged files)..."
 pnpm exec lint-staged || exit 1
 
 # 2. TypeScript type-check shared package
@@ -11,17 +11,7 @@ echo "🔎 Running TypeScript type-check (shared package)..."
 cd packages/shared && pnpm run typecheck || { echo "❌ TypeScript errors in packages/shared"; exit 1; }
 cd ../..
 
-# 3. ESLint (web app) - zero warnings allowed, same rule CI enforces
-echo "🔎 Running ESLint (web app, zero warnings allowed)..."
-cd apps/web && pnpm run check:lint || { echo "❌ ESLint errors/warnings in apps/web"; exit 1; }
-cd ../..
-
-# 4. ESLint (mobile app) - zero warnings allowed, same rule CI enforces
-echo "🔎 Running ESLint (mobile app, zero warnings allowed)..."
-cd apps/mobile && pnpm run lint || { echo "❌ ESLint errors/warnings in apps/mobile"; exit 1; }
-cd ../..
-
-# 5. TypeScript type-check mobile app
+# 3. TypeScript type-check mobile app
 echo "🔎 Running TypeScript type-check (mobile app)..."
 cd apps/mobile && pnpm run typecheck || { echo "❌ TypeScript errors in apps/mobile"; exit 1; }
 cd ../..
