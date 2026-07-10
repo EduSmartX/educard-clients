@@ -190,6 +190,7 @@ export default function LoginPage() {
                 <Input
                   id="username"
                   placeholder={FormPlaceholders.ENTER_USERNAME_OR_EMAIL}
+                  autoComplete="off"
                   className="h-14 rounded-xl border-2 border-gray-200 pl-12 text-base transition-all duration-200 focus:border-teal-400 focus:ring-4 focus:ring-teal-100"
                   error={errors.username?.message}
                   {...register('username')}
