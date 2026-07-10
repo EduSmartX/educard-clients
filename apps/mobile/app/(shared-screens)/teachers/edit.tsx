@@ -86,7 +86,7 @@ export default function EditTeacherScreen() {
     joining_date: '',
     supervisor_email: '',
     subjects: [] as string[],
-    address_type: ADDRESS_TYPE.USER_CURRENT,
+    address_type: ADDRESS_TYPE.USER_CURRENT as string,
     street_address: '',
     city: '',
     state: '',

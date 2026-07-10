@@ -1,6 +1,6 @@
+import { AlertTriangle, Mail, Phone, X, ChevronRight } from 'lucide-react-native';
 import { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { AlertTriangle, Mail, Phone, X, ChevronRight } from 'lucide-react-native';
 
 import { USER_ROLES } from '@/constants';
 import type { User } from '@/types/user';
@@ -88,7 +88,11 @@ function getPendingVerifications(user: User): PendingVerification[] {
   return pending;
 }
 
-export function VerificationBanner({ user, onVerifyEmail, onVerifyPhone }: VerificationBannerProps) {
+export function VerificationBanner({
+  user,
+  onVerifyEmail,
+  onVerifyPhone,
+}: VerificationBannerProps) {
   const [dismissed, setDismissed] = useState(false);
   const pendingVerifications = getPendingVerifications(user);
 

@@ -34,7 +34,12 @@ import {
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 
-import { TodaySchedule, StatsGrid, VerificationBanner, type StatCardData } from '@/components/dashboard';
+import {
+  TodaySchedule,
+  StatsGrid,
+  VerificationBanner,
+  type StatCardData,
+} from '@/components/dashboard';
 import { getMediaUrl } from '@/constants/config';
 import { useDashboardAttendanceStats, useAttendanceDisplay } from '@/features/attendance/hooks';
 import { useClasses } from '@/features/classes';

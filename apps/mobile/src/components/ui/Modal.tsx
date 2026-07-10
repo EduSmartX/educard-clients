@@ -90,7 +90,9 @@ export function Modal({
           exiting={ZoomOut.duration(150)}
           style={[styles.modalWrapper, { maxWidth: maxModalWidth }]}
         >
-          <View style={[styles.modalContainer, { padding: modalPadding, paddingTop: modalPadding + 8 }]}>
+          <View
+            style={[styles.modalContainer, { padding: modalPadding, paddingTop: modalPadding + 8 }]}
+          >
             {/* Close Button */}
             {showCloseButton && (
               <TouchableOpacity style={styles.closeButton} onPress={onClose} hitSlop={10}>

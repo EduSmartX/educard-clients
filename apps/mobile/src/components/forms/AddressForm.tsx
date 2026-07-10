@@ -31,6 +31,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
+
 import { useResponsive } from '@/hooks/useResponsive';
 
 // Address data structure

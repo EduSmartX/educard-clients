@@ -240,8 +240,12 @@ export default function ParentDashboard() {
           {user && (
             <VerificationBanner
               user={user}
-              onVerifyEmail={() => router.push('/(shared-screens)/change-email?mode=verify&from=dashboard')}
-              onVerifyPhone={() => router.push('/(shared-screens)/change-phone?mode=verify&from=dashboard')}
+              onVerifyEmail={() =>
+                router.push('/(shared-screens)/change-email?mode=verify&from=dashboard')
+              }
+              onVerifyPhone={() =>
+                router.push('/(shared-screens)/change-phone?mode=verify&from=dashboard')
+              }
             />
           )}
 

@@ -311,7 +311,10 @@ export function FormDatePicker({
                     ) : (
                       <View
                         key={`empty-${viewYear}-${viewMonth}-${idx}`}
-                        style={[styles.dayCell, { width: daySize, height: daySize, borderRadius: daySize / 2 }]}
+                        style={[
+                          styles.dayCell,
+                          { width: daySize, height: daySize, borderRadius: daySize / 2 },
+                        ]}
                       />
                     )
                   )}
