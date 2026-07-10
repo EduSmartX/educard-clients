@@ -895,7 +895,7 @@ export function TimetableGrid({ timetable, isLoading, readOnly }: Readonly<Timet
       </CardHeader>
 
       <CardContent className="overflow-x-auto p-3 sm:p-5">
-        <div ref={timetableAreaRef} className="min-w-[700px]">
+        <div ref={timetableAreaRef} className="min-w-[520px] sm:min-w-[700px]">
           {copySource && (
             <div
               data-copy-preserve="true"

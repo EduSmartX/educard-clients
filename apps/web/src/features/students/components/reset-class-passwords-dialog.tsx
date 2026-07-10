@@ -145,7 +145,7 @@ export function ResetClassPasswordsDialog({
           Reset Passwords
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:w-full sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Reset Class Passwords</DialogTitle>
           <DialogDescription>

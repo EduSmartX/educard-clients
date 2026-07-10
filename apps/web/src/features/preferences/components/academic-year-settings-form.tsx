@@ -18,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { DatePicker } from '@/components/ui/date-picker';
 import { toast } from 'sonner';
+import { useFormErrorHandler } from '@/hooks/use-form-error-handler';
 import {
   getCurrentAcademicYear,
   updateAcademicYear,
@@ -80,6 +81,10 @@ export function AcademicYearSettingsForm() {
     },
   });
 
+  const handleUpdateError = useFormErrorHandler(form.setError, {
+    defaultErrorMessage: ErrorMessages.UPDATE_FAILED,
+  });
+
   // Set initial values when data loads
   useEffect(() => {
     if (academicYear) {
@@ -106,11 +111,7 @@ export function AcademicYearSettingsForm() {
         description: SuccessMessages.PREFERENCES.ACADEMIC_YEAR_UPDATED,
       });
     },
-    onError: (error: Error) => {
-      toast.error(ToastTitles.ERROR, {
-        description: error?.message || ErrorMessages.UPDATE_FAILED,
-      });
-    },
+    onError: handleUpdateError,
   });
 
   // Form submission handler

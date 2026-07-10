@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ErrorMessages, ROUTES, SuccessMessages } from '@/constants';
 import { authApi } from '@/lib/api/auth-api';
+import { getErrorMessage } from '@/lib/utils/error-handler';
 import { RequestOtpStep, VerifyOtpStep, SuccessStep } from '../components/forgot-password-steps';
 
 // Step 1: Request OTP - Email or Username
@@ -127,8 +128,7 @@ export default function ForgotPasswordPage() {
       setCurrentStep('success');
       toast.success(SuccessMessages.AUTH.PASSWORD_RESET_SUCCESS);
     } catch (err: unknown) {
-      const error = err as { message?: string };
-      toast.error(error?.message || ErrorMessages.AUTH.PASSWORD_RESET_FAILED);
+      toast.error(getErrorMessage(err, ErrorMessages.AUTH.PASSWORD_RESET_FAILED));
     } finally {
       setIsLoading(false);
     }

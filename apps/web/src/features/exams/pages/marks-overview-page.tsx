@@ -682,16 +682,16 @@ export function MarksOverviewPage() {
                   <table className="w-full border-collapse">
                     <thead className="sticky top-0 z-20 bg-gray-100">
                       <tr>
-                        <th className="sticky top-0 left-0 z-30 min-w-[80px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold">
+                        <th className="sticky top-0 left-0 z-30 min-w-[56px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold sm:min-w-[80px]">
                           S.No
                         </th>
-                        <th className="sticky top-0 left-[80px] z-30 min-w-[80px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold">
+                        <th className="sticky top-0 left-[56px] z-30 min-w-[56px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold sm:left-[80px] sm:min-w-[80px]">
                           Photo
                         </th>
-                        <th className="sticky top-0 left-[160px] z-30 min-w-[120px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold">
+                        <th className="sticky top-0 left-[112px] z-30 min-w-[84px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold sm:left-[160px] sm:min-w-[120px]">
                           Roll No
                         </th>
-                        <th className="sticky top-0 left-[280px] z-30 min-w-[200px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold">
+                        <th className="sticky top-0 left-[196px] z-30 min-w-[140px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold sm:left-[280px] sm:min-w-[200px]">
                           Student Name
                         </th>
                         {completedSubjects.map((subject) => {
@@ -699,7 +699,7 @@ export function MarksOverviewPage() {
                           return (
                             <th
                               key={subject.exam_public_id}
-                              className={`border-2 ${colors.border} p-3 text-center font-semibold ${colors.header} sticky top-0 z-20 min-w-[150px]`}
+                              className={`border-2 ${colors.border} p-3 text-center font-semibold ${colors.header} sticky top-0 z-20 min-w-[110px] sm:min-w-[150px]`}
                             >
                               <div className="space-y-1">
                                 <div className={`font-bold ${colors.text}`}>
@@ -723,7 +723,7 @@ export function MarksOverviewPage() {
                           );
                         })}
                         {/* Total & Percentage columns */}
-                        <th className="sticky top-0 z-20 min-w-[100px] border-2 border-gray-300 bg-emerald-200 p-3 text-center font-semibold">
+                        <th className="sticky top-0 z-20 min-w-[82px] border-2 border-gray-300 bg-emerald-200 p-3 text-center font-semibold sm:min-w-[100px]">
                           <div className="space-y-1">
                             <div className="font-bold text-emerald-800">Total</div>
                             <div className="text-xs text-gray-600">
@@ -731,7 +731,7 @@ export function MarksOverviewPage() {
                             </div>
                           </div>
                         </th>
-                        <th className="sticky top-0 z-20 min-w-[90px] border-2 border-gray-300 bg-amber-200 p-3 text-center font-semibold">
+                        <th className="sticky top-0 z-20 min-w-[74px] border-2 border-gray-300 bg-amber-200 p-3 text-center font-semibold sm:min-w-[90px]">
                           <div className="font-bold text-amber-800">%</div>
                         </th>
                       </tr>
@@ -745,7 +745,7 @@ export function MarksOverviewPage() {
                           <td className="sticky left-0 z-10 border-2 border-gray-300 bg-inherit p-3 text-center font-medium">
                             {rowIndex + 1}
                           </td>
-                          <td className="sticky left-[80px] z-10 border-2 border-gray-300 bg-inherit p-3">
+                          <td className="sticky left-[56px] z-10 border-2 border-gray-300 bg-inherit p-3 sm:left-[80px]">
                             <StudentAvatar
                               name={student.name}
                               photoUrl={student.photo}
@@ -753,10 +753,10 @@ export function MarksOverviewPage() {
                               size="md"
                             />
                           </td>
-                          <td className="sticky left-[160px] z-10 border-2 border-gray-300 bg-inherit p-3 font-medium">
+                          <td className="sticky left-[112px] z-10 border-2 border-gray-300 bg-inherit p-3 font-medium sm:left-[160px]">
                             {student.rollNumber}
                           </td>
-                          <td className="sticky left-[280px] z-10 border-2 border-gray-300 bg-inherit p-3 font-medium">
+                          <td className="sticky left-[196px] z-10 border-2 border-gray-300 bg-inherit p-3 font-medium sm:left-[280px]">
                             {student.name}
                           </td>
                           {completedSubjects.map((subject, colIndex) => {

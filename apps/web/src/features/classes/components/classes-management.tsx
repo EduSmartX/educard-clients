@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { DeleteConfirmationDialog, ReactivateConfirmationDialog } from '@/components/common';
 import { ErrorMessages } from '@/constants';
+import { getErrorMessage } from '@/lib/utils/error-handler';
 import { useClasses } from '../hooks/use-classes';
 import { useDeleteClass, useReactivateClass } from '../hooks/mutations';
 import { ClassesList } from './classes-list';
@@ -64,7 +65,7 @@ export function ClassesManagement({ viewMode = 'admin' }: Readonly<ClassesManage
       setClassToDelete(undefined);
     },
     onError: (error: Error) => {
-      toast.error(error.message || ErrorMessages.CLASS.DELETE_FAILED);
+      toast.error(getErrorMessage(error, ErrorMessages.CLASS.DELETE_FAILED));
     },
   });
 
@@ -74,7 +75,7 @@ export function ClassesManagement({ viewMode = 'admin' }: Readonly<ClassesManage
       setClassToReactivate(undefined);
     },
     onError: (error: Error) => {
-      toast.error(error.message || ErrorMessages.CLASS.REACTIVATE_FAILED);
+      toast.error(getErrorMessage(error, ErrorMessages.CLASS.REACTIVATE_FAILED));
     },
   });
 

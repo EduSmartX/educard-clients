@@ -37,7 +37,6 @@ export function getLeaveBalanceColumns(
           <div className="text-muted-foreground text-xs">days</div>
         </div>
       ),
-      width: 120,
     },
     {
       header: 'Used',
@@ -47,7 +46,6 @@ export function getLeaveBalanceColumns(
           <div className="text-muted-foreground text-xs">days</div>
         </div>
       ),
-      width: 120,
     },
     {
       header: 'Carried Forward',
@@ -59,7 +57,6 @@ export function getLeaveBalanceColumns(
           <div className="text-muted-foreground text-xs">days</div>
         </div>
       ),
-      width: 140,
     },
     {
       header: 'Available',
@@ -69,7 +66,6 @@ export function getLeaveBalanceColumns(
           <div className="text-muted-foreground text-xs">days</div>
         </div>
       ),
-      width: 120,
     },
     {
       header: 'Created',
@@ -122,7 +118,6 @@ export function getLeaveBalanceColumns(
           </Button>
         </div>
       ),
-      width: 100,
     },
   ];
 }

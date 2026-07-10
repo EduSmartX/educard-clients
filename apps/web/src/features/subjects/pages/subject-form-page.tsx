@@ -228,7 +228,7 @@ export default function SubjectFormPage() {
       // Navigation happens before mutation is called
     },
     onError: (error: Error) => {
-      toast.error(error.message || ErrorMessages.SUBJECT.DELETE_FAILED);
+      toast.error(getErrorMessage(error, ErrorMessages.SUBJECT.DELETE_FAILED));
     },
   });
 
@@ -237,7 +237,7 @@ export default function SubjectFormPage() {
       // Navigation already happened before mutation was called
     },
     onError: (error: Error) => {
-      toast.error(error.message || ErrorMessages.SUBJECT.REACTIVATE_FAILED);
+      toast.error(getErrorMessage(error, ErrorMessages.SUBJECT.REACTIVATE_FAILED));
     },
   });
 

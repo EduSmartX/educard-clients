@@ -177,7 +177,7 @@ export function useUploadProfilePhoto() {
       toast.success(SuccessMessages.PROFILE.PHOTO_UPLOADED);
     },
     onError: (error: Error) => {
-      toast.error(error.message || ErrorMessages.PROFILE.PHOTO_UPLOAD_FAILED);
+      toast.error(getErrorMessage(error, ErrorMessages.PROFILE.PHOTO_UPLOAD_FAILED));
     },
   });
 }
@@ -195,7 +195,7 @@ export function useDeleteProfilePhoto() {
       toast.success(SuccessMessages.PROFILE.PHOTO_DELETED);
     },
     onError: (error: Error) => {
-      toast.error(error.message || ErrorMessages.PROFILE.PHOTO_DELETE_FAILED);
+      toast.error(getErrorMessage(error, ErrorMessages.PROFILE.PHOTO_DELETE_FAILED));
     },
   });
 }

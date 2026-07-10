@@ -43,7 +43,6 @@ export function createExamSessionColumns({
       ),
       sortable: true,
       sortKey: 'name',
-      width: 220,
     },
     {
       header: 'Type',
@@ -57,7 +56,6 @@ export function createExamSessionColumns({
       ),
       sortable: true,
       sortKey: 'session_type',
-      width: 140,
     },
     {
       header: 'Academic Year',
@@ -66,7 +64,6 @@ export function createExamSessionColumns({
       ),
       sortable: true,
       sortKey: 'academic_year',
-      width: 130,
     },
     {
       header: 'Duration',
@@ -82,7 +79,6 @@ export function createExamSessionColumns({
           </div>
         );
       },
-      width: 140,
     },
     {
       header: 'Exams',
@@ -91,7 +87,6 @@ export function createExamSessionColumns({
           {row.exam_count}
         </Badge>
       ),
-      width: 80,
     },
     {
       header: 'Created',
@@ -107,7 +102,6 @@ export function createExamSessionColumns({
       ),
       sortable: true,
       sortKey: 'created_at',
-      width: 140,
     },
     {
       header: 'Actions',
@@ -168,7 +162,6 @@ export function createExamSessionColumns({
           )}
         </div>
       ),
-      width: 120,
     },
   ];
 }

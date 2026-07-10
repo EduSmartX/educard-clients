@@ -43,7 +43,7 @@ interface DataTableProps<T> {
   getRowKey: (row: T, index: number) => string | number;
   onRowClick?: (row: T) => void;
   maxHeight?: string; // Optional: maximum table height (default: 500px)
-  minWidth?: string; // Optional: minimum table width (default: 1200px)
+  minWidth?: string; // Optional: minimum table width (default: 100%)
   // Pagination props
   pagination?: PaginationInfo;
   onPageChange?: (page: number) => void;
@@ -59,15 +59,15 @@ export function DataTable<T>({
   getRowKey,
   onRowClick,
   maxHeight = '500px',
-  minWidth = '1200px',
+  minWidth = '100%',
   pagination,
   onPageChange,
   onPageSizeChange,
 }: DataTableProps<T>) {
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [columnWidths, setColumnWidths] = useState<number[]>(
-    columns.map((col) => col.width || 200)
+  const [columnWidths, setColumnWidths] = useState<Array<number | null>>(
+    columns.map((col) => col.width ?? null)
   );
   const [resizingIndex, setResizingIndex] = useState<number | null>(null);
   const startXRef = useRef<number>(0);
@@ -156,7 +156,8 @@ export function DataTable<T>({
     e.stopPropagation();
     setResizingIndex(index);
     startXRef.current = e.clientX;
-    startWidthRef.current = columnWidths[index];
+    startWidthRef.current =
+      columnWidths[index] ?? e.currentTarget.parentElement?.getBoundingClientRect().width ?? 160;
   };
 
   useEffect(() => {
@@ -232,10 +233,14 @@ export function DataTable<T>({
                 <TableHead
                   key={column.header}
                   className={`relative border-r border-gray-300 bg-gray-100 font-bold text-gray-900 last:border-r-0 ${column.headerClassName || ''}`}
-                  style={{
-                    width: `${columnWidths[index]}px`,
-                    minWidth: `${columnWidths[index]}px`,
-                  }}
+                  style={
+                    columnWidths[index] !== null
+                      ? {
+                          width: `${columnWidths[index]}px`,
+                          minWidth: `${columnWidths[index]}px`,
+                        }
+                      : undefined
+                  }
                 >
                   {column.sortable ? (
                     <button
@@ -273,10 +278,14 @@ export function DataTable<T>({
                   <TableCell
                     key={column.header || `col-${colIndex}`}
                     className={`border-r border-gray-200 break-words last:border-r-0 ${column.className || ''}`}
-                    style={{
-                      width: `${columnWidths[colIndex]}px`,
-                      maxWidth: `${columnWidths[colIndex]}px`,
-                    }}
+                    style={
+                      columnWidths[colIndex] !== null
+                        ? {
+                            width: `${columnWidths[colIndex]}px`,
+                            maxWidth: `${columnWidths[colIndex]}px`,
+                          }
+                        : undefined
+                    }
                   >
                     {typeof column.accessor === 'function'
                       ? column.accessor(row)

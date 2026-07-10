@@ -36,7 +36,6 @@ export function getStudentColumns({
           className="h-9 w-9"
         />
       ),
-      width: 70,
     },
     {
       header: 'Class',
@@ -48,13 +47,11 @@ export function getStudentColumns({
       ),
       sortable: true,
       sortKey: 'class_master_name',
-      width: 150,
     },
     {
       header: 'Roll Number',
       accessor: 'roll_number',
       sortable: true,
-      width: 150,
     },
     {
       header: 'Name',
@@ -66,7 +63,6 @@ export function getStudentColumns({
       ),
       sortable: true,
       sortKey: 'full_name',
-      width: 250,
     },
     {
       header: 'Admission Number',
@@ -82,14 +78,12 @@ export function getStudentColumns({
       ),
       sortable: true,
       sortKey: 'admission_number',
-      width: 200,
     },
     {
       header: 'Phone',
       accessor: (row) => (
         <span className="text-gray-700">{row.phone ? formatPhoneNumber(row.phone) : '—'}</span>
       ),
-      width: 150,
     },
     {
       header: 'Gender',
@@ -118,7 +112,6 @@ export function getStudentColumns({
           </Badge>
         );
       },
-      width: 120,
     },
     {
       header: 'Actions',
@@ -157,7 +150,6 @@ export function getStudentColumns({
           </div>
         );
       },
-      width: 150,
     },
   ];
 }

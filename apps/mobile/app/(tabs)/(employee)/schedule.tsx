@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 10,
     alignItems: 'center',
-    minWidth: 52,
+    minWidth: 44,
   },
   dayButtonSelected: {
     backgroundColor: '#6366f1',

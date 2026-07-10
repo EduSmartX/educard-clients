@@ -829,7 +829,9 @@ export function LeaveAllocationForm({
                                   <div className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-purple-400 to-pink-400 text-[10px] font-semibold text-white">
                                     {role.name.charAt(0)}
                                   </div>
-                                  <span className="max-w-[120px] truncate">{role.name}</span>
+                                  <span className="max-w-[96px] truncate sm:max-w-[120px]">
+                                    {role.name}
+                                  </span>
                                 </div>
                               ))}
                             </div>

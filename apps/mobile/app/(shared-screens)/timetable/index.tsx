@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e2e8f0',
     alignItems: 'center',
-    minWidth: 70,
+    minWidth: 56,
   },
   dayTabActive: {
     backgroundColor: '#7c3aed',

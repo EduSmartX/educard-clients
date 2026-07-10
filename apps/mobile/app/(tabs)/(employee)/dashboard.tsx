@@ -25,6 +25,7 @@ import {
   RefreshControl,
   StyleSheet,
   Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 
@@ -101,6 +102,7 @@ const quickActions: QuickAction[] = [
 
 export default function EmployeeDashboard() {
   const router = useRouter();
+  const { width: viewportWidth } = useWindowDimensions();
   const { user } = useAuthStore();
   const { profileImageUrl } = useProfileImageUrl();
   const [refreshing, setRefreshing] = useState(false);
@@ -283,7 +285,10 @@ export default function EmployeeDashboard() {
                 entering={ZoomIn.delay(550 + index * 60)
                   .springify()
                   .damping(14)}
-                style={styles.quickActionItem}
+                style={[
+                  styles.quickActionItem,
+                  { width: viewportWidth >= 768 ? '33.333%' : '50%' },
+                ]}
               >
                 <TouchableOpacity
                   style={styles.quickActionCard}
@@ -394,7 +399,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { fontSize: 16, fontWeight: '700', color: '#1e293b', letterSpacing: -0.3 },
   quickActionsGrid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -6 },
-  quickActionItem: { width: '50%', padding: 6 },
+  quickActionItem: { padding: 6 },
   quickActionCard: {
     alignItems: 'center',
     paddingVertical: 20,

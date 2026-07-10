@@ -227,7 +227,7 @@ export function MarkAttendanceForm() {
           {/* Class, Date, and Period Card with background color */}
           <Card className="shadow-sm" style={{ backgroundColor: '#C5D89D' }}>
             <CardContent className="pt-6">
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {/* Class Selection */}
                 <FormField
                   control={form.control}
@@ -287,16 +287,16 @@ export function MarkAttendanceForm() {
                   control={form.control}
                   name="period"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="sm:col-span-2 lg:col-span-1">
                       <FormLabel className="text-base font-semibold">
                         {AttendanceUiText.PERIOD_LABEL}
                       </FormLabel>
                       <FormControl>
-                        <div className="flex h-11 items-center rounded-md border border-gray-300 bg-white px-3">
+                        <div className="rounded-md border border-gray-300 bg-white px-3 py-2">
                           <RadioGroup
                             onValueChange={field.onChange}
                             value={field.value}
-                            className="flex gap-3"
+                            className="flex flex-wrap items-center gap-x-4 gap-y-2"
                           >
                             <FormItem className="flex items-center space-y-0 space-x-1.5">
                               <FormControl>
@@ -304,7 +304,7 @@ export function MarkAttendanceForm() {
                               </FormControl>
                               <FormLabel className="flex cursor-pointer items-center gap-1 font-normal whitespace-nowrap">
                                 <Sun className="h-4 w-4 text-amber-500" />
-                                <span className="hidden sm:inline">
+                                <span className="hidden lg:inline">
                                   {AttendanceUiText.PERIOD_MORNING}
                                 </span>
                               </FormLabel>
@@ -315,7 +315,7 @@ export function MarkAttendanceForm() {
                               </FormControl>
                               <FormLabel className="flex cursor-pointer items-center gap-1 font-normal whitespace-nowrap">
                                 <Sunset className="h-4 w-4 text-orange-500" />
-                                <span className="hidden sm:inline">
+                                <span className="hidden lg:inline">
                                   {AttendanceUiText.PERIOD_AFTERNOON}
                                 </span>
                               </FormLabel>
@@ -326,7 +326,7 @@ export function MarkAttendanceForm() {
                               </FormControl>
                               <FormLabel className="flex cursor-pointer items-center gap-1 font-normal whitespace-nowrap">
                                 <Calendar className="h-4 w-4 text-blue-500" />
-                                <span className="hidden sm:inline">
+                                <span className="hidden lg:inline">
                                   {AttendanceUiText.PERIOD_FULL_DAY}
                                 </span>
                               </FormLabel>

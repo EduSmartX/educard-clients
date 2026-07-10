@@ -230,7 +230,7 @@ export function ExamSessionsPage() {
             </div>
           </div>
           {/* Filters Row */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <SearchableSelect
               options={[
                 { value: 'all', label: 'All Types' },
@@ -246,7 +246,7 @@ export function ExamSessionsPage() {
               }}
               placeholder="Session Type"
               searchPlaceholder="Search session types..."
-              className="w-[160px]"
+              className="w-full"
             />
             <SearchableSelect
               options={[
@@ -262,7 +262,7 @@ export function ExamSessionsPage() {
                 setPage(1);
               }}
               placeholder="Academic Year"
-              className="w-[140px]"
+              className="w-full"
             />
             {(sessionTypeFilter || academicYearFilter) && (
               <Button
@@ -273,7 +273,7 @@ export function ExamSessionsPage() {
                   setAcademicYearFilter('');
                   setPage(1);
                 }}
-                className="text-xs text-gray-500 hover:text-gray-700"
+                className="h-10 justify-start text-xs text-gray-500 hover:text-gray-700"
               >
                 Clear Filters
               </Button>

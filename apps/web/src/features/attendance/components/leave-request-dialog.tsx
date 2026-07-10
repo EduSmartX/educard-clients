@@ -263,7 +263,7 @@ export function LeaveRequestDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[95vh] overflow-y-auto border-2 border-gray-300 bg-white shadow-2xl sm:max-w-[600px]">
+      <DialogContent className="max-h-[95vh] w-[calc(100vw-1.5rem)] overflow-y-auto border-2 border-gray-300 bg-white shadow-2xl sm:w-full sm:max-w-[600px]">
         <DialogHeader className="space-y-3 border-b pb-4">
           <DialogTitle className="text-2xl font-bold text-gray-900">Apply for Leave</DialogTitle>
           <DialogDescription className="text-base text-gray-600">

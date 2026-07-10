@@ -83,7 +83,7 @@ export function SendReminderDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:w-full sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{FEE_UI_TEXT.FORM.SEND_REMINDER}</DialogTitle>
           <DialogDescription>

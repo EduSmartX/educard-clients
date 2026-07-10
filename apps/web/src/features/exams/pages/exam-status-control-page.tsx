@@ -288,7 +288,7 @@ export function ExamStatusControlPage() {
                     value={bulkTargetStatus}
                     onValueChange={(value) => setBulkTargetStatus(value as ExamStatus)}
                     placeholder="Select target status"
-                    className="w-[200px]"
+                    className="w-full md:w-[200px]"
                   />
                   <Button
                     variant="warning"
@@ -365,7 +365,7 @@ export function ExamStatusControlPage() {
                               [exam.public_id]: value as ExamStatus,
                             }))
                           }
-                          className="w-[200px]"
+                          className="w-full md:w-[200px]"
                         />
                         <Button
                           variant="info"

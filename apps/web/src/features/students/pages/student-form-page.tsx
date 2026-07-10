@@ -135,7 +135,7 @@ export default function StudentFormPage() {
             setIsDeleting(false);
           },
           onError: (error: Error) => {
-            toast.error(error.message || ErrorMessages.STUDENT.DELETE_FAILED);
+            toast.error(getErrorMessage(error, ErrorMessages.STUDENT.DELETE_FAILED));
             setIsDeleting(false);
           },
         }

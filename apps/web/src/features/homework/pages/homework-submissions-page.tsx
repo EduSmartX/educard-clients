@@ -214,6 +214,21 @@ export default function HomeworkSubmissionsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Keep local state in sync when URL changes (manual URL edits, back/forward navigation).
+  useEffect(() => {
+    const classParam = searchParams.get('class') || '';
+    const dateParam = searchParams.get('date');
+    const nextDate =
+      dateParam && isValid(parseISO(dateParam)) ? parseISO(dateParam) : getPreviousWorkingDay();
+    const homeworkParam = searchParams.get('homework') || '';
+
+    setSelectedClassId((prev) => (prev === classParam ? prev : classParam));
+    setSelectedDate((prev) =>
+      format(prev, 'yyyy-MM-dd') === format(nextDate, 'yyyy-MM-dd') ? prev : nextDate
+    );
+    setSelectedHomeworkId((prev) => (prev === homeworkParam ? prev : homeworkParam));
+  }, [searchParams]);
+
   // Fetch teacher's classes
   const { data: teacherClasses = [], isLoading: isLoadingClasses } = useTeacherClasses();
 
@@ -256,8 +271,8 @@ export default function HomeworkSubmissionsPage() {
       setSelectedHomeworkId('');
       return;
     }
-    if (!selectedHomeworkId || !homeworkList.some((h) => h.public_id === selectedHomeworkId)) {
-      setSelectedHomeworkId(homeworkList[0].public_id);
+    if (selectedHomeworkId && !homeworkList.some((h) => h.public_id === selectedHomeworkId)) {
+      setSelectedHomeworkId('');
     }
   }, [homeworkList, selectedHomeworkId]);
 
@@ -278,8 +293,10 @@ export default function HomeworkSubmissionsPage() {
     if (selectedHomeworkId) {
       params.set('homework', selectedHomeworkId);
     }
-    setSearchParams(params, { replace: true });
-  }, [selectedClassId, selectedDate, selectedHomeworkId, setSearchParams]);
+    if (params.toString() !== searchParams.toString()) {
+      setSearchParams(params, { replace: true });
+    }
+  }, [selectedClassId, selectedDate, selectedHomeworkId, searchParams, setSearchParams]);
 
   // Filter submissions
   const filteredSubmissions = useMemo(() => {

@@ -133,13 +133,13 @@ export function MarksOverviewTable({ data }: Readonly<MarksOverviewTableProps>) 
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="w-[50px] text-center font-semibold">#</TableHead>
-              <TableHead className="min-w-[180px] font-semibold">Name</TableHead>
-              <TableHead className="w-[100px] font-semibold">Roll No</TableHead>
+              <TableHead className="w-[38px] text-center font-semibold sm:w-[50px]">#</TableHead>
+              <TableHead className="min-w-[120px] font-semibold sm:min-w-[180px]">Name</TableHead>
+              <TableHead className="w-[80px] font-semibold sm:w-[100px]">Roll No</TableHead>
               {subjects.map((subject) => (
                 <TableHead
                   key={subject.exam_public_id}
-                  className="min-w-[100px] text-center font-semibold"
+                  className="min-w-[80px] text-center font-semibold sm:min-w-[100px]"
                 >
                   <div className="flex flex-col">
                     <span>{subject.subject_name}</span>
@@ -149,9 +149,9 @@ export function MarksOverviewTable({ data }: Readonly<MarksOverviewTableProps>) 
                   </div>
                 </TableHead>
               ))}
-              <TableHead className="w-[100px] text-center font-semibold">Total</TableHead>
-              <TableHead className="w-[80px] text-center font-semibold">%</TableHead>
-              <TableHead className="w-[80px] text-center font-semibold">Result</TableHead>
+              <TableHead className="w-[80px] text-center font-semibold sm:w-[100px]">Total</TableHead>
+              <TableHead className="w-[64px] text-center font-semibold sm:w-[80px]">%</TableHead>
+              <TableHead className="w-[64px] text-center font-semibold sm:w-[80px]">Result</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

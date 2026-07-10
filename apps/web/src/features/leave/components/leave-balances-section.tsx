@@ -27,9 +27,9 @@ export function LeaveBalancesSection({
     <div>
       <h2 className="text-primary mb-3 text-xl font-bold sm:mb-4 sm:text-2xl">Leave Balances</h2>
       {showSkeleton && (
-        <div className="mb-4 flex gap-4">
+        <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {['skeleton-bal-1', 'skeleton-bal-2', 'skeleton-bal-3'].map((key) => (
-            <Card key={key} className="w-[180px] min-w-[180px]">
+            <Card key={key} className="w-full">
               <CardContent className="py-8">
                 <Skeleton className="mb-2 h-10 w-24" />
                 <Skeleton className="h-5 w-20" />

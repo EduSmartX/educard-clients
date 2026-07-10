@@ -312,7 +312,7 @@ export function ExceptionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[90vh] flex-col overflow-hidden bg-white p-0 sm:max-w-[700px]">
+      <DialogContent className="flex h-[90vh] w-[calc(100vw-1.5rem)] flex-col overflow-hidden bg-white p-0 sm:w-full sm:max-w-[700px]">
         <DialogTitle className="sr-only">{dialogTitle}</DialogTitle>
         <DialogDescription className="sr-only">{dialogDescription}</DialogDescription>
         {/* Modern Gradient Header - Fixed */}

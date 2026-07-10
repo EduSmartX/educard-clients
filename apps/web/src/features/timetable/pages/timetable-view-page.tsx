@@ -141,11 +141,17 @@ function WeekTimeline({ days }: { days: ClassTimetableWeekDay[] }) {
 
   const allSlots = sortedDays.flatMap((day) => day.slots);
   const subjectColorMap = getSubjectColorMap(allSlots);
+  const timelineMinWidth = Math.max(700, 170 + sortedDays.length * 150);
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-cyan-100 bg-gradient-to-br from-cyan-50 via-sky-50 to-emerald-50 p-3 shadow-sm">
-      <div className="min-w-[980px]">
-        <div className="grid grid-cols-[220px_repeat(6,minmax(0,1fr))] gap-2">
+      <div style={{ minWidth: `${timelineMinWidth}px` }}>
+        <div
+          className="grid gap-2"
+          style={{
+            gridTemplateColumns: `minmax(140px,170px) repeat(${sortedDays.length}, minmax(150px, 1fr))`,
+          }}
+        >
           <div className="rounded-xl border border-cyan-200 bg-white/90 p-3">
             <p className="text-[11px] font-semibold tracking-wide text-cyan-700 uppercase">
               Period
@@ -281,7 +287,7 @@ function ByClassView() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
         <div className="w-full sm:w-72">
           {classesLoading ? (
             <div className="bg-muted h-10 animate-pulse rounded-md" />
@@ -303,7 +309,7 @@ function ByClassView() {
           type="date"
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
-          className="w-full max-w-48"
+          className="w-full sm:max-w-48"
         />
       </div>
 
@@ -547,9 +553,9 @@ function ByTeacherView() {
             return (
               <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
                 <div
-                  className="grid min-w-[700px]"
+                  className="grid min-w-[520px] sm:min-w-[700px]"
                   style={{
-                    gridTemplateColumns: `90px repeat(${visibleDays.length}, minmax(0, 1fr))`,
+                    gridTemplateColumns: `minmax(72px, 90px) repeat(${visibleDays.length}, minmax(0, 1fr))`,
                   }}
                 >
                   <div className="sticky top-0 z-10 flex items-center justify-center border-b border-gray-200 bg-gray-50 p-3">

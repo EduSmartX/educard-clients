@@ -12,8 +12,8 @@ import {
   Modal,
   StyleSheet,
   FlatList,
-  Dimensions,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 
 const MONTHS = [
@@ -85,8 +85,12 @@ export function FormDatePicker({
   minDate,
   maxDate,
 }: FormDatePickerProps) {
+  const { width: viewportWidth } = useWindowDimensions();
   const currentYear = new Date().getFullYear();
   const effectiveMaxYear = maxYear ?? currentYear + 5;
+  const calendarPadding = viewportWidth < 360 ? 12 : 20;
+  const daySize = Math.max(34, Math.min(54, Math.floor((viewportWidth - calendarPadding * 2) / 7)));
+  const monthCellWidth = (viewportWidth - calendarPadding * 2 - 20) / 3;
 
   const [visible, setVisible] = useState(false);
   const [mode, setMode] = useState<'calendar' | 'year' | 'month'>('calendar');
@@ -271,7 +275,7 @@ export function FormDatePicker({
                 {/* Weekday headers */}
                 <View style={styles.weekRow}>
                   {WEEKDAYS.map((d) => (
-                    <Text key={d} style={styles.weekDay}>
+                    <Text key={d} style={[styles.weekDay, { width: daySize }]}>
                       {d}
                     </Text>
                   ))}
@@ -285,6 +289,7 @@ export function FormDatePicker({
                         key={`day-${viewYear}-${viewMonth}-${day}`}
                         style={[
                           styles.dayCell,
+                          { width: daySize, height: daySize, borderRadius: daySize / 2 },
                           isSelected(day) ? styles.dayCellSelected : undefined,
                           isToday(day) && !isSelected(day) ? styles.dayCellToday : undefined,
                           isDayDisabled(day) ? styles.dayCellDisabled : undefined,
@@ -304,7 +309,10 @@ export function FormDatePicker({
                         </Text>
                       </TouchableOpacity>
                     ) : (
-                      <View key={`empty-${viewYear}-${viewMonth}-${idx}`} style={styles.dayCell} />
+                      <View
+                        key={`empty-${viewYear}-${viewMonth}-${idx}`}
+                        style={[styles.dayCell, { width: daySize, height: daySize, borderRadius: daySize / 2 }]}
+                      />
                     )
                   )}
                 </View>
@@ -342,7 +350,11 @@ export function FormDatePicker({
                 {MONTHS.map((m, idx) => (
                   <TouchableOpacity
                     key={m}
-                    style={[styles.monthItem, idx === viewMonth && styles.monthItemActive]}
+                    style={[
+                      styles.monthItem,
+                      { width: monthCellWidth },
+                      idx === viewMonth && styles.monthItemActive,
+                    ]}
                     onPress={() => selectMonth(idx)}
                   >
                     <Text style={[styles.monthText, idx === viewMonth && styles.monthTextActive]}>
@@ -368,9 +380,6 @@ export function FormDatePicker({
     </View>
   );
 }
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const DAY_SIZE = Math.floor((SCREEN_WIDTH - 40) / 7);
 
 const styles = StyleSheet.create({
   container: { marginBottom: 16 },
@@ -460,7 +469,6 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   weekDay: {
-    width: DAY_SIZE,
     textAlign: 'center',
     fontSize: 12,
     fontWeight: '600',
@@ -474,11 +482,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   dayCell: {
-    width: DAY_SIZE,
-    height: DAY_SIZE,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: DAY_SIZE / 2,
   },
   dayCellSelected: { backgroundColor: '#0d9488' },
   dayCellToday: { borderWidth: 1.5, borderColor: '#0d9488' },
@@ -512,7 +517,6 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   monthItem: {
-    width: (SCREEN_WIDTH - 60) / 3,
     paddingVertical: 14,
     alignItems: 'center',
     borderRadius: 10,

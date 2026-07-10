@@ -507,7 +507,7 @@ export function AttendanceReportPage() {
           <Button
             onClick={() => setShowCalendarView(!showCalendarView)}
             variant={showCalendarView ? 'default' : 'outline'}
-            className={`min-w-[200px] ${showCalendarView ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}`}
+            className={`w-full sm:w-auto sm:min-w-[200px] ${showCalendarView ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}`}
           >
             {showCalendarView ? 'Hide Calendar View' : 'View Calendar Grid'}
           </Button>

@@ -686,7 +686,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     width: '85%',
-    maxWidth: 340,
+    maxWidth: '92%',
   },
   modalTitle: { fontSize: 18, fontWeight: '700', color: '#1e293b', marginBottom: 4 },
   modalSubtitle: { fontSize: 14, color: '#64748b', marginBottom: 16 },

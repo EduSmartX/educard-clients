@@ -232,13 +232,13 @@ export function YearlyCalendarGrid({
           <table className="w-full border-collapse text-xs">
             <thead>
               <tr className="bg-blue-100">
-                <th className="sticky left-0 z-10 min-w-[60px] border border-gray-300 bg-blue-100 p-2 text-center font-semibold">
+                <th className="sticky left-0 z-10 min-w-[52px] border border-gray-300 bg-blue-100 p-2 text-center font-semibold sm:min-w-[60px]">
                   Date / Month
                 </th>
                 {monthOrder.map((monthIndex) => (
                   <th
                     key={monthIndex}
-                    className="min-w-[90px] border border-gray-300 p-2 text-center font-semibold"
+                    className="min-w-[76px] border border-gray-300 p-2 text-center font-semibold sm:min-w-[90px]"
                   >
                     {MONTHS[monthIndex]}
                   </th>

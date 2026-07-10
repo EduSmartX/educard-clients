@@ -17,6 +17,7 @@ import type { StudentListItem } from '../types';
 import { DeleteConfirmationDialog, ReactivateConfirmationDialog } from '@/components/common';
 import { useDeletedView } from '@/hooks/use-deleted-view';
 import { useAuth } from '@/hooks/use-auth';
+import { getErrorMessage } from '@/lib/utils/error-handler';
 
 type PageMode = 'list' | 'create' | 'edit' | 'view';
 
@@ -187,7 +188,7 @@ export function StudentsManagement() {
             setStudentToDelete(null);
           },
           onError: (error: Error) => {
-            toast.error(error.message || ErrorMessages.STUDENT.DELETE_FAILED);
+            toast.error(getErrorMessage(error, ErrorMessages.STUDENT.DELETE_FAILED));
           },
         }
       );
@@ -209,7 +210,7 @@ export function StudentsManagement() {
             setReactivateError(null);
           },
           onError: (error: Error) => {
-            const errorMessage = error.message || ErrorMessages.STUDENT.REACTIVATE_FAILED;
+            const errorMessage = getErrorMessage(error, ErrorMessages.STUDENT.REACTIVATE_FAILED);
             setReactivateError(errorMessage);
           },
         }

@@ -63,7 +63,6 @@ export function createExamColumns({
       ),
       sortable: true,
       sortKey: 'session_name',
-      width: 180,
     },
     {
       header: 'Session Duration',
@@ -86,14 +85,12 @@ export function createExamColumns({
           </div>
         );
       },
-      width: 140,
     },
     {
       header: 'Subject',
       accessor: (row) => <span className="font-medium text-gray-900">{row.subject_name}</span>,
       sortable: true,
       sortKey: 'subject_name',
-      width: 150,
     },
     {
       header: 'Class',
@@ -104,7 +101,6 @@ export function createExamColumns({
       ),
       sortable: true,
       sortKey: 'class_name',
-      width: 120,
     },
     {
       header: 'Status',
@@ -118,7 +114,6 @@ export function createExamColumns({
       ),
       sortable: true,
       sortKey: 'status',
-      width: 110,
     },
     {
       header: 'Exam Date',
@@ -139,7 +134,6 @@ export function createExamColumns({
       },
       sortable: true,
       sortKey: 'date',
-      width: 130,
     },
     {
       header: 'Marks',
@@ -149,7 +143,6 @@ export function createExamColumns({
           <span className="text-xs text-gray-500">Pass: {row.passing_marks}</span>
         </div>
       ),
-      width: 90,
     },
     {
       header: 'Actions',
@@ -223,7 +216,6 @@ export function createExamColumns({
           )}
         </div>
       ),
-      width: 100,
     },
   ];
 }

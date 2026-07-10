@@ -24,6 +24,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { ErrorMessages, SuccessMessages } from '@/constants';
 import { downloadFile } from '@/lib/utils';
+import { getErrorMessage } from '@/lib/utils/error-handler';
 import { useCriticalOperation } from '@/providers/critical-operation-provider';
 
 // Generic error type for bulk uploads
@@ -150,8 +151,7 @@ export function BulkUploadDialog({
       downloadFile(blob, templateFileName);
       toast.success(SuccessMessages.FILES.TEMPLATE_DOWNLOADED);
     } catch (error) {
-      const err = error as Error;
-      toast.error(err?.message || 'Failed to download template');
+      toast.error(getErrorMessage(error, 'Failed to download template'));
     } finally {
       setIsDownloading(false);
     }

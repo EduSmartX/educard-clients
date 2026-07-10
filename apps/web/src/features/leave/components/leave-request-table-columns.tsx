@@ -54,7 +54,6 @@ export function getLeaveRequestColumns(actions: ColumnActions): Column<LeaveRequ
       ),
       sortable: true,
       sortKey: 'number_of_days',
-      width: 80,
     },
     {
       header: 'Status',
@@ -86,7 +85,7 @@ export function getLeaveRequestColumns(actions: ColumnActions): Column<LeaveRequ
       header: 'Comments',
       accessor: (row) => (
         <div
-          className="max-w-[220px] truncate text-sm text-gray-900"
+            className="max-w-[160px] truncate text-sm text-gray-900 sm:max-w-[220px]"
           title={row.review_comments || '-'}
         >
           {row.review_comments?.trim() || '-'}
@@ -142,7 +141,6 @@ export function getLeaveRequestColumns(actions: ColumnActions): Column<LeaveRequ
           )}
         </div>
       ),
-      width: 120,
     },
   ];
 }

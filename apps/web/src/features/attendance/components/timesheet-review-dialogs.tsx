@@ -123,7 +123,7 @@ export function TimesheetRejectDialog({
 
   return (
     <Dialog open={!!target} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="bg-white sm:max-w-md">
+      <DialogContent className="w-[calc(100vw-1.5rem)] bg-white sm:w-full sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Reject Timesheet</DialogTitle>
           <DialogDescription>
