@@ -131,8 +131,18 @@ export function MarksEntryPage() {
 
   // Mark entries state
   const [markEntries, setMarkEntries] = useState<StudentMarkRow[]>([]);
-  const [isMarksPublishedLocally, setIsMarksPublishedLocally] = useState(false);
+  const [publishedStateOverride, setPublishedStateOverride] = useState<boolean | null>(null);
   const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (
+      publishedStateOverride !== null &&
+      selectedExam &&
+      selectedExam.is_marks_published === publishedStateOverride
+    ) {
+      setPublishedStateOverride(null);
+    }
+  }, [publishedStateOverride, selectedExam]);
 
   // Keyboard navigation
   const handleMarksKeyDown = useCallback(
@@ -203,7 +213,7 @@ export function MarksEntryPage() {
     setSelectedClassId('');
     setSelectedExamId('');
     setMarkEntries([]);
-    setIsMarksPublishedLocally(false);
+    setPublishedStateOverride(null);
   }, []);
 
   // Handler: when class changes from user interaction, reset exam
@@ -211,13 +221,13 @@ export function MarksEntryPage() {
     setSelectedClassId(val);
     setSelectedExamId('');
     setMarkEntries([]);
-    setIsMarksPublishedLocally(false);
+    setPublishedStateOverride(null);
   }, []);
 
   // Handler: when exam/subject changes from user interaction
   const handleExamChange = useCallback((val: string) => {
     setSelectedExamId(val);
-    setIsMarksPublishedLocally(false);
+    setPublishedStateOverride(null);
   }, []);
 
   // Bulk upsert mutation
@@ -234,7 +244,13 @@ export function MarksEntryPage() {
   const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
 
   // Unpublish only; publish can now be triggered by bulk-upsert with publish_after_save.
-  const unpublishMarksMutation = useUnpublishExamMarks();
+  const unpublishMarksMutation = useUnpublishExamMarks({
+    onSuccess: () => {
+      setPublishedStateOverride(false);
+      queryClient.invalidateQueries({ queryKey: ['exams'] });
+      queryClient.invalidateQueries({ queryKey: ['marks-by-exam', selectedExamId] });
+    },
+  });
 
   // Handler: Save & Publish — saves marks first, then publishes the selected exam
   const handleSaveAndPublish = useCallback(async () => {
@@ -287,7 +303,7 @@ export function MarksEntryPage() {
         marks,
         publish_after_save: true,
       });
-      setIsMarksPublishedLocally(true);
+      setPublishedStateOverride(true);
       queryClient.invalidateQueries({ queryKey: ['exams'] });
       toast.success('Marks saved and published successfully!');
     } catch (error) {
@@ -389,7 +405,7 @@ export function MarksEntryPage() {
 
   const isPending = bulkUpsertMutation.isPending;
   const isDataLoading = studentsLoading || existingMarksLoading;
-  const isMarksLocked = !!selectedExam?.is_marks_published || isMarksPublishedLocally;
+  const isMarksLocked = publishedStateOverride ?? !!selectedExam?.is_marks_published;
 
   // Stats
   const enteredCount = markEntries.filter((e) => e.marks_obtained || e.is_absent).length;
@@ -512,7 +528,7 @@ export function MarksEntryPage() {
                 <span className="font-medium text-gray-700">Students:</span>
                 <Badge>{markEntries.length}</Badge>
               </div>
-              {selectedExam.is_marks_published && (
+              {isMarksLocked && (
                 <Badge className="border-green-200 bg-green-100 text-green-700">✓ Published</Badge>
               )}
             </div>
@@ -523,7 +539,7 @@ export function MarksEntryPage() {
       {/* Marks Table */}
       {selectedExamId && !isDataLoading && markEntries.length > 0 && (
         <Card className="border shadow-sm">
-          {selectedExam?.is_marks_published && (
+          {isMarksLocked && (
             <div className="flex items-center gap-2 border-b border-blue-200 bg-blue-50 px-6 py-3 text-sm text-blue-800">
               <span className="text-base">🔒</span>
               <span className="font-medium">
@@ -603,7 +619,7 @@ export function MarksEntryPage() {
                                 handleMarkChange(index, 'marks_obtained', e.target.value)
                               }
                               onKeyDown={(e) => handleMarksKeyDown(e, index)}
-                              disabled={entry.is_absent || !!selectedExam?.is_marks_published}
+                              disabled={entry.is_absent || isMarksLocked}
                               placeholder="0"
                               data-marks-row={index}
                               className={`h-9 w-28 font-mono ${entry.marksError ? 'border-red-500' : ''}`}
@@ -619,7 +635,7 @@ export function MarksEntryPage() {
                             onCheckedChange={(checked) =>
                               handleMarkChange(index, 'is_absent', !!checked)
                             }
-                            disabled={!!selectedExam?.is_marks_published}
+                            disabled={isMarksLocked}
                           />
                         </td>
                         <td className="px-4 py-3 text-center">
@@ -659,7 +675,7 @@ export function MarksEntryPage() {
                 )}
               </div>
               <div className="flex items-center gap-3">
-                {selectedExam?.is_marks_published && (
+                {isMarksLocked && selectedExamId && (
                   <Button
                     variant="outline"
                     onClick={() => unpublishMarksMutation.mutate(selectedExamId)}
