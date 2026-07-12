@@ -85,7 +85,7 @@ export default function ProfilePage() {
           </TabsList>
 
           <TabsContent value="profile" className="mt-6 space-y-6">
-            <ProfilePhotoUpload />
+            {!isStudent && <ProfilePhotoUpload />}
             <ProfileInformationForm />
           </TabsContent>
 

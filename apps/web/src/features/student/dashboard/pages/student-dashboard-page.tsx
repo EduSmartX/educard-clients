@@ -7,6 +7,7 @@
  */
 
 import { useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import {
   BarChart3,
@@ -22,6 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { VerificationBanner } from '@/components/dashboard';
 import { useAuth } from '@/hooks/use-auth';
+import { ROUTES } from '@/constants/app-config';
 import { useStudentDashboard } from '../hooks/use-dashboard-data';
 
 const STAGGER_CHILDREN = {
@@ -79,6 +81,7 @@ function AnimatedNumber({ value, isLoading }: { value: number | string; isLoadin
 
 export default function StudentDashboardPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const greeting = getGreeting();
   const firstName = user?.full_name?.split(' ')[0] || 'Student';
 
@@ -98,6 +101,7 @@ export default function StudentDashboardPage() {
       iconBg: 'bg-gradient-to-br from-emerald-500 to-teal-600',
       gradient: 'bg-gradient-to-br from-emerald-500/90 to-teal-600/90',
       icon: BarChart3,
+      path: ROUTES.STUDENT.ATTENDANCE,
     },
     {
       label: 'Attendance This Year',
@@ -105,6 +109,7 @@ export default function StudentDashboardPage() {
       iconBg: 'bg-gradient-to-br from-blue-500 to-indigo-600',
       gradient: 'bg-gradient-to-br from-blue-500/90 to-indigo-600/90',
       icon: CalendarClock,
+      path: ROUTES.STUDENT.ATTENDANCE,
     },
     {
       label: 'Pending Homework',
@@ -112,6 +117,7 @@ export default function StudentDashboardPage() {
       iconBg: 'bg-gradient-to-br from-orange-500 to-amber-600',
       gradient: 'bg-gradient-to-br from-orange-500/90 to-amber-600/90',
       icon: BookOpen,
+      path: ROUTES.STUDENT.HOMEWORK,
     },
     {
       label: 'Upcoming Exams',
@@ -119,6 +125,7 @@ export default function StudentDashboardPage() {
       iconBg: 'bg-gradient-to-br from-violet-500 to-purple-600',
       gradient: 'bg-gradient-to-br from-violet-500/90 to-purple-600/90',
       icon: FileWarning,
+      path: ROUTES.STUDENT.EXAMS,
     },
   ];
 
@@ -203,6 +210,7 @@ export default function StudentDashboardPage() {
               variants={FADE_UP}
               whileHover={{ y: -4, scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              onClick={() => navigate(stat.path)}
               className="group cursor-pointer"
             >
               <Card className="relative overflow-hidden border border-gray-100 shadow-sm transition-shadow duration-300 hover:shadow-xl">
