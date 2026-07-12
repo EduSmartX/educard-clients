@@ -12,6 +12,7 @@ interface OrganizationUser {
   public_id: string;
   role?: string;
   role_display?: string;
+  employee_id?: string;
 }
 
 interface ApiResponse<T> {

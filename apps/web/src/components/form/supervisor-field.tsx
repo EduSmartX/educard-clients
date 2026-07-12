@@ -58,7 +58,11 @@ export function SupervisorField<T extends FieldValues>({
         const matchedUser = filteredUsers.find((u) => u.email === (field.value as string));
         const resolvedDisplayValue =
           viewValue ||
-          (matchedUser ? `${matchedUser.full_name} (${matchedUser.email})` : '') ||
+          (matchedUser
+            ? matchedUser.employee_id
+              ? `${matchedUser.full_name} (${matchedUser.employee_id})`
+              : `${matchedUser.full_name} (${matchedUser.email})`
+            : '') ||
           (field.value as string) ||
           '';
 
@@ -80,7 +84,9 @@ export function SupervisorField<T extends FieldValues>({
                 <SearchableSelect
                   options={filteredUsers.map((user) => ({
                     value: user.email,
-                    label: `${user.full_name} (${user.email})`,
+                    label: user.employee_id
+                      ? `${user.full_name} (${user.employee_id})`
+                      : `${user.full_name} (${user.email})`,
                   }))}
                   onValueChange={field.onChange}
                   value={(field.value as string) || ''}
