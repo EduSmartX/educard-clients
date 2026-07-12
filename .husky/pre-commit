@@ -1,19 +1,9 @@
 # ============================================
-# Pre-commit checks
+# Pre-commit checks (lightweight — full lint runs in CI)
 # ============================================
 
-# 1. Lint-staged: Prettier + ESLint on staged files only
-echo "🔍 Running lint-staged (Prettier + ESLint on staged files)..."
+# 1. Lint-staged: Prettier formatting on staged files only
+echo "🔍 Running lint-staged (Prettier on staged files)..."
 pnpm exec lint-staged || exit 1
 
-# 2. TypeScript type-check shared package
-echo "🔎 Running TypeScript type-check (shared package)..."
-cd packages/shared && pnpm run typecheck || { echo "❌ TypeScript errors in packages/shared"; exit 1; }
-cd ../..
-
-# 3. TypeScript type-check mobile app
-echo "🔎 Running TypeScript type-check (mobile app)..."
-cd apps/mobile && pnpm run typecheck || { echo "❌ TypeScript errors in apps/mobile"; exit 1; }
-cd ../..
-
-echo "✅ All pre-commit checks passed!"
+echo "✅ Pre-commit checks passed!"

@@ -1,25 +1,10 @@
 /**
  * Lint-Staged Configuration
- * Runs prettier + eslint on staged files only (not the whole project).
+ * Runs prettier on staged files. Full ESLint/tsc runs in CI pipeline.
  */
 module.exports = {
-  // Web app: prettier + eslint on staged ts/tsx files
-  "apps/web/**/*.{ts,tsx}": [
-    "prettier --write",
-    "eslint --max-warnings=0 --no-warn-ignored",
-  ],
-
-  // Mobile app: prettier + eslint on staged ts/tsx files
-  "apps/mobile/**/*.{ts,tsx}": [
-    "prettier --write",
-    "eslint --max-warnings=0 --no-warn-ignored",
-  ],
-
-  // Shared package: prettier + eslint on staged ts files
-  "packages/shared/**/*.ts": [
-    "prettier --write",
-    "eslint --max-warnings=0 --no-warn-ignored",
-  ],
+  // TypeScript & TSX files: format only
+  "*.{ts,tsx}": ["prettier --write"],
 
   // JSON, YAML, Markdown — format only
   "*.{json,yml,yaml,md}": ["prettier --write"],
