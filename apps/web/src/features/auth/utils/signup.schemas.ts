@@ -49,8 +49,8 @@ export const createStep3Schema = (includeAddress: boolean) =>
 
 export const step4Schema = z
   .object({
-    firstName: z.string().min(2, 'First name is required'),
-    lastName: z.string().min(2, 'Last name is required'),
+    firstName: z.string().min(1, 'First name is required'),
+    lastName: z.string().min(1, 'Last name is required'),
     phoneNumber: z
       .string()
       .optional()
@@ -86,6 +86,10 @@ export const step4Schema = z
   .refine((data) => !data.canTeachSubject || !!data.gender?.trim(), {
     message: 'Gender is required',
     path: ['gender'],
+  })
+  .refine((data) => data.firstName.length > 1 || data.lastName.length > 1, {
+    message: 'Both first and last name cannot be a single character',
+    path: ['lastName'],
   });
 
 export type Step1Data = z.infer<typeof step1Schema>;

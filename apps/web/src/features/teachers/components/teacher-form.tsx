@@ -414,6 +414,7 @@ export function TeacherForm({
                   disabled={isViewMode}
                   required
                   viewValue={initialData?.user?.organization_role?.name}
+                  excludeRoleCodes={['STUDENT', 'PARENT']}
                 />
                 {!useQuickAdd && (
                   <>
