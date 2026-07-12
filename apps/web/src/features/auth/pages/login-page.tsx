@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import { Mail, Lock, LogIn, UserCircle2 } from 'lucide-react';
+import { Mail, Lock, LogIn, UserCircle2, Eye, EyeOff } from 'lucide-react';
 import { authApi, isProfileSelectionResponse, type LoginCredentials } from '@/lib/api/auth-api';
 import { tokenManager } from '@/lib/token-manager';
 import { CommonUiText, ErrorMessages, FormPlaceholders, SuccessMessages } from '@/constants';
@@ -28,6 +28,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -223,12 +224,20 @@ export default function LoginPage() {
                 </div>
                 <Input
                   id="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder={FormPlaceholders.ENTER_PASSWORD}
-                  className="h-14 rounded-xl border-2 border-gray-200 pl-12 text-base transition-all duration-200 focus:border-teal-400 focus:ring-4 focus:ring-teal-100"
+                  className="h-14 rounded-xl border-2 border-gray-200 pr-12 pl-12 text-base transition-all duration-200 focus:border-teal-400 focus:ring-4 focus:ring-teal-100"
                   error={errors.password?.message}
                   {...register('password')}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-gray-600"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
               </div>
             </div>
 
