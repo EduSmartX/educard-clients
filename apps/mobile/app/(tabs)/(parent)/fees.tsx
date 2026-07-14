@@ -59,6 +59,13 @@ export default function ParentFeesScreen() {
 
   const paidPct = summary ? Number(summary.paid_percentage) : 0;
 
+  const mandatoryComponents = (components ?? []).filter(
+    (c: FeeComponent) => c.component_type === 'mandatory'
+  );
+  const optionalComponents = (components ?? []).filter(
+    (c: FeeComponent) => c.component_type === 'optional'
+  );
+
   return (
     <Screen>
       <Header title="Fees" showBack={false} />
@@ -123,118 +130,155 @@ export default function ParentFeesScreen() {
               </>
             )}
 
-            {/* Payment History */}
-            <Text className="mb-3 mt-6 text-sm font-semibold text-gray-600">� Fee Components</Text>
+            {/* Fee Components */}
+            <Text className="mb-3 mt-6 text-sm font-semibold text-gray-600">Fee Components</Text>
             {components && components.length > 0 ? (
-              components.map((c: FeeComponent) => (
-                <View
-                  key={c.public_id}
-                  className="mb-2 rounded-xl border border-gray-100 bg-white p-4"
-                >
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-1">
-                      <View className="flex-row items-center gap-2">
-                        <Text className="text-sm font-medium text-gray-800">{c.name}</Text>
-                        {c.component_type === 'optional' && (
-                          <View className="rounded-md bg-purple-100 px-1.5 py-0.5">
-                            <Text className="text-[9px] font-medium text-purple-700">Optional</Text>
-                          </View>
-                        )}
-                        {c.is_selected && (
-                          <View className="rounded-md bg-emerald-100 px-1.5 py-0.5">
-                            <Text className="text-[9px] font-medium text-emerald-700">
-                              Selected
-                            </Text>
-                          </View>
-                        )}
-                      </View>
-                      {c.approval_status === 'pending' && (
-                        <View className="mt-1 self-start rounded-md bg-amber-100 px-1.5 py-0.5">
-                          <Text className="text-[9px] font-medium text-amber-700">
-                            Pending Approval
-                          </Text>
+              <>
+                {/* Mandatory */}
+                {mandatoryComponents.length > 0 && (
+                  <>
+                    <Text className="mb-2 text-xs font-medium uppercase tracking-wide text-blue-600">
+                      Mandatory
+                    </Text>
+                    {mandatoryComponents.map((c: FeeComponent) => (
+                      <View
+                        key={c.public_id}
+                        className="mb-2 flex-row items-center rounded-xl border border-gray-100 bg-white p-4"
+                      >
+                        <View className="flex-1">
+                          <Text className="text-sm font-medium text-gray-800">{c.name}</Text>
                         </View>
-                      )}
-                      {c.approval_status === 'rejected' && (
-                        <View className="mt-1 self-start rounded-md bg-red-100 px-1.5 py-0.5">
-                          <Text className="text-[9px] font-medium text-red-700">Rejected</Text>
-                        </View>
-                      )}
-                      {c.admin_note ? (
-                        <Text className="mt-1 text-[10px] italic text-gray-400">
-                          Admin: {c.admin_note}
+                        <Text className="text-sm font-semibold text-gray-700">
+                          {formatCurrency(Number(c.amount))}
                         </Text>
-                      ) : null}
-                    </View>
-                    <View className="items-end">
-                      <Text className="text-sm font-semibold text-gray-700">
-                        {formatCurrency(Number(c.amount))}
-                      </Text>
-                      {c.can_request_change && activeId !== c.public_id && (
-                        <TouchableOpacity
-                          className="mt-1 flex-row items-center gap-1 rounded-md border border-gray-200 px-2 py-1"
-                          onPress={() => setActiveId(c.public_id)}
-                        >
-                          {c.is_selected ? (
-                            <ToggleLeft size={12} color={colors.gray[500]} />
-                          ) : (
-                            <ToggleRight size={12} color={colors.primary[500]} />
-                          )}
-                          <Text className="text-[10px] text-gray-600">
-                            {c.is_selected ? 'Opt Out' : 'Opt In'}
-                          </Text>
-                        </TouchableOpacity>
-                      )}
-                    </View>
-                  </View>
-                  {activeId === c.public_id && (
-                    <View className="mt-3 border-t border-gray-100 pt-3">
-                      <TextInput
-                        placeholder="Reason for request..."
-                        value={note}
-                        onChangeText={setNote}
-                        className="rounded-md border border-gray-200 px-3 py-2 text-sm"
-                      />
-                      <View className="mt-2 flex-row gap-2">
-                        <TouchableOpacity
-                          className="flex-1 items-center rounded-md bg-primary-500 py-2"
-                          disabled={!note.trim() || optIn.isPending || optOut.isPending}
-                          onPress={() => {
-                            const action = c.is_selected ? optOut : optIn;
-                            action.mutate(
-                              { publicId: c.public_id, requestNote: note.trim() },
-                              {
-                                onSuccess: () => {
-                                  Alert.alert(
-                                    'Success',
-                                    c.is_selected
-                                      ? 'Opt-out request submitted'
-                                      : 'Opt-in request submitted'
+                      </View>
+                    ))}
+                  </>
+                )}
+
+                {/* Optional */}
+                {optionalComponents.length > 0 && (
+                  <>
+                    <Text className="mb-2 mt-3 text-xs font-medium uppercase tracking-wide text-purple-600">
+                      Optional
+                    </Text>
+                    {optionalComponents.map((c: FeeComponent) => (
+                      <View
+                        key={c.public_id}
+                        className="mb-2 rounded-xl border border-gray-100 bg-white p-4"
+                      >
+                        <View className="flex-row items-center justify-between">
+                          <View className="flex-1">
+                            <Text className="text-sm font-medium text-gray-800">{c.name}</Text>
+                            <View className="mt-1 flex-row items-center gap-2">
+                              <View
+                                className={`h-2 w-2 rounded-full ${c.is_selected ? 'bg-emerald-500' : 'bg-gray-300'}`}
+                              />
+                              <Text
+                                className={`text-[10px] ${c.is_selected ? 'text-emerald-600' : 'text-gray-400'}`}
+                              >
+                                {c.is_selected ? 'Included' : 'Not included'}
+                              </Text>
+                              {c.approval_status === 'pending' && (
+                                <View className="rounded-md bg-amber-100 px-1.5 py-0.5">
+                                  <Text className="text-[9px] font-medium text-amber-700">
+                                    Pending
+                                  </Text>
+                                </View>
+                              )}
+                              {c.approval_status === 'approved' && (
+                                <View className="rounded-md bg-emerald-100 px-1.5 py-0.5">
+                                  <Text className="text-[9px] font-medium text-emerald-700">
+                                    Approved
+                                  </Text>
+                                </View>
+                              )}
+                              {c.approval_status === 'rejected' && (
+                                <View className="rounded-md bg-red-100 px-1.5 py-0.5">
+                                  <Text className="text-[9px] font-medium text-red-700">
+                                    Rejected
+                                  </Text>
+                                </View>
+                              )}
+                            </View>
+                            {c.admin_note ? (
+                              <Text className="mt-1 text-[10px] italic text-gray-400">
+                                Admin: {c.admin_note}
+                              </Text>
+                            ) : null}
+                          </View>
+                          <View className="items-end">
+                            <Text className="text-sm font-semibold text-gray-700">
+                              {formatCurrency(Number(c.amount))}
+                            </Text>
+                            {c.can_request_change && activeId !== c.public_id && (
+                              <TouchableOpacity
+                                className="mt-1 flex-row items-center gap-1 rounded-md border border-gray-200 px-2 py-1"
+                                onPress={() => setActiveId(c.public_id)}
+                              >
+                                {c.is_selected ? (
+                                  <ToggleLeft size={12} color={colors.gray[500]} />
+                                ) : (
+                                  <ToggleRight size={12} color={colors.primary[500]} />
+                                )}
+                                <Text className="text-[10px] text-gray-600">
+                                  {c.is_selected ? 'Opt Out' : 'Opt In'}
+                                </Text>
+                              </TouchableOpacity>
+                            )}
+                          </View>
+                        </View>
+                        {activeId === c.public_id && (
+                          <View className="mt-3 border-t border-gray-100 pt-3">
+                            <TextInput
+                              placeholder="Reason for request..."
+                              value={note}
+                              onChangeText={setNote}
+                              className="rounded-md border border-gray-200 px-3 py-2 text-sm"
+                            />
+                            <View className="mt-2 flex-row gap-2">
+                              <TouchableOpacity
+                                className="flex-1 items-center rounded-md bg-primary-500 py-2"
+                                disabled={!note.trim() || optIn.isPending || optOut.isPending}
+                                onPress={() => {
+                                  const action = c.is_selected ? optOut : optIn;
+                                  action.mutate(
+                                    { publicId: c.public_id, requestNote: note.trim() },
+                                    {
+                                      onSuccess: () => {
+                                        Alert.alert(
+                                          'Success',
+                                          c.is_selected
+                                            ? 'Opt-out request submitted'
+                                            : 'Opt-in request submitted'
+                                        );
+                                        setActiveId(null);
+                                        setNote('');
+                                      },
+                                      onError: () => Alert.alert('Error', 'Request failed'),
+                                    }
                                   );
+                                }}
+                              >
+                                <Text className="text-xs font-medium text-white">Submit</Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity
+                                className="flex-1 items-center rounded-md border border-gray-200 py-2"
+                                onPress={() => {
                                   setActiveId(null);
                                   setNote('');
-                                },
-                                onError: () => Alert.alert('Error', 'Request failed'),
-                              }
-                            );
-                          }}
-                        >
-                          <Text className="text-xs font-medium text-white">Submit</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          className="flex-1 items-center rounded-md border border-gray-200 py-2"
-                          onPress={() => {
-                            setActiveId(null);
-                            setNote('');
-                          }}
-                        >
-                          <Text className="text-xs text-gray-600">Cancel</Text>
-                        </TouchableOpacity>
+                                }}
+                              >
+                                <Text className="text-xs text-gray-600">Cancel</Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        )}
                       </View>
-                    </View>
-                  )}
-                </View>
-              ))
+                    ))}
+                  </>
+                )}
+              </>
             ) : (
               <View className="items-center rounded-xl bg-gray-50 py-6">
                 <Text className="text-sm text-gray-400">No fee components</Text>
@@ -242,9 +286,7 @@ export default function ParentFeesScreen() {
             )}
 
             {/* Payment History */}
-            <Text className="mb-3 mt-6 text-sm font-semibold text-gray-600">
-              �💳 Payment History
-            </Text>
+            <Text className="mb-3 mt-6 text-sm font-semibold text-gray-600">Payment History</Text>
             {payments && payments.length > 0 ? (
               payments.map((p: FeePayment) => (
                 <View

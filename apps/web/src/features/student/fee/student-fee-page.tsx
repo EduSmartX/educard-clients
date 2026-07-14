@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageHeader } from '@/components/common';
 import { useFeeSummary, useFeePayments, useFeeComponents, useOptIn, useOptOut } from './hooks';
-import type { FeeComponent } from './api';
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('en-IN', {
@@ -36,6 +35,9 @@ export default function StudentFeePage() {
         { name: 'Pending', value: Number(summary.balance_due) || 0 },
       ]
     : [];
+
+  const mandatoryComponents = (components ?? []).filter((c) => c.component_type === 'mandatory');
+  const optionalComponents = (components ?? []).filter((c) => c.component_type === 'optional');
 
   return (
     <div className="space-y-6">
@@ -167,147 +169,168 @@ export default function StudentFeePage() {
             {componentsLoading ? (
               <Skeleton className="h-32 w-full rounded-xl" />
             ) : components && components.length > 0 ? (
-              <div className="divide-y">
-                {components.map((c: FeeComponent) => (
-                  <div key={c.public_id} className="py-3 first:pt-0 last:pb-0">
-                    <div className="flex items-start justify-between gap-3">
-                      {/* Left: Name + badges + status */}
-                      <div className="min-w-0 flex-1 space-y-1">
-                        <div className="flex flex-wrap items-center gap-2">
+              <div className="space-y-5">
+                {/* Mandatory Components */}
+                {mandatoryComponents.length > 0 && (
+                  <div>
+                    <div className="mb-2 flex items-center gap-2">
+                      <span className="text-xs font-semibold tracking-wider text-blue-600 uppercase">
+                        Mandatory
+                      </span>
+                      <span className="text-[10px] text-gray-400">
+                        ({mandatoryComponents.length})
+                      </span>
+                    </div>
+                    <div className="divide-y rounded-lg border">
+                      {mandatoryComponents.map((c) => (
+                        <div
+                          key={c.public_id}
+                          className="flex items-center justify-between px-4 py-3"
+                        >
                           <p className="text-sm font-medium text-gray-800">{c.name}</p>
-                          <Badge
-                            className={
-                              c.component_type === 'mandatory'
-                                ? 'bg-blue-50 text-blue-600'
-                                : 'bg-purple-50 text-purple-600'
-                            }
-                          >
-                            {c.component_type === 'mandatory' ? 'Mandatory' : 'Optional'}
-                          </Badge>
+                          <p className="text-sm font-semibold text-gray-700">
+                            {formatCurrency(Number(c.amount))}
+                          </p>
                         </div>
-
-                        {/* Status row for optional components */}
-                        {c.component_type === 'optional' && (
-                          <div className="flex flex-wrap items-center gap-2">
-                            {/* Selection status */}
-                            <span
-                              className={`inline-flex items-center gap-1 text-xs ${
-                                c.is_selected ? 'text-emerald-600' : 'text-gray-400'
-                              }`}
-                            >
-                              <span
-                                className={`h-2 w-2 rounded-full ${
-                                  c.is_selected ? 'bg-emerald-500' : 'bg-gray-300'
-                                }`}
-                              />
-                              {c.is_selected ? 'Included in fee' : 'Not included'}
-                            </span>
-
-                            {/* Approval status */}
-                            {c.approval_status === 'pending' && (
-                              <Badge className="bg-amber-50 text-[10px] text-amber-600">
-                                ⏳ Pending Approval
-                              </Badge>
-                            )}
-                            {c.approval_status === 'approved' && (
-                              <Badge className="bg-emerald-50 text-[10px] text-emerald-600">
-                                ✅ Approved
-                              </Badge>
-                            )}
-                            {c.approval_status === 'rejected' && (
-                              <Badge className="bg-red-50 text-[10px] text-red-600">
-                                ❌ Rejected
-                              </Badge>
-                            )}
-                          </div>
-                        )}
-
-                        {c.admin_note && (
-                          <p className="text-xs text-gray-400 italic">Admin note: {c.admin_note}</p>
-                        )}
-
-                        {/* Opt-in/Opt-out input */}
-                        {activeComponentId === c.public_id && (
-                          <div className="mt-2 flex gap-2">
-                            <input
-                              type="text"
-                              placeholder="Reason for request..."
-                              value={requestNote}
-                              onChange={(e) => setRequestNote(e.target.value)}
-                              className="flex-1 rounded-md border px-2 py-1 text-sm"
-                            />
-                            <Button
-                              size="sm"
-                              disabled={!requestNote.trim() || optIn.isPending || optOut.isPending}
-                              onClick={() => {
-                                const action = c.is_selected ? optOut : optIn;
-                                action.mutate(
-                                  { publicId: c.public_id, requestNote: requestNote.trim() },
-                                  {
-                                    onSuccess: () => {
-                                      toast.success(
-                                        c.is_selected
-                                          ? 'Opt-out request submitted'
-                                          : 'Opt-in request submitted'
-                                      );
-                                      setActiveComponentId(null);
-                                      setRequestNote('');
-                                    },
-                                    onError: () => toast.error('Request failed'),
-                                  }
-                                );
-                              }}
-                            >
-                              Submit
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => {
-                                setActiveComponentId(null);
-                                setRequestNote('');
-                              }}
-                            >
-                              Cancel
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Right: Amount + action */}
-                      <div className="flex flex-col items-end gap-1">
-                        <p className="text-sm font-semibold text-gray-700">
-                          {formatCurrency(Number(c.amount))}
-                        </p>
-                        {c.component_type === 'optional' &&
-                          c.can_request_change &&
-                          activeComponentId !== c.public_id && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="gap-1 text-xs"
-                              onClick={() => setActiveComponentId(c.public_id)}
-                            >
-                              {c.is_selected ? (
-                                <>
-                                  <ToggleLeft className="h-3 w-3" /> Opt Out
-                                </>
-                              ) : (
-                                <>
-                                  <ToggleRight className="h-3 w-3" /> Opt In
-                                </>
-                              )}
-                            </Button>
-                          )}
-                        {c.component_type === 'optional' &&
-                          !c.can_request_change &&
-                          c.approval_status === 'pending' && (
-                            <span className="text-[10px] text-amber-500">Awaiting admin</span>
-                          )}
-                      </div>
+                      ))}
                     </div>
                   </div>
-                ))}
+                )}
+
+                {/* Optional Components */}
+                {optionalComponents.length > 0 && (
+                  <div>
+                    <div className="mb-2 flex items-center gap-2">
+                      <span className="text-xs font-semibold tracking-wider text-purple-600 uppercase">
+                        Optional
+                      </span>
+                      <span className="text-[10px] text-gray-400">
+                        ({optionalComponents.length})
+                      </span>
+                    </div>
+                    <div className="divide-y rounded-lg border">
+                      {optionalComponents.map((c) => (
+                        <div key={c.public_id} className="px-4 py-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1 space-y-1">
+                              <p className="text-sm font-medium text-gray-800">{c.name}</p>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span
+                                  className={`inline-flex items-center gap-1 text-xs ${
+                                    c.is_selected ? 'text-emerald-600' : 'text-gray-400'
+                                  }`}
+                                >
+                                  <span
+                                    className={`h-2 w-2 rounded-full ${
+                                      c.is_selected ? 'bg-emerald-500' : 'bg-gray-300'
+                                    }`}
+                                  />
+                                  {c.is_selected ? 'Included in fee' : 'Not included'}
+                                </span>
+                                {c.approval_status === 'pending' && (
+                                  <Badge className="bg-amber-50 text-[10px] text-amber-600">
+                                    ⏳ Pending Approval
+                                  </Badge>
+                                )}
+                                {c.approval_status === 'approved' && (
+                                  <Badge className="bg-emerald-50 text-[10px] text-emerald-600">
+                                    ✅ Approved
+                                  </Badge>
+                                )}
+                                {c.approval_status === 'rejected' && (
+                                  <Badge className="bg-red-50 text-[10px] text-red-600">
+                                    ❌ Rejected
+                                  </Badge>
+                                )}
+                              </div>
+                              {c.admin_note && (
+                                <p className="text-xs text-gray-400 italic">
+                                  Admin note: {c.admin_note}
+                                </p>
+                              )}
+                              {activeComponentId === c.public_id && (
+                                <div className="mt-2 flex gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder="Reason for request..."
+                                    value={requestNote}
+                                    onChange={(e) => setRequestNote(e.target.value)}
+                                    className="flex-1 rounded-md border px-2 py-1 text-sm"
+                                  />
+                                  <Button
+                                    size="sm"
+                                    disabled={
+                                      !requestNote.trim() || optIn.isPending || optOut.isPending
+                                    }
+                                    onClick={() => {
+                                      const action = c.is_selected ? optOut : optIn;
+                                      action.mutate(
+                                        {
+                                          publicId: c.public_id,
+                                          requestNote: requestNote.trim(),
+                                        },
+                                        {
+                                          onSuccess: () => {
+                                            toast.success(
+                                              c.is_selected
+                                                ? 'Opt-out request submitted'
+                                                : 'Opt-in request submitted'
+                                            );
+                                            setActiveComponentId(null);
+                                            setRequestNote('');
+                                          },
+                                          onError: () => toast.error('Request failed'),
+                                        }
+                                      );
+                                    }}
+                                  >
+                                    Submit
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      setActiveComponentId(null);
+                                      setRequestNote('');
+                                    }}
+                                  >
+                                    Cancel
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex flex-col items-end gap-1">
+                              <p className="text-sm font-semibold text-gray-700">
+                                {formatCurrency(Number(c.amount))}
+                              </p>
+                              {c.can_request_change && activeComponentId !== c.public_id && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="gap-1 text-xs"
+                                  onClick={() => setActiveComponentId(c.public_id)}
+                                >
+                                  {c.is_selected ? (
+                                    <>
+                                      <ToggleLeft className="h-3 w-3" /> Opt Out
+                                    </>
+                                  ) : (
+                                    <>
+                                      <ToggleRight className="h-3 w-3" /> Opt In
+                                    </>
+                                  )}
+                                </Button>
+                              )}
+                              {!c.can_request_change && c.approval_status === 'pending' && (
+                                <span className="text-[10px] text-amber-500">Awaiting admin</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <p className="py-8 text-center text-sm text-gray-400">No fee components</p>

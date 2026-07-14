@@ -288,7 +288,7 @@ export function StudentFeeComponentRequestsPage() {
                         <div className="text-muted-foreground text-sm">
                           Requested action:{' '}
                           <span className="text-foreground font-medium">
-                            {component.is_selected ? 'Opt in' : 'Opt out'}
+                            {component.is_selected ? 'Opt out' : 'Opt in'}
                           </span>
                         </div>
                         {component.request_note && (

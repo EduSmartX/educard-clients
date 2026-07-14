@@ -38,6 +38,7 @@ import {
   validateCarryForward,
 } from '../utils/leave-allocation-helpers';
 import { applyFieldErrors, parseApiError } from '@/lib/utils/error-handler';
+import { useCriticalOperation } from '@/providers/critical-operation-provider';
 
 interface LeaveAllocationFormProps {
   mode?: 'create' | 'edit' | 'view';
@@ -212,9 +213,11 @@ export function LeaveAllocationForm({
   }, [academicYearData, mode, form]);
 
   // Create mutation
+  const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
   const createMutation = useMutation({
     mutationFn: (data: LeaveAllocationPayload) => leaveApi.createAllocation(data),
     onSuccess: (data) => {
+      endCriticalOperation();
       toast.success(SuccessMessages.CREATE_SUCCESS, {
         description: `${data.leave_type_name} policy has been created`,
         icon: <CheckCircle2 className="h-4 w-4" />,
@@ -224,6 +227,7 @@ export function LeaveAllocationForm({
       onSuccess?.();
     },
     onError: (error: unknown) => {
+      endCriticalOperation();
       const { hasFieldErrors, toastMessage } = applyFieldErrors(error, form.setError);
       if (hasFieldErrors) {
         return;
@@ -295,6 +299,10 @@ export function LeaveAllocationForm({
       const { leave_type, ...updatePayload } = payload;
       updateMutation.mutate({ id: allocationId, data: updatePayload });
     } else {
+      beginCriticalOperation({
+        title: 'Creating Leave Policy',
+        description: 'Creating leave allocation and assigning balances to users. Please wait...',
+      });
       createMutation.mutate(payload);
     }
   };

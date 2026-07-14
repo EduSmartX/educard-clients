@@ -15,6 +15,7 @@ interface PendingVerification {
   type: 'email' | 'phone';
   label: string;
   value: string;
+  action: 'add' | 'verify';
 }
 
 function maskValue(value: string, type: 'email' | 'phone'): string {
@@ -35,53 +36,39 @@ function maskValue(value: string, type: 'email' | 'phone'): string {
 function getPendingVerifications(user: User): PendingVerification[] {
   const pending: PendingVerification[] = [];
 
-  if (!user.is_email_verified) {
-    pending.push({
-      type: 'email',
-      label: 'Email',
-      value: user.email || 'Not added',
-    });
+  if (!user.email) {
+    pending.push({ type: 'email', label: 'Email', value: '', action: 'add' });
+  } else if (!user.is_email_verified) {
+    pending.push({ type: 'email', label: 'Email', value: user.email, action: 'verify' });
   }
 
-  if (!user.is_mobile_verified) {
-    pending.push({
-      type: 'phone',
-      label: 'Phone',
-      value: user.phone || 'Not added',
-    });
+  if (!user.phone) {
+    pending.push({ type: 'phone', label: 'Phone', value: '', action: 'add' });
+  } else if (!user.is_mobile_verified) {
+    pending.push({ type: 'phone', label: 'Phone', value: user.phone, action: 'verify' });
   }
 
   if (user.role === USER_ROLES.STUDENT) {
-    if (!user.guardian_email_verified) {
-      if (user.guardian_email && user.guardian_email !== user.email) {
-        pending.push({
-          type: 'email',
-          label: 'Guardian Email',
-          value: user.guardian_email,
-        });
-      } else if (!user.guardian_email) {
-        pending.push({
-          type: 'email',
-          label: 'Guardian Email',
-          value: 'Not added',
-        });
-      }
+    if (!user.guardian_email) {
+      pending.push({ type: 'email', label: 'Guardian Email', value: '', action: 'add' });
+    } else if (!user.guardian_email_verified) {
+      pending.push({
+        type: 'email',
+        label: 'Guardian Email',
+        value: user.guardian_email,
+        action: 'verify',
+      });
     }
 
-    if (!user.guardian_phone_verified) {
-      if (user.guardian_phone && user.guardian_phone !== user.phone) {
-        pending.push({
-          type: 'phone',
-          label: 'Guardian Phone',
-          value: user.guardian_phone,
-        });
-      } else if (!user.guardian_phone) {
-        pending.push({
-          type: 'phone',
-          label: 'Guardian Phone',
-          value: 'Not added',
-        });
-      }
+    if (!user.guardian_phone) {
+      pending.push({ type: 'phone', label: 'Guardian Phone', value: '', action: 'add' });
+    } else if (!user.guardian_phone_verified) {
+      pending.push({
+        type: 'phone',
+        label: 'Guardian Phone',
+        value: user.guardian_phone,
+        action: 'verify',
+      });
     }
   }
 
@@ -135,7 +122,9 @@ export function VerificationBanner({
             >
               <Icon size={14} color="#b45309" />
               <Text style={styles.chipText} numberOfLines={1}>
-                {item.label}: {maskValue(item.value, item.type)}
+                {item.action === 'add'
+                  ? `Add ${item.label}`
+                  : `${item.label}: ${maskValue(item.value, item.type)}`}
               </Text>
               <ChevronRight size={14} color="#b45309" />
             </TouchableOpacity>

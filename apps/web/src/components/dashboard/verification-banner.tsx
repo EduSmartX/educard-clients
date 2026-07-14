@@ -21,27 +21,24 @@ interface PendingVerification {
   type: 'email' | 'phone';
   label: string;
   value: string;
+  action: 'add' | 'verify';
 }
 
 function getPendingVerifications(user: User): PendingVerification[] {
   const pending: PendingVerification[] = [];
 
-  // Check user's own email verification
-  if (!user.is_email_verified) {
-    pending.push({
-      type: 'email',
-      label: 'Email',
-      value: user.email || 'Not added',
-    });
+  // Email: missing or unverified
+  if (!user.email) {
+    pending.push({ type: 'email', label: 'Email', value: 'Not added', action: 'add' });
+  } else if (!user.is_email_verified) {
+    pending.push({ type: 'email', label: 'Email', value: user.email, action: 'verify' });
   }
 
-  // Check user's own phone verification
-  if (!user.is_mobile_verified) {
-    pending.push({
-      type: 'phone',
-      label: 'Phone',
-      value: user.phone || 'Not added',
-    });
+  // Phone: missing or unverified
+  if (!user.phone) {
+    pending.push({ type: 'phone', label: 'Phone', value: 'Not added', action: 'add' });
+  } else if (!user.is_mobile_verified) {
+    pending.push({ type: 'phone', label: 'Phone', value: user.phone, action: 'verify' });
   }
 
   return pending;
@@ -85,7 +82,7 @@ export function VerificationBanner({
           <div className="min-w-0 flex-1">
             <h3 className="text-sm font-semibold text-amber-900">Verification Required</h3>
             <p className="mt-0.5 text-sm text-amber-700">
-              Please verify the following to receive important notifications:
+              Please complete the following to receive important notifications:
             </p>
 
             <div className="mt-3 flex flex-wrap gap-2">
@@ -107,7 +104,9 @@ export function VerificationBanner({
                     <Phone className="h-3.5 w-3.5 text-amber-500" />
                   )}
                   <span>
-                    {item.label}: {maskValue(item.value, item.type)}
+                    {item.action === 'add'
+                      ? `Add ${item.label}`
+                      : `${item.label}: ${maskValue(item.value, item.type)}`}
                   </span>
                   <ArrowRight className="h-3 w-3 text-amber-400 transition-transform group-hover:translate-x-0.5" />
                 </button>

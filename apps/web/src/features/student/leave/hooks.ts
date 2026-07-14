@@ -1,5 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
-import { getLeaveBalance, getLeaveRequests } from './api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  getLeaveBalance,
+  getLeaveRequests,
+  applyLeaveRequest,
+  type ApplyLeavePayload,
+} from './api';
 
 export function useLeaveBalance() {
   return useQuery({
@@ -14,5 +19,15 @@ export function useLeaveRequests() {
     queryKey: ['student', 'leave', 'requests'],
     queryFn: getLeaveRequests,
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useApplyLeave() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: ApplyLeavePayload) => applyLeaveRequest(data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['student', 'leave'] });
+    },
   });
 }

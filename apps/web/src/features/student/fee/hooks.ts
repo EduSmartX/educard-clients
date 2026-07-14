@@ -11,7 +11,8 @@ export function useFeeSummary() {
   return useQuery({
     queryKey: ['student', 'fee', 'summary'],
     queryFn: getFeeSummary,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -19,7 +20,8 @@ export function useFeePayments() {
   return useQuery({
     queryKey: ['student', 'fee', 'payments'],
     queryFn: getFeePayments,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -27,7 +29,8 @@ export function useFeeComponents() {
   return useQuery({
     queryKey: ['student', 'fee', 'components'],
     queryFn: getFeeComponents,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 }
 

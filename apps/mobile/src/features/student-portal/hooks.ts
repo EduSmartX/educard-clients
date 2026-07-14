@@ -114,14 +114,14 @@ export function useExamSessionDetail(publicId: string | null) {
 }
 
 export function useFeeSummary() {
-  return useQuery({ queryKey: KEYS.feeSummary, queryFn: fetchFeeSummary, staleTime: 10 * 60_000 });
+  return useQuery({ queryKey: KEYS.feeSummary, queryFn: fetchFeeSummary, staleTime: 0 });
 }
 
 export function useFeePayments() {
   return useQuery({
     queryKey: KEYS.feePayments,
     queryFn: fetchFeePayments,
-    staleTime: 10 * 60_000,
+    staleTime: 30_000,
   });
 }
 
@@ -129,7 +129,7 @@ export function useFeeComponents() {
   return useQuery({
     queryKey: KEYS.feeComponents,
     queryFn: fetchFeeComponents,
-    staleTime: 5 * 60_000,
+    staleTime: 0,
   });
 }
 

@@ -24,6 +24,7 @@ const OrganizationNotApprovedPage = lazy(
   () => import('./features/auth/pages/organization-not-approved-page')
 );
 const SelectProfilePage = lazy(() => import('./features/auth/pages/select-profile-page'));
+const SetNewPasswordPage = lazy(() => import('./features/auth/pages/set-new-password-page'));
 
 // Role-based route guards
 const AdminRoute = lazy(() =>
@@ -283,6 +284,7 @@ function App() {
             element={<OrganizationNotApprovedPage />}
           />
           <Route path={ROUTES.AUTH.SELECT_PROFILE} element={<SelectProfilePage />} />
+          <Route path={ROUTES.SET_NEW_PASSWORD} element={<SetNewPasswordPage />} />
 
           {/* Protected Routes - Header rendered once in ProtectedLayout */}
           <Route element={<ProtectedLayout />}>

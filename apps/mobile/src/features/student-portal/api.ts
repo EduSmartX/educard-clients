@@ -153,21 +153,26 @@ export interface FeeComponent {
 }
 
 export interface LeaveBalance {
-  leave_type: string;
-  leave_type_name: string;
-  total: number;
+  public_id: string;
+  leave_type_code: string;
+  leave_name: string;
+  total_allocated: number;
   used: number;
+  carried_forward: number;
+  pending: number;
   available: number;
 }
 
 export interface LeaveRequest {
   public_id: string;
-  leave_type_name: string;
+  leave_name: string;
+  leave_type_code: string;
   start_date: string;
   end_date: string;
+  number_of_days: number;
   reason: string;
   status: string;
-  applied_on: string;
+  applied_at: string;
   total_days: number;
 }
 
