@@ -54,6 +54,19 @@ const ParentDashboardPage = lazy(
 const StudentDashboardPage = lazy(
   () => import('./features/student/dashboard/pages/student-dashboard-page')
 );
+const StudentAttendancePage = lazy(
+  () => import('./features/student/attendance/student-attendance-page')
+);
+const StudentTimetablePage = lazy(
+  () => import('./features/student/timetable/student-timetable-page')
+);
+const StudentHomeworkPage = lazy(() => import('./features/student/homework/student-homework-page'));
+const StudentHomeworkDetailPage = lazy(
+  () => import('./features/student/homework/homework-detail-page')
+);
+const StudentExamsPage = lazy(() => import('./features/student/exams/student-exams-page'));
+const StudentFeePage = lazy(() => import('./features/student/fee/student-fee-page'));
+const StudentLeavePage = lazy(() => import('./features/student/leave/student-leave-page'));
 
 // Student pages
 const StudentsListPage = lazy(() => import('./features/students/pages/students-list-page'));
@@ -308,6 +321,13 @@ function App() {
 
             <Route path="/student" element={<StudentRoute />}>
               <Route path="dashboard" element={<StudentDashboardPage />} />
+              <Route path="attendance" element={<StudentAttendancePage />} />
+              <Route path="timetable" element={<StudentTimetablePage />} />
+              <Route path="homework" element={<StudentHomeworkPage />} />
+              <Route path="homework/:id" element={<StudentHomeworkDetailPage />} />
+              <Route path="exams" element={<StudentExamsPage />} />
+              <Route path="fee" element={<StudentFeePage />} />
+              <Route path="leave" element={<StudentLeavePage />} />
             </Route>
 
             {/* Students */}

@@ -85,6 +85,7 @@ export interface HomeworkSubmission {
 export interface HomeworkSubmissionDetail extends HomeworkSubmission {
   notes: string;
   feedback: string;
+  review_outcome: "approved" | "rejected" | "needs_revision" | null;
   attachments: HomeworkAttachment[];
 }
 
@@ -157,6 +158,7 @@ export interface HomeworkUpdatePayload {
 
 export interface ReviewSubmissionPayload {
   feedback?: string;
+  review_outcome?: "approved" | "rejected" | "needs_revision";
 }
 
 // ============== Query Params ==============

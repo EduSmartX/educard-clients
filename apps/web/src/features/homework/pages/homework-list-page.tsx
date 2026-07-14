@@ -219,11 +219,9 @@ export default function HomeworkListPage() {
   }, [selectedDate, selectedClassId, navigateWorkingDay, canNavigateNext]);
 
   const handleCreateHomework = useCallback(() => {
-    // For creating homework, use today's date (not the currently viewed past date)
-    const today = new Date();
-    const dateStr = format(today, 'yyyy-MM-dd');
+    const dateStr = format(selectedDate, 'yyyy-MM-dd');
     navigate(`${ROUTES.HOMEWORK_NEW}?class=${selectedClass?.public_id}&date=${dateStr}`);
-  }, [navigate, selectedClass]);
+  }, [navigate, selectedClass, selectedDate]);
 
   const handleViewHomework = useCallback(
     (homework: Homework) => {
@@ -234,14 +232,12 @@ export default function HomeworkListPage() {
 
   const handleAddSubjectHomework = useCallback(
     (subjectId: string) => {
-      // For creating homework, use today's date (not the currently viewed past date)
-      const today = new Date();
-      const dateStr = format(today, 'yyyy-MM-dd');
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
       navigate(
         `${ROUTES.HOMEWORK_NEW}?class=${selectedClass?.public_id}&subject=${subjectId}&date=${dateStr}`
       );
     },
-    [navigate, selectedClass]
+    [navigate, selectedClass, selectedDate]
   );
 
   const deleteHomework = useDeleteHomework();

@@ -671,13 +671,57 @@ export function BulkExamCreatePage() {
                           </TableCell>
                           <TableCell>
                             <div className="space-y-1">
-                              <DatePicker
-                                value={row.date}
-                                onChange={(date) => updateRow(index, 'date', date)}
-                                disabled={!row.selected}
-                                placeholder="Select date"
-                                className={`h-8 ${row.dateError ? 'border-red-500' : ''}`}
-                              />
+                              <div className="flex items-center gap-1">
+                                {row.selected && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 shrink-0 rounded-full bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-700"
+                                    onClick={() => {
+                                      const base =
+                                        row.date ||
+                                        (index > 0 ? subjectRows[index - 1].date : null);
+                                      if (base) {
+                                        const prev = new Date(base);
+                                        prev.setDate(prev.getDate() - 1);
+                                        updateRow(index, 'date', prev);
+                                      }
+                                    }}
+                                    title="Previous day"
+                                  >
+                                    −
+                                  </Button>
+                                )}
+                                <DatePicker
+                                  value={row.date}
+                                  onChange={(date) => updateRow(index, 'date', date)}
+                                  disabled={!row.selected}
+                                  placeholder="Select date"
+                                  className={`h-8 ${row.dateError ? 'border-red-500' : ''}`}
+                                />
+                                {row.selected && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 shrink-0 rounded-full bg-green-50 text-green-500 hover:bg-green-100 hover:text-green-700"
+                                    onClick={() => {
+                                      const base =
+                                        row.date ||
+                                        (index > 0 ? subjectRows[index - 1].date : null);
+                                      if (base) {
+                                        const next = new Date(base);
+                                        next.setDate(next.getDate() + 1);
+                                        updateRow(index, 'date', next);
+                                      }
+                                    }}
+                                    title="Next day"
+                                  >
+                                    +
+                                  </Button>
+                                )}
+                              </div>
                               {!!row.dateError && (
                                 <div className="flex items-center gap-1 text-xs text-red-500">
                                   <AlertTriangle className="h-3 w-3" />

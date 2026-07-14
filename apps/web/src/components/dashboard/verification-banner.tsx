@@ -10,7 +10,6 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Mail, Phone, X, ArrowRight } from 'lucide-react';
 import type { User } from '@/hooks/use-auth';
-import { USER_ROLES } from '@/constants';
 
 interface VerificationBannerProps {
   user: User;
@@ -43,26 +42,6 @@ function getPendingVerifications(user: User): PendingVerification[] {
       label: 'Phone',
       value: user.phone || 'Not added',
     });
-  }
-
-  // For students/parents — check guardian verification
-  if (user.role === USER_ROLES.STUDENT) {
-    if (!user.guardian_email_verified) {
-      // Skip if same as user email (already shown above)
-      if (user.guardian_email && user.guardian_email !== user.email) {
-        pending.push({ type: 'email', label: 'Guardian Email', value: user.guardian_email });
-      } else if (!user.guardian_email) {
-        pending.push({ type: 'email', label: 'Guardian Email', value: 'Not added' });
-      }
-    }
-    if (!user.guardian_phone_verified) {
-      // Skip if same as user phone (already shown above)
-      if (user.guardian_phone && user.guardian_phone !== user.phone) {
-        pending.push({ type: 'phone', label: 'Guardian Phone', value: user.guardian_phone });
-      } else if (!user.guardian_phone) {
-        pending.push({ type: 'phone', label: 'Guardian Phone', value: 'Not added' });
-      }
-    }
   }
 
   return pending;

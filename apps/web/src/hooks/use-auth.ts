@@ -11,6 +11,8 @@ export interface User {
   profile_image?: string;
   is_email_verified?: boolean;
   is_mobile_verified?: boolean;
+  class_name?: string;
+  roll_number?: string;
   guardian_name?: string;
   guardian_phone?: string;
   guardian_email?: string;

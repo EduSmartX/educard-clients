@@ -43,6 +43,9 @@ export interface User {
   is_email_verified?: boolean;
   is_mobile_verified?: boolean;
   force_password_reset?: boolean;
+  // Student-specific fields
+  class_name?: string;
+  roll_number?: string;
   // Guardian fields (for student/parent roles)
   guardian_name?: string;
   guardian_phone?: string;

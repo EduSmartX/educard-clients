@@ -161,6 +161,30 @@ export function createTeacherListColumns({
       width: 180,
     },
     {
+      header: 'Gender',
+      accessor: (row) => (
+        <span className="text-gray-700">
+          {row.gender === 'M'
+            ? 'Male'
+            : row.gender === 'F'
+              ? 'Female'
+              : row.gender === 'O'
+                ? 'Other'
+                : '—'}
+        </span>
+      ),
+      width: 90,
+    },
+    {
+      header: 'Role',
+      accessor: (row) => (
+        <Badge variant="outline" className="text-xs">
+          {row.organization_role?.name || '—'}
+        </Badge>
+      ),
+      width: 140,
+    },
+    {
       header: 'Experience',
       accessor: (row) => (
         <span className="text-gray-700">

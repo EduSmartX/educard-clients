@@ -29,6 +29,7 @@ export default function Index() {
     case 'employee':
       return <Redirect href="/(tabs)/(employee)/dashboard" />;
     case 'parent':
+    case 'student':
       return <Redirect href="/(tabs)/(parent)/dashboard" />;
     default:
       return <Redirect href="/(tabs)/(admin)/dashboard" />;

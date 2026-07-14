@@ -71,6 +71,17 @@ export function TeachersList({
         options: designations,
         searchable: true,
       },
+      {
+        name: 'gender',
+        label: 'Gender',
+        type: 'select',
+        placeholder: 'All genders',
+        options: [
+          { value: 'M', label: 'Male' },
+          { value: 'F', label: 'Female' },
+          { value: 'O', label: 'Other' },
+        ],
+      },
     ];
   }, [teachers]);
 

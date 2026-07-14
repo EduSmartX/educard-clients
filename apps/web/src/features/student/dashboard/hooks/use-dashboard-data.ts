@@ -15,5 +15,7 @@ export function useStudentDashboard() {
     queryKey: QueryKeys.STUDENT_PORTAL.DASHBOARD,
     queryFn: () => getStudentDashboard(),
     select: (data) => data.data,
+    staleTime: 2 * 60 * 1000,
+    retry: 2,
   });
 }

@@ -36,6 +36,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PageHeader } from '@/components/common';
 import { getSubjectColor, HOMEWORK_UI } from '@educard/shared';
 import { ROUTES } from '@/constants/app-config';
 import { useUserProfile } from '@/features/profile/hooks/queries';
@@ -165,6 +166,7 @@ export default function SubmissionReviewPage() {
   const returnUrl = searchParams.get('returnUrl') || DEFAULT_RETURN_URL;
 
   const [feedback, setFeedback] = useState('');
+  const [reviewOutcome, setReviewOutcome] = useState<'approved' | 'rejected'>('approved');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: userProfile } = useUserProfile();
@@ -231,7 +233,7 @@ export default function SubmissionReviewPage() {
       await reviewMutation.mutateAsync({
         homeworkPublicId: homeworkId,
         submissionId,
-        data: { feedback: feedback.trim() },
+        data: { feedback: feedback.trim(), review_outcome: reviewOutcome },
       });
       if (navigation.next) {
         navigateToSubmission(navigation.next.public_id);
@@ -247,6 +249,7 @@ export default function SubmissionReviewPage() {
     homeworkId,
     submissionId,
     feedback,
+    reviewOutcome,
     reviewMutation,
     navigation.next,
     navigateToSubmission,
@@ -269,11 +272,15 @@ export default function SubmissionReviewPage() {
     if (submission?.feedback) {
       setFeedback(submission.feedback);
     }
-  }, [submission?.feedback]);
+    if (submission?.review_outcome) {
+      setReviewOutcome(submission.review_outcome as 'approved' | 'rejected');
+    }
+  }, [submission?.feedback, submission?.review_outcome]);
 
   if (isLoading) {
     return (
-      <div className="container mx-auto max-w-5xl px-4 py-6">
+      <div className="space-y-6">
+        <PageHeader title="Review Submission" icon={MessageSquare} />
         <LoadingSkeleton />
       </div>
     );
@@ -281,7 +288,8 @@ export default function SubmissionReviewPage() {
 
   if (submissionError || !submission) {
     return (
-      <div className="container mx-auto max-w-5xl px-4 py-6">
+      <div className="space-y-6">
+        <PageHeader title="Review Submission" icon={MessageSquare} />
         <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-16 text-center">
           <AlertCircle className="mb-4 h-12 w-12 text-red-400" />
           <h3 className="text-lg font-semibold text-slate-900">
@@ -298,22 +306,21 @@ export default function SubmissionReviewPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-6">
-      <div className="mb-6">
-        <Button variant="ghost" onClick={handleGoBack} className="mb-3 -ml-2">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          {HOMEWORK_UI.BACK_TO_SUBMISSIONS}
-        </Button>
+    <div className="space-y-6">
+      <PageHeader title="Review Submission" icon={MessageSquare} />
 
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-slate-900">{HOMEWORK_UI.REVIEW_SUBMISSION}</h1>
-          {navigation.total > 0 && (
-            <span className="text-sm text-slate-500">
-              {navigation.current} of {navigation.total} submissions
-            </span>
-          )}
+      <Button variant="ghost" onClick={handleGoBack} className="-ml-2">
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        {HOMEWORK_UI.BACK_TO_SUBMISSIONS}
+      </Button>
+
+      {navigation.total > 0 && (
+        <div className="flex items-center justify-end">
+          <span className="text-sm text-slate-500">
+            {navigation.current} of {navigation.total} submissions
+          </span>
         </div>
-      </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
@@ -428,6 +435,70 @@ export default function SubmissionReviewPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Submission History */}
+          {(submission as Record<string, unknown>).submission_history &&
+            (
+              (submission as Record<string, unknown>).submission_history as Array<
+                Record<string, unknown>
+              >
+            ).length > 0 && (
+              <Card>
+                <CardHeader className="px-4 py-3">
+                  <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                    <Clock className="h-4 w-4" />
+                    Previous Submissions (
+                    {
+                      (
+                        (submission as Record<string, unknown>).submission_history as Array<
+                          Record<string, unknown>
+                        >
+                      ).length
+                    }
+                    )
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="divide-y px-4 pt-0 pb-4">
+                  {(
+                    (submission as Record<string, unknown>).submission_history as Array<
+                      Record<string, string | null>
+                    >
+                  ).map((past, idx, arr) => (
+                    <div key={past.public_id || idx} className="space-y-1.5 py-3 first:pt-0">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-slate-500">
+                          Attempt #{arr.length - idx} —{' '}
+                          {past.submitted_at
+                            ? format(new Date(past.submitted_at), 'MMM d, h:mm a')
+                            : ''}
+                        </span>
+                        {past.review_outcome && (
+                          <Badge
+                            variant="outline"
+                            className={`border-0 px-2 py-0.5 text-[10px] ${
+                              past.review_outcome === 'rejected'
+                                ? 'bg-red-50 text-red-700'
+                                : 'bg-green-50 text-green-700'
+                            }`}
+                          >
+                            {past.review_outcome === 'rejected' ? '❌ Rejected' : '✅ Approved'}
+                          </Badge>
+                        )}
+                      </div>
+                      {past.notes && <p className="text-xs text-slate-600">{past.notes}</p>}
+                      {past.feedback && (
+                        <div className="rounded bg-slate-50 p-2 text-xs">
+                          <span className="font-medium text-slate-500">
+                            Feedback{past.reviewed_by_name ? ` (${past.reviewed_by_name})` : ''}:
+                          </span>{' '}
+                          <span className="text-slate-700">{past.feedback}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
         </div>
 
         <div className="lg:col-span-1">
@@ -482,6 +553,37 @@ export default function SubmissionReviewPage() {
                   disabled={isSubmitting || !canReview}
                   readOnly={!canReview}
                 />
+
+                {/* Review Outcome */}
+                {canReview && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-slate-600">Review Decision</p>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setReviewOutcome('approved')}
+                        className={`flex-1 rounded-lg border px-3 py-2 text-xs font-medium transition-all ${
+                          reviewOutcome === 'approved'
+                            ? 'border-green-300 bg-green-50 text-green-700 ring-2 ring-green-200'
+                            : 'border-gray-200 text-gray-500 hover:border-green-200 hover:bg-green-50/50'
+                        }`}
+                      >
+                        ✅ Approve
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setReviewOutcome('rejected')}
+                        className={`flex-1 rounded-lg border px-3 py-2 text-xs font-medium transition-all ${
+                          reviewOutcome === 'rejected'
+                            ? 'border-red-300 bg-red-50 text-red-700 ring-2 ring-red-200'
+                            : 'border-gray-200 text-gray-500 hover:border-red-200 hover:bg-red-50/50'
+                        }`}
+                      >
+                        ❌ Reject
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {canReview && (
                   <Button

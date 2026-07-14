@@ -45,6 +45,10 @@ export function ProtectedLayout() {
   const isSupervisor = isAdmin || managementContext?.can_review_requests || false;
   const isStudent = user?.role === USER_ROLES.STUDENT;
 
+  // Show class name alongside role for students
+  const displayRole =
+    isStudent && user?.class_name ? `${userRoleFormatted} • ${user.class_name}` : userRoleFormatted;
+
   return (
     <CriticalOperationProvider>
       <div className={cn('min-h-screen', theme.mainBgGradient)}>
@@ -53,7 +57,7 @@ export function ProtectedLayout() {
           organizationLogo={organization?.logo}
           userName={user?.full_name || user?.username}
           username={user?.username}
-          userRole={userRoleFormatted}
+          userRole={displayRole}
           userAvatar={avatarUrl}
           notificationCount={3}
           showSwitchProfile={isStudent}

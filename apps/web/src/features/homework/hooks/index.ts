@@ -93,9 +93,6 @@ export function useCreateHomework() {
       queryClient.invalidateQueries({ queryKey: homeworkKeys.lists() });
       queryClient.invalidateQueries({ queryKey: homeworkKeys.dashboard() });
     },
-    onError: (error: Error) => {
-      toast.error(getErrorMessage(error, HOMEWORK_UI.FAILED_TO_CREATE));
-    },
   });
 }
 
@@ -107,9 +104,6 @@ export function useBulkCreateHomework() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: homeworkKeys.lists() });
       queryClient.invalidateQueries({ queryKey: homeworkKeys.dashboard() });
-    },
-    onError: (error: Error) => {
-      toast.error(getErrorMessage(error, HOMEWORK_UI.FAILED_TO_CREATE));
     },
   });
 }

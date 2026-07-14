@@ -25,6 +25,7 @@ import { VerificationBanner } from '@/components/dashboard';
 import { useAuth } from '@/hooks/use-auth';
 import { ROUTES } from '@/constants/app-config';
 import { useStudentDashboard } from '../hooks/use-dashboard-data';
+import { getSubjectTheme } from '../../utils/subject-theme';
 
 const STAGGER_CHILDREN = {
   hidden: { opacity: 0 },
@@ -60,7 +61,7 @@ function formatTime(timeStr: string): string {
 
 function AnimatedNumber({ value, isLoading }: { value: number | string; isLoading: boolean }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-40px' });
+  const isInView = useInView(ref, { once: true });
 
   if (isLoading) {
     return <Skeleton className="h-8 w-16" />;
@@ -71,7 +72,7 @@ function AnimatedNumber({ value, isLoading }: { value: number | string; isLoadin
       ref={ref}
       className="text-2xl font-bold"
       initial={{ opacity: 0, scale: 0.5 }}
-      animate={isInView ? { opacity: 1, scale: 1 } : {}}
+      animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, type: 'spring', bounce: 0.3 }}
     >
       {value}
@@ -132,9 +133,15 @@ export default function StudentDashboardPage() {
   const todayTimetable = data?.today_timetable ?? [];
 
   return (
-    <div className="container mx-auto max-w-5xl space-y-8 px-3 py-4 sm:p-6">
+    <div className="space-y-8">
       {/* Verification Banner */}
-      {user && <VerificationBanner user={user} />}
+      {user && (
+        <VerificationBanner
+          user={user}
+          onVerifyEmail={() => navigate(`${ROUTES.PROFILE}?tab=email&from=dashboard`)}
+          onVerifyPhone={() => navigate(`${ROUTES.PROFILE}?tab=phone&from=dashboard`)}
+        />
+      )}
 
       {/* Animated Greeting Banner */}
       <motion.div
@@ -186,6 +193,24 @@ export default function StudentDashboardPage() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.4 }}
+            className="mt-3 flex flex-wrap items-center gap-2"
+          >
+            {user?.class_name && (
+              <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-medium backdrop-blur-sm">
+                🎓 {user.class_name}
+              </span>
+            )}
+            {user?.roll_number && (
+              <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-medium backdrop-blur-sm">
+                📋 Roll No: {user.roll_number}
+              </span>
+            )}
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.4 }}
             className="mt-4 flex w-fit items-center gap-2 rounded-full bg-white/15 px-4 py-2 backdrop-blur-sm"
           >
@@ -213,11 +238,11 @@ export default function StudentDashboardPage() {
               onClick={() => navigate(stat.path)}
               className="group cursor-pointer"
             >
-              <Card className="relative overflow-hidden border border-gray-100 shadow-sm transition-shadow duration-300 hover:shadow-xl">
+              <Card className="relative h-full overflow-hidden border border-gray-100 shadow-sm transition-shadow duration-300 hover:shadow-xl">
                 <div
                   className={`absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 ${stat.gradient}`}
                 />
-                <CardContent className="relative z-10 p-5">
+                <CardContent className="relative z-10 flex h-full items-center p-5">
                   <div className="flex items-center gap-4">
                     <div
                       className={`shrink-0 rounded-xl p-3 ${stat.iconBg} transition-transform duration-300 group-hover:scale-110`}
@@ -225,10 +250,10 @@ export default function StudentDashboardPage() {
                       <Icon className="h-6 w-6 text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm text-gray-500 transition-colors duration-300 group-hover:text-white/80">
+                      <p className="text-sm leading-tight text-gray-500 transition-colors duration-300 group-hover:text-white/80">
                         {stat.label}
                       </p>
-                      <div className="transition-colors duration-300 group-hover:text-white">
+                      <div className="mt-1 transition-colors duration-300 group-hover:text-white">
                         <AnimatedNumber value={stat.value} isLoading={isLoading} />
                       </div>
                     </div>
@@ -279,39 +304,48 @@ export default function StudentDashboardPage() {
 
           {!isLoading && todayTimetable.length > 0 && (
             <div className="max-h-96 space-y-3 overflow-y-auto pr-1">
-              {todayTimetable.map((entry, idx) => (
-                <motion.div
-                  key={entry.slot_public_id}
-                  initial={{ opacity: 0, x: -12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.05, duration: 0.3 }}
-                  className={`flex items-center justify-between rounded-xl border p-3 ${
-                    entry.is_cancelled
-                      ? 'border-red-100 bg-red-50/60'
-                      : 'border-gray-100 bg-gray-50/60'
-                  }`}
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="truncate font-medium text-gray-900">
-                        {entry.subject_name || entry.label}
-                      </p>
-                      {entry.is_cancelled && (
-                        <Badge variant="destructive" className="shrink-0">
-                          Cancelled
-                        </Badge>
-                      )}
+              {todayTimetable.map((entry, idx) => {
+                const theme = getSubjectTheme(entry.subject_name);
+                const SubjectIcon = theme.icon;
+                return (
+                  <motion.div
+                    key={entry.slot_public_id}
+                    initial={{ opacity: 0, x: -12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05, duration: 0.3 }}
+                    className={`flex items-center justify-between rounded-xl border p-3 ${
+                      entry.is_cancelled
+                        ? 'border-red-100 bg-red-50/60'
+                        : 'border-gray-100 bg-gray-50/60'
+                    }`}
+                  >
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                      <div className={`shrink-0 rounded-lg p-2 ${theme.bgColor}`}>
+                        <SubjectIcon className="h-4 w-4 text-gray-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="truncate font-medium text-gray-900">
+                            {entry.subject_name || entry.label}
+                          </p>
+                          {entry.is_cancelled && (
+                            <Badge variant="destructive" className="shrink-0">
+                              Cancelled
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="truncate text-xs text-gray-500">
+                          {entry.teacher_name || 'No teacher assigned'}
+                          {entry.room ? ` • ${entry.room}` : ''}
+                        </p>
+                      </div>
                     </div>
-                    <p className="truncate text-xs text-gray-500">
-                      {entry.teacher_name || 'No teacher assigned'}
-                      {entry.room ? ` • ${entry.room}` : ''}
-                    </p>
-                  </div>
-                  <div className="shrink-0 text-right text-xs text-gray-500">
-                    {formatTime(entry.start_time)} - {formatTime(entry.end_time)}
-                  </div>
-                </motion.div>
-              ))}
+                    <div className="shrink-0 text-right text-xs text-gray-500">
+                      {formatTime(entry.start_time)} - {formatTime(entry.end_time)}
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
         </CardContent>

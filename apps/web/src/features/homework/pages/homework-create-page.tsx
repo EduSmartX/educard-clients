@@ -26,7 +26,7 @@ import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { ROUTES } from '@/constants/app-config';
 import { PageHeader } from '@/components/common';
-import { getSubjectColor, HOMEWORK_UI } from '@educard/shared';
+import { getSubjectColor, HOMEWORK_UI, getErrorMessage } from '@educard/shared';
 import { toast } from 'sonner';
 import { useCriticalOperation } from '@/providers/critical-operation-provider';
 
@@ -36,6 +36,7 @@ import {
   useCreateHomework,
   useBulkCreateHomework,
   useUploadAttachment,
+  useHomeworkList,
 } from '../hooks';
 import { HOMEWORK_PRIORITY_OPTIONS, SUBMISSION_TYPE_OPTIONS } from '../types';
 
@@ -81,18 +82,15 @@ export default function HomeworkCreatePage() {
   const initialSubjectId = searchParams.get('subject') || '';
   const initialDateStr = searchParams.get('date') || '';
 
-  // Get initial assigned date (today or next working day, never past)
+  // Get initial assigned date
   const getInitialAssignedDate = () => {
-    const today = getTodayOrNextWorkingDay();
-
     if (initialDateStr) {
       const parsedDate = parse(initialDateStr, 'yyyy-MM-dd', new Date());
-      // Only use URL date if it's today or future
-      if (parsedDate >= new Date(today.toDateString())) {
+      if (!isNaN(parsedDate.getTime())) {
         return parsedDate;
       }
     }
-    return today;
+    return getTodayOrNextWorkingDay();
   };
 
   // Set default due datetime to 5 PM on the day AFTER assigned date
@@ -140,6 +138,28 @@ export default function HomeworkCreatePage() {
     return teacherClasses.find((c) => c.public_id === selectedClassId);
   }, [teacherClasses, selectedClassId]);
 
+  // Fetch existing homework for this class+date to mark already-created subjects
+  const existingDateStr = watchedAssignedDate ? format(watchedAssignedDate, 'yyyy-MM-dd') : '';
+  const { data: existingHomework } = useHomeworkList(
+    selectedClassId && existingDateStr
+      ? {
+          class_public_id: selectedClassId,
+          assigned_date_from: existingDateStr,
+          assigned_date_to: existingDateStr,
+        }
+      : undefined
+  );
+  const existingSubjectMap = useMemo(() => {
+    if (!existingHomework) {
+      return new Map<string, string>();
+    }
+    const map = new Map<string, string>();
+    for (const hw of existingHomework) {
+      map.set(hw.subject_public_id, hw.public_id);
+    }
+    return map;
+  }, [existingHomework]);
+
   // Initialize subjects when class changes
   useMemo(() => {
     if (selectedClass?.subjects && fields.length === 0) {
@@ -153,7 +173,7 @@ export default function HomeworkCreatePage() {
         description: '',
         instructions: '',
         priority: 'medium' as const,
-        submission_type: 'offline' as const, // Default to offline
+        submission_type: 'offline' as const,
         reference_link: '',
       }));
       replace(items);
@@ -206,7 +226,7 @@ export default function HomeworkCreatePage() {
     });
 
     let successCount = 0;
-    let errorCount = 0;
+    let _errorCount = 0;
     const isBulkCreate = enabledItems.length > 1;
 
     if (isBulkCreate) {
@@ -231,8 +251,9 @@ export default function HomeworkCreatePage() {
             });
           }
           successCount = 1;
-        } catch {
-          errorCount = 1;
+        } catch (err) {
+          _errorCount = 1;
+          toast.error(getErrorMessage(err, HOMEWORK_UI.FAILED_TO_CREATE));
         }
       } else {
         // Multiple homeworks - use bulk API call
@@ -240,7 +261,16 @@ export default function HomeworkCreatePage() {
           const payloads = enabledItems.map(buildPayload);
           const result = await bulkCreateMutation.mutateAsync(payloads);
           successCount = result.created_count;
-          errorCount = result.errors.length;
+          _errorCount = result.errors.length;
+
+          if (result.errors.length > 0) {
+            const errorMsgs = result.errors
+              .map((e: { subject_name?: string; error?: string }) =>
+                e.subject_name ? `${e.subject_name}: ${e.error}` : e.error
+              )
+              .join('\n');
+            toast.error(errorMsgs);
+          }
 
           // Upload attachments for successfully created homework
           for (const created of result.created) {
@@ -258,8 +288,9 @@ export default function HomeworkCreatePage() {
               });
             }
           }
-        } catch {
-          errorCount = enabledItems.length;
+        } catch (err) {
+          _errorCount = enabledItems.length;
+          toast.error(getErrorMessage(err, HOMEWORK_UI.FAILED_TO_CREATE));
         }
       }
 
@@ -271,11 +302,6 @@ export default function HomeworkCreatePage() {
         }
         params.set('date', format(data.assigned_date, 'yyyy-MM-dd'));
         navigate(`${ROUTES.HOMEWORK}?${params.toString()}`);
-      }
-      if (errorCount > 0) {
-        toast.error(
-          `Failed to create ${errorCount} homework assignment${errorCount > 1 ? 's' : ''}`
-        );
       }
     } finally {
       if (isBulkCreate) {
@@ -451,6 +477,8 @@ export default function HomeworkCreatePage() {
                   const isEnabled = watch(`items.${index}.enabled`);
                   const isSubjectLocked =
                     !!initialSubjectId && field.subject_public_id === initialSubjectId;
+                  const alreadyExists = existingSubjectMap.has(field.subject_public_id);
+                  const existingHwId = existingSubjectMap.get(field.subject_public_id);
 
                   return (
                     <div
@@ -458,6 +486,7 @@ export default function HomeworkCreatePage() {
                       className={cn(
                         'rounded-xl border-2 transition-all',
                         color.border,
+                        alreadyExists ? 'opacity-60' : '',
                         isEnabled ? 'bg-card shadow-sm' : 'bg-muted/30'
                       )}
                     >
@@ -477,7 +506,7 @@ export default function HomeworkCreatePage() {
                                 checked={checkField.value}
                                 onCheckedChange={checkField.onChange}
                                 className="h-5 w-5"
-                                disabled={isSubjectLocked}
+                                disabled={isSubjectLocked || alreadyExists}
                               />
                             )}
                           />
@@ -493,6 +522,17 @@ export default function HomeworkCreatePage() {
                               <p className="text-muted-foreground text-xs">{field.teacher_name}</p>
                             )}
                           </div>
+                          {alreadyExists && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                navigate(ROUTES.HOMEWORK_EDIT.replace(':id', existingHwId!))
+                              }
+                              className="ml-2 rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 hover:bg-amber-200"
+                            >
+                              Already created — Edit ✏️
+                            </button>
+                          )}
                         </div>
                         {isEnabled && watch(`items.${index}.title`) && (
                           <CheckCircle2 className="h-5 w-5 text-green-500" />
