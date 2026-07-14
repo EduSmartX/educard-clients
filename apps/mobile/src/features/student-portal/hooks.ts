@@ -16,6 +16,9 @@ import {
   fetchExamSessionDetail,
   fetchFeeSummary,
   fetchFeePayments,
+  fetchFeeComponents,
+  requestFeeOptIn,
+  requestFeeOptOut,
   fetchLeaveBalance,
   fetchLeaveRequests,
 } from './api';
@@ -31,6 +34,7 @@ const KEYS = {
   examDetail: (id: string) => ['student', 'exams', 'detail', id],
   feeSummary: ['student', 'fee', 'summary'],
   feePayments: ['student', 'fee', 'payments'],
+  feeComponents: ['student', 'fee', 'components'],
   leaveBalance: ['student', 'leave', 'balance'],
   leaveRequests: ['student', 'leave', 'requests'],
 };
@@ -118,6 +122,32 @@ export function useFeePayments() {
     queryKey: KEYS.feePayments,
     queryFn: fetchFeePayments,
     staleTime: 10 * 60_000,
+  });
+}
+
+export function useFeeComponents() {
+  return useQuery({
+    queryKey: KEYS.feeComponents,
+    queryFn: fetchFeeComponents,
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useFeeOptOut() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ publicId, requestNote }: { publicId: string; requestNote: string }) =>
+      requestFeeOptOut(publicId, requestNote),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['student', 'fee'] }),
+  });
+}
+
+export function useFeeOptIn() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ publicId, requestNote }: { publicId: string; requestNote: string }) =>
+      requestFeeOptIn(publicId, requestNote),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['student', 'fee'] }),
   });
 }
 

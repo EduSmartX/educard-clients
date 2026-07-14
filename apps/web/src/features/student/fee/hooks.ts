@@ -1,5 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
-import { getFeeSummary, getFeePayments } from './api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  getFeeSummary,
+  getFeePayments,
+  getFeeComponents,
+  requestOptIn,
+  requestOptOut,
+} from './api';
 
 export function useFeeSummary() {
   return useQuery({
@@ -14,5 +20,35 @@ export function useFeePayments() {
     queryKey: ['student', 'fee', 'payments'],
     queryFn: getFeePayments,
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useFeeComponents() {
+  return useQuery({
+    queryKey: ['student', 'fee', 'components'],
+    queryFn: getFeeComponents,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useOptOut() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ publicId, requestNote }: { publicId: string; requestNote: string }) =>
+      requestOptOut(publicId, requestNote),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['student', 'fee'] });
+    },
+  });
+}
+
+export function useOptIn() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ publicId, requestNote }: { publicId: string; requestNote: string }) =>
+      requestOptIn(publicId, requestNote),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['student', 'fee'] });
+    },
   });
 }
