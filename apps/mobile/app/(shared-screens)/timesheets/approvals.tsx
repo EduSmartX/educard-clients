@@ -156,7 +156,7 @@ export default function TimesheetApprovalsScreen() {
   });
 
   const timesheets = useMemo(() => {
-    const list = data?.data ?? []; // ?? instead of ||
+    const list = data?.data ?? [];
     if (!searchQuery) return list;
     const q = searchQuery.toLowerCase();
     return list.filter(

@@ -44,7 +44,6 @@ export default function ResetPasswordScreen() {
 
     setIsLoading(true);
     try {
-      // Call backend API to verify OTP and reset password
       await verifyPasswordResetOtp({
         email: email || '',
         otp: otp || '',
@@ -52,7 +51,6 @@ export default function ResetPasswordScreen() {
         confirm_password: confirmPassword,
       });
 
-      // Navigate to login with success message
       router.replace('/(auth)/login');
     } catch (err) {
       const apiError = parseApiError(err);
@@ -188,7 +186,7 @@ export default function ResetPasswordScreen() {
           {/* Reset Button */}
           <TouchableOpacity
             style={[styles.resetButton, isLoading && styles.buttonDisabled]}
-            onPress={() => void handleResetPassword()} // void for async handler
+            onPress={() => void handleResetPassword()}
             disabled={isLoading}
           >
             <Text style={styles.resetButtonText}>

@@ -164,7 +164,7 @@ export default function ForgotPasswordScreen() {
             </View>
           </View>
           <TouchableOpacity
-            onPress={() => void handleSendOTP()} // void for async handler
+            onPress={() => void handleSendOTP()}
             disabled={isLoading}
             style={styles.sendButton}
           >

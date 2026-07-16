@@ -10,6 +10,7 @@
 export const USER_ROLES = {
   ADMIN: "admin",
   TEACHER: "teacher",
+  EMPLOYEE: "employee",
   STUDENT: "student",
   PARENT: "parent",
   STAFF: "staff",

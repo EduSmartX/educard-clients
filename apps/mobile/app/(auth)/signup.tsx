@@ -291,7 +291,6 @@ export default function SignupScreen() {
 
     setIsLoading(true);
     try {
-      // Prepare emails to send OTPs
       const emailsToSend = useSameEmail
         ? [{ email: adminEmail, category: 'admin' as const, purpose: 'organization_registration' }]
         : [
@@ -303,13 +302,11 @@ export default function SignupScreen() {
             },
           ];
 
-      // Call API to send OTPs
       const response = await sendOtps(emailsToSend);
 
       if (!response.all_success) {
-        // Check for individual failures
         const failedEmail = response.results.find((r) => !r.success);
-        modal.error('Error', failedEmail?.message ?? 'Failed to send verification codes'); // ?? instead of ||
+        modal.error('Error', failedEmail?.message ?? 'Failed to send verification codes');
         return;
       }
 
@@ -339,7 +336,6 @@ export default function SignupScreen() {
 
     setIsLoading(true);
     try {
-      // Call API to verify OTP
       const response = await verifyOtp(adminEmail, adminOtp, 'organization_registration');
 
       if (!response.success) {
@@ -368,7 +364,6 @@ export default function SignupScreen() {
 
     setIsLoading(true);
     try {
-      // Call API to verify OTP
       const response = await verifyOtp(orgEmail, orgOtp, 'organization_registration');
 
       if (!response.success) {
@@ -440,14 +435,13 @@ export default function SignupScreen() {
 
     setIsLoading(true);
     try {
-      // Prepare registration data matching backend API structure
       const registrationData: OrganizationRegistrationData = {
         organization_info: {
           name: orgName.trim(),
-          type: orgType, // Already lowercase from picker
+          type: orgType,
           email: useSameEmail ? adminEmail : orgEmail,
           phone_number: orgPhone.trim() || '',
-          board_affiliation: boardAffiliation || undefined, // Already lowercase from picker
+          board_affiliation: boardAffiliation || undefined,
         },
         admin_info: {
           first_name: firstName.trim(),
@@ -462,19 +456,17 @@ export default function SignupScreen() {
         },
       };
 
-      // Add teacher info when the admin can also teach a subject
       if (canTeachSubject) {
         registrationData.teacher_info = {
           employee_id: employeeId.trim(),
         };
       }
 
-      // Add address info if any field is filled
       const hasAddress =
         orgAddress.streetAddress || orgAddress.city || orgAddress.state || orgAddress.zipCode;
       if (hasAddress) {
         registrationData.address_info = {
-          street_address: orgAddress.streetAddress ?? '', // ?? instead of ||
+          street_address: orgAddress.streetAddress ?? '',
           address_line_2: orgAddress.addressLine2 ?? undefined,
           city: orgAddress.city ?? '',
           state: orgAddress.state ?? '',
@@ -483,7 +475,6 @@ export default function SignupScreen() {
         };
       }
 
-      // Call the registration API
       const response = await registerOrganization(registrationData);
 
       if (response.success) {
@@ -624,7 +615,7 @@ export default function SignupScreen() {
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.primaryButton, isLoading && styles.buttonDisabled]}
-          onPress={() => void handleStep1Submit()} // void for async handler
+          onPress={() => void handleStep1Submit()}
           disabled={isLoading}
         >
           {isLoading ? (
@@ -670,7 +661,7 @@ export default function SignupScreen() {
           />
           <TouchableOpacity
             style={[styles.verifyButton, adminOtpVerified && styles.verifyButtonSuccess]}
-            onPress={() => void handleVerifyAdminOtp()} // void for async handler
+            onPress={() => void handleVerifyAdminOtp()}
             disabled={adminOtpVerified || isLoading}
           >
             {adminOtpVerified ? (
@@ -700,7 +691,7 @@ export default function SignupScreen() {
             />
             <TouchableOpacity
               style={[styles.verifyButton, orgOtpVerified && styles.verifyButtonSuccess]}
-              onPress={() => void handleVerifyOrgOtp()} // void for async handler
+              onPress={() => void handleVerifyOrgOtp()}
               disabled={orgOtpVerified || isLoading}
             >
               {orgOtpVerified ? (
@@ -1174,7 +1165,7 @@ export default function SignupScreen() {
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.primaryButton, styles.successButton, isLoading && styles.buttonDisabled]}
-          onPress={() => void handleStep4Submit()} // void for async handler
+          onPress={() => void handleStep4Submit()}
           disabled={isLoading}
         >
           {isLoading ? (

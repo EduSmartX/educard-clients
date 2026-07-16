@@ -99,7 +99,7 @@ export default function LoginScreen() {
               value={useEmail}
               onValueChange={(value) => {
                 setUseEmail(value);
-                setUsername(''); // Clear input when switching
+                setUsername('');
               }}
               trackColor={{ false: Colors.gray[300], true: Colors.primary[200] }}
               thumbColor={useEmail ? Colors.primary[500] : Colors.gray[400]}

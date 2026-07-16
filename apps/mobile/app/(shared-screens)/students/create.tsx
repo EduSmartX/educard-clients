@@ -70,10 +70,10 @@ export default function CreateStudentScreen() {
     deletedRecordId: string | null;
   }>();
   const classOptions = useMemo(() => {
-    const items = classesData?.classes ?? []; // ?? instead of ||
+    const items = classesData?.classes ?? [];
     return items.map((c) => ({
       value: c.public_id,
-      label: `${c.class_master?.name ?? ''} - ${c.name}`.trim(), // ?? instead of ||
+      label: `${c.class_master?.name ?? ''} - ${c.name}`.trim(),
     }));
   }, [classesData]);
 

@@ -26,7 +26,7 @@ void SplashScreen.preventAutoHideAsync();
 /** Determine the correct dashboard route for a user's role */
 function getDashboardRoute(role: string | undefined) {
   const normalized = role?.toLowerCase();
-  if (normalized === USER_ROLES.TEACHER || normalized === 'employee') {
+  if (normalized === USER_ROLES.TEACHER || normalized === USER_ROLES.EMPLOYEE) {
     return '/(tabs)/(employee)/dashboard' as const;
   }
   if (normalized === USER_ROLES.STUDENT) {
@@ -54,7 +54,7 @@ function shouldRedirectAuthenticated(
 
   const normalized = role?.toLowerCase();
   const isAdmin = normalized === USER_ROLES.ADMIN;
-  const isTeacher = normalized === USER_ROLES.TEACHER || normalized === 'employee';
+  const isTeacher = normalized === USER_ROLES.TEACHER || normalized === USER_ROLES.EMPLOYEE;
   // Note: there is no Parent role - student accounts are logged into by
   // parents/guardians on their child's behalf and reuse the Parent tab
   // group, so this only ever needs to check isStudent.

@@ -18,7 +18,7 @@ export default function StudentDetailScreen() {
   return (
     <DetailScreenShell
       title="Student Details"
-      subtitle={student?.full_name ?? '...'} // ?? instead of ||
+      subtitle={student?.full_name ?? '...'}
       isLoading={isLoading}
       isError={isError || !student}
       onBack={() => router.back()}

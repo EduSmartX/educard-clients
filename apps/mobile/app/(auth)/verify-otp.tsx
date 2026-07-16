@@ -40,22 +40,18 @@ export default function VerifyOTPScreen() {
   };
 
   const handleKeyPress = (e: { nativeEvent: { key: string } }, index: number) => {
-    // proper type instead of any
     if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
   };
 
   const handleVerify = () => {
-    // removed async - no await
     const otpCode = otp.join('');
     if (otpCode.length !== 6) {
       setError('Please enter the complete 6-digit code');
       return;
     }
 
-    // Navigate to reset password screen with OTP
-    // OTP will be verified together with new password
     router.push({
       pathname: '/(auth)/reset-password',
       params: { email, otp: otpCode },
