@@ -77,7 +77,6 @@ export default function SubjectFormPage() {
   const location = useLocation();
   const { id } = useParams<{ id: string }>();
 
-  // Check if viewing deleted subject (from query param)
   const searchParams = new URLSearchParams(location.search);
   const isViewingDeleted = searchParams.get('deleted') === 'true';
 

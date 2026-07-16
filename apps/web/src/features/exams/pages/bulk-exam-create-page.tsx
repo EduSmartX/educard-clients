@@ -184,7 +184,6 @@ export function BulkExamCreatePage() {
   const classesList = classesData?.data || [];
   const subjectsList = useMemo(() => subjectsData?.data || [], [subjectsData]);
 
-  // Get the selected session to display its date range
   const selectedSession = useMemo(
     () => sessionsList.find((s) => s.public_id === sessionId),
     [sessionsList, sessionId]

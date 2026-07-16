@@ -92,7 +92,6 @@ export function useDeleteStudent(
       deleteStudent(classId, publicId),
     onSuccess: (...args) => {
       const [, { publicId }] = args;
-      // Remove the deleted student's detail query from cache to prevent 404 refetch
       queryClient.removeQueries({
         queryKey: ['students', publicId],
       });

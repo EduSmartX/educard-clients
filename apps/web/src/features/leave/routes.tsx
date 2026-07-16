@@ -8,7 +8,6 @@ import LeaveAllocationsListPage from '@/features/leave/pages/leave-allocations-p
 import LeaveDashboardPage from '@/features/leave/pages/leave-dashboard-page';
 import LeaveRequestFormPage from '@/features/leave/pages/leave-request-form-page';
 
-// Add these routes to your router configuration
 // Example using React Router v6/v7:
 
 export const leaveRoutes = [

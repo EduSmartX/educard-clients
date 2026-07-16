@@ -20,7 +20,6 @@ export default function LeaveAllocationsPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
 
-  // Check if user is a teacher (read-only mode)
   const isTeacher = user?.role === USER_ROLES.TEACHER;
 
   // Pagination state

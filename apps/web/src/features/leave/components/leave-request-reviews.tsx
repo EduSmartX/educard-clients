@@ -207,7 +207,6 @@ export function LeaveRequestReviews() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Check if user is admin
   const isAdmin = user?.role === USER_ROLES.ADMIN;
 
   // Fetch teacher's management context (only for non-admins)

@@ -150,7 +150,6 @@ export function ExamFormPage() {
   const subjectsList = useMemo(() => subjectsData?.data || [], [subjectsData]);
   const existingExams = useMemo(() => existingExamsData?.data || [], [existingExamsData]);
 
-  // Get the selected session to display its date range
   const selectedSession = useMemo(
     () => sessionsList.find((s) => s.public_id === sessionId),
     [sessionsList, sessionId]

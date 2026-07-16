@@ -171,7 +171,6 @@ async function fetchClassesData(
 export default function ManageLeaveBalances() {
   const { user: currentUser } = useAuth();
 
-  // Check if user is admin
   const isAdmin = currentUser?.role === USER_ROLES.ADMIN;
 
   // Fetch teacher's management context (only for non-admins)

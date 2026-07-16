@@ -59,7 +59,6 @@ export default function CreateStudentScreen() {
   const createMutation = useCreateStudent();
   const restoreMutation = useRestoreStudent();
 
-  // Check if user is a teacher (not admin)
   const isTeacher = isTeacherRole(user?.role);
 
   // Fetch managed classes - for teachers, only classes where they are class teacher

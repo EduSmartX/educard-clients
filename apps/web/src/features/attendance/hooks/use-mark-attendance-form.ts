@@ -46,7 +46,6 @@ export function useMarkAttendanceForm() {
   // Queries
   const { data: eligibleClasses, isLoading: loadingClasses } = useEligibleClasses();
 
-  // Validate the date
   const { data: dateValidation } = useValidateDate(classId, dateString, !!classId && !!dateString);
 
   // Fetch comprehensive data if it's a working day

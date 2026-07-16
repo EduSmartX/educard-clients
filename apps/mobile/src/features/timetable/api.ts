@@ -20,7 +20,6 @@ export type {
   TimetableOverrideUpsertPayload,
 } from '@educard/shared';
 
-// Create the API instance with mobile's axios client
 const timetableApi = createTimetableApi({ client: apiClient });
 
 // Export individual functions for backward compatibility

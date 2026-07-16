@@ -31,7 +31,6 @@ export default function StudentFormPage() {
   const [isReactivating, setIsReactivating] = useState(false);
   const [reactivateError, setReactivateError] = useState<string | null>(null);
 
-  // Check if viewing deleted student (from query param)
   const searchParams = new URLSearchParams(location.search);
   const isViewingDeleted = searchParams.get('deleted') === 'true';
 

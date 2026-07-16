@@ -260,7 +260,6 @@ export default function HomeworkSubmissionsPage() {
     refetch: refetchHomework,
   } = useHomeworkList(selectedClassId ? homeworkFilters : undefined);
 
-  // Get the selected homework
   const selectedHomework = useMemo(() => {
     return homeworkList.find((h) => h.public_id === selectedHomeworkId) || null;
   }, [homeworkList, selectedHomeworkId]);

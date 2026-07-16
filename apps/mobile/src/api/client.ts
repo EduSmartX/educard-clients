@@ -97,7 +97,6 @@ apiClient.interceptors.response.use(
         // Store new access token
         await SecureStore.setItemAsync(STORAGE_KEYS.ACCESS_TOKEN, access);
 
-        // Reset the 401 handler flag
         isHandling401 = false;
 
         // Retry original request with new token
