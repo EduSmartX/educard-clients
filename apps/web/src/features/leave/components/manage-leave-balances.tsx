@@ -224,7 +224,7 @@ export default function ManageLeaveBalances() {
   const { data: classesData, isLoading: isLoadingClasses } = useQuery({
     queryKey: QUERY_KEYS.classesForLeave.forBalances(userRole, isAdmin, teacherContext),
     queryFn: async () => fetchClassesData(isAdmin, teacherContext),
-    enabled: !manageOwnBalance && userRole === 'student',
+    enabled: !manageOwnBalance && userRole === USER_ROLES.STUDENT,
   });
 
   const { data: studentsData, isLoading: isLoadingStudents } = useQuery({
@@ -233,7 +233,7 @@ export default function ManageLeaveBalances() {
       const response = await api.get(`/students/classes/${selectedClass}/students/`);
       return Array.isArray(response.data) ? { data: response.data } : response.data;
     },
-    enabled: !manageOwnBalance && userRole === 'student' && !!selectedClass,
+    enabled: !manageOwnBalance && userRole === USER_ROLES.STUDENT && !!selectedClass,
   });
 
   // Get effective user ID from auth context or selected user
@@ -443,8 +443,8 @@ export default function ManageLeaveBalances() {
   );
 
   const userSelectDisabled =
-    (userRole === 'staff' && isLoadingUsers) ||
-    (userRole === 'student' && (!selectedClass || isLoadingStudents));
+    (userRole === USER_ROLES.STAFF && isLoadingUsers) ||
+    (userRole === USER_ROLES.STUDENT && (!selectedClass || isLoadingStudents));
 
   return (
     <div className="space-y-6">

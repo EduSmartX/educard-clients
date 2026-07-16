@@ -15,6 +15,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import { queryClient } from '@/lib/query-client';
 import { ToastProvider } from '@/lib/toast-context';
 import { CriticalOperationProvider } from '@/providers/critical-operation-context';
+import { USER_ROLES } from '@educard/shared/constants';
 
 // Suppress harmless React Native internal warning from reanimated/gestures
 LogBox.ignoreLogs(['viewIsDescendantOf']);
@@ -25,10 +26,10 @@ void SplashScreen.preventAutoHideAsync();
 /** Determine the correct dashboard route for a user's role */
 function getDashboardRoute(role: string | undefined) {
   const normalized = role?.toLowerCase();
-  if (normalized === 'teacher' || normalized === 'employee') {
+  if (normalized === USER_ROLES.TEACHER || normalized === 'employee') {
     return '/(tabs)/(employee)/dashboard' as const;
   }
-  if (normalized === 'student') {
+  if (normalized === USER_ROLES.STUDENT) {
     return '/(tabs)/(parent)/dashboard' as const;
   }
   return '/(tabs)/(admin)/dashboard' as const;
@@ -52,12 +53,12 @@ function shouldRedirectAuthenticated(
   if (inSharedScreens || inModals) return false;
 
   const normalized = role?.toLowerCase();
-  const isAdmin = normalized === 'admin';
-  const isTeacher = normalized === 'teacher' || normalized === 'employee';
+  const isAdmin = normalized === USER_ROLES.ADMIN;
+  const isTeacher = normalized === USER_ROLES.TEACHER || normalized === 'employee';
   // Note: there is no Parent role - student accounts are logged into by
   // parents/guardians on their child's behalf and reuse the Parent tab
   // group, so this only ever needs to check isStudent.
-  const isStudent = normalized === 'student';
+  const isStudent = normalized === USER_ROLES.STUDENT;
 
   const inAdminTabs = segments[0] === '(tabs)' && segments[1] === '(admin)';
   const inEmployeeTabs = segments[0] === '(tabs)' && segments[1] === '(employee)';
