@@ -43,7 +43,6 @@ export default function ForgotPasswordScreen() {
 
   // These functions are for future use (OTP and reset password steps)
   const _handleVerifyOTP = useCallback(() => {
-    // removed async - no await, prefixed _
     const otpCode = otp.join('');
     if (otpCode.length !== 6) {
       Alert.alert('Error', 'Please enter the complete OTP');

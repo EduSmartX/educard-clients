@@ -141,7 +141,6 @@ async function forceLogout(): Promise<void> {
     error: null,
   });
 
-  // Navigate to login
   router.replace('/(auth)/login');
 }
 

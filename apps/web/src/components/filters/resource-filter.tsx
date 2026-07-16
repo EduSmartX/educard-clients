@@ -59,7 +59,6 @@ export function ResourceFilter({
     setFilters((prev) => {
       const newFilters = { ...prev, [name]: value };
 
-      // Call onFieldChange callback if provided
       if (onFieldChange) {
         const stringFilters = Object.entries(newFilters).reduce(
           (acc, [key, val]) => {

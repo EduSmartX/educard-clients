@@ -95,7 +95,6 @@ export async function forgotPassword(
  */
 export async function logout(): Promise<void> {
   try {
-    // Call logout endpoint if available
     await apiClient.post('/auth/logout/');
   } catch {
     // Ignore errors on logout

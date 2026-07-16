@@ -126,7 +126,7 @@ function resolveRawUserDetails(ctx: {
   if (ctx.apiUser) {
     return ctx.apiUser;
   }
-  if (ctx.userRole === 'staff') {
+  if (ctx.userRole === USER_ROLES.STAFF) {
     return ctx.manageableUsers.find((u) => u.public_id === ctx.selectedUser);
   }
   return ctx.students.find((s) => s.user_info.public_id === ctx.selectedUser);
@@ -137,7 +137,7 @@ function buildUserOptions(
   manageableUsers: ManageableUser[],
   students: StudentData[]
 ) {
-  if (userRole === 'staff') {
+  if (userRole === USER_ROLES.STAFF) {
     return manageableUsers.map((u) => ({
       label: `${u.full_name} [${u.email}]`,
       value: u.public_id,
@@ -218,7 +218,7 @@ export default function ManageLeaveBalances() {
       const response = await api.get(`/users/profile/manageable-users/?role=${userRole}`);
       return Array.isArray(response.data) ? { data: response.data } : response.data;
     },
-    enabled: !manageOwnBalance && userRole === 'staff',
+    enabled: !manageOwnBalance && userRole === USER_ROLES.STAFF,
   });
 
   const { data: classesData, isLoading: isLoadingClasses } = useQuery({

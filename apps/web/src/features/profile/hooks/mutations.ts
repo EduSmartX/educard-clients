@@ -69,7 +69,6 @@ export function useChangePassword() {
       window.localStorage.setItem('logout-event', Date.now().toString());
       window.localStorage.removeItem('logout-event');
 
-      // Navigate to login
       navigate(ROUTES.AUTH.LOGIN, { replace: true });
 
       // Force reload to clear any cached state

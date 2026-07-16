@@ -394,7 +394,6 @@ export function BulkUploadDialog({
         toast.error(message);
       }
 
-      // Call success callback
       if (onUploadSuccess) {
         onUploadSuccess(result);
       }
