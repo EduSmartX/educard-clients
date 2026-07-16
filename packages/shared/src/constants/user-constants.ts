@@ -39,6 +39,7 @@ export type UserRoleUpper =
 export const USER_ROLE_LABELS: Record<UserRoleValue, string> = {
   [USER_ROLES.ADMIN]: "Administrator",
   [USER_ROLES.TEACHER]: "Teacher",
+  [USER_ROLES.EMPLOYEE]: "Teacher",
   [USER_ROLES.STUDENT]: "Student",
   [USER_ROLES.PARENT]: "Parent",
   [USER_ROLES.STAFF]: "Staff",

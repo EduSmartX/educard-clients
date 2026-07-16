@@ -4,7 +4,7 @@
  * Filters: status, staff search, date range
  */
 
-import { Colors, getRoleGradient } from '@educard/shared';
+import { Colors, getRoleGradient, LEAVE_STATUS } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
@@ -237,7 +237,7 @@ export default function LeaveApprovalsScreen() {
           {item.status !== 'pending' && item.reviewed_by_name && (
             <View style={styles.reviewerInfo}>
               <Text style={styles.reviewerLabel}>
-                {item.status === 'approved' ? '✓ Approved by: ' : '✗ Rejected by: '}
+                {item.status === LEAVE_STATUS.APPROVED ? '✓ Approved by: ' : '✗ Rejected by: '}
               </Text>
               <Text style={styles.reviewerName}>{item.reviewed_by_name}</Text>
               {!!item.reviewed_at && (
@@ -255,7 +255,7 @@ export default function LeaveApprovalsScreen() {
             </Text>
           ) : null}
 
-          {item.status === 'pending' && (
+          {item.status === LEAVE_STATUS.PENDING && (
             <View style={styles.actionRow}>
               <TouchableOpacity
                 style={[styles.actionBtn, styles.approveBtn]}

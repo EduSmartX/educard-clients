@@ -1,3 +1,4 @@
+import { LEAVE_STATUS } from '@educard/shared/constants';
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -141,7 +142,7 @@ function getDayState(
     return 'holiday';
   }
 
-  if (leaveInfo?.status === 'approved') {
+  if (leaveInfo?.status === LEAVE_STATUS.APPROVED) {
     return 'leave-approved';
   }
   if (leaveInfo?.status === 'pending') {

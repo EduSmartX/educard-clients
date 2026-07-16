@@ -1,3 +1,4 @@
+import { LEAVE_STATUS } from '@educard/shared/constants';
 import { Check, X, Sun, Sunset } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -178,7 +179,7 @@ export function StudentAttendanceTable({
                           {/* email removed intentionally - show only student name */}
                           {student.leave_info?.leave_status && (
                             <div className="mt-1">
-                              {student.leave_info.leave_status === 'approved' ? (
+                              {student.leave_info.leave_status === LEAVE_STATUS.APPROVED ? (
                                 <Badge
                                   variant="outline"
                                   className="border-blue-200 bg-blue-50 text-blue-700"

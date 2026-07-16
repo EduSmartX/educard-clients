@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-misused-promises, @typescript-eslint/no-floating-promises, @typescript-eslint/prefer-nullish-coalescing */ import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query';
+  LEAVE_STATUS,
+  TimesheetStatus,
+} from '@educard/shared/constants';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   format,
   startOfMonth,
@@ -233,7 +233,7 @@ const getDayState = (
 /** Derive day state from an attendance record */
 function getStateFromRecord(record: AttendanceRecord): DayState {
   if (record.is_leave) {
-    return record.leave_status === 'pending' ? 'leave-pending' : 'leave-approved';
+    return record.leave_status === LEAVE_STATUS.PENDING ? 'leave-pending' : 'leave-approved';
   }
   if (record.morning_present && record.afternoon_present) return 'present';
   if (record.morning_present || record.afternoon_present) return 'half_day';
@@ -288,7 +288,8 @@ function buildWeekRows(params: {
     const isForceWorking = holidayInfo?.type === 'force_working';
     const isLeave = strictLeaveCheck
       ? record?.is_leave &&
-        (record?.leave_status === 'approved' || record?.leave_status === 'pending')
+        (record?.leave_status === TimesheetStatus.APPROVED ||
+          record?.leave_status === LEAVE_STATUS.PENDING)
       : record?.is_leave;
     const dayIsWorkingDay = isWorkingDay(day, workingDayPolicy, holidaySet, exceptionsMap);
 
@@ -334,9 +335,9 @@ function getDayClickBlockReason(
 
   const record = attendanceByDate.get(format(date, 'yyyy-MM-dd'));
   const status = record?.approval_status?.toLowerCase();
-  if (status === 'approved')
+  if (status === TimesheetStatus.APPROVED)
     return { title: 'Cannot Edit', message: 'This date has been approved and cannot be modified.' };
-  if (status === 'submitted' || status === 'pending')
+  if (status === TimesheetStatus.SUBMITTED || status === LEAVE_STATUS.PENDING)
     return {
       title: 'Cannot Edit',
       message: 'This date has been submitted for approval. Wait for approval or return to draft.',

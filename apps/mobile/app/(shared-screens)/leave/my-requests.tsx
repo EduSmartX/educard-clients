@@ -2,7 +2,7 @@
  * My Leave Requests Screen - View and cancel leave requests
  */
 
-import { getRoleGradient, getRoleThemeColors } from '@educard/shared';
+import { getRoleGradient, getRoleThemeColors, LEAVE_STATUS } from '@educard/shared';
 import { format, parseISO, isAfter, startOfToday } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -195,7 +195,7 @@ export default function MyLeaveRequestsScreen() {
           {item.status !== 'pending' && item.status !== 'cancelled' && !!item.reviewed_by_name && (
             <View style={styles.reviewerInfo}>
               <Text style={styles.reviewerInfoLabel}>
-                {item.status === 'approved' ? '✓ Approved by: ' : '✗ Rejected by: '}
+                {item.status === LEAVE_STATUS.APPROVED ? '✓ Approved by: ' : '✗ Rejected by: '}
               </Text>
               <Text style={styles.reviewerInfoName}>{item.reviewed_by_name}</Text>
               {!!item.reviewed_at && (
@@ -218,7 +218,7 @@ export default function MyLeaveRequestsScreen() {
             <Text style={styles.appliedDate}>
               Applied: {format(parseISO(item.applied_at), 'dd MMM yyyy')}
             </Text>
-            {item.can_be_cancelled && item.status === 'pending' && (
+            {item.can_be_cancelled && item.status === LEAVE_STATUS.PENDING && (
               <TouchableOpacity style={styles.cancelButton} onPress={() => handleCancel(item)}>
                 <X size={14} color="#ef4444" />
                 <Text style={styles.cancelText}>Cancel</Text>

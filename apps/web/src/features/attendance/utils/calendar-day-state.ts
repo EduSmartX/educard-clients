@@ -1,3 +1,5 @@
+import { LEAVE_STATUS } from '@educard/shared/constants';
+
 /**
  * Calendar Day State Resolver
  * Determines the visual state (colors, icon, label) of a day in the attendance calendar
@@ -59,7 +61,7 @@ export function resolveDayState(ctx: DayContext): DayState {
   }
 
   // Check for approved or pending leave
-  if (ctx.leave?.status === 'approved' || ctx.leave?.status === 'pending') {
+  if (ctx.leave?.status === LEAVE_STATUS.APPROVED || ctx.leave?.status === LEAVE_STATUS.PENDING) {
     return {
       bgColor: 'bg-orange-50 border-orange-300',
       textColor: 'text-orange-900',

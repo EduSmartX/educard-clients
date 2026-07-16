@@ -1,3 +1,5 @@
+import { LEAVE_STATUS } from '@educard/shared/constants';
+
 /**
  * Mark Attendance Screen
  * Select class, date, and mark student attendance with toggle buttons
@@ -202,7 +204,7 @@ export default function MarkAttendanceScreen() {
     const absent = students.filter(
       (s) => !(s.morning_present ?? false) && !(s.afternoon_present ?? false)
     ).length;
-    const onLeave = students.filter((s) => s.leave_status === 'approved').length;
+    const onLeave = students.filter((s) => s.leave_status === LEAVE_STATUS.APPROVED).length;
     return { total, present, absent, onLeave };
   }, [students]);
 
@@ -421,7 +423,7 @@ export default function MarkAttendanceScreen() {
                         ? `Roll: ${student.roll_number}`
                         : student.admission_number}
                     </Text>
-                    {student.leave_status === 'approved' && (
+                    {student.leave_status === LEAVE_STATUS.APPROVED && (
                       <View style={styles.leaveTag}>
                         <Text style={styles.leaveTagText}>On Leave - {student.leave_type}</Text>
                       </View>
