@@ -3,6 +3,7 @@
  * Configures providers and handles auth state
  */
 
+import { USER_ROLES } from '@educard/shared/constants';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -15,7 +16,6 @@ import { useAuthStore } from '@/lib/auth-store';
 import { queryClient } from '@/lib/query-client';
 import { ToastProvider } from '@/lib/toast-context';
 import { CriticalOperationProvider } from '@/providers/critical-operation-context';
-import { USER_ROLES } from '@educard/shared/constants';
 
 // Suppress harmless React Native internal warning from reanimated/gestures
 LogBox.ignoreLogs(['viewIsDescendantOf']);

@@ -1,10 +1,9 @@
-import { LEAVE_STATUS } from '@educard/shared/constants';
-
 /**
  * Mark Attendance Screen
  * Select class, date, and mark student attendance with toggle buttons
  */
 
+import { LEAVE_STATUS } from '@educard/shared/constants';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { format } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';

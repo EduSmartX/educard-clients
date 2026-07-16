@@ -184,7 +184,7 @@ export function AttendanceSummaryPage() {
     // Get all pending classes with class teachers
     const pendingWithTeachers =
       summaryData?.classes.filter(
-        (c) => c.submission_status === TimesheetStatus.PENDING && c.class_teacher
+        (c) => c.submission_status === TimesheetStatus.SUBMITTED && c.class_teacher
       ) || [];
 
     if (pendingWithTeachers.length === 0) {

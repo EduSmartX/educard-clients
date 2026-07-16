@@ -4,6 +4,7 @@
  */
 
 import { format } from 'date-fns';
+import * as DocumentPicker from 'expo-document-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   Clock,
@@ -17,7 +18,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react-native';
-import { useState, useRef, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -27,7 +28,6 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import * as DocumentPicker from 'expo-document-picker';
 
 import { Screen, Header } from '@/components/layout';
 import { colors } from '@/constants/colors';
@@ -298,7 +298,7 @@ export default function StudentHomeworkDetailScreen() {
               </View>
             ) : (
               <TouchableOpacity
-                onPress={pickFile}
+                onPress={() => void pickFile()}
                 className="items-center rounded-lg border-2 border-dashed border-gray-200 py-6"
               >
                 <Upload size={20} color={colors.gray[400]} />

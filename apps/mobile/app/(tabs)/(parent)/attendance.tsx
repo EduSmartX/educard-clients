@@ -41,7 +41,7 @@ export default function ParentAttendanceScreen() {
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={false} onRefresh={refetch} />}
+        refreshControl={<RefreshControl refreshing={false} onRefresh={() => void refetch()} />}
       >
         {isLoading ? (
           <View className="items-center py-20">

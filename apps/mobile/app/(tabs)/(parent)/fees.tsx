@@ -3,9 +3,9 @@
  * Fee summary + components (opt-in/opt-out) + payment history
  */
 
-import { useState } from 'react';
 import { format } from 'date-fns';
 import { CheckCircle, ToggleLeft, ToggleRight } from 'lucide-react-native';
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -51,9 +51,9 @@ export default function ParentFeesScreen() {
   const [note, setNote] = useState('');
 
   const refresh = () => {
-    refetchSummary();
-    refetchPayments();
-    refetchComponents();
+    void refetchSummary();
+    void refetchPayments();
+    void refetchComponents();
   };
   const isLoading = summaryLoading || paymentsLoading || componentsLoading;
 

@@ -77,8 +77,8 @@ export function useStudentHomework(date?: string) {
 
 export function useHomeworkDetail(publicId: string | null) {
   return useQuery({
-    queryKey: KEYS.homeworkDetail(publicId!),
-    queryFn: () => fetchHomeworkDetail(publicId!),
+    queryKey: KEYS.homeworkDetail(publicId ?? ''),
+    queryFn: () => fetchHomeworkDetail(publicId ?? ''),
     enabled: !!publicId,
   });
 }
@@ -107,8 +107,8 @@ export function useExamSessions() {
 
 export function useExamSessionDetail(publicId: string | null) {
   return useQuery({
-    queryKey: KEYS.examDetail(publicId!),
-    queryFn: () => fetchExamSessionDetail(publicId!),
+    queryKey: KEYS.examDetail(publicId ?? ''),
+    queryFn: () => fetchExamSessionDetail(publicId ?? ''),
     enabled: !!publicId,
   });
 }

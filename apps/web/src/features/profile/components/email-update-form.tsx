@@ -168,10 +168,10 @@ export function EmailUpdateForm() {
                       <span className="text-green-600">
                         OTP sent! Expires in {formatCountdown(countdown)}
                       </span>
+                    ) : isDashboardVerificationFlow ? (
+                      'Click the button to send OTP for email verification'
                     ) : (
-                      isDashboardVerificationFlow
-                        ? 'Click the button to send OTP for email verification'
-                        : 'Click the button to send OTP to this email'
+                      'Click the button to send OTP to this email'
                     )}
                   </FormDescription>
                   <FormMessage />
@@ -196,11 +196,11 @@ export function EmailUpdateForm() {
                         {...field}
                       />
                     </FormControl>
-                      <FormDescription>
-                        {isDashboardVerificationFlow
-                          ? 'Enter the OTP sent to this email address'
-                          : 'Enter the OTP sent to your new email'}
-                      </FormDescription>
+                    <FormDescription>
+                      {isDashboardVerificationFlow
+                        ? 'Enter the OTP sent to this email address'
+                        : 'Enter the OTP sent to your new email'}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

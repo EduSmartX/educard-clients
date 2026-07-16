@@ -165,10 +165,10 @@ export function PhoneUpdateForm() {
                       <span className="text-green-600">
                         OTP sent! Expires in {formatCountdown(countdown)}
                       </span>
+                    ) : isDashboardVerificationFlow ? (
+                      'Click the button to send OTP for phone verification'
                     ) : (
-                      isDashboardVerificationFlow
-                        ? 'Click the button to send OTP for phone verification'
-                        : 'Click the button to send OTP to this phone'
+                      'Click the button to send OTP to this phone'
                     )}
                   </FormDescription>
                   <FormMessage />
@@ -193,11 +193,11 @@ export function PhoneUpdateForm() {
                         {...field}
                       />
                     </FormControl>
-                      <FormDescription>
-                        {isDashboardVerificationFlow
-                          ? 'Enter the OTP sent to this phone number'
-                          : 'Enter the OTP sent to your new phone number'}
-                      </FormDescription>
+                    <FormDescription>
+                      {isDashboardVerificationFlow
+                        ? 'Enter the OTP sent to this phone number'
+                        : 'Enter the OTP sent to your new phone number'}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

@@ -14,7 +14,7 @@ import {
   Clock,
   AlertTriangle,
 } from 'lucide-react-native';
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -65,10 +65,7 @@ function TimetableSection() {
   const todayIdx = today.getDay() === 0 ? 5 : today.getDay() - 1;
   const [selectedDay, setSelectedDay] = useState(Math.min(todayIdx, 5));
 
-  const monday = useMemo(
-    () => addDays(startOfWeek(today, { weekStartsOn: 1 }), weekOffset * 7),
-    [weekOffset]
-  );
+  const monday = addDays(startOfWeek(today, { weekStartsOn: 1 }), weekOffset * 7);
   const dateStr = format(addDays(monday, selectedDay), 'yyyy-MM-dd');
   const { data: periods, isLoading, refetch } = useTimetable(dateStr);
 
@@ -76,7 +73,7 @@ function TimetableSection() {
     <ScrollView
       className="flex-1"
       showsVerticalScrollIndicator={false}
-      refreshControl={<RefreshControl refreshing={false} onRefresh={refetch} />}
+      refreshControl={<RefreshControl refreshing={false} onRefresh={() => void refetch()} />}
     >
       {/* Week Nav */}
       <View className="mx-4 mt-4 flex-row items-center justify-between rounded-xl bg-blue-50 px-3 py-2.5">
@@ -201,7 +198,7 @@ function HomeworkSection() {
     <ScrollView
       className="flex-1"
       showsVerticalScrollIndicator={false}
-      refreshControl={<RefreshControl refreshing={false} onRefresh={refetch} />}
+      refreshControl={<RefreshControl refreshing={false} onRefresh={() => void refetch()} />}
     >
       <View className="mx-4 mt-4 flex-row items-center justify-between rounded-xl bg-orange-50 px-3 py-2.5">
         <TouchableOpacity onPress={() => goDay(-1)} className="p-1">
@@ -288,7 +285,7 @@ function ExamsSection() {
     <ScrollView
       className="flex-1"
       showsVerticalScrollIndicator={false}
-      refreshControl={<RefreshControl refreshing={false} onRefresh={refetch} />}
+      refreshControl={<RefreshControl refreshing={false} onRefresh={() => void refetch()} />}
     >
       <View className="px-4 pb-6 pt-4">
         {isLoading ? (

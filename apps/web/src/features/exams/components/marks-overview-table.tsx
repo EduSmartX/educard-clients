@@ -149,9 +149,13 @@ export function MarksOverviewTable({ data }: Readonly<MarksOverviewTableProps>) 
                   </div>
                 </TableHead>
               ))}
-              <TableHead className="w-[80px] text-center font-semibold sm:w-[100px]">Total</TableHead>
+              <TableHead className="w-[80px] text-center font-semibold sm:w-[100px]">
+                Total
+              </TableHead>
               <TableHead className="w-[64px] text-center font-semibold sm:w-[80px]">%</TableHead>
-              <TableHead className="w-[64px] text-center font-semibold sm:w-[80px]">Result</TableHead>
+              <TableHead className="w-[64px] text-center font-semibold sm:w-[80px]">
+                Result
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

@@ -5,7 +5,6 @@
 
 import { format } from 'date-fns';
 import { useLocalSearchParams } from 'expo-router';
-import { Calendar, Clock, User, Award } from 'lucide-react-native';
 import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
 
 import { Screen, Header } from '@/components/layout';

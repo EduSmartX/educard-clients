@@ -337,7 +337,7 @@ function getDayClickBlockReason(
   const status = record?.approval_status?.toLowerCase();
   if (status === TimesheetStatus.APPROVED)
     return { title: 'Cannot Edit', message: 'This date has been approved and cannot be modified.' };
-  if (status === TimesheetStatus.SUBMITTED || status === TimesheetStatus.PENDING)
+  if (status === TimesheetStatus.SUBMITTED)
     return {
       title: 'Cannot Edit',
       message: 'This date has been submitted for approval. Wait for approval or return to draft.',

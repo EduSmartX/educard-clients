@@ -7,7 +7,7 @@
  * - Teacher/Employee: App settings only (no Organization section)
  */
 
-import { getRoleGradient, USER_ROLES, USER_ROLE_LABELS } from '@educard/shared';
+import { getRoleGradient, USER_ROLE_LABELS } from '@educard/shared';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
