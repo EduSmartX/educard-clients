@@ -288,7 +288,7 @@ function buildWeekRows(params: {
     const isForceWorking = holidayInfo?.type === 'force_working';
     const isLeave = strictLeaveCheck
       ? record?.is_leave &&
-        (record?.leave_status === TimesheetStatus.APPROVED ||
+        (record?.leave_status === LEAVE_STATUS.APPROVED ||
           record?.leave_status === LEAVE_STATUS.PENDING)
       : record?.is_leave;
     const dayIsWorkingDay = isWorkingDay(day, workingDayPolicy, holidaySet, exceptionsMap);
@@ -337,7 +337,7 @@ function getDayClickBlockReason(
   const status = record?.approval_status?.toLowerCase();
   if (status === TimesheetStatus.APPROVED)
     return { title: 'Cannot Edit', message: 'This date has been approved and cannot be modified.' };
-  if (status === TimesheetStatus.SUBMITTED || status === LEAVE_STATUS.PENDING)
+  if (status === TimesheetStatus.SUBMITTED || status === TimesheetStatus.PENDING)
     return {
       title: 'Cannot Edit',
       message: 'This date has been submitted for approval. Wait for approval or return to draft.',
