@@ -1,6 +1,5 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-
 import { Colors } from '@educard/shared';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 export interface SegmentOption<T extends string = string> {
   value: T;

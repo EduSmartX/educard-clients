@@ -154,8 +154,11 @@ export async function bulkUploadHolidays(
 export async function sendHolidayNotification(
   holidayIds: string[]
 ): Promise<{ message: string; data: { count: number } }> {
-  const response = await apiClient.post('/attendance/admin/holiday-calendar/send-notification/', {
-    holiday_ids: holidayIds,
-  });
+  const response = await apiClient.post<{ message: string; data: { count: number } }>(
+    '/attendance/admin/holiday-calendar/send-notification/',
+    {
+      holiday_ids: holidayIds,
+    }
+  );
   return response.data;
 }
