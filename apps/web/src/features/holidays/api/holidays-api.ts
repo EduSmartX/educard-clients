@@ -32,6 +32,7 @@ const ADMIN_ENDPOINTS = {
   holidayDetail: (id: string) => `/attendance/admin/holiday-calendar/${id}/`,
   holidayTemplate: '/attendance/admin/holiday-calendar/download-template/',
   holidayBulkUpload: '/attendance/admin/holiday-calendar/bulk-upload/',
+  holidaySendNotification: '/attendance/admin/holiday-calendar/send-notification/',
   workingDayPolicy: '/attendance/admin/working-day-policy/',
 };
 
@@ -193,5 +194,17 @@ export async function bulkUploadHolidays(
 export async function fetchWorkingDayPolicy(): Promise<WorkingDayPolicyListResponse> {
   const endpoint = getWorkingDayPolicyEndpoint();
   const response = await api.get<WorkingDayPolicyListResponse>(endpoint);
+  return response.data;
+}
+
+/**
+ * Send holiday notification for selected holidays (Admin only)
+ */
+export async function sendHolidayNotification(
+  holidayIds: string[]
+): Promise<{ message: string; data: { count: number } }> {
+  const response = await api.post(ADMIN_ENDPOINTS.holidaySendNotification, {
+    holiday_ids: holidayIds,
+  });
   return response.data;
 }

@@ -230,10 +230,18 @@ export const ErrorMessages = {
     PENDING_APPROVAL: "Organization pending approval.",
     ORGANIZATION_REJECTED: "Organization has been rejected.",
     SEND_OTP_FAILED: "Failed to send OTP. Please try again.",
+    SEND_VERIFICATION_CODES_FAILED:
+      "Failed to send verification codes. Please try again.",
+    OTP_ALREADY_SENT_RECENTLY:
+      "Verification codes were already sent recently. Check your inbox, or wait to resend.",
     INVALID_OTP: "Please enter a valid 6-digit OTP.",
     VERIFY_OTP_FAILED: "Failed to verify OTP. Please try again.",
+    ADMIN_PHONE_REQUIRED: "Enter administrator mobile number first.",
+    ADMIN_PHONE_OTP_REQUIRED:
+      "Please verify administrator mobile number OTP before registration.",
     PASSWORD_RESET_FAILED:
       "Invalid OTP or failed to reset password. Please try again.",
+    REGISTRATION_FAILED: "Failed to register. Please try again.",
   },
 
   PROFILE: {
@@ -455,10 +463,13 @@ export const SuccessMessages = {
 
   AUTH: {
     OTP_SENT: "OTP sent successfully.",
+    OTP_RESENT: "New verification code sent successfully.",
     PASSWORD_RESET_SUCCESS: "Password reset successful.",
     LOGIN_SUCCESS: "Logged in successfully.",
     LOGOUT_SUCCESS: "Logged out successfully.",
     ADMIN_EMAIL_VERIFIED: "Admin email verified successfully.",
+    ADMIN_PHONE_OTP_SENT: "OTP sent to administrator mobile number.",
+    ADMIN_PHONE_VERIFIED: "Administrator mobile number verified successfully.",
     ORG_EMAIL_VERIFIED: "Organization email verified successfully.",
     EMAIL_VERIFICATION_COMPLETE: "Email verification complete.",
   },

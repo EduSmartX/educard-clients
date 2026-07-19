@@ -68,6 +68,12 @@ export const step4Schema = z
           message: 'Please enter a valid 10-digit Indian mobile number',
         }
       ),
+    adminPhoneOtp: z
+      .string()
+      .optional()
+      .refine((val) => !val || /^\d{6}$/.test(val), {
+        message: 'OTP must be 6 digits',
+      }),
     gender: z.string().optional(),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string(),

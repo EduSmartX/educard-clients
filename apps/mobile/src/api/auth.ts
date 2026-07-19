@@ -165,11 +165,12 @@ export async function checkAuth(): Promise<User | null> {
  * Request password reset OTP
  */
 export async function requestPasswordResetOtp(
-  email: string
+  email: string,
+  channel: 'email' | 'sms' | 'both' = 'email'
 ): Promise<{ message: string; expires_in_minutes: number }> {
   const response = await apiClient.post<{ message: string; expires_in_minutes: number }>(
     '/auth/password-reset-request/',
-    { email }
+    { email, channel }
   );
   return response.data;
 }

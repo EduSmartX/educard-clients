@@ -13,6 +13,7 @@ import {
   updateHoliday,
   deleteHoliday,
   bulkUploadHolidays,
+  sendHolidayNotification,
 } from '../api/holidays-api';
 import { getErrorMessage, getFieldErrors } from '@/lib/utils/error-handler';
 import {
@@ -160,6 +161,21 @@ export function useBulkUploadHolidays(options?: MutationOptions<HolidayFieldErro
     },
     onError: (error: Error) => {
       handleMutationError(error, ErrorMessages.HOLIDAY.BULK_UPLOAD_FAILED, options?.onError);
+    },
+  });
+}
+
+export function useSendHolidayNotification() {
+  return useMutation({
+    mutationFn: (holidayIds: string[]) => sendHolidayNotification(holidayIds),
+    onSuccess: (response) => {
+      toast.success('Holiday notification sent', {
+        description: `Notification queued for ${response.data.count} holiday(s).`,
+      });
+    },
+    onError: (error: Error) => {
+      const msg = getErrorMessage(error, 'Failed to send holiday notification.');
+      toast.error(ToastTitles.ERROR, { description: msg });
     },
   });
 }

@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Loader2,
   AlertCircle,
+  Bell,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -28,6 +29,7 @@ import { CalendarView } from './calendar-view';
 import { TableView } from './table-view';
 import { BulkUploadDialog } from './bulk-upload-dialog';
 import { HolidayFormDialog } from './holiday-form-dialog';
+import { useSendHolidayNotification } from '../hooks';
 
 /**
  * Main Holiday Calendar Component
@@ -38,6 +40,7 @@ export function HolidayCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const { isAdmin } = useRole();
+  const notifyMutation = useSendHolidayNotification();
 
   const { fetchFromDate, fetchToDate } = useMemo(() => {
     const monthStart = startOfMonth(currentDate);
@@ -109,6 +112,29 @@ export function HolidayCalendar() {
     setCurrentDate(new Date());
   };
 
+  // Send notification for all non-weekend holidays in current month
+  const handleSendNotification = () => {
+    const apiHolidays = holidayData?.data || [];
+    const realHolidays = apiHolidays.filter(
+      (h) =>
+        h.holiday_type !== 'SUNDAY' &&
+        h.holiday_type !== 'SATURDAY' &&
+        h.holiday_type !== 'SECOND_SATURDAY'
+    );
+    const holidayIds = realHolidays.map((h) => h.public_id);
+    if (holidayIds.length === 0) {
+      return;
+    }
+    notifyMutation.mutate(holidayIds);
+  };
+
+  const apiHolidayCount = (holidayData?.data || []).filter(
+    (h) =>
+      h.holiday_type !== 'SUNDAY' &&
+      h.holiday_type !== 'SATURDAY' &&
+      h.holiday_type !== 'SECOND_SATURDAY'
+  ).length;
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -123,6 +149,20 @@ export function HolidayCalendar() {
         {/* Action buttons - Only show for admins */}
         {isAdmin && (
           <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              className="gap-2 border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
+              onClick={handleSendNotification}
+              disabled={notifyMutation.isPending || apiHolidayCount === 0}
+              title={
+                apiHolidayCount === 0
+                  ? 'No holidays in current month to notify'
+                  : `Send notification for ${apiHolidayCount} holiday(s) in this month`
+              }
+            >
+              <Bell className="h-4 w-4" />
+              {notifyMutation.isPending ? 'Sending...' : 'Notify'}
+            </Button>
             <BulkUploadDialog />
             <HolidayFormDialog mode="create" showTrigger={true} />
           </div>

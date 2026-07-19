@@ -25,6 +25,7 @@ const categoryIcons: Record<string, string> = {
   fee_notifications: '💰',
   homework_notifications: '📚',
   work_policy_notifications: '📋',
+  security_notifications: '🔒',
 };
 
 // Category display names
@@ -38,6 +39,8 @@ const categoryDisplayNames: Record<string, string> = {
   fee_notifications: 'Fee Notifications',
   homework_notifications: 'HomeWork Notifications',
   work_policy_notifications: 'Exception WorkPolicy Notification',
+  holiday_notifications: 'Holiday Notifications',
+  security_notifications: 'Security Notifications',
 };
 
 interface PreferencesByCategoryProps {

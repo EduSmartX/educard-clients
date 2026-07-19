@@ -16,6 +16,7 @@ import {
   getWorkingDayPolicy,
   createWorkingDayPolicy,
   updateWorkingDayPolicy,
+  sendHolidayNotification,
   type FetchHolidaysParams,
   type Holiday,
   type WorkingDayPolicy,
@@ -124,6 +125,19 @@ export function useUpdateWorkingDayPolicy(options?: MutationOptions) {
     },
     onError: (error: unknown) => {
       handleMutationError(error, 'Failed to update working day policy', options?.onError);
+    },
+  });
+}
+
+export function useSendHolidayNotification(options?: MutationOptions) {
+  return useMutation({
+    mutationFn: (holidayIds: string[]) => sendHolidayNotification(holidayIds),
+    onSuccess: (response) => {
+      showToast('success', `Notification queued for ${response.data.count} holiday(s)`);
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to send holiday notification', options?.onError);
     },
   });
 }

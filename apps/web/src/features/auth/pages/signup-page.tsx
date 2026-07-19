@@ -8,6 +8,7 @@ import { SignupStep1 } from '../components/signup-step1';
 import { SignupStep2 } from '../components/signup-step2';
 import { SignupStep3 } from '../components/signup-step3';
 import { SignupStep4 } from '../components/signup-step4';
+import { CriticalOperationProvider } from '@/providers/critical-operation-provider';
 
 /** Get step circle styling class based on progress */
 function getStepClass(step: number, currentStep: number): string {
@@ -21,6 +22,14 @@ function getStepClass(step: number, currentStep: number): string {
 }
 
 export default function SignupPage() {
+  return (
+    <CriticalOperationProvider>
+      <SignupPageContent />
+    </CriticalOperationProvider>
+  );
+}
+
+function SignupPageContent() {
   const {
     currentStep,
     isLoading,
@@ -35,8 +44,12 @@ export default function SignupPage() {
     orgOtpVerified,
     verifyingAdmin,
     verifyingOrg,
+    adminPhoneOtpVerified,
+    sendingAdminPhoneOtp,
+    verifyingAdminPhoneOtp,
     adminResendCooldown,
     orgResendCooldown,
+    adminPhoneResendCooldown,
     step1Form,
     step2Form,
     step3Form,
@@ -49,6 +62,8 @@ export default function SignupPage() {
     handleVerifyOrgOtp,
     handleResendAdminOtp,
     handleResendOrgOtp,
+    handleSendAdminPhoneOtp,
+    handleVerifyAdminPhoneOtp,
     goToPreviousStep,
     navigate,
     otpSentMessage,
@@ -185,6 +200,12 @@ export default function SignupPage() {
                 form={step4Form}
                 formData={formData}
                 isLoading={isLoading}
+                adminPhoneOtpVerified={adminPhoneOtpVerified}
+                sendingAdminPhoneOtp={sendingAdminPhoneOtp}
+                verifyingAdminPhoneOtp={verifyingAdminPhoneOtp}
+                adminPhoneResendCooldown={adminPhoneResendCooldown}
+                onSendAdminPhoneOtp={handleSendAdminPhoneOtp}
+                onVerifyAdminPhoneOtp={handleVerifyAdminPhoneOtp}
                 onSubmit={handleStep4Submit}
                 onBack={goToPreviousStep}
               />

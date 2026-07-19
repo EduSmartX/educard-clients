@@ -94,6 +94,7 @@ export interface OTPVerificationData {
 export interface PasswordResetRequestData {
   username?: string;
   email?: string;
+  channel?: 'email' | 'sms' | 'both';
 }
 
 export interface PasswordResetVerifyData {

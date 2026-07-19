@@ -8,6 +8,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 
 import { authApi } from '@/api/auth';
+import { SegmentedSelector } from '@/components/ui';
 
 type Step = 'email' | 'otp' | 'newPassword';
 
@@ -15,6 +16,7 @@ export default function ForgotPasswordScreen() {
   const router = useRouter();
   const [, setStep] = useState<Step>('email'); // NOSONAR - only setter needed
   const [email, setEmail] = useState('');
+  const [channel, setChannel] = useState<'email' | 'sms' | 'both'>('email');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [newPassword, _setNewPassword] = useState(''); // NOSONAR - used in future password reset step
   const [confirmPassword, _setConfirmPassword] = useState(''); // NOSONAR - used in future password reset step
@@ -30,7 +32,7 @@ export default function ForgotPasswordScreen() {
     }
     setIsLoading(true);
     try {
-      await authApi.requestPasswordResetOtp(email.trim());
+      await authApi.requestPasswordResetOtp(email.trim(), channel);
       Alert.alert('Success', 'OTP sent to your email', [
         { text: 'OK', onPress: () => setStep('otp') },
       ]);
@@ -39,7 +41,7 @@ export default function ForgotPasswordScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [email]);
+  }, [email, channel]);
 
   // These functions are for future use (OTP and reset password steps)
   const _handleVerifyOTP = useCallback(() => {
@@ -162,6 +164,15 @@ export default function ForgotPasswordScreen() {
               />
             </View>
           </View>
+
+          {/* OTP Channel Selector */}
+          <SegmentedSelector
+            label="Send OTP via"
+            options={['email', 'sms', 'both'] as const}
+            value={channel}
+            onChange={setChannel}
+          />
+
           <TouchableOpacity
             onPress={() => void handleSendOTP()}
             disabled={isLoading}

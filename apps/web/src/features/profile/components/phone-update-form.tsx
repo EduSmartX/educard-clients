@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { CommonUiText, FormPlaceholders } from '@/constants';
+import { useCriticalOperation } from '@/providers/critical-operation-provider';
 import { useUserProfile } from '../hooks/queries';
 import { useSendOTP, useUpdatePhone } from '../hooks/mutations';
 import { formatCountdown } from '../utils/format-countdown';
@@ -36,6 +37,7 @@ type PhoneFormValues = z.infer<typeof phoneSchema>;
 export function PhoneUpdateForm() {
   const { data: profile } = useUserProfile();
   const [searchParams] = useSearchParams();
+  const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
   const sendOTPMutation = useSendOTP();
   const updatePhoneMutation = useUpdatePhone();
   const [otpSent, setOtpSent] = useState(false);
@@ -97,11 +99,19 @@ export function PhoneUpdateForm() {
   };
 
   const onSubmit = (values: PhoneFormValues) => {
+    beginCriticalOperation({
+      title: 'Verifying phone OTP',
+      description: 'Please wait while we verify the OTP and update your phone number.',
+    });
+
     updatePhoneMutation.mutate(values, {
       onSuccess: () => {
         form.reset();
         setOtpSent(false);
         setCountdown(0);
+      },
+      onSettled: () => {
+        endCriticalOperation();
       },
     });
   };

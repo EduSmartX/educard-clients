@@ -111,14 +111,7 @@ export function SignupStep2({
             isLoading={verifyingAdmin}
             className={`h-14 min-w-[120px] rounded-xl font-semibold transition-all ${adminVerifyBtnClass}`}
           >
-            {adminOtpVerified ? (
-              <span className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5" />
-                Verified
-              </span>
-            ) : (
-              'Verify'
-            )}
+            {adminOtpVerified ? 'Verified' : verifyingAdmin ? 'Verifying' : 'Verify'}
           </Button>
         </div>
 
@@ -189,14 +182,7 @@ export function SignupStep2({
                   : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:scale-105 hover:shadow-xl'
               }`}
             >
-              {orgOtpVerified ? (
-                <span className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5" />
-                  Verified
-                </span>
-              ) : (
-                'Verify'
-              )}
+              {orgOtpVerified ? 'Verified' : verifyingOrg ? 'Verifying' : 'Verify'}
             </Button>
           </div>
 

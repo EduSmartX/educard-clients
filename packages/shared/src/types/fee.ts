@@ -301,12 +301,12 @@ export interface FeeReminder {
 
 export interface SendReminderPayload {
   student_fee_public_id: string;
-  channel?: ReminderChannelType;
+  delivery_methods: ReminderChannelType[];
 }
 
 export interface BulkReminderPayload {
   student_fee_public_ids: string[];
-  channel?: ReminderChannelType;
+  delivery_methods: ReminderChannelType[];
 }
 
 export interface ReminderResult {

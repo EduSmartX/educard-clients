@@ -71,6 +71,7 @@ export default function ForgotPasswordPage() {
   const [currentStep, setCurrentStep] = useState<Step>('request');
   const [isLoading, setIsLoading] = useState(false);
   const [useEmail, setUseEmail] = useState(true); // Toggle between email/username
+  const [channel, setChannel] = useState<'email' | 'sms' | 'both'>('email');
   const [identifier, setIdentifier] = useState(''); // Store email/username
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -97,7 +98,7 @@ export default function ForgotPasswordPage() {
   const handleRequestOtp = async (formData: RequestOtpFormData) => {
     setIsLoading(true);
     try {
-      const requestData = buildIdentifierPayload(useEmail, formData.identifier);
+      const requestData = { ...buildIdentifierPayload(useEmail, formData.identifier), channel };
 
       await authApi.requestPasswordResetOtp(requestData);
 
@@ -167,6 +168,8 @@ export default function ForgotPasswordPage() {
             <RequestOtpStep
               useEmail={useEmail}
               setUseEmail={setUseEmail}
+              channel={channel}
+              setChannel={setChannel}
               onSubmit={handleSubmitRequest(handleRequestOtp)}
               register={registerRequest}
               errors={errorsRequest}
