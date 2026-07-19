@@ -290,6 +290,8 @@ export const ROUTES = {
   HOMEWORK_SUBMISSION_REVIEW: '/homework/:homeworkId/submissions/:submissionId/review',
   HOMEWORK_VIEW: '/homework/:id',
   HOMEWORK_EDIT: '/homework/:id/edit',
+  // Announcements
+  ANNOUNCEMENTS: '/announcements',
   // Fee Management
   FEES: {
     DASHBOARD: '/fees',

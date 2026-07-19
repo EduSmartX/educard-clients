@@ -201,6 +201,9 @@ const HomeworkSubmissionsPage = lazy(
 );
 const SubmissionReviewPage = lazy(() => import('./features/homework/pages/submission-review-page'));
 
+// Announcements
+const AnnouncementsPage = lazy(() => import('./features/announcements/pages/announcements-page'));
+
 // Fee Management
 const FeeDashboardPage = lazy(() =>
   import('./features/fee/admin/pages/fee-dashboard-page').then((m) => ({
@@ -396,6 +399,9 @@ function App() {
             <Route path={ROUTES.HOMEWORK_SUBMISSION_REVIEW} element={<SubmissionReviewPage />} />
             <Route path={ROUTES.HOMEWORK_VIEW} element={<HomeworkDetailPage />} />
             <Route path={ROUTES.HOMEWORK_EDIT} element={<HomeworkFormPage />} />
+
+            {/* Announcements */}
+            <Route path={ROUTES.ANNOUNCEMENTS} element={<AnnouncementsPage />} />
 
             {/* Fee Management */}
             <Route path={ROUTES.FEES.DASHBOARD} element={<FeeDashboardPage />} />

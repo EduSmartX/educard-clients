@@ -32,6 +32,7 @@ import {
   Eye,
   CalendarRange,
   ClipboardEdit,
+  Megaphone,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
 import { ROUTES } from '@/constants/app-config';
@@ -125,6 +126,17 @@ export const adminSidebarConfig: SidebarSection[] = [
         label: 'Submissions',
         icon: SubmissionsIcon,
         path: ROUTES.HOMEWORK_SUBMISSIONS,
+      },
+    ],
+  },
+  {
+    title: 'COMMUNICATION',
+    items: [
+      {
+        id: 'announcements',
+        label: 'Announcements',
+        icon: Megaphone,
+        path: ROUTES.ANNOUNCEMENTS,
       },
     ],
   },
