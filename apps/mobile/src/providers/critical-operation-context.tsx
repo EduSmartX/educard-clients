@@ -24,7 +24,7 @@ const DEFAULT_DESCRIPTION = 'Please wait until the operation completes.';
 
 const CriticalOperationContext = createContext<CriticalOperationContextValue | null>(null);
 
-export function CriticalOperationProvider({ children }: { children: ReactNode }) {
+export function CriticalOperationProvider({ children }: { readonly children: ReactNode }) {
   const [isActive, setIsActive] = useState(false);
   const [title, setTitle] = useState(DEFAULT_TITLE);
   const [description, setDescription] = useState(DEFAULT_DESCRIPTION);

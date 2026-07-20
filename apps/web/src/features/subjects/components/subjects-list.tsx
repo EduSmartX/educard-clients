@@ -14,6 +14,20 @@ import { useClasses } from '@/features/classes/hooks/use-classes';
 import { useSubjectMasters } from '@/features/core/hooks/use-subject-masters';
 import { useTeachers } from '@/features/teachers';
 
+function getBulkUploadHeaderExtra(showBulkUpload: boolean, isAdmin: boolean) {
+  if (!showBulkUpload) {
+    return undefined;
+  }
+  if (isAdmin) {
+    return (
+      <div className="flex basis-full justify-end gap-2">
+        <BulkUploadSubjectsDialog />
+      </div>
+    );
+  }
+  return <BulkUploadSubjectsDialog />;
+}
+
 interface SubjectsListProps {
   subjects: Subject[];
   isLoading: boolean;
@@ -136,17 +150,7 @@ export function SubjectsList({
       onSearch={onSearch}
       onFilterChange={onFilterChange}
       getRowKey={(row) => row.public_id}
-      headerExtra={
-        showBulkUpload ? (
-          isAdmin ? (
-            <div className="flex basis-full justify-end gap-2">
-              <BulkUploadSubjectsDialog />
-            </div>
-          ) : (
-            <BulkUploadSubjectsDialog />
-          )
-        ) : undefined
-      }
+      headerExtra={getBulkUploadHeaderExtra(showBulkUpload, isAdmin)}
       canCreate={canCreateSubjects}
       showDisabledCreateButton={false}
       createButtonDisabled={false}

@@ -12,6 +12,19 @@ import type { Teacher } from '../types';
 import { createCommonColumns } from '@/components/tables/common-columns';
 import { UserAvatar } from '@/components/common/user-avatar';
 
+function getGenderLabel(gender: string | undefined): string {
+  if (gender === 'M') {
+    return 'Male';
+  }
+  if (gender === 'F') {
+    return 'Female';
+  }
+  if (gender === 'O') {
+    return 'Other';
+  }
+  return '—';
+}
+
 interface CreateColumnsParams {
   onView: (teacher: Teacher) => void;
   onEdit: (teacher: Teacher) => void;
@@ -162,17 +175,7 @@ export function createTeacherListColumns({
     },
     {
       header: 'Gender',
-      accessor: (row) => (
-        <span className="text-gray-700">
-          {row.gender === 'M'
-            ? 'Male'
-            : row.gender === 'F'
-              ? 'Female'
-              : row.gender === 'O'
-                ? 'Other'
-                : '—'}
-        </span>
-      ),
+      accessor: (row) => <span className="text-gray-700">{getGenderLabel(row.gender)}</span>,
       width: 90,
     },
     {

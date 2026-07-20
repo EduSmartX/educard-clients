@@ -86,7 +86,7 @@ export default function HomeworkCreatePage() {
   const getInitialAssignedDate = () => {
     if (initialDateStr) {
       const parsedDate = parse(initialDateStr, 'yyyy-MM-dd', new Date());
-      if (!isNaN(parsedDate.getTime())) {
+      if (!Number.isNaN(parsedDate.getTime())) {
         return parsedDate;
       }
     }
@@ -195,6 +195,62 @@ export default function HomeworkCreatePage() {
     [fields, setValue]
   );
 
+  const uploadAttachmentsFor = async (subjectPublicId: string, homeworkPublicId: string) => {
+    const files = uploadedFiles[subjectPublicId] || [];
+    for (const file of files) {
+      await uploadMutation.mutateAsync({ homeworkPublicId, file: file.file });
+    }
+  };
+
+  const submitSingleHomework = async (
+    item: FormData['items'][number],
+    buildPayload: (
+      item: FormData['items'][number]
+    ) => Parameters<typeof createMutation.mutateAsync>[0]
+  ): Promise<{ successCount: number; errorCount: number }> => {
+    try {
+      const result = await createMutation.mutateAsync(buildPayload(item));
+      await uploadAttachmentsFor(item.subject_public_id, result.public_id);
+      return { successCount: 1, errorCount: 0 };
+    } catch (err) {
+      toast.error(getErrorMessage(err, HOMEWORK_UI.FAILED_TO_CREATE));
+      return { successCount: 0, errorCount: 1 };
+    }
+  };
+
+  const submitBulkHomework = async (
+    items: FormData['items'],
+    buildPayload: (
+      item: FormData['items'][number]
+    ) => Parameters<typeof createMutation.mutateAsync>[0]
+  ): Promise<{ successCount: number; errorCount: number }> => {
+    try {
+      const payloads = items.map(buildPayload);
+      const result = await bulkCreateMutation.mutateAsync(payloads);
+
+      if (result.errors.length > 0) {
+        const errorMsgs = result.errors
+          .map((e: { subject_name?: string; error?: string }) =>
+            e.subject_name ? `${e.subject_name}: ${e.error}` : e.error
+          )
+          .join('\n');
+        toast.error(errorMsgs);
+      }
+
+      for (const created of result.created) {
+        const item = items.find((i) => i.subject_public_id === created.subject_public_id);
+        if (!item) {
+          continue;
+        }
+        await uploadAttachmentsFor(item.subject_public_id, created.public_id);
+      }
+      return { successCount: result.created_count, errorCount: result.errors.length };
+    } catch (err) {
+      toast.error(getErrorMessage(err, HOMEWORK_UI.FAILED_TO_CREATE));
+      return { successCount: 0, errorCount: items.length };
+    }
+  };
+
   const onSubmit = async (data: FormData) => {
     const enabledItems = data.items.filter((item) => item.enabled);
 
@@ -225,8 +281,6 @@ export default function HomeworkCreatePage() {
       reference_link: item.reference_link || undefined,
     });
 
-    let successCount = 0;
-    let _errorCount = 0;
     const isBulkCreate = enabledItems.length > 1;
 
     if (isBulkCreate) {
@@ -237,62 +291,9 @@ export default function HomeworkCreatePage() {
     }
 
     try {
-      if (enabledItems.length === 1) {
-        // Single homework - use single API call
-        const item = enabledItems[0];
-        try {
-          const result = await createMutation.mutateAsync(buildPayload(item));
-
-          const files = uploadedFiles[item.subject_public_id] || [];
-          for (const file of files) {
-            await uploadMutation.mutateAsync({
-              homeworkPublicId: result.public_id,
-              file: file.file,
-            });
-          }
-          successCount = 1;
-        } catch (err) {
-          _errorCount = 1;
-          toast.error(getErrorMessage(err, HOMEWORK_UI.FAILED_TO_CREATE));
-        }
-      } else {
-        // Multiple homeworks - use bulk API call
-        try {
-          const payloads = enabledItems.map(buildPayload);
-          const result = await bulkCreateMutation.mutateAsync(payloads);
-          successCount = result.created_count;
-          _errorCount = result.errors.length;
-
-          if (result.errors.length > 0) {
-            const errorMsgs = result.errors
-              .map((e: { subject_name?: string; error?: string }) =>
-                e.subject_name ? `${e.subject_name}: ${e.error}` : e.error
-              )
-              .join('\n');
-            toast.error(errorMsgs);
-          }
-
-          // Upload attachments for successfully created homework
-          for (const created of result.created) {
-            const item = enabledItems.find(
-              (i) => i.subject_public_id === created.subject_public_id
-            );
-            if (!item) {
-              continue;
-            }
-            const files = uploadedFiles[item.subject_public_id] || [];
-            for (const file of files) {
-              await uploadMutation.mutateAsync({
-                homeworkPublicId: created.public_id,
-                file: file.file,
-              });
-            }
-          }
-        } catch (err) {
-          _errorCount = enabledItems.length;
-          toast.error(getErrorMessage(err, HOMEWORK_UI.FAILED_TO_CREATE));
-        }
-      }
+      const { successCount } = isBulkCreate
+        ? await submitBulkHomework(enabledItems, buildPayload)
+        : await submitSingleHomework(enabledItems[0], buildPayload);
 
       if (successCount > 0) {
         toast.success(`Created ${successCount} homework assignment${successCount > 1 ? 's' : ''}`);

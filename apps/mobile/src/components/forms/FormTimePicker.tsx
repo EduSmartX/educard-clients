@@ -84,7 +84,7 @@ export function FormTimePicker({
 
   return (
     <View style={styles.container}>
-      {label && (
+      {!!label && (
         <Text style={styles.label}>
           {label}
           {required ? <Text style={styles.required}> *</Text> : null}

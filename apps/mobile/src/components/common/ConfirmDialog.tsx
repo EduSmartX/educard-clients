@@ -64,7 +64,12 @@ export function ConfirmDialog({
   const config = VARIANT_CONFIG[confirmVariant];
   const IconComponent = icon ?? config.icon;
   const { width } = useWindowDimensions();
-  const maxDialogWidth = width >= 900 ? 520 : width >= 600 ? 420 : width - 32;
+  let maxDialogWidth = width - 32;
+  if (width >= 900) {
+    maxDialogWidth = 520;
+  } else if (width >= 600) {
+    maxDialogWidth = 420;
+  }
   const overlayPadding = width < 360 ? 12 : 24;
   const contentPadding = width < 360 ? 18 : 24;
 

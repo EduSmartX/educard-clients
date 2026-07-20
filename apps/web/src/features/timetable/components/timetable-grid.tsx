@@ -134,23 +134,31 @@ function AssignmentPopover({
   const warnings = createEntry.data?.warnings ?? [];
   const hasWarnings = warnings.length > 0;
 
-  const handleAssign = () => {
+  const resetForm = () => {
+    setAssignmentType('subject');
+    setSelectedSubjectId('');
+    setOtherPeriodType('activity');
+    setOtherLabel('');
+    setOtherNotes('');
+    setSelectedCoordinatorId('');
     setSubmitError('');
-    if (assignmentType === 'subject') {
-      if (!selectedSubjectId) {
-        toast.error(ValidationMessages.SELECT_SUBJECT);
-        return;
-      }
-      createEntry.mutate({
-        slot_public_id: slot.public_id,
-        day_of_week: slot.day_of_week,
-        class_public_id: classPublicId,
-        assignment_type: 'subject',
-        subject_public_id: selectedSubjectId,
-      });
+  };
+
+  const submitSubjectAssignment = () => {
+    if (!selectedSubjectId) {
+      toast.error(ValidationMessages.SELECT_SUBJECT);
       return;
     }
+    createEntry.mutate({
+      slot_public_id: slot.public_id,
+      day_of_week: slot.day_of_week,
+      class_public_id: classPublicId,
+      assignment_type: 'subject',
+      subject_public_id: selectedSubjectId,
+    });
+  };
 
+  const submitOtherAssignment = () => {
     if (!otherLabel.trim()) {
       toast.error('Please enter a label for this period.');
       return;
@@ -159,7 +167,6 @@ function AssignmentPopover({
       toast.error('Please select a coordinator.');
       return;
     }
-
     createEntry.mutate({
       slot_public_id: slot.public_id,
       day_of_week: slot.day_of_week,
@@ -172,17 +179,20 @@ function AssignmentPopover({
     });
   };
 
+  const handleAssign = () => {
+    setSubmitError('');
+    if (assignmentType === 'subject') {
+      submitSubjectAssignment();
+      return;
+    }
+    submitOtherAssignment();
+  };
+
   const handleDismissWarning = () => {
     // Now invalidate cache so the grid refreshes with the new entry
     qc.invalidateQueries({ queryKey: timetableKeys.classTimetable(classPublicId) });
     setOpen(false);
-    setAssignmentType('subject');
-    setSelectedSubjectId('');
-    setOtherPeriodType('activity');
-    setOtherLabel('');
-    setOtherNotes('');
-    setSelectedCoordinatorId('');
-    setSubmitError('');
+    resetForm();
     createEntry.reset();
     onAssigned();
   };
@@ -194,13 +204,7 @@ function AssignmentPopover({
         setOpen(v);
         if (!v) {
           createEntry.reset();
-          setAssignmentType('subject');
-          setSelectedSubjectId('');
-          setOtherPeriodType('activity');
-          setOtherLabel('');
-          setOtherNotes('');
-          setSelectedCoordinatorId('');
-          setSubmitError('');
+          resetForm();
         }
       }}
     >
@@ -287,7 +291,7 @@ function AssignmentPopover({
                 </div>
               )}
 
-              <label className="block space-y-1.5">
+              <div className="block space-y-1.5">
                 <span className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase">
                   Assignment Type
                 </span>
@@ -311,7 +315,7 @@ function AssignmentPopover({
                     Other
                   </Button>
                 </div>
-              </label>
+              </div>
 
               {assignmentType === 'subject' ? (
                 <>
@@ -571,6 +575,7 @@ function PeriodCell({
         <>
           {!!slot.subject_public_id && (
             <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 onStartCopy({
@@ -586,6 +591,7 @@ function PeriodCell({
             </button>
           )}
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               if (slot.entry_public_id) {

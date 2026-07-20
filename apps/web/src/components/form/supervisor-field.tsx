@@ -56,15 +56,13 @@ export function SupervisorField<T extends FieldValues>({
       name={name}
       render={({ field }) => {
         const matchedUser = filteredUsers.find((u) => u.email === (field.value as string));
-        const resolvedDisplayValue =
-          viewValue ||
-          (matchedUser
-            ? matchedUser.employee_id
-              ? `${matchedUser.full_name} (${matchedUser.employee_id})`
-              : `${matchedUser.full_name} (${matchedUser.email})`
-            : '') ||
-          (field.value as string) ||
-          '';
+        let matchedUserLabel = '';
+        if (matchedUser) {
+          matchedUserLabel = matchedUser.employee_id
+            ? `${matchedUser.full_name} (${matchedUser.employee_id})`
+            : `${matchedUser.full_name} (${matchedUser.email})`;
+        }
+        const resolvedDisplayValue = viewValue || matchedUserLabel || (field.value as string) || '';
 
         return (
           <FormItem>

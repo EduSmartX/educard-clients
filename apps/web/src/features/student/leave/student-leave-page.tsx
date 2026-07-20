@@ -93,50 +93,60 @@ export default function StudentLeavePage() {
       />
 
       {/* Balance Cards */}
-      {balanceLoading ? (
-        <div className="grid gap-3 sm:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 rounded-xl" />
-          ))}
-        </div>
-      ) : balance && balance.length > 0 ? (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
-        >
-          {balance.map((b) => (
-            <Card key={b.public_id} className="overflow-hidden">
-              <CardContent className="p-4">
-                <p className="text-xs font-medium text-gray-500">{b.leave_name}</p>
-                <div className="mt-2 flex items-end justify-between">
-                  <span className="text-2xl font-bold text-gray-800">{Number(b.available)}</span>
-                  <span className="text-xs text-gray-400">/ {Number(b.total_allocated)} days</span>
-                </div>
-                <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-100">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-500"
-                    style={{
-                      width: `${Number(b.total_allocated) > 0 ? (Number(b.available) / Number(b.total_allocated)) * 100 : 0}%`,
-                    }}
-                  />
-                </div>
-                {Number(b.pending) > 0 && (
-                  <p className="mt-1 text-[10px] text-amber-500">{Number(b.pending)} pending</p>
-                )}
+      {(() => {
+        if (balanceLoading) {
+          return (
+            <div className="grid gap-3 sm:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-20 rounded-xl" />
+              ))}
+            </div>
+          );
+        }
+        if (!balance || balance.length === 0) {
+          return (
+            <Card className="border-dashed">
+              <CardContent className="flex flex-col items-center gap-2 py-8 text-center">
+                <span className="text-3xl">🌱</span>
+                <p className="text-sm text-gray-500">No leave allocation found</p>
               </CardContent>
             </Card>
-          ))}
-        </motion.div>
-      ) : (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center gap-2 py-8 text-center">
-            <span className="text-3xl">🌱</span>
-            <p className="text-sm text-gray-500">No leave allocation found</p>
-          </CardContent>
-        </Card>
-      )}
+          );
+        }
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+          >
+            {balance.map((b) => (
+              <Card key={b.public_id} className="overflow-hidden">
+                <CardContent className="p-4">
+                  <p className="text-xs font-medium text-gray-500">{b.leave_name}</p>
+                  <div className="mt-2 flex items-end justify-between">
+                    <span className="text-2xl font-bold text-gray-800">{Number(b.available)}</span>
+                    <span className="text-xs text-gray-400">
+                      / {Number(b.total_allocated)} days
+                    </span>
+                  </div>
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-100">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-500"
+                      style={{
+                        width: `${Number(b.total_allocated) > 0 ? (Number(b.available) / Number(b.total_allocated)) * 100 : 0}%`,
+                      }}
+                    />
+                  </div>
+                  {Number(b.pending) > 0 && (
+                    <p className="mt-1 text-[10px] text-amber-500">{Number(b.pending)} pending</p>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </motion.div>
+        );
+      })()}
 
       {/* Apply Leave Form */}
       {showForm && balance && balance.length > 0 && (
@@ -147,8 +157,14 @@ export default function StudentLeavePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-600">Leave Type</label>
+                <label
+                  htmlFor="leave-type-select"
+                  className="mb-1 block text-xs font-medium text-gray-600"
+                >
+                  Leave Type
+                </label>
                 <select
+                  id="leave-type-select"
                   value={selectedBalance}
                   onChange={(e) => setSelectedBalance(e.target.value)}
                   className="w-full rounded-md border px-3 py-2 text-sm"
@@ -163,7 +179,7 @@ export default function StudentLeavePage() {
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-600">Start Date</label>
+                  <span className="mb-1 block text-xs font-medium text-gray-600">Start Date</span>
                   <DatePicker
                     value={startDate}
                     onChange={(d) => {
@@ -177,7 +193,7 @@ export default function StudentLeavePage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-600">End Date</label>
+                  <span className="mb-1 block text-xs font-medium text-gray-600">End Date</span>
                   <DatePicker
                     value={endDate}
                     onChange={setEndDate}
@@ -195,8 +211,14 @@ export default function StudentLeavePage() {
                 </p>
               )}
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-600">Reason</label>
+                <label
+                  htmlFor="leave-reason"
+                  className="mb-1 block text-xs font-medium text-gray-600"
+                >
+                  Reason
+                </label>
                 <textarea
+                  id="leave-reason"
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="Why are you applying for leave?"
@@ -229,41 +251,47 @@ export default function StudentLeavePage() {
             <CardTitle className="text-lg">📋 Leave Requests</CardTitle>
           </CardHeader>
           <CardContent>
-            {requestsLoading ? (
-              <Skeleton className="h-32 w-full rounded-xl" />
-            ) : requests && requests.length > 0 ? (
-              <div className="space-y-3">
-                {requests.map((req) => {
-                  const style = STATUS_STYLES[req.status] || STATUS_STYLES.pending;
-                  return (
-                    <div
-                      key={req.public_id}
-                      className="flex items-start gap-3 rounded-lg border p-3"
-                    >
-                      <span className="mt-0.5 text-xl">{style.emoji}</span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-sm font-medium text-gray-800">{req.leave_name}</p>
-                          <Badge className={style.color}>{req.status}</Badge>
+            {(() => {
+              if (requestsLoading) {
+                return <Skeleton className="h-32 w-full rounded-xl" />;
+              }
+              if (!requests || requests.length === 0) {
+                return (
+                  <div className="flex flex-col items-center gap-3 py-12 text-center">
+                    <span className="text-4xl">🌈</span>
+                    <p className="text-sm text-gray-500">No leave requests yet</p>
+                  </div>
+                );
+              }
+              return (
+                <div className="space-y-3">
+                  {requests.map((req) => {
+                    const style = STATUS_STYLES[req.status] || STATUS_STYLES.pending;
+                    return (
+                      <div
+                        key={req.public_id}
+                        className="flex items-start gap-3 rounded-lg border p-3"
+                      >
+                        <span className="mt-0.5 text-xl">{style.emoji}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-sm font-medium text-gray-800">{req.leave_name}</p>
+                            <Badge className={style.color}>{req.status}</Badge>
+                          </div>
+                          <p className="mt-0.5 text-xs text-gray-500">
+                            {formatDate(req.start_date)} — {formatDate(req.end_date)} (
+                            {req.number_of_days} day{req.number_of_days !== 1 ? 's' : ''})
+                          </p>
+                          {req.reason && (
+                            <p className="mt-1 text-xs text-gray-400 italic">{req.reason}</p>
+                          )}
                         </div>
-                        <p className="mt-0.5 text-xs text-gray-500">
-                          {formatDate(req.start_date)} — {formatDate(req.end_date)} (
-                          {req.number_of_days} day{req.number_of_days !== 1 ? 's' : ''})
-                        </p>
-                        {req.reason && (
-                          <p className="mt-1 text-xs text-gray-400 italic">{req.reason}</p>
-                        )}
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-3 py-12 text-center">
-                <span className="text-4xl">🌈</span>
-                <p className="text-sm text-gray-500">No leave requests yet</p>
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </CardContent>
         </Card>
       </motion.div>

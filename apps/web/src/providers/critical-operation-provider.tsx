@@ -61,7 +61,6 @@ export function CriticalOperationProvider({ children }: Readonly<{ children: Rea
 
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
-      event.returnValue = '';
     };
 
     document.body.style.overflow = 'hidden';

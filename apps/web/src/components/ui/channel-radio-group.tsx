@@ -13,11 +13,11 @@ export const DEFAULT_CHANNEL_OPTIONS: ChannelOption[] = [
 ];
 
 interface ChannelRadioGroupProps {
-  value: string;
-  onValueChange: (value: string) => void;
-  options?: ChannelOption[];
-  idPrefix?: string;
-  className?: string;
+  readonly value: string;
+  readonly onValueChange: (value: string) => void;
+  readonly options?: ChannelOption[];
+  readonly idPrefix?: string;
+  readonly className?: string;
 }
 
 export function ChannelRadioGroup({

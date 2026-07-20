@@ -184,6 +184,46 @@ export default function TimetableOverrideDayScreen() {
     }
   };
 
+  const renderDayContent = () => {
+    if (dayLoading) {
+      return (
+        <View style={styles.centerState}>
+          <ActivityIndicator size="large" color="#7c3aed" />
+        </View>
+      );
+    }
+    if (!selectedClassId) {
+      return (
+        <View style={styles.centerState}>
+          <CalendarRange size={24} color="#64748b" />
+          <Text style={styles.emptyText}>Select class and date to view slots</Text>
+        </View>
+      );
+    }
+    if (error) {
+      return (
+        <View style={styles.centerState}>
+          <Text style={styles.errorText}>{extractApiError(error)}</Text>
+        </View>
+      );
+    }
+    return (
+      <View style={styles.slotList}>
+        {(dayTimetable?.slots ?? []).map((slot) => (
+          <OverrideSlotCard
+            key={slot.slot_public_id}
+            slot={slot}
+            teacherOptions={teacherOptions}
+            subjectOptions={subjectOptions}
+            pending={upsertOverride.isPending || deleteOverride.isPending}
+            onSave={(form) => void handleSaveOverride(slot, form)}
+            onDelete={(overridePublicId) => void handleDeleteOverride(overridePublicId)}
+          />
+        ))}
+      </View>
+    );
+  };
+
   return (
     <View style={layoutStyles.container}>
       <LinearGradient colors={adminGradient} style={headerStyles.header}>
@@ -229,34 +269,7 @@ export default function TimetableOverrideDayScreen() {
           />
         </View>
 
-        {dayLoading ? (
-          <View style={styles.centerState}>
-            <ActivityIndicator size="large" color="#7c3aed" />
-          </View>
-        ) : !selectedClassId ? (
-          <View style={styles.centerState}>
-            <CalendarRange size={24} color="#64748b" />
-            <Text style={styles.emptyText}>Select class and date to view slots</Text>
-          </View>
-        ) : error ? (
-          <View style={styles.centerState}>
-            <Text style={styles.errorText}>{extractApiError(error)}</Text>
-          </View>
-        ) : (
-          <View style={styles.slotList}>
-            {(dayTimetable?.slots ?? []).map((slot) => (
-              <OverrideSlotCard
-                key={slot.slot_public_id}
-                slot={slot}
-                teacherOptions={teacherOptions}
-                subjectOptions={subjectOptions}
-                pending={upsertOverride.isPending || deleteOverride.isPending}
-                onSave={(form) => void handleSaveOverride(slot, form)}
-                onDelete={(overridePublicId) => void handleDeleteOverride(overridePublicId)}
-              />
-            ))}
-          </View>
-        )}
+        {renderDayContent()}
       </ScrollView>
     </View>
   );
@@ -270,7 +283,7 @@ function OverrideSlotCard({
   onSave,
   onDelete,
 }: {
-  slot: {
+  readonly slot: {
     slot_public_id: string;
     label: string;
     start_time: string;
@@ -291,10 +304,10 @@ function OverrideSlotCard({
       reason: string;
     } | null;
   };
-  teacherOptions: { label: string; value: string }[];
-  subjectOptions: { label: string; value: string }[];
-  pending: boolean;
-  onSave: (form: {
+  readonly teacherOptions: { label: string; value: string }[];
+  readonly subjectOptions: { label: string; value: string }[];
+  readonly pending: boolean;
+  readonly onSave: (form: {
     overrideType: TimetableOverrideType;
     substituteAssignmentType: 'subject' | 'other';
     substituteTeacherId: string;
@@ -304,7 +317,7 @@ function OverrideSlotCard({
     substituteOtherNotes: string;
     reason: string;
   }) => void;
-  onDelete: (overridePublicId: string) => void;
+  readonly onDelete: (overridePublicId: string) => void;
 }) {
   const [overrideType, setOverrideType] = useState<TimetableOverrideType>(
     slot.override?.override_type ?? 'substitute'

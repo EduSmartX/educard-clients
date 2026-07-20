@@ -37,6 +37,76 @@ import {
   useSubmitHomework,
 } from '@/features/student-portal';
 
+type HomeworkSubmission = NonNullable<
+  ReturnType<typeof useHomeworkDetail>['data']
+>['my_submission'];
+
+function SubmissionStatusCard({
+  submission,
+  isReviewed,
+  canSubmitOnline,
+  acceptingSubmissions,
+  onResubmit,
+}: Readonly<{
+  submission: NonNullable<HomeworkSubmission>;
+  isReviewed: boolean;
+  canSubmitOnline: boolean;
+  acceptingSubmissions: boolean;
+  onResubmit: () => void;
+}>) {
+  return (
+    <View className="mx-4 mt-4 rounded-xl border border-gray-100 bg-white p-4">
+      <View className="flex-row items-center justify-between">
+        <View className="flex-row items-center gap-2">
+          <CheckCircle size={18} color={colors.success[500]} />
+          <Text className="text-sm font-semibold text-emerald-700">Your Submission</Text>
+        </View>
+        <View className={`rounded-lg px-2.5 py-1 ${isReviewed ? 'bg-blue-100' : 'bg-emerald-100'}`}>
+          <Text
+            className={`text-[10px] font-semibold ${isReviewed ? 'text-blue-700' : 'text-emerald-700'}`}
+          >
+            {isReviewed ? 'Reviewed' : 'Submitted'}
+          </Text>
+        </View>
+      </View>
+
+      <Text className="mt-2 text-xs text-gray-400">
+        Submitted on {format(new Date(submission.submitted_at), 'd MMM yyyy, h:mm a')}
+        {submission.is_late ? ' (Late)' : ''}
+      </Text>
+
+      {submission.notes ? (
+        <View className="mt-3 rounded-lg bg-gray-50 p-3">
+          <Text className="mb-1 text-[10px] font-medium text-gray-500">Your Notes</Text>
+          <Text className="text-sm text-gray-700">{submission.notes}</Text>
+        </View>
+      ) : null}
+
+      {isReviewed && (
+        <View className="mt-3 rounded-xl border border-blue-200 bg-blue-50 p-3">
+          <View className="flex-row items-center gap-1.5">
+            <MessageSquare size={14} color={colors.primary[600]} />
+            <Text className="text-xs font-semibold text-blue-700">Teacher&apos;s Feedback</Text>
+          </View>
+          <Text className="mt-1.5 text-sm text-gray-700">
+            {submission.feedback || 'No written feedback provided'}
+          </Text>
+        </View>
+      )}
+
+      {isReviewed && canSubmitOnline && acceptingSubmissions && (
+        <TouchableOpacity
+          onPress={onResubmit}
+          className="mt-4 flex-row items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 py-3"
+        >
+          <Upload size={16} color={colors.warning[600]} />
+          <Text className="text-sm font-medium text-orange-600">Re-submit Homework</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
+
 export default function StudentHomeworkDetailScreen() {
   const { id, date } = useLocalSearchParams<{ id: string; date?: string }>();
   const router = useRouter();
@@ -207,61 +277,13 @@ export default function StudentHomeworkDetailScreen() {
 
         {/* Submission Status */}
         {submission && !showResubmit && (
-          <View className="mx-4 mt-4 rounded-xl border border-gray-100 bg-white p-4">
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center gap-2">
-                <CheckCircle size={18} color={colors.success[500]} />
-                <Text className="text-sm font-semibold text-emerald-700">Your Submission</Text>
-              </View>
-              <View
-                className={`rounded-lg px-2.5 py-1 ${isReviewed ? 'bg-blue-100' : 'bg-emerald-100'}`}
-              >
-                <Text
-                  className={`text-[10px] font-semibold ${isReviewed ? 'text-blue-700' : 'text-emerald-700'}`}
-                >
-                  {isReviewed ? 'Reviewed' : 'Submitted'}
-                </Text>
-              </View>
-            </View>
-
-            <Text className="mt-2 text-xs text-gray-400">
-              Submitted on {format(new Date(submission.submitted_at), 'd MMM yyyy, h:mm a')}
-              {submission.is_late ? ' (Late)' : ''}
-            </Text>
-
-            {submission.notes ? (
-              <View className="mt-3 rounded-lg bg-gray-50 p-3">
-                <Text className="mb-1 text-[10px] font-medium text-gray-500">Your Notes</Text>
-                <Text className="text-sm text-gray-700">{submission.notes}</Text>
-              </View>
-            ) : null}
-
-            {/* Teacher Feedback */}
-            {isReviewed && (
-              <View className="mt-3 rounded-xl border border-blue-200 bg-blue-50 p-3">
-                <View className="flex-row items-center gap-1.5">
-                  <MessageSquare size={14} color={colors.primary[600]} />
-                  <Text className="text-xs font-semibold text-blue-700">
-                    Teacher&apos;s Feedback
-                  </Text>
-                </View>
-                <Text className="mt-1.5 text-sm text-gray-700">
-                  {submission.feedback || 'No written feedback provided'}
-                </Text>
-              </View>
-            )}
-
-            {/* Re-submit button */}
-            {isReviewed && canSubmitOnline && homework.is_accepting_submissions && (
-              <TouchableOpacity
-                onPress={() => setShowResubmit(true)}
-                className="mt-4 flex-row items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 py-3"
-              >
-                <Upload size={16} color={colors.warning[600]} />
-                <Text className="text-sm font-medium text-orange-600">Re-submit Homework</Text>
-              </TouchableOpacity>
-            )}
-          </View>
+          <SubmissionStatusCard
+            submission={submission}
+            isReviewed={isReviewed}
+            canSubmitOnline={canSubmitOnline}
+            acceptingSubmissions={homework.is_accepting_submissions}
+            onResubmit={() => setShowResubmit(true)}
+          />
         )}
 
         {/* Submit Form */}
@@ -322,11 +344,10 @@ export default function StudentHomeworkDetailScreen() {
                 style={{ opacity: submitMutation.isPending ? 0.6 : 1 }}
               >
                 <Text className="text-sm font-semibold text-white">
-                  {submitMutation.isPending
-                    ? 'Submitting...'
-                    : showResubmit
-                      ? 'Re-submit'
-                      : 'Submit'}
+                  {(() => {
+                    if (submitMutation.isPending) return 'Submitting...';
+                    return showResubmit ? 'Re-submit' : 'Submit';
+                  })()}
                 </Text>
               </TouchableOpacity>
             </View>

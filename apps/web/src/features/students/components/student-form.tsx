@@ -567,13 +567,14 @@ export function StudentForm({
                             option.value !== RELATIONSHIP.OTHER &&
                             option.value === normalizedRelationshipValue
                         );
-                        const selectedRelationship = usesCustomGuardianRelationship
-                          ? RELATIONSHIP.OTHER
-                          : usesPresetRelationship
-                            ? normalizedRelationshipValue
-                            : relationshipValue
-                              ? RELATIONSHIP.OTHER
-                              : '';
+                        let selectedRelationship = '';
+                        if (usesCustomGuardianRelationship) {
+                          selectedRelationship = RELATIONSHIP.OTHER;
+                        } else if (usesPresetRelationship) {
+                          selectedRelationship = normalizedRelationshipValue;
+                        } else if (relationshipValue) {
+                          selectedRelationship = RELATIONSHIP.OTHER;
+                        }
 
                         return (
                           <FormItem>

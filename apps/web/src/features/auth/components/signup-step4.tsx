@@ -12,23 +12,23 @@ import type { Step4Data } from '../utils/signup.schemas';
 import { formatResendCountdown } from '../utils/signup.utils';
 
 interface SignupStep4Props {
-  form: UseFormReturn<Step4Data>;
-  formData: {
+  readonly form: UseFormReturn<Step4Data>;
+  readonly formData: {
     orgName?: string;
     orgEmail?: string;
     adminEmail?: string;
     city?: string;
     state?: string;
   };
-  isLoading: boolean;
-  adminPhoneOtpVerified: boolean;
-  sendingAdminPhoneOtp: boolean;
-  verifyingAdminPhoneOtp: boolean;
-  adminPhoneResendCooldown: number;
-  onSendAdminPhoneOtp: () => void;
-  onVerifyAdminPhoneOtp: () => void;
-  onSubmit: (data: Step4Data) => void;
-  onBack: () => void;
+  readonly isLoading: boolean;
+  readonly adminPhoneOtpVerified: boolean;
+  readonly sendingAdminPhoneOtp: boolean;
+  readonly verifyingAdminPhoneOtp: boolean;
+  readonly adminPhoneResendCooldown: number;
+  readonly onSendAdminPhoneOtp: () => void;
+  readonly onVerifyAdminPhoneOtp: () => void;
+  readonly onSubmit: (data: Step4Data) => void;
+  readonly onBack: () => void;
 }
 
 export function SignupStep4({
@@ -60,15 +60,14 @@ export function SignupStep4({
     onSendAdminPhoneOtp();
   };
 
-  const primaryOtpLabel = adminPhoneOtpVerified
-    ? 'Verified'
-    : otpSent
-      ? verifyingAdminPhoneOtp
-        ? 'Verifying...'
-        : 'Verify OTP'
-      : sendingAdminPhoneOtp
-        ? 'Sending...'
-        : 'Send OTP';
+  let primaryOtpLabel = 'Send OTP';
+  if (adminPhoneOtpVerified) {
+    primaryOtpLabel = 'Verified';
+  } else if (otpSent) {
+    primaryOtpLabel = verifyingAdminPhoneOtp ? 'Verifying...' : 'Verify OTP';
+  } else if (sendingAdminPhoneOtp) {
+    primaryOtpLabel = 'Sending...';
+  }
 
   const primaryOtpDisabled =
     adminPhoneOtpVerified || sendingAdminPhoneOtp || verifyingAdminPhoneOtp;

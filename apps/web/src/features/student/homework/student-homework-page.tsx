@@ -143,6 +143,7 @@ export default function StudentHomeworkPage() {
         </Button>
         <div className="flex items-center gap-3">
           <button
+            type="button"
             onClick={goToday}
             className="rounded-lg bg-white px-3 py-1 text-xs font-medium text-orange-600 shadow-sm hover:bg-orange-50"
           >
@@ -175,6 +176,7 @@ export default function StudentHomeworkPage() {
         {TABS.map((tab) => (
           <button
             key={tab.key}
+            type="button"
             onClick={() => setFilter(tab.key)}
             className={`shrink-0 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
               filter === tab.key
@@ -194,10 +196,28 @@ export default function StudentHomeworkPage() {
 
       {/* Homework List */}
       <div className="space-y-3">
-        {isLoading ? (
-          Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)
-        ) : filtered.length > 0 ? (
-          filtered.map((hw, index) => {
+        {(() => {
+          if (isLoading) {
+            return Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-24 rounded-xl" />
+            ));
+          }
+          if (filtered.length === 0) {
+            return (
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center gap-3 py-16 text-center">
+                  <span className="text-5xl">🦋</span>
+                  <p className="text-lg font-medium text-gray-600">
+                    {filter === 'all'
+                      ? `No homework for ${formatDateLabel(selectedDate).toLowerCase()}`
+                      : `No ${filter} homework`}
+                  </p>
+                  <p className="text-sm text-gray-400">Try another date!</p>
+                </CardContent>
+              </Card>
+            );
+          }
+          return filtered.map((hw, index) => {
             const effectiveStatus = hw.is_overdue
               ? 'overdue'
               : hw.my_submission_status || 'not_submitted';
@@ -256,20 +276,8 @@ export default function StudentHomeworkPage() {
                 </Card>
               </motion.div>
             );
-          })
-        ) : (
-          <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center gap-3 py-16 text-center">
-              <span className="text-5xl">🦋</span>
-              <p className="text-lg font-medium text-gray-600">
-                {filter === 'all'
-                  ? `No homework for ${formatDateLabel(selectedDate).toLowerCase()}`
-                  : `No ${filter} homework`}
-              </p>
-              <p className="text-sm text-gray-400">Try another date!</p>
-            </CardContent>
-          </Card>
-        )}
+          });
+        })()}
       </div>
     </div>
   );

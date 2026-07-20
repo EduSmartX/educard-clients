@@ -71,7 +71,12 @@ export function Modal({
   const config = variantConfig[variant];
   const IconComponent = config.icon;
   const { width } = useWindowDimensions();
-  const maxModalWidth = width >= 900 ? 520 : width >= 600 ? 460 : width - 32;
+  let maxModalWidth = width - 32;
+  if (width >= 900) {
+    maxModalWidth = 520;
+  } else if (width >= 600) {
+    maxModalWidth = 460;
+  }
   const modalPadding = width < 360 ? 18 : 24;
   const overlayPadding = width < 360 ? 12 : 24;
 

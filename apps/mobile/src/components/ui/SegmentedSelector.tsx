@@ -7,10 +7,10 @@ export interface SegmentOption<T extends string = string> {
 }
 
 interface SegmentedSelectorProps<T extends string = string> {
-  label?: string;
-  options: readonly SegmentOption<T>[] | readonly T[];
-  value: T;
-  onChange: (value: T) => void;
+  readonly label?: string;
+  readonly options: readonly SegmentOption<T>[] | readonly T[];
+  readonly value: T;
+  readonly onChange: (value: T) => void;
 }
 
 export function SegmentedSelector<T extends string = string>({

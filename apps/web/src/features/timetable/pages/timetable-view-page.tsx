@@ -90,7 +90,7 @@ function getTodayDateString() {
   return `${y}-${m}-${d}`;
 }
 
-function WeekTimeline({ days }: { days: ClassTimetableWeekDay[] }) {
+function WeekTimeline({ days }: { readonly days: ClassTimetableWeekDay[] }) {
   if (!days.length) {
     return (
       <div className="rounded-xl border border-dashed border-slate-200 bg-white p-6 text-sm text-slate-500">
@@ -195,6 +195,12 @@ function WeekTimeline({ days }: { days: ClassTimetableWeekDay[] }) {
                 const subjectKey = (slot.subject_name || '').trim();
                 const subjectColor = subjectColorMap.get(subjectKey);
                 const typeBorder = getSlotTypeBorder(slot);
+                let slotLabel = slot.subject_name || 'No assignment';
+                if (slot.is_break) {
+                  slotLabel = 'Break';
+                } else if (slot.is_cancelled) {
+                  slotLabel = 'Cancelled';
+                }
                 return (
                   <div
                     key={`${row.key}-${day.day_of_week}`}
@@ -207,11 +213,7 @@ function WeekTimeline({ days }: { days: ClassTimetableWeekDay[] }) {
                     )}
                   >
                     <p className={cn('text-sm leading-tight font-bold', subjectColor?.text)}>
-                      {slot.is_break
-                        ? 'Break'
-                        : slot.is_cancelled
-                          ? 'Cancelled'
-                          : slot.subject_name || 'No assignment'}
+                      {slotLabel}
                     </p>
                     <p
                       className={cn(

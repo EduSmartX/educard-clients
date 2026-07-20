@@ -6,9 +6,9 @@ import { USER_ROLES } from '@/constants';
 import type { User } from '@/types/user';
 
 interface VerificationBannerProps {
-  user: User;
-  onVerifyEmail?: () => void;
-  onVerifyPhone?: () => void;
+  readonly user: User;
+  readonly onVerifyEmail?: () => void;
+  readonly onVerifyPhone?: () => void;
 }
 
 interface PendingVerification {

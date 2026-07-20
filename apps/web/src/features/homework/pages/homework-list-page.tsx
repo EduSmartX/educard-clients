@@ -557,6 +557,7 @@ function SubjectCard({
       {/* Delete button - shown on hover like timetable */}
       {hasHomework && (
         <button
+          type="button"
           onClick={(e) => {
             e.stopPropagation();
             onDelete(homework.public_id);

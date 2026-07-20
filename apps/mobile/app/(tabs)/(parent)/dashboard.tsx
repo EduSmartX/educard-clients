@@ -3,16 +3,15 @@
  * Main dashboard for parents to view their children's information
  */
 
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
-  Bell,
   BookOpen,
   ClipboardCheck,
   Calendar,
+  CalendarClock,
   CreditCard,
   MessageCircle,
-  AlertCircle,
+  Megaphone,
   ChevronRight,
   ChevronDown,
   Star,
@@ -23,7 +22,16 @@ import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-
 
 import { VerificationBanner } from '@/components/dashboard';
 import { Screen } from '@/components/layout';
-import { Card, Avatar, Badge } from '@/components/ui';
+import {
+  Avatar,
+  Badge,
+  GradientHeader,
+  FloatingCard,
+  SectionHeader,
+  QuickActionsGrid,
+  PressableScale,
+  type QuickAction,
+} from '@/components/ui';
 import { colors } from '@/constants/colors';
 import { useAuthStore } from '@/lib/auth-store';
 
@@ -114,8 +122,32 @@ export default function ParentDashboard() {
     return 'Good Evening';
   };
 
+  const quickActions: QuickAction[] = [
+    {
+      id: 'message',
+      title: 'Message Teacher',
+      icon: MessageCircle,
+      gradient: ['#3b82f6', '#60a5fa'],
+      onPress: () => router.push('/(shared-screens)/notifications'),
+    },
+    {
+      id: 'fees',
+      title: 'Pay Fees',
+      icon: CreditCard,
+      gradient: ['#059669', '#34d399'],
+      onPress: () => router.push('/(tabs)/(parent)/fees'),
+    },
+    {
+      id: 'leave',
+      title: 'Apply Leave',
+      icon: Calendar,
+      gradient: ['#f59e0b', '#fbbf24'],
+      onPress: () => router.push('/(tabs)/(parent)/academics'),
+    },
+  ];
+
   return (
-    <Screen scrollable={false}>
+    <Screen scrollable={false} edges={[]} statusBarStyle="light">
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -123,34 +155,16 @@ export default function ParentDashboard() {
         }
       >
         {/* Header */}
-        <LinearGradient
-          colors={[colors.success[600], colors.success[700]]}
-          className="rounded-b-[30px] px-6 pb-6 pt-12"
+        <GradientHeader
+          greeting={`${formatGreeting()},`}
+          title={user?.full_name ?? user?.first_name ?? 'Parent'}
+          notificationCount={2}
+          onNotificationPress={() => router.push('/(shared-screens)/notifications')}
+          right={<Avatar name={user?.full_name ?? user?.first_name ?? 'P'} size="md" />}
         >
-          <View className="mb-4 flex-row items-start justify-between">
-            <View className="flex-1">
-              <Text className="text-sm text-green-100">{formatGreeting()},</Text>
-              <Text className="text-2xl font-bold text-white" numberOfLines={1}>
-                {user?.full_name ?? user?.first_name ?? 'Parent'}
-              </Text>
-            </View>
-            <View className="flex-row items-center">
-              <TouchableOpacity
-                className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-white/20"
-                onPress={() => router.push('/(shared-screens)/notifications')}
-              >
-                <Bell size={20} color="#ffffff" />
-                <View className="absolute -right-1 -top-1 h-5 w-5 items-center justify-center rounded-full bg-danger-500">
-                  <Text className="text-xs font-bold text-white">2</Text>
-                </View>
-              </TouchableOpacity>
-              <Avatar name={user?.full_name ?? user?.first_name ?? 'P'} size="md" />
-            </View>
-          </View>
-
           {/* Child Selector */}
           <TouchableOpacity
-            className="flex-row items-center rounded-xl bg-white/20 p-3"
+            className="mt-4 flex-row items-center rounded-2xl bg-white/20 p-3"
             onPress={() => setShowChildSelector(!showChildSelector)}
           >
             <Avatar name={selectedChild.name} size="md" />
@@ -165,7 +179,7 @@ export default function ParentDashboard() {
 
           {/* Child Selector Dropdown */}
           {showChildSelector && mockChildren.length > 1 && (
-            <View className="mt-2 overflow-hidden rounded-xl bg-white">
+            <View className="mt-2 overflow-hidden rounded-2xl bg-white">
               {mockChildren.map((child, index) => (
                 <TouchableOpacity
                   key={child.id}
@@ -191,46 +205,46 @@ export default function ParentDashboard() {
               ))}
             </View>
           )}
-        </LinearGradient>
+        </GradientHeader>
 
         {/* Stats Row */}
         <View className="-mt-4 px-4">
           <View className="-mx-1.5 flex-row flex-wrap">
             <View className="mb-3 w-1/2 px-1.5">
-              <Card className="items-center py-4">
+              <FloatingCard delay={80} style={{ alignItems: 'center', paddingVertical: 16 }}>
                 <ClipboardCheck size={24} color={colors.success[500]} strokeWidth={1.5} />
                 <Text className="mt-2 text-2xl font-bold text-gray-900">
                   {mockSelectedChild.attendance}%
                 </Text>
                 <Text className="text-xs text-gray-500">Attendance</Text>
-              </Card>
+              </FloatingCard>
             </View>
             <View className="mb-3 w-1/2 px-1.5">
-              <Card className="items-center py-4">
+              <FloatingCard delay={140} style={{ alignItems: 'center', paddingVertical: 16 }}>
                 <Award size={24} color={colors.primary[500]} strokeWidth={1.5} />
                 <Text className="mt-2 text-2xl font-bold text-gray-900">
                   {mockSelectedChild.grade}
                 </Text>
                 <Text className="text-xs text-gray-500">Grade</Text>
-              </Card>
+              </FloatingCard>
             </View>
             <View className="w-1/2 px-1.5">
-              <Card className="items-center py-4">
+              <FloatingCard delay={200} style={{ alignItems: 'center', paddingVertical: 16 }}>
                 <Star size={24} color={colors.warning[500]} strokeWidth={1.5} />
                 <Text className="mt-2 text-2xl font-bold text-gray-900">
                   #{mockSelectedChild.rank}
                 </Text>
                 <Text className="text-xs text-gray-500">Class Rank</Text>
-              </Card>
+              </FloatingCard>
             </View>
             <View className="w-1/2 px-1.5">
-              <Card className="items-center py-4">
+              <FloatingCard delay={260} style={{ alignItems: 'center', paddingVertical: 16 }}>
                 <CreditCard size={24} color={colors.danger[500]} strokeWidth={1.5} />
                 <Text className="mt-2 text-2xl font-bold text-gray-900">
                   ₹{(mockSelectedChild.pendingFees / 1000).toFixed(0)}K
                 </Text>
                 <Text className="text-xs text-gray-500">Pending Fees</Text>
-              </Card>
+              </FloatingCard>
             </View>
           </View>
         </View>
@@ -252,33 +266,38 @@ export default function ParentDashboard() {
           {/* Announcements */}
           {mockAnnouncements.length > 0 && (
             <View className="mb-6">
-              <TouchableOpacity className="flex-row items-center rounded-xl border border-primary-200 bg-primary-50 p-4">
-                <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-primary-100">
-                  <AlertCircle size={20} color={colors.primary[600]} />
+              <PressableScale
+                onPress={() => router.push('/(shared-screens)/notifications')}
+                style={{ borderRadius: 16 }}
+              >
+                <View className="flex-row items-center rounded-2xl border border-primary-200 bg-primary-50 p-4">
+                  <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-primary-100">
+                    <Megaphone size={20} color={colors.primary[600]} />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="font-semibold text-primary-800">
+                      {mockAnnouncements[0].title}
+                    </Text>
+                    <Text className="text-sm text-primary-600" numberOfLines={1}>
+                      {mockAnnouncements[0].message}
+                    </Text>
+                  </View>
+                  <ChevronRight size={20} color={colors.primary[400]} />
                 </View>
-                <View className="flex-1">
-                  <Text className="font-semibold text-primary-800">
-                    {mockAnnouncements[0].title}
-                  </Text>
-                  <Text className="text-sm text-primary-600" numberOfLines={1}>
-                    {mockAnnouncements[0].message}
-                  </Text>
-                </View>
-                <ChevronRight size={20} color={colors.primary[400]} />
-              </TouchableOpacity>
+              </PressableScale>
             </View>
           )}
 
           {/* Recent Marks */}
           <View className="mb-6">
-            <View className="mb-4 flex-row items-center justify-between">
-              <Text className="text-lg font-semibold text-gray-900">Recent Marks</Text>
-              <TouchableOpacity>
-                <Text className="text-sm font-medium text-primary-600">View All</Text>
-              </TouchableOpacity>
-            </View>
+            <SectionHeader
+              title="Recent Marks"
+              icon={BookOpen}
+              actionLabel="View All"
+              onAction={() => router.push('/(tabs)/(parent)/academics')}
+            />
 
-            <Card>
+            <FloatingCard>
               {mockRecentMarks.map((mark, index) => (
                 <View
                   key={mark.subject}
@@ -303,19 +322,19 @@ export default function ParentDashboard() {
                   </View>
                 </View>
               ))}
-            </Card>
+            </FloatingCard>
           </View>
 
           {/* Upcoming Events */}
           <View className="mb-6">
-            <View className="mb-4 flex-row items-center justify-between">
-              <Text className="text-lg font-semibold text-gray-900">Upcoming Events</Text>
-              <TouchableOpacity>
-                <Text className="text-sm font-medium text-primary-600">View Calendar</Text>
-              </TouchableOpacity>
-            </View>
+            <SectionHeader
+              title="Upcoming Events"
+              icon={CalendarClock}
+              actionLabel="View Calendar"
+              onAction={() => router.push('/(shared-screens)/holidays')}
+            />
 
-            <Card>
+            <FloatingCard>
               {mockUpcomingEvents.map((event, index) => (
                 <View
                   key={event.id}
@@ -343,38 +362,13 @@ export default function ParentDashboard() {
                   </View>
                 </View>
               ))}
-            </Card>
+            </FloatingCard>
           </View>
 
           {/* Quick Actions */}
           <View className="mb-8">
-            <Text className="mb-4 text-lg font-semibold text-gray-900">Quick Actions</Text>
-            <View className="-mx-1.5 flex-row flex-wrap">
-              <TouchableOpacity className="mb-3 w-1/3 px-1.5">
-                <View className="items-center rounded-2xl bg-primary-50 p-4">
-                  <MessageCircle size={28} color={colors.primary[600]} strokeWidth={1.5} />
-                  <Text className="mt-2 text-center text-sm font-medium text-primary-700">
-                    Message{'\n'}Teacher
-                  </Text>
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity className="mb-3 w-1/3 px-1.5">
-                <View className="items-center rounded-2xl bg-success-50 p-4">
-                  <CreditCard size={28} color={colors.success[600]} strokeWidth={1.5} />
-                  <Text className="mt-2 text-center text-sm font-medium text-success-700">
-                    Pay{'\n'}Fees
-                  </Text>
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity className="mb-3 w-1/3 px-1.5">
-                <View className="items-center rounded-2xl bg-warning-50 p-4">
-                  <Calendar size={28} color={colors.warning[600]} strokeWidth={1.5} />
-                  <Text className="mt-2 text-center text-sm font-medium text-warning-700">
-                    Apply{'\n'}Leave
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            </View>
+            <SectionHeader title="Quick Actions" />
+            <QuickActionsGrid actions={quickActions} columns={3} />
           </View>
         </View>
       </ScrollView>

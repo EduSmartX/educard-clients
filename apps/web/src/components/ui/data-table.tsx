@@ -244,6 +244,7 @@ export function DataTable<T>({
                 >
                   {column.sortable ? (
                     <button
+                      type="button"
                       onClick={() => handleSort(column)}
                       className="flex items-center font-bold transition-colors hover:text-blue-600"
                     >
@@ -325,6 +326,7 @@ export function DataTable<T>({
           {/* Mobile pagination */}
           <div className="flex flex-1 justify-between gap-3 sm:hidden">
             <Button
+              type="button"
               onClick={() => onPageChange?.(pagination.current_page - 1)}
               disabled={!pagination.has_previous}
               variant="outline"
@@ -334,6 +336,7 @@ export function DataTable<T>({
               Previous
             </Button>
             <Button
+              type="button"
               onClick={() => onPageChange?.(pagination.current_page + 1)}
               disabled={!pagination.has_next}
               variant="outline"
@@ -388,6 +391,7 @@ export function DataTable<T>({
             <nav className="isolate inline-flex gap-1 rounded-lg" aria-label="Pagination">
               {/* Previous button */}
               <button
+                type="button"
                 onClick={() => onPageChange?.(pagination.current_page - 1)}
                 disabled={!pagination.has_previous}
                 className="relative inline-flex h-10 w-10 items-center justify-center rounded-lg border-2 border-gray-200 bg-white text-gray-600 shadow-sm transition-all hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 hover:shadow-md focus:z-20 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-gray-200 disabled:hover:bg-white disabled:hover:text-gray-600"
@@ -407,6 +411,7 @@ export function DataTable<T>({
 
               {/* Next button */}
               <button
+                type="button"
                 onClick={() => onPageChange?.(pagination.current_page + 1)}
                 disabled={!pagination.has_next}
                 className="relative inline-flex h-10 w-10 items-center justify-center rounded-lg border-2 border-gray-200 bg-white text-gray-600 shadow-sm transition-all hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 hover:shadow-md focus:z-20 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-gray-200 disabled:hover:bg-white disabled:hover:text-gray-600"
@@ -482,6 +487,7 @@ function renderPageNumbers(pagination: PaginationInfo, onPageChange?: (page: num
     return (
       <button
         key={pageNum}
+        type="button"
         onClick={() => onPageChange?.(pageNum)}
         className={`relative inline-flex h-10 w-10 items-center justify-center rounded-lg text-sm font-semibold shadow-sm transition-all hover:shadow-md focus:z-20 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
           isCurrentPage

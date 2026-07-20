@@ -59,7 +59,13 @@ function formatTime(timeStr: string): string {
   return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
 }
 
-function AnimatedNumber({ value, isLoading }: { value: number | string; isLoading: boolean }) {
+function AnimatedNumber({
+  value,
+  isLoading,
+}: {
+  readonly value: number | string;
+  readonly isLoading: boolean;
+}) {
   const ref = useRef<HTMLSpanElement>(null);
   const isInView = useInView(ref, { once: true });
 
@@ -72,7 +78,7 @@ function AnimatedNumber({ value, isLoading }: { value: number | string; isLoadin
       ref={ref}
       className="text-2xl font-bold"
       initial={{ opacity: 0, scale: 0.5 }}
-      animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 1, scale: 1 }}
+      animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.5 }}
       transition={{ duration: 0.5, type: 'spring', bounce: 0.3 }}
     >
       {value}

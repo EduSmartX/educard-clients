@@ -2,14 +2,14 @@ import { EXAM_STATUS_LABELS, type ExamStatus } from '@educard/shared';
 import { WarningConfirmationDialog } from '@/components/common';
 
 interface ExamStatusChangeConfirmationDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onConfirm: () => void;
-  isLoading?: boolean;
-  fromStatus: ExamStatus;
-  toStatus: ExamStatus;
-  examName?: string;
-  affectedCount?: number;
+  readonly open: boolean;
+  readonly onOpenChange: (open: boolean) => void;
+  readonly onConfirm: () => void;
+  readonly isLoading?: boolean;
+  readonly fromStatus: ExamStatus;
+  readonly toStatus: ExamStatus;
+  readonly examName?: string;
+  readonly affectedCount?: number;
 }
 
 function getTransitionWarning(fromStatus: ExamStatus, toStatus: ExamStatus) {

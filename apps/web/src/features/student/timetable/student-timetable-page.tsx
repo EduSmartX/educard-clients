@@ -64,17 +64,19 @@ export default function StudentTimetablePage() {
         {SCHOOL_WEEKDAYS.map((day, i) => {
           const dayDate = addDays(currentMonday, i);
           const isToday = format(dayDate, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
+          let dayTabClass = 'bg-gray-50 text-gray-600 hover:bg-gray-100';
+          if (selectedDay === i) {
+            dayTabClass =
+              'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-200';
+          } else if (isToday) {
+            dayTabClass = 'bg-blue-50 text-blue-600 ring-2 ring-blue-300';
+          }
           return (
             <button
               key={day}
+              type="button"
               onClick={() => setSelectedDay(i)}
-              className={`shrink-0 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
-                selectedDay === i
-                  ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-200'
-                  : isToday
-                    ? 'bg-blue-50 text-blue-600 ring-2 ring-blue-300'
-                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-              }`}
+              className={`shrink-0 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${dayTabClass}`}
             >
               <span>{day.slice(0, 3)}</span>
               <span className="ml-1 text-[10px] opacity-70">{dayDate.getDate()}</span>
@@ -91,106 +93,114 @@ export default function StudentTimetablePage() {
         transition={{ duration: 0.2 }}
         className="space-y-3"
       >
-        {isLoading ? (
-          Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-xl" />)
-        ) : periods.length > 0 ? (
-          <Card className="overflow-hidden">
-            <CardContent className="p-0">
-              {/* Table Header */}
-              <div className="hidden gap-2 border-b bg-gray-50/80 px-4 py-3 text-xs font-semibold tracking-wider text-gray-500 uppercase sm:grid sm:grid-cols-[auto_2fr_1fr_1.5fr_1fr]">
-                <span className="w-12">#</span>
-                <span>Subject</span>
-                <span>Time</span>
-                <span>Teacher</span>
-                <span>Room</span>
-              </div>
-              {/* Rows */}
-              <div className="divide-y">
-                {periods.map((period, index) => {
-                  const color = SLOT_TYPE_COLORS[period.slot_type] || SLOT_TYPE_COLORS.class;
-                  const subjectTheme = getSubjectTheme(period.subject_name);
-                  const SubjectIcon = subjectTheme.icon;
-                  const isBreak = period.slot_type !== 'class';
+        {(() => {
+          if (isLoading) {
+            return Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-16 rounded-xl" />
+            ));
+          }
+          if (periods.length === 0) {
+            return (
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center gap-3 py-16 text-center">
+                  <span className="text-5xl">🌴</span>
+                  <p className="text-lg font-medium text-gray-600">No classes this day!</p>
+                  <p className="text-sm text-gray-400">Enjoy your free time 🎉</p>
+                </CardContent>
+              </Card>
+            );
+          }
+          return (
+            <Card className="overflow-hidden">
+              <CardContent className="p-0">
+                {/* Table Header */}
+                <div className="hidden gap-2 border-b bg-gray-50/80 px-4 py-3 text-xs font-semibold tracking-wider text-gray-500 uppercase sm:grid sm:grid-cols-[auto_2fr_1fr_1.5fr_1fr]">
+                  <span className="w-12">#</span>
+                  <span>Subject</span>
+                  <span>Time</span>
+                  <span>Teacher</span>
+                  <span>Room</span>
+                </div>
+                {/* Rows */}
+                <div className="divide-y">
+                  {periods.map((period, index) => {
+                    const color = SLOT_TYPE_COLORS[period.slot_type] || SLOT_TYPE_COLORS.class;
+                    const subjectTheme = getSubjectTheme(period.subject_name);
+                    const SubjectIcon = subjectTheme.icon;
+                    const isBreak = period.slot_type !== 'class';
+                    let rowStateClass = 'hover:bg-blue-50/40';
+                    if (period.is_cancelled) {
+                      rowStateClass = 'opacity-50';
+                    } else if (isBreak) {
+                      rowStateClass = 'bg-amber-50/40';
+                    }
 
-                  return (
-                    <motion.div
-                      key={period.slot_public_id}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.03 }}
-                      className={`grid grid-cols-1 gap-2 px-4 py-3 transition-colors sm:grid-cols-[auto_2fr_1fr_1.5fr_1fr] sm:items-center ${
-                        period.is_cancelled
-                          ? 'opacity-50'
-                          : isBreak
-                            ? 'bg-amber-50/40'
-                            : 'hover:bg-blue-50/40'
-                      }`}
-                    >
-                      {/* Slot # */}
-                      <div className="flex items-center gap-3 sm:w-12">
-                        <div
-                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${color} text-sm font-bold text-white shadow-sm`}
-                        >
-                          {period.slot_number}
-                        </div>
-                      </div>
-                      {/* Subject */}
-                      <div className="flex items-center gap-2">
-                        {!isBreak && (
-                          <div className={`rounded-lg p-1.5 ${subjectTheme.bgColor}`}>
-                            <SubjectIcon className="h-4 w-4 text-gray-600" />
+                    return (
+                      <motion.div
+                        key={period.slot_public_id}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.03 }}
+                        className={`grid grid-cols-1 gap-2 px-4 py-3 transition-colors sm:grid-cols-[auto_2fr_1fr_1.5fr_1fr] sm:items-center ${rowStateClass}`}
+                      >
+                        {/* Slot # */}
+                        <div className="flex items-center gap-3 sm:w-12">
+                          <div
+                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${color} text-sm font-bold text-white shadow-sm`}
+                          >
+                            {period.slot_number}
                           </div>
-                        )}
-                        <div className="min-w-0">
-                          <p className="font-medium text-gray-800">
-                            {isBreak
-                              ? `${subjectTheme.emoji} ${period.label}`
-                              : period.subject_name || period.label}
-                          </p>
-                          {period.is_cancelled && (
-                            <Badge variant="destructive" className="mt-0.5 text-[10px]">
-                              Cancelled
-                            </Badge>
-                          )}
                         </div>
-                      </div>
-                      {/* Time */}
-                      <div className="flex items-center gap-1.5 text-sm text-gray-600 sm:flex-col sm:items-start sm:gap-0">
-                        <Clock className="h-3.5 w-3.5 text-gray-400 sm:hidden" />
-                        <span className="font-medium">{formatSlotTime(period.start_time)}</span>
-                        <span className="text-xs text-gray-400">
-                          to {formatSlotTime(period.end_time)}
-                        </span>
-                      </div>
-                      {/* Teacher */}
-                      <div className="flex items-center gap-1.5 text-sm text-gray-600">
-                        <User className="h-3.5 w-3.5 text-gray-400 sm:hidden" />
-                        <span className={period.teacher_name ? '' : 'text-gray-400'}>
-                          {period.teacher_name || (isBreak ? '—' : '—')}
-                        </span>
-                      </div>
-                      {/* Room */}
-                      <div className="flex items-center gap-1.5 text-sm text-gray-600">
-                        <MapPin className="h-3.5 w-3.5 text-gray-400 sm:hidden" />
-                        <span className={period.room ? '' : 'text-gray-400'}>
-                          {period.room || '—'}
-                        </span>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center gap-3 py-16 text-center">
-              <span className="text-5xl">🌴</span>
-              <p className="text-lg font-medium text-gray-600">No classes this day!</p>
-              <p className="text-sm text-gray-400">Enjoy your free time 🎉</p>
-            </CardContent>
-          </Card>
-        )}
+                        {/* Subject */}
+                        <div className="flex items-center gap-2">
+                          {!isBreak && (
+                            <div className={`rounded-lg p-1.5 ${subjectTheme.bgColor}`}>
+                              <SubjectIcon className="h-4 w-4 text-gray-600" />
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="font-medium text-gray-800">
+                              {isBreak
+                                ? `${subjectTheme.emoji} ${period.label}`
+                                : period.subject_name || period.label}
+                            </p>
+                            {period.is_cancelled && (
+                              <Badge variant="destructive" className="mt-0.5 text-[10px]">
+                                Cancelled
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        {/* Time */}
+                        <div className="flex items-center gap-1.5 text-sm text-gray-600 sm:flex-col sm:items-start sm:gap-0">
+                          <Clock className="h-3.5 w-3.5 text-gray-400 sm:hidden" />
+                          <span className="font-medium">{formatSlotTime(period.start_time)}</span>
+                          <span className="text-xs text-gray-400">
+                            to {formatSlotTime(period.end_time)}
+                          </span>
+                        </div>
+                        {/* Teacher */}
+                        <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                          <User className="h-3.5 w-3.5 text-gray-400 sm:hidden" />
+                          <span className={period.teacher_name ? '' : 'text-gray-400'}>
+                            {period.teacher_name || '—'}
+                          </span>
+                        </div>
+                        {/* Room */}
+                        <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                          <MapPin className="h-3.5 w-3.5 text-gray-400 sm:hidden" />
+                          <span className={period.room ? '' : 'text-gray-400'}>
+                            {period.room || '—'}
+                          </span>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
       </motion.div>
     </div>
   );

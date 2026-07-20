@@ -25,7 +25,7 @@ import { CommonUiText, FormPlaceholders } from '@/constants';
 import { useCriticalOperation } from '@/providers/critical-operation-provider';
 import { useUserProfile } from '../hooks/queries';
 import { useSendOTP, useUpdatePhone } from '../hooks/mutations';
-import { formatCountdown } from '../utils/format-countdown';
+import { formatCountdown, getOtpHintText } from '../utils/format-countdown';
 
 const phoneSchema = z.object({
   new_phone: z.string().min(10, 'Phone number must be at least 10 digits'),
@@ -175,10 +175,8 @@ export function PhoneUpdateForm() {
                       <span className="text-green-600">
                         OTP sent! Expires in {formatCountdown(countdown)}
                       </span>
-                    ) : isDashboardVerificationFlow ? (
-                      'Click the button to send OTP for phone verification'
                     ) : (
-                      'Click the button to send OTP to this phone'
+                      getOtpHintText(isDashboardVerificationFlow, 'phone')
                     )}
                   </FormDescription>
                   <FormMessage />

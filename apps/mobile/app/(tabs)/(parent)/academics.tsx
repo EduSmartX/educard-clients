@@ -47,7 +47,7 @@ const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 function formatSlotTime(t: string): string {
   const [h, m] = t.split(':');
-  const hour = parseInt(h, 10);
+  const hour = Number.parseInt(h, 10);
   const ampm = hour >= 12 ? 'PM' : 'AM';
   return `${hour % 12 || 12}:${m} ${ampm}`;
 }
@@ -68,6 +68,51 @@ function TimetableSection() {
   const monday = addDays(startOfWeek(today, { weekStartsOn: 1 }), weekOffset * 7);
   const dateStr = format(addDays(monday, selectedDay), 'yyyy-MM-dd');
   const { data: periods, isLoading, refetch } = useTimetable(dateStr);
+
+  const renderPeriodsList = () => {
+    if (isLoading) {
+      return (
+        <View className="items-center py-10">
+          <ActivityIndicator color={colors.primary[500]} />
+        </View>
+      );
+    }
+    if (periods && periods.length > 0) {
+      return periods.map((p: TimetableEntry) => (
+        <View
+          key={p.slot_public_id}
+          className={`flex-row items-center border-b border-gray-100 px-3 py-3 ${p.slot_type !== 'class' ? 'bg-amber-50/50' : ''}`}
+        >
+          <View className="w-10">
+            <View className="h-7 w-7 items-center justify-center rounded-lg bg-green-500">
+              <Text className="text-xs font-bold text-white">{p.slot_number}</Text>
+            </View>
+          </View>
+          <View className="flex-1">
+            <Text className="text-sm font-medium text-gray-800">{p.subject_name || p.label}</Text>
+            {p.is_cancelled && <Text className="text-[10px] text-red-500">Cancelled</Text>}
+          </View>
+          <View className="w-20">
+            <Text className="text-xs font-medium text-gray-600">
+              {formatSlotTime(p.start_time)}
+            </Text>
+            <Text className="text-[10px] text-gray-400">to {formatSlotTime(p.end_time)}</Text>
+          </View>
+          <View className="w-24">
+            <Text className="text-xs text-gray-600" numberOfLines={1}>
+              {p.teacher_name || '—'}
+            </Text>
+          </View>
+        </View>
+      ));
+    }
+    return (
+      <View className="items-center py-10">
+        <Text className="text-3xl">🌴</Text>
+        <Text className="mt-2 text-sm text-gray-500">No classes this day</Text>
+      </View>
+    );
+  };
 
   return (
     <ScrollView
@@ -94,15 +139,25 @@ function TimetableSection() {
           const d = addDays(monday, i);
           const isToday = format(d, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
           const sel = selectedDay === i;
+          let tabBg = 'bg-gray-50';
+          if (sel) {
+            tabBg = 'bg-blue-500';
+          } else if (isToday) {
+            tabBg = 'bg-blue-100';
+          }
+          let tabText = 'text-gray-600';
+          if (sel) {
+            tabText = 'text-white';
+          } else if (isToday) {
+            tabText = 'text-blue-600';
+          }
           return (
             <TouchableOpacity
               key={day}
               onPress={() => setSelectedDay(i)}
-              className={`mr-2 rounded-xl px-4 py-2.5 ${sel ? 'bg-blue-500' : isToday ? 'bg-blue-100' : 'bg-gray-50'}`}
+              className={`mr-2 rounded-xl px-4 py-2.5 ${tabBg}`}
             >
-              <Text
-                className={`text-sm font-medium ${sel ? 'text-white' : isToday ? 'text-blue-600' : 'text-gray-600'}`}
-              >
+              <Text className={`text-sm font-medium ${tabText}`}>
                 {day} {d.getDate()}
               </Text>
             </TouchableOpacity>
@@ -118,46 +173,7 @@ function TimetableSection() {
           <Text className="w-20 text-[10px] font-semibold uppercase text-gray-400">Time</Text>
           <Text className="w-24 text-[10px] font-semibold uppercase text-gray-400">Teacher</Text>
         </View>
-        {isLoading ? (
-          <View className="items-center py-10">
-            <ActivityIndicator color={colors.primary[500]} />
-          </View>
-        ) : periods && periods.length > 0 ? (
-          periods.map((p: TimetableEntry) => (
-            <View
-              key={p.slot_public_id}
-              className={`flex-row items-center border-b border-gray-100 px-3 py-3 ${p.slot_type !== 'class' ? 'bg-amber-50/50' : ''}`}
-            >
-              <View className="w-10">
-                <View className="h-7 w-7 items-center justify-center rounded-lg bg-green-500">
-                  <Text className="text-xs font-bold text-white">{p.slot_number}</Text>
-                </View>
-              </View>
-              <View className="flex-1">
-                <Text className="text-sm font-medium text-gray-800">
-                  {p.subject_name || p.label}
-                </Text>
-                {p.is_cancelled && <Text className="text-[10px] text-red-500">Cancelled</Text>}
-              </View>
-              <View className="w-20">
-                <Text className="text-xs font-medium text-gray-600">
-                  {formatSlotTime(p.start_time)}
-                </Text>
-                <Text className="text-[10px] text-gray-400">to {formatSlotTime(p.end_time)}</Text>
-              </View>
-              <View className="w-24">
-                <Text className="text-xs text-gray-600" numberOfLines={1}>
-                  {p.teacher_name || '—'}
-                </Text>
-              </View>
-            </View>
-          ))
-        ) : (
-          <View className="items-center py-10">
-            <Text className="text-3xl">🌴</Text>
-            <Text className="mt-2 text-sm text-gray-500">No classes this day</Text>
-          </View>
-        )}
+        {renderPeriodsList()}
       </View>
     </ScrollView>
   );
@@ -194,6 +210,67 @@ function HomeworkSection() {
     return { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Pending' };
   };
 
+  const renderHomeworkList = () => {
+    if (isLoading) {
+      return (
+        <View className="items-center py-10">
+          <ActivityIndicator color={colors.primary[500]} />
+        </View>
+      );
+    }
+    if (homework && homework.length > 0) {
+      return homework.map((hw: HomeworkItem) => {
+        const st = statusStyle(hw);
+        return (
+          <TouchableOpacity
+            key={hw.public_id}
+            onPress={() =>
+              router.push(
+                `/(shared-screens)/student/homework-detail?id=${hw.public_id}&date=${dateStr}` as never
+              )
+            }
+            className="mb-3 rounded-xl border border-gray-100 bg-white p-4"
+            activeOpacity={0.7}
+          >
+            <View className="flex-row items-start justify-between">
+              <View className="flex-1 pr-2">
+                <Text className="text-base font-semibold text-gray-800">{hw.title}</Text>
+                <Text className="mt-0.5 text-xs text-gray-500">
+                  {hw.subject_name}
+                  {hw.chapter ? ` • ${hw.chapter}` : ''}
+                </Text>
+              </View>
+              <View className={`rounded-lg px-2.5 py-1 ${st.bg}`}>
+                <Text className={`text-[10px] font-semibold ${st.text}`}>{st.label}</Text>
+              </View>
+            </View>
+            <View className="mt-2 flex-row items-center">
+              <Clock size={12} color={colors.gray[400]} />
+              <Text className="ml-1 text-[11px] text-gray-400">
+                Due: {format(new Date(hw.due_datetime), 'd MMM h:mm a')}
+              </Text>
+              <Text className="ml-3 text-[11px] text-gray-400">By: {hw.assigned_by_name}</Text>
+            </View>
+            {hw.priority === 'high' && (
+              <View className="mt-1.5 flex-row items-center">
+                <AlertTriangle size={12} color={colors.danger[500]} />
+                <Text className="ml-1 text-[10px] font-medium text-red-600">High Priority</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        );
+      });
+    }
+    return (
+      <View className="items-center py-10">
+        <Text className="text-3xl">🦋</Text>
+        <Text className="mt-2 text-sm text-gray-500">
+          No homework for {dateLabel.toLowerCase()}
+        </Text>
+      </View>
+    );
+  };
+
   return (
     <ScrollView
       className="flex-1"
@@ -213,62 +290,7 @@ function HomeworkSection() {
         </TouchableOpacity>
       </View>
 
-      <View className="mt-4 px-4 pb-6">
-        {isLoading ? (
-          <View className="items-center py-10">
-            <ActivityIndicator color={colors.primary[500]} />
-          </View>
-        ) : homework && homework.length > 0 ? (
-          homework.map((hw: HomeworkItem) => {
-            const st = statusStyle(hw);
-            return (
-              <TouchableOpacity
-                key={hw.public_id}
-                onPress={() =>
-                  router.push(
-                    `/(shared-screens)/student/homework-detail?id=${hw.public_id}&date=${dateStr}` as never
-                  )
-                }
-                className="mb-3 rounded-xl border border-gray-100 bg-white p-4"
-                activeOpacity={0.7}
-              >
-                <View className="flex-row items-start justify-between">
-                  <View className="flex-1 pr-2">
-                    <Text className="text-base font-semibold text-gray-800">{hw.title}</Text>
-                    <Text className="mt-0.5 text-xs text-gray-500">
-                      {hw.subject_name}
-                      {hw.chapter ? ` • ${hw.chapter}` : ''}
-                    </Text>
-                  </View>
-                  <View className={`rounded-lg px-2.5 py-1 ${st.bg}`}>
-                    <Text className={`text-[10px] font-semibold ${st.text}`}>{st.label}</Text>
-                  </View>
-                </View>
-                <View className="mt-2 flex-row items-center">
-                  <Clock size={12} color={colors.gray[400]} />
-                  <Text className="ml-1 text-[11px] text-gray-400">
-                    Due: {format(new Date(hw.due_datetime), 'd MMM h:mm a')}
-                  </Text>
-                  <Text className="ml-3 text-[11px] text-gray-400">By: {hw.assigned_by_name}</Text>
-                </View>
-                {hw.priority === 'high' && (
-                  <View className="mt-1.5 flex-row items-center">
-                    <AlertTriangle size={12} color={colors.danger[500]} />
-                    <Text className="ml-1 text-[10px] font-medium text-red-600">High Priority</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-          })
-        ) : (
-          <View className="items-center py-10">
-            <Text className="text-3xl">🦋</Text>
-            <Text className="mt-2 text-sm text-gray-500">
-              No homework for {dateLabel.toLowerCase()}
-            </Text>
-          </View>
-        )}
-      </View>
+      <View className="mt-4 px-4 pb-6">{renderHomeworkList()}</View>
     </ScrollView>
   );
 }

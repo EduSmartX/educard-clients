@@ -51,6 +51,20 @@ import type { Exam, BulkMarkEntry } from '@educard/shared';
 import { getErrorMessage } from '@/lib/utils/error-handler';
 import { useRole } from '@/hooks/use-role';
 
+function getPublishButtonTitle(
+  isMarksLocked: boolean,
+  enteredCount: number,
+  totalCount: number
+): string {
+  if (isMarksLocked) {
+    return 'Marks are already published';
+  }
+  if (enteredCount < totalCount) {
+    return `Enter marks for all ${totalCount} students before publishing`;
+  }
+  return 'Save marks and publish results';
+}
+
 interface StudentMarkRow {
   student_id: string;
   student_name: string;
@@ -659,20 +673,28 @@ export function MarksEntryPage() {
           <div className="border-t bg-gray-50/50 px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-600">
-                {isMarksLocked ? (
-                  <span className="font-medium text-blue-600">
-                    🔒 Marks published — unpublish to allow editing
-                  </span>
-                ) : enteredCount < markEntries.length ? (
-                  <span className="font-medium text-amber-600">
-                    ⚠ {markEntries.length - enteredCount} student(s) remaining — enter marks or mark
-                    absent
-                  </span>
-                ) : (
-                  <span className="font-medium text-green-600">
-                    ✓ All entries completed — ready to publish
-                  </span>
-                )}
+                {(() => {
+                  if (isMarksLocked) {
+                    return (
+                      <span className="font-medium text-blue-600">
+                        🔒 Marks published — unpublish to allow editing
+                      </span>
+                    );
+                  }
+                  if (enteredCount < markEntries.length) {
+                    return (
+                      <span className="font-medium text-amber-600">
+                        ⚠ {markEntries.length - enteredCount} student(s) remaining — enter marks or
+                        mark absent
+                      </span>
+                    );
+                  }
+                  return (
+                    <span className="font-medium text-green-600">
+                      ✓ All entries completed — ready to publish
+                    </span>
+                  );
+                })()}
               </div>
               <div className="flex items-center gap-3">
                 {isMarksLocked && selectedExamId && (
@@ -717,13 +739,7 @@ export function MarksEntryPage() {
                       isMarksLocked
                     }
                     className="gap-2"
-                    title={
-                      isMarksLocked
-                        ? 'Marks are already published'
-                        : enteredCount < markEntries.length
-                          ? `Enter marks for all ${markEntries.length} students before publishing`
-                          : 'Save marks and publish results'
-                    }
+                    title={getPublishButtonTitle(isMarksLocked, enteredCount, markEntries.length)}
                   >
                     {bulkUpsertMutation.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin" />

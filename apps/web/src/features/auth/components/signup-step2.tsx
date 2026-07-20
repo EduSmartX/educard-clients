@@ -8,6 +8,13 @@ import { AuthActionButtons } from './auth-action-buttons';
 import type { Step2Data } from '../utils/signup.schemas';
 import { formatResendCountdown } from '../utils/signup.utils';
 
+function getOtpButtonLabel(verified: boolean, verifying: boolean): string {
+  if (verified) {
+    return 'Verified';
+  }
+  return verifying ? 'Verifying' : 'Verify';
+}
+
 interface SignupStep2Props {
   form: UseFormReturn<Step2Data>;
   formData: { adminEmail?: string; orgEmail?: string };
@@ -111,7 +118,7 @@ export function SignupStep2({
             isLoading={verifyingAdmin}
             className={`h-14 min-w-[120px] rounded-xl font-semibold transition-all ${adminVerifyBtnClass}`}
           >
-            {adminOtpVerified ? 'Verified' : verifyingAdmin ? 'Verifying' : 'Verify'}
+            {getOtpButtonLabel(adminOtpVerified, verifyingAdmin)}
           </Button>
         </div>
 
@@ -182,7 +189,7 @@ export function SignupStep2({
                   : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:scale-105 hover:shadow-xl'
               }`}
             >
-              {orgOtpVerified ? 'Verified' : verifyingOrg ? 'Verifying' : 'Verify'}
+              {getOtpButtonLabel(orgOtpVerified, verifyingOrg)}
             </Button>
           </div>
 
