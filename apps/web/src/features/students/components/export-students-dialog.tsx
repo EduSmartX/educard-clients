@@ -36,10 +36,12 @@ import type { ExportStudentsPayload } from '../types';
 interface ExportStudentsDialogProps {
   /** Trigger button variant */
   triggerVariant?: 'default' | 'outline' | 'ghost';
+  triggerDisabled?: boolean;
 }
 
 export function ExportStudentsDialog({
   triggerVariant = 'outline',
+  triggerDisabled = false,
 }: Readonly<ExportStudentsDialogProps>) {
   const [open, setOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -120,12 +122,12 @@ export function ExportStudentsDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant={triggerVariant} className="gap-2">
+        <Button variant={triggerVariant} className="gap-2" disabled={triggerDisabled}>
           <Download className="h-4 w-4" />
           Export
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:w-full sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Export Students Data</DialogTitle>
           <DialogDescription>

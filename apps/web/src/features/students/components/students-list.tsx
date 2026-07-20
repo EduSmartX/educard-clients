@@ -13,11 +13,12 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DataTable, type PaginationInfo } from '@/components/ui/data-table';
 import { ResourceFilter, type FilterField } from '@/components/filters/resource-filter';
-import { PageHeader, DeletedViewToggle } from '@/components/common';
+import { PageHeader, DeletedViewToggle, HeaderActionRows } from '@/components/common';
 import type { StudentListItem } from '../types';
 import { getStudentColumns } from './student-table-columns';
 import { BulkUploadStudentsDialog } from './bulk-upload-students-dialog';
 import { ExportStudentsDialog } from './export-students-dialog';
+import { ResetClassPasswordsDialog } from './reset-class-passwords-dialog';
 import {
   getListTitle,
   getListDescription,
@@ -42,6 +43,7 @@ interface StudentsListProps {
   onFilterChange?: (filters: Record<string, string>) => void;
   canCreateStudents?: boolean; // NEW: Whether user can create students
   isClassTeacher?: boolean; // NEW: Whether user is a class teacher
+  isTeacherWithoutManagedClasses?: boolean;
 }
 
 export function StudentsList({
@@ -61,6 +63,7 @@ export function StudentsList({
   onFilterChange,
   canCreateStudents = true, // Default true for admins
   isClassTeacher = false,
+  isTeacherWithoutManagedClasses = false,
 }: Readonly<StudentsListProps>) {
   const [appliedSearchQuery, setAppliedSearchQuery] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
@@ -119,37 +122,57 @@ export function StudentsList({
     isClassTeacher, // Pass to columns for conditional Edit/Delete
   });
 
+  const showCreateActions = !showDeleted && canCreateStudents;
+  const showExportAction = !showDeleted;
+  const showTopToggle = !!onToggleDeleted;
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <PageHeader
         title={getListTitle('Students', showDeleted)}
         description={getListDescription('Students', showDeleted)}
-        actions={[
-          ...(!showDeleted && canCreateStudents
-            ? [
-                {
-                  label: 'Add Student',
-                  onClick: onCreateNew,
-                  variant: 'brand' as const,
-                  icon: Plus,
-                },
-              ]
-            : []),
-        ]}
+        actions={[]}
       >
-        <div className="flex items-center gap-2">
-          {onToggleDeleted && (
-            <DeletedViewToggle
-              showDeleted={showDeleted}
-              onToggle={onToggleDeleted}
-              resourceName="students"
-            />
-          )}
-          {!showDeleted && canCreateStudents && <ExportStudentsDialog />}
-          {!showDeleted && canCreateStudents && <BulkUploadStudentsDialog />}
-        </div>
+        <HeaderActionRows
+          primaryAction={
+            showCreateActions ? (
+              <Button onClick={onCreateNew} variant="brand" className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add Student
+              </Button>
+            ) : undefined
+          }
+          topRightAction={
+            showTopToggle ? (
+              <DeletedViewToggle
+                showDeleted={showDeleted}
+                onToggle={onToggleDeleted}
+                resourceName="students"
+              />
+            ) : undefined
+          }
+          secondaryActions={
+            showExportAction ? (
+              <>
+                <ExportStudentsDialog />
+                {showCreateActions && <BulkUploadStudentsDialog />}
+                {showCreateActions && <ResetClassPasswordsDialog />}
+              </>
+            ) : undefined
+          }
+        />
       </PageHeader>
+
+      {!showDeleted && isTeacherWithoutManagedClasses && (
+        <Alert className="border-amber-200 bg-amber-50">
+          <AlertCircle className="h-4 w-4 text-amber-700" />
+          <AlertDescription className="text-amber-900">
+            You are not eligible to add any student because you are not assigned as class teacher
+            for any class.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Search and Filter Bar */}
       <Card>
@@ -173,7 +196,8 @@ export function StudentsList({
             {Object.keys(filters).length > 0 && (
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-muted-foreground text-sm">Active filters:</span>
-                {Object.entries(filters).map(([key, value]) => {
+                {Object.keys(filters).map((key) => {
+                  const value = filters[key];
                   // Get label for class filter
                   let displayValue = value;
                   if (key === 'class_assigned__public_id') {
@@ -252,7 +276,6 @@ export function StudentsList({
                 setAppliedSearchQuery(search || '');
                 setFilters(otherFilters);
 
-                // Call parent handlers if provided (for API calls)
                 if (onSearch) {
                   onSearch(search || '');
                 }
@@ -265,7 +288,6 @@ export function StudentsList({
                 setAppliedSearchQuery('');
                 setFilters({});
 
-                // Call parent handlers if provided (for API calls)
                 if (onSearch) {
                   onSearch('');
                 }
@@ -309,6 +331,7 @@ export function StudentsList({
             emptyAction={
               !error &&
               !showDeleted &&
+              canCreateStudents &&
               !appliedSearchQuery &&
               Object.keys(filters).length === 0 &&
               students.length === 0

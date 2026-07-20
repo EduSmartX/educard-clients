@@ -25,10 +25,16 @@ import {
   RefreshControl,
   StyleSheet,
   Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 
-import { TodaySchedule, StatsGrid, type StatCardData } from '@/components/dashboard';
+import {
+  TodaySchedule,
+  StatsGrid,
+  VerificationBanner,
+  type StatCardData,
+} from '@/components/dashboard';
 import { useDashboardAttendanceStats, useAttendanceDisplay } from '@/features/attendance/hooks';
 import { useClasses } from '@/features/classes';
 import { useStudents } from '@/features/students';
@@ -101,6 +107,7 @@ const quickActions: QuickAction[] = [
 
 export default function EmployeeDashboard() {
   const router = useRouter();
+  const { width: viewportWidth } = useWindowDimensions();
   const { user } = useAuthStore();
   const { profileImageUrl } = useProfileImageUrl();
   const [refreshing, setRefreshing] = useState(false);
@@ -250,6 +257,18 @@ export default function EmployeeDashboard() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#10b981" />
         }
       >
+        {user && (
+          <VerificationBanner
+            user={user}
+            onVerifyEmail={() =>
+              router.push('/(shared-screens)/change-email?mode=verify&from=dashboard' as never)
+            }
+            onVerifyPhone={() =>
+              router.push('/(shared-screens)/change-phone?mode=verify&from=dashboard' as never)
+            }
+          />
+        )}
+
         {/* Stats Grid - uses shared component */}
         <StatsGrid stats={statsConfig} />
 
@@ -271,7 +290,10 @@ export default function EmployeeDashboard() {
                 entering={ZoomIn.delay(550 + index * 60)
                   .springify()
                   .damping(14)}
-                style={styles.quickActionItem}
+                style={[
+                  styles.quickActionItem,
+                  { width: viewportWidth >= 768 ? '33.333%' : '50%' },
+                ]}
               >
                 <TouchableOpacity
                   style={styles.quickActionCard}
@@ -382,7 +404,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { fontSize: 16, fontWeight: '700', color: '#1e293b', letterSpacing: -0.3 },
   quickActionsGrid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -6 },
-  quickActionItem: { width: '50%', padding: 6 },
+  quickActionItem: { padding: 6 },
   quickActionCard: {
     alignItems: 'center',
     paddingVertical: 20,

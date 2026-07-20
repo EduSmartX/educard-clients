@@ -56,6 +56,7 @@ export function FormProfilePhoto({
   disabled = false,
 }: FormProfilePhotoProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -220,10 +221,10 @@ export function FormProfilePhoto({
         {!isViewMode && (
           <button
             type="button"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => cameraInputRef.current?.click()}
             disabled={isBusy}
             className="bg-primary text-primary-foreground hover:bg-primary/90 absolute -right-1 -bottom-1 rounded-full p-1.5 shadow-md transition-colors disabled:opacity-50"
-            title="Upload photo"
+            title="Take photo"
           >
             {isUploading ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -269,11 +270,21 @@ export function FormProfilePhoto({
         </div>
       )}
 
-      {/* Hidden file input */}
+      {/* Hidden file input for gallery/files */}
       <input
         ref={fileInputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp"
+        onChange={handleFileChange}
+        className="hidden"
+      />
+
+      {/* Hidden camera input for direct camera capture */}
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        capture="user"
         onChange={handleFileChange}
         className="hidden"
       />

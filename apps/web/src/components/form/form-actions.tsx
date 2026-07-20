@@ -57,7 +57,7 @@ export function FormActions({
                 type="button"
                 variant="destructive"
                 onClick={onDelete}
-                className="shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-200"
+                className="shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 {deleteLabel}
@@ -100,7 +100,7 @@ export function FormActions({
                 variant="destructive"
                 onClick={onDelete}
                 disabled={isSubmitting}
-                className="shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-200"
+                className="shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 {deleteLabel}
@@ -118,7 +118,7 @@ export function FormActions({
                   variant="brandOutline"
                   onClick={onCancel}
                   disabled={isSubmitting}
-                  className="shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-200"
+                  className="shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
                 >
                   {cancelLabel}
                 </Button>
@@ -128,7 +128,7 @@ export function FormActions({
                 type="submit"
                 size="lg"
                 variant="brand"
-                className="shadow-md hover:shadow-lg hover:scale-[1.03] active:scale-95 transition-all duration-200 font-semibold"
+                className="font-semibold shadow-md transition-all duration-200 hover:scale-[1.03] hover:shadow-lg active:scale-95"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (

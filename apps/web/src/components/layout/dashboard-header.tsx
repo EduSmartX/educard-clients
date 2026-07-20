@@ -1,4 +1,5 @@
-import { Search, Bell, Building2, Settings, LogOut, ChevronDown } from 'lucide-react';
+import { Search, Bell, Building2, Settings, LogOut, ChevronDown, Repeat } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { LogoWithText } from '@/components/branding';
 import {
@@ -14,6 +15,7 @@ import { ROUTES } from '@/constants';
 import { authApi } from '@/lib/api/auth-api';
 import { cn } from '@/lib/utils';
 import { getThemeConfig } from '@/lib/utils/theme-utils';
+import { SwitchProfileDialog } from './switch-profile-dialog';
 
 interface DashboardHeaderProps {
   organizationName?: string;
@@ -23,6 +25,7 @@ interface DashboardHeaderProps {
   userAvatar?: string;
   userRole?: string;
   notificationCount?: number;
+  showSwitchProfile?: boolean;
 }
 
 export function DashboardHeader({
@@ -33,9 +36,11 @@ export function DashboardHeader({
   userAvatar,
   userRole = 'Administrator',
   notificationCount = 0,
+  showSwitchProfile = false,
 }: DashboardHeaderProps) {
   const navigate = useNavigate();
   const theme = getThemeConfig(userRole);
+  const [isSwitchProfileOpen, setIsSwitchProfileOpen] = useState(false);
 
   const handleLogout = async () => {
     await authApi.logout();
@@ -177,6 +182,18 @@ export function DashboardHeader({
                 <span className="font-medium">Profile Settings</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator className="-mx-2 bg-slate-100" />
+              {showSwitchProfile && (
+                <>
+                  <DropdownMenuItem
+                    onClick={() => setIsSwitchProfileOpen(true)}
+                    className="mx-0 my-1 cursor-pointer rounded-xl px-3 py-2.5"
+                  >
+                    <Repeat className="mr-3 h-4 w-4 text-slate-500" />
+                    <span className="font-medium">Switch Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="-mx-2 bg-slate-100" />
+                </>
+              )}
               <DropdownMenuItem
                 onClick={handleLogout}
                 className="mx-0 my-1 cursor-pointer rounded-xl px-3 py-2.5 text-rose-600 focus:bg-rose-50 focus:text-rose-600"
@@ -188,6 +205,10 @@ export function DashboardHeader({
           </DropdownMenu>
         </div>
       </div>
+
+      {showSwitchProfile && (
+        <SwitchProfileDialog open={isSwitchProfileOpen} onOpenChange={setIsSwitchProfileOpen} />
+      )}
     </header>
   );
 }

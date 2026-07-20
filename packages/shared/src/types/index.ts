@@ -22,3 +22,4 @@ export * from "./timetable";
 export * from "./holiday";
 export * from "./homework.types";
 export * from "./calendar";
+export * from "./student-portal";

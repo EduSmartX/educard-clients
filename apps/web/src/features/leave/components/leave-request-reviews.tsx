@@ -207,7 +207,6 @@ export function LeaveRequestReviews() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Check if user is admin
   const isAdmin = user?.role === USER_ROLES.ADMIN;
 
   // Fetch teacher's management context (only for non-admins)
@@ -267,7 +266,7 @@ export function LeaveRequestReviews() {
       }
       return { data: [] };
     },
-    enabled: userRole === 'student',
+    enabled: userRole === USER_ROLES.STUDENT,
   });
 
   const classes = useMemo(() => parseClasses(classesData?.data), [classesData]);
@@ -279,7 +278,7 @@ export function LeaveRequestReviews() {
       const response = await api.get(`/users/profile/manageable-users/?role=${userRole}`);
       return response.data;
     },
-    enabled: userRole === 'staff',
+    enabled: userRole === USER_ROLES.STAFF,
   });
 
   const users = useMemo(() => {
@@ -318,7 +317,7 @@ export function LeaveRequestReviews() {
       },
     ];
 
-    if (userRole === 'staff') {
+    if (userRole === USER_ROLES.STAFF) {
       fields.push({
         name: 'user',
         label: 'Search User',
@@ -357,7 +356,7 @@ export function LeaveRequestReviews() {
       page_size: pageSize.toString(),
     };
 
-    if (userRole === 'student' && selectedClass) {
+    if (userRole === USER_ROLES.STUDENT && selectedClass) {
       params.class_id = selectedClass;
     }
 
@@ -396,7 +395,7 @@ export function LeaveRequestReviews() {
       const response = await api.get(`/leave/employee/reviews/?${queryString}`);
       return response.data;
     },
-    enabled: userRole === 'staff' || (userRole === 'student' && !!selectedClass),
+    enabled: userRole === USER_ROLES.STAFF || (userRole === USER_ROLES.STUDENT && !!selectedClass),
     refetchOnMount: 'always',
   });
 
@@ -591,11 +590,12 @@ export function LeaveRequestReviews() {
           {/* Staff/Student Toggle */}
           <div className="flex gap-2">
             <Button
-              variant={userRole === 'staff' ? 'default' : 'outline'}
+              variant={userRole === USER_ROLES.STAFF ? 'default' : 'outline'}
               onClick={() => setUserRole('staff')}
               className={cn(
                 'flex-1',
-                userRole === 'staff' && 'bg-blue-600 text-white shadow-md hover:bg-blue-700'
+                userRole === USER_ROLES.STAFF &&
+                  'bg-blue-600 text-white shadow-md hover:bg-blue-700'
               )}
               disabled={!isAdmin && teacherContext && !teacherContext.is_supervisor}
             >
@@ -603,11 +603,12 @@ export function LeaveRequestReviews() {
               Staff
             </Button>
             <Button
-              variant={userRole === 'student' ? 'default' : 'outline'}
+              variant={userRole === USER_ROLES.STUDENT ? 'default' : 'outline'}
               onClick={() => setUserRole('student')}
               className={cn(
                 'flex-1',
-                userRole === 'student' && 'bg-green-600 text-white shadow-md hover:bg-green-700'
+                userRole === USER_ROLES.STUDENT &&
+                  'bg-green-600 text-white shadow-md hover:bg-green-700'
               )}
               disabled={!isAdmin && teacherContext && !teacherContext.is_class_teacher}
             >
@@ -617,7 +618,7 @@ export function LeaveRequestReviews() {
           </div>
 
           {/* Class Selection for Students */}
-          {userRole === 'student' && (
+          {userRole === USER_ROLES.STUDENT && (
             <Card>
               <CardHeader>
                 <CardTitle>Select Class</CardTitle>
@@ -659,7 +660,8 @@ export function LeaveRequestReviews() {
             <CardHeader>
               <CardTitle>Leave Requests</CardTitle>
               <CardDescription>
-                {userRole === 'staff' ? 'Staff' : 'Student'} leave requests awaiting your review
+                {userRole === USER_ROLES.STAFF ? 'Staff' : 'Student'} leave requests awaiting your
+                review
               </CardDescription>
             </CardHeader>
             <CardContent>

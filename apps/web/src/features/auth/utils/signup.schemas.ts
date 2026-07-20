@@ -9,6 +9,16 @@ export const step1Schema = z.object({
   orgEmail: z.string().email('Please enter a valid organization email'),
 });
 
+export const createStep1Schema = (useSameEmail: boolean) =>
+  step1Schema.refine(
+    (data) =>
+      useSameEmail || data.adminEmail.trim().toLowerCase() !== data.orgEmail.trim().toLowerCase(),
+    {
+      message: 'Organization email must be different from the administrator email',
+      path: ['orgEmail'],
+    }
+  );
+
 export const step2Schema = z.object({
   adminOtp: z.string().length(6, 'OTP must be 6 digits'),
   orgOtp: z.string().optional(),
@@ -39,8 +49,8 @@ export const createStep3Schema = (includeAddress: boolean) =>
 
 export const step4Schema = z
   .object({
-    firstName: z.string().min(2, 'First name is required'),
-    lastName: z.string().min(2, 'Last name is required'),
+    firstName: z.string().min(1, 'First name is required'),
+    lastName: z.string().min(1, 'Last name is required'),
     phoneNumber: z
       .string()
       .optional()
@@ -58,6 +68,12 @@ export const step4Schema = z
           message: 'Please enter a valid 10-digit Indian mobile number',
         }
       ),
+    adminPhoneOtp: z
+      .string()
+      .optional()
+      .refine((val) => !val || /^\d{6}$/.test(val), {
+        message: 'OTP must be 6 digits',
+      }),
     gender: z.string().optional(),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string(),
@@ -76,6 +92,10 @@ export const step4Schema = z
   .refine((data) => !data.canTeachSubject || !!data.gender?.trim(), {
     message: 'Gender is required',
     path: ['gender'],
+  })
+  .refine((data) => data.firstName.length > 1 || data.lastName.length > 1, {
+    message: 'Both first and last name cannot be a single character',
+    path: ['lastName'],
   });
 
 export type Step1Data = z.infer<typeof step1Schema>;

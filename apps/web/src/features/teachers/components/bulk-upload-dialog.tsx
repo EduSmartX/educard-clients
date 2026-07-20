@@ -56,6 +56,10 @@ export function BulkUploadTeachersDialog() {
       isMinimalFields={isMinimalFields}
       onMinimalFieldsChange={setIsMinimalFields}
       minimalFieldsLabel="Only Required Fields (Employee ID, Name, Email, Gender, Role)"
+      criticalOperationOptions={{
+        title: 'Uploading teachers',
+        description: 'Please keep this page open until the teacher import completes.',
+      }}
     />
   );
 }

@@ -15,6 +15,10 @@ export const subjectFormSchema = z.object({
     .positive('Subject is required'),
   teacher_id: z.string().optional(),
   description: z.string().optional(),
+  display_order: z
+    .string()
+    .optional()
+    .refine((val) => !val || /^\d+$/.test(val), 'Display order must be a valid number'),
 });
 
 export type SubjectFormData = z.infer<typeof subjectFormSchema>;

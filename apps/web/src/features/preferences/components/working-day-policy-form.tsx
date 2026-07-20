@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DatePicker } from '@/components/ui/date-picker';
+import { useFormErrorHandler } from '@/hooks/use-form-error-handler';
 import {
   Form,
   FormControl,
@@ -55,6 +56,10 @@ export function WorkingDayPolicyForm() {
       effective_from: new Date(),
       effective_to: null,
     },
+  });
+
+  const handleSaveError = useFormErrorHandler(form.setError, {
+    defaultErrorMessage: ErrorMessages.UPDATE_FAILED,
   });
 
   // Fetch current policy
@@ -117,15 +122,13 @@ export function WorkingDayPolicyForm() {
         description: SuccessMessages.PREFERENCES.WORKING_DAY_POLICY_UPDATED,
       });
     },
-    onError: (error: Error) => {
-      toast.error(ToastTitles.ERROR, {
-        description: error?.message || ErrorMessages.UPDATE_FAILED,
-      });
-    },
+    onError: handleSaveError,
   });
 
   // Form submission handler
   const onSubmit = (data: WorkingDayPolicyFormValues) => {
+    form.clearErrors();
+
     const payload: CreateWorkingDayPolicyPayload = {
       sunday_off: data.sunday_off,
       saturday_off_pattern: data.saturday_off_pattern as SaturdayOffPatternType,

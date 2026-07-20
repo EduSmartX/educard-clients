@@ -110,7 +110,7 @@ export function PaymentFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:w-full sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{FEE_UI_TEXT.FORM.RECORD_PAYMENT}</DialogTitle>
           <DialogDescription>

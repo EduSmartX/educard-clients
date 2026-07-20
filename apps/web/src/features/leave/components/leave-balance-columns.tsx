@@ -37,7 +37,6 @@ export function getLeaveBalanceColumns(
           <div className="text-muted-foreground text-xs">days</div>
         </div>
       ),
-      width: 120,
     },
     {
       header: 'Used',
@@ -47,7 +46,6 @@ export function getLeaveBalanceColumns(
           <div className="text-muted-foreground text-xs">days</div>
         </div>
       ),
-      width: 120,
     },
     {
       header: 'Carried Forward',
@@ -59,7 +57,6 @@ export function getLeaveBalanceColumns(
           <div className="text-muted-foreground text-xs">days</div>
         </div>
       ),
-      width: 140,
     },
     {
       header: 'Available',
@@ -69,7 +66,6 @@ export function getLeaveBalanceColumns(
           <div className="text-muted-foreground text-xs">days</div>
         </div>
       ),
-      width: 120,
     },
     {
       header: 'Created',
@@ -109,12 +105,7 @@ export function getLeaveBalanceColumns(
       header: 'Actions',
       accessor: (row: LeaveBalance) => (
         <div className="flex items-center justify-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onEdit(row)}
-            className="h-8 w-8 p-0"
-          >
+          <Button variant="ghost" size="sm" onClick={() => onEdit(row)} className="h-8 w-8 p-0">
             <Edit className="h-4 w-4" />
           </Button>
           <Button
@@ -127,7 +118,6 @@ export function getLeaveBalanceColumns(
           </Button>
         </div>
       ),
-      width: 100,
     },
   ];
 }

@@ -61,7 +61,7 @@ export function AddClassDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white sm:max-w-md">
+      <DialogContent className="w-[calc(100vw-1.5rem)] bg-white sm:w-full sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <GraduationCap className="h-5 w-5 text-indigo-500" />

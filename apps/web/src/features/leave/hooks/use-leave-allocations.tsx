@@ -6,7 +6,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
-import { ErrorMessages, SuccessMessages, QUERY_KEYS } from '@/constants';
+import { ErrorMessages, SuccessMessages } from '@/constants';
 import { leaveApi } from '@/lib/api/leave-api';
 import { parseApiError } from '@/lib/utils/error-handler';
 
@@ -57,7 +57,10 @@ export function useDeleteLeaveAllocation() {
         description: allocationName ? `${allocationName} policy has been removed` : undefined,
         icon: <CheckCircle2 className="h-4 w-4" />,
       });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.leave.allocations() });
+      queryClient.invalidateQueries({ queryKey: ['leave-allocations'] });
+      queryClient.invalidateQueries({ queryKey: ['user-leave-allocations'] });
+      queryClient.invalidateQueries({ queryKey: ['user-leave-balances'] });
+      queryClient.invalidateQueries({ queryKey: ['leave-balances'] });
     },
     onError: (error: unknown) => {
       const errorMessage = parseApiError(error, ErrorMessages.LEAVE.DELETE_ALLOCATION_FAILED);

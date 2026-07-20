@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { DashboardHeader } from './dashboard-header';
 import { DashboardLayout } from './dashboard-layout';
 import { useAuth } from '../../hooks/use-auth';
@@ -12,6 +12,7 @@ import { getThemeConfig } from '@/lib/utils/theme-utils';
 import { cn } from '@/lib/utils';
 import { useTeacherManagementContext } from '@/features/leave/hooks/use-teacher-management-context';
 import { tokenManager } from '@/lib/token-manager';
+import { CriticalOperationProvider } from '@/providers/critical-operation-provider';
 
 /**
  * Protected Layout - Wraps all authenticated pages with header and sidebar.
@@ -21,11 +22,16 @@ export function ProtectedLayout() {
   const { user, organization } = useAuth();
   const { data: profilePhoto } = useMyProfilePhoto();
   const { data: managementContext } = useTeacherManagementContext();
+  const location = useLocation();
 
   useStorageListener();
 
   if (!tokenManager.isAuthenticated() || !user) {
     return <Navigate to={ROUTES.AUTH.LOGIN} replace />;
+  }
+
+  if (user.force_password_reset && location.pathname !== ROUTES.SET_NEW_PASSWORD) {
+    return <Navigate to={ROUTES.SET_NEW_PASSWORD} replace />;
   }
 
   // Get role-based theme
@@ -37,26 +43,34 @@ export function ProtectedLayout() {
 
   const isAdmin = user?.role === USER_ROLES.ADMIN;
   const isSupervisor = isAdmin || managementContext?.can_review_requests || false;
+  const isStudent = user?.role === USER_ROLES.STUDENT;
+
+  // Show class name alongside role for students
+  const displayRole =
+    isStudent && user?.class_name ? `${userRoleFormatted} • ${user.class_name}` : userRoleFormatted;
 
   return (
-    <div className={cn('min-h-screen', theme.mainBgGradient)}>
-      <DashboardHeader
-        organizationName={organization?.name}
-        organizationLogo={organization?.logo}
-        userName={user?.full_name || user?.username}
-        username={user?.username}
-        userRole={userRoleFormatted}
-        userAvatar={avatarUrl}
-        notificationCount={3}
-      />
+    <CriticalOperationProvider>
+      <div className={cn('min-h-screen', theme.mainBgGradient)}>
+        <DashboardHeader
+          organizationName={organization?.name}
+          organizationLogo={organization?.logo}
+          userName={user?.full_name || user?.username}
+          username={user?.username}
+          userRole={displayRole}
+          userAvatar={avatarUrl}
+          notificationCount={3}
+          showSwitchProfile={isStudent}
+        />
 
-      <DashboardLayout
-        sidebarSections={getSidebarConfig()}
-        userRole={userRoleFormatted}
-        isSupervisor={isSupervisor}
-      >
-        <Outlet />
-      </DashboardLayout>
-    </div>
+        <DashboardLayout
+          sidebarSections={getSidebarConfig()}
+          userRole={userRoleFormatted}
+          isSupervisor={isSupervisor}
+        >
+          <Outlet />
+        </DashboardLayout>
+      </div>
+    </CriticalOperationProvider>
   );
 }

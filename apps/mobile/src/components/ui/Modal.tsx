@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Pressable,
+  useWindowDimensions,
 } from 'react-native';
 import Animated, { ZoomIn, ZoomOut } from 'react-native-reanimated';
 
@@ -69,6 +70,10 @@ export function Modal({
 }: ModalProps) {
   const config = variantConfig[variant];
   const IconComponent = config.icon;
+  const { width } = useWindowDimensions();
+  const maxModalWidth = width >= 900 ? 520 : width >= 600 ? 460 : width - 32;
+  const modalPadding = width < 360 ? 18 : 24;
+  const overlayPadding = width < 360 ? 12 : 24;
 
   return (
     <RNModal
@@ -78,14 +83,16 @@ export function Modal({
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { paddingHorizontal: overlayPadding }]}>
         <Pressable style={styles.overlayBackground} onPress={onClose} />
         <Animated.View
           entering={ZoomIn.duration(200)}
           exiting={ZoomOut.duration(150)}
-          style={styles.modalWrapper}
+          style={[styles.modalWrapper, { maxWidth: maxModalWidth }]}
         >
-          <View style={styles.modalContainer}>
+          <View
+            style={[styles.modalContainer, { padding: modalPadding, paddingTop: modalPadding + 8 }]}
+          >
             {/* Close Button */}
             {showCloseButton && (
               <TouchableOpacity style={styles.closeButton} onPress={onClose} hitSlop={10}>

@@ -2,7 +2,10 @@
  * @deprecated Import from '@/components/common/employee-info-card' instead.
  * This file is kept for backward compatibility.
  */
-import { EmployeeInfoCard as SharedEmployeeInfoCard, type EmployeeInfoUser } from '@/components/common/employee-info-card';
+import {
+  EmployeeInfoCard as SharedEmployeeInfoCard,
+  type EmployeeInfoUser,
+} from '@/components/common/employee-info-card';
 
 interface EmployeeInfoCardProps {
   user: EmployeeInfoUser;

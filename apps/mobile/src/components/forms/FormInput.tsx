@@ -5,15 +5,7 @@
 
 import { AlertCircle } from 'lucide-react-native';
 import { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  type TextInputProps,
-  type NativeSyntheticEvent,
-  type TextInputFocusEventData,
-} from 'react-native';
+import { View, Text, TextInput, StyleSheet, type TextInputProps } from 'react-native';
 
 interface FormInputProps extends TextInputProps {
   label: string;
@@ -36,7 +28,7 @@ export function FormInput({
 }: FormInputProps) {
   const [focused, setFocused] = useState(false);
 
-  const handleBlur = (e: NativeSyntheticEvent<TextInputFocusEventData>) => {
+  const handleBlur: NonNullable<TextInputProps['onBlur']> = (e) => {
     setFocused(false);
     onBlurValidate?.();
     onBlur?.(e);

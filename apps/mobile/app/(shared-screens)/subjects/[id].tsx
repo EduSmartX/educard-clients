@@ -32,6 +32,7 @@ export default function SubjectDetailScreen() {
           <DetailRow label="Name" value={s?.subject_info?.name ?? s?.name} />
           <DetailRow label="Code" value={subjectCode} />
           <DetailRow label="Description" value={s?.description} />
+          <DetailRow label="Display Order" value={s?.display_order} />
         </DetailSection>
       </Animated.View>
 

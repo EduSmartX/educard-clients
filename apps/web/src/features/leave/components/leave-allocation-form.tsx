@@ -38,6 +38,7 @@ import {
   validateCarryForward,
 } from '../utils/leave-allocation-helpers';
 import { applyFieldErrors, parseApiError } from '@/lib/utils/error-handler';
+import { useCriticalOperation } from '@/providers/critical-operation-provider';
 
 interface LeaveAllocationFormProps {
   mode?: 'create' | 'edit' | 'view';
@@ -212,9 +213,11 @@ export function LeaveAllocationForm({
   }, [academicYearData, mode, form]);
 
   // Create mutation
+  const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
   const createMutation = useMutation({
     mutationFn: (data: LeaveAllocationPayload) => leaveApi.createAllocation(data),
     onSuccess: (data) => {
+      endCriticalOperation();
       toast.success(SuccessMessages.CREATE_SUCCESS, {
         description: `${data.leave_type_name} policy has been created`,
         icon: <CheckCircle2 className="h-4 w-4" />,
@@ -224,6 +227,7 @@ export function LeaveAllocationForm({
       onSuccess?.();
     },
     onError: (error: unknown) => {
+      endCriticalOperation();
       const { hasFieldErrors, toastMessage } = applyFieldErrors(error, form.setError);
       if (hasFieldErrors) {
         return;
@@ -295,6 +299,10 @@ export function LeaveAllocationForm({
       const { leave_type, ...updatePayload } = payload;
       updateMutation.mutate({ id: allocationId, data: updatePayload });
     } else {
+      beginCriticalOperation({
+        title: 'Creating Leave Policy',
+        description: 'Creating leave allocation and assigning balances to users. Please wait...',
+      });
       createMutation.mutate(payload);
     }
   };
@@ -373,7 +381,7 @@ export function LeaveAllocationForm({
   }
 
   // Empty state - No leave types available
-  if (!leaveTypes || leaveTypes.length === 0) {
+  if (!Array.isArray(leaveTypes) || leaveTypes.length === 0) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <Alert className="max-w-md">
@@ -396,7 +404,7 @@ export function LeaveAllocationForm({
   }
 
   // Empty state - No organization roles available
-  if (!organizationRoles || organizationRoles.length === 0) {
+  if (!Array.isArray(organizationRoles) || organizationRoles.length === 0) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <Alert className="max-w-md">
@@ -829,7 +837,9 @@ export function LeaveAllocationForm({
                                   <div className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-purple-400 to-pink-400 text-[10px] font-semibold text-white">
                                     {role.name.charAt(0)}
                                   </div>
-                                  <span className="max-w-[120px] truncate">{role.name}</span>
+                                  <span className="max-w-[96px] truncate sm:max-w-[120px]">
+                                    {role.name}
+                                  </span>
                                 </div>
                               ))}
                             </div>

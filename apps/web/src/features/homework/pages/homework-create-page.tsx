@@ -26,11 +26,18 @@ import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { ROUTES } from '@/constants/app-config';
 import { PageHeader } from '@/components/common';
-import { getSubjectColor, HOMEWORK_UI } from '@educard/shared';
+import { getSubjectColor, HOMEWORK_UI, getErrorMessage } from '@educard/shared';
 import { toast } from 'sonner';
+import { useCriticalOperation } from '@/providers/critical-operation-provider';
 
 import { FileUpload, FILE_UPLOAD_PRESETS, type UploadedFile } from '@/components/ui/file-upload';
-import { useTeacherClasses, useCreateHomework, useUploadAttachment } from '../hooks';
+import {
+  useTeacherClasses,
+  useCreateHomework,
+  useBulkCreateHomework,
+  useUploadAttachment,
+  useHomeworkList,
+} from '../hooks';
 import { HOMEWORK_PRIORITY_OPTIONS, SUBMISSION_TYPE_OPTIONS } from '../types';
 
 const homeworkItemSchema = z.object({
@@ -75,18 +82,15 @@ export default function HomeworkCreatePage() {
   const initialSubjectId = searchParams.get('subject') || '';
   const initialDateStr = searchParams.get('date') || '';
 
-  // Get initial assigned date (today or next working day, never past)
+  // Get initial assigned date
   const getInitialAssignedDate = () => {
-    const today = getTodayOrNextWorkingDay();
-
     if (initialDateStr) {
       const parsedDate = parse(initialDateStr, 'yyyy-MM-dd', new Date());
-      // Only use URL date if it's today or future
-      if (parsedDate >= new Date(today.toDateString())) {
+      if (!isNaN(parsedDate.getTime())) {
         return parsedDate;
       }
     }
-    return today;
+    return getTodayOrNextWorkingDay();
   };
 
   // Set default due datetime to 5 PM on the day AFTER assigned date
@@ -102,7 +106,9 @@ export default function HomeworkCreatePage() {
 
   const { data: teacherClasses = [], isLoading: isLoadingClasses } = useTeacherClasses();
   const createMutation = useCreateHomework();
+  const bulkCreateMutation = useBulkCreateHomework();
   const uploadMutation = useUploadAttachment();
+  const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -132,6 +138,28 @@ export default function HomeworkCreatePage() {
     return teacherClasses.find((c) => c.public_id === selectedClassId);
   }, [teacherClasses, selectedClassId]);
 
+  // Fetch existing homework for this class+date to mark already-created subjects
+  const existingDateStr = watchedAssignedDate ? format(watchedAssignedDate, 'yyyy-MM-dd') : '';
+  const { data: existingHomework } = useHomeworkList(
+    selectedClassId && existingDateStr
+      ? {
+          class_public_id: selectedClassId,
+          assigned_date_from: existingDateStr,
+          assigned_date_to: existingDateStr,
+        }
+      : undefined
+  );
+  const existingSubjectMap = useMemo(() => {
+    if (!existingHomework) {
+      return new Map<string, string>();
+    }
+    const map = new Map<string, string>();
+    for (const hw of existingHomework) {
+      map.set(hw.subject_public_id, hw.public_id);
+    }
+    return map;
+  }, [existingHomework]);
+
   // Initialize subjects when class changes
   useMemo(() => {
     if (selectedClass?.subjects && fields.length === 0) {
@@ -145,7 +173,7 @@ export default function HomeworkCreatePage() {
         description: '',
         instructions: '',
         priority: 'medium' as const,
-        submission_type: 'offline' as const, // Default to offline
+        submission_type: 'offline' as const,
         reference_link: '',
       }));
       replace(items);
@@ -183,51 +211,102 @@ export default function HomeworkCreatePage() {
       return;
     }
 
+    const buildPayload = (item: (typeof enabledItems)[0]) => ({
+      title: item.title,
+      description: item.description,
+      instructions: item.instructions,
+      chapter: item.chapter || undefined,
+      subject_public_id: item.subject_public_id,
+      due_datetime: data.due_datetime.toISOString(),
+      assigned_date: format(data.assigned_date, 'yyyy-MM-dd'),
+      status: data.status,
+      priority: item.priority,
+      submission_type: item.submission_type,
+      reference_link: item.reference_link || undefined,
+    });
+
     let successCount = 0;
-    let errorCount = 0;
+    let _errorCount = 0;
+    const isBulkCreate = enabledItems.length > 1;
 
-    for (const item of enabledItems) {
-      try {
-        const result = await createMutation.mutateAsync({
-          title: item.title,
-          description: item.description,
-          instructions: item.instructions,
-          chapter: item.chapter || undefined,
-          subject_public_id: item.subject_public_id,
-          due_datetime: data.due_datetime.toISOString(),
-          assigned_date: format(data.assigned_date, 'yyyy-MM-dd'),
-          status: data.status,
-          priority: item.priority,
-          submission_type: item.submission_type,
-          reference_link: item.reference_link || undefined,
-        });
+    if (isBulkCreate) {
+      beginCriticalOperation({
+        title: 'Creating homework',
+        description: `Creating ${enabledItems.length} homework assignments. Please wait...`,
+      });
+    }
 
-        const files = uploadedFiles[item.subject_public_id] || [];
-        for (const file of files) {
-          await uploadMutation.mutateAsync({
-            homeworkPublicId: result.public_id,
-            file: file.file,
-          });
+    try {
+      if (enabledItems.length === 1) {
+        // Single homework - use single API call
+        const item = enabledItems[0];
+        try {
+          const result = await createMutation.mutateAsync(buildPayload(item));
+
+          const files = uploadedFiles[item.subject_public_id] || [];
+          for (const file of files) {
+            await uploadMutation.mutateAsync({
+              homeworkPublicId: result.public_id,
+              file: file.file,
+            });
+          }
+          successCount = 1;
+        } catch (err) {
+          _errorCount = 1;
+          toast.error(getErrorMessage(err, HOMEWORK_UI.FAILED_TO_CREATE));
         }
+      } else {
+        // Multiple homeworks - use bulk API call
+        try {
+          const payloads = enabledItems.map(buildPayload);
+          const result = await bulkCreateMutation.mutateAsync(payloads);
+          successCount = result.created_count;
+          _errorCount = result.errors.length;
 
-        successCount++;
-      } catch {
-        errorCount++;
-      }
-    }
+          if (result.errors.length > 0) {
+            const errorMsgs = result.errors
+              .map((e: { subject_name?: string; error?: string }) =>
+                e.subject_name ? `${e.subject_name}: ${e.error}` : e.error
+              )
+              .join('\n');
+            toast.error(errorMsgs);
+          }
 
-    if (successCount > 0) {
-      toast.success(`Created ${successCount} homework assignment${successCount > 1 ? 's' : ''}`);
-      // Navigate back with the same class and assigned date to maintain state
-      const params = new URLSearchParams();
-      if (selectedClassId) {
-        params.set('class', selectedClassId);
+          // Upload attachments for successfully created homework
+          for (const created of result.created) {
+            const item = enabledItems.find(
+              (i) => i.subject_public_id === created.subject_public_id
+            );
+            if (!item) {
+              continue;
+            }
+            const files = uploadedFiles[item.subject_public_id] || [];
+            for (const file of files) {
+              await uploadMutation.mutateAsync({
+                homeworkPublicId: created.public_id,
+                file: file.file,
+              });
+            }
+          }
+        } catch (err) {
+          _errorCount = enabledItems.length;
+          toast.error(getErrorMessage(err, HOMEWORK_UI.FAILED_TO_CREATE));
+        }
       }
-      params.set('date', format(data.assigned_date, 'yyyy-MM-dd'));
-      navigate(`${ROUTES.HOMEWORK}?${params.toString()}`);
-    }
-    if (errorCount > 0) {
-      toast.error(`Failed to create ${errorCount} homework assignment${errorCount > 1 ? 's' : ''}`);
+
+      if (successCount > 0) {
+        toast.success(`Created ${successCount} homework assignment${successCount > 1 ? 's' : ''}`);
+        const params = new URLSearchParams();
+        if (selectedClassId) {
+          params.set('class', selectedClassId);
+        }
+        params.set('date', format(data.assigned_date, 'yyyy-MM-dd'));
+        navigate(`${ROUTES.HOMEWORK}?${params.toString()}`);
+      }
+    } finally {
+      if (isBulkCreate) {
+        endCriticalOperation();
+      }
     }
   };
 
@@ -398,6 +477,8 @@ export default function HomeworkCreatePage() {
                   const isEnabled = watch(`items.${index}.enabled`);
                   const isSubjectLocked =
                     !!initialSubjectId && field.subject_public_id === initialSubjectId;
+                  const alreadyExists = existingSubjectMap.has(field.subject_public_id);
+                  const existingHwId = existingSubjectMap.get(field.subject_public_id);
 
                   return (
                     <div
@@ -405,6 +486,7 @@ export default function HomeworkCreatePage() {
                       className={cn(
                         'rounded-xl border-2 transition-all',
                         color.border,
+                        alreadyExists ? 'opacity-60' : '',
                         isEnabled ? 'bg-card shadow-sm' : 'bg-muted/30'
                       )}
                     >
@@ -424,7 +506,7 @@ export default function HomeworkCreatePage() {
                                 checked={checkField.value}
                                 onCheckedChange={checkField.onChange}
                                 className="h-5 w-5"
-                                disabled={isSubjectLocked}
+                                disabled={isSubjectLocked || alreadyExists}
                               />
                             )}
                           />
@@ -440,6 +522,17 @@ export default function HomeworkCreatePage() {
                               <p className="text-muted-foreground text-xs">{field.teacher_name}</p>
                             )}
                           </div>
+                          {alreadyExists && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                navigate(ROUTES.HOMEWORK_EDIT.replace(':id', existingHwId!))
+                              }
+                              className="ml-2 rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 hover:bg-amber-200"
+                            >
+                              Already created — Edit ✏️
+                            </button>
+                          )}
                         </div>
                         {isEnabled && watch(`items.${index}.title`) && (
                           <CheckCircle2 className="h-5 w-5 text-green-500" />
@@ -574,7 +667,7 @@ export default function HomeworkCreatePage() {
               Cancel
             </Button>
             <Button type="submit" variant="brand" disabled={isSubmitting || enabledCount === 0}>
-              {isSubmitting ? 'Creating...' : `Create ${enabledCount} Homework`}
+              {isSubmitting ? 'Creating...' : 'Create Homework'}
             </Button>
           </div>
         </form>

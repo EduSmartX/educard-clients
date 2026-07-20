@@ -46,3 +46,22 @@ export function formatSlotTime(time: string): string {
   const hour12 = h % 12 || 12;
   return `${hour12}:${String(m).padStart(2, "0")} ${ampm}`;
 }
+
+/** School weekdays (Mon–Sat, no Sunday) */
+export const SCHOOL_WEEKDAYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+] as const;
+
+/** Gradient colors per timetable slot type */
+export const SLOT_TYPE_COLORS: Record<string, string> = {
+  class: "from-emerald-400 to-green-500",
+  break: "from-amber-300 to-orange-400",
+  lunch: "from-pink-400 to-rose-500",
+  assembly: "from-blue-400 to-indigo-500",
+  lab: "from-violet-400 to-purple-500",
+};

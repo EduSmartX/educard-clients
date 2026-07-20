@@ -6,3 +6,5 @@ export { Badge } from './Badge';
 export { LoadingSpinner } from './LoadingSpinner';
 export { Modal, useModal } from './Modal';
 export type { ModalVariant } from './Modal';
+export { SegmentedSelector } from './SegmentedSelector';
+export type { SegmentOption } from './SegmentedSelector';

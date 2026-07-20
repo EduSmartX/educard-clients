@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   Briefcase,
   CheckSquare,
+  RotateCcw,
   Clock,
   ClipboardList,
   FileText,
@@ -29,7 +30,9 @@ import {
   Receipt,
   CreditCard,
   Eye,
+  CalendarRange,
   ClipboardEdit,
+  Megaphone,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
 import { ROUTES } from '@/constants/app-config';
@@ -101,6 +104,12 @@ export const adminSidebarConfig: SidebarSection[] = [
         icon: Eye,
         path: ROUTES.TIMETABLE_VIEW,
       },
+      {
+        id: 'day-overrides',
+        label: 'Period Overrides',
+        icon: CalendarRange,
+        path: ROUTES.TIMETABLE_OVERRIDES,
+      },
     ],
   },
   {
@@ -117,6 +126,17 @@ export const adminSidebarConfig: SidebarSection[] = [
         label: 'Submissions',
         icon: SubmissionsIcon,
         path: ROUTES.HOMEWORK_SUBMISSIONS,
+      },
+    ],
+  },
+  {
+    title: 'COMMUNICATION',
+    items: [
+      {
+        id: 'announcements',
+        label: 'Announcements',
+        icon: Megaphone,
+        path: ROUTES.ANNOUNCEMENTS,
       },
     ],
   },
@@ -142,6 +162,12 @@ export const adminSidebarConfig: SidebarSection[] = [
         path: ROUTES.FEES.STUDENT_FEES,
       },
       {
+        id: 'fee-component-requests',
+        label: 'Component Change Requests',
+        icon: ClipboardCheck,
+        path: ROUTES.FEES.COMPONENT_REQUESTS,
+      },
+      {
         id: 'fee-payments',
         label: 'Payments',
         icon: CreditCard,
@@ -164,7 +190,13 @@ export const adminSidebarConfig: SidebarSection[] = [
         label: 'Exams',
         icon: FileText,
         path: ROUTES.EXAMS_LIST,
-        matchPaths: [ROUTES.EXAMS_NEW, ROUTES.EXAMS_BULK_CREATE],
+        matchPaths: [ROUTES.EXAMS_NEW, ROUTES.EXAMS_BULK_CREATE, ROUTES.EXAMS_STATUS_CONTROL],
+      },
+      {
+        id: 'exam-status-control',
+        label: 'Status Control',
+        icon: RotateCcw,
+        path: ROUTES.EXAMS_STATUS_CONTROL,
       },
       {
         id: 'exam-schedule',

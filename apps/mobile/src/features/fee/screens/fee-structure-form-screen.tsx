@@ -241,7 +241,7 @@ export default function FeeStructureFormScreen() {
     const payload: FeeStructureCreatePayload = {
       name: name.trim(),
       description: description.trim() || undefined,
-      academic_year: academicYear,
+      academic_year_public_id: academicYear,
       due_date: dueDate,
       class_public_ids: classIds,
       is_active: isActive,

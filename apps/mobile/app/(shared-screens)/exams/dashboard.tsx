@@ -5,6 +5,7 @@
 
 import { getRoleGradient } from '@educard/shared';
 import {
+  EXAM_STATUS,
   EXAM_STATUS_LABELS,
   EXAM_STATUS_COLORS,
   EXAM_STATUS_OPTIONS,
@@ -142,11 +143,12 @@ export default function ExamDashboardScreen() {
     page_size: 100,
   });
   const exams: Exam[] = examsData?.data ?? [];
-  const allExamsCompleted = exams.length > 0 && exams.every((e) => e.status === 'completed');
+  const allExamsCompleted =
+    exams.length > 0 && exams.every((e) => e.status === EXAM_STATUS.COMPLETED);
   const allMarksPublished =
     allExamsCompleted &&
-    exams.filter((e) => e.status === 'completed').every((e) => e.is_marks_published);
-  const hasDraftExams = exams.some((e) => e.status === 'draft');
+    exams.filter((e) => e.status === EXAM_STATUS.COMPLETED).every((e) => e.is_marks_published);
+  const hasDraftExams = exams.some((e) => e.status === EXAM_STATUS.DRAFT);
   const hasExams = exams.length > 0;
 
   // Notification mutations
@@ -207,7 +209,7 @@ export default function ExamDashboardScreen() {
   const renderExam = ({ item, index }: { item: Exam; index: number }) => {
     const statusColor = EXAM_STATUS_COLORS[item.status] ?? EXAM_STATUS_COLORS.draft;
     const canEdit = canEditSubject(item.subject_public_id);
-    const isCompleted = item.status === 'completed';
+    const isCompleted = item.status === EXAM_STATUS.COMPLETED;
     const marksEnabled = isCompleted && canEdit;
     const showEnterMarks = marksEnabled || !isCompleted;
     const buttonText = showEnterMarks ? 'Enter Marks' : 'View Marks';
@@ -686,7 +688,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     width: '85%',
-    maxWidth: 340,
+    maxWidth: '92%',
   },
   modalTitle: { fontSize: 18, fontWeight: '700', color: '#1e293b', marginBottom: 4 },
   modalSubtitle: { fontSize: 14, color: '#64748b', marginBottom: 16 },

@@ -54,7 +54,7 @@ interface FeeStructureFormProps {
   onSubmit: (data: FeeStructureCreatePayload) => void;
   isLoading?: boolean;
   classes: Array<{ public_id: string; name: string }>;
-  academicYears: string[];
+  academicYears: Array<{ value: string; label: string }>;
   defaultAcademicYear?: string;
   apiError?: unknown;
 }
@@ -114,7 +114,7 @@ export function FeeStructureForm({
       description: initialData?.description ?? '',
       total_amount: Number.parseFloat(String(initialData?.total_amount ?? 0)),
       due_date: initialData?.due_date ?? '',
-      academic_year: initialData?.academic_year ?? defaultAcademicYear ?? '',
+      academic_year: initialData?.academic_year_public_id ?? defaultAcademicYear ?? '',
       class_public_ids: initialData?.class_public_ids ?? [],
       components: transformedComponents,
       is_active: initialData?.is_active ?? true,
@@ -149,7 +149,7 @@ export function FeeStructureForm({
       description: values.description,
       total_amount: values.total_amount,
       due_date: values.due_date,
-      academic_year: values.academic_year,
+      academic_year_public_id: values.academic_year,
       class_public_ids: values.class_public_ids,
       components: componentsList,
       is_active: values.is_active,
@@ -315,8 +315,11 @@ export function FeeStructureForm({
                     <FormControl>
                       <SearchableSelect
                         options={academicYears.map((year) => ({
-                          value: year,
-                          label: year === defaultAcademicYear ? `${year} (Active)` : year,
+                          value: year.value,
+                          label:
+                            year.value === defaultAcademicYear
+                              ? `${year.label} (Active)`
+                              : year.label,
                         }))}
                         value={field.value}
                         onValueChange={field.onChange}

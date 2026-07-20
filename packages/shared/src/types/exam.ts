@@ -151,6 +151,7 @@ export interface ExamListParams {
   class_id?: string;
   subject?: string;
   is_deleted?: boolean;
+  my_exams_only?: boolean;
 }
 
 export interface ExamCreatePayload {
@@ -222,7 +223,7 @@ export interface Mark {
 
 export interface BulkMarkEntry {
   student_id: string;
-  marks_obtained: number;
+  marks_obtained?: number | null;
   is_absent?: boolean;
 }
 
@@ -243,6 +244,7 @@ export interface MarksOverviewSubject {
   max_marks: number;
   passing_marks: number;
   status: string;
+  is_marks_published?: boolean;
   total_students: number;
   appeared: number;
   absent: number;

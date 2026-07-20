@@ -20,17 +20,23 @@ import {
   CheckCircle2,
   Loader2,
   ShieldCheck,
+  Upload,
+  Undo2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { PageHeader, StudentAvatar } from '@/components/common';
+import { PageHeader, StudentAvatar, WarningConfirmationDialog } from '@/components/common';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { useExamSessions, useMarksOverview } from '../hooks/use-exams';
 import { useClasses } from '@/features/classes/hooks/use-classes';
-import { bulkSaveAllMarks } from '../api/exams-api';
-import { usePublishExamMarks } from '../hooks/mutations';
+import {
+  bulkSaveAllMarks,
+  publishAllMarksForClassSession,
+  unpublishAllMarksForClassSession,
+} from '../api/exams-api';
 import {
   buildStudentMarkEntries,
   buildBulkSavePayload,
@@ -39,6 +45,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { useGridKeyboardNavigation } from '@/hooks/use-grid-keyboard-navigation';
 import { toast } from 'sonner';
+import { useCriticalOperation } from '@/providers/critical-operation-provider';
 
 // Subject color schemes (same as exam overview)
 const SUBJECT_COLORS = [
@@ -123,6 +130,13 @@ export function MarksOverviewPage() {
   const [selectedClassId, setSelectedClassId] = useState<string>('');
   const [studentMarks, setStudentMarks] = useState<StudentMarkEntry[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [isPublishingOnly, setIsPublishingOnly] = useState(false);
+  const [isUnpublishing, setIsUnpublishing] = useState(false);
+  const [showPublishConfirm, setShowPublishConfirm] = useState(false);
+  const [showUnpublishConfirm, setShowUnpublishConfirm] = useState(false);
+  const [publishedStateOverride, setPublishedStateOverride] = useState<boolean | null>(null);
+  const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
 
   // Fetch sessions and classes (always fetch these)
   const { data: sessionsData } = useExamSessions({ page: 1, page_size: 100 });
@@ -143,15 +157,38 @@ export function MarksOverviewPage() {
   // Extract data from marks overview response
   const marksOverview = marksOverviewData?.data;
   const subjects = useMemo(() => marksOverview?.subjects || [], [marksOverview]);
+  const completedSubjects = useMemo(
+    () => subjects.filter((subject) => subject.status === 'completed'),
+    [subjects]
+  );
   const permissions = marksOverview?.permissions;
+  const canManagePublish = useMemo(
+    () => !!permissions && (permissions.is_admin || permissions.is_class_teacher),
+    [permissions]
+  );
+  const hasPublishedCompleted = useMemo(
+    () => completedSubjects.some((subject) => subject.is_marks_published),
+    [completedSubjects]
+  );
+  const hasUnpublishedCompleted = useMemo(
+    () => completedSubjects.some((subject) => !subject.is_marks_published),
+    [completedSubjects]
+  );
+  const effectiveHasPublishedCompleted =
+    publishedStateOverride === null ? hasPublishedCompleted : publishedStateOverride;
+  const effectiveHasUnpublishedCompleted =
+    publishedStateOverride === null ? hasUnpublishedCompleted : !publishedStateOverride;
+  const isMarksLocked =
+    publishedStateOverride === true ||
+    (publishedStateOverride === null && hasPublishedCompleted && !hasUnpublishedCompleted);
 
   // Helper to check if a subject is editable
   const isSubjectEditable = (subjectPublicId: string): boolean => {
     if (!permissions) {
       return true;
     }
-    if (permissions.is_admin || permissions.is_class_teacher) {
-      return true;
+    if (!permissions.is_admin && !permissions.is_class_teacher) {
+      return false;
     }
     if (permissions.editable_subject_ids === null) {
       return true;
@@ -160,23 +197,26 @@ export function MarksOverviewPage() {
   };
 
   // Check if user can edit ANY marks
-  const canEditAny = useMemo(() => !permissions || permissions.can_edit, [permissions]);
+  const canEditAny = useMemo(
+    () => !permissions || permissions.is_admin || permissions.is_class_teacher,
+    [permissions]
+  );
 
   // Keyboard navigation for the marks grid
   const { containerRef, handleKeyDown } = useGridKeyboardNavigation({
     rows: studentMarks.length,
-    cols: subjects.length,
+    cols: completedSubjects.length,
     wrap: false,
   });
 
   // Initialize/update student marks when marks overview data changes
   useEffect(() => {
-    if (marksOverview?.students && marksOverview.subjects.length > 0) {
+    if (marksOverview?.students && completedSubjects.length > 0) {
       setStudentMarks(buildStudentMarkEntries(marksOverview.students));
     } else {
       setStudentMarks([]);
     }
-  }, [marksOverview]);
+  }, [marksOverview, completedSubjects]);
 
   // Handle marks change
   const handleMarksChange = (
@@ -204,18 +244,22 @@ export function MarksOverviewPage() {
   const queryClient = useQueryClient();
 
   const handleSave = async () => {
-    if (!selectedSessionId || !selectedClassId || subjects.length === 0) {
+    if (!selectedSessionId || !selectedClassId || completedSubjects.length === 0) {
       toast.error('Please select a session and class first');
       return;
     }
 
-    const studentsPayload = buildBulkSavePayload(studentMarks, subjects);
+    const studentsPayload = buildBulkSavePayload(studentMarks, completedSubjects);
     if (studentsPayload.length === 0) {
       toast.warning('No marks to save');
       return;
     }
 
     setIsSaving(true);
+    beginCriticalOperation({
+      title: 'Saving marks',
+      description: 'Please keep this page open until the marks save completes.',
+    });
     try {
       const result = await bulkSaveAllMarks({
         session_id: selectedSessionId,
@@ -228,18 +272,16 @@ export function MarksOverviewPage() {
       toast.error('Failed to save marks');
     } finally {
       setIsSaving(false);
+      endCriticalOperation();
     }
   };
 
-  // Publish marks for all exams
-  const publishMarksMutation = usePublishExamMarks();
-
-  const handlePublishAllMarks = async () => {
-    if (!subjects || subjects.length === 0) {
+  const handleSaveAndPublish = async () => {
+    if (!selectedSessionId || !selectedClassId || completedSubjects.length === 0) {
+      toast.error('Please select a session and class first');
       return;
     }
 
-    // Check if all marks are entered (100% completion)
     if (stats.completionPercent < 100) {
       toast.error(
         `Cannot publish: Only ${stats.completionPercent}% of marks are entered. Please enter marks for all students before publishing.`
@@ -247,36 +289,135 @@ export function MarksOverviewPage() {
       return;
     }
 
-    // Find subjects that are completed (ready for publishing)
-    const completedSubjects = subjects.filter((s) => s.status === 'completed');
-    if (completedSubjects.length === 0) {
-      toast.error('No completed exams found. Please mark exams as completed first.');
+    const studentsPayload = buildBulkSavePayload(studentMarks, completedSubjects);
+    if (studentsPayload.length === 0) {
+      toast.warning('No marks to save');
       return;
     }
 
-    // Publish each completed exam sequentially
+    setIsPublishing(true);
+    beginCriticalOperation({
+      title: 'Saving and publishing marks',
+      description: 'Please keep this page open until the publish completes.',
+    });
     try {
-      for (const subject of completedSubjects) {
-        await publishMarksMutation.mutateAsync(subject.exam_public_id);
-      }
-      toast.success(`Successfully published marks for ${completedSubjects.length} exam(s)!`);
-      queryClient.invalidateQueries({ queryKey: ['exams'] });
+      const result = await bulkSaveAllMarks({
+        session_id: selectedSessionId,
+        class_id: selectedClassId,
+        students: studentsPayload,
+        publish_after_save: true,
+      });
+      setPublishedStateOverride(true);
+
       queryClient.invalidateQueries({ queryKey: ['marks-overview'] });
-    } catch (error) {
-      console.error('Failed to publish marks:', error);
-      toast.error('Some exams failed to publish. Please check and try again.');
+      queryClient.invalidateQueries({ queryKey: ['exams'] });
+      const summary = result.data;
+      const published = summary.published_exams_count ?? 0;
+      const alreadyPublished = summary.already_published_count ?? 0;
+      const skipped = summary.skipped_count ?? 0;
+      toast.success(
+        `Marks saved. Published ${published} exam(s), ${alreadyPublished} already published, ${skipped} skipped.`
+      );
+    } catch {
+      toast.error('Failed to save and publish. Please try again.');
+    } finally {
+      setIsPublishing(false);
+      endCriticalOperation();
+    }
+  };
+
+  const handlePublishOnly = async () => {
+    if (!selectedSessionId || !selectedClassId || completedSubjects.length === 0) {
+      toast.error('Please select a session and class first');
+      return;
+    }
+
+    if (stats.completionPercent < 100) {
+      toast.error(
+        `Cannot publish: Only ${stats.completionPercent}% of marks are entered. Please enter marks for all students before publishing.`
+      );
+      return;
+    }
+
+    if (!hasUnpublishedCompleted) {
+      toast.success('All completed exams are already published.');
+      return;
+    }
+
+    setIsPublishingOnly(true);
+    beginCriticalOperation({
+      title: 'Publishing marks',
+      description: 'Please keep this page open until the publish completes.',
+    });
+    try {
+      const result = await publishAllMarksForClassSession({
+        session_id: selectedSessionId,
+        class_id: selectedClassId,
+      });
+      setPublishedStateOverride(true);
+      const publishedCount = result.data.published_exams_count ?? 0;
+      const alreadyPublishedCount = result.data.already_published_count ?? 0;
+      const skippedCount = result.data.skipped_count ?? 0;
+
+      queryClient.invalidateQueries({ queryKey: ['marks-overview'] });
+      queryClient.invalidateQueries({ queryKey: ['exams'] });
+      toast.success(
+        `Published ${publishedCount} exam(s). ${alreadyPublishedCount} already published, ${skippedCount} skipped.`
+      );
+      setShowPublishConfirm(false);
+    } catch {
+      toast.error('Failed to publish marks. Please try again.');
+    } finally {
+      setIsPublishingOnly(false);
+      endCriticalOperation();
+    }
+  };
+
+  const handleUnpublish = async () => {
+    if (!selectedSessionId || !selectedClassId || completedSubjects.length === 0) {
+      toast.error('Please select a session and class first');
+      return;
+    }
+
+    if (!hasPublishedCompleted) {
+      toast.success('No published exams found to unpublish.');
+      return;
+    }
+
+    setIsUnpublishing(true);
+    beginCriticalOperation({
+      title: 'Unpublishing marks',
+      description: 'Please keep this page open until the unpublish completes.',
+    });
+    try {
+      const result = await unpublishAllMarksForClassSession({
+        session_id: selectedSessionId,
+        class_id: selectedClassId,
+      });
+      setPublishedStateOverride(false);
+      const unpublishedCount = result.data.unpublished_exams_count ?? 0;
+
+      queryClient.invalidateQueries({ queryKey: ['marks-overview'] });
+      queryClient.invalidateQueries({ queryKey: ['exams'] });
+      toast.success(`Unpublished ${unpublishedCount} exam(s) successfully.`);
+      setShowUnpublishConfirm(false);
+    } catch {
+      toast.error('Failed to unpublish one or more exams. Please try again.');
+    } finally {
+      setIsUnpublishing(false);
+      endCriticalOperation();
     }
   };
 
   // Calculate statistics
   const stats = useMemo(() => {
     const totalStudents = studentMarks.length;
-    const totalExams = subjects.length;
+    const totalExams = completedSubjects.length;
     let filledCount = 0;
     let totalCells = 0;
 
     studentMarks.forEach((student) => {
-      subjects.forEach((subject) => {
+      completedSubjects.forEach((subject) => {
         totalCells++;
         if (student.marks[subject.exam_public_id]) {
           filledCount++;
@@ -287,7 +428,7 @@ export function MarksOverviewPage() {
     const completionPercent = totalCells > 0 ? Math.round((filledCount / totalCells) * 100) : 0;
 
     return { totalStudents, totalExams, filledCount, totalCells, completionPercent };
-  }, [studentMarks, subjects]);
+  }, [studentMarks, completedSubjects]);
 
   // Per-subject analytics
   const subjectStats = useMemo(() => {
@@ -295,7 +436,7 @@ export function MarksOverviewPage() {
       string,
       { absent: number; entered: number; total: number; avg: number }
     > = {};
-    subjects.forEach((subject) => {
+    completedSubjects.forEach((subject) => {
       let absent = 0;
       let entered = 0;
       let sum = 0;
@@ -316,7 +457,7 @@ export function MarksOverviewPage() {
       };
     });
     return statsMap;
-  }, [studentMarks, subjects]);
+  }, [studentMarks, completedSubjects]);
 
   // Per-student totals
   const studentTotals = useMemo(() => {
@@ -335,7 +476,7 @@ export function MarksOverviewPage() {
       let maxTotal = 0;
       let attempted = 0;
       let absentCount = 0;
-      subjects.forEach((subject) => {
+      completedSubjects.forEach((subject) => {
         const val = student.marks[subject.exam_public_id];
         if (val === 'AB') {
           absentCount++;
@@ -354,7 +495,7 @@ export function MarksOverviewPage() {
       };
     });
     return totalsMap;
-  }, [studentMarks, subjects]);
+  }, [studentMarks, completedSubjects]);
 
   // Get selected session info for display
   const selectedSession = sessionsList.find((s) => s.public_id === selectedSessionId);
@@ -383,6 +524,7 @@ export function MarksOverviewPage() {
                 onValueChange={(value) => {
                   setSelectedSessionId(value);
                   setSelectedClassId('');
+                  setPublishedStateOverride(null);
                 }}
                 placeholder="Select session"
                 searchPlaceholder="Search sessions..."
@@ -399,7 +541,10 @@ export function MarksOverviewPage() {
                   label: `${cls.class_master?.name || 'Unknown'} - ${cls.name}`,
                 }))}
                 value={selectedClassId}
-                onValueChange={setSelectedClassId}
+                onValueChange={(value) => {
+                  setSelectedClassId(value);
+                  setPublishedStateOverride(null);
+                }}
                 disabled={!selectedSessionId}
                 placeholder={selectedSessionId ? 'Select class' : 'Select session first'}
                 searchPlaceholder="Search classes..."
@@ -474,6 +619,23 @@ export function MarksOverviewPage() {
         selectedClassId &&
         !isLoadingMarks &&
         subjects.length > 0 &&
+        completedSubjects.length === 0 && (
+          <Card>
+            <CardContent className="py-20">
+              <div className="text-center text-gray-500">
+                <AlertCircle className="mx-auto mb-4 h-16 w-16 text-amber-500" />
+                <p className="text-lg font-medium text-gray-700">Exams not yet completed</p>
+                <p className="mt-1 text-sm text-gray-500">
+                  Marks can be entered from this page only after exams are marked as completed.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      {selectedSessionId &&
+        selectedClassId &&
+        !isLoadingMarks &&
+        completedSubjects.length > 0 &&
         studentMarks.length === 0 && (
           <Card>
             <CardContent className="py-20">
@@ -487,7 +649,7 @@ export function MarksOverviewPage() {
       {selectedSessionId &&
         selectedClassId &&
         !isLoadingMarks &&
-        subjects.length > 0 &&
+        completedSubjects.length > 0 &&
         studentMarks.length > 0 && (
           <>
             <Card className="border-2">
@@ -501,26 +663,16 @@ export function MarksOverviewPage() {
                         : 'View only - You can only edit marks for subjects assigned to you'}
                     </p>
                   </div>
-                  {canEditAny && (
-                    <Button
-                      variant="success"
-                      onClick={handleSave}
-                      disabled={isSaving}
-                      className="gap-2"
-                    >
-                      <Save className="h-4 w-4" />
-                      {isSaving ? 'Saving...' : 'Save All Marks'}
-                    </Button>
-                  )}
                 </div>
               </CardHeader>
               {/* View-only banner */}
               {!canEditAny && (
                 <div className="flex items-center gap-2 border-b border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-700">
-                  <AlertCircle className="h-4 w-4" />
+                  <AlertCircle className="h-4 w-4 shrink-0" />
                   <span>
-                    You are viewing marks in read-only mode. Only teachers assigned to specific
-                    subjects can edit them.
+                    You are not a class teacher or admin, so you cannot edit marks here. To enter
+                    marks for your assigned subjects, go to the <strong>Enter Marks</strong> page
+                    from the sidebar.
                   </span>
                 </div>
               )}
@@ -530,28 +682,33 @@ export function MarksOverviewPage() {
                   <table className="w-full border-collapse">
                     <thead className="sticky top-0 z-20 bg-gray-100">
                       <tr>
-                        <th className="sticky top-0 left-0 z-30 min-w-[80px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold">
+                        <th className="sticky top-0 left-0 z-30 min-w-[56px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold sm:min-w-[80px]">
                           S.No
                         </th>
-                        <th className="sticky top-0 left-[80px] z-30 min-w-[80px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold">
+                        <th className="sticky top-0 left-[56px] z-30 min-w-[56px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold sm:left-[80px] sm:min-w-[80px]">
                           Photo
                         </th>
-                        <th className="sticky top-0 left-[160px] z-30 min-w-[120px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold">
+                        <th className="sticky top-0 left-[112px] z-30 min-w-[84px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold sm:left-[160px] sm:min-w-[120px]">
                           Roll No
                         </th>
-                        <th className="sticky top-0 left-[280px] z-30 min-w-[200px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold">
+                        <th className="sticky top-0 left-[196px] z-30 min-w-[140px] border-2 border-gray-300 bg-gray-100 p-3 text-left font-semibold sm:left-[280px] sm:min-w-[200px]">
                           Student Name
                         </th>
-                        {subjects.map((subject) => {
+                        {completedSubjects.map((subject) => {
                           const colors = getSubjectColor(subject.subject_name);
                           return (
                             <th
                               key={subject.exam_public_id}
-                              className={`border-2 ${colors.border} p-3 text-center font-semibold ${colors.header} sticky top-0 z-20 min-w-[150px]`}
+                              className={`border-2 ${colors.border} p-3 text-center font-semibold ${colors.header} sticky top-0 z-20 min-w-[110px] sm:min-w-[150px]`}
                             >
                               <div className="space-y-1">
                                 <div className={`font-bold ${colors.text}`}>
                                   {subject.subject_name}
+                                  {subject.is_marks_published && (
+                                    <span className="ml-1 text-xs text-green-700" title="Published">
+                                      🔒
+                                    </span>
+                                  )}
                                 </div>
                                 <div className="text-xs text-gray-600">
                                   Max: {subject.max_marks} | Pass: {subject.passing_marks}
@@ -566,15 +723,15 @@ export function MarksOverviewPage() {
                           );
                         })}
                         {/* Total & Percentage columns */}
-                        <th className="sticky top-0 z-20 min-w-[100px] border-2 border-gray-300 bg-emerald-200 p-3 text-center font-semibold">
+                        <th className="sticky top-0 z-20 min-w-[82px] border-2 border-gray-300 bg-emerald-200 p-3 text-center font-semibold sm:min-w-[100px]">
                           <div className="space-y-1">
                             <div className="font-bold text-emerald-800">Total</div>
                             <div className="text-xs text-gray-600">
-                              Max: {subjects.reduce((s, sub) => s + sub.max_marks, 0)}
+                              Max: {completedSubjects.reduce((s, sub) => s + sub.max_marks, 0)}
                             </div>
                           </div>
                         </th>
-                        <th className="sticky top-0 z-20 min-w-[90px] border-2 border-gray-300 bg-amber-200 p-3 text-center font-semibold">
+                        <th className="sticky top-0 z-20 min-w-[74px] border-2 border-gray-300 bg-amber-200 p-3 text-center font-semibold sm:min-w-[90px]">
                           <div className="font-bold text-amber-800">%</div>
                         </th>
                       </tr>
@@ -588,7 +745,7 @@ export function MarksOverviewPage() {
                           <td className="sticky left-0 z-10 border-2 border-gray-300 bg-inherit p-3 text-center font-medium">
                             {rowIndex + 1}
                           </td>
-                          <td className="sticky left-[80px] z-10 border-2 border-gray-300 bg-inherit p-3">
+                          <td className="sticky left-[56px] z-10 border-2 border-gray-300 bg-inherit p-3 sm:left-[80px]">
                             <StudentAvatar
                               name={student.name}
                               photoUrl={student.photo}
@@ -596,13 +753,13 @@ export function MarksOverviewPage() {
                               size="md"
                             />
                           </td>
-                          <td className="sticky left-[160px] z-10 border-2 border-gray-300 bg-inherit p-3 font-medium">
+                          <td className="sticky left-[112px] z-10 border-2 border-gray-300 bg-inherit p-3 font-medium sm:left-[160px]">
                             {student.rollNumber}
                           </td>
-                          <td className="sticky left-[280px] z-10 border-2 border-gray-300 bg-inherit p-3 font-medium">
+                          <td className="sticky left-[196px] z-10 border-2 border-gray-300 bg-inherit p-3 font-medium sm:left-[280px]">
                             {student.name}
                           </td>
-                          {subjects.map((subject, colIndex) => {
+                          {completedSubjects.map((subject, colIndex) => {
                             const colors = getSubjectColor(subject.subject_name);
                             const markValue = student.marks[subject.exam_public_id] || '';
                             const numMark = Number.parseFloat(markValue);
@@ -614,7 +771,9 @@ export function MarksOverviewPage() {
                               !Number.isNaN(numMark) &&
                               numMark < subject.passing_marks;
                             const isAbsent = markValue === 'AB';
-                            const editable = isSubjectEditable(subject.subject_public_id);
+                            const editable =
+                              isSubjectEditable(subject.subject_public_id) &&
+                              !subject.is_marks_published;
 
                             return (
                               <td
@@ -699,7 +858,7 @@ export function MarksOverviewPage() {
                         >
                           📊 Analytics
                         </td>
-                        {subjects.map((subject) => {
+                        {completedSubjects.map((subject) => {
                           const st = subjectStats[subject.exam_public_id];
                           const colors = getSubjectColor(subject.subject_name);
                           return (
@@ -754,33 +913,146 @@ export function MarksOverviewPage() {
               </CardContent>
             </Card>
 
-            {/* Publish All Marks Button */}
+            {/* Action Buttons Footer */}
             {canEditAny && (
-              <div className="flex items-center justify-between rounded-lg border-2 border-dashed border-green-300 bg-green-50 p-4">
+              <div
+                className={cn(
+                  'flex items-center justify-between rounded-lg border-2 border-dashed p-4',
+                  isMarksLocked ? 'border-blue-300 bg-blue-50' : 'border-green-300 bg-green-50'
+                )}
+              >
                 <div className="flex items-center gap-3">
-                  <ShieldCheck className="h-5 w-5 text-green-600" />
+                  <ShieldCheck
+                    className={cn('h-5 w-5', isMarksLocked ? 'text-blue-600' : 'text-green-600')}
+                  />
                   <div>
-                    <p className="font-medium text-green-800">Marks entered for all students?</p>
-                    <p className="text-sm text-green-600">
-                      Publish marks to make results available. This confirms marks entry is complete
-                      for all exams.
+                    <p
+                      className={cn(
+                        'font-medium',
+                        isMarksLocked ? 'text-blue-800' : 'text-green-800'
+                      )}
+                    >
+                      {isMarksLocked
+                        ? '🔒 All marks published — unpublish to allow editing'
+                        : stats.completionPercent === 100
+                          ? 'All marks entered — ready to publish'
+                          : `${stats.completionPercent}% complete — enter all marks to enable publishing`}
+                    </p>
+                    <p
+                      className={cn('text-sm', isMarksLocked ? 'text-blue-600' : 'text-green-600')}
+                    >
+                      {isMarksLocked
+                        ? 'Marks are locked. Unpublish to make changes.'
+                        : 'Save marks to preserve your entries. Save & Publish to finalize results.'}
                     </p>
                   </div>
                 </div>
-                <Button
-                  variant="success"
-                  onClick={handlePublishAllMarks}
-                  disabled={publishMarksMutation.isPending || stats.completionPercent < 100}
-                  className="gap-2"
-                >
-                  {publishMarksMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <CheckCircle2 className="h-4 w-4" />
+                <div className="flex items-center gap-3">
+                  {canManagePublish && effectiveHasUnpublishedCompleted && !isMarksLocked && (
+                    <Button
+                      variant="success"
+                      onClick={() => setShowPublishConfirm(true)}
+                      disabled={
+                        isSaving ||
+                        isPublishing ||
+                        isPublishingOnly ||
+                        isUnpublishing ||
+                        stats.completionPercent < 100 ||
+                        isMarksLocked
+                      }
+                      className="gap-2"
+                    >
+                      {isPublishingOnly ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4" />
+                      )}
+                      Publish
+                    </Button>
                   )}
-                  Publish All Marks
-                </Button>
+                  {canManagePublish &&
+                    !effectiveHasUnpublishedCompleted &&
+                    effectiveHasPublishedCompleted && (
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowUnpublishConfirm(true)}
+                        disabled={isSaving || isPublishing || isPublishingOnly || isUnpublishing}
+                        className="gap-2 border-amber-200 text-amber-700 hover:bg-amber-50"
+                      >
+                        {isUnpublishing ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Undo2 className="h-4 w-4" />
+                        )}
+                        Unpublish
+                      </Button>
+                    )}
+                  <Button
+                    variant="outline"
+                    onClick={handleSave}
+                    disabled={
+                      isSaving ||
+                      isPublishing ||
+                      isPublishingOnly ||
+                      isUnpublishing ||
+                      isMarksLocked
+                    }
+                    className="gap-2"
+                  >
+                    <Save className="h-4 w-4" />
+                    {isSaving ? 'Saving...' : 'Save'}
+                  </Button>
+                  {!isMarksLocked && (
+                    <Button
+                      variant="success"
+                      onClick={handleSaveAndPublish}
+                      disabled={
+                        isSaving ||
+                        isPublishing ||
+                        isPublishingOnly ||
+                        isUnpublishing ||
+                        stats.completionPercent < 100
+                      }
+                      className="gap-2"
+                    >
+                      {isPublishing ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="h-4 w-4" />
+                      )}
+                      Save &amp; Publish
+                    </Button>
+                  )}
+                </div>
               </div>
+            )}
+
+            {canManagePublish && (
+              <WarningConfirmationDialog
+                open={showPublishConfirm}
+                onOpenChange={setShowPublishConfirm}
+                onConfirm={handlePublishOnly}
+                title="Publish Completed Subjects"
+                description={`Publish marks for all completed subjects in this session/class without saving again.`}
+                warningText="After publishing, marks become locked until unpublished."
+                confirmButtonText="Publish"
+                cancelButtonText="Cancel"
+                isLoading={isPublishingOnly}
+              />
+            )}
+
+            {canManagePublish && (
+              <WarningConfirmationDialog
+                open={showUnpublishConfirm}
+                onOpenChange={setShowUnpublishConfirm}
+                onConfirm={handleUnpublish}
+                title="Unpublish Completed Subjects"
+                description="Unpublish marks for all currently published completed subjects in this class."
+                warningText="This will re-enable editing for those subjects."
+                confirmButtonText="Unpublish"
+                cancelButtonText="Cancel"
+                isLoading={isUnpublishing}
+              />
             )}
           </>
         )}

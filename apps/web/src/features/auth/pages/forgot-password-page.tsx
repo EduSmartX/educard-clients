@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ErrorMessages, ROUTES, SuccessMessages } from '@/constants';
 import { authApi } from '@/lib/api/auth-api';
+import { getErrorMessage } from '@/lib/utils/error-handler';
 import { RequestOtpStep, VerifyOtpStep, SuccessStep } from '../components/forgot-password-steps';
 
 // Step 1: Request OTP - Email or Username
@@ -70,6 +71,7 @@ export default function ForgotPasswordPage() {
   const [currentStep, setCurrentStep] = useState<Step>('request');
   const [isLoading, setIsLoading] = useState(false);
   const [useEmail, setUseEmail] = useState(true); // Toggle between email/username
+  const [channel, setChannel] = useState<'email' | 'sms' | 'both'>('email');
   const [identifier, setIdentifier] = useState(''); // Store email/username
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -96,7 +98,7 @@ export default function ForgotPasswordPage() {
   const handleRequestOtp = async (formData: RequestOtpFormData) => {
     setIsLoading(true);
     try {
-      const requestData = buildIdentifierPayload(useEmail, formData.identifier);
+      const requestData = { ...buildIdentifierPayload(useEmail, formData.identifier), channel };
 
       await authApi.requestPasswordResetOtp(requestData);
 
@@ -127,8 +129,7 @@ export default function ForgotPasswordPage() {
       setCurrentStep('success');
       toast.success(SuccessMessages.AUTH.PASSWORD_RESET_SUCCESS);
     } catch (err: unknown) {
-      const error = err as { message?: string };
-      toast.error(error?.message || ErrorMessages.AUTH.PASSWORD_RESET_FAILED);
+      toast.error(getErrorMessage(err, ErrorMessages.AUTH.PASSWORD_RESET_FAILED));
     } finally {
       setIsLoading(false);
     }
@@ -167,6 +168,8 @@ export default function ForgotPasswordPage() {
             <RequestOtpStep
               useEmail={useEmail}
               setUseEmail={setUseEmail}
+              channel={channel}
+              setChannel={setChannel}
               onSubmit={handleSubmitRequest(handleRequestOtp)}
               register={registerRequest}
               errors={errorsRequest}

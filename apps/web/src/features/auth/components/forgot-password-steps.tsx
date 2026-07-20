@@ -3,17 +3,22 @@
  * Extracted to reduce cognitive complexity of ForgotPasswordPage
  */
 
-import { Mail, ArrowLeft, Send, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { Mail, ArrowLeft, Send, CheckCircle2, Eye, EyeOff, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { ChannelRadioGroup } from '@/components/ui/channel-radio-group';
 import { cn } from '@/lib/utils';
 import { FormPlaceholders, ROUTES, BRANDING } from '@/constants';
 import type { UseFormRegister, FieldErrors } from 'react-hook-form';
 
+type OtpChannel = 'email' | 'sms' | 'both';
+
 interface RequestStepProps {
   useEmail: boolean;
   setUseEmail: (v: boolean) => void;
+  channel: OtpChannel;
+  setChannel: (v: OtpChannel) => void;
   onSubmit: (e: React.FormEvent) => void;
   register: UseFormRegister<{ identifier: string }>;
   errors: FieldErrors<{ identifier: string }>;
@@ -24,6 +29,8 @@ interface RequestStepProps {
 export function RequestOtpStep({
   useEmail,
   setUseEmail,
+  channel,
+  setChannel,
   onSubmit,
   register,
   errors,
@@ -124,6 +131,18 @@ export function RequestOtpStep({
               ⚠️ {errors.identifier.message}
             </p>
           )}
+        </div>
+
+        {/* OTP Delivery Channel */}
+        <div className="space-y-3">
+          <Label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+            <Smartphone className="h-4 w-4 text-teal-600" />
+            Send OTP via
+          </Label>
+          <ChannelRadioGroup
+            value={channel}
+            onValueChange={(v: string) => setChannel(v as OtpChannel)}
+          />
         </div>
 
         <Button

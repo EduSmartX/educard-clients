@@ -282,7 +282,7 @@ export default function StudentFeesScreen() {
     (channel: ReminderChannelType) => {
       if (!reminderTarget) return;
       sendReminder(
-        { student_fee_public_id: reminderTarget.public_id, channel },
+        { student_fee_public_id: reminderTarget.public_id, delivery_methods: [channel] },
         {
           onSuccess: () => {
             setShowReminderModal(false);

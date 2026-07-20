@@ -9,7 +9,7 @@ import { DataTable, type Column, type PaginationInfo } from '@/components/ui/dat
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Eye, CreditCard, Bell } from 'lucide-react';
+import { Eye, CreditCard, Bell, ClipboardCheck } from 'lucide-react';
 import { FeeStatusBadge } from '../../components/fee-status-badge';
 import { FeeAmount, FeeProgress } from '../../components/fee-amount';
 import { type StudentFee, type FeeStatusType, FeeStatus } from '@educard/shared';
@@ -77,6 +77,7 @@ function StudentFeeActionsCell({
 }: Readonly<StudentFeeActionsCellProps>) {
   const isRefund = row.status === FeeStatus.OVERPAID || row.status === FeeStatus.REFUNDING;
   const canRecordPayment = row.status === FeeStatus.PENDING || row.status === FeeStatus.PARTIAL;
+  const hasPendingRequests = (row.pending_approvals ?? 0) > 0;
   const canSendReminder = !(
     [FeeStatus.PAID, FeeStatus.OVERPAID, FeeStatus.REFUNDING, FeeStatus.REFUNDED] as FeeStatusType[]
   ).includes(row.status);
@@ -163,6 +164,27 @@ function StudentFeeActionsCell({
               </Button>
             </TooltipTrigger>
             <TooltipContent>Send Reminder</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+
+      {hasPendingRequests && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-amber-700 hover:bg-amber-50 hover:text-amber-800"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onNavigate(ROUTES.FEES.STUDENT_FEES_VIEW.replace(':id', row.public_id));
+                }}
+              >
+                <ClipboardCheck className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Review {row.pending_approvals} pending request(s)</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       )}

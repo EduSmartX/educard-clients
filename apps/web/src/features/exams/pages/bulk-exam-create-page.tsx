@@ -46,6 +46,7 @@ import { useClasses } from '@/features/classes/hooks/use-classes';
 import { useRole } from '@/hooks/use-role';
 import { bulkCreateExams } from '../api/exams-api';
 import { validateAttendanceDate } from '@/features/attendance/api/attendance-api';
+import { useCriticalOperation } from '@/providers/critical-operation-provider';
 import type { BulkExamCreatePayload, BulkExamItem } from '@educard/shared';
 
 // Subject row state for the table
@@ -135,6 +136,7 @@ export function BulkExamCreatePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { isAdmin } = useRole();
+  const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
 
   // Non-admin users cannot access bulk create
   useEffect(() => {
@@ -182,7 +184,6 @@ export function BulkExamCreatePage() {
   const classesList = classesData?.data || [];
   const subjectsList = useMemo(() => subjectsData?.data || [], [subjectsData]);
 
-  // Get the selected session to display its date range
   const selectedSession = useMemo(
     () => sessionsList.find((s) => s.public_id === sessionId),
     [sessionsList, sessionId]
@@ -347,6 +348,7 @@ export function BulkExamCreatePage() {
   const bulkCreateMutation = useMutation({
     mutationFn: bulkCreateExams,
     onSuccess: (data) => {
+      endCriticalOperation();
       toast.success(`Successfully created ${data.length} exam(s)`);
       queryClient.invalidateQueries({ queryKey: ['exams'] });
       navigate(ROUTES.EXAMS_LIST);
@@ -356,6 +358,7 @@ export function BulkExamCreatePage() {
         response?: { data?: { message?: string; errors?: Record<string, string[]> } };
       }
     ) => {
+      endCriticalOperation();
       const respData = error.response?.data;
       const allMessages = respData?.errors ? Object.values(respData.errors).flat() : [];
       if (allMessages.length > 0) {
@@ -430,6 +433,10 @@ export function BulkExamCreatePage() {
       return;
     }
 
+    beginCriticalOperation({
+      title: 'Creating exams',
+      description: 'Saving bulk exam schedule and updating existing exams. Please wait...',
+    });
     bulkCreateMutation.mutate(payload);
   };
 
@@ -437,6 +444,10 @@ export function BulkExamCreatePage() {
     setShowMissingDateTimeWarning(false);
     setShowDurationWarning(false);
     if (pendingSubmitPayload) {
+      beginCriticalOperation({
+        title: 'Creating exams',
+        description: 'Saving bulk exam schedule and updating existing exams. Please wait...',
+      });
       bulkCreateMutation.mutate(pendingSubmitPayload);
       setPendingSubmitPayload(null);
     }
@@ -659,13 +670,57 @@ export function BulkExamCreatePage() {
                           </TableCell>
                           <TableCell>
                             <div className="space-y-1">
-                              <DatePicker
-                                value={row.date}
-                                onChange={(date) => updateRow(index, 'date', date)}
-                                disabled={!row.selected}
-                                placeholder="Select date"
-                                className={`h-8 ${row.dateError ? 'border-red-500' : ''}`}
-                              />
+                              <div className="flex items-center gap-1">
+                                {row.selected && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 shrink-0 rounded-full bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-700"
+                                    onClick={() => {
+                                      const base =
+                                        row.date ||
+                                        (index > 0 ? subjectRows[index - 1].date : null);
+                                      if (base) {
+                                        const prev = new Date(base);
+                                        prev.setDate(prev.getDate() - 1);
+                                        updateRow(index, 'date', prev);
+                                      }
+                                    }}
+                                    title="Previous day"
+                                  >
+                                    −
+                                  </Button>
+                                )}
+                                <DatePicker
+                                  value={row.date}
+                                  onChange={(date) => updateRow(index, 'date', date)}
+                                  disabled={!row.selected}
+                                  placeholder="Select date"
+                                  className={`h-8 ${row.dateError ? 'border-red-500' : ''}`}
+                                />
+                                {row.selected && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 shrink-0 rounded-full bg-green-50 text-green-500 hover:bg-green-100 hover:text-green-700"
+                                    onClick={() => {
+                                      const base =
+                                        row.date ||
+                                        (index > 0 ? subjectRows[index - 1].date : null);
+                                      if (base) {
+                                        const next = new Date(base);
+                                        next.setDate(next.getDate() + 1);
+                                        updateRow(index, 'date', next);
+                                      }
+                                    }}
+                                    title="Next day"
+                                  >
+                                    +
+                                  </Button>
+                                )}
+                              </div>
                               {!!row.dateError && (
                                 <div className="flex items-center gap-1 text-xs text-red-500">
                                   <AlertTriangle className="h-3 w-3" />

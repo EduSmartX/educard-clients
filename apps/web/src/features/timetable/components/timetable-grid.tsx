@@ -15,6 +15,8 @@ import { formatSlotTime } from '@educard/shared';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -22,7 +24,9 @@ import { SearchableSelect } from '@/components/ui/searchable-select';
 import { AlertTriangle, BookOpen, Clock, Coffee, Copy, Plus, User, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSubjects } from '@/features/subjects/hooks/use-subjects';
+import { useOrganizationStaffUsers } from '@/hooks/use-supervisors';
 import { useRole } from '@/hooks/use-role';
+import { getErrorMessage, getFieldErrors } from '@/lib/utils/error-handler';
 import { useCreateEntry, useDeleteEntry } from '../hooks/mutations';
 import { timetableKeys } from '../hooks/queries';
 import {
@@ -86,18 +90,40 @@ function AssignmentPopover({
   onAssigned: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [assignmentType, setAssignmentType] = useState<'subject' | 'other'>('subject');
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('');
+  const [otherPeriodType, setOtherPeriodType] = useState<string>('activity');
+  const [otherLabel, setOtherLabel] = useState<string>('');
+  const [otherNotes, setOtherNotes] = useState<string>('');
+  const [selectedCoordinatorId, setSelectedCoordinatorId] = useState<string>('');
+  const [submitError, setSubmitError] = useState<string>('');
   const qc = useQueryClient();
 
   const { data: subjectsData } = useSubjects({
     class_assigned: classPublicId,
     page_size: 100,
   });
+  const { data: staffUsers = [], isLoading: isStaffLoading } = useOrganizationStaffUsers();
   const createEntry = useCreateEntry(classPublicId, {
     onSuccess: () => {
       setOpen(false);
+      setAssignmentType('subject');
       setSelectedSubjectId('');
+      setOtherPeriodType('activity');
+      setOtherLabel('');
+      setOtherNotes('');
+      setSelectedCoordinatorId('');
+      setSubmitError('');
       onAssigned();
+    },
+    onError: (error) => {
+      const fieldErrors = getFieldErrors(error);
+      const message =
+        fieldErrors.coordinator_public_id ||
+        fieldErrors.notes ||
+        getErrorMessage(error, 'Unable to save this timetable entry.');
+      setSubmitError(message);
+      toast.error(message);
     },
   });
 
@@ -109,15 +135,40 @@ function AssignmentPopover({
   const hasWarnings = warnings.length > 0;
 
   const handleAssign = () => {
-    if (!selectedSubjectId) {
-      toast.error(ValidationMessages.SELECT_SUBJECT);
+    setSubmitError('');
+    if (assignmentType === 'subject') {
+      if (!selectedSubjectId) {
+        toast.error(ValidationMessages.SELECT_SUBJECT);
+        return;
+      }
+      createEntry.mutate({
+        slot_public_id: slot.public_id,
+        day_of_week: slot.day_of_week,
+        class_public_id: classPublicId,
+        assignment_type: 'subject',
+        subject_public_id: selectedSubjectId,
+      });
       return;
     }
+
+    if (!otherLabel.trim()) {
+      toast.error('Please enter a label for this period.');
+      return;
+    }
+    if (!selectedCoordinatorId) {
+      toast.error('Please select a coordinator.');
+      return;
+    }
+
     createEntry.mutate({
       slot_public_id: slot.public_id,
       day_of_week: slot.day_of_week,
       class_public_id: classPublicId,
-      subject_public_id: selectedSubjectId,
+      assignment_type: 'other',
+      coordinator_public_id: selectedCoordinatorId,
+      other_period_type: otherPeriodType,
+      other_label: otherLabel.trim(),
+      notes: otherNotes.trim(),
     });
   };
 
@@ -125,7 +176,13 @@ function AssignmentPopover({
     // Now invalidate cache so the grid refreshes with the new entry
     qc.invalidateQueries({ queryKey: timetableKeys.classTimetable(classPublicId) });
     setOpen(false);
+    setAssignmentType('subject');
     setSelectedSubjectId('');
+    setOtherPeriodType('activity');
+    setOtherLabel('');
+    setOtherNotes('');
+    setSelectedCoordinatorId('');
+    setSubmitError('');
     createEntry.reset();
     onAssigned();
   };
@@ -137,7 +194,13 @@ function AssignmentPopover({
         setOpen(v);
         if (!v) {
           createEntry.reset();
+          setAssignmentType('subject');
           setSelectedSubjectId('');
+          setOtherPeriodType('activity');
+          setOtherLabel('');
+          setOtherNotes('');
+          setSelectedCoordinatorId('');
+          setSubmitError('');
         }
       }}
     >
@@ -218,51 +281,158 @@ function AssignmentPopover({
                 </Button>
               </div>
 
+              {!!submitError && (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                  {submitError}
+                </div>
+              )}
+
               <label className="block space-y-1.5">
                 <span className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase">
-                  Subject
+                  Assignment Type
                 </span>
-                <SearchableSelect
-                  options={subjects.map((sub) => ({
-                    value: sub.public_id,
-                    label: sub.subject_info.name,
-                  }))}
-                  value={selectedSubjectId}
-                  onValueChange={setSelectedSubjectId}
-                  placeholder="Choose a subject…"
-                  searchPlaceholder="Search subjects..."
-                  emptyText="No subjects configured for this class"
-                  className="h-9 text-xs"
-                />
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={assignmentType === 'subject' ? 'default' : 'outline'}
+                    className="h-8 text-xs"
+                    onClick={() => setAssignmentType('subject')}
+                  >
+                    Subject
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={assignmentType === 'other' ? 'default' : 'outline'}
+                    className="h-8 text-xs"
+                    onClick={() => setAssignmentType('other')}
+                  >
+                    Other
+                  </Button>
+                </div>
               </label>
 
-              {selectedSubject && (
-                <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                  <span className="mb-2 block text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
-                    Teacher (auto-assigned)
-                  </span>
-                  {selectedSubject.teacher_info ? (
-                    <div className="flex items-center gap-2.5">
-                      <Avatar className="h-8 w-8 shadow-sm">
-                        <AvatarFallback className="bg-indigo-100 text-xs font-bold text-indigo-600">
-                          {getInitials(selectedSubject.teacher_info.full_name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-sm font-semibold text-slate-700">
-                          {selectedSubject.teacher_info.full_name}
-                        </p>
-                        <p className="text-[10px] text-slate-400">
-                          {selectedSubject.teacher_info.employee_id}
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-xs text-slate-400">
-                      <User className="h-4 w-4" />
-                      No teacher assigned to this subject
+              {assignmentType === 'subject' ? (
+                <>
+                  <label className="block space-y-1.5">
+                    <span className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase">
+                      Subject
+                    </span>
+                    <SearchableSelect
+                      options={subjects.map((sub) => ({
+                        value: sub.public_id,
+                        label: sub.subject_info.name,
+                      }))}
+                      value={selectedSubjectId}
+                      onValueChange={setSelectedSubjectId}
+                      placeholder="Choose a subject…"
+                      searchPlaceholder="Search subjects..."
+                      emptyText="No subjects configured for this class"
+                      className="h-9 text-xs"
+                    />
+                  </label>
+
+                  {selectedSubject && (
+                    <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                      <span className="mb-2 block text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+                        Teacher (auto-assigned)
+                      </span>
+                      {selectedSubject.teacher_info ? (
+                        <div className="flex items-center gap-2.5">
+                          <Avatar className="h-8 w-8 shadow-sm">
+                            <AvatarFallback className="bg-indigo-100 text-xs font-bold text-indigo-600">
+                              {getInitials(selectedSubject.teacher_info.full_name)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="text-sm font-semibold text-slate-700">
+                              {selectedSubject.teacher_info.full_name}
+                            </p>
+                            <p className="text-[10px] text-slate-400">
+                              {selectedSubject.teacher_info.employee_id}
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-xs text-slate-400">
+                          <User className="h-4 w-4" />
+                          No teacher assigned to this subject
+                        </div>
+                      )}
                     </div>
                   )}
+                </>
+              ) : (
+                <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                  <div className="space-y-2.5">
+                    <label className="block space-y-1">
+                      <span className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase">
+                        Coordinator
+                      </span>
+                      <SearchableSelect
+                        options={staffUsers.map((user) => ({
+                          value: user.public_id,
+                          label: user.role_display
+                            ? `${user.full_name} (${user.role_display})`
+                            : user.full_name,
+                        }))}
+                        value={selectedCoordinatorId}
+                        onValueChange={setSelectedCoordinatorId}
+                        placeholder={isStaffLoading ? 'Loading staff...' : 'Select coordinator...'}
+                        searchPlaceholder="Search staff..."
+                        emptyText="No staff users found"
+                        className="h-9 text-xs"
+                        disabled={isStaffLoading}
+                      />
+                    </label>
+
+                    <label className="block space-y-1">
+                      <span className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase">
+                        Type
+                      </span>
+                      <SearchableSelect
+                        options={[
+                          { value: 'activity', label: 'Activity' },
+                          { value: 'club', label: 'Club' },
+                          { value: 'sports', label: 'Sports' },
+                          { value: 'assembly', label: 'Assembly' },
+                          { value: 'event', label: 'Event' },
+                          { value: 'study_hall', label: 'Study Hall' },
+                        ]}
+                        value={otherPeriodType}
+                        onValueChange={setOtherPeriodType}
+                        placeholder="Choose type..."
+                        searchPlaceholder="Search types..."
+                        emptyText="No type found"
+                        className="h-9 text-xs"
+                      />
+                    </label>
+                    <label className="block space-y-1">
+                      <span className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase">
+                        Label
+                      </span>
+                      <Input
+                        value={otherLabel}
+                        onChange={(e) => setOtherLabel(e.target.value)}
+                        placeholder="e.g., Lab Preparation"
+                        className="h-9 text-xs"
+                        maxLength={60}
+                      />
+                    </label>
+                    <label className="block space-y-1">
+                      <span className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase">
+                        Notes (optional)
+                      </span>
+                      <Textarea
+                        value={otherNotes}
+                        onChange={(e) => setOtherNotes(e.target.value)}
+                        placeholder="Optional details"
+                        className="min-h-[68px] text-xs"
+                        maxLength={120}
+                      />
+                    </label>
+                  </div>
                 </div>
               )}
 
@@ -273,7 +443,13 @@ function AssignmentPopover({
                   className="h-8 flex-1 text-xs"
                   onClick={() => {
                     setOpen(false);
+                    setAssignmentType('subject');
                     setSelectedSubjectId('');
+                    setOtherPeriodType('activity');
+                    setOtherLabel('');
+                    setOtherNotes('');
+                    setSelectedCoordinatorId('');
+                    setSubmitError('');
                   }}
                 >
                   Cancel
@@ -282,7 +458,11 @@ function AssignmentPopover({
                   size="sm"
                   className="h-8 flex-1 bg-indigo-600 text-xs hover:bg-indigo-700"
                   onClick={handleAssign}
-                  disabled={!selectedSubjectId || createEntry.isPending}
+                  disabled={
+                    createEntry.isPending ||
+                    (assignmentType === 'subject' && !selectedSubjectId) ||
+                    (assignmentType === 'other' && (!otherLabel.trim() || !selectedCoordinatorId))
+                  }
                 >
                   {createEntry.isPending ? 'Saving…' : 'Assign'}
                 </Button>
@@ -382,25 +562,29 @@ function PeriodCell({
     <div
       data-timetable-cell="true"
       className={`group relative flex h-full flex-col rounded-xl border border-l-4 ${color.border} ${color.bg} px-3 py-2.5 transition-all hover:shadow-md ${
-        copySource?.subjectPublicId === slot.subject_public_id ? 'ring-2 ring-indigo-400 ring-offset-2' : ''
+        copySource?.subjectPublicId === slot.subject_public_id
+          ? 'ring-2 ring-indigo-400 ring-offset-2'
+          : ''
       }`}
     >
       {isAdmin && (
         <>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onStartCopy({
-                subjectPublicId: slot.subject_public_id ?? '',
-                subjectName: slot.subject_name ?? '',
-                teacherName: slot.teacher_name,
-              });
-            }}
-            className="absolute -top-1.5 right-6 z-10 hidden h-5 w-5 items-center justify-center rounded-full bg-indigo-500 text-white shadow-sm transition-all group-hover:flex hover:bg-indigo-600"
-            title="Copy this subject to other periods"
-          >
-            <Copy className="h-3 w-3" />
-          </button>
+          {!!slot.subject_public_id && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onStartCopy({
+                  subjectPublicId: slot.subject_public_id ?? '',
+                  subjectName: slot.subject_name ?? '',
+                  teacherName: slot.teacher_name,
+                });
+              }}
+              className="absolute -top-1.5 right-6 z-10 hidden h-5 w-5 items-center justify-center rounded-full bg-indigo-500 text-white shadow-sm transition-all group-hover:flex hover:bg-indigo-600"
+              title="Copy this subject to other periods"
+            >
+              <Copy className="h-3 w-3" />
+            </button>
+          )}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -424,15 +608,15 @@ function PeriodCell({
         {slot.subject_name}
       </span>
 
-      {!!slot.teacher_name && (
+      {!!(slot.teacher_name || slot.coordinator_name) && (
         <div className="mt-auto flex items-center gap-1.5 pt-2">
           <Avatar className="h-5 w-5 shadow-sm">
             <AvatarFallback className={`${color.light} text-[8px] font-bold ${color.text}`}>
-              {getInitials(slot.teacher_name)}
+              {getInitials(slot.teacher_name || slot.coordinator_name || '')}
             </AvatarFallback>
           </Avatar>
           <span className={`truncate text-[10px] font-medium ${color.text} opacity-75`}>
-            {slot.teacher_name}
+            {slot.teacher_name || slot.coordinator_name}
           </span>
         </div>
       )}
@@ -520,7 +704,9 @@ export function TimetableGrid({ timetable, isLoading, readOnly }: Readonly<Timet
 
         if (result.warnings?.length) {
           toast.warning(result.warnings[0] ?? 'Assignment saved with warnings.');
-          await qc.invalidateQueries({ queryKey: timetableKeys.classTimetable(timetable.class_public_id) });
+          await qc.invalidateQueries({
+            queryKey: timetableKeys.classTimetable(timetable.class_public_id),
+          });
         }
       } catch {
         // Mutation errors are surfaced by the shared mutation handler.
@@ -709,7 +895,7 @@ export function TimetableGrid({ timetable, isLoading, readOnly }: Readonly<Timet
       </CardHeader>
 
       <CardContent className="overflow-x-auto p-3 sm:p-5">
-        <div ref={timetableAreaRef} className="min-w-[700px]">
+        <div ref={timetableAreaRef} className="min-w-[520px] sm:min-w-[700px]">
           {copySource && (
             <div
               data-copy-preserve="true"

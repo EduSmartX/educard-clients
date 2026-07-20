@@ -6,6 +6,8 @@
 
 import {
   getRoleGradient,
+  ADDRESS_TYPE,
+  ADDRESS_TYPE_OPTIONS,
   GENDER_OPTIONS,
   BLOOD_GROUP_OPTIONS,
   teacherFullSchema,
@@ -84,6 +86,7 @@ export default function EditTeacherScreen() {
     joining_date: '',
     supervisor_email: '',
     subjects: [] as string[],
+    address_type: ADDRESS_TYPE.USER_CURRENT as string,
     street_address: '',
     city: '',
     state: '',
@@ -115,6 +118,7 @@ export default function EditTeacherScreen() {
         joining_date: teacher.joining_date ?? '',
         supervisor_email: u?.supervisor?.email ?? '',
         subjects: (teacher.subjects ?? []).map((s) => s.id?.toString() ?? s.public_id),
+        address_type: addr?.address_type ?? ADDRESS_TYPE.USER_CURRENT,
         street_address: addr?.street_address ?? '',
         city: addr?.city ?? '',
         state: addr?.state ?? '',
@@ -192,9 +196,10 @@ export default function EditTeacherScreen() {
         onSuccess: () => {
           router.back();
         },
-        onError: (err: Error & { response?: { data?: unknown } }) => {
-          if (err.response?.data) {
-            const { fieldErrors: fe, generalError } = parseApiErrors(err.response.data);
+        onError: (err: unknown) => {
+          const apiErr = err as { response?: { data?: Record<string, unknown> }; message?: string };
+          if (apiErr.response?.data) {
+            const { fieldErrors: fe, generalError } = parseApiErrors(apiErr.response.data);
             if (Object.keys(fe).length > 0) {
               setErrors(fe);
               scrollRef.current?.scrollToPosition(0, 0, true);
@@ -202,7 +207,7 @@ export default function EditTeacherScreen() {
             }
             setApiError(generalError ?? 'Failed to update teacher.');
           } else {
-            setApiError(err.message ?? 'Network error.');
+            setApiError(apiErr.message ?? 'Network error.');
           }
         },
       }
@@ -442,6 +447,16 @@ export default function EditTeacherScreen() {
           </TouchableOpacity>
           {addressExpanded && (
             <View style={s.collapseBody}>
+              <FormDropdown
+                label="Address Type"
+                options={ADDRESS_TYPE_OPTIONS.map((o) => ({
+                  value: o.value,
+                  label: o.label,
+                }))}
+                value={form.address_type}
+                onChange={(v) => updateField('address_type', v)}
+                placeholder="Select address type"
+              />
               <FormInput
                 label="Street Address"
                 value={form.street_address}

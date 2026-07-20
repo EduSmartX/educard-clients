@@ -110,7 +110,6 @@ export default function EditHomeworkScreen() {
     }
   }, [homework, initialized]);
 
-  // Check if user is admin
   const isAdmin = useMemo(() => {
     if (!user?.role) return false;
     return ['admin', 'super_admin', 'organization_admin'].includes(user.role.toLowerCase());

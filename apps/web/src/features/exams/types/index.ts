@@ -1,7 +1,7 @@
 /**
  * Exam Types — Re-exports from @educard/shared
  * Single source of truth for Web and Mobile
- * 
+ *
  * ExamSession -> Exam (session+subject) -> Mark
  */
 

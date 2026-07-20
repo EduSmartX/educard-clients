@@ -42,6 +42,7 @@ import {
 import { ROUTES } from '@/constants/app-config';
 import apiClient from '@/lib/api';
 import { PageHeader } from '@/components/common';
+import { useCriticalOperation } from '@/providers/critical-operation-provider';
 
 // Impact messages for user clarity
 const IMPACT_MESSAGES = {
@@ -74,6 +75,7 @@ export function EditFeeStructurePage() {
   const { id = '' } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const feeStructureApi = createFeeStructureApi(apiClient);
+  const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
 
   // Fetch existing structure
   const { data: structure, isLoading: isStructureLoading } = useFeeStructure(id);
@@ -161,11 +163,19 @@ export function EditFeeStructurePage() {
     if (!id) {
       return;
     }
+    beginCriticalOperation({
+      title: 'Updating fee structure',
+      description: 'Applying component and student fee updates. Please wait...',
+    });
     updateMutation.mutate(
       { id, data },
       {
         onSuccess: () => {
+          endCriticalOperation();
           navigate(ROUTES.FEES.STRUCTURES);
+        },
+        onError: () => {
+          endCriticalOperation();
         },
       }
     );
@@ -191,10 +201,13 @@ export function EditFeeStructurePage() {
     display_name: cls.display_name,
   }));
 
-  // Academic years list
+  // Academic years list - pass public_id as value, name as label
   const academicYears = academicYearsData?.length
-    ? academicYearsData.map((ay: { name: string }) => ay.name)
-    : ['2024-2025', '2025-2026', '2026-2027'];
+    ? academicYearsData.map((ay: { public_id: string; name: string }) => ({
+        value: ay.public_id,
+        label: ay.name,
+      }))
+    : [];
 
   if (isStructureLoading) {
     return (

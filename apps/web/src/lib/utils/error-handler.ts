@@ -24,6 +24,23 @@ export type { NormalizedError } from '@educard/shared';
 
 import { parseError } from '@educard/shared';
 
+function getFieldCandidates(field: string, fieldMap?: Record<string, string>): string[] {
+  const explicit = fieldMap?.[field];
+  if (explicit) {
+    return [explicit];
+  }
+
+  const normalized = field.replace(/\[(\d+)\]/g, '.$1');
+  const leaf = normalized.split('.').pop() || normalized;
+
+  const candidates = [normalized];
+  if (leaf !== normalized) {
+    candidates.push(leaf);
+  }
+
+  return [...new Set(candidates)];
+}
+
 /**
  * Apply field errors to react-hook-form.
  * Sets errors on form fields and returns summary for toast.
@@ -31,7 +48,7 @@ import { parseError } from '@educard/shared';
 export function applyFieldErrors<TFieldValues extends FieldValues>(
   error: unknown,
   setError: UseFormSetError<TFieldValues>,
-  fieldMap?: Record<string, string>,
+  fieldMap?: Record<string, string>
 ): {
   hasFieldErrors: boolean;
   fieldErrorCount: number;
@@ -46,10 +63,14 @@ export function applyFieldErrors<TFieldValues extends FieldValues>(
     fieldErrorMessages: [] as string[],
   };
 
-  Object.entries(normalized.fieldErrors).forEach(([field, message]) => {
+  const parsedFieldErrors = normalized.fieldErrors as Record<string, string>;
+
+  Object.entries(parsedFieldErrors).forEach(([field, message]) => {
     try {
-      const formField = (fieldMap?.[field] || field) as Path<TFieldValues>;
-      setError(formField, { type: 'manual', message });
+      const candidates = getFieldCandidates(field, fieldMap);
+      candidates.forEach((candidate) => {
+        setError(candidate as Path<TFieldValues>, { type: 'manual', message });
+      });
       result.hasFieldErrors = true;
       result.fieldErrorCount++;
       result.fieldErrorMessages.push(message);
@@ -73,7 +94,7 @@ export function applyFieldErrors<TFieldValues extends FieldValues>(
 export function setFormFieldErrors<TFieldValues extends FieldValues>(
   error: unknown,
   setError: UseFormSetError<TFieldValues>,
-  fieldMap?: Record<string, Path<TFieldValues>>,
+  fieldMap?: Record<string, Path<TFieldValues>>
 ): {
   hasFieldError: boolean;
   fieldErrors: string[];

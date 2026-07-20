@@ -10,6 +10,9 @@ interface OrganizationUser {
   email: string;
   full_name: string;
   public_id: string;
+  role?: string;
+  role_display?: string;
+  employee_id?: string;
 }
 
 interface ApiResponse<T> {
@@ -24,6 +27,19 @@ export function useOrganizationUsers() {
     queryKey: ['organization-users', 'supervisors'],
     queryFn: async () => {
       const response = await apiClient.get<ApiResponse<OrganizationUser[]>>('/users/supervisors/');
+      return response.data?.data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useOrganizationStaffUsers() {
+  return useQuery<OrganizationUser[]>({
+    queryKey: ['organization-users', 'staff'],
+    queryFn: async () => {
+      const response = await apiClient.get<ApiResponse<OrganizationUser[]>>(
+        '/users/supervisors/?scope=staff'
+      );
       return response.data?.data || [];
     },
     staleTime: 5 * 60 * 1000,

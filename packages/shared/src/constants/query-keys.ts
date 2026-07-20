@@ -244,6 +244,34 @@ export const QueryKeys = {
       ["attachments", "photo", "user", userId] as const,
     ORG_BRANDING: (type: string) => ["attachments", "branding", type] as const,
   },
+
+  // Student Portal (self-service pages under /student/*)
+  STUDENT_PORTAL: {
+    DASHBOARD: ["student-portal", "dashboard"] as const,
+    ATTENDANCE_SUMMARY: ["student-portal", "attendance", "summary"] as const,
+    ATTENDANCE_CALENDAR: (month?: number, year?: number) =>
+      ["student-portal", "attendance", "calendar", month, year] as const,
+    ATTENDANCE_YEARLY_REPORT: [
+      "student-portal",
+      "attendance",
+      "yearly-report",
+    ] as const,
+    EXAM_SESSIONS: ["student-portal", "exams", "sessions"] as const,
+    EXAM_SESSION_DETAIL: (publicId: string) =>
+      ["student-portal", "exams", "sessions", publicId] as const,
+    FEE_SUMMARY: ["student-portal", "fee", "summary"] as const,
+    FEE_PAYMENTS: ["student-portal", "fee", "payments"] as const,
+    FEE_COMPONENTS: ["student-portal", "fee", "components"] as const,
+    TIMETABLE: (date?: string) =>
+      ["student-portal", "timetable", date] as const,
+    HOMEWORK_LIST: (date?: string) =>
+      ["student-portal", "homework", "list", date] as const,
+    HOMEWORK_DETAIL: (publicId: string) =>
+      ["student-portal", "homework", "detail", publicId] as const,
+    LEAVE_ENABLED: ["student-portal", "leave", "enabled"] as const,
+    LEAVE_BALANCE: ["student-portal", "leave", "balance"] as const,
+    LEAVE_REQUESTS: ["student-portal", "leave", "requests"] as const,
+  },
 } as const;
 
 /**

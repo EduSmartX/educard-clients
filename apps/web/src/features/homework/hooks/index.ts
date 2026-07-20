@@ -6,6 +6,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { HOMEWORK_UI } from '@educard/shared';
+import { getErrorMessage } from '@/lib/utils/error-handler';
 
 import * as homeworkApi from '../api/homework-api';
 import type {
@@ -92,8 +93,17 @@ export function useCreateHomework() {
       queryClient.invalidateQueries({ queryKey: homeworkKeys.lists() });
       queryClient.invalidateQueries({ queryKey: homeworkKeys.dashboard() });
     },
-    onError: (error: Error) => {
-      toast.error(error.message || HOMEWORK_UI.FAILED_TO_CREATE);
+  });
+}
+
+export function useBulkCreateHomework() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (items: HomeworkCreatePayload[]) => homeworkApi.bulkCreateHomework(items),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: homeworkKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: homeworkKeys.dashboard() });
     },
   });
 }
@@ -109,7 +119,7 @@ export function useUpdateHomework() {
       queryClient.invalidateQueries({ queryKey: homeworkKeys.detail(publicId) });
     },
     onError: (error: Error) => {
-      toast.error(error.message || HOMEWORK_UI.FAILED_TO_UPDATE);
+      toast.error(getErrorMessage(error, HOMEWORK_UI.FAILED_TO_UPDATE));
     },
   });
 }
@@ -125,7 +135,7 @@ export function useDeleteHomework() {
       queryClient.invalidateQueries({ queryKey: homeworkKeys.dashboard() });
     },
     onError: (error: Error) => {
-      toast.error(error.message || HOMEWORK_UI.FAILED_TO_DELETE);
+      toast.error(getErrorMessage(error, HOMEWORK_UI.FAILED_TO_DELETE));
     },
   });
 }
@@ -150,7 +160,7 @@ export function useUploadAttachment() {
       toast.success(HOMEWORK_UI.FILE_UPLOADED);
     },
     onError: (error: Error) => {
-      toast.error(error.message || HOMEWORK_UI.FAILED_TO_UPLOAD);
+      toast.error(getErrorMessage(error, HOMEWORK_UI.FAILED_TO_UPLOAD));
     },
   });
 }
@@ -171,7 +181,7 @@ export function useDeleteAttachment() {
       toast.success(HOMEWORK_UI.ATTACHMENT_REMOVED);
     },
     onError: (error: Error) => {
-      toast.error(error.message || HOMEWORK_UI.FAILED_TO_REMOVE);
+      toast.error(getErrorMessage(error, HOMEWORK_UI.FAILED_TO_REMOVE));
     },
   });
 }
@@ -216,7 +226,7 @@ export function useReviewSubmission() {
       toast.success(HOMEWORK_UI.SUBMISSION_REVIEWED);
     },
     onError: (error: Error) => {
-      toast.error(error.message || HOMEWORK_UI.FAILED_TO_REVIEW);
+      toast.error(getErrorMessage(error, HOMEWORK_UI.FAILED_TO_REVIEW));
     },
   });
 }
@@ -244,10 +254,7 @@ export function useSendHomeworkNotification() {
       toast.success('Notification sent successfully');
     },
     onError: (error: unknown) => {
-      const message =
-        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        'Failed to send notification';
-      toast.error(message);
+      toast.error(getErrorMessage(error, 'Failed to send notification'));
     },
   });
 }

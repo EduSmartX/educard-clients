@@ -5,7 +5,7 @@
 
 import { useMemo, useState } from 'react';
 import { format, parseISO, startOfDay } from 'date-fns';
-import { Pencil, Trash2, AlertCircle } from 'lucide-react';
+import { Pencil, Trash2, AlertCircle, Bell } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -27,7 +27,7 @@ import {
   isHolidayPast,
   isWeekendHoliday,
 } from '../utils/holiday-utils';
-import { useDeleteHoliday } from '../hooks';
+import { useDeleteHoliday, useSendHolidayNotification } from '../hooks';
 import { HolidayFormDialog } from './holiday-form-dialog';
 import { DeleteConfirmationDialog } from '@/components/common/delete-confirmation-dialog';
 
@@ -46,6 +46,11 @@ export function TableView({ holidays, currentDate }: Readonly<TableViewProps>) {
 
   const today = startOfDay(new Date());
   const deleteMutation = useDeleteHoliday();
+  const notifyMutation = useSendHolidayNotification();
+
+  const handleNotify = (holiday: Holiday) => {
+    notifyMutation.mutate([holiday.public_id]);
+  };
 
   // Sort holidays by date
   const sortedHolidays = useMemo(() => {
@@ -152,6 +157,18 @@ export function TableView({ holidays, currentDate }: Readonly<TableViewProps>) {
                   {isAdmin && (
                     <TableCell>
                       <div className="flex items-center justify-center gap-1">
+                        {!isWeekend && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-amber-600 hover:bg-amber-100 hover:text-amber-700"
+                            onClick={() => handleNotify(holiday)}
+                            disabled={notifyMutation.isPending}
+                            title="Send holiday notification"
+                          >
+                            <Bell className="h-4 w-4" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"

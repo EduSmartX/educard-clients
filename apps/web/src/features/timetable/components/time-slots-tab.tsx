@@ -255,7 +255,7 @@ function SlotRow({
           title="End"
         />
       </div>
-      <div className="min-w-[120px] flex-1">
+      <div className="min-w-[96px] flex-1 sm:min-w-[120px]">
         <Input
           value={slot.label}
           onChange={(e) => onChange({ ...slot, label: e.target.value })}
@@ -309,7 +309,7 @@ function CopyToDaysDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white sm:max-w-md">
+      <DialogContent className="w-[calc(100vw-1.5rem)] bg-white sm:w-full sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Copy className="h-5 w-5 text-indigo-500" />
@@ -880,7 +880,7 @@ export function TimeSlotsTab() {
 
       {/* Delete Day confirmation dialog */}
       <Dialog open={showDeleteDayConfirm} onOpenChange={setShowDeleteDayConfirm}>
-        <DialogContent className="border-2 border-slate-200 bg-white shadow-2xl sm:max-w-md sm:rounded-2xl">
+        <DialogContent className="w-[calc(100vw-1.5rem)] border-2 border-slate-200 bg-white shadow-2xl sm:w-full sm:max-w-md sm:rounded-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-lg text-slate-900">
               <AlertTriangle className="h-5 w-5 text-red-500" />

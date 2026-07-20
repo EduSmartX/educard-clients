@@ -52,7 +52,6 @@ export default function ClassFormPage() {
   const location = useLocation();
   const { id } = useParams<{ id: string }>();
 
-  // Check if viewing deleted class (from query param)
   const searchParams = new URLSearchParams(location.search);
   const isViewingDeleted = searchParams.get('deleted') === 'true';
 

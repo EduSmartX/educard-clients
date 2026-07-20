@@ -1,3 +1,4 @@
+import { LEAVE_STATUS } from '@educard/shared/constants';
 import { Check, X, Sun, Sunset } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -100,11 +101,11 @@ export function StudentAttendanceTable({
           <TableHeader>
             <TableRow style={{ backgroundColor: '#E8F5E9' }}>
               {/* Roll No - always visible */}
-              <TableHead className="w-[60px] px-2 text-xs font-bold text-gray-900 sm:w-[80px] sm:px-3 sm:text-sm">
+              <TableHead className="w-[56px] px-2 text-xs font-bold text-gray-900 sm:w-[68px] sm:px-3 sm:text-sm lg:w-[88px]">
                 {AttendanceUiText.ROLL_NO}
               </TableHead>
               {/* Photo - visible on sm+, no header text needed */}
-              <TableHead className="hidden w-[50px] px-1 sm:table-cell sm:px-2">
+              <TableHead className="hidden w-[42px] px-1 sm:table-cell sm:w-[50px] sm:px-2">
                 {/* Photo column - no header text for cleaner look */}
               </TableHead>
               {/* Student Name */}
@@ -112,22 +113,22 @@ export function StudentAttendanceTable({
                 {AttendanceUiText.STUDENT_NAME}
               </TableHead>
               {showMorning && (
-                <TableHead className="w-[80px] px-1 text-center text-xs font-bold text-gray-900 sm:w-[130px] sm:px-4 sm:text-sm">
+                <TableHead className="w-[82px] px-1 text-center text-xs font-bold text-gray-900 sm:w-[92px] sm:px-2 sm:text-sm lg:w-[130px] lg:px-4">
                   <div className="flex items-center justify-center gap-1">
                     <Sun className="h-4 w-4 text-amber-500" />
-                    <span className="hidden sm:inline">{AttendanceUiText.PERIOD_MORNING}</span>
+                    <span className="hidden lg:inline">{AttendanceUiText.PERIOD_MORNING}</span>
                   </div>
                 </TableHead>
               )}
               {showAfternoon && (
-                <TableHead className="w-[80px] px-1 text-center text-xs font-bold text-gray-900 sm:w-[130px] sm:px-4 sm:text-sm">
+                <TableHead className="w-[82px] px-1 text-center text-xs font-bold text-gray-900 sm:w-[92px] sm:px-2 sm:text-sm lg:w-[130px] lg:px-4">
                   <div className="flex items-center justify-center gap-1">
                     <Sunset className="h-4 w-4 text-orange-500" />
-                    <span className="hidden sm:inline">{AttendanceUiText.PERIOD_AFTERNOON}</span>
+                    <span className="hidden lg:inline">{AttendanceUiText.PERIOD_AFTERNOON}</span>
                   </div>
                 </TableHead>
               )}
-              <TableHead className="hidden w-[200px] font-bold text-gray-900 sm:table-cell">
+              <TableHead className="hidden font-bold text-gray-900 sm:table-cell sm:w-[140px] lg:w-[200px]">
                 {AttendanceUiText.REMARKS}
               </TableHead>
             </TableRow>
@@ -178,7 +179,7 @@ export function StudentAttendanceTable({
                           {/* email removed intentionally - show only student name */}
                           {student.leave_info?.leave_status && (
                             <div className="mt-1">
-                              {student.leave_info.leave_status === 'approved' ? (
+                              {student.leave_info.leave_status === LEAVE_STATUS.APPROVED ? (
                                 <Badge
                                   variant="outline"
                                   className="border-blue-200 bg-blue-50 text-blue-700"

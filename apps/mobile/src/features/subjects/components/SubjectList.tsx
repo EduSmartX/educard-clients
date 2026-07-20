@@ -242,7 +242,6 @@ export function SubjectList({ onBack }: SubjectListProps) {
         description="Upload multiple subjects at once using an Excel template"
         downloadTemplate={downloadSubjectTemplate}
         uploadFile={bulkUploadSubjects}
-        templateFileName="subjects_template.xlsx"
         customInfoMessage={bulkUploadInfoMessage}
         onUploadSuccess={() => void refetch()}
       />

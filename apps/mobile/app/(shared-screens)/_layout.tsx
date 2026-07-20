@@ -61,6 +61,9 @@ export default function SharedScreensLayout() {
       <Stack.Screen name="exams/marks" />
       {/* Homework */}
       <Stack.Screen name="homework" />
+      {/* Student Portal Screens */}
+      <Stack.Screen name="student/homework-detail" />
+      <Stack.Screen name="student/exam-detail" />
       {/* Profile */}
       <Stack.Screen name="profile/index" />
     </Stack>

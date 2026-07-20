@@ -23,6 +23,17 @@ export const INDIAN_PHONE_REGEX = /^[6-9]\d{9}$/;
  */
 export const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
+// Indian Government Standard Patterns
+
+/** CIN: L/U + 5-digit industry + 2-letter state + 4-digit year + 3-letter type + 6 digits */
+export const CIN_REGEX = /^[LU][0-9]{5}[A-Z]{2}[0-9]{4}[A-Z]{3}[0-9]{6}$/;
+
+/** GSTIN: 2-digit state + PAN (5 letters+4 digits+1 letter) + entity + Z + checksum */
+export const GSTIN_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
+
+/** Registration number: alphanumeric with slashes/hyphens, 3-50 chars */
+export const REGISTRATION_NUMBER_REGEX = /^[A-Za-z0-9/-]{3,50}$/;
+
 // Reusable Field Schemas
 
 /**
@@ -85,26 +96,40 @@ export const optionalPhoneSchema = z
 export const nameSchema = z
   .string()
   .min(1, "Name is required")
-  .min(2, "Name must be at least 2 characters")
   .max(100, "Name must be less than 100 characters");
 
 /**
- * First name schema
+ * First name schema (allows single character)
  */
 export const firstNameSchema = z
   .string()
   .min(1, "First name is required")
-  .min(2, "First name must be at least 2 characters")
   .max(50, "First name must be less than 50 characters");
 
 /**
- * Last name schema
+ * Last name schema (allows single character)
  */
 export const lastNameSchema = z
   .string()
   .min(1, "Last name is required")
-  .min(1, "Last name is required")
   .max(50, "Last name must be less than 50 characters");
+
+/**
+ * Cross-field name refinement: at least one of first/last name must be > 1 character.
+ * Use with .superRefine() on schemas containing first_name + last_name.
+ */
+export const refineNames = (
+  data: { first_name: string; last_name: string },
+  ctx: z.RefinementCtx,
+) => {
+  if (data.first_name.length <= 1 && data.last_name.length <= 1) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Both names cannot be a single character",
+      path: ["last_name"],
+    });
+  }
+};
 
 /**
  * Gender schema

@@ -100,6 +100,7 @@ export async function registerOrganization(
 }
 
 export interface AcademicYear {
+  public_id: string;
   name: string;
   start_date: string;
   end_date: string;

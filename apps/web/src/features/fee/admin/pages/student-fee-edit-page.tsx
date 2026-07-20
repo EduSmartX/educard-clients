@@ -4,24 +4,23 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ROUTES } from '@/constants/app-config';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Lock, IndianRupee, Pencil } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import { PageHeader } from '@/components/common';
 import { useStudentFee } from '../../hooks/use-fee-queries';
 import { useUpdateStudentFee, useUpdateStudentFeeComponents } from '../../hooks/use-fee-mutations';
-import type { StudentFeeComponentItem } from '@educard/shared';
+import { type StudentFeeComponentItem } from '@educard/shared';
+import { StudentFeeDiscountSection } from '../components/student-fee-discount-section';
+import { StudentFeeComponentsSection } from '../components/student-fee-components-section';
 
 export function StudentFeeEditPage() {
   const { id = '' } = useParams<{ id: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const activeSection = searchParams.get('section') === 'components' ? 'components' : 'discount';
 
   const { data: studentFee, isLoading } = useStudentFee(id);
   const updateStudentFee = useUpdateStudentFee();
@@ -90,6 +89,32 @@ export function StudentFeeEditPage() {
     );
   };
 
+  const handleComponentSelectionChange = (componentPublicId: string, isSelected: boolean) => {
+    setComponentSelections((prev) => ({
+      ...prev,
+      [componentPublicId]: {
+        ...prev[componentPublicId],
+        is_selected: isSelected,
+      },
+    }));
+  };
+
+  const handleComponentAdminNoteChange = (componentPublicId: string, adminNote: string) => {
+    setComponentSelections((prev) => ({
+      ...prev,
+      [componentPublicId]: {
+        ...prev[componentPublicId],
+        admin_note: adminNote,
+      },
+    }));
+  };
+
+  const handleSectionChange = (section: 'discount' | 'components') => {
+    const nextSearch = new URLSearchParams(searchParams);
+    nextSearch.set('section', section);
+    setSearchParams(nextSearch, { replace: true });
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -119,7 +144,7 @@ export function StudentFeeEditPage() {
         actions={[
           {
             label: 'Cancel',
-            onClick: () => navigate(ROUTES.FEES.STUDENT_FEES),
+            onClick: () => navigate(ROUTES.FEES.STUDENT_FEES_VIEW.replace(':id', id)),
             variant: 'outline' as const,
           },
           {
@@ -131,149 +156,49 @@ export function StudentFeeEditPage() {
         ]}
       />
 
-      {/* Section 1: Discount & Referral */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Discount & Referral</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="discount_percentage">Discount Percentage (%)</Label>
-              <Input
-                id="discount_percentage"
-                type="number"
-                min={0}
-                max={100}
-                value={discountPercentage}
-                onChange={(e) => setDiscountPercentage(e.target.value)}
-                placeholder="0"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="discount_reason">Discount Reason</Label>
-              <Input
-                id="discount_reason"
-                value={discountReason}
-                onChange={(e) => setDiscountReason(e.target.value)}
-                placeholder="e.g. Sibling discount"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="referral_name">Referral Name</Label>
-              <Input
-                id="referral_name"
-                value={referralName}
-                onChange={(e) => setReferralName(e.target.value)}
-                placeholder="Referrer's name"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="referral_code">Referral Code</Label>
-              <Input
-                id="referral_code"
-                value={referralCode}
-                onChange={(e) => setReferralCode(e.target.value)}
-                placeholder="e.g. REF2024"
-              />
-            </div>
-          </div>
-          <div className="flex justify-end">
-            <Button
-              onClick={handleSaveDiscount}
-              disabled={updateStudentFee.isPending}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground min-w-32 gap-2"
-            >
-              {updateStudentFee.isPending ? 'Saving...' : 'Save Discount'}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+        <Button
+          size="sm"
+          variant={activeSection === 'discount' ? 'default' : 'ghost'}
+          onClick={() => handleSectionChange('discount')}
+          className="rounded-lg"
+        >
+          Discount
+        </Button>
+        <Button
+          size="sm"
+          variant={activeSection === 'components' ? 'default' : 'ghost'}
+          onClick={() => handleSectionChange('components')}
+          className="rounded-lg"
+        >
+          Components
+        </Button>
+      </div>
 
-      {/* Section 2: Fee Components */}
-      {studentFee.components && studentFee.components.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Fee Components</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {studentFee.components.map((component: StudentFeeComponentItem) => {
-              const isMandatory = component.component_type === 'mandatory';
-              const selection = componentSelections[component.fee_component_public_id];
-              const isSelected = selection?.is_selected ?? component.is_selected;
-              const adminNote = selection?.admin_note ?? '';
+      {activeSection === 'discount' && (
+        <StudentFeeDiscountSection
+          discountPercentage={discountPercentage}
+          discountReason={discountReason}
+          referralName={referralName}
+          referralCode={referralCode}
+          isSaving={updateStudentFee.isPending}
+          onDiscountPercentageChange={setDiscountPercentage}
+          onDiscountReasonChange={setDiscountReason}
+          onReferralNameChange={setReferralName}
+          onReferralCodeChange={setReferralCode}
+          onSave={handleSaveDiscount}
+        />
+      )}
 
-              return (
-                <div
-                  key={component.fee_component_public_id}
-                  className="space-y-2 rounded-lg border p-4"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      {isMandatory ? (
-                        <Lock className="text-muted-foreground h-4 w-4" />
-                      ) : (
-                        <Switch
-                          checked={isSelected}
-                          onCheckedChange={(checked) =>
-                            setComponentSelections((prev) => ({
-                              ...prev,
-                              [component.fee_component_public_id]: {
-                                ...prev[component.fee_component_public_id],
-                                is_selected: checked,
-                              },
-                            }))
-                          }
-                        />
-                      )}
-                      <div>
-                        <div className="font-medium">{component.name}</div>
-                        <Badge
-                          variant={isMandatory ? 'secondary' : 'outline'}
-                          className="mt-0.5 text-xs"
-                        >
-                          {isMandatory ? 'Mandatory' : 'Optional'}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="flex items-center text-lg font-semibold">
-                      <IndianRupee className="h-4 w-4" />
-                      {component.amount.toLocaleString('en-IN')}
-                    </div>
-                  </div>
-                  {!isMandatory && (
-                    <div className="space-y-1">
-                      <Label className="text-muted-foreground text-xs">Admin Note (optional)</Label>
-                      <Input
-                        className="h-8 text-sm"
-                        value={adminNote}
-                        onChange={(e) =>
-                          setComponentSelections((prev) => ({
-                            ...prev,
-                            [component.fee_component_public_id]: {
-                              ...prev[component.fee_component_public_id],
-                              admin_note: e.target.value,
-                            },
-                          }))
-                        }
-                        placeholder="Reason for selecting/deselecting"
-                      />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-            <div className="flex justify-end pt-2">
-              <Button
-                onClick={handleSaveComponents}
-                disabled={updateComponents.isPending}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground min-w-36 gap-2"
-              >
-                {updateComponents.isPending ? 'Saving...' : 'Save Components'}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      {activeSection === 'components' && (
+        <StudentFeeComponentsSection
+          components={studentFee.components ?? []}
+          componentSelections={componentSelections}
+          isSaving={updateComponents.isPending}
+          onSelectionChange={handleComponentSelectionChange}
+          onAdminNoteChange={handleComponentAdminNoteChange}
+          onSave={handleSaveComponents}
+        />
       )}
     </div>
   );

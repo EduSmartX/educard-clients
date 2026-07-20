@@ -18,12 +18,19 @@ import {
 import { Input } from '@/components/ui/input';
 import { DatePicker } from '@/components/ui/date-picker';
 import { toast } from 'sonner';
+import { useFormErrorHandler } from '@/hooks/use-form-error-handler';
 import {
   getCurrentAcademicYear,
   updateAcademicYear,
   type UpdateAcademicYearPayload,
 } from '@/lib/api/academic-year-api';
-import { CommonUiText, ErrorMessages, FormPlaceholders, SuccessMessages, ToastTitles } from '@/constants';
+import {
+  CommonUiText,
+  ErrorMessages,
+  FormPlaceholders,
+  SuccessMessages,
+  ToastTitles,
+} from '@/constants';
 
 const academicYearSchema = z
   .object({
@@ -74,6 +81,10 @@ export function AcademicYearSettingsForm() {
     },
   });
 
+  const handleUpdateError = useFormErrorHandler(form.setError, {
+    defaultErrorMessage: ErrorMessages.UPDATE_FAILED,
+  });
+
   // Set initial values when data loads
   useEffect(() => {
     if (academicYear) {
@@ -100,11 +111,7 @@ export function AcademicYearSettingsForm() {
         description: SuccessMessages.PREFERENCES.ACADEMIC_YEAR_UPDATED,
       });
     },
-    onError: (error: Error) => {
-      toast.error(ToastTitles.ERROR, {
-        description: error?.message || ErrorMessages.UPDATE_FAILED,
-      });
-    },
+    onError: handleUpdateError,
   });
 
   // Form submission handler
@@ -123,7 +130,7 @@ export function AcademicYearSettingsForm() {
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-8">
-          <Loader2 className="h-6 w-6 animate-spin text-blue-600 mr-2" />
+          <Loader2 className="mr-2 h-6 w-6 animate-spin text-blue-600" />
           <span className="text-gray-600">Loading academic year...</span>
         </CardContent>
       </Card>
@@ -141,7 +148,7 @@ export function AcademicYearSettingsForm() {
   }
 
   return (
-    <Card className="shadow-sm hover:shadow-md transition-shadow border-gray-200">
+    <Card className="border-gray-200 shadow-sm transition-shadow hover:shadow-md">
       <CardHeader className="border-b bg-gray-50 py-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -151,7 +158,7 @@ export function AcademicYearSettingsForm() {
             </div>
           </div>
           {showSuccess && (
-            <div className="flex items-center gap-2 rounded-full bg-green-50 px-3 py-1.5 text-green-700 border border-green-200">
+            <div className="flex items-center gap-2 rounded-full border border-green-200 bg-green-50 px-3 py-1.5 text-green-700">
               <span className="text-sm font-medium">✓ Settings updated</span>
             </div>
           )}
@@ -169,7 +176,11 @@ export function AcademicYearSettingsForm() {
                 <FormItem>
                   <FormLabel>Academic Year Name</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder={FormPlaceholders.ACADEMIC_YEAR_EXAMPLE} className="h-11" />
+                    <Input
+                      {...field}
+                      placeholder={FormPlaceholders.ACADEMIC_YEAR_EXAMPLE}
+                      className="h-11"
+                    />
                   </FormControl>
                   <FormDescription className="text-sm text-gray-600">
                     Enter the name or label for the academic year (e.g., 2025-26)
@@ -180,7 +191,7 @@ export function AcademicYearSettingsForm() {
             />
 
             {/* Date Range */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name="start_date"
@@ -230,7 +241,7 @@ export function AcademicYearSettingsForm() {
             </div>
 
             {/* Info Box */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
               <p className="text-sm text-blue-800">
                 <strong>Note:</strong> The academic year defines the period for attendance tracking,
                 leave management, and academic activities. Changes will affect all date-based
@@ -244,7 +255,7 @@ export function AcademicYearSettingsForm() {
                 type="submit"
                 variant="brand"
                 disabled={!form.formState.isDirty || updateMutation.isPending}
-                className="gap-2 h-11 px-6"
+                className="h-11 gap-2 px-6"
               >
                 {updateMutation.isPending ? (
                   <>

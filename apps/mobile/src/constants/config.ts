@@ -5,7 +5,6 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
-// Get the correct API URL based on platform and device type
 const getDefaultApiUrl = () => {
   // If running in Expo Go on a physical device, we need the host machine's IP
   // Expo provides this in the manifest
@@ -92,6 +91,7 @@ export const USER_ROLES = {
   EMPLOYEE: 'employee',
   TEACHER: 'teacher',
   PARENT: 'parent',
+  STUDENT: 'student',
 } as const;
 
 export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];

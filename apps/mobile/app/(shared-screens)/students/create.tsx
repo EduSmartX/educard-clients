@@ -59,7 +59,6 @@ export default function CreateStudentScreen() {
   const createMutation = useCreateStudent();
   const restoreMutation = useRestoreStudent();
 
-  // Check if user is a teacher (not admin)
   const isTeacher = isTeacherRole(user?.role);
 
   // Fetch managed classes - for teachers, only classes where they are class teacher
@@ -70,10 +69,10 @@ export default function CreateStudentScreen() {
     deletedRecordId: string | null;
   }>();
   const classOptions = useMemo(() => {
-    const items = classesData?.classes ?? []; // ?? instead of ||
-    return items.map((c: { public_id: string; class_master?: { name: string }; name: string }) => ({
+    const items = classesData?.classes ?? [];
+    return items.map((c) => ({
       value: c.public_id,
-      label: `${c.class_master?.name ?? ''} - ${c.name}`.trim(), // ?? instead of ||
+      label: `${c.class_master?.name ?? ''} - ${c.name}`.trim(),
     }));
   }, [classesData]);
 
@@ -206,24 +205,27 @@ export default function CreateStudentScreen() {
       showToast({ type: 'error', title: 'Error', message: 'Could not find deleted record ID.' });
       return;
     }
-    restoreMutation.mutate(recordId, {
-      onSuccess: () => {
-        duplicateHandler.closeDialog();
-        showToast({
-          type: 'success',
-          title: 'Restored',
-          message: 'The deleted student has been reactivated.',
-        });
-        router.back();
-      },
-      onError: (error: unknown) => {
-        showToast({
-          type: 'error',
-          title: 'Error',
-          message: getErrorMessage(error, 'Failed to reactivate. Please try again.'),
-        });
-      },
-    });
+    restoreMutation.mutate(
+      { publicId: recordId },
+      {
+        onSuccess: () => {
+          duplicateHandler.closeDialog();
+          showToast({
+            type: 'success',
+            title: 'Restored',
+            message: 'The deleted student has been reactivated.',
+          });
+          router.back();
+        },
+        onError: (error: unknown) => {
+          showToast({
+            type: 'error',
+            title: 'Error',
+            message: getErrorMessage(error, 'Failed to reactivate. Please try again.'),
+          });
+        },
+      }
+    );
   }, [duplicateHandler, restoreMutation, router, showToast]);
 
   const handleForceCreate = useCallback(() => {

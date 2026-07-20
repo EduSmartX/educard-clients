@@ -61,7 +61,6 @@ export function ActionButton({
   disabled = false,
   className,
 }: ActionButtonProps) {
-  // Get the icon component
   const IconComponent = typeof icon === 'string' ? ACTION_ICONS[icon] : icon;
 
   return (

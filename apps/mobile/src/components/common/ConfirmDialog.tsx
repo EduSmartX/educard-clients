@@ -16,7 +16,15 @@
 
 import { AlertTriangle, Info, CheckCircle, XCircle, LucideIcon } from 'lucide-react-native';
 import React from 'react';
-import { View, Text, Modal, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  Modal,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  useWindowDimensions,
+} from 'react-native';
 
 type ConfirmVariant = 'danger' | 'warning' | 'info' | 'success';
 
@@ -55,6 +63,10 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   const config = VARIANT_CONFIG[confirmVariant];
   const IconComponent = icon ?? config.icon;
+  const { width } = useWindowDimensions();
+  const maxDialogWidth = width >= 900 ? 520 : width >= 600 ? 420 : width - 32;
+  const overlayPadding = width < 360 ? 12 : 24;
+  const contentPadding = width < 360 ? 18 : 24;
 
   return (
     <Modal
@@ -64,8 +76,8 @@ export function ConfirmDialog({
       onRequestClose={onCancel}
       statusBarTranslucent
     >
-      <View style={styles.overlay}>
-        <View style={styles.container}>
+      <View style={[styles.overlay, { padding: overlayPadding }]}>
+        <View style={[styles.container, { maxWidth: maxDialogWidth, padding: contentPadding }]}>
           {/* Icon */}
           <View style={[styles.iconContainer, { backgroundColor: config.bgColor }]}>
             <IconComponent size={28} color={config.color} />

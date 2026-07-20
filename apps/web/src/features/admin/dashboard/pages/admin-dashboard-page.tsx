@@ -387,7 +387,8 @@ export default function AdminDashboardPage() {
   const firstName = user?.full_name?.split(' ')[0] || 'Admin';
   const greeting = getGreeting();
 
-  const handleVerifyEmail = () => navigate(ROUTES.PROFILE);
+  const handleVerifyEmail = () => navigate(`${ROUTES.PROFILE}?tab=email&from=dashboard`);
+  const handleVerifyPhone = () => navigate(`${ROUTES.PROFILE}?tab=phone&from=dashboard`);
 
   const { data: teachersData, isLoading: loadingTeachers } = useTeachers({
     page_size: 1,
@@ -480,7 +481,7 @@ export default function AdminDashboardPage() {
         <VerificationBanner
           user={user}
           onVerifyEmail={handleVerifyEmail}
-          onVerifyPhone={handleVerifyEmail}
+          onVerifyPhone={handleVerifyPhone}
         />
       )}
 

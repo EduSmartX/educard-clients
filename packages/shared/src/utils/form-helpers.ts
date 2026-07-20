@@ -5,7 +5,7 @@
  */
 
 // Type definitions
-type FormValue = string | number | boolean | null | undefined;
+type FormValue = string | number | boolean | string[] | null | undefined;
 type FormValues = Record<string, FormValue>;
 export type ApiErrorData = Record<string, unknown>;
 
@@ -178,6 +178,7 @@ export function buildTeacherPayload(
     );
 
     const addr = stripEmpty({
+      address_type: safeTrim(form.address_type),
       street_address: safeTrim(form.street_address),
       city: safeTrim(form.city),
       state: safeTrim(form.state),
@@ -185,7 +186,7 @@ export function buildTeacherPayload(
       country: safeTrim(form.country),
     });
     if (Object.keys(addr).length > 0) {
-      user.address = { ...addr, address_type: "user_current" };
+      user.address = { ...addr, address_type: form.address_type || "user_current" };
     }
   }
 
@@ -228,8 +229,6 @@ export function buildStudentPayload(
       payload,
       stripEmpty({
         guardian_name: safeTrim(form.guardian_name),
-        guardian_phone: safeTrim(form.guardian_phone),
-        guardian_email: safeTrim(form.guardian_email),
         guardian_relationship: form.guardian_relationship || undefined,
         medical_conditions: safeTrim(form.medical_conditions),
         description: safeTrim(form.description),
@@ -281,6 +280,9 @@ export function buildSubjectPayload(form: FormValues): Record<string, unknown> {
     ...stripEmpty({
       teacher_id: form.teacher_id || undefined,
       description: safeTrim(form.description),
+      display_order: form.display_order
+        ? Number(form.display_order)
+        : undefined,
     }),
   };
 }

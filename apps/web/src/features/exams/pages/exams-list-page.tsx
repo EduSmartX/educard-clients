@@ -9,7 +9,7 @@
 
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Plus, Download } from 'lucide-react';
+import { FileText, Plus, Download, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
@@ -179,6 +179,14 @@ export function ExamsListPage() {
                 <Download className="h-4 w-4" />
                 Export
               </Button>
+              <Button
+                onClick={() => navigate(ROUTES.EXAMS_STATUS_CONTROL)}
+                variant="info"
+                className="gap-2"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Update Status
+              </Button>
               {isAdmin && (
                 <>
                   <Button
@@ -202,7 +210,7 @@ export function ExamsListPage() {
             </div>
           </div>
           {/* Filters Row */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <SearchableSelect
               options={[
                 { value: 'all', label: 'All Sessions' },
@@ -218,7 +226,7 @@ export function ExamsListPage() {
               }}
               placeholder="All Sessions"
               searchPlaceholder="Search sessions..."
-              className="w-[180px]"
+              className="w-full"
             />
             <SearchableSelect
               options={[
@@ -235,7 +243,7 @@ export function ExamsListPage() {
               }}
               placeholder="All Classes"
               searchPlaceholder="Search classes..."
-              className="w-[160px]"
+              className="w-full"
             />
             <SearchableSelect
               options={[
@@ -251,7 +259,7 @@ export function ExamsListPage() {
                 setPage(1);
               }}
               placeholder="All Statuses"
-              className="w-[140px]"
+              className="w-full"
             />
             {(sessionFilter || classFilter || statusFilter) && (
               <Button
@@ -263,7 +271,7 @@ export function ExamsListPage() {
                   setStatusFilter('');
                   setPage(1);
                 }}
-                className="text-xs text-gray-500 hover:text-gray-700"
+                className="h-10 justify-start text-xs text-gray-500 hover:text-gray-700"
               >
                 Clear Filters
               </Button>

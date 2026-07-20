@@ -314,7 +314,7 @@ const barStyles = StyleSheet.create({
     width: 2,
     backgroundColor: 'rgba(0,0,0,0.2)',
   },
-  label: { fontSize: 13, fontWeight: '700', minWidth: 50, textAlign: 'right' },
+  label: { fontSize: 13, fontWeight: '700', minWidth: 42, textAlign: 'right' },
 });
 
 const s = StyleSheet.create({
@@ -362,7 +362,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
-    minWidth: 32,
+    minWidth: 28,
     alignItems: 'center',
   },
   markBadgeText: { fontSize: 12, fontWeight: '800' },

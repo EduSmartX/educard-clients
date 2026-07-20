@@ -14,7 +14,16 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        sans: [
+          'Plus Jakarta Sans',
+          'Inter',
+          'system-ui',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'Segoe UI',
+          'Roboto',
+          'sans-serif',
+        ],
       },
       colors: {
         border: 'hsl(var(--border))',
@@ -108,10 +117,10 @@ const config: Config = {
         '3xl': '1.5rem',
       },
       boxShadow: {
-        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
+        soft: '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
         'soft-lg': '0 10px 40px -10px rgba(0, 0, 0, 0.1), 0 2px 10px -2px rgba(0, 0, 0, 0.04)',
         'soft-xl': '0 20px 50px -15px rgba(0, 0, 0, 0.1)',
-        'glow': '0 0 20px rgba(139, 92, 246, 0.3)',
+        glow: '0 0 20px rgba(139, 92, 246, 0.3)',
         'glow-lg': '0 0 40px rgba(139, 92, 246, 0.4)',
         'inner-glow': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.1)',
       },
@@ -122,7 +131,8 @@ const config: Config = {
         'gradient-accent': 'linear-gradient(135deg, #10b981 0%, #14b8a6 100%)',
         'gradient-warm': 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
         'gradient-cool': 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
-        'gradient-mesh': 'radial-gradient(at 40% 20%, hsla(250, 91%, 62%, 0.1) 0px, transparent 50%), radial-gradient(at 80% 0%, hsla(280, 87%, 65%, 0.1) 0px, transparent 50%), radial-gradient(at 0% 50%, hsla(172, 66%, 50%, 0.1) 0px, transparent 50%)',
+        'gradient-mesh':
+          'radial-gradient(at 40% 20%, hsla(250, 91%, 62%, 0.1) 0px, transparent 50%), radial-gradient(at 80% 0%, hsla(280, 87%, 65%, 0.1) 0px, transparent 50%), radial-gradient(at 0% 50%, hsla(172, 66%, 50%, 0.1) 0px, transparent 50%)',
       },
       keyframes: {
         'accordion-down': {

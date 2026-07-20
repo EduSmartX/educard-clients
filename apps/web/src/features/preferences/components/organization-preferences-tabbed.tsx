@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { updatePreference, type OrganizationPreference } from '@/lib/api/preferences-api';
+import { getErrorMessage } from '@/lib/utils/error-handler';
 import { useOrganizationPreferences } from '../hooks/use-preferences';
 import { AcademicYearSettingsForm } from './academic-year-settings-form';
 import { PreferenceField } from './preference-field';
@@ -24,6 +25,7 @@ const categoryIcons: Record<string, string> = {
   fee_notifications: '💰',
   homework_notifications: '📚',
   work_policy_notifications: '📋',
+  security_notifications: '🔒',
 };
 
 // Category display names
@@ -37,6 +39,8 @@ const categoryDisplayNames: Record<string, string> = {
   fee_notifications: 'Fee Notifications',
   homework_notifications: 'HomeWork Notifications',
   work_policy_notifications: 'Exception WorkPolicy Notification',
+  holiday_notifications: 'Holiday Notifications',
+  security_notifications: 'Security Notifications',
 };
 
 interface PreferencesByCategoryProps {
@@ -128,7 +132,7 @@ function PreferencesByCategory({ preferences }: Readonly<PreferencesByCategoryPr
     onError: (error: Error, variables) => {
       setSavingStates((prev) => ({ ...prev, [variables.publicId]: false }));
       toast.error(ToastTitles.ERROR, {
-        description: error?.message || ErrorMessages.UPDATE_FAILED,
+        description: getErrorMessage(error, ErrorMessages.UPDATE_FAILED),
       });
     },
   });

@@ -32,6 +32,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 
+import { useResponsive } from '@/hooks/useResponsive';
+
 // Address data structure
 export interface AddressData {
   streetAddress: string;
@@ -77,6 +79,8 @@ export function AddressForm({
 }: AddressFormProps) {
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const { width } = useResponsive();
+  const useTwoColumnRows = width >= 400;
 
   // Handle location auto-fill
   const handleUseLocation = async () => {
@@ -235,7 +239,7 @@ export function AddressForm({
         )}
 
         {/* City & State Row */}
-        <View style={styles.row}>
+        <View style={[styles.row, !useTwoColumnRows && styles.rowStacked]}>
           {renderField(
             'city',
             'City',
@@ -259,7 +263,7 @@ export function AddressForm({
         </View>
 
         {/* ZIP Code & Country Row */}
-        <View style={styles.row}>
+        <View style={[styles.row, !useTwoColumnRows && styles.rowStacked]}>
           {renderField(
             'zipCode',
             'PIN Code',
@@ -373,6 +377,10 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     gap: 12,
+  },
+  rowStacked: {
+    flexDirection: 'column',
+    gap: 16,
   },
 
   // Field styles

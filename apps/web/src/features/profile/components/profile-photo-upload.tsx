@@ -35,6 +35,7 @@ export function ProfilePhotoUpload() {
   const deleteMutation = useDeleteProfilePhoto();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
 
@@ -151,10 +152,10 @@ export function ProfilePhotoUpload() {
             {/* Camera overlay button */}
             <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => cameraInputRef.current?.click()}
               disabled={isUploading}
               className="bg-brand hover:bg-brand/90 absolute right-0 bottom-0 rounded-full p-2 text-white shadow-md transition-colors disabled:opacity-50"
-              title="Change photo"
+              title="Take photo"
             >
               <Camera className="h-4 w-4" />
             </button>
@@ -190,11 +191,21 @@ export function ProfilePhotoUpload() {
               </p>
             </button>
 
-            {/* Hidden file input */}
+            {/* Hidden file input for gallery/files */}
             <input
               ref={fileInputRef}
               type="file"
               accept="image/jpeg,image/png,image/webp"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+
+            {/* Hidden camera input for direct camera capture */}
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              capture="user"
               onChange={handleFileChange}
               className="hidden"
             />

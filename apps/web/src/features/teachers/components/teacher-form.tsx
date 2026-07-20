@@ -195,6 +195,7 @@ export function TeacherForm({
         'user.address.address_line_2': 'address_line_2',
         'user.address.city': 'city',
         'user.address.state': 'state',
+        'user.address.address_type': 'address_type',
         'user.address.zip_code': 'postal_code',
         'user.address.postal_code': 'postal_code',
         'user.address.country': 'country',
@@ -237,6 +238,7 @@ export function TeacherForm({
         'user.address.address_line_2': 'address_line_2',
         'user.address.city': 'city',
         'user.address.state': 'state',
+        'user.address.address_type': 'address_type',
         'user.address.zip_code': 'postal_code',
         'user.address.postal_code': 'postal_code',
         'user.address.country': 'country',
@@ -412,6 +414,7 @@ export function TeacherForm({
                   disabled={isViewMode}
                   required
                   viewValue={initialData?.user?.organization_role?.name}
+                  excludeRoleCodes={['STUDENT', 'PARENT']}
                 />
                 {!useQuickAdd && (
                   <>

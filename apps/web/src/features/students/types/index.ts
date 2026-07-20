@@ -1,6 +1,6 @@
 /**
  * Student Types
- * 
+ *
  * Re-exports shared types and adds any web-specific extensions.
  * All base types come from @educard/shared for consistency across platforms.
  */
@@ -25,6 +25,7 @@ export type {
   StudentBulkUploadResult,
   ExportStudentsPayload,
   ExportStudentsResult,
+  ResetClassPasswordsPayload,
 } from '@educard/shared';
 
 // Re-export common types used in student module

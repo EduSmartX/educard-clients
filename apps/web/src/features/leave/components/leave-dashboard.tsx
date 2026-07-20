@@ -3,11 +3,7 @@
  */
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  Briefcase,
-  Plus,
-  RefreshCw,
-} from 'lucide-react';
+import { Briefcase, Plus, RefreshCw } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { PageHeader } from '@/components/common';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -193,12 +189,14 @@ export function LeaveDashboard() {
   const pageDescription = isViewingOtherUser
     ? "View employee's leave balances and requests"
     : 'Manage your leave balances and requests';
-  const emptyMessage = activeFiltersCount > 0
-    ? 'No leave requests found matching your filters.'
-    : 'No leave requests found. Click "Apply Leave" to create your first request.';
-  const emptyAction = !activeFiltersCount && requests.length === 0
-    ? { label: 'Apply for Leave', onClick: handleApplyLeave }
-    : undefined;
+  const emptyMessage =
+    activeFiltersCount > 0
+      ? 'No leave requests found matching your filters.'
+      : 'No leave requests found. Click "Apply Leave" to create your first request.';
+  const emptyAction =
+    !activeFiltersCount && requests.length === 0
+      ? { label: 'Apply for Leave', onClick: handleApplyLeave }
+      : undefined;
 
   // Modern UI: summary cards and per-type cards
   return (
@@ -209,11 +207,7 @@ export function LeaveDashboard() {
           <UserInfoBanner userInfo={userInfo} onBack={() => navigate('/leave/reviews')} />
         )}
 
-        <PageHeader
-          title={pageTitle}
-          icon={Briefcase}
-          description={pageDescription}
-        >
+        <PageHeader title={pageTitle} icon={Briefcase} description={pageDescription}>
           <Button
             onClick={handleRefresh}
             variant="outline"

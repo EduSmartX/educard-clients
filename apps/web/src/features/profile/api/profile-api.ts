@@ -9,11 +9,14 @@ import type {
   ApiResponse,
   ChangePasswordPayload,
   ProfileImage,
+  ProfileSyncRequestOtpResponse,
+  ProfileSyncVerifyResponse,
   SendOTPPayload,
   UpdateEmailPayload,
   UpdatePhonePayload,
   UpdateProfilePayload,
   UserProfile,
+  VerifyProfileSyncPayload,
 } from '../types/profile.types';
 
 /**
@@ -73,6 +76,29 @@ export async function updateEmail(payload: UpdateEmailPayload): Promise<ApiRespo
  */
 export async function updatePhone(payload: UpdatePhonePayload): Promise<ApiResponse<UserProfile>> {
   const response = await api.post<ApiResponse<UserProfile>>('/users/update-phone/', payload);
+  return response.data;
+}
+
+/**
+ * Request an OTP to begin syncing/linking every active student account that
+ * shares the authenticated student's login email (parent-initiated).
+ */
+export async function requestProfileSyncOtp(): Promise<ProfileSyncRequestOtpResponse> {
+  const response = await api.post<ProfileSyncRequestOtpResponse>(
+    '/auth/profile-sync/request-otp/',
+    {}
+  );
+  return response.data;
+}
+
+/**
+ * Verify the profile-sync OTP and link every active student account sharing
+ * this email - marks them all email-verified and syncs their password.
+ */
+export async function verifyProfileSync(
+  payload: VerifyProfileSyncPayload
+): Promise<ProfileSyncVerifyResponse> {
+  const response = await api.post<ProfileSyncVerifyResponse>('/auth/profile-sync/verify/', payload);
   return response.data;
 }
 

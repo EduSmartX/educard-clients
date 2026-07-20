@@ -37,7 +37,6 @@ export function ProfileInformationForm() {
   const { data: profile, isLoading } = useUserProfile();
   const updateMutation = useUpdateProfile();
 
-  // Check if user is admin - only admins can edit their organization role
   const isAdmin = profile?.role?.toLowerCase() === USER_ROLES.ADMIN;
 
   const form = useForm<ProfileInformationFormData>({

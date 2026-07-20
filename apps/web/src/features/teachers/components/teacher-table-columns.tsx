@@ -61,7 +61,7 @@ export function getTeacherColumns({
               </Badge>
             ))
           ) : (
-            <span className="text-gray-400 text-sm">No subjects</span>
+            <span className="text-sm text-gray-400">No subjects</span>
           )}
           {row.original.subjects.length > 3 && (
             <Badge variant="secondary" className="text-xs">
@@ -100,7 +100,7 @@ export function getTeacherColumns({
             variant="ghost"
             size="sm"
             onClick={() => onDelete(row.original)}
-            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+            className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"
           >
             <Trash2 className="h-4 w-4" />
             <span className="sr-only">{isDeletedView ? 'Restore' : 'Delete'}</span>

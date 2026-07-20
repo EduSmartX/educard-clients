@@ -11,11 +11,14 @@ export interface User {
   profile_image?: string;
   is_email_verified?: boolean;
   is_mobile_verified?: boolean;
+  class_name?: string;
+  roll_number?: string;
   guardian_name?: string;
   guardian_phone?: string;
   guardian_email?: string;
   guardian_email_verified?: boolean;
   guardian_phone_verified?: boolean;
+  force_password_reset?: boolean;
 }
 
 export interface Organization {

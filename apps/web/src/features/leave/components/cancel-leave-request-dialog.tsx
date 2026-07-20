@@ -65,7 +65,7 @@ export function CancelLeaveRequestDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-white sm:max-w-[500px]">
+      <DialogContent className="w-[calc(100vw-1.5rem)] bg-white sm:w-full sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <X className="h-5 w-5 text-red-600" />

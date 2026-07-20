@@ -7,7 +7,7 @@ import { getErrorMessage } from '@educard/shared';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { type LucideIcon, ArrowLeft, KeyRound, CheckCircle, Send } from 'lucide-react-native';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -39,6 +39,8 @@ export interface ChangeCredentialConfig {
   placeholder: string;
   /** Input label */
   inputLabel: string;
+  /** Optional initial value for input */
+  initialValue?: string;
   /** Keyboard type */
   keyboardType: 'email-address' | 'phone-pad' | 'default';
   /** Validate the new value - return error message or null */
@@ -69,13 +71,17 @@ export function ChangeCredentialScreenBase({ config }: Props) {
   const router = useRouter();
   const { user } = useAuthStore();
 
-  const [newValue, setNewValue] = useState('');
+  const [newValue, setNewValue] = useState(config.initialValue ?? '');
   const [otp, setOtp] = useState('');
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(0);
+
+  useEffect(() => {
+    setNewValue(config.initialValue ?? '');
+  }, [config.initialValue]);
 
   const accentColor = config.gradientColors[0];
 
@@ -204,7 +210,7 @@ export function ChangeCredentialScreenBase({ config }: Props) {
                 isSendingOtp && styles.buttonDisabled,
               ]}
               onPress={() => {
-                handleSendOtp();
+                void handleSendOtp();
               }}
               disabled={isSendingOtp}
             >
@@ -257,7 +263,7 @@ export function ChangeCredentialScreenBase({ config }: Props) {
               ) : (
                 <TouchableOpacity
                   onPress={() => {
-                    handleSendOtp();
+                    void handleSendOtp();
                   }}
                   disabled={isSendingOtp}
                 >
@@ -275,7 +281,7 @@ export function ChangeCredentialScreenBase({ config }: Props) {
                   isUpdating && styles.buttonDisabled,
                 ]}
                 onPress={() => {
-                  handleUpdate();
+                  void handleUpdate();
                 }}
                 disabled={isUpdating}
               >

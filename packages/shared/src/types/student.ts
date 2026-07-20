@@ -198,3 +198,8 @@ export interface ExportStudentsResult {
   message: string;
   file_url?: string;
 }
+
+export interface ResetClassPasswordsPayload {
+  new_password: string;
+  confirm_password: string;
+}

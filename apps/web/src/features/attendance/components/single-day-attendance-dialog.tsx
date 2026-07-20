@@ -249,7 +249,7 @@ export function SingleDayAttendanceDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="bg-white sm:max-w-md">
+        <DialogContent className="w-[calc(100vw-1.5rem)] bg-white sm:w-full sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Submit Attendance</DialogTitle>
             <DialogDescription>

@@ -178,11 +178,17 @@ export default function EnterMarksScreen() {
           Alert.alert('Error', `Invalid marks for ${sm.studentName}. Must be 0-${maxMarks}.`);
           return;
         }
-        marks.push({
-          student_id: sm.studentId,
-          marks_obtained: sm.isAbsent ? 0 : obtained,
-          is_absent: sm.isAbsent,
-        });
+        if (sm.isAbsent) {
+          marks.push({
+            student_id: sm.studentId,
+            is_absent: true,
+          });
+        } else {
+          marks.push({
+            student_id: sm.studentId,
+            marks_obtained: obtained,
+          });
+        }
       }
     }
 
@@ -201,6 +207,42 @@ export default function EnterMarksScreen() {
     } catch (err: unknown) {
       showToast({ type: 'error', title: 'Error', message: extractApiError(err) });
     }
+  };
+
+  const handlePublish = () => {
+    if (enteredCount < studentList.length) {
+      Alert.alert(
+        'Incomplete Marks',
+        `Enter marks for all ${studentList.length} students before publishing.`
+      );
+      return;
+    }
+
+    Alert.alert(
+      'Publish Marks',
+      'Publish marks for this exam? You can unpublish later if needed.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Publish',
+          onPress: () => publishMarksMutation.mutate(examId),
+        },
+      ]
+    );
+  };
+
+  const handleUnpublish = () => {
+    Alert.alert(
+      'Unpublish Marks',
+      'Unpublish marks for this exam? This will allow editing again.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Unpublish',
+          onPress: () => unpublishMarksMutation.mutate(examId),
+        },
+      ]
+    );
   };
 
   const isLoading = marksLoading || studentsLoading;
@@ -309,7 +351,7 @@ export default function EnterMarksScreen() {
           {isMarksPublished ? (
             <TouchableOpacity
               style={st.unpublishBtn}
-              onPress={() => unpublishMarksMutation.mutate(examId)}
+              onPress={handleUnpublish}
               disabled={unpublishMarksMutation.isPending}
             >
               <Text style={st.unpublishBtnText}>
@@ -319,7 +361,7 @@ export default function EnterMarksScreen() {
           ) : (
             <TouchableOpacity
               style={[st.publishBtn, enteredCount < studentList.length && st.publishBtnDisabled]}
-              onPress={() => publishMarksMutation.mutate(examId)}
+              onPress={handlePublish}
               disabled={publishMarksMutation.isPending || enteredCount < studentList.length}
             >
               <Text style={st.publishBtnText}>

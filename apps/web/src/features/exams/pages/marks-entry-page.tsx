@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCriticalOperation } from '@/providers/critical-operation-provider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -38,7 +39,7 @@ import { PageHeader, StudentAvatar } from '@/components/common';
 import { ROUTES, ValidationMessages } from '@/constants';
 import { useExamSessions, useExams } from '../hooks/use-exams';
 import { useClasses } from '@/features/classes/hooks/use-classes';
-import { usePublishExamMarks, useUnpublishExamMarks } from '../hooks/mutations';
+import { useUnpublishExamMarks } from '../hooks/mutations';
 import {
   bulkUpsertMarks,
   fetchMarksByExam,
@@ -47,6 +48,8 @@ import {
 } from '../api/exams-api';
 import { fetchStudents } from '@/features/students/api/students-api';
 import type { Exam, BulkMarkEntry } from '@educard/shared';
+import { getErrorMessage } from '@/lib/utils/error-handler';
+import { useRole } from '@/hooks/use-role';
 
 interface StudentMarkRow {
   student_id: string;
@@ -63,6 +66,7 @@ export function MarksEntryPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
+  const { isAdmin } = useRole();
 
   // Pre-select from URL params (from exams list page redirect)
   const initialSessionId = searchParams.get('session') || '';
@@ -81,6 +85,7 @@ export function MarksEntryPage() {
     page: 1,
     page_size: 200,
     session: selectedSessionId || undefined,
+    ...(isAdmin ? {} : { my_exams_only: true }),
   });
 
   const sessions = sessionsData?.data || [];
@@ -126,7 +131,18 @@ export function MarksEntryPage() {
 
   // Mark entries state
   const [markEntries, setMarkEntries] = useState<StudentMarkRow[]>([]);
+  const [publishedStateOverride, setPublishedStateOverride] = useState<boolean | null>(null);
   const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (
+      publishedStateOverride !== null &&
+      selectedExam &&
+      selectedExam.is_marks_published === publishedStateOverride
+    ) {
+      setPublishedStateOverride(null);
+    }
+  }, [publishedStateOverride, selectedExam]);
 
   // Keyboard navigation
   const handleMarksKeyDown = useCallback(
@@ -197,6 +213,7 @@ export function MarksEntryPage() {
     setSelectedClassId('');
     setSelectedExamId('');
     setMarkEntries([]);
+    setPublishedStateOverride(null);
   }, []);
 
   // Handler: when class changes from user interaction, reset exam
@@ -204,59 +221,106 @@ export function MarksEntryPage() {
     setSelectedClassId(val);
     setSelectedExamId('');
     setMarkEntries([]);
+    setPublishedStateOverride(null);
   }, []);
 
   // Handler: when exam/subject changes from user interaction
   const handleExamChange = useCallback((val: string) => {
     setSelectedExamId(val);
+    setPublishedStateOverride(null);
   }, []);
 
   // Bulk upsert mutation
   const bulkUpsertMutation = useMutation({
     mutationFn: (data: BulkMarkUpsertPayload) => bulkUpsertMarks(data),
     onSuccess: () => {
-      toast.success('Marks saved successfully!');
       queryClient.invalidateQueries({ queryKey: ['marks'] });
       queryClient.invalidateQueries({ queryKey: ['marks-by-exam', selectedExamId] });
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to save marks');
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to save marks'));
+    },
+  });
+  const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
+
+  // Unpublish only; publish can now be triggered by bulk-upsert with publish_after_save.
+  const unpublishMarksMutation = useUnpublishExamMarks({
+    onSuccess: () => {
+      setPublishedStateOverride(false);
+      queryClient.invalidateQueries({ queryKey: ['exams'] });
+      queryClient.invalidateQueries({ queryKey: ['marks-by-exam', selectedExamId] });
     },
   });
 
-  // Publish / unpublish
-  const publishMarksMutation = usePublishExamMarks();
-  const unpublishMarksMutation = useUnpublishExamMarks();
-
-  // Handler for publishing all exams in session/class
-  const handlePublishAllMarks = useCallback(async () => {
-    if (!selectedSessionId || !selectedClassId) {
-      toast.error('Please select a session and class first.');
+  // Handler: Save & Publish — saves marks first, then publishes the selected exam
+  const handleSaveAndPublish = useCallback(async () => {
+    if (!selectedSessionId || !selectedExamId) {
+      toast.error('Please select a session and exam first.');
       return;
     }
 
-    // Get all completed exams for this session and class
-    const examsToPublish = filteredExams.filter(
-      (e) => e.status === 'completed' && !e.is_marks_published
+    const validEntries = markEntries.filter((e) => e.marks_obtained || e.is_absent);
+    if (validEntries.length === 0) {
+      toast.warning('No marks to save. Enter marks or mark students as absent.');
+      return;
+    }
+
+    if (validEntries.length < markEntries.length) {
+      toast.error(
+        `Enter marks for all ${markEntries.length} students (either marks or Absent) before publishing.`
+      );
+      return;
+    }
+
+    const entriesWithErrors = validEntries.filter((e) => e.marksError);
+    if (entriesWithErrors.length > 0) {
+      toast.error(
+        `${entriesWithErrors.length} student(s) have invalid marks. Please fix errors before saving.`
+      );
+      return;
+    }
+
+    const marks: BulkMarkEntry[] = validEntries.map((e) =>
+      e.is_absent
+        ? {
+            student_id: e.student_id,
+            is_absent: true,
+          }
+        : {
+            student_id: e.student_id,
+            marks_obtained: Number(e.marks_obtained),
+          }
     );
 
-    if (examsToPublish.length === 0) {
-      toast.info('All exams are already published for this class.');
-      return;
-    }
-
-    // Publish all exams sequentially
+    beginCriticalOperation({
+      title: 'Saving marks',
+      description: 'Please keep this page open until the save completes.',
+    });
     try {
-      for (const exam of examsToPublish) {
-        await publishMarksMutation.mutateAsync(exam.public_id);
-      }
-      toast.success(`Successfully published marks for ${examsToPublish.length} exam(s)!`);
+      await bulkUpsertMutation.mutateAsync({
+        session_id: selectedSessionId,
+        exam_id: selectedExamId,
+        marks,
+        publish_after_save: true,
+      });
+      setPublishedStateOverride(true);
       queryClient.invalidateQueries({ queryKey: ['exams'] });
+      toast.success('Marks saved and published successfully!');
     } catch (error) {
-      console.error('Failed to publish marks:', error);
-      toast.error('Some exams failed to publish. Please check and try again.');
+      console.error('Save & Publish failed:', error);
+      // Individual error toasts already shown by mutation hooks
+    } finally {
+      endCriticalOperation();
     }
-  }, [selectedSessionId, selectedClassId, filteredExams, publishMarksMutation, queryClient]);
+  }, [
+    selectedSessionId,
+    selectedExamId,
+    markEntries,
+    bulkUpsertMutation,
+    queryClient,
+    beginCriticalOperation,
+    endCriticalOperation,
+  ]);
 
   const handleMarkChange = (
     index: number,
@@ -309,21 +373,39 @@ export function MarksEntryPage() {
       return;
     }
 
-    const marks: BulkMarkEntry[] = validEntries.map((e) => ({
-      student_id: e.student_id,
-      marks_obtained: e.is_absent ? 0 : Number(e.marks_obtained),
-      is_absent: e.is_absent,
-    }));
+    const marks: BulkMarkEntry[] = validEntries.map((e) =>
+      e.is_absent
+        ? {
+            student_id: e.student_id,
+            is_absent: true,
+          }
+        : {
+            student_id: e.student_id,
+            marks_obtained: Number(e.marks_obtained),
+          }
+    );
 
-    bulkUpsertMutation.mutate({
-      session_id: selectedSessionId,
-      exam_id: selectedExamId,
-      marks,
-    });
+    bulkUpsertMutation.mutate(
+      {
+        session_id: selectedSessionId,
+        exam_id: selectedExamId,
+        marks,
+      },
+      {
+        onSuccess: () => {
+          toast.success('Marks saved successfully!');
+          endCriticalOperation();
+        },
+        onError: () => {
+          endCriticalOperation();
+        },
+      }
+    );
   };
 
   const isPending = bulkUpsertMutation.isPending;
   const isDataLoading = studentsLoading || existingMarksLoading;
+  const isMarksLocked = publishedStateOverride ?? !!selectedExam?.is_marks_published;
 
   // Stats
   const enteredCount = markEntries.filter((e) => e.marks_obtained || e.is_absent).length;
@@ -446,7 +528,7 @@ export function MarksEntryPage() {
                 <span className="font-medium text-gray-700">Students:</span>
                 <Badge>{markEntries.length}</Badge>
               </div>
-              {selectedExam.is_marks_published && (
+              {isMarksLocked && (
                 <Badge className="border-green-200 bg-green-100 text-green-700">✓ Published</Badge>
               )}
             </div>
@@ -457,6 +539,14 @@ export function MarksEntryPage() {
       {/* Marks Table */}
       {selectedExamId && !isDataLoading && markEntries.length > 0 && (
         <Card className="border shadow-sm">
+          {isMarksLocked && (
+            <div className="flex items-center gap-2 border-b border-blue-200 bg-blue-50 px-6 py-3 text-sm text-blue-800">
+              <span className="text-base">🔒</span>
+              <span className="font-medium">
+                Marks are published for this subject. Unpublish to allow editing.
+              </span>
+            </div>
+          )}
           <CardHeader className="bg-muted/30 border-b px-6 py-4">
             <div>
               <CardTitle className="text-lg">Student Marks</CardTitle>
@@ -529,7 +619,7 @@ export function MarksEntryPage() {
                                 handleMarkChange(index, 'marks_obtained', e.target.value)
                               }
                               onKeyDown={(e) => handleMarksKeyDown(e, index)}
-                              disabled={entry.is_absent}
+                              disabled={entry.is_absent || isMarksLocked}
                               placeholder="0"
                               data-marks-row={index}
                               className={`h-9 w-28 font-mono ${entry.marksError ? 'border-red-500' : ''}`}
@@ -545,6 +635,7 @@ export function MarksEntryPage() {
                             onCheckedChange={(checked) =>
                               handleMarkChange(index, 'is_absent', !!checked)
                             }
+                            disabled={isMarksLocked}
                           />
                         </td>
                         <td className="px-4 py-3 text-center">
@@ -568,10 +659,14 @@ export function MarksEntryPage() {
           <div className="border-t bg-gray-50/50 px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-600">
-                {enteredCount < markEntries.length ? (
+                {isMarksLocked ? (
+                  <span className="font-medium text-blue-600">
+                    🔒 Marks published — unpublish to allow editing
+                  </span>
+                ) : enteredCount < markEntries.length ? (
                   <span className="font-medium text-amber-600">
-                    ⚠ Complete all entries ({markEntries.length - enteredCount} remaining) to enable
-                    publishing
+                    ⚠ {markEntries.length - enteredCount} student(s) remaining — enter marks or mark
+                    absent
                   </span>
                 ) : (
                   <span className="font-medium text-green-600">
@@ -580,7 +675,7 @@ export function MarksEntryPage() {
                 )}
               </div>
               <div className="flex items-center gap-3">
-                {selectedExam?.is_marks_published ? (
+                {isMarksLocked && selectedExamId && (
                   <Button
                     variant="outline"
                     onClick={() => unpublishMarksMutation.mutate(selectedExamId)}
@@ -595,35 +690,12 @@ export function MarksEntryPage() {
                     )}
                     Unpublish
                   </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    onClick={handlePublishAllMarks}
-                    disabled={
-                      publishMarksMutation.isPending ||
-                      markEntries.length === 0 ||
-                      enteredCount < markEntries.length
-                    }
-                    className="gap-2 border-green-200 text-green-700 hover:bg-green-50 disabled:cursor-not-allowed disabled:opacity-50"
-                    title={
-                      enteredCount < markEntries.length
-                        ? `Enter marks for all ${markEntries.length} students (either marks or AB) before publishing`
-                        : 'Publish marks for all exams in this session and class'
-                    }
-                  >
-                    {publishMarksMutation.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <BadgeCheck className="h-4 w-4" />
-                    )}
-                    Publish Marks
-                  </Button>
                 )}
 
                 <Button
-                  variant="brand"
+                  variant="outline"
                   onClick={handleSaveAll}
-                  disabled={isPending || markEntries.length === 0}
+                  disabled={isPending || markEntries.length === 0 || isMarksLocked}
                   className="gap-2"
                 >
                   {isPending ? (
@@ -631,8 +703,36 @@ export function MarksEntryPage() {
                   ) : (
                     <Save className="h-4 w-4" />
                   )}
-                  Save Marks
+                  Save
                 </Button>
+
+                {!isMarksLocked && (
+                  <Button
+                    variant="brand"
+                    onClick={handleSaveAndPublish}
+                    disabled={
+                      bulkUpsertMutation.isPending ||
+                      markEntries.length === 0 ||
+                      enteredCount < markEntries.length ||
+                      isMarksLocked
+                    }
+                    className="gap-2"
+                    title={
+                      isMarksLocked
+                        ? 'Marks are already published'
+                        : enteredCount < markEntries.length
+                          ? `Enter marks for all ${markEntries.length} students before publishing`
+                          : 'Save marks and publish results'
+                    }
+                  >
+                    {bulkUpsertMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <BadgeCheck className="h-4 w-4" />
+                    )}
+                    Save &amp; Publish
+                  </Button>
+                )}
               </div>
             </div>
           </div>

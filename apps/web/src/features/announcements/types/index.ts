@@ -1,0 +1,80 @@
+/**
+ * Announcements types and option constants
+ */
+
+export type DeliveryMethod = 'email' | 'sms' | 'both';
+
+export type RecipientType =
+  | 'all_users'
+  | 'all_students'
+  | 'all_teachers'
+  | 'all_parents'
+  | 'specific_classes'
+  | 'manual_emails';
+
+export type AnnouncementStatus = 'draft' | 'sent' | 'failed';
+
+export interface CreateAnnouncementPayload {
+  subject: string;
+  body_html?: string;
+  event_name?: string;
+  event_date?: string | null;
+  event_note?: string;
+  delivery_methods: DeliveryMethod;
+  recipient_type: RecipientType;
+  class_ids?: string[];
+  manual_emails?: string;
+}
+
+export interface AnnouncementListItem {
+  public_id: string;
+  subject: string;
+  event_name: string;
+  event_date: string | null;
+  delivery_methods: DeliveryMethod;
+  recipient_type: RecipientType;
+  status: AnnouncementStatus;
+  sent_at: string | null;
+  sent_by_name: string | null;
+  recipient_count: number;
+  created_at: string;
+}
+
+export const DELIVERY_METHOD_OPTIONS: { value: DeliveryMethod; label: string }[] = [
+  { value: 'email', label: 'Email' },
+  { value: 'sms', label: 'SMS' },
+  { value: 'both', label: 'Email & SMS' },
+];
+
+export const RECIPIENT_TYPE_OPTIONS: { value: RecipientType; label: string }[] = [
+  { value: 'all_users', label: 'All Users' },
+  { value: 'all_students', label: 'All Students' },
+  { value: 'all_teachers', label: 'All Teachers' },
+  { value: 'all_parents', label: 'All Parents / Guardians' },
+  { value: 'specific_classes', label: 'Specific Classes' },
+  { value: 'manual_emails', label: 'Manual Email List' },
+];
+
+export const DELIVERY_METHOD_LABELS: Record<DeliveryMethod, string> = {
+  email: 'Email',
+  sms: 'SMS',
+  both: 'Email & SMS',
+};
+
+export const RECIPIENT_TYPE_LABELS: Record<RecipientType, string> = {
+  all_users: 'All Users',
+  all_students: 'All Students',
+  all_teachers: 'All Teachers',
+  all_parents: 'All Parents / Guardians',
+  specific_classes: 'Specific Classes',
+  manual_emails: 'Manual Email List',
+};
+
+export const ANNOUNCEMENT_STATUS_META: Record<
+  AnnouncementStatus,
+  { label: string; variant: 'success' | 'secondary' | 'destructive' }
+> = {
+  sent: { label: 'Sent', variant: 'success' },
+  draft: { label: 'Draft', variant: 'secondary' },
+  failed: { label: 'Failed', variant: 'destructive' },
+};

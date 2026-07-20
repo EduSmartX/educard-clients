@@ -7,7 +7,7 @@
  * - Teacher/Employee: App settings only (no Organization section)
  */
 
-import { getRoleGradient } from '@educard/shared';
+import { getRoleGradient, USER_ROLE_LABELS } from '@educard/shared';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -191,7 +191,7 @@ export default function SettingsScreen() {
               <Text style={st.headerEmail}>{user?.email ?? ''}</Text>
               <View style={st.roleBadge}>
                 <Text style={st.roleText}>
-                  {user?.role === 'admin' ? 'Administrator' : (user?.role ?? 'Staff')}
+                  {USER_ROLE_LABELS[user?.role as keyof typeof USER_ROLE_LABELS] ?? 'Staff'}
                 </Text>
               </View>
             </View>

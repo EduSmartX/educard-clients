@@ -29,6 +29,8 @@ interface OrganizationRoleFieldProps<T extends FieldValues> {
   defaultRoleCode?: string; // e.g., "TEACHER", "STUDENT"
   /** Display text for view/disabled mode (e.g., "Vice Principal") */
   viewValue?: string;
+  /** Role codes to exclude from the dropdown (e.g., ["STUDENT", "PARENT"]) */
+  excludeRoleCodes?: string[];
 }
 
 /** Inner component so hooks can be called at the top level. */
@@ -117,8 +119,13 @@ export function OrganizationRoleField<T extends FieldValues>({
   disabled = false,
   defaultRoleCode,
   viewValue,
+  excludeRoleCodes = [],
 }: OrganizationRoleFieldProps<T>) {
   const { data: orgRoles = [], isLoading } = useOrganizationRoles();
+
+  const filteredRoles = excludeRoleCodes.length
+    ? orgRoles.filter((role) => !excludeRoleCodes.includes(role.code))
+    : orgRoles;
 
   return (
     <FormField
@@ -127,7 +134,7 @@ export function OrganizationRoleField<T extends FieldValues>({
       render={({ field }) => (
         <RoleFieldContent
           field={field}
-          orgRoles={orgRoles}
+          orgRoles={filteredRoles}
           isLoading={isLoading}
           label={label}
           placeholder={placeholder}

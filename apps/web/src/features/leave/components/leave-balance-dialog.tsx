@@ -137,7 +137,7 @@ export function LeaveBalanceDialog({
 
   return (
     <Dialog open={open} onOpenChange={() => onClose()}>
-      <DialogContent className="bg-white sm:max-w-[550px]">
+      <DialogContent className="w-[calc(100vw-1.5rem)] bg-white sm:w-full sm:max-w-[550px]">
         <DialogHeader className="space-y-3">
           <DialogTitle className="text-2xl font-bold text-gray-900">
             {mode === 'add' ? 'Add Leave Balance' : 'Edit Leave Balance'}
@@ -213,7 +213,7 @@ export function LeaveBalanceDialog({
               variant="brandOutline"
               onClick={() => onClose()}
               disabled={createBalanceMutation.isPending || updateBalanceMutation.isPending}
-              className="min-w-[100px]"
+              className="w-full sm:w-auto sm:min-w-[100px]"
             >
               Cancel
             </Button>
@@ -226,7 +226,7 @@ export function LeaveBalanceDialog({
                 !allocationId ||
                 totalAllocated <= 0
               }
-              className="min-w-[120px]"
+              className="w-full sm:w-auto sm:min-w-[120px]"
             >
               {(createBalanceMutation.isPending || updateBalanceMutation.isPending) && (
                 <span className="flex items-center gap-2">

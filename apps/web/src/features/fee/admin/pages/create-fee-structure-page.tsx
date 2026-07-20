@@ -57,13 +57,14 @@ export function CreateFeeStructurePage() {
     (cls) => !classesWithActiveFeeStructure.has(cls.public_id)
   );
 
-  // Academic years list
+  // Academic years list - pass public_id as value, name as label
   const academicYears = academicYearsData?.length
-    ? academicYearsData.map((ay: { name: string }) => ay.name)
-    : ['2024-2025', '2025-2026', '2026-2027'];
-
-  // Default academic year from current active year
-  const defaultAcademicYear = currentAcademicYear?.name || '';
+    ? academicYearsData.map((ay: { public_id: string; name: string }) => ({
+        value: ay.public_id,
+        label: ay.name,
+      }))
+    : [];
+  const defaultAcademicYear = currentAcademicYear?.public_id || '';
 
   return (
     <div className="space-y-6">

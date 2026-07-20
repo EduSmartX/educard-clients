@@ -30,10 +30,16 @@ import {
   StyleSheet,
   Dimensions,
   RefreshControl,
+  useWindowDimensions,
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 
-import { TodaySchedule, StatsGrid, type StatCardData } from '@/components/dashboard';
+import {
+  TodaySchedule,
+  StatsGrid,
+  VerificationBanner,
+  type StatCardData,
+} from '@/components/dashboard';
 import { getMediaUrl } from '@/constants/config';
 import { useDashboardAttendanceStats, useAttendanceDisplay } from '@/features/attendance/hooks';
 import { useClasses } from '@/features/classes';
@@ -125,6 +131,7 @@ const adminLinks: AdminLinkItem[] = [
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const { width: viewportWidth } = useWindowDimensions();
   const { user } = useAuthStore();
   const { data: profilePhoto } = useMyProfilePhoto();
   const [refreshing, setRefreshing] = useState(false);
@@ -274,6 +281,18 @@ export default function AdminDashboard() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#10b981" />
         }
       >
+        {user && (
+          <VerificationBanner
+            user={user}
+            onVerifyEmail={() =>
+              router.push('/(shared-screens)/change-email?mode=verify&from=dashboard' as never)
+            }
+            onVerifyPhone={() =>
+              router.push('/(shared-screens)/change-phone?mode=verify&from=dashboard' as never)
+            }
+          />
+        )}
+
         {/* Stats Grid - uses shared component */}
         <StatsGrid stats={statsConfig} />
 
@@ -293,7 +312,7 @@ export default function AdminDashboard() {
                 entering={ZoomIn.delay(450 + index * 60)
                   .springify()
                   .damping(14)}
-                style={styles.adminLinkItem}
+                style={[styles.adminLinkItem, { width: viewportWidth >= 768 ? '25%' : '33.333%' }]}
               >
                 <TouchableOpacity
                   style={styles.adminLinkCard}
@@ -426,7 +445,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 16, fontWeight: '800', color: '#1e293b', letterSpacing: -0.2 },
   seeAll: { fontSize: 13, color: '#10b981', fontWeight: '700' },
   adminLinksGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  adminLinkItem: { width: '30%', alignItems: 'center' },
+  adminLinkItem: { alignItems: 'center' },
   adminLinkCard: {
     alignItems: 'center',
     paddingVertical: 14,

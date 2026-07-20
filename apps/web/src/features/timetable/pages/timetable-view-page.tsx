@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { getCurrentDayIndex, formatSlotTime } from '@educard/shared';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SearchableSelect } from '@/components/ui/searchable-select';
+import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/common';
 import { PageLoader } from '@/components/ui/loading-spinner';
 import { cn } from '@/lib/utils';
@@ -10,16 +11,238 @@ import { School, User } from 'lucide-react';
 import { useClasses } from '@/features/classes/hooks/use-classes';
 import { useRole } from '@/hooks/use-role';
 import { useManageableUsers } from '@/hooks/use-manageable-users';
-import { useClassTimetable, useMyTimetable, useTeacherTimetable } from '../hooks/queries';
-import { TimetableGrid } from '../components/timetable-grid';
-import { DAY_LABELS, type TimetableEntry, type TeacherSlotRow } from '../types';
+import { useClassTimetableForWeek, useMyTimetable, useTeacherTimetable } from '../hooks/queries';
+import {
+  DAY_LABELS,
+  type ClassTimetableDateSlot,
+  type ClassTimetableWeekDay,
+  type TimetableEntry,
+  type TeacherSlotRow,
+} from '../types';
 import type { Class } from '@/features/classes/types';
 import { PERIOD_PASTEL_COLORS } from '../constants';
 
 const SELF_TEACHER_OPTION = '__self_timetable__';
 
+function getSlotStatus(slot: ClassTimetableDateSlot): {
+  label: string;
+  className: string;
+} {
+  if (slot.override?.override_type === 'cancelled' || slot.is_cancelled) {
+    return {
+      label: 'Cancelled Class',
+      className: 'bg-rose-100/90 text-rose-700 ring-1 ring-rose-200',
+    };
+  }
+
+  if (slot.override?.override_type === 'extra_class') {
+    return {
+      label: 'Extra Class',
+      className: 'bg-emerald-100/90 text-emerald-700 ring-1 ring-emerald-200',
+    };
+  }
+
+  if (slot.override?.override_type === 'substitute') {
+    return {
+      label: 'Substitute Class',
+      className: 'bg-amber-100/90 text-amber-700 ring-1 ring-amber-200',
+    };
+  }
+
+  return {
+    label: 'Regular Class',
+    className: 'bg-slate-100/90 text-slate-600 ring-1 ring-slate-200',
+  };
+}
+
+function getSlotTypeBorder(slot: ClassTimetableDateSlot): string {
+  if (slot.override?.override_type === 'cancelled' || slot.is_cancelled) {
+    return 'border-l-4 border-l-rose-400';
+  }
+  if (slot.override?.override_type === 'extra_class') {
+    return 'border-l-4 border-l-emerald-400';
+  }
+  if (slot.override?.override_type === 'substitute') {
+    return 'border-l-4 border-l-amber-400';
+  }
+  return '';
+}
+
+function getSubjectColorMap(slots: ClassTimetableDateSlot[]) {
+  const map = new Map<string, (typeof PERIOD_PASTEL_COLORS)[number]>();
+  let colorIndex = 0;
+  for (const slot of slots) {
+    const subjectKey = (slot.subject_name || '').trim();
+    if (!subjectKey || map.has(subjectKey)) {
+      continue;
+    }
+    map.set(subjectKey, PERIOD_PASTEL_COLORS[colorIndex % PERIOD_PASTEL_COLORS.length]);
+    colorIndex += 1;
+  }
+  return map;
+}
+
+function getTodayDateString() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function WeekTimeline({ days }: { days: ClassTimetableWeekDay[] }) {
+  if (!days.length) {
+    return (
+      <div className="rounded-xl border border-dashed border-slate-200 bg-white p-6 text-sm text-slate-500">
+        No timetable configured for this week.
+      </div>
+    );
+  }
+
+  const sortedDays = [...days].sort((a, b) => a.day_of_week - b.day_of_week);
+
+  const slotRowMap = new Map<
+    string,
+    {
+      key: string;
+      label: string;
+      start_time: string;
+      end_time: string;
+      daySlots: Record<number, ClassTimetableDateSlot | undefined>;
+    }
+  >();
+
+  for (const day of sortedDays) {
+    for (const slot of day.slots) {
+      const key = `${slot.label}|${slot.start_time}|${slot.end_time}`;
+      if (!slotRowMap.has(key)) {
+        slotRowMap.set(key, {
+          key,
+          label: slot.label,
+          start_time: slot.start_time,
+          end_time: slot.end_time,
+          daySlots: {},
+        });
+      }
+      const row = slotRowMap.get(key);
+      if (row) {
+        row.daySlots[day.day_of_week] = slot;
+      }
+    }
+  }
+
+  const slotRows = [...slotRowMap.values()].sort((a, b) => {
+    const byTime = a.start_time.localeCompare(b.start_time);
+    if (byTime !== 0) {
+      return byTime;
+    }
+    return a.label.localeCompare(b.label);
+  });
+
+  const allSlots = sortedDays.flatMap((day) => day.slots);
+  const subjectColorMap = getSubjectColorMap(allSlots);
+  const timelineMinWidth = Math.max(700, 170 + sortedDays.length * 150);
+
+  return (
+    <div className="overflow-x-auto rounded-2xl border border-cyan-100 bg-gradient-to-br from-cyan-50 via-sky-50 to-emerald-50 p-3 shadow-sm">
+      <div style={{ minWidth: `${timelineMinWidth}px` }}>
+        <div
+          className="grid gap-2"
+          style={{
+            gridTemplateColumns: `minmax(140px,170px) repeat(${sortedDays.length}, minmax(150px, 1fr))`,
+          }}
+        >
+          <div className="rounded-xl border border-cyan-200 bg-white/90 p-3">
+            <p className="text-[11px] font-semibold tracking-wide text-cyan-700 uppercase">
+              Period
+            </p>
+            <p className="text-[11px] text-slate-500">Time</p>
+          </div>
+
+          {sortedDays.map((day) => (
+            <div
+              key={day.date}
+              className="rounded-xl border border-cyan-200 bg-white/90 p-3 text-center"
+            >
+              <p className="text-xs font-semibold text-slate-800">{DAY_LABELS[day.day_of_week]}</p>
+              <p className="text-[11px] text-slate-500">{day.date}</p>
+            </div>
+          ))}
+
+          {slotRows.map((row) => (
+            <Fragment key={row.key}>
+              <div className="rounded-xl border border-slate-200 bg-white p-3">
+                <p className="text-xs font-semibold text-slate-800">{row.label}</p>
+                <p className="text-[11px] text-slate-500">
+                  {formatSlotTime(row.start_time)} - {formatSlotTime(row.end_time)}
+                </p>
+              </div>
+
+              {sortedDays.map((day) => {
+                const slot = row.daySlots[day.day_of_week];
+                if (!slot) {
+                  return (
+                    <div
+                      key={`${row.key}-${day.day_of_week}`}
+                      className="rounded-xl border border-dashed border-slate-200 bg-white/70 p-3 text-center text-xs text-slate-400"
+                    >
+                      -
+                    </div>
+                  );
+                }
+
+                const status = getSlotStatus(slot);
+                const subjectKey = (slot.subject_name || '').trim();
+                const subjectColor = subjectColorMap.get(subjectKey);
+                const typeBorder = getSlotTypeBorder(slot);
+                return (
+                  <div
+                    key={`${row.key}-${day.day_of_week}`}
+                    className={cn(
+                      'rounded-xl border border-slate-200 bg-white p-3',
+                      typeBorder,
+                      subjectColor?.bg,
+                      subjectColor?.border,
+                      subjectColor && !typeBorder ? 'border-l-4' : ''
+                    )}
+                  >
+                    <p className={cn('text-sm leading-tight font-bold', subjectColor?.text)}>
+                      {slot.is_break
+                        ? 'Break'
+                        : slot.is_cancelled
+                          ? 'Cancelled'
+                          : slot.subject_name || 'No assignment'}
+                    </p>
+                    <p
+                      className={cn(
+                        'mt-0.5 text-[11px] font-semibold text-slate-600',
+                        subjectColor?.sub
+                      )}
+                    >
+                      {slot.teacher_name && !slot.is_cancelled ? slot.teacher_name : '-'}
+                    </p>
+                    <span
+                      className={cn(
+                        'mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold',
+                        status.className
+                      )}
+                    >
+                      {status.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </Fragment>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ByClassView() {
   const [selectedClassId, setSelectedClassId] = useState<string>('');
+  const [selectedDate, setSelectedDate] = useState<string>(getTodayDateString());
 
   const { data: classesData, isLoading: classesLoading } = useClasses({
     page_size: 200,
@@ -27,11 +250,11 @@ function ByClassView() {
   });
 
   const {
-    data: timetable,
-    isLoading: timetableLoading,
+    data: weekTimetable,
+    isLoading: weekLoading,
     isError,
     error,
-  } = useClassTimetable(selectedClassId || undefined);
+  } = useClassTimetableForWeek(selectedClassId || undefined, selectedDate || undefined);
 
   useEffect(() => {
     if (!selectedClassId && classesData?.data && classesData.data.length > 0) {
@@ -42,7 +265,7 @@ function ByClassView() {
   const classes: Class[] = classesData?.data ?? [];
 
   const renderTimetableContent = () => {
-    if (timetableLoading) {
+    if (weekLoading) {
       return <PageLoader />;
     }
     if (isError) {
@@ -56,14 +279,15 @@ function ByClassView() {
         </div>
       );
     }
-    if (timetable) {
-      return <TimetableGrid timetable={timetable} readOnly />;
+    if (weekTimetable) {
+      return <WeekTimeline days={weekTimetable.days} />;
     }
     return null;
   };
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
         <div className="w-full sm:w-72">
           {classesLoading ? (
             <div className="bg-muted h-10 animate-pulse rounded-md" />
@@ -80,6 +304,13 @@ function ByClassView() {
             />
           )}
         </div>
+
+        <Input
+          type="date"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          className="w-full sm:max-w-48"
+        />
       </div>
 
       {selectedClassId ? (
@@ -103,7 +334,7 @@ function ByTeacherView() {
     isAdmin ? '' : SELF_TEACHER_OPTION
   );
 
-  const { data: manageableTeachers, isLoading: teachersLoading } = useManageableUsers('teacher');
+  const { data: manageableTeachers, isLoading: teachersLoading } = useManageableUsers('staff');
 
   const teachers = useMemo(() => manageableTeachers ?? [], [manageableTeachers]);
   const { data: myTimetable, isLoading: myLoading } = useMyTimetable();
@@ -134,7 +365,10 @@ function ByTeacherView() {
   }, [isAdmin, selectedTeacherId]);
 
   const teacherOptions = useMemo(() => {
-    const options = teachers.map((t) => ({ value: t.public_id, label: t.full_name }));
+    const options = teachers.map((t) => ({
+      value: t.public_id,
+      label: t.role_display ? `${t.full_name} (${t.role_display})` : t.full_name,
+    }));
     const myLabel = myTimetable?.teacher_name
       ? `${myTimetable.teacher_name} (My Timetable)`
       : 'My Timetable';
@@ -268,7 +502,7 @@ function ByTeacherView() {
 
       {!isLoading && timetableData && slotRows.length > 0 && (
         <div className="space-y-3">
-          {availableDays.length > 1 && (
+          {availableDays.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
@@ -319,9 +553,9 @@ function ByTeacherView() {
             return (
               <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
                 <div
-                  className="grid min-w-[700px]"
+                  className="grid min-w-[520px] sm:min-w-[700px]"
                   style={{
-                    gridTemplateColumns: `90px repeat(${visibleDays.length}, minmax(0, 1fr))`,
+                    gridTemplateColumns: `minmax(72px, 90px) repeat(${visibleDays.length}, minmax(0, 1fr))`,
                   }}
                 >
                   <div className="sticky top-0 z-10 flex items-center justify-center border-b border-gray-200 bg-gray-50 p-3">
@@ -369,7 +603,9 @@ function ByTeacherView() {
                             {formatSlotTime(row.endTime)}
                           </span>
                           {!!row.slotLabel && (
-                            <span className="mt-0.5 text-[10px] text-gray-400">{row.slotLabel}</span>
+                            <span className="mt-0.5 text-[10px] text-gray-400">
+                              {row.slotLabel}
+                            </span>
                           )}
                         </div>
 
@@ -416,18 +652,46 @@ function ByTeacherView() {
                             >
                               <div
                                 className={cn(
-                                  'h-full rounded-lg border-l-3 p-2',
+                                  'flex h-full flex-col rounded-lg border-l-3 px-3 py-2',
                                   periodColor.bg,
                                   periodColor.border
                                 )}
                               >
-                                <div
-                                  className={cn('truncate text-xs font-semibold', periodColor.text)}
-                                >
-                                  {entry.subject_name || 'Unassigned'}
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className="flex min-w-0 items-baseline gap-2">
+                                    <span
+                                      className={cn('truncate text-sm font-bold', periodColor.text)}
+                                    >
+                                      {entry.class_name}
+                                    </span>
+                                    <span className={cn('truncate text-xs', periodColor.sub)}>
+                                      {entry.subject_name || 'Unassigned'}
+                                    </span>
+                                  </div>
+                                  <span
+                                    className={cn(
+                                      'shrink-0 rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-semibold',
+                                      periodColor.text
+                                    )}
+                                  >
+                                    {row.slotLabel || 'Period'}
+                                  </span>
                                 </div>
-                                <div className={cn('mt-0.5 truncate text-[11px]', periodColor.sub)}>
-                                  {entry.class_name}
+
+                                <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[10px]">
+                                  <span className="rounded-full bg-white/70 px-2 py-0.5 font-medium text-slate-600">
+                                    {formatSlotTime(row.startTime)} – {formatSlotTime(row.endTime)}
+                                  </span>
+                                  {!!entry.group_name && (
+                                    <span className="rounded-full bg-white/70 px-2 py-0.5 font-medium text-slate-600">
+                                      {entry.group_name}
+                                    </span>
+                                  )}
+                                  {!!entry.room && (
+                                    <span className="rounded-full bg-white/70 px-2 py-0.5 font-medium text-slate-600">
+                                      📍 {entry.room}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             </div>

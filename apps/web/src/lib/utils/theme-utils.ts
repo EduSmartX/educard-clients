@@ -80,21 +80,21 @@ export const roleThemes: Record<RoleTheme, ThemeConfig> = {
     accentBg: 'bg-violet-100',
   },
   student: {
-    // Orange/Amber theme for Student
-    headerBg: 'bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500',
-    headerShadow: 'shadow-xl shadow-orange-500/20',
-    subtitleText: 'text-orange-100',
-    notificationRing: 'ring-orange-600',
-    avatarGradient: 'from-orange-500 to-amber-600',
-    sidebarActiveBg: 'bg-gradient-to-r from-orange-500 to-amber-500',
+    // Light Green/Lime theme for Student
+    headerBg: 'bg-gradient-to-r from-lime-500 via-green-500 to-emerald-500',
+    headerShadow: 'shadow-xl shadow-lime-500/20',
+    subtitleText: 'text-lime-100',
+    notificationRing: 'ring-lime-600',
+    avatarGradient: 'from-lime-500 to-green-600',
+    sidebarActiveBg: 'bg-gradient-to-r from-lime-500 to-green-500',
     sidebarActiveText: 'text-white',
-    sidebarActiveShadow: 'shadow-md shadow-orange-500/25',
-    mobileMenuBg: 'bg-gradient-to-r from-orange-500 to-amber-500',
-    mobileMenuHover: 'hover:from-orange-600 hover:to-amber-600',
-    mobileMenuShadow: 'shadow-lg shadow-orange-500/25',
-    mainBgGradient: 'bg-gradient-to-br from-slate-50 via-white to-orange-50/30',
-    accentColor: 'text-orange-600',
-    accentBg: 'bg-orange-100',
+    sidebarActiveShadow: 'shadow-md shadow-lime-500/25',
+    mobileMenuBg: 'bg-gradient-to-r from-lime-500 to-green-500',
+    mobileMenuHover: 'hover:from-lime-600 hover:to-green-600',
+    mobileMenuShadow: 'shadow-lg shadow-lime-500/25',
+    mainBgGradient: 'bg-gradient-to-br from-slate-50 via-white to-lime-50/30',
+    accentColor: 'text-lime-600',
+    accentBg: 'bg-lime-100',
   },
 };
 
@@ -103,7 +103,7 @@ export const roleThemes: Record<RoleTheme, ThemeConfig> = {
  */
 export function getRoleTheme(userRole?: string): RoleTheme {
   const role = userRole?.toLowerCase() || '';
-  
+
   if (role.includes('admin') || role.includes('administrator')) {
     return 'admin';
   }
@@ -116,7 +116,7 @@ export function getRoleTheme(userRole?: string): RoleTheme {
   if (role.includes('student')) {
     return 'student';
   }
-  
+
   return 'admin'; // Default to admin theme
 }
 

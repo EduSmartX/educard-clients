@@ -17,6 +17,8 @@ import {
   clearDaySlots,
   createEntry,
   deleteEntry,
+  upsertTimetableOverride,
+  deleteTimetableOverride,
   type CreateEntryResult,
 } from '../api/timetable-api';
 import { timetableKeys } from './queries';
@@ -24,6 +26,7 @@ import type {
   ClassGroupCreatePayload,
   BulkSlotPayload,
   TimetableEntryCreatePayload,
+  TimetableOverrideUpsertPayload,
 } from '../types';
 
 export function useCreateClassGroup(options?: MutationOptions) {
@@ -191,6 +194,54 @@ export function useDeleteEntry(classPublicId?: string, options?: MutationOptions
     },
     onError: (error: Error) => {
       handleMutationError(error, ErrorMessages.TIMETABLE.DELETE_ENTRY_FAILED, options?.onError);
+    },
+  });
+}
+
+export function useUpsertTimetableOverride(classPublicId: string, options?: MutationOptions) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: TimetableOverrideUpsertPayload) =>
+      upsertTimetableOverride(classPublicId, payload),
+    onSuccess: (_result, variables) => {
+      toast.success('Day override saved successfully.');
+      qc.invalidateQueries({
+        queryKey: timetableKeys.classTimetableDate(classPublicId, variables.override_date),
+      });
+      qc.invalidateQueries({
+        queryKey: timetableKeys.classTimetable(classPublicId),
+      });
+      qc.invalidateQueries({
+        queryKey: timetableKeys.classOverrides(classPublicId, variables.override_date),
+      });
+      options?.onSuccess?.();
+    },
+    onError: (error: Error) => {
+      handleMutationError(error, 'Unable to save day override.', options?.onError);
+    },
+  });
+}
+
+export function useDeleteTimetableOverride(classPublicId: string, options?: MutationOptions) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ overridePublicId, date }: { overridePublicId: string; date: string }) =>
+      deleteTimetableOverride(overridePublicId).then(() => date),
+    onSuccess: (date) => {
+      toast.success('Day override removed successfully.');
+      qc.invalidateQueries({
+        queryKey: timetableKeys.classTimetableDate(classPublicId, date),
+      });
+      qc.invalidateQueries({
+        queryKey: timetableKeys.classTimetable(classPublicId),
+      });
+      qc.invalidateQueries({
+        queryKey: timetableKeys.classOverrides(classPublicId, date),
+      });
+      options?.onSuccess?.();
+    },
+    onError: (error: Error) => {
+      handleMutationError(error, 'Unable to remove day override.', options?.onError);
     },
   });
 }

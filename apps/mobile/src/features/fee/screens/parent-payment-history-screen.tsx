@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#E5E7EB',
   },
   detailItem: {
-    minWidth: 80,
+    minWidth: 64,
   },
   detailLabel: {
     fontSize: 10,

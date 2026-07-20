@@ -53,9 +53,6 @@ export function getTimesheetTableColumns({
       ),
       sortable: true,
       sortKey: 'employee_info.full_name',
-      width: 220,
-      minWidth: 200,
-      maxWidth: 280,
     });
   }
 
@@ -83,9 +80,6 @@ export function getTimesheetTableColumns({
       ),
       sortable: true,
       sortKey: 'week_start_date',
-      width: 220,
-      minWidth: 200,
-      maxWidth: 280,
     },
     // Working Days
     {
@@ -97,9 +91,6 @@ export function getTimesheetTableColumns({
       className: 'text-center',
       sortable: true,
       sortKey: 'total_working_days',
-      width: 130,
-      minWidth: 110,
-      maxWidth: 160,
     },
     // Present
     {
@@ -109,9 +100,6 @@ export function getTimesheetTableColumns({
       className: 'text-center',
       sortable: true,
       sortKey: 'total_present_days',
-      width: 100,
-      minWidth: 80,
-      maxWidth: 120,
     },
     // Absent
     {
@@ -121,9 +109,6 @@ export function getTimesheetTableColumns({
       className: 'text-center',
       sortable: true,
       sortKey: 'total_absent_days',
-      width: 100,
-      minWidth: 80,
-      maxWidth: 120,
     },
     // Leave
     {
@@ -133,9 +118,6 @@ export function getTimesheetTableColumns({
       className: 'text-center',
       sortable: true,
       sortKey: 'total_leave_days',
-      width: 100,
-      minWidth: 80,
-      maxWidth: 120,
     },
     // Attendance %
     {
@@ -156,9 +138,6 @@ export function getTimesheetTableColumns({
       className: 'text-center',
       sortable: true,
       sortKey: 'attendance_percentage',
-      width: 140,
-      minWidth: 120,
-      maxWidth: 170,
     },
     // Submitted On
     {
@@ -178,9 +157,6 @@ export function getTimesheetTableColumns({
         ),
       sortable: true,
       sortKey: 'submitted_at',
-      width: 150,
-      minWidth: 130,
-      maxWidth: 190,
     },
     // Status
     {
@@ -190,9 +166,6 @@ export function getTimesheetTableColumns({
       className: 'text-center',
       sortable: true,
       sortKey: 'submission_status',
-      width: 140,
-      minWidth: 120,
-      maxWidth: 180,
     },
     // Actions
     {
@@ -261,9 +234,6 @@ export function getTimesheetTableColumns({
       ),
       headerClassName: 'text-right',
       className: 'text-right',
-      width: 180,
-      minWidth: 140,
-      maxWidth: 220,
     }
   );
 

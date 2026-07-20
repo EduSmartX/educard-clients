@@ -26,12 +26,7 @@ export type {
 } from '@educard/shared';
 
 // Student types
-export type {
-  Student,
-  Guardian,
-  Class,
-  Section,
-} from '@educard/shared';
+export type { Student, Guardian, Class, Section } from '@educard/shared';
 
 // Re-export utilities
 export {

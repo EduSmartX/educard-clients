@@ -338,7 +338,6 @@ export default function HolidayCalendarScreen() {
         description="Upload multiple holidays at once using an Excel template"
         downloadTemplate={downloadHolidayTemplate}
         uploadFile={bulkUploadHolidays}
-        templateFileName="holidays_template.xlsx"
         onUploadSuccess={() => void refetch()}
       />
 

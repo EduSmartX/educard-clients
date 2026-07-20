@@ -11,6 +11,8 @@ export interface ManageableUser {
   public_id: string;
   full_name: string;
   email: string;
+  role?: string;
+  role_display?: string;
 }
 
 interface ManageableUsersApiResponse {

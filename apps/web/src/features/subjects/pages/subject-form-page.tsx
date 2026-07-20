@@ -34,6 +34,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import {
   ToastTitles,
@@ -64,6 +65,10 @@ const subjectSchema = z.object({
   subject_type: z.enum(['core', 'elective', 'language']).optional().default('core'),
   teacher_id: z.string().optional(),
   description: z.string().optional(),
+  display_order: z
+    .string()
+    .optional()
+    .refine((val) => !val || /^\d+$/.test(val), 'Display order must be a valid number'),
 });
 type SubjectFormData = z.infer<typeof subjectSchema>;
 
@@ -72,7 +77,6 @@ export default function SubjectFormPage() {
   const location = useLocation();
   const { id } = useParams<{ id: string }>();
 
-  // Check if viewing deleted subject (from query param)
   const searchParams = new URLSearchParams(location.search);
   const isViewingDeleted = searchParams.get('deleted') === 'true';
 
@@ -109,7 +113,8 @@ export default function SubjectFormPage() {
 
   // Fetch dropdown data
   const { data: classesData } = useClasses({ page_size: 100 });
-  const { data: managedClassesData } = useManagedClassesForSubjects();
+  const { data: managedClassesData, isLoading: isManagedClassesLoading } =
+    useManagedClassesForSubjects();
   const { data: subjectMastersData } = useSubjectMasters({ page_size: 100 });
   const { data: teachersData } = useTeachers({ page_size: 100 });
 
@@ -119,6 +124,11 @@ export default function SubjectFormPage() {
     isTeacher && managedClassesData && mode === 'create'
       ? managedClassesData
       : classesData?.data || [];
+  const isTeacherWithoutManagedClasses =
+    isTeacher &&
+    mode === 'create' &&
+    !isManagedClassesLoading &&
+    (managedClassesData?.length ?? 0) === 0;
 
   const form = useForm<SubjectFormData>({
     resolver: zodResolver(subjectSchema),
@@ -129,6 +139,7 @@ export default function SubjectFormPage() {
       subject_type: 'core',
       teacher_id: '',
       description: '',
+      display_order: '',
     },
   });
 
@@ -143,6 +154,7 @@ export default function SubjectFormPage() {
           subject_type: (subject.subject_type as 'core' | 'elective' | 'language') || 'core',
           teacher_id: teacherId,
           description: subject.description || '',
+          display_order: subject.display_order ? String(subject.display_order) : '',
         },
         {
           keepDefaultValues: false,
@@ -215,7 +227,7 @@ export default function SubjectFormPage() {
       // Navigation happens before mutation is called
     },
     onError: (error: Error) => {
-      toast.error(error.message || ErrorMessages.SUBJECT.DELETE_FAILED);
+      toast.error(getErrorMessage(error, ErrorMessages.SUBJECT.DELETE_FAILED));
     },
   });
 
@@ -224,7 +236,7 @@ export default function SubjectFormPage() {
       // Navigation already happened before mutation was called
     },
     onError: (error: Error) => {
-      toast.error(error.message || ErrorMessages.SUBJECT.REACTIVATE_FAILED);
+      toast.error(getErrorMessage(error, ErrorMessages.SUBJECT.REACTIVATE_FAILED));
     },
   });
 
@@ -280,6 +292,7 @@ export default function SubjectFormPage() {
           subject_type: pendingData.subject_type || 'core',
           teacher_id: pendingData.teacher_id || undefined,
           description: pendingData.description || undefined,
+          display_order: pendingData.display_order ? Number(pendingData.display_order) : undefined,
         },
         forceCreate: true,
       });
@@ -296,6 +309,7 @@ export default function SubjectFormPage() {
           subject_type: data.subject_type || 'core',
           teacher_id: data.teacher_id || undefined,
           description: data.description || undefined,
+          display_order: data.display_order ? Number(data.display_order) : undefined,
         },
       });
     } else {
@@ -306,6 +320,7 @@ export default function SubjectFormPage() {
           subject_type: data.subject_type || 'core',
           teacher_id: data.teacher_id || undefined,
           description: data.description || undefined,
+          display_order: data.display_order ? Number(data.display_order) : undefined,
         },
       });
     }
@@ -431,150 +446,208 @@ export default function SubjectFormPage() {
         actions={pageConfig.actions}
       />
 
-      <Card>
-        <CardContent className="pt-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Teacher Information Alert */}
-              {isTeacher && mode === 'create' && (
-                <Alert className="border-blue-200 bg-blue-50">
-                  <Info className="h-4 w-4 text-blue-600" />
-                  <AlertDescription className="text-blue-800">
-                    You can add subjects only for classes where you are assigned as the class
-                    teacher.
-                  </AlertDescription>
-                </Alert>
-              )}
+      {isTeacherWithoutManagedClasses && (
+        <Alert className="border-amber-200 bg-amber-50">
+          <Info className="h-4 w-4 text-amber-700" />
+          <AlertDescription className="text-amber-900">
+            You are not eligible to add any subject because you are not assigned as class teacher
+            for any class.
+          </AlertDescription>
+        </Alert>
+      )}
 
-              {/* Subject Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900">Subject Information</h3>
+      {!isTeacherWithoutManagedClasses && (
+        <Card>
+          <CardContent className="pt-6">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                {/* Teacher Information Alert */}
+                {isTeacher && mode === 'create' && (
+                  <Alert className="border-blue-200 bg-blue-50">
+                    <Info className="h-4 w-4 text-blue-600" />
+                    <AlertDescription className="text-blue-800">
+                      You can add subjects only for classes where you are assigned as the class
+                      teacher.
+                    </AlertDescription>
+                  </Alert>
+                )}
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  {/* Class Dropdown */}
-                  <FormField
-                    control={form.control}
-                    name="class_id"
-                    render={({ field, fieldState }) => (
-                      <FormItem
-                        ref={fieldState.error && !firstErrorRef.current ? firstErrorRef : null}
-                      >
-                        <FormLabel>
-                          Class <span className="text-red-500">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <SearchableSelect
-                            key={`class-${subject?.public_id || 'new'}-${field.value}`}
-                            options={classOptions.map((opt) => ({
-                              value: opt.value,
-                              label: opt.label,
-                            }))}
-                            value={field.value}
-                            onValueChange={field.onChange}
-                            placeholder={FormPlaceholders.SELECT_CLASS}
-                            searchPlaceholder="Search classes..."
-                            disabled={isPending || mode === 'view' || mode === 'edit'}
-                          />
-                        </FormControl>
-                        {mode === 'edit' && (
-                          <p className="text-muted-foreground text-sm">
-                            Class cannot be changed after creation
-                          </p>
-                        )}
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                {/* Subject Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Subject Information</h3>
 
-                  {/* Subject Master Dropdown */}
-                  <FormField
-                    control={form.control}
-                    name="subject_id"
-                    render={({ field, fieldState }) => (
-                      <FormItem
-                        ref={fieldState.error && !firstErrorRef.current ? firstErrorRef : null}
-                      >
-                        <FormLabel>
-                          Subject Master <span className="text-red-500">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <SearchableSelect
-                            key={`subject-${subject?.public_id || 'new'}-${field.value}`}
-                            options={subjectOptions.map((opt) => ({
-                              value: opt.value.toString(),
-                              label: opt.label,
-                            }))}
-                            value={field.value?.toString() || ''}
-                            onValueChange={(value) => field.onChange(Number(value))}
-                            placeholder={FormPlaceholders.SELECT_SUBJECT}
-                            searchPlaceholder="Search subjects..."
-                            disabled={isPending || mode === 'view' || mode === 'edit'}
-                          />
-                        </FormControl>
-                        {mode === 'edit' && (
-                          <p className="text-muted-foreground text-sm">
-                            Subject cannot be changed after creation
-                          </p>
-                        )}
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  {/* Subject Type Dropdown */}
-                  <FormField
-                    control={form.control}
-                    name="subject_type"
-                    render={({ field, fieldState }) => (
-                      <FormItem
-                        ref={fieldState.error && !firstErrorRef.current ? firstErrorRef : null}
-                      >
-                        <FormLabel>Subject Type (Optional)</FormLabel>
-                        <FormControl>
-                          <SearchableSelect
-                            options={SUBJECT_TYPE_OPTIONS.map((opt) => ({
-                              value: opt.value,
-                              label: opt.label,
-                            }))}
-                            value={field.value || 'core'}
-                            onValueChange={field.onChange}
-                            placeholder="Select subject type"
-                            disabled={isPending || mode === 'view'}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Teacher Dropdown */}
-                  <FormField
-                    control={form.control}
-                    name="teacher_id"
-                    render={({ field, fieldState }) => (
-                      <FormItem
-                        ref={fieldState.error && !firstErrorRef.current ? firstErrorRef : null}
-                      >
-                        <FormLabel>Teacher (Optional)</FormLabel>
-                        <FormControl>
-                          <SearchableSelect
-                            key={`teacher-${subject?.public_id || 'new'}-${field.value}`}
-                            options={[
-                              { value: 'none', label: 'None' },
-                              ...teacherOptions.map((opt) => ({
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {/* Class Dropdown */}
+                    <FormField
+                      control={form.control}
+                      name="class_id"
+                      render={({ field, fieldState }) => (
+                        <FormItem
+                          ref={fieldState.error && !firstErrorRef.current ? firstErrorRef : null}
+                        >
+                          <FormLabel>
+                            Class <span className="text-red-500">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <SearchableSelect
+                              key={`class-${subject?.public_id || 'new'}-${field.value}`}
+                              options={classOptions.map((opt) => ({
                                 value: opt.value,
                                 label: opt.label,
-                              })),
-                            ]}
-                            value={field.value || 'none'}
-                            onValueChange={(value) => {
-                              field.onChange(value === 'none' ? '' : value);
-                            }}
-                            placeholder={FormPlaceholders.SELECT_TEACHER}
-                            searchPlaceholder="Search teachers..."
+                              }))}
+                              value={field.value}
+                              onValueChange={field.onChange}
+                              placeholder={FormPlaceholders.SELECT_CLASS}
+                              searchPlaceholder="Search classes..."
+                              disabled={isPending || mode === 'view' || mode === 'edit'}
+                            />
+                          </FormControl>
+                          {mode === 'edit' && (
+                            <p className="text-muted-foreground text-sm">
+                              Class cannot be changed after creation
+                            </p>
+                          )}
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Subject Master Dropdown */}
+                    <FormField
+                      control={form.control}
+                      name="subject_id"
+                      render={({ field, fieldState }) => (
+                        <FormItem
+                          ref={fieldState.error && !firstErrorRef.current ? firstErrorRef : null}
+                        >
+                          <FormLabel>
+                            Subject Master <span className="text-red-500">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <SearchableSelect
+                              key={`subject-${subject?.public_id || 'new'}-${field.value}`}
+                              options={subjectOptions.map((opt) => ({
+                                value: opt.value.toString(),
+                                label: opt.label,
+                              }))}
+                              value={field.value?.toString() || ''}
+                              onValueChange={(value) => field.onChange(Number(value))}
+                              placeholder={FormPlaceholders.SELECT_SUBJECT}
+                              searchPlaceholder="Search subjects..."
+                              disabled={isPending || mode === 'view' || mode === 'edit'}
+                            />
+                          </FormControl>
+                          {mode === 'edit' && (
+                            <p className="text-muted-foreground text-sm">
+                              Subject cannot be changed after creation
+                            </p>
+                          )}
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {/* Subject Type Dropdown */}
+                    <FormField
+                      control={form.control}
+                      name="subject_type"
+                      render={({ field, fieldState }) => (
+                        <FormItem
+                          ref={fieldState.error && !firstErrorRef.current ? firstErrorRef : null}
+                        >
+                          <FormLabel>Subject Type (Optional)</FormLabel>
+                          <FormControl>
+                            <SearchableSelect
+                              options={SUBJECT_TYPE_OPTIONS.map((opt) => ({
+                                value: opt.value,
+                                label: opt.label,
+                              }))}
+                              value={field.value || 'core'}
+                              onValueChange={field.onChange}
+                              placeholder="Select subject type"
+                              disabled={isPending || mode === 'view'}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Teacher Dropdown */}
+                    <FormField
+                      control={form.control}
+                      name="teacher_id"
+                      render={({ field, fieldState }) => (
+                        <FormItem
+                          ref={fieldState.error && !firstErrorRef.current ? firstErrorRef : null}
+                        >
+                          <FormLabel>Teacher (Optional)</FormLabel>
+                          <FormControl>
+                            <SearchableSelect
+                              key={`teacher-${subject?.public_id || 'new'}-${field.value}`}
+                              options={[
+                                { value: 'none', label: 'None' },
+                                ...teacherOptions.map((opt) => ({
+                                  value: opt.value,
+                                  label: opt.label,
+                                })),
+                              ]}
+                              value={field.value || 'none'}
+                              onValueChange={(value) => {
+                                field.onChange(value === 'none' ? '' : value);
+                              }}
+                              placeholder={FormPlaceholders.SELECT_TEACHER}
+                              searchPlaceholder="Search teachers..."
+                              disabled={isPending || mode === 'view'}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Display Order */}
+                  <FormField
+                    control={form.control}
+                    name="display_order"
+                    render={({ field, fieldState }) => (
+                      <FormItem
+                        ref={fieldState.error && !firstErrorRef.current ? firstErrorRef : null}
+                        className="md:w-1/2 md:pr-2"
+                      >
+                        <FormLabel>Display Order (Optional)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min={0}
+                            placeholder="e.g. 1 (lower appears first)"
                             disabled={isPending || mode === 'view'}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Description */}
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field, fieldState }) => (
+                      <FormItem
+                        ref={fieldState.error && !firstErrorRef.current ? firstErrorRef : null}
+                      >
+                        <FormLabel>Additional Information (Optional)</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder={FormPlaceholders.SUBJECT_INFO}
+                            disabled={isPending || mode === 'view'}
+                            rows={3}
+                            {...field}
                           />
                         </FormControl>
                         <FormMessage />
@@ -583,40 +656,18 @@ export default function SubjectFormPage() {
                   />
                 </div>
 
-                {/* Description */}
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field, fieldState }) => (
-                    <FormItem
-                      ref={fieldState.error && !firstErrorRef.current ? firstErrorRef : null}
-                    >
-                      <FormLabel>Additional Information (Optional)</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder={FormPlaceholders.SUBJECT_INFO}
-                          disabled={isPending || mode === 'view'}
-                          rows={3}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                {/* Form Actions */}
+                <FormActions
+                  mode={mode}
+                  isSubmitting={isPending}
+                  onCancel={() => navigate(ROUTES.SUBJECTS)}
+                  submitLabel={mode === 'edit' ? 'Update Subject' : 'Create Subject'}
                 />
-              </div>
-
-              {/* Form Actions */}
-              <FormActions
-                mode={mode}
-                isSubmitting={isPending}
-                onCancel={() => navigate(ROUTES.SUBJECTS)}
-                submitLabel={mode === 'edit' ? 'Update Subject' : 'Create Subject'}
-              />
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Deleted Duplicate Dialog */}
       <DeletedDuplicateDialog

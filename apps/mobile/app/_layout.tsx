@@ -3,6 +3,7 @@
  * Configures providers and handles auth state
  */
 
+import { USER_ROLES } from '@educard/shared/constants';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -14,6 +15,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/lib/auth-store';
 import { queryClient } from '@/lib/query-client';
 import { ToastProvider } from '@/lib/toast-context';
+import { CriticalOperationProvider } from '@/providers/critical-operation-context';
 
 // Suppress harmless React Native internal warning from reanimated/gestures
 LogBox.ignoreLogs(['viewIsDescendantOf']);
@@ -21,33 +23,42 @@ LogBox.ignoreLogs(['viewIsDescendantOf']);
 // Keep splash screen visible while loading
 void SplashScreen.preventAutoHideAsync();
 
-type AppSegments = ReturnType<typeof useSegments>;
-
 /** Determine the correct dashboard route for a user's role */
 function getDashboardRoute(role: string | undefined) {
   const normalized = role?.toLowerCase();
-  if (normalized === 'teacher' || normalized === 'employee') {
+  if (normalized === USER_ROLES.TEACHER || normalized === USER_ROLES.EMPLOYEE) {
     return '/(tabs)/(employee)/dashboard' as const;
   }
-  if (normalized === 'parent') {
+  if (normalized === USER_ROLES.STUDENT) {
     return '/(tabs)/(parent)/dashboard' as const;
   }
   return '/(tabs)/(admin)/dashboard' as const;
 }
 
+/** Check if the current segments are the mandatory force-password-change screen */
+function isForcePasswordChangeScreen(segments: readonly string[]): boolean {
+  return segments[0] === '(shared-screens)' && segments[1] === 'force-password-change';
+}
+
 /** Check if the user needs to be redirected based on role and current segments */
-function shouldRedirectAuthenticated(segments: AppSegments, role: string | undefined): boolean {
+function shouldRedirectAuthenticated(
+  segments: readonly string[],
+  role: string | undefined
+): boolean {
   const inAuthGroup = segments[0] === '(auth)';
   const inSharedScreens = segments[0] === '(shared-screens)';
-  const inModals = segments[0] === ('(modals)' as (typeof segments)[0]);
+  const inModals = segments[0] === '(modals)';
 
   // Allow shared screens and modals for all authenticated users
   if (inSharedScreens || inModals) return false;
 
   const normalized = role?.toLowerCase();
-  const isAdmin = normalized === 'admin';
-  const isTeacher = normalized === 'teacher' || normalized === 'employee';
-  const isParent = normalized === 'parent';
+  const isAdmin = normalized === USER_ROLES.ADMIN;
+  const isTeacher = normalized === USER_ROLES.TEACHER || normalized === USER_ROLES.EMPLOYEE;
+  // Note: there is no Parent role - student accounts are logged into by
+  // parents/guardians on their child's behalf and reuse the Parent tab
+  // group, so this only ever needs to check isStudent.
+  const isStudent = normalized === USER_ROLES.STUDENT;
 
   const inAdminTabs = segments[0] === '(tabs)' && segments[1] === '(admin)';
   const inEmployeeTabs = segments[0] === '(tabs)' && segments[1] === '(employee)';
@@ -57,7 +68,7 @@ function shouldRedirectAuthenticated(segments: AppSegments, role: string | undef
     inAuthGroup ||
     (isAdmin && !inAdminTabs) ||
     (isTeacher && !inEmployeeTabs) ||
-    (isParent && !inParentTabs)
+    (isStudent && !inParentTabs)
   );
 }
 
@@ -104,6 +115,16 @@ function RootLayoutNav() {
       setTimeout(() => {
         isNavigating.current = false;
       }, 500);
+    } else if (
+      isAuthenticated &&
+      user?.force_password_reset &&
+      !isForcePasswordChangeScreen(segments)
+    ) {
+      isNavigating.current = true;
+      router.replace('/(shared-screens)/force-password-change');
+      setTimeout(() => {
+        isNavigating.current = false;
+      }, 500);
     } else if (isAuthenticated && shouldRedirectAuthenticated(segments, user?.role)) {
       isNavigating.current = true;
       router.replace(getDashboardRoute(user?.role));
@@ -134,9 +155,11 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <ToastProvider>
-            <RootLayoutNav />
-          </ToastProvider>
+          <CriticalOperationProvider>
+            <ToastProvider>
+              <RootLayoutNav />
+            </ToastProvider>
+          </CriticalOperationProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

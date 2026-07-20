@@ -198,6 +198,27 @@ export function useBulkUpdateExamStatusBySession(options?: MutationOptions<Field
   });
 }
 
+export function useBulkUpdateExamStatuses(options?: MutationOptions<FieldErrors>) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ updates }: { updates: Array<{ id: string; status: ExamStatus }> }) => {
+      const updated = await Promise.all(
+        updates.map((item) => updateExam(item.id, { status: item.status }))
+      );
+      return updated;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['exams'] });
+      queryClient.invalidateQueries({ queryKey: ['exam-sessions'] });
+      toast.success(`Successfully updated ${data.length} exam(s)`);
+      options?.onSuccess?.();
+    },
+    onError: (error: Error) => {
+      handleMutationError(error, 'Failed to bulk update exam statuses', options?.onError);
+    },
+  });
+}
+
 // ─── Notification Mutations ─────────────────────────────────────────────────────
 
 export function useSendExamScheduleNotification(options?: MutationOptions<FieldErrors>) {

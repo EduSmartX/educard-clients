@@ -1,3 +1,4 @@
+import { LEAVE_STATUS } from '@educard/shared/constants';
 import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -46,7 +47,6 @@ export function useMarkAttendanceForm() {
   // Queries
   const { data: eligibleClasses, isLoading: loadingClasses } = useEligibleClasses();
 
-  // Validate the date
   const { data: dateValidation } = useValidateDate(classId, dateString, !!classId && !!dateString);
 
   // Fetch comprehensive data if it's a working day
@@ -214,7 +214,7 @@ export function useMarkAttendanceForm() {
     total: students.length,
     present: getPresentCount(),
     absent: getAbsentCount(),
-    onLeave: students.filter((s) => s.leave_status === 'approved').length,
+    onLeave: students.filter((s) => s.leave_status === LEAVE_STATUS.APPROVED).length,
   };
 
   return {

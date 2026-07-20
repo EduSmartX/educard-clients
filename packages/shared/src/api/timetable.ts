@@ -15,7 +15,11 @@ import type {
   TimetableEntryCreatePayload,
   TimetableEntryUpdatePayload,
   ClassTimetableResponse,
+  ClassTimetableDateResponse,
+  ClassTimetableWeekResponse,
   MyTimetableResponse,
+  TimetableOverride,
+  TimetableOverrideUpsertPayload,
 } from "../types/timetable";
 
 // =============================================================================
@@ -223,6 +227,55 @@ export function createTimetableApi(config: TimetableApiConfig) {
         `${ADMIN_BASE}/class/${classId}/timetable/`,
       );
       return res.data.data;
+    },
+
+    async getClassTimetableForDate(
+      classId: string,
+      date: string,
+    ): Promise<ClassTimetableDateResponse> {
+      const res = await client.get<ApiResponse<ClassTimetableDateResponse>>(
+        `${EMPLOYEE_BASE}/class/${classId}/timetable/date/`,
+        { params: { date } },
+      );
+      return res.data.data;
+    },
+
+    async getClassTimetableForWeek(
+      classId: string,
+      date: string,
+    ): Promise<ClassTimetableWeekResponse> {
+      const res = await client.get<ApiResponse<ClassTimetableWeekResponse>>(
+        `${EMPLOYEE_BASE}/class/${classId}/timetable/week/`,
+        { params: { date } },
+      );
+      return res.data.data;
+    },
+
+    async listClassOverrides(
+      classId: string,
+      date?: string,
+    ): Promise<TimetableOverride[]> {
+      const params = date ? { date } : undefined;
+      const res = await client.get<ApiResponse<TimetableOverride[]>>(
+        `${EMPLOYEE_BASE}/class/${classId}/overrides/`,
+        { params },
+      );
+      return res.data.data;
+    },
+
+    async upsertOverride(
+      classId: string,
+      data: TimetableOverrideUpsertPayload,
+    ): Promise<TimetableOverride> {
+      const res = await client.post<ApiResponse<TimetableOverride>>(
+        `${EMPLOYEE_BASE}/class/${classId}/overrides/`,
+        data,
+      );
+      return res.data.data;
+    },
+
+    async deleteOverride(overridePublicId: string): Promise<void> {
+      await client.delete(`${EMPLOYEE_BASE}/overrides/${overridePublicId}/`);
     },
 
     // =========================================================================

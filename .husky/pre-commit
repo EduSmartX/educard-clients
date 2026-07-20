@@ -1,20 +1,9 @@
 # ============================================
-# Pre-commit checks (like Python's pre-commit)
+# Pre-commit checks (lightweight — full lint runs in CI)
 # ============================================
 
-# 1. Lint-staged: Prettier formatting on staged files
-echo "🔍 Running lint-staged (Prettier formatting)..."
+# 1. Lint-staged: Prettier formatting on staged files only
+echo "🔍 Running lint-staged (Prettier on staged files)..."
 pnpm exec lint-staged || exit 1
 
-# 2. TypeScript type-check shared package
-echo "🔎 Running TypeScript type-check (shared package)..."
-cd packages/shared && pnpm run typecheck || { echo "❌ TypeScript errors in packages/shared"; exit 1; }
-cd ../..
-
-# NOTE: Mobile app lint and typecheck temporarily disabled due to pre-existing issues
-# TODO: Fix lint/TypeScript errors and re-enable
-# echo "🔎 Running lint (mobile app)..."
-# cd apps/mobile && pnpm run lint || { echo "❌ ESLint errors in apps/mobile"; exit 1; }
-# cd ../..
-
-echo "✅ All pre-commit checks passed!"
+echo "✅ Pre-commit checks passed!"

@@ -11,9 +11,6 @@ import { ProtectedLayout } from './components/layout/protected-layout';
 
 // Public pages
 const HomePage = lazy(() => import('./pages/home-page'));
-const PrivacyPolicyPage = lazy(() => import('./pages/privacy-policy-page'));
-const TermsOfServicePage = lazy(() => import('./pages/terms-of-service-page'));
-const ContactPage = lazy(() => import('./pages/contact-page'));
 
 // Auth pages
 const LoginPage = lazy(() => import('./features/auth/pages/login-page'));
@@ -26,6 +23,8 @@ const VerifyEmailPage = lazy(() => import('./pages/verify-email-page'));
 const OrganizationNotApprovedPage = lazy(
   () => import('./features/auth/pages/organization-not-approved-page')
 );
+const SelectProfilePage = lazy(() => import('./features/auth/pages/select-profile-page'));
+const SetNewPasswordPage = lazy(() => import('./features/auth/pages/set-new-password-page'));
 
 // Role-based route guards
 const AdminRoute = lazy(() =>
@@ -36,6 +35,9 @@ const EmployeeRoute = lazy(() =>
 );
 const ParentRoute = lazy(() =>
   import('./components/guards/role-guards').then((m) => ({ default: m.ParentRoute }))
+);
+const StudentRoute = lazy(() =>
+  import('./components/guards/role-guards').then((m) => ({ default: m.StudentRoute }))
 );
 
 // Role-specific dashboards
@@ -50,6 +52,22 @@ const EmployeeClassesPage = lazy(() => import('./features/employee/pages/employe
 const ParentDashboardPage = lazy(
   () => import('./features/parent/dashboard/pages/parent-dashboard-page')
 );
+const StudentDashboardPage = lazy(
+  () => import('./features/student/dashboard/pages/student-dashboard-page')
+);
+const StudentAttendancePage = lazy(
+  () => import('./features/student/attendance/student-attendance-page')
+);
+const StudentTimetablePage = lazy(
+  () => import('./features/student/timetable/student-timetable-page')
+);
+const StudentHomeworkPage = lazy(() => import('./features/student/homework/student-homework-page'));
+const StudentHomeworkDetailPage = lazy(
+  () => import('./features/student/homework/homework-detail-page')
+);
+const StudentExamsPage = lazy(() => import('./features/student/exams/student-exams-page'));
+const StudentFeePage = lazy(() => import('./features/student/fee/student-fee-page'));
+const StudentLeavePage = lazy(() => import('./features/student/leave/student-leave-page'));
 
 // Student pages
 const StudentsListPage = lazy(() => import('./features/students/pages/students-list-page'));
@@ -137,6 +155,9 @@ const ExamsListPage = lazy(() =>
 const ExamSchedulePage = lazy(() =>
   import('./features/exams/pages').then((m) => ({ default: m.ExamSchedulePage }))
 );
+const ExamStatusControlPage = lazy(() =>
+  import('./features/exams/pages').then((m) => ({ default: m.ExamStatusControlPage }))
+);
 const ExamSessionFormPage = lazy(() =>
   import('./features/exams/pages').then((m) => ({ default: m.ExamSessionFormPage }))
 );
@@ -166,6 +187,9 @@ const ExceptionalWorkPage = lazy(() => import('./pages/exceptional-work-page'));
 const ClassTimetablePage = lazy(() => import('./features/timetable/pages/class-timetable-page'));
 const TimetableSetupPage = lazy(() => import('./features/timetable/pages/timetable-setup-page'));
 const TimetableViewPage = lazy(() => import('./features/timetable/pages/timetable-view-page'));
+const TimetableOverridePage = lazy(
+  () => import('./features/timetable/pages/timetable-override-page')
+);
 
 // Homework
 const HomeworkListPage = lazy(() => import('./features/homework/pages/homework-list-page'));
@@ -176,6 +200,9 @@ const HomeworkSubmissionsPage = lazy(
   () => import('./features/homework/pages/homework-submissions-page')
 );
 const SubmissionReviewPage = lazy(() => import('./features/homework/pages/submission-review-page'));
+
+// Announcements
+const AnnouncementsPage = lazy(() => import('./features/announcements/pages/announcements-page'));
 
 // Fee Management
 const FeeDashboardPage = lazy(() =>
@@ -213,6 +240,11 @@ const StudentFeeEditPage = lazy(() =>
     default: m.StudentFeeEditPage,
   }))
 );
+const StudentFeeComponentRequestsPage = lazy(() =>
+  import('./features/fee/admin/pages/student-fee-component-requests-page').then((m) => ({
+    default: m.StudentFeeComponentRequestsPage,
+  }))
+);
 const FeePaymentsPage = lazy(() =>
   import('./features/fee/admin/pages/payments-page').then((m) => ({
     default: m.PaymentsPage,
@@ -243,10 +275,6 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-          <Route path="/terms-of-service" element={<TermsOfServicePage />} />
-          <Route path="/terms-and-conditions" element={<TermsOfServicePage />} />
-          <Route path="/contact" element={<ContactPage />} />
           <Route path={ROUTES.AUTH.LOGIN} element={<LoginPage />} />
           <Route path={ROUTES.AUTH.SIGNUP} element={<SignupPage />} />
           <Route path={ROUTES.AUTH.REGISTRATION_SUCCESS} element={<RegistrationSuccessPage />} />
@@ -258,6 +286,8 @@ function App() {
             path={ROUTES.AUTH.ORGANIZATION_NOT_APPROVED}
             element={<OrganizationNotApprovedPage />}
           />
+          <Route path={ROUTES.AUTH.SELECT_PROFILE} element={<SelectProfilePage />} />
+          <Route path={ROUTES.SET_NEW_PASSWORD} element={<SetNewPasswordPage />} />
 
           {/* Protected Routes - Header rendered once in ProtectedLayout */}
           <Route element={<ProtectedLayout />}>
@@ -294,6 +324,17 @@ function App() {
               <Route path="dashboard" element={<ParentDashboardPage />} />
             </Route>
 
+            <Route path="/student" element={<StudentRoute />}>
+              <Route path="dashboard" element={<StudentDashboardPage />} />
+              <Route path="attendance" element={<StudentAttendancePage />} />
+              <Route path="timetable" element={<StudentTimetablePage />} />
+              <Route path="homework" element={<StudentHomeworkPage />} />
+              <Route path="homework/:id" element={<StudentHomeworkDetailPage />} />
+              <Route path="exams" element={<StudentExamsPage />} />
+              <Route path="fee" element={<StudentFeePage />} />
+              <Route path="leave" element={<StudentLeavePage />} />
+            </Route>
+
             {/* Students */}
             <Route path={ROUTES.STUDENTS} element={<StudentsListPage />} />
             <Route path={ROUTES.STUDENTS_NEW} element={<StudentFormPage />} />
@@ -322,6 +363,7 @@ function App() {
             <Route path={ROUTES.EXAMS} element={<ExamSessionsPage />} />
             <Route path={ROUTES.EXAMS_SCHEDULE} element={<ExamSchedulePage />} />
             <Route path={ROUTES.EXAMS_LIST} element={<ExamsListPage />} />
+            <Route path={ROUTES.EXAMS_STATUS_CONTROL} element={<ExamStatusControlPage />} />
             <Route path={ROUTES.EXAM_SESSIONS_NEW} element={<ExamSessionFormPage />} />
             <Route path={ROUTES.EXAM_SESSIONS_VIEW} element={<ExamSessionFormPage />} />
             <Route path={ROUTES.EXAM_SESSIONS_EDIT} element={<ExamSessionFormPage />} />
@@ -348,6 +390,7 @@ function App() {
             <Route path={ROUTES.TIMETABLE} element={<ClassTimetablePage />} />
             <Route path={ROUTES.TIMETABLE_SETUP} element={<TimetableSetupPage />} />
             <Route path={ROUTES.TIMETABLE_VIEW} element={<TimetableViewPage />} />
+            <Route path={ROUTES.TIMETABLE_OVERRIDES} element={<TimetableOverridePage />} />
 
             {/* Homework */}
             <Route path={ROUTES.HOMEWORK} element={<HomeworkListPage />} />
@@ -357,12 +400,19 @@ function App() {
             <Route path={ROUTES.HOMEWORK_VIEW} element={<HomeworkDetailPage />} />
             <Route path={ROUTES.HOMEWORK_EDIT} element={<HomeworkFormPage />} />
 
+            {/* Announcements */}
+            <Route path={ROUTES.ANNOUNCEMENTS} element={<AnnouncementsPage />} />
+
             {/* Fee Management */}
             <Route path={ROUTES.FEES.DASHBOARD} element={<FeeDashboardPage />} />
             <Route path={ROUTES.FEES.STRUCTURES} element={<FeeStructuresPage />} />
             <Route path={ROUTES.FEES.STRUCTURES_NEW} element={<CreateFeeStructurePage />} />
             <Route path={ROUTES.FEES.STRUCTURES_EDIT} element={<EditFeeStructurePage />} />
             <Route path={ROUTES.FEES.STUDENT_FEES} element={<StudentFeesPage />} />
+            <Route
+              path={ROUTES.FEES.COMPONENT_REQUESTS}
+              element={<StudentFeeComponentRequestsPage />}
+            />
             <Route path={ROUTES.FEES.STUDENT_FEES_VIEW} element={<StudentFeeDetailPage />} />
             <Route path={ROUTES.FEES.STUDENT_FEES_EDIT} element={<StudentFeeEditPage />} />
             <Route path={ROUTES.FEES.PAYMENTS} element={<FeePaymentsPage />} />

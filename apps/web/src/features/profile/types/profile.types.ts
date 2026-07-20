@@ -91,6 +91,28 @@ export interface UpdatePhonePayload {
   otp: string;
 }
 
+/**
+ * Profile-sync (parent-initiated, OTP-verified multi-profile linking) types.
+ *
+ * Unlike other `/auth/*` calls in this module, these endpoints return a flat
+ * body (no `ApiResponse` wrapper), matching the rest of `AuthViewSet`.
+ */
+export interface ProfileSyncRequestOtpResponse {
+  message: string;
+  expires_in_minutes: number;
+}
+
+export interface VerifyProfileSyncPayload {
+  otp: string;
+  new_password?: string;
+  confirm_password?: string;
+}
+
+export interface ProfileSyncVerifyResponse {
+  message: string;
+  linked_profiles_count: number;
+}
+
 // Deprecated - kept for backwards compatibility
 export interface UpdateAddressPayload {
   street_address?: string;

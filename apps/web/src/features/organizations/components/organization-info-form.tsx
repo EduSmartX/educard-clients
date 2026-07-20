@@ -14,7 +14,13 @@ import { Form } from '@/components/ui/form';
 import { TextInputField, SelectField } from '@/components/form/form-fields';
 import { useUpdateOrganization } from '../hooks/mutations';
 import type { Organization } from '../api/organization-api';
-import { ORGANIZATION_TYPES, BOARD_AFFILIATIONS } from '@educard/shared';
+import {
+  ORGANIZATION_TYPES,
+  BOARD_AFFILIATIONS,
+  CIN_REGEX,
+  GSTIN_REGEX,
+  REGISTRATION_NUMBER_REGEX,
+} from '@educard/shared';
 import { CommonUiText, FormPlaceholders } from '@/constants';
 import { STANDARD_FORM_VALIDATION_CONFIG } from '@/lib/utils/form-validation';
 
@@ -23,9 +29,24 @@ const organizationInfoSchema = z.object({
   organization_type: z.string().optional(),
   email: z.string().email('Invalid email address'),
   phone: z.string().min(10, 'Phone number must be at least 10 digits').optional(),
-  registration_number: z.string().optional(),
-  corporate_identification_number: z.string().optional(),
-  tax_id: z.string().optional(),
+  registration_number: z
+    .string()
+    .optional()
+    .refine((val) => !val || REGISTRATION_NUMBER_REGEX.test(val), {
+      message: 'Enter a valid registration number (alphanumeric, 3-50 characters)',
+    }),
+  corporate_identification_number: z
+    .string()
+    .optional()
+    .refine((val) => !val || CIN_REGEX.test(val.toUpperCase()), {
+      message: 'Enter a valid 21-character CIN (e.g. L12345MH2000PLC123456)',
+    }),
+  tax_id: z
+    .string()
+    .optional()
+    .refine((val) => !val || GSTIN_REGEX.test(val.toUpperCase()), {
+      message: 'Enter a valid 15-character GSTIN (e.g. 27AABCU9603R1ZM)',
+    }),
   website_url: z.string().url('Invalid website URL').optional().or(z.literal('')),
   board_affiliation: z.string().optional(),
 });

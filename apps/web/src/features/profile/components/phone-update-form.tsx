@@ -3,10 +3,11 @@
  * Update phone with OTP verification
  */
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Phone, Send } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +22,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { CommonUiText, FormPlaceholders } from '@/constants';
+import { useCriticalOperation } from '@/providers/critical-operation-provider';
 import { useUserProfile } from '../hooks/queries';
 import { useSendOTP, useUpdatePhone } from '../hooks/mutations';
 import { formatCountdown } from '../utils/format-countdown';
@@ -34,10 +36,16 @@ type PhoneFormValues = z.infer<typeof phoneSchema>;
 
 export function PhoneUpdateForm() {
   const { data: profile } = useUserProfile();
+  const [searchParams] = useSearchParams();
+  const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
   const sendOTPMutation = useSendOTP();
   const updatePhoneMutation = useUpdatePhone();
   const [otpSent, setOtpSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const hasPrefilledFromDashboard = useRef(false);
+
+  const isDashboardVerificationFlow =
+    searchParams.get('from') === 'dashboard' && searchParams.get('tab') === 'phone';
 
   const form = useForm<PhoneFormValues>({
     resolver: zodResolver(phoneSchema),
@@ -46,6 +54,17 @@ export function PhoneUpdateForm() {
       otp: '',
     },
   });
+
+  useEffect(() => {
+    if (!isDashboardVerificationFlow || hasPrefilledFromDashboard.current) {
+      return;
+    }
+    const currentPhone = profile?.phone?.trim();
+    if (currentPhone) {
+      form.setValue('new_phone', currentPhone, { shouldValidate: true });
+    }
+    hasPrefilledFromDashboard.current = true;
+  }, [form, isDashboardVerificationFlow, profile?.phone]);
 
   const startCountdownTimer = (minutes: number) => {
     setCountdown(minutes * 60);
@@ -80,11 +99,19 @@ export function PhoneUpdateForm() {
   };
 
   const onSubmit = (values: PhoneFormValues) => {
+    beginCriticalOperation({
+      title: 'Verifying phone OTP',
+      description: 'Please wait while we verify the OTP and update your phone number.',
+    });
+
     updatePhoneMutation.mutate(values, {
       onSuccess: () => {
         form.reset();
         setOtpSent(false);
         setCountdown(0);
+      },
+      onSettled: () => {
+        endCriticalOperation();
       },
     });
   };
@@ -92,7 +119,9 @@ export function PhoneUpdateForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base font-medium">Update Phone Number</CardTitle>
+        <CardTitle className="text-base font-medium">
+          {isDashboardVerificationFlow ? 'Verify Phone Number' : 'Update Phone Number'}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
@@ -100,7 +129,9 @@ export function PhoneUpdateForm() {
             <strong>Current Phone:</strong> {profile?.phone || 'Not set'}
           </p>
           <p className="mt-2 text-xs text-blue-700">
-            An OTP will be sent to your new phone number for verification
+            {isDashboardVerificationFlow
+              ? 'An OTP will be sent to this phone number for verification'
+              : 'An OTP will be sent to your new phone number for verification'}
           </p>
         </div>
 
@@ -112,7 +143,8 @@ export function PhoneUpdateForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    New Phone Number <span className="text-red-500">*</span>
+                    {isDashboardVerificationFlow ? 'Phone Number' : 'New Phone Number'}{' '}
+                    <span className="text-red-500">*</span>
                   </FormLabel>
                   <div className="flex gap-2">
                     <FormControl>
@@ -143,6 +175,8 @@ export function PhoneUpdateForm() {
                       <span className="text-green-600">
                         OTP sent! Expires in {formatCountdown(countdown)}
                       </span>
+                    ) : isDashboardVerificationFlow ? (
+                      'Click the button to send OTP for phone verification'
                     ) : (
                       'Click the button to send OTP to this phone'
                     )}
@@ -169,7 +203,11 @@ export function PhoneUpdateForm() {
                         {...field}
                       />
                     </FormControl>
-                    <FormDescription>Enter the OTP sent to your new phone number</FormDescription>
+                    <FormDescription>
+                      {isDashboardVerificationFlow
+                        ? 'Enter the OTP sent to this phone number'
+                        : 'Enter the OTP sent to your new phone number'}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -198,7 +236,7 @@ export function PhoneUpdateForm() {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
                 <Phone className="mr-2 h-4 w-4" />
-                {CommonUiText.UPDATE_PHONE}
+                {isDashboardVerificationFlow ? 'Verify Phone' : CommonUiText.UPDATE_PHONE}
               </Button>
             </div>
           </form>

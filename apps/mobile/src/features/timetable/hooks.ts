@@ -6,6 +6,7 @@ import type {
   ClassGroupCreatePayload,
   BulkSlotPayload,
   TimetableEntryCreatePayload,
+  TimetableOverrideUpsertPayload,
 } from '@educard/shared';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -17,6 +18,10 @@ import {
   fetchClassTimetable,
   fetchMyTimetable,
   fetchTeacherTimetable,
+  fetchClassTimetableForDate,
+  fetchClassOverrides,
+  upsertOverride,
+  deleteOverride,
   createClassGroup,
   updateClassGroup,
   deleteClassGroup,
@@ -68,6 +73,24 @@ export function useTeacherTimetable(teacherPublicId: string | undefined) {
     queryFn: () => fetchTeacherTimetable(teacherPublicId ?? ''),
     enabled: !!teacherPublicId,
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useClassTimetableForDate(classId: string | undefined, date: string | undefined) {
+  return useQuery({
+    queryKey: ['timetable', 'class-timetable-date', classId, date],
+    queryFn: () => fetchClassTimetableForDate(classId ?? '', date ?? ''),
+    enabled: !!classId && !!date,
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useClassOverrides(classId: string | undefined, date?: string) {
+  return useQuery({
+    queryKey: ['timetable', 'overrides', classId, date],
+    queryFn: () => fetchClassOverrides(classId ?? '', date),
+    enabled: !!classId,
+    staleTime: 60 * 1000,
   });
 }
 
@@ -173,6 +196,37 @@ export function useDeleteEntry() {
     onSuccess: () => {
       showToast('success', 'Timetable entry deleted');
       void qc.invalidateQueries({ queryKey: ['timetable', 'class-timetable'] });
+    },
+  });
+}
+
+export function useUpsertOverride(classId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: TimetableOverrideUpsertPayload) => upsertOverride(classId, data),
+    onSuccess: (_data, variables) => {
+      showToast('success', 'Timetable override saved');
+      void qc.invalidateQueries({
+        queryKey: ['timetable', 'class-timetable-date', classId, variables.override_date],
+      });
+      void qc.invalidateQueries({ queryKey: ['timetable', 'class-timetable', classId] });
+      void qc.invalidateQueries({
+        queryKey: ['timetable', 'overrides', classId, variables.override_date],
+      });
+    },
+  });
+}
+
+export function useDeleteOverride(classId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ overridePublicId, date }: { overridePublicId: string; date: string }) =>
+      deleteOverride(overridePublicId).then(() => date),
+    onSuccess: (date) => {
+      showToast('success', 'Timetable override removed');
+      void qc.invalidateQueries({ queryKey: ['timetable', 'class-timetable-date', classId, date] });
+      void qc.invalidateQueries({ queryKey: ['timetable', 'class-timetable', classId] });
+      void qc.invalidateQueries({ queryKey: ['timetable', 'overrides', classId, date] });
     },
   });
 }

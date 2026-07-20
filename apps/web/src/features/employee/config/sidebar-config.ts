@@ -8,6 +8,7 @@ import {
   Calendar,
   CalendarDays,
   CalendarCheck,
+  CalendarRange,
   BookOpen,
   ClipboardCheck,
   Settings,
@@ -24,6 +25,7 @@ import {
   ClipboardList as SubmissionsIcon,
   Eye,
   ClipboardEdit,
+  RotateCcw,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
 import { ROUTES } from '@/constants/app-config';
@@ -89,6 +91,12 @@ export const employeeSidebarConfig: SidebarSection[] = [
         icon: Eye,
         path: ROUTES.TIMETABLE_VIEW,
       },
+      {
+        id: 'period-overrides',
+        label: 'Period Overrides',
+        icon: CalendarRange,
+        path: ROUTES.TIMETABLE_OVERRIDES,
+      },
     ],
   },
   {
@@ -122,6 +130,13 @@ export const employeeSidebarConfig: SidebarSection[] = [
         label: 'Exams',
         icon: FileText,
         path: ROUTES.EXAMS_LIST,
+        matchPaths: [ROUTES.EXAMS_STATUS_CONTROL],
+      },
+      {
+        id: 'exam-status-control',
+        label: 'Status Control',
+        icon: RotateCcw,
+        path: ROUTES.EXAMS_STATUS_CONTROL,
       },
       {
         id: 'marks-entry',

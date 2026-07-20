@@ -32,7 +32,7 @@ interface ApiResponse {
 
 export function useTeacherManagementContext() {
   const { user } = useAuthStore();
-  const isAdmin = user?.role === USER_ROLES.ADMIN;
+  const isAdminOrTeacher = user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.TEACHER;
 
   return useQuery({
     queryKey: ['teacher-management-context'],
@@ -43,7 +43,7 @@ export function useTeacherManagementContext() {
       return response.data?.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
-    enabled: !isAdmin && !!user, // Only fetch for non-admin users (teachers)
+    enabled: isAdminOrTeacher && !user?.force_password_reset,
   });
 }
 

@@ -23,8 +23,8 @@ export function DeletedViewToggle({
         size="sm"
         className={
           showDeleted
-            ? `border-0 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 shadow-md hover:shadow-lg transition-all duration-200 [&>*]:!text-white ${className || ''}`
-            : `shadow-sm hover:shadow-md transition-all duration-200 ${className || ''}`
+            ? `border-0 bg-gradient-to-r from-blue-600 to-cyan-600 shadow-md transition-all duration-200 hover:from-blue-700 hover:to-cyan-700 hover:shadow-lg [&>*]:!text-white ${className || ''}`
+            : `shadow-sm transition-all duration-200 hover:shadow-md ${className || ''}`
         }
       >
         <AnimatePresence mode="wait" initial={false}>

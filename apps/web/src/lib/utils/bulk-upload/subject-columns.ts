@@ -36,7 +36,8 @@ export const SUBJECT_COLUMNS: ColumnConfig[] = [
     key: 'teacher_info',
     name: 'Teacher',
     required: false,
-    description: "Teacher information in format: 'FirstName LastName (email@example.com)' (Optional)",
+    description:
+      "Teacher information in format: 'FirstName LastName (email@example.com)' (Optional)",
     validator: teacherInfoValidator,
   },
   {
@@ -63,19 +64,19 @@ export const SUBJECT_DUPLICATE_CHECKS: DuplicateCheckConfig[] = [
  * Get column config by field key
  */
 export function getSubjectColumnByKey(key: string): ColumnConfig | undefined {
-  return SUBJECT_COLUMNS.find(col => col.key === key);
+  return SUBJECT_COLUMNS.find((col) => col.key === key);
 }
 
 /**
  * Get mandatory subject columns
  */
 export function getMandatorySubjectColumns(): ColumnConfig[] {
-  return SUBJECT_COLUMNS.filter(col => col.required);
+  return SUBJECT_COLUMNS.filter((col) => col.required);
 }
 
 /**
  * Get optional subject columns
  */
 export function getOptionalSubjectColumns(): ColumnConfig[] {
-  return SUBJECT_COLUMNS.filter(col => !col.required);
+  return SUBJECT_COLUMNS.filter((col) => !col.required);
 }

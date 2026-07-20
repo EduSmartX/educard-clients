@@ -16,8 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea';
-import { SearchableSelect } from '@/components/ui/searchable-select';
+import { ChannelRadioGroup } from '@/components/ui/channel-radio-group';
 import {
   Dialog,
   DialogContent,
@@ -33,14 +32,12 @@ import {
   type SendReminderPayload,
   type ReminderChannelType,
   ReminderChannel,
-  REMINDER_CHANNEL_OPTIONS,
   FEE_UI_TEXT,
 } from '@educard/shared';
 
 // Form validation schema
 const reminderFormSchema = z.object({
-  channel: z.enum([ReminderChannel.SMS, ReminderChannel.WHATSAPP, ReminderChannel.EMAIL]),
-  custom_message: z.string().optional(),
+  channel: z.enum([ReminderChannel.EMAIL, ReminderChannel.SMS, 'both']),
 });
 
 type ReminderFormValues = z.infer<typeof reminderFormSchema>;
@@ -64,7 +61,6 @@ export function SendReminderDialog({
     resolver: zodResolver(reminderFormSchema),
     defaultValues: {
       channel: ReminderChannel.EMAIL,
-      custom_message: '',
     },
   });
 
@@ -73,9 +69,12 @@ export function SendReminderDialog({
       return;
     }
 
+    const deliveryMethods: ReminderChannelType[] =
+      values.channel === 'both' ? [ReminderChannel.SMS, ReminderChannel.EMAIL] : [values.channel];
+
     const payload: SendReminderPayload = {
       student_fee_public_id: studentFee.public_id,
-      channel: values.channel as ReminderChannelType,
+      delivery_methods: deliveryMethods,
     };
 
     onSubmit(studentFee.public_id, payload);
@@ -83,7 +82,7 @@ export function SendReminderDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:w-full sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{FEE_UI_TEXT.FORM.SEND_REMINDER}</DialogTitle>
           <DialogDescription>
@@ -131,39 +130,13 @@ export function SendReminderDialog({
                 <FormItem>
                   <FormLabel>{FEE_UI_TEXT.LABELS.REMINDER_CHANNELS}</FormLabel>
                   <FormControl>
-                    <SearchableSelect
-                      options={REMINDER_CHANNEL_OPTIONS.map((option) => ({
-                        value: option.value,
-                        label: option.label,
-                      }))}
+                    <ChannelRadioGroup
                       value={field.value}
                       onValueChange={field.onChange}
-                      placeholder="Select a channel"
+                      idPrefix="reminder-channel"
                     />
                   </FormControl>
                   <FormDescription>Select how to send the reminder</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Custom Message */}
-            <FormField
-              control={form.control}
-              name="custom_message"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{FEE_UI_TEXT.LABELS.CUSTOM_MESSAGE}</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Add a custom message to include with the reminder (optional)"
-                      className="min-h-[100px] resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    This message will be added to the standard fee reminder
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

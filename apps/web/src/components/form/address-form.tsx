@@ -66,12 +66,16 @@ export function AddressForm({
 
   const labelSize = compact ? 'text-xs' : 'text-sm';
 
+  // Only offer "Use My Location" when a real Google Maps API key is configured.
+  // Without it, the form simply renders as a normal manual-entry address form.
+  const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  const canUseLocation = showLocationButton && Boolean(googleMapsApiKey);
+
   // Handle "Use My Location" button click
   const handleUseLocation = async () => {
     setIsLoadingLocation(true);
     try {
-      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-      const locationData = await getCurrentLocationAddress(apiKey);
+      const locationData = await getCurrentLocationAddress(googleMapsApiKey);
 
       // Fill form fields with location data using mapped field names
       form.setValue(getFieldName('streetAddress'), locationData.streetAddress, {
@@ -92,47 +96,53 @@ export function AddressForm({
     }
   };
 
+  const useLocationButton = (
+    <Button
+      type="button"
+      onClick={handleUseLocation}
+      disabled={isLoadingLocation || disabled}
+      className={cn(
+        'flex h-9 items-center gap-2 rounded-lg border-2 border-blue-200 bg-white px-3 text-xs font-medium text-blue-700 transition-all hover:border-blue-300 hover:bg-blue-50',
+        isLoadingLocation && 'cursor-not-allowed opacity-50'
+      )}
+    >
+      {isLoadingLocation ? (
+        <>
+          <Loader2 className="h-4 w-4 animate-spin" />
+          {CommonUiText.GETTING_LOCATION}
+        </>
+      ) : (
+        <>
+          <MapPin className="h-4 w-4" />
+          Use My Location
+        </>
+      )}
+    </Button>
+  );
+
   return (
     <div className="space-y-4">
-      {/* Section Header with Location Button */}
-      {showHeader && (
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
-              <span className="text-xl text-green-600">📍</span>
+      {/* Section Header and/or Location Button */}
+      {(showHeader || canUseLocation) && (
+        <div
+          className={cn('mb-4 flex items-center', showHeader ? 'justify-between' : 'justify-end')}
+        >
+          {showHeader && (
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
+                <span className="text-xl text-green-600">📍</span>
+              </div>
+              <div>
+                <h4 className="text-base font-bold text-gray-800">Address Information</h4>
+                <p className="mt-0.5 text-xs text-gray-600">
+                  {required ? 'Provide complete address details' : 'Optional address details'}
+                </p>
+              </div>
             </div>
-            <div>
-              <h4 className="text-base font-bold text-gray-800">Address Information</h4>
-              <p className="mt-0.5 text-xs text-gray-600">
-                {required ? 'Provide complete address details' : 'Optional address details'}
-              </p>
-            </div>
-          </div>
+          )}
 
           {/* Use My Location Button */}
-          {showLocationButton && (
-            <Button
-              type="button"
-              onClick={handleUseLocation}
-              disabled={isLoadingLocation}
-              className={cn(
-                'flex h-9 items-center gap-2 rounded-lg border-2 border-blue-200 bg-white px-3 text-xs font-medium text-blue-700 transition-all hover:border-blue-300 hover:bg-blue-50',
-                isLoadingLocation && 'cursor-not-allowed opacity-50'
-              )}
-            >
-              {isLoadingLocation ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  {CommonUiText.GETTING_LOCATION}
-                </>
-              ) : (
-                <>
-                  <MapPin className="h-4 w-4" />
-                  Use My Location
-                </>
-              )}
-            </Button>
-          )}
+          {canUseLocation && useLocationButton}
         </div>
       )}
 

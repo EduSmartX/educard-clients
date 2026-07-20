@@ -1,6 +1,6 @@
 // App Configuration
 export const APP_NAME = import.meta.env.VITE_APP_NAME || 'EduCard';
-export const COMPANY_NAME = import.meta.env.VITE_COMPANY_NAME || 'EduCard Technologies';
+export const COMPANY_NAME = import.meta.env.VITE_COMPANY_NAME || 'EduCard';
 export const APP_VERSION = import.meta.env.VITE_APP_VERSION || '1.0.0';
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
@@ -221,9 +221,11 @@ export const ROUTES = {
     RESET_PASSWORD: '/auth/reset-password',
     VERIFY_EMAIL: '/auth/verify-email',
     ORGANIZATION_NOT_APPROVED: '/auth/organization-not-approved',
+    SELECT_PROFILE: '/auth/select-profile',
   },
   // Common routes (role-agnostic)
   ORGANIZATION: '/organization',
+  SET_NEW_PASSWORD: '/set-new-password',
   STUDENTS: '/students',
   STUDENTS_NEW: '/students/new',
   STUDENTS_VIEW: '/students/:id',
@@ -247,6 +249,7 @@ export const ROUTES = {
   EXAM_SESSIONS_VIEW: '/exams/sessions/:id',
   EXAM_SESSIONS_EDIT: '/exams/sessions/:id/edit',
   EXAMS_LIST: '/exams/list',
+  EXAMS_STATUS_CONTROL: '/exams/status-control',
   EXAMS_NEW: '/exams/new',
   EXAMS_BULK_CREATE: '/exams/bulk-create',
   EXAMS_VIEW: '/exams/:id',
@@ -279,6 +282,7 @@ export const ROUTES = {
   TIMETABLE: '/timetable',
   TIMETABLE_SETUP: '/timetable/setup',
   TIMETABLE_VIEW: '/timetable/view',
+  TIMETABLE_OVERRIDES: '/timetable/overrides',
   // Homework
   HOMEWORK: '/homework',
   HOMEWORK_NEW: '/homework/new',
@@ -286,6 +290,8 @@ export const ROUTES = {
   HOMEWORK_SUBMISSION_REVIEW: '/homework/:homeworkId/submissions/:submissionId/review',
   HOMEWORK_VIEW: '/homework/:id',
   HOMEWORK_EDIT: '/homework/:id/edit',
+  // Announcements
+  ANNOUNCEMENTS: '/announcements',
   // Fee Management
   FEES: {
     DASHBOARD: '/fees',
@@ -293,6 +299,7 @@ export const ROUTES = {
     STRUCTURES_NEW: '/fees/structures/new',
     STRUCTURES_EDIT: '/fees/structures/:id/edit',
     STUDENT_FEES: '/fees/students',
+    COMPONENT_REQUESTS: '/fees/students/component-requests',
     STUDENT_FEES_VIEW: '/fees/students/:id',
     STUDENT_FEES_EDIT: '/fees/students/:id/edit',
     PAYMENTS: '/fees/payments',
@@ -367,7 +374,7 @@ export const ROUTES = {
       SUBMISSIONS: '/homework/submissions',
       SUBMISSION_REVIEW: '/homework/:homeworkId/submissions/:submissionId/review',
     },
-    PROFILE: '/employee/profile',
+    PROFILE: '/profile',
   },
   TEACHER: {
     MY_CLASSES: '/teacher/classes',
@@ -382,7 +389,20 @@ export const ROUTES = {
       APPLY: '/parent/leave/apply',
       HISTORY: '/parent/leave/history',
     },
-    PROFILE: '/parent/profile',
+    PROFILE: '/profile',
+    SWITCH_PROFILE: '/parent/switch-profile',
+  },
+  STUDENT: {
+    DASHBOARD: '/student/dashboard',
+    ATTENDANCE: '/student/attendance',
+    EXAMS: '/student/exams',
+    EXAM_SESSION_DETAIL: '/student/exams/:publicId',
+    FEE: '/student/fee',
+    FEE_COMPONENTS: '/student/fee/components',
+    TIMETABLE: '/student/timetable',
+    HOMEWORK: '/student/homework',
+    HOMEWORK_DETAIL: '/student/homework/:publicId',
+    LEAVE: '/student/leave',
   },
   PROFILE: '/profile',
 } as const;

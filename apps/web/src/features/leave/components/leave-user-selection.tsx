@@ -1,4 +1,5 @@
 import { User, Users } from 'lucide-react';
+import { USER_ROLES } from '@educard/shared/constants';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -19,8 +20,12 @@ interface ClassOption {
 }
 
 function getPlaceholder(userRole: string, selectedClass: string): string {
-  if (userRole === 'staff') { return 'Select a staff member'; }
-  if (selectedClass) { return 'Select a student'; }
+  if (userRole === USER_ROLES.STAFF) {
+    return 'Select a staff member';
+  }
+  if (selectedClass) {
+    return 'Select a student';
+  }
   return 'First select a class';
 }
 
@@ -62,11 +67,11 @@ export function LeaveUserSelection({
     <>
       <div className="flex gap-2">
         <Button
-          variant={userRole === 'staff' ? 'default' : 'outline'}
+          variant={userRole === USER_ROLES.STAFF ? 'default' : 'outline'}
           onClick={() => setUserRole('staff')}
           className={cn(
             'flex-1',
-            userRole === 'staff' && 'bg-blue-600 text-white shadow-md hover:bg-blue-700'
+            userRole === USER_ROLES.STAFF && 'bg-blue-600 text-white shadow-md hover:bg-blue-700'
           )}
           disabled={!isAdmin && teacherContext && !teacherContext.is_supervisor}
         >
@@ -74,11 +79,12 @@ export function LeaveUserSelection({
           Staff
         </Button>
         <Button
-          variant={userRole === 'student' ? 'default' : 'outline'}
+          variant={userRole === USER_ROLES.STUDENT ? 'default' : 'outline'}
           onClick={() => setUserRole('student')}
           className={cn(
             'flex-1',
-            userRole === 'student' && 'bg-green-600 text-white shadow-md hover:bg-green-700'
+            userRole === USER_ROLES.STUDENT &&
+              'bg-green-600 text-white shadow-md hover:bg-green-700'
           )}
           disabled={!isAdmin && teacherContext && !teacherContext.is_class_teacher}
         >
@@ -90,13 +96,13 @@ export function LeaveUserSelection({
         <CardHeader>
           <CardTitle>Select User</CardTitle>
           <CardDescription>
-            {userRole === 'staff'
+            {userRole === USER_ROLES.STAFF
               ? 'Choose a staff member to manage their leave balances'
               : 'Choose a student to manage their leave balances'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {userRole === 'student' && (
+          {userRole === USER_ROLES.STUDENT && (
             <div className="space-y-2">
               <Label>Select Class</Label>
               <Combobox
@@ -121,8 +127,12 @@ export function LeaveUserSelection({
               onValueChange={setSelectedUser}
               options={userOptions}
               placeholder={getPlaceholder(userRole, selectedClass)}
-              emptyText={userRole === 'staff' ? 'No staff members found' : 'No students found'}
-              searchPlaceholder={userRole === 'staff' ? 'Search staff...' : 'Search students...'}
+              emptyText={
+                userRole === USER_ROLES.STAFF ? 'No staff members found' : 'No students found'
+              }
+              searchPlaceholder={
+                userRole === USER_ROLES.STAFF ? 'Search staff...' : 'Search students...'
+              }
               disabled={userSelectDisabled}
             />
           </div>

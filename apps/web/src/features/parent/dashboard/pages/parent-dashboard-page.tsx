@@ -92,7 +92,8 @@ export default function ParentDashboardPage() {
   const navigate = useNavigate();
   const greeting = getGreeting();
   const firstName = user?.full_name?.split(' ')[0] || 'Parent';
-  const handleVerifyEmail = () => navigate(ROUTES.PARENT.PROFILE);
+  const handleVerifyEmail = () => navigate(`${ROUTES.PROFILE}?tab=email&from=dashboard`);
+  const handleVerifyPhone = () => navigate(`${ROUTES.PROFILE}?tab=phone&from=dashboard`);
 
   const formattedDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -108,7 +109,7 @@ export default function ParentDashboardPage() {
         <VerificationBanner
           user={user}
           onVerifyEmail={handleVerifyEmail}
-          onVerifyPhone={handleVerifyEmail}
+          onVerifyPhone={handleVerifyPhone}
         />
       )}
 

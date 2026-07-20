@@ -1,3 +1,4 @@
+import { TimesheetStatus } from '@educard/shared/constants';
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -36,8 +37,6 @@ const getAttendanceSummaryColumns = (): Column<ClassAttendanceSummaryItem>[] => 
     accessor: 'name',
     sortable: true,
     sortKey: 'name',
-    width: 250,
-    minWidth: 180,
   },
   {
     header: 'Class Teacher',
@@ -52,16 +51,12 @@ const getAttendanceSummaryColumns = (): Column<ClassAttendanceSummaryItem>[] => 
       ),
     sortable: true,
     sortKey: 'class_teacher_name',
-    width: 200,
-    minWidth: 150,
   },
   {
     header: 'Total',
     accessor: (row) => <span className="font-medium">{row.total_students}</span>,
     sortable: true,
     sortKey: 'total_students',
-    width: 80,
-    minWidth: 60,
     className: 'text-center',
     headerClassName: 'text-center',
   },
@@ -72,8 +67,6 @@ const getAttendanceSummaryColumns = (): Column<ClassAttendanceSummaryItem>[] => 
     ),
     sortable: true,
     sortKey: 'marked',
-    width: 80,
-    minWidth: 60,
     className: 'text-center',
     headerClassName: 'text-center',
   },
@@ -87,8 +80,6 @@ const getAttendanceSummaryColumns = (): Column<ClassAttendanceSummaryItem>[] => 
     ),
     sortable: true,
     sortKey: 'present',
-    width: 90,
-    minWidth: 70,
     className: 'text-center',
     headerClassName: 'text-center',
   },
@@ -102,8 +93,6 @@ const getAttendanceSummaryColumns = (): Column<ClassAttendanceSummaryItem>[] => 
     ),
     sortable: true,
     sortKey: 'absent',
-    width: 90,
-    minWidth: 70,
     className: 'text-center',
     headerClassName: 'text-center',
   },
@@ -117,8 +106,6 @@ const getAttendanceSummaryColumns = (): Column<ClassAttendanceSummaryItem>[] => 
     ),
     sortable: true,
     sortKey: 'halfday',
-    width: 90,
-    minWidth: 70,
     className: 'text-center',
     headerClassName: 'text-center',
   },
@@ -127,8 +114,6 @@ const getAttendanceSummaryColumns = (): Column<ClassAttendanceSummaryItem>[] => 
     accessor: (row) => <span className="text-muted-foreground">{row.unmarked}</span>,
     sortable: true,
     sortKey: 'unmarked',
-    width: 100,
-    minWidth: 80,
     className: 'text-center',
     headerClassName: 'text-center',
   },
@@ -148,8 +133,6 @@ const getAttendanceSummaryColumns = (): Column<ClassAttendanceSummaryItem>[] => 
       ),
     sortable: true,
     sortKey: 'submission_status',
-    width: 120,
-    minWidth: 100,
     className: 'text-center',
     headerClassName: 'text-center',
   },
@@ -200,8 +183,9 @@ export function AttendanceSummaryPage() {
   const handleNotifyPending = () => {
     // Get all pending classes with class teachers
     const pendingWithTeachers =
-      summaryData?.classes.filter((c) => c.submission_status === 'pending' && c.class_teacher) ||
-      [];
+      summaryData?.classes.filter(
+        (c) => c.submission_status === TimesheetStatus.SUBMITTED && c.class_teacher
+      ) || [];
 
     if (pendingWithTeachers.length === 0) {
       toast.info('No pending classes with assigned class teachers to notify.');

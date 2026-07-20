@@ -81,7 +81,7 @@ export default function StudentFeeDetailScreen() {
   const handleReminderSend = (channel: ReminderChannelType) => {
     if (!id) return;
     sendReminder(
-      { student_fee_public_id: id, channel },
+      { student_fee_public_id: id, delivery_methods: [channel] },
       {
         onSuccess: () => {
           setShowReminderModal(false);

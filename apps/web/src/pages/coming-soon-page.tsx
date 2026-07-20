@@ -30,13 +30,13 @@ export default function ComingSoonPage({
       >
         <Card className="border-2">
           <CardContent className="pt-12 pb-10">
-            <div className="mx-auto max-w-2xl text-center space-y-6">
+            <div className="mx-auto max-w-2xl space-y-6 text-center">
               {/* Icon */}
               <motion.div
                 initial={{ scale: 0, rotate: -10 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ delay: 0.2, type: 'spring', bounce: 0.4 }}
-                className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center shadow-lg"
+                className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-violet-600 shadow-lg"
               >
                 <Clock className="h-10 w-10 text-white" />
               </motion.div>
@@ -70,7 +70,7 @@ export default function ComingSoonPage({
               >
                 <Button
                   onClick={() => navigate(-1)}
-                  className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white"
+                  className="bg-gradient-to-r from-purple-600 to-violet-600 text-white hover:from-purple-700 hover:to-violet-700"
                 >
                   Go Back
                 </Button>

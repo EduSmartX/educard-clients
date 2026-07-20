@@ -45,6 +45,18 @@ npm run dev:mobile
 npm run dev:web & npm run dev:mobile
 ```
 
+### Daily Commands (Quick Reference)
+
+For repeated tasks (start servers, git push flow, lint/typecheck, clean reinstall), use:
+
+- [`DEVELOPER_COMMANDS.md`](./DEVELOPER_COMMANDS.md)
+
+### Production Deployment (Full Runbook)
+
+For end-to-end production releases (GitHub, SonarQube, Vercel, Expo APK/AAB builds):
+
+- [`PRODUCTION_RUNBOOK.md`](./PRODUCTION_RUNBOOK.md)
+
 ### Building
 
 ```bash

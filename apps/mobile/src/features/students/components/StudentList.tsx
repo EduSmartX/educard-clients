@@ -310,7 +310,6 @@ export function StudentList({ onBack }: StudentListProps) {
         description="Upload multiple students at once using an Excel template"
         downloadTemplate={() => downloadStudentTemplate(false)}
         uploadFile={(uri, name) => bulkUploadStudents(uri, name, false)}
-        templateFileName="students_template.xlsx"
         customInfoMessage={bulkUploadInfoMessage}
         onUploadSuccess={() => void refetch()}
       />

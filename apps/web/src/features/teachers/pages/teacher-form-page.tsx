@@ -30,11 +30,9 @@ export default function TeacherFormPage() {
   const [isReactivating, setIsReactivating] = useState(false);
   const [reactivateError, setReactivateError] = useState<string | null>(null);
 
-  // Check if viewing deleted teacher (from query param)
   const searchParams = new URLSearchParams(location.search);
   const isViewingDeleted = searchParams.get('deleted') === 'true';
 
-  // Check if accessing from employee section
   const isEmployeeView = location.pathname.startsWith('/employee/');
 
   // Determine mode based on URL path

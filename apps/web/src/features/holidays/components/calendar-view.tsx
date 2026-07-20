@@ -14,9 +14,10 @@ import {
   parseISO,
   isWithinInterval,
 } from 'date-fns';
-import { Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar as CalendarIcon, Bell } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useRole } from '@/hooks/use-role';
 import type { Holiday, CalendarDay } from '../types';
@@ -31,6 +32,7 @@ import {
 } from '../utils/holiday-utils';
 import { HolidayFormDialog } from './holiday-form-dialog';
 import { DateActionDialog } from './date-action-dialog';
+import { useSendHolidayNotification } from '../hooks';
 
 interface DayColorInfo {
   isSunday: boolean;
@@ -108,6 +110,7 @@ export function CalendarView({ currentDate, holidays }: Readonly<CalendarViewPro
   const [showAddDialog, setShowAddDialog] = useState(false);
 
   const { isAdmin } = useRole();
+  const notifyMutation = useSendHolidayNotification();
   const today = startOfDay(new Date());
 
   // Generate calendar grid
@@ -379,6 +382,18 @@ export function CalendarView({ currentDate, holidays }: Readonly<CalendarViewPro
                           <span className="flex-1 text-sm font-semibold text-gray-900">
                             {holiday.description}
                           </span>
+                          {isAdmin && !isWeekendHoliday(holiday) && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 flex-shrink-0 text-amber-600 hover:bg-amber-100 hover:text-amber-700"
+                              onClick={() => notifyMutation.mutate([holiday.public_id])}
+                              disabled={notifyMutation.isPending}
+                              title="Send notification for this holiday"
+                            >
+                              <Bell className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
                         </div>
                         <div className="mb-2 text-xs text-gray-600">
                           {format(parseISO(holiday.start_date), 'MMM dd, yyyy')}

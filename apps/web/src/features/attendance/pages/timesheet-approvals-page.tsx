@@ -291,14 +291,12 @@ export default function TimesheetApprovalsPage() {
         accessor: (row) => <EmployeeCell row={row} />,
         sortable: true,
         sortKey: 'employee_info.full_name',
-        width: 220,
       },
       {
         header: 'Week Period',
         accessor: (row) => <WeekPeriodCell row={row} />,
         sortable: true,
         sortKey: 'week_start_date',
-        width: 220,
       },
       {
         header: 'Working Days',
@@ -309,7 +307,6 @@ export default function TimesheetApprovalsPage() {
         className: 'text-center',
         sortable: true,
         sortKey: 'total_working_days',
-        width: 130,
       },
       {
         header: 'Present',
@@ -318,7 +315,6 @@ export default function TimesheetApprovalsPage() {
         className: 'text-center',
         sortable: true,
         sortKey: 'total_present_days',
-        width: 100,
       },
       {
         header: 'Absent',
@@ -327,7 +323,6 @@ export default function TimesheetApprovalsPage() {
         className: 'text-center',
         sortable: true,
         sortKey: 'total_absent_days',
-        width: 100,
       },
       {
         header: 'Leave',
@@ -336,7 +331,6 @@ export default function TimesheetApprovalsPage() {
         className: 'text-center',
         sortable: true,
         sortKey: 'total_leave_days',
-        width: 100,
       },
       {
         header: 'Attendance %',
@@ -345,14 +339,12 @@ export default function TimesheetApprovalsPage() {
         className: 'text-center',
         sortable: true,
         sortKey: 'attendance_percentage',
-        width: 140,
       },
       {
         header: 'Submitted On',
         accessor: (row) => <SubmittedOnCell row={row} />,
         sortable: true,
         sortKey: 'submitted_at',
-        width: 150,
       },
       {
         header: 'Status',
@@ -361,7 +353,6 @@ export default function TimesheetApprovalsPage() {
         className: 'text-center',
         sortable: true,
         sortKey: 'submission_status',
-        width: 140,
       },
       {
         header: 'Actions',
@@ -379,7 +370,6 @@ export default function TimesheetApprovalsPage() {
         ),
         headerClassName: 'text-center',
         className: 'text-center',
-        width: 320,
       },
     ],
     [reviewMutation.isPending]

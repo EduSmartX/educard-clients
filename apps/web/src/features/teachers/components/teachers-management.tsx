@@ -16,6 +16,7 @@ import type { Teacher } from '../types';
 import { DeleteConfirmationDialog, ReactivateConfirmationDialog } from '@/components/common';
 import { useDeletedView } from '@/hooks/use-deleted-view';
 import { useFilterParams } from '@/hooks/use-filter-params';
+import { getErrorMessage } from '@/lib/utils/error-handler';
 
 type PageMode = 'list' | 'create' | 'edit' | 'view';
 
@@ -73,7 +74,7 @@ export function TeachersManagement({ viewMode = 'admin' }: Readonly<TeachersMana
       setTeacherToDelete(null);
     },
     onError: (error: Error) => {
-      toast.error(error.message || ErrorMessages.TEACHER.DELETE_FAILED);
+      toast.error(getErrorMessage(error, ErrorMessages.TEACHER.DELETE_FAILED));
     },
   });
 
@@ -83,7 +84,7 @@ export function TeachersManagement({ viewMode = 'admin' }: Readonly<TeachersMana
       setTeacherToReactivate(null);
     },
     onError: (error: Error) => {
-      toast.error(error.message || ErrorMessages.TEACHER.REACTIVATE_FAILED);
+      toast.error(getErrorMessage(error, ErrorMessages.TEACHER.REACTIVATE_FAILED));
     },
   });
 

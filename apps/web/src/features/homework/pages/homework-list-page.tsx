@@ -69,6 +69,21 @@ export default function HomeworkListPage() {
   const [activeTab, setActiveTab] = useState<string>(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Keep local state synced when URL changes (manual edits, browser back/forward).
+  useEffect(() => {
+    const classParam = searchParams.get('class') || '';
+    const dateParam = searchParams.get('date');
+    const nextDate = dateParam && isValid(parseISO(dateParam)) ? parseISO(dateParam) : new Date();
+    const tabParam = searchParams.get('tab') || 'all';
+    const nextTab = ['all', 'published', 'draft'].includes(tabParam) ? tabParam : 'all';
+
+    setSelectedClassId((prev) => (prev === classParam ? prev : classParam));
+    setSelectedDate((prev) =>
+      format(prev, 'yyyy-MM-dd') === format(nextDate, 'yyyy-MM-dd') ? prev : nextDate
+    );
+    setActiveTab((prev) => (prev === nextTab ? prev : nextTab));
+  }, [searchParams]);
+
   // Working day navigation mutation
   const { mutateAsync: navigateWorkingDay, isPending: isNavigating } = useNavigateWorkingDay();
 
@@ -99,8 +114,10 @@ export default function HomeworkListPage() {
     if (activeTab !== 'all') {
       params.set('tab', activeTab);
     }
-    setSearchParams(params, { replace: true });
-  }, [selectedClassId, selectedDate, activeTab, setSearchParams]);
+    if (params.toString() !== searchParams.toString()) {
+      setSearchParams(params, { replace: true });
+    }
+  }, [selectedClassId, selectedDate, activeTab, searchParams, setSearchParams]);
 
   const filters: HomeworkListParams = useMemo(() => {
     const f: HomeworkListParams = {
@@ -202,11 +219,9 @@ export default function HomeworkListPage() {
   }, [selectedDate, selectedClassId, navigateWorkingDay, canNavigateNext]);
 
   const handleCreateHomework = useCallback(() => {
-    // For creating homework, use today's date (not the currently viewed past date)
-    const today = new Date();
-    const dateStr = format(today, 'yyyy-MM-dd');
+    const dateStr = format(selectedDate, 'yyyy-MM-dd');
     navigate(`${ROUTES.HOMEWORK_NEW}?class=${selectedClass?.public_id}&date=${dateStr}`);
-  }, [navigate, selectedClass]);
+  }, [navigate, selectedClass, selectedDate]);
 
   const handleViewHomework = useCallback(
     (homework: Homework) => {
@@ -217,14 +232,12 @@ export default function HomeworkListPage() {
 
   const handleAddSubjectHomework = useCallback(
     (subjectId: string) => {
-      // For creating homework, use today's date (not the currently viewed past date)
-      const today = new Date();
-      const dateStr = format(today, 'yyyy-MM-dd');
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
       navigate(
         `${ROUTES.HOMEWORK_NEW}?class=${selectedClass?.public_id}&subject=${subjectId}&date=${dateStr}`
       );
     },
-    [navigate, selectedClass]
+    [navigate, selectedClass, selectedDate]
   );
 
   const deleteHomework = useDeleteHomework();
@@ -287,7 +300,7 @@ export default function HomeworkListPage() {
               onValueChange={setSelectedClassId}
               placeholder="Select a class"
               searchPlaceholder="Search classes..."
-              className="w-full sm:w-[250px]"
+              className="w-full md:w-[250px]"
             />
           )}
         </label>
@@ -316,7 +329,7 @@ export default function HomeworkListPage() {
                 <Button
                   variant="outline"
                   className={cn(
-                    'min-w-[220px] justify-start text-left font-normal',
+                    'w-full min-w-0 justify-start text-left font-normal sm:min-w-[220px]',
                     isYesterday && 'border-primary bg-primary/5'
                   )}
                 >
@@ -418,7 +431,7 @@ export default function HomeworkListPage() {
             <TabsTrigger value="draft">Drafts</TabsTrigger>
           </TabsList>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {selectedClass && hasPublishedHomework && (
               <Button
                 variant="outline"
@@ -431,7 +444,7 @@ export default function HomeworkListPage() {
               </Button>
             )}
 
-            <div className="relative w-full sm:w-[250px]">
+            <div className="relative w-full md:w-[250px]">
               <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
               <Input
                 placeholder="Search subjects..."

@@ -9,11 +9,13 @@ import { toast } from 'sonner';
 import {
   changePassword,
   deleteMyProfilePhoto,
+  requestProfileSyncOtp,
   sendOTP,
   updateEmail,
   updatePhone,
   updateProfile,
   uploadMyProfilePhoto,
+  verifyProfileSync,
 } from '../api/profile-api';
 import { authApi } from '@/lib/api/auth-api';
 import { ROUTES } from '@/constants/app-config';
@@ -25,6 +27,7 @@ import type {
   UpdateEmailPayload,
   UpdatePhonePayload,
   UpdateProfilePayload,
+  VerifyProfileSyncPayload,
 } from '../types/profile.types';
 
 /**
@@ -66,7 +69,6 @@ export function useChangePassword() {
       window.localStorage.setItem('logout-event', Date.now().toString());
       window.localStorage.removeItem('logout-event');
 
-      // Navigate to login
       navigate(ROUTES.AUTH.LOGIN, { replace: true });
 
       // Force reload to clear any cached state
@@ -129,6 +131,33 @@ export function useUpdatePhone() {
   });
 }
 
+/**
+ * Hook to request a profile-sync OTP (sent to the student's own login email)
+ */
+export function useRequestProfileSyncOtp() {
+  return useMutation({
+    mutationFn: () => requestProfileSyncOtp(),
+    onSuccess: (data) => {
+      toast.success(data.message || SuccessMessages.PROFILE.SYNC_OTP_SENT);
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error, ErrorMessages.PROFILE.REQUEST_SYNC_OTP_FAILED));
+    },
+  });
+}
+
+/**
+ * Hook to verify the profile-sync OTP and link accounts sharing this email
+ */
+export function useVerifyProfileSync() {
+  return useMutation({
+    mutationFn: (payload: VerifyProfileSyncPayload) => verifyProfileSync(payload),
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error, ErrorMessages.PROFILE.SYNC_PROFILES_FAILED));
+    },
+  });
+}
+
 // Deprecated - kept for backwards compatibility
 export const useUpdateAddress = useUpdateProfile;
 
@@ -147,7 +176,7 @@ export function useUploadProfilePhoto() {
       toast.success(SuccessMessages.PROFILE.PHOTO_UPLOADED);
     },
     onError: (error: Error) => {
-      toast.error(error.message || ErrorMessages.PROFILE.PHOTO_UPLOAD_FAILED);
+      toast.error(getErrorMessage(error, ErrorMessages.PROFILE.PHOTO_UPLOAD_FAILED));
     },
   });
 }
@@ -165,7 +194,7 @@ export function useDeleteProfilePhoto() {
       toast.success(SuccessMessages.PROFILE.PHOTO_DELETED);
     },
     onError: (error: Error) => {
-      toast.error(error.message || ErrorMessages.PROFILE.PHOTO_DELETE_FAILED);
+      toast.error(getErrorMessage(error, ErrorMessages.PROFILE.PHOTO_DELETE_FAILED));
     },
   });
 }

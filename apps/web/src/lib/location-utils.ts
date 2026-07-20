@@ -12,6 +12,12 @@ export interface LocationData {
   longitude: number;
 }
 
+interface GoogleAddressComponent {
+  long_name: string;
+  short_name: string;
+  types: string[];
+}
+
 /**
  * Get current location using browser's Geolocation API
  */
@@ -38,7 +44,8 @@ export const reverseGeocode = async (
   longitude: number,
   apiKey?: string
 ): Promise<LocationData> => {
-  // If no API key, try to use browser's built-in reverse geocoding (limited)
+  // No key configured (VITE_GOOGLE_MAPS_API_KEY unset in the environment) -
+  // fail fast with a clear message instead of calling Google with a bad key.
   if (!apiKey) {
     throw new Error('Google Maps API key is not configured');
   }
@@ -53,7 +60,7 @@ export const reverseGeocode = async (
   }
 
   const result = data.results[0];
-  const addressComponents = result.address_components;
+  const addressComponents: GoogleAddressComponent[] = result.address_components;
 
   // Extract address components
   let streetNumber = '';
@@ -63,7 +70,7 @@ export const reverseGeocode = async (
   let postalCode = '';
   let country = 'India';
 
-  addressComponents.forEach((component: unknown) => {
+  addressComponents.forEach((component) => {
     const types = component.types;
 
     if (types.includes('street_number')) {

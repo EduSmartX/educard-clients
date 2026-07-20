@@ -341,7 +341,7 @@ const barStyles = StyleSheet.create({
     width: 2,
     backgroundColor: 'rgba(0,0,0,0.15)',
   },
-  label: { fontSize: 12, fontWeight: '700', minWidth: 40, textAlign: 'right' },
+  label: { fontSize: 12, fontWeight: '700', minWidth: 34, textAlign: 'right' },
 });
 
 const s = StyleSheet.create({
@@ -386,7 +386,7 @@ const s = StyleSheet.create({
   barContainer: { flex: 1 },
   barTrack: { height: 8, borderRadius: 4, overflow: 'hidden' },
   barFill: { height: '100%', borderRadius: 4 },
-  barValue: { fontSize: 12, fontWeight: '700', minWidth: 36, textAlign: 'right' },
+  barValue: { fontSize: 12, fontWeight: '700', minWidth: 30, textAlign: 'right' },
   subjectStats: { flexDirection: 'row', gap: 6, marginTop: 6 },
   chip: {
     fontSize: 11,

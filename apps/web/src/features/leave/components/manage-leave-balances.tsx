@@ -126,7 +126,7 @@ function resolveRawUserDetails(ctx: {
   if (ctx.apiUser) {
     return ctx.apiUser;
   }
-  if (ctx.userRole === 'staff') {
+  if (ctx.userRole === USER_ROLES.STAFF) {
     return ctx.manageableUsers.find((u) => u.public_id === ctx.selectedUser);
   }
   return ctx.students.find((s) => s.user_info.public_id === ctx.selectedUser);
@@ -137,7 +137,7 @@ function buildUserOptions(
   manageableUsers: ManageableUser[],
   students: StudentData[]
 ) {
-  if (userRole === 'staff') {
+  if (userRole === USER_ROLES.STAFF) {
     return manageableUsers.map((u) => ({
       label: `${u.full_name} [${u.email}]`,
       value: u.public_id,
@@ -171,7 +171,6 @@ async function fetchClassesData(
 export default function ManageLeaveBalances() {
   const { user: currentUser } = useAuth();
 
-  // Check if user is admin
   const isAdmin = currentUser?.role === USER_ROLES.ADMIN;
 
   // Fetch teacher's management context (only for non-admins)
@@ -218,13 +217,13 @@ export default function ManageLeaveBalances() {
       const response = await api.get(`/users/profile/manageable-users/?role=${userRole}`);
       return Array.isArray(response.data) ? { data: response.data } : response.data;
     },
-    enabled: !manageOwnBalance && userRole === 'staff',
+    enabled: !manageOwnBalance && userRole === USER_ROLES.STAFF,
   });
 
   const { data: classesData, isLoading: isLoadingClasses } = useQuery({
     queryKey: QUERY_KEYS.classesForLeave.forBalances(userRole, isAdmin, teacherContext),
     queryFn: async () => fetchClassesData(isAdmin, teacherContext),
-    enabled: !manageOwnBalance && userRole === 'student',
+    enabled: !manageOwnBalance && userRole === USER_ROLES.STUDENT,
   });
 
   const { data: studentsData, isLoading: isLoadingStudents } = useQuery({
@@ -233,7 +232,7 @@ export default function ManageLeaveBalances() {
       const response = await api.get(`/students/classes/${selectedClass}/students/`);
       return Array.isArray(response.data) ? { data: response.data } : response.data;
     },
-    enabled: !manageOwnBalance && userRole === 'student' && !!selectedClass,
+    enabled: !manageOwnBalance && userRole === USER_ROLES.STUDENT && !!selectedClass,
   });
 
   // Get effective user ID from auth context or selected user
@@ -443,8 +442,8 @@ export default function ManageLeaveBalances() {
   );
 
   const userSelectDisabled =
-    (userRole === 'staff' && isLoadingUsers) ||
-    (userRole === 'student' && (!selectedClass || isLoadingStudents));
+    (userRole === USER_ROLES.STAFF && isLoadingUsers) ||
+    (userRole === USER_ROLES.STUDENT && (!selectedClass || isLoadingStudents));
 
   return (
     <div className="space-y-6">

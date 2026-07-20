@@ -238,7 +238,6 @@ export const FEE_UI_TEXT = {
     TRANSACTION_ID: "Transaction ID",
     REMARKS: "Remarks",
     REMINDER_CHANNELS: "Reminder Channels",
-    CUSTOM_MESSAGE: "Custom Message",
   },
   BUTTONS: {
     CREATE: "Create",

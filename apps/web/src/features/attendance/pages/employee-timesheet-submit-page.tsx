@@ -148,7 +148,7 @@ const AttendanceIndicator = ({
       <Button
         variant={morningPresent ? 'default' : 'outline'}
         size="sm"
-        className={`h-8 min-w-[60px] px-2 sm:h-10 sm:min-w-[120px] sm:px-6 ${getSessionButtonClass(morningPresent, disabled)}`}
+        className={`h-8 min-w-[60px] px-2 sm:h-10 sm:min-w-[96px] sm:px-4 lg:min-w-[120px] lg:px-6 ${getSessionButtonClass(morningPresent, disabled)}`}
         onClick={disabled ? undefined : onMorningClick}
         disabled={disabled}
       >
@@ -162,7 +162,7 @@ const AttendanceIndicator = ({
       <Button
         variant={afternoonPresent ? 'default' : 'outline'}
         size="sm"
-        className={`h-8 min-w-[60px] px-2 sm:h-10 sm:min-w-[120px] sm:px-6 ${getSessionButtonClass(afternoonPresent, disabled)}`}
+        className={`h-8 min-w-[60px] px-2 sm:h-10 sm:min-w-[96px] sm:px-4 lg:min-w-[120px] lg:px-6 ${getSessionButtonClass(afternoonPresent, disabled)}`}
         onClick={disabled ? undefined : onAfternoonClick}
         disabled={disabled}
       >

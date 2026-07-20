@@ -149,7 +149,6 @@ export async function validateExcelFile(
     const data = new Uint8Array(arrayBuffer);
     const workbook = xlsx.read(data, { type: 'array' });
 
-    // Get the first sheet
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
 

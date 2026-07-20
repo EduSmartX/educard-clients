@@ -46,10 +46,11 @@ export function useFeeStructure(id: string | undefined) {
 // Student Fee Queries
 // ============================================================================
 
-export function useStudentFees(filters?: StudentFeeFilters) {
+export function useStudentFees(filters?: StudentFeeFilters, enabled = true) {
   return useQuery({
     queryKey: [FeeQueryKeys.STUDENT_FEES, filters],
     queryFn: () => studentFeeApi.list(filters),
+    enabled,
   });
 }
 

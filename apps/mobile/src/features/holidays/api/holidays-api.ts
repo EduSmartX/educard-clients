@@ -147,3 +147,18 @@ export async function bulkUploadHolidays(
 ): Promise<BulkUploadResponse> {
   return bulkUploadExcel('/attendance/admin/holiday-calendar/bulk-upload/', fileUri, fileName);
 }
+
+/**
+ * Send holiday notification for selected holidays (Admin only)
+ */
+export async function sendHolidayNotification(
+  holidayIds: string[]
+): Promise<{ message: string; data: { count: number } }> {
+  const response = await apiClient.post<{ message: string; data: { count: number } }>(
+    '/attendance/admin/holiday-calendar/send-notification/',
+    {
+      holiday_ids: holidayIds,
+    }
+  );
+  return response.data;
+}

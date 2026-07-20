@@ -254,7 +254,6 @@ export function LeaveAllocationsList({
                 setAppliedSearchQuery(search || '');
                 setFilters(otherFilters);
 
-                // Call parent handlers if provided (for API calls)
                 if (onSearch) {
                   onSearch(search || '');
                 }
@@ -269,7 +268,6 @@ export function LeaveAllocationsList({
                 setAppliedSearchQuery('');
                 setFilters({});
 
-                // Call parent handlers if provided (for API calls)
                 if (onSearch) {
                   onSearch('');
                 }

@@ -3,19 +3,44 @@
  * Main page for managing user profile with tabbed interface and entrance animations
  */
 
-import { User, Lock, Mail, Phone, MapPin } from 'lucide-react';
+import { User, Lock, Mail, Phone, MapPin, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PageHeader } from '@/components/common';
+import { useRole } from '@/hooks/use-role';
 import { ProfilePhotoUpload } from '../components/profile-photo-upload';
 import { ProfileInformationForm } from '../components/profile-information-form';
 import { PasswordChangeForm } from '../components/password-change-form';
 import { EmailUpdateForm } from '../components/email-update-form';
 import { PhoneUpdateForm } from '../components/phone-update-form';
 import { AddressUpdateForm } from '../components/address-update-form';
+import { SyncProfilesForm } from '../components/sync-profiles-form';
 
 export default function ProfilePage() {
+  const { isStudent } = useRole();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const activeTab = useMemo(() => {
+    const allowedTabs = isStudent
+      ? ['profile', 'password', 'email', 'phone', 'address', 'sync-profiles']
+      : ['profile', 'password', 'email', 'phone', 'address'];
+    const requestedTab = searchParams.get('tab') || 'profile';
+    return allowedTabs.includes(requestedTab) ? requestedTab : 'profile';
+  }, [isStudent, searchParams]);
+
+  const handleTabChange = (value: string) => {
+    const nextParams = new URLSearchParams(searchParams);
+    if (value === 'profile') {
+      nextParams.delete('tab');
+    } else {
+      nextParams.set('tab', value);
+    }
+    setSearchParams(nextParams, { replace: true });
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -29,8 +54,8 @@ export default function ProfilePage() {
       />
 
       <Card>
-        <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid h-auto w-full grid-cols-5">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <TabsList className={`grid h-auto w-full ${isStudent ? 'grid-cols-6' : 'grid-cols-5'}`}>
             <TabsTrigger value="profile" className="flex items-center gap-2 py-3">
               <User className="h-4 w-4" />
               <span className="hidden sm:inline">Profile</span>
@@ -51,10 +76,16 @@ export default function ProfilePage() {
               <MapPin className="h-4 w-4" />
               <span className="hidden sm:inline">Address</span>
             </TabsTrigger>
+            {isStudent && (
+              <TabsTrigger value="sync-profiles" className="flex items-center gap-2 py-3">
+                <Users className="h-4 w-4" />
+                <span className="hidden sm:inline">Sync Profiles</span>
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="profile" className="mt-6 space-y-6">
-            <ProfilePhotoUpload />
+            {!isStudent && <ProfilePhotoUpload />}
             <ProfileInformationForm />
           </TabsContent>
 
@@ -73,6 +104,12 @@ export default function ProfilePage() {
           <TabsContent value="address" className="mt-6">
             <AddressUpdateForm />
           </TabsContent>
+
+          {isStudent && (
+            <TabsContent value="sync-profiles" className="mt-6">
+              <SyncProfilesForm />
+            </TabsContent>
+          )}
         </Tabs>
       </Card>
     </motion.div>

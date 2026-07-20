@@ -21,6 +21,7 @@ import {
 import { useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 
+import { VerificationBanner } from '@/components/dashboard';
 import { Screen } from '@/components/layout';
 import { Card, Avatar, Badge } from '@/components/ui';
 import { colors } from '@/constants/colors';
@@ -236,6 +237,18 @@ export default function ParentDashboard() {
 
         {/* Content */}
         <View className="px-4 pt-4">
+          {user && (
+            <VerificationBanner
+              user={user}
+              onVerifyEmail={() =>
+                router.push('/(shared-screens)/change-email?mode=verify&from=dashboard')
+              }
+              onVerifyPhone={() =>
+                router.push('/(shared-screens)/change-phone?mode=verify&from=dashboard')
+              }
+            />
+          )}
+
           {/* Announcements */}
           {mockAnnouncements.length > 0 && (
             <View className="mb-6">

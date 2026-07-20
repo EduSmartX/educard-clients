@@ -53,7 +53,7 @@ export function transformFormToCreatePayload(values: TeacherFormValues): CreateT
 
   if (hasAddress) {
     payload.user.address = {
-      address_type: ADDRESS_TYPE.USER_CURRENT,
+      address_type: values.address_type || ADDRESS_TYPE.USER_CURRENT,
       street_address: values.street_address || '',
       address_line_2: values.address_line_2 || '',
       city: values.city || '',
@@ -117,7 +117,7 @@ export function transformFormToUpdatePayload(values: TeacherFormValues): UpdateT
     ...(values.supervisor_email && { supervisor_email: values.supervisor_email }),
     ...(hasAddress && {
       address: {
-        address_type: ADDRESS_TYPE.USER_CURRENT,
+        address_type: values.address_type || ADDRESS_TYPE.USER_CURRENT,
         street_address: values.street_address || '',
         address_line_2: values.address_line_2 || '',
         city: values.city || '',
@@ -166,6 +166,7 @@ export function transformTeacherToForm(teacher: TeacherDetail): Partial<TeacherF
     specialization: teacher.specialization || '',
     experience_years: teacher.experience_years || undefined,
     joining_date: teacher.joining_date || '',
+    address_type: teacher.user?.address?.address_type || ADDRESS_TYPE.USER_CURRENT,
     street_address: teacher.user?.address?.street_address || '',
     address_line_2: teacher.user?.address?.address_line_2 || '',
     city: teacher.user?.address?.city || '',

@@ -40,7 +40,6 @@ export function useCreateStudent(
     onSuccess: (...args) => {
       queryClient.invalidateQueries({ queryKey: ['students'] });
       queryClient.invalidateQueries({ queryKey: ['classes'] });
-      // Call custom onSuccess if provided
       onSuccess?.(...args);
     },
   });
@@ -73,7 +72,6 @@ export function useUpdateStudent(
     onSuccess: (...args) => {
       queryClient.invalidateQueries({ queryKey: ['students'] });
       queryClient.invalidateQueries({ queryKey: ['student'] });
-      // Call custom onSuccess if provided
       onSuccess?.(...args);
     },
   });
@@ -94,7 +92,6 @@ export function useDeleteStudent(
       deleteStudent(classId, publicId),
     onSuccess: (...args) => {
       const [, { publicId }] = args;
-      // Remove the deleted student's detail query from cache to prevent 404 refetch
       queryClient.removeQueries({
         queryKey: ['students', publicId],
       });
@@ -105,7 +102,6 @@ export function useDeleteStudent(
       queryClient.invalidateQueries({
         queryKey: ['classes'],
       });
-      // Call custom onSuccess if provided
       onSuccess?.(...args);
     },
   });
@@ -131,7 +127,6 @@ export function useReactivateStudent(
       queryClient.invalidateQueries({
         queryKey: ['classes'],
       });
-      // Call custom onSuccess if provided
       onSuccess?.(...args);
     },
   });
