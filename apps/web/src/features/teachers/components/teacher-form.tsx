@@ -164,7 +164,15 @@ export function TeacherForm({
   }, [initialData, form]);
 
   const createMutation = useCreateTeacher({
-    onSuccess: () => {
+    onSuccess: async (createdTeacher) => {
+      // Upload photo before navigating away (runs even after unmount)
+      if (photoFile && createdTeacher?.data?.user?.public_id) {
+        try {
+          await uploadProfilePhotoForUser(createdTeacher.data.user.public_id, photoFile);
+        } catch {
+          toast.error('Teacher created but photo upload failed. You can upload it later.');
+        }
+      }
       toast.success(SuccessMessages.TEACHER.CREATE_SUCCESS);
       duplicateHandler.closeDialog();
       onSuccess();
@@ -296,19 +304,7 @@ export function TeacherForm({
   const onSubmit = (data: TeacherFormValues) => {
     if (mode === 'create') {
       const payload = transformFormToCreatePayload(data);
-      createMutation.mutate(
-        { payload },
-        {
-          onSuccess: (createdTeacher) => {
-            // Upload photo if one was selected during form fill
-            if (photoFile && createdTeacher?.user?.public_id) {
-              uploadProfilePhotoForUser(createdTeacher.user.public_id, photoFile).catch(() => {
-                toast.error('Teacher created but photo upload failed. You can upload it later.');
-              });
-            }
-          },
-        }
-      );
+      createMutation.mutate({ payload });
     } else if (mode === 'edit' && teacherId) {
       const payload = transformFormToUpdatePayload(data);
       updateMutation.mutate({ publicId: teacherId, payload });

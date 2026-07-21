@@ -45,7 +45,11 @@ export interface TeacherFieldErrors extends FieldErrors {
 
 export type { MutationOptions };
 
-export function useCreateTeacher(options?: MutationOptions<TeacherFieldErrors>) {
+export function useCreateTeacher(
+  options?: Omit<MutationOptions<TeacherFieldErrors>, 'onSuccess'> & {
+    onSuccess?: (data: Awaited<ReturnType<typeof createTeacher>>) => void | Promise<void>;
+  }
+) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -56,9 +60,9 @@ export function useCreateTeacher(options?: MutationOptions<TeacherFieldErrors>) 
       payload: CreateTeacherPayload;
       forceCreate?: boolean;
     }) => createTeacher(payload, forceCreate),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: QueryKeys.TEACHERS.ALL });
-      options?.onSuccess?.();
+      return options?.onSuccess?.(data);
     },
     onError: (error: Error) => {
       handleMutationError(error, ErrorMessages.TEACHER.CREATE_FAILED, options?.onError);

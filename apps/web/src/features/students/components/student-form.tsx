@@ -176,7 +176,15 @@ export function StudentForm({
   }, [initialData, mode, form]);
 
   const createMutation = useCreateStudent({
-    onSuccess: () => {
+    onSuccess: async (createdStudent) => {
+      // Upload photo before navigating away (runs even after unmount)
+      if (photoFile && createdStudent?.user_info?.public_id) {
+        try {
+          await uploadProfilePhotoForUser(createdStudent.user_info.public_id, photoFile);
+        } catch {
+          toast.error('Student created but photo upload failed. You can upload it later.');
+        }
+      }
       toast.success(SuccessMessages.STUDENT.CREATE_SUCCESS);
       duplicateHandler.closeDialog();
       onSuccess();
@@ -278,19 +286,7 @@ export function StudentForm({
     const payload = transformStudentFormToPayload(data);
 
     if (mode === 'create') {
-      createMutation.mutate(
-        { classId: data.class_id, payload },
-        {
-          onSuccess: (createdStudent) => {
-            // Upload photo if one was selected during form fill
-            if (photoFile && createdStudent?.user_info?.public_id) {
-              uploadProfilePhotoForUser(createdStudent.user_info.public_id, photoFile).catch(() => {
-                toast.error('Student created but photo upload failed. You can upload it later.');
-              });
-            }
-          },
-        }
-      );
+      createMutation.mutate({ classId: data.class_id, payload });
     } else if (mode === 'edit' && studentId && initialData) {
       updateMutation.mutate({
         classId: data.class_id,
