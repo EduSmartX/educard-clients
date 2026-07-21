@@ -90,6 +90,7 @@ export default function ForgotPasswordPage() {
     register: registerVerify,
     handleSubmit: handleSubmitVerify,
     formState: { errors: errorsVerify },
+    reset: resetVerifyForm,
   } = useForm<VerifyOtpFormData>({
     resolver: zodResolver(verifyOtpSchema),
   });
@@ -102,6 +103,7 @@ export default function ForgotPasswordPage() {
 
       await authApi.requestPasswordResetOtp(requestData);
 
+      resetVerifyForm();
       setIdentifier(formData.identifier);
       setCurrentStep('verify');
       toast.success(`${SuccessMessages.AUTH.OTP_SENT} to your ${getIdentifierLabel(useEmail)}!`);
@@ -110,6 +112,11 @@ export default function ForgotPasswordPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleBackToRequest = () => {
+    resetVerifyForm();
+    setCurrentStep('request');
   };
 
   // Step 2: Verify OTP and Reset Password
@@ -174,14 +181,13 @@ export default function ForgotPasswordPage() {
               register={registerRequest}
               errors={errorsRequest}
               isLoading={isLoading}
-              identifierLabel={getIdentifierLabel(useEmail)}
             />
           )}
 
           {currentStep === 'verify' && (
             <VerifyOtpStep
               identifier={identifier}
-              onBack={() => setCurrentStep('request')}
+              onBack={handleBackToRequest}
               onSubmit={handleSubmitVerify(handleVerifyOtp)}
               register={registerVerify}
               errors={errorsVerify}

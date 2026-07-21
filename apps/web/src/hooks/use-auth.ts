@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { getParsedLocalStorageItem } from '@/lib/utils/storage';
+import { useEffect, useState } from 'react';
+import { AUTH_STORAGE_EVENT, getParsedLocalStorageItem } from '@/lib/utils/storage';
 
 export interface User {
   public_id: string;
@@ -36,12 +36,23 @@ export interface Organization {
 }
 
 export function useAuth() {
-  const getUserFromStorage = () => getParsedLocalStorageItem<User>('user');
+  const [user, setUser] = useState<User | null>(() => getParsedLocalStorageItem<User>('user'));
+  const [organization, setOrganization] = useState<Organization | null>(() =>
+    getParsedLocalStorageItem<Organization>('organization')
+  );
 
-  const getOrganizationFromStorage = () => getParsedLocalStorageItem<Organization>('organization');
-
-  const [user] = useState<User | null>(getUserFromStorage);
-  const [organization] = useState<Organization | null>(getOrganizationFromStorage);
+  useEffect(() => {
+    const sync = () => {
+      setUser(getParsedLocalStorageItem<User>('user'));
+      setOrganization(getParsedLocalStorageItem<Organization>('organization'));
+    };
+    window.addEventListener(AUTH_STORAGE_EVENT, sync);
+    window.addEventListener('storage', sync);
+    return () => {
+      window.removeEventListener(AUTH_STORAGE_EVENT, sync);
+      window.removeEventListener('storage', sync);
+    };
+  }, []);
 
   return { user, organization };
 }

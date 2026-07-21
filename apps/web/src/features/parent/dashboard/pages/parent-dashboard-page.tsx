@@ -5,9 +5,8 @@
  * staggered stat cards, and hover micro-interactions.
  */
 
-import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useInView } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Users, BarChart3, CalendarDays, Bell, Clock, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { VerificationBanner } from '@/components/dashboard';
@@ -36,15 +35,11 @@ function getGreeting(): { text: string; emoji: string } {
 }
 
 function AnimatedNumber({ value }: { value: number | string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-40px' });
-
   return (
     <motion.span
-      ref={ref}
       className="text-2xl font-bold"
       initial={{ opacity: 0, scale: 0.5 }}
-      animate={isInView ? { opacity: 1, scale: 1 } : {}}
+      animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, type: 'spring', bounce: 0.3 }}
     >
       {value}

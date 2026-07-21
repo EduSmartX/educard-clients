@@ -42,6 +42,7 @@ export interface UserProfile {
   organization_role: string | { code: string; name: string };
   is_active: boolean;
   is_email_verified: boolean;
+  is_mobile_verified: boolean;
   notification_opt_in: boolean;
   teacher_public_id?: string | null;
   address?: Address;

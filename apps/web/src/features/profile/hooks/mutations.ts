@@ -21,6 +21,7 @@ import { authApi } from '@/lib/api/auth-api';
 import { ROUTES } from '@/constants/app-config';
 import { ErrorMessages, SuccessMessages } from '@/constants';
 import { getErrorMessage } from '@/lib/utils/error-handler';
+import { updateStoredUser } from '@/lib/utils/storage';
 import type {
   ChangePasswordPayload,
   SendOTPPayload,
@@ -103,7 +104,8 @@ export function useUpdateEmail() {
 
   return useMutation({
     mutationFn: (payload: UpdateEmailPayload) => updateEmail(payload),
-    onSuccess: () => {
+    onSuccess: (response) => {
+      updateStoredUser(response.data ?? {});
       queryClient.invalidateQueries({ queryKey: ['user-profile', 'me'] });
       toast.success(SuccessMessages.PROFILE.EMAIL_UPDATED);
     },
@@ -121,7 +123,8 @@ export function useUpdatePhone() {
 
   return useMutation({
     mutationFn: (payload: UpdatePhonePayload) => updatePhone(payload),
-    onSuccess: () => {
+    onSuccess: (response) => {
+      updateStoredUser(response.data ?? {});
       queryClient.invalidateQueries({ queryKey: ['user-profile', 'me'] });
       toast.success(SuccessMessages.PROFILE.PHONE_UPDATED);
     },

@@ -23,7 +23,6 @@ interface RequestStepProps {
   register: UseFormRegister<{ identifier: string }>;
   errors: FieldErrors<{ identifier: string }>;
   isLoading: boolean;
-  identifierLabel: string;
 }
 
 export function RequestOtpStep({
@@ -35,7 +34,6 @@ export function RequestOtpStep({
   register,
   errors,
   isLoading,
-  identifierLabel,
 }: RequestStepProps) {
   return (
     <>
@@ -61,9 +59,6 @@ export function RequestOtpStep({
           <h1 className="mb-2 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-4xl font-bold text-transparent">
             Forgot Password? 🔒
           </h1>
-          <p className="text-base text-gray-600">
-            Don't worry! Enter your {identifierLabel} and we'll send you an OTP
-          </p>
         </div>
       </div>
 

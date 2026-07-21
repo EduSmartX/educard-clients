@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { getTimesheetSubmissions } from '../../api/attendance-api';
+import { getPendingTimesheets, getTimesheetSubmissions } from '../../api/attendance-api';
 
-export type { TimesheetSubmission } from '../../api/attendance-api';
+export type { PendingTimesheetWeek, TimesheetSubmission } from '../../api/attendance-api';
 
 interface UseTimesheetSubmissionsOptions {
   employee?: string;
@@ -24,6 +24,14 @@ export function useTimesheetSubmissions(options?: UseTimesheetSubmissionsOptions
   return useQuery({
     queryKey: ['timesheet-submissions', options],
     queryFn: () => getTimesheetSubmissions(apiParams),
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+}
+
+export function usePendingTimesheets() {
+  return useQuery({
+    queryKey: ['timesheet-submissions', 'pending'],
+    queryFn: getPendingTimesheets,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }

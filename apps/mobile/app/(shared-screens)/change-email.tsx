@@ -47,6 +47,7 @@ export default function ChangeEmailScreen() {
       updateStore: (u, value, result) => ({
         ...(u as object),
         email: (result as { email?: string }).email || value,
+        is_email_verified: (result as { is_email_verified?: boolean }).is_email_verified ?? true,
       }),
       successTitle: isVerifyMode ? 'Email Verified' : 'Email Updated',
       successMessage: isVerifyMode

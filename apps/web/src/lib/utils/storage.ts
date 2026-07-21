@@ -20,3 +20,14 @@ export function getStoredUserRole(): string | null {
   const user = getParsedLocalStorageItem<{ role?: string }>('user');
   return typeof user?.role === 'string' ? user.role.toLowerCase() : null;
 }
+
+export const AUTH_STORAGE_EVENT = 'auth-user-changed';
+
+export function updateStoredUser(updates: Record<string, unknown>): void {
+  const current = getParsedLocalStorageItem<Record<string, unknown>>('user');
+  if (!current) {
+    return;
+  }
+  localStorage.setItem('user', JSON.stringify({ ...current, ...updates }));
+  window.dispatchEvent(new Event(AUTH_STORAGE_EVENT));
+}

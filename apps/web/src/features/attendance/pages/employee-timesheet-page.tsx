@@ -32,6 +32,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ROUTES } from '@/constants/app-config';
 import { useAuth } from '@/hooks/use-auth';
 import { getEmployeeAttendance } from '@/features/attendance/api/attendance-api';
+import { useEmployeeAttendanceStats } from '@/features/attendance/hooks/queries/use-employee-attendance';
 import { EmployeeInfoCard } from '@/features/attendance/components/employee-info-card';
 import { SingleDayAttendanceDialog } from '@/features/attendance/components/single-day-attendance-dialog';
 import { TimesheetDayCell } from '@/features/attendance/components/timesheet-day-cell';
@@ -242,6 +243,12 @@ export function EmployeeTimesheetPage() {
     queryFn: () => getEmployeeAttendance({ from_date: fromDate, to_date: toDate }),
   });
 
+  // Month-range stats from the same backend stats API the dashboard uses
+  const { data: statsData } = useEmployeeAttendanceStats({
+    from_date: format(monthStart, 'yyyy-MM-dd'),
+    to_date: format(monthEnd, 'yyyy-MM-dd'),
+  });
+
   const attendanceByDate = useMemo(() => {
     const map = new Map<string, AttendanceRecord>();
     (attendanceData?.records || []).forEach((record: AttendanceRecord) => {
@@ -308,9 +315,9 @@ export function EmployeeTimesheetPage() {
     [monthStart]
   );
 
-  // Use stats from backend
+  // Use month-range backend stats so numbers match the dashboard
   const report = useMemo(() => {
-    const stats = attendanceData?.stats || {};
+    const stats = statsData?.stats || {};
     return {
       submitted: attendanceData?.records?.length || 0,
       present: stats.total_present || 0,
@@ -319,8 +326,9 @@ export function EmployeeTimesheetPage() {
       leave: stats.total_leaves || 0,
       holiday: stats.total_holidays || 0,
       totalWorkingDays: stats.total_working_days || 0,
+      attendancePercentage: stats.attendance_percentage || 0,
     };
-  }, [attendanceData]);
+  }, [statsData, attendanceData]);
 
   const loading = loadingAttendance;
 
@@ -396,9 +404,7 @@ export function EmployeeTimesheetPage() {
               <div>
                 <div className="mb-1 text-sm text-gray-600">Attendance Summary</div>
                 <div className="mb-2 text-base font-semibold">
-                  {report.totalWorkingDays > 0
-                    ? `${Math.round((report.present / report.totalWorkingDays) * 100)}% present`
-                    : '0% present'}
+                  {`${report.attendancePercentage}% present`}
                 </div>
                 <div className="flex h-2 overflow-hidden rounded-full bg-gray-200">
                   {report.present > 0 && (
@@ -578,17 +584,13 @@ export function EmployeeTimesheetPage() {
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600">Attendance Rate</span>
                   <span className="font-bold text-green-700">
-                    {report.totalWorkingDays > 0
-                      ? `${Math.round((report.present / report.totalWorkingDays) * 100)}%`
-                      : '0%'}
+                    {`${report.attendancePercentage}%`}
                   </span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-gray-200">
                   <div
                     className="h-full bg-green-500 transition-all"
-                    style={{
-                      width: `${report.totalWorkingDays > 0 ? (report.present / report.totalWorkingDays) * 100 : 0}%`,
-                    }}
+                    style={{ width: `${report.attendancePercentage}%` }}
                   />
                 </div>
               </div>

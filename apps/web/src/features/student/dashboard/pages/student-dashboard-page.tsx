@@ -6,9 +6,8 @@
  * pulled from `GET /students/student/dashboard/`.
  */
 
-import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useInView } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   BarChart3,
   BookOpen,
@@ -66,19 +65,15 @@ function AnimatedNumber({
   readonly value: number | string;
   readonly isLoading: boolean;
 }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: true });
-
   if (isLoading) {
     return <Skeleton className="h-8 w-16" />;
   }
 
   return (
     <motion.span
-      ref={ref}
       className="text-2xl font-bold"
       initial={{ opacity: 0, scale: 0.5 }}
-      animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.5 }}
+      animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, type: 'spring', bounce: 0.3 }}
     >
       {value}
