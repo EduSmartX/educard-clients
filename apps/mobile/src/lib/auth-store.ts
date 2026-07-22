@@ -6,6 +6,7 @@ import * as SecureStore from 'expo-secure-store';
 import { create } from 'zustand';
 
 import { login as apiLogin, logout as apiLogout, signup as apiSignup, checkAuth } from '@/api/auth';
+import { getUserProfile } from '@/api/profile';
 import { STORAGE_KEYS } from '@/constants/config';
 import { clearQueryCache } from '@/lib/query-client';
 import type { User, LoginCredentials, SignupData, AuthTokens } from '@/types/user';
@@ -56,6 +57,27 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
           isLoading: false,
           isInitialized: true,
         });
+
+        // Best-effort refresh so a stale verification banner self-heals on app load.
+        void getUserProfile()
+          .then((profile) => {
+            set((state) =>
+              state.user
+                ? {
+                    user: {
+                      ...state.user,
+                      email: profile.email,
+                      phone: profile.phone ?? state.user.phone,
+                      is_email_verified: profile.is_email_verified,
+                      is_mobile_verified: profile.is_mobile_verified,
+                    },
+                  }
+                : {}
+            );
+          })
+          .catch(() => {
+            // Keep the cached user if the refresh fails.
+          });
       } else {
         set({
           user: null,

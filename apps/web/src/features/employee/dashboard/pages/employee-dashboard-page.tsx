@@ -8,10 +8,10 @@
  * - Leave balance, pending timesheets, attendance donut chart
  */
 
-import { useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
-import { motion, useInView } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,8 +29,8 @@ import {
 } from 'lucide-react';
 import { useMyTimetable } from '@/features/timetable/hooks/queries';
 import { useMyLeaveBalancesSummary } from '@/features/leave/hooks/use-leave-balances';
-import { useTimesheetSubmissions } from '@/features/attendance/hooks';
-import { useEmployeeAttendance } from '@/features/attendance/hooks/queries/use-employee-attendance';
+import { usePendingTimesheets } from '@/features/attendance/hooks';
+import { useEmployeeAttendanceStats } from '@/features/attendance/hooks/queries/use-employee-attendance';
 import { useAuth } from '@/hooks/use-auth';
 import { VerificationBanner } from '@/components/dashboard';
 import { ROUTES } from '@/constants/app-config';
@@ -81,19 +81,15 @@ function SectionHeader({
 }
 
 function AnimatedNumber({ value, isLoading }: { value: number; isLoading: boolean }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-40px' });
-
   if (isLoading) {
     return <Skeleton className="h-8 w-16" />;
   }
 
   return (
     <motion.span
-      ref={ref}
       className="text-2xl font-bold"
       initial={{ opacity: 0, scale: 0.5 }}
-      animate={isInView ? { opacity: 1, scale: 1 } : {}}
+      animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, type: 'spring', bounce: 0.3 }}
     >
       {value}
@@ -166,9 +162,7 @@ export default function EmployeeDashboardPage() {
 
   const { data: timetableData, isLoading: loadingTimetable } = useMyTimetable();
   const { data: leaveData, isLoading: loadingLeave } = useMyLeaveBalancesSummary();
-  const { data: timesheetData, isLoading: loadingTimesheet } = useTimesheetSubmissions({
-    status: 'DRAFT,RETURNED',
-  });
+  const { data: pendingData, isLoading: loadingTimesheet } = usePendingTimesheets();
 
   const currentMonthRange = useMemo(() => {
     const now = new Date();
@@ -178,7 +172,7 @@ export default function EmployeeDashboardPage() {
     };
   }, []);
 
-  const { data: attendanceData, isLoading: loadingAttendance } = useEmployeeAttendance(
+  const { data: attendanceData, isLoading: loadingAttendance } = useEmployeeAttendanceStats(
     currentMonthRange,
     true
   );
@@ -218,8 +212,8 @@ export default function EmployeeDashboardPage() {
   }, [leaveData]);
 
   const pendingTimesheets = useMemo(() => {
-    return timesheetData?.results?.length || 0;
-  }, [timesheetData]);
+    return pendingData?.pending_count ?? pendingData?.results?.length ?? 0;
+  }, [pendingData]);
 
   const attendanceStats = useMemo(() => {
     const stats = attendanceData?.stats || {};
@@ -228,7 +222,7 @@ export default function EmployeeDashboardPage() {
     const leaves = stats.total_leaves || 0;
     const holidays = stats.total_holidays || 0;
     const total = present + absent + leaves + holidays;
-    const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
+    const percentage = stats.attendance_percentage || 0;
     return { present, absent, leaves, holidays, total, percentage };
   }, [attendanceData]);
 
@@ -547,9 +541,9 @@ export default function EmployeeDashboardPage() {
                 </CardHeader>
                 <CardContent className="p-4">
                   <div className="max-h-48 space-y-3 overflow-y-auto pr-1">
-                    {timesheetData?.results?.map((submission, idx) => (
+                    {pendingData?.results?.map((week, idx) => (
                       <motion.div
-                        key={submission.public_id}
+                        key={week.week_start_date}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.1 * idx, duration: 0.4 }}
@@ -558,22 +552,23 @@ export default function EmployeeDashboardPage() {
                       >
                         <AlertCircle className="mt-0.5 h-5 w-5 text-amber-600" />
                         <div className="flex-1">
-                          <p className="text-sm font-medium">
-                            Week: {new Date(submission.week_start_date).toLocaleDateString()} –{' '}
-                            {new Date(submission.week_end_date).toLocaleDateString()}
-                          </p>
+                          <p className="text-sm font-medium">Week: {week.label}</p>
                           <p className="text-muted-foreground text-xs">
                             Status:{' '}
-                            {submission.submission_status === 'DRAFT'
-                              ? 'Not submitted'
-                              : 'Returned'}
+                            {week.status === 'RETURNED'
+                              ? 'Returned'
+                              : week.status === 'DRAFT'
+                                ? 'Draft'
+                                : 'Not submitted'}
                           </p>
                         </div>
                         <Button
                           size="sm"
                           variant="outline"
                           className="shrink-0"
-                          onClick={() => navigate('/employee/attendance/timesheet')}
+                          onClick={() =>
+                            navigate(`/employee/attendance/submit?week=${week.week_start_date}`)
+                          }
                         >
                           Submit
                         </Button>

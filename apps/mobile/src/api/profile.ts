@@ -41,6 +41,8 @@ export interface UserProfile {
   last_name: string;
   full_name: string;
   phone?: string;
+  is_email_verified?: boolean;
+  is_mobile_verified?: boolean;
   gender?: string;
   blood_group?: string;
   date_of_birth?: string;

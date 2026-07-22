@@ -9,6 +9,8 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { tokenManager } from '@/lib/token-manager';
+import { getUserProfile } from '@/features/profile/api/profile-api';
+import { updateStoredUser } from '@/lib/utils/storage';
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
@@ -33,6 +35,18 @@ export function useAuthInit() {
           { withCredentials: true }
         );
         tokenManager.setAccessToken(response.data.access);
+        // Refresh verification flags so a stale banner self-heals without re-login.
+        try {
+          const profile = await getUserProfile();
+          updateStoredUser({
+            email: profile.data.email,
+            phone: profile.data.phone,
+            is_email_verified: profile.data.is_email_verified,
+            is_mobile_verified: profile.data.is_mobile_verified,
+          });
+        } catch {
+          // Non-fatal: keep the cached user if the profile refresh fails.
+        }
       } catch {
         // Cookie expired or invalid — user will be redirected to login
         tokenManager.clear();

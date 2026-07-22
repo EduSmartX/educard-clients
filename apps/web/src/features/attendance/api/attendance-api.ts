@@ -139,7 +139,10 @@ export const getEmployeeAttendance = async (params: {
     apiParams.user = params.user_public_id;
   }
 
-  const response = await apiClient.get('/attendance/employee-attendance/', { params: apiParams });
+  const response = await apiClient.get('/attendance/employee-attendance/', {
+    params: apiParams,
+    timeout: 60000,
+  });
   const payload = response.data?.data || response.data || {};
 
   return {
@@ -162,6 +165,35 @@ export const getEmployeeAttendance = async (params: {
       previous_page: null,
     },
     submission_config: payload.submission_config || {},
+  };
+};
+
+// Lightweight stats-only endpoint for dashboards (no records/pagination).
+export const getEmployeeAttendanceStats = async (params: {
+  from_date: string;
+  to_date: string;
+  user_public_id?: string;
+}): Promise<{
+  stats: Record<string, number>;
+  date_range: { from_date: string; to_date: string };
+}> => {
+  const apiParams: Record<string, string> = {
+    from_date: params.from_date,
+    to_date: params.to_date,
+  };
+  if (params.user_public_id) {
+    apiParams.user = params.user_public_id;
+  }
+
+  const response = await apiClient.get('/attendance/employee-attendance/stats/', {
+    params: apiParams,
+    timeout: 60000,
+  });
+  const payload = response.data?.data || response.data || {};
+
+  return {
+    stats: payload.stats || {},
+    date_range: payload.date_range || { from_date: params.from_date, to_date: params.to_date },
   };
 };
 
@@ -365,6 +397,26 @@ export const getTimesheetSubmissions = async (params?: {
 
   // Otherwise it might already be in the { results, count } format
   return responseData;
+};
+
+export interface PendingTimesheetWeek {
+  week_start_date: string;
+  week_end_date: string;
+  status: 'NOT_SUBMITTED' | 'DRAFT' | 'RETURNED';
+  label: string;
+}
+
+// Get the current user's pending timesheet weeks (never-submitted + draft + returned)
+export const getPendingTimesheets = async (): Promise<{
+  results: PendingTimesheetWeek[];
+  pending_count: number;
+}> => {
+  const response = await apiClient.get('/attendance/timesheet-submission/pending/');
+  const responseData = response.data.data || response.data;
+  return {
+    results: responseData.results || [],
+    pending_count: responseData.pending_count ?? responseData.results?.length ?? 0,
+  };
 };
 
 // Get detailed timesheet submission

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   eachDayOfInterval,
@@ -288,15 +288,16 @@ export function EmployeeTimesheetSubmitPage() {
     queryClient.invalidateQueries({ queryKey: ['attendance'] });
   });
 
-  const addWeek = async () => {
-    if (!selectedDate) {
+  const addWeek = async (dateArg?: Date) => {
+    const dateToUse = dateArg ?? selectedDate;
+    if (!dateToUse) {
       toast.error('Please select a date to add its week.');
       return;
     }
 
     // Week starts on Sunday (0) and ends on Saturday (6)
-    const weekStart = startOfWeek(selectedDate, { weekStartsOn: 0 });
-    const weekEnd = endOfWeek(selectedDate, { weekStartsOn: 0 });
+    const weekStart = startOfWeek(dateToUse, { weekStartsOn: 0 });
+    const weekEnd = endOfWeek(dateToUse, { weekStartsOn: 0 });
     const weekId = format(weekStart, 'yyyy-MM-dd');
 
     if (weeks.some((week) => week.id === weekId)) {
@@ -479,6 +480,26 @@ export function EmployeeTimesheetSubmitPage() {
     }
   };
 
+  // Auto-add the week passed via ?week=YYYY-MM-DD (from the dashboard pending list)
+  const autoAddedWeekRef = useRef(false);
+  useEffect(() => {
+    if (autoAddedWeekRef.current) {
+      return;
+    }
+    const weekParam = new URLSearchParams(location.search).get('week');
+    if (!weekParam) {
+      return;
+    }
+    const parsed = parseISO(weekParam);
+    if (Number.isNaN(parsed.getTime())) {
+      return;
+    }
+    autoAddedWeekRef.current = true;
+    setSelectedDate(parsed);
+    void addWeek(parsed);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search]);
+
   const updateRow = (
     weekId: string,
     date: string,
@@ -658,7 +679,7 @@ export function EmployeeTimesheetSubmitPage() {
               />
             </div>
             <Button
-              onClick={addWeek}
+              onClick={() => addWeek()}
               disabled={addingWeek}
               size="sm"
               className="sm:size-default bg-green-600 hover:bg-green-700"

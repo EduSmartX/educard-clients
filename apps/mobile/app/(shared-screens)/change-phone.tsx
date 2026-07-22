@@ -47,6 +47,7 @@ export default function ChangePhoneScreen() {
       updateStore: (u, value, result) => ({
         ...(u as object),
         phone: (result as { phone?: string }).phone || value,
+        is_mobile_verified: (result as { is_mobile_verified?: boolean }).is_mobile_verified ?? true,
       }),
       successTitle: isVerifyMode ? 'Phone Verified' : 'Phone Updated',
       successMessage: isVerifyMode
