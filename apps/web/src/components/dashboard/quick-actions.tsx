@@ -33,6 +33,7 @@ export function QuickActions({
         {actions.map((action) => (
           <button
             key={action.id}
+            type="button"
             onClick={action.onClick}
             className="group flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors hover:bg-gray-50"
           >

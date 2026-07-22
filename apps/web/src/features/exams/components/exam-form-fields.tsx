@@ -20,35 +20,35 @@ import {
 } from '@educard/shared';
 
 interface ExamFormFieldsProps {
-  isView: boolean;
-  isEdit: boolean;
-  existingExam: Exam | undefined;
-  sessionId: string;
-  setSessionId: (v: string) => void;
-  classId: string;
-  setClassId: (v: string) => void;
-  subjectId: string;
-  setSubjectId: (v: string) => void;
-  status: ExamStatus | '';
-  setStatus: (v: ExamStatus | '') => void;
-  maxMarks: string;
-  setMaxMarks: (v: string) => void;
-  passingMarks: string;
-  setPassingMarks: (v: string) => void;
-  examDate: Date | null;
-  onExamDateChange: (d: Date | null) => void;
-  startTime: string;
-  setStartTime: (v: string) => void;
-  endTime: string;
-  setEndTime: (v: string) => void;
-  sessionsList: ExamSession[];
-  classesList: Class[];
-  subjectsList: SubjectItem[];
-  selectedSession: ExamSession | undefined;
-  selectedSubject: SubjectItem | undefined;
-  checkDuplicateExam: Exam | null | undefined;
-  fieldErrors: Record<string, string>;
-  dateError: string | undefined;
+  readonly isView: boolean;
+  readonly isEdit: boolean;
+  readonly existingExam: Exam | undefined;
+  readonly sessionId: string;
+  readonly setSessionId: (v: string) => void;
+  readonly classId: string;
+  readonly setClassId: (v: string) => void;
+  readonly subjectId: string;
+  readonly setSubjectId: (v: string) => void;
+  readonly status: ExamStatus | '';
+  readonly setStatus: (v: ExamStatus | '') => void;
+  readonly maxMarks: string;
+  readonly setMaxMarks: (v: string) => void;
+  readonly passingMarks: string;
+  readonly setPassingMarks: (v: string) => void;
+  readonly examDate: Date | null;
+  readonly onExamDateChange: (d: Date | null) => void;
+  readonly startTime: string;
+  readonly setStartTime: (v: string) => void;
+  readonly endTime: string;
+  readonly setEndTime: (v: string) => void;
+  readonly sessionsList: ExamSession[];
+  readonly classesList: Class[];
+  readonly subjectsList: SubjectItem[];
+  readonly selectedSession: ExamSession | undefined;
+  readonly selectedSubject: SubjectItem | undefined;
+  readonly checkDuplicateExam: Exam | null | undefined;
+  readonly fieldErrors: Record<string, string>;
+  readonly dateError: string | undefined;
 }
 
 export function ExamFormFields(props: ExamFormFieldsProps) {

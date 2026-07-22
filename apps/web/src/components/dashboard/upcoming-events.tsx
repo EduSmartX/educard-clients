@@ -37,6 +37,7 @@ export function UpcomingEvents({
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
         {onViewCalendar && (
           <button
+            type="button"
             onClick={onViewCalendar}
             className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
           >

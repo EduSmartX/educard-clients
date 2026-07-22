@@ -325,82 +325,90 @@ export function ExamStatusControlPage() {
               <CardTitle className="text-lg">Individual Exam Status Update</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              {isLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-                </div>
-              ) : exams.length === 0 ? (
-                <div className="px-6 py-12 text-center text-sm text-gray-500">
-                  No exams found for this session and class.
-                </div>
-              ) : (
-                <div className="divide-y">
-                  {exams.map((exam) => (
-                    <div
-                      key={exam.public_id}
-                      className="flex flex-col gap-3 px-6 py-4 md:flex-row md:items-center md:justify-between"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-gray-900">
-                          {exam.subject_name}
-                        </p>
-                        <p className="text-xs text-gray-500">{exam.date || 'Date not set'}</p>
-                        <Badge
-                          variant="outline"
-                          className={`mt-2 text-xs ${EXAM_STATUS_COLORS[exam.status] || ''}`}
-                        >
-                          Current: {EXAM_STATUS_LABELS[exam.status] || exam.status}
-                        </Badge>
-                      </div>
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                        <SearchableSelect
-                          options={statusOptions.map((option) => ({
-                            value: option.value,
-                            label: option.label,
-                          }))}
-                          value={singleTargetStatus[exam.public_id] || exam.status}
-                          onValueChange={(value) =>
-                            setSingleTargetStatus((prev) => ({
-                              ...prev,
-                              [exam.public_id]: value as ExamStatus,
-                            }))
-                          }
-                          className="w-full md:w-[200px]"
-                        />
-                        <Button
-                          variant="info"
-                          onClick={() => openSingleUpdate(exam)}
-                          disabled={isMutating}
-                          className="gap-2"
-                        >
-                          {updateExamStatusMutation.isPending ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <RotateCcw className="h-4 w-4" />
-                          )}
-                          Update
-                        </Button>
-                        <Button
-                          variant="success"
-                          onClick={() =>
-                            navigate(
-                              `${ROUTES.MARKS_ENTRY}?session=${exam.session_public_id}&class=${exam.class_public_id}&exam=${exam.public_id}`
-                            )
-                          }
-                          disabled={exam.status !== 'completed'}
-                          title={
-                            exam.status === 'completed'
-                              ? 'Enter marks for this exam'
-                              : 'Only completed exams allow marks entry'
-                          }
-                        >
-                          Enter Marks
-                        </Button>
-                      </div>
+              {(() => {
+                if (isLoading) {
+                  return (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
                     </div>
-                  ))}
-                </div>
-              )}
+                  );
+                }
+                if (exams.length === 0) {
+                  return (
+                    <div className="px-6 py-12 text-center text-sm text-gray-500">
+                      No exams found for this session and class.
+                    </div>
+                  );
+                }
+                return (
+                  <div className="divide-y">
+                    {exams.map((exam) => (
+                      <div
+                        key={exam.public_id}
+                        className="flex flex-col gap-3 px-6 py-4 md:flex-row md:items-center md:justify-between"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-gray-900">
+                            {exam.subject_name}
+                          </p>
+                          <p className="text-xs text-gray-500">{exam.date || 'Date not set'}</p>
+                          <Badge
+                            variant="outline"
+                            className={`mt-2 text-xs ${EXAM_STATUS_COLORS[exam.status] || ''}`}
+                          >
+                            Current: {EXAM_STATUS_LABELS[exam.status] || exam.status}
+                          </Badge>
+                        </div>
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                          <SearchableSelect
+                            options={statusOptions.map((option) => ({
+                              value: option.value,
+                              label: option.label,
+                            }))}
+                            value={singleTargetStatus[exam.public_id] || exam.status}
+                            onValueChange={(value) =>
+                              setSingleTargetStatus((prev) => ({
+                                ...prev,
+                                [exam.public_id]: value as ExamStatus,
+                              }))
+                            }
+                            className="w-full md:w-[200px]"
+                          />
+                          <Button
+                            variant="info"
+                            onClick={() => openSingleUpdate(exam)}
+                            disabled={isMutating}
+                            className="gap-2"
+                          >
+                            {updateExamStatusMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <RotateCcw className="h-4 w-4" />
+                            )}
+                            Update
+                          </Button>
+                          <Button
+                            variant="success"
+                            onClick={() =>
+                              navigate(
+                                `${ROUTES.MARKS_ENTRY}?session=${exam.session_public_id}&class=${exam.class_public_id}&exam=${exam.public_id}`
+                              )
+                            }
+                            disabled={exam.status !== 'completed'}
+                            title={
+                              exam.status === 'completed'
+                                ? 'Enter marks for this exam'
+                                : 'Only completed exams allow marks entry'
+                            }
+                          >
+                            Enter Marks
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </CardContent>
           </Card>
         </>

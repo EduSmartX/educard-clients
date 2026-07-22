@@ -50,6 +50,129 @@ function getStatusEmoji(status: CalendarDay['status']) {
   }
 }
 
+function getGrowthDisplay(growthRate: number | null | undefined) {
+  const isPositive = !!growthRate && growthRate >= 0;
+  return {
+    icon: isPositive ? <TrendingUp className="h-5 w-5" /> : <TrendingDown className="h-5 w-5" />,
+    color: isPositive ? 'from-emerald-400 to-teal-500' : 'from-orange-400 to-red-500',
+    emoji: isPositive ? '🦋' : '🐛',
+  };
+}
+
+function AttendanceSummaryStats({
+  isLoading,
+  summary,
+}: Readonly<{
+  isLoading: boolean;
+  summary:
+    | {
+        current_month: { percentage: number; present_days: number; working_days: number };
+        academic_year_percentage: number;
+        growth_rate?: number | null;
+      }
+    | undefined;
+}>) {
+  if (isLoading) {
+    return (
+      <>
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-28 rounded-xl" />
+        ))}
+      </>
+    );
+  }
+  const growth = getGrowthDisplay(summary?.growth_rate);
+  return (
+    <>
+      <StatCard
+        label="This Month"
+        value={`${summary?.current_month.percentage ?? 0}%`}
+        icon={<Sun className="h-5 w-5" />}
+        color="from-emerald-400 to-green-500"
+        emoji="🌻"
+      />
+      <StatCard
+        label="Academic Year"
+        value={`${summary?.academic_year_percentage ?? 0}%`}
+        icon={<TreePine className="h-5 w-5" />}
+        color="from-blue-400 to-indigo-500"
+        emoji="🌳"
+      />
+      <StatCard
+        label="Present Days"
+        value={`${summary?.current_month.present_days ?? 0}/${summary?.current_month.working_days ?? 0}`}
+        icon={<Flower2 className="h-5 w-5" />}
+        color="from-pink-400 to-rose-500"
+        emoji="🌸"
+      />
+      <StatCard
+        label="Growth"
+        value={`${(summary?.growth_rate ?? 0) > 0 ? '+' : ''}${summary?.growth_rate?.toFixed(1) ?? 0}%`}
+        icon={growth.icon}
+        color={growth.color}
+        emoji={growth.emoji}
+      />
+    </>
+  );
+}
+
+function AttendanceCalendarGrid({
+  isLoading,
+  calYear,
+  calMonth,
+  firstDayOfMonth,
+  daysInMonth,
+  calendar,
+  today,
+}: Readonly<{
+  isLoading: boolean;
+  calYear: number;
+  calMonth: number;
+  firstDayOfMonth: number;
+  daysInMonth: number;
+  calendar: CalendarDay[] | undefined;
+  today: Date;
+}>) {
+  if (isLoading) {
+    return <Skeleton className="h-64 w-full rounded-xl" />;
+  }
+  return (
+    <div className="grid grid-cols-7 gap-1">
+      {WEEKDAY_NAMES_SHORT.map((d) => (
+        <div key={d} className="py-2 text-center text-xs font-semibold text-gray-400">
+          {d}
+        </div>
+      ))}
+      {Array.from({ length: firstDayOfMonth }).map((_, i) => {
+        const paddingDate = new Date(calYear, calMonth - 1, 1 - (firstDayOfMonth - i));
+        return <div key={paddingDate.toISOString()} />;
+      })}
+      {Array.from({ length: daysInMonth }).map((_, i) => {
+        const dayNum = i + 1;
+        const dateStr = `${calYear}-${String(calMonth).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+        const dayData = calendar?.find((d) => d.date === dateStr);
+        const status = dayData?.status || 'not_marked';
+        const isToday = dateStr === today.toISOString().split('T')[0];
+
+        return (
+          <div
+            key={dayNum}
+            className={`group relative flex h-10 items-center justify-center rounded-lg text-sm font-medium transition-all ${getStatusColor(status)} ${isToday ? 'ring-2 ring-pink-400 ring-offset-1' : ''}`}
+            title={dayData?.holiday_name || status.replace('_', ' ')}
+          >
+            {dayNum}
+            {status !== 'not_marked' && status !== 'weekend' && (
+              <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-sm opacity-0 transition-opacity group-hover:opacity-100">
+                {getStatusEmoji(status)}
+              </span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function StudentAttendancePage() {
   const today = new Date();
   const [calYear, setCalYear] = useState(today.getFullYear());
@@ -95,50 +218,7 @@ export default function StudentAttendancePage() {
         transition={{ delay: 0.1 }}
         className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
       >
-        {summaryLoading ? (
-          Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)
-        ) : (
-          <>
-            <StatCard
-              label="This Month"
-              value={`${summary?.current_month.percentage ?? 0}%`}
-              icon={<Sun className="h-5 w-5" />}
-              color="from-emerald-400 to-green-500"
-              emoji="🌻"
-            />
-            <StatCard
-              label="Academic Year"
-              value={`${summary?.academic_year_percentage ?? 0}%`}
-              icon={<TreePine className="h-5 w-5" />}
-              color="from-blue-400 to-indigo-500"
-              emoji="🌳"
-            />
-            <StatCard
-              label="Present Days"
-              value={`${summary?.current_month.present_days ?? 0}/${summary?.current_month.working_days ?? 0}`}
-              icon={<Flower2 className="h-5 w-5" />}
-              color="from-pink-400 to-rose-500"
-              emoji="🌸"
-            />
-            <StatCard
-              label="Growth"
-              value={`${(summary?.growth_rate ?? 0 > 0) ? '+' : ''}${summary?.growth_rate?.toFixed(1) ?? 0}%`}
-              icon={
-                summary?.growth_rate && summary.growth_rate >= 0 ? (
-                  <TrendingUp className="h-5 w-5" />
-                ) : (
-                  <TrendingDown className="h-5 w-5" />
-                )
-              }
-              color={
-                summary?.growth_rate && summary.growth_rate >= 0
-                  ? 'from-emerald-400 to-teal-500'
-                  : 'from-orange-400 to-red-500'
-              }
-              emoji={summary?.growth_rate && summary.growth_rate >= 0 ? '🦋' : '🐛'}
-            />
-          </>
-        )}
+        <AttendanceSummaryStats isLoading={summaryLoading} summary={summary} />
       </motion.div>
 
       {/* Calendar */}
@@ -179,46 +259,15 @@ export default function StudentAttendancePage() {
             </div>
           </CardHeader>
           <CardContent className="p-4">
-            {calendarLoading ? (
-              <Skeleton className="h-64 w-full rounded-xl" />
-            ) : (
-              <div className="grid grid-cols-7 gap-1">
-                {/* Weekday headers */}
-                {WEEKDAY_NAMES_SHORT.map((d) => (
-                  <div key={d} className="py-2 text-center text-xs font-semibold text-gray-400">
-                    {d}
-                  </div>
-                ))}
-                {/* Empty cells before first day */}
-                {Array.from({ length: firstDayOfMonth }).map((_, i) => (
-                  <div key={`empty-${i}`} />
-                ))}
-                {/* Day cells */}
-                {Array.from({ length: daysInMonth }).map((_, i) => {
-                  const dayNum = i + 1;
-                  const dateStr = `${calYear}-${String(calMonth).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-                  const dayData = calendar?.find((d) => d.date === dateStr);
-                  const status = dayData?.status || 'not_marked';
-                  const isToday = dateStr === today.toISOString().split('T')[0];
-
-                  return (
-                    <div
-                      key={dayNum}
-                      className={`group relative flex h-10 items-center justify-center rounded-lg text-sm font-medium transition-all ${getStatusColor(status)} ${isToday ? 'ring-2 ring-pink-400 ring-offset-1' : ''}`}
-                      title={dayData?.holiday_name || status.replace('_', ' ')}
-                    >
-                      {dayNum}
-                      {/* Emoji tooltip on hover */}
-                      {status !== 'not_marked' && status !== 'weekend' && (
-                        <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-sm opacity-0 transition-opacity group-hover:opacity-100">
-                          {getStatusEmoji(status)}
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            <AttendanceCalendarGrid
+              isLoading={calendarLoading}
+              calYear={calYear}
+              calMonth={calMonth}
+              firstDayOfMonth={firstDayOfMonth}
+              daysInMonth={daysInMonth}
+              calendar={calendar}
+              today={today}
+            />
           </CardContent>
         </Card>
       </motion.div>
@@ -237,51 +286,57 @@ export default function StudentAttendancePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4">
-            {yearlyLoading ? (
-              <Skeleton className="h-48 w-full rounded-xl" />
-            ) : yearly?.months && yearly.months.length > 0 ? (
-              <div className="space-y-3">
-                {yearly.months.map((m) => (
-                  <div key={`${m.year}-${m.month_number}`} className="flex items-center gap-3">
-                    <span className="w-12 text-xs font-medium text-gray-500">
-                      {m.month_name.slice(0, 3)}
-                    </span>
-                    <div className="relative h-6 flex-1 overflow-hidden rounded-full bg-gray-100">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${m.percentage}%` }}
-                        transition={{ duration: 0.8, ease: 'easeOut' }}
-                        className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500"
-                      />
-                      <span className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-gray-700">
-                        {m.percentage.toFixed(0)}%
+            {(() => {
+              if (yearlyLoading) {
+                return <Skeleton className="h-48 w-full rounded-xl" />;
+              }
+              if (yearly?.months && yearly.months.length > 0) {
+                return (
+                  <div className="space-y-3">
+                    {yearly.months.map((m) => (
+                      <div key={`${m.year}-${m.month_number}`} className="flex items-center gap-3">
+                        <span className="w-12 text-xs font-medium text-gray-500">
+                          {m.month_name.slice(0, 3)}
+                        </span>
+                        <div className="relative h-6 flex-1 overflow-hidden rounded-full bg-gray-100">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${m.percentage}%` }}
+                            transition={{ duration: 0.8, ease: 'easeOut' }}
+                            className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500"
+                          />
+                          <span className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-gray-700">
+                            {m.percentage.toFixed(0)}%
+                          </span>
+                        </div>
+                        <span className="w-16 text-right text-xs text-gray-400">
+                          {m.present_days}/{m.working_days}
+                        </span>
+                      </div>
+                    ))}
+                    {/* Total */}
+                    <div className="mt-4 flex items-center gap-3 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 p-3">
+                      <span className="text-lg">🏆</span>
+                      <span className="text-sm font-semibold text-gray-700">
+                        Overall: {yearly.total_summary.overall_percentage.toFixed(1)}%
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        ({yearly.total_summary.total_present_days}/
+                        {yearly.total_summary.total_working_days} days)
                       </span>
                     </div>
-                    <span className="w-16 text-right text-xs text-gray-400">
-                      {m.present_days}/{m.working_days}
-                    </span>
                   </div>
-                ))}
-                {/* Total */}
-                <div className="mt-4 flex items-center gap-3 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 p-3">
-                  <span className="text-lg">🏆</span>
-                  <span className="text-sm font-semibold text-gray-700">
-                    Overall: {yearly.total_summary.overall_percentage.toFixed(1)}%
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    ({yearly.total_summary.total_present_days}/
-                    {yearly.total_summary.total_working_days} days)
-                  </span>
+                );
+              }
+              return (
+                <div className="flex flex-col items-center gap-3 py-12 text-center">
+                  <span className="text-4xl">🌱</span>
+                  <p className="text-sm text-gray-500">
+                    No attendance data yet for this academic year
+                  </p>
                 </div>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-3 py-12 text-center">
-                <span className="text-4xl">🌱</span>
-                <p className="text-sm text-gray-500">
-                  No attendance data yet for this academic year
-                </p>
-              </div>
-            )}
+              );
+            })()}
           </CardContent>
         </Card>
       </motion.div>
@@ -296,11 +351,11 @@ function StatCard({
   color,
   emoji,
 }: {
-  label: string;
-  value: string;
-  icon: React.ReactNode;
-  color: string;
-  emoji: string;
+  readonly label: string;
+  readonly value: string;
+  readonly icon: React.ReactNode;
+  readonly color: string;
+  readonly emoji: string;
 }) {
   return (
     <Card className="group relative overflow-hidden transition-shadow hover:shadow-lg">

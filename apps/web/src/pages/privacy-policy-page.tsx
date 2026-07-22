@@ -293,7 +293,7 @@ export default function PrivacyPolicyPage() {
               To exercise any of these rights, contact us at{' '}
               <a href={`mailto:${BRANDING.CONTACT.EMAIL}`} className="text-primary hover:underline">
                 {BRANDING.CONTACT.EMAIL}
-              </a>
+              </a>{' '}
               . We will respond within 30 days of receiving your request.
             </p>
           </section>

@@ -24,7 +24,7 @@ import { Input } from '@/components/ui/input';
 import { CommonUiText, FormPlaceholders } from '@/constants';
 import { useUserProfile } from '../hooks/queries';
 import { useSendOTP, useUpdateEmail } from '../hooks/mutations';
-import { formatCountdown } from '../utils/format-countdown';
+import { formatCountdown, getOtpHintText } from '../utils/format-countdown';
 
 const emailSchema = z.object({
   new_email: z.string().email('Invalid email address'),
@@ -168,10 +168,8 @@ export function EmailUpdateForm() {
                       <span className="text-green-600">
                         OTP sent! Expires in {formatCountdown(countdown)}
                       </span>
-                    ) : isDashboardVerificationFlow ? (
-                      'Click the button to send OTP for email verification'
                     ) : (
-                      'Click the button to send OTP to this email'
+                      getOtpHintText(isDashboardVerificationFlow, 'email')
                     )}
                   </FormDescription>
                   <FormMessage />

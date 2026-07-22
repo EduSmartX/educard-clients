@@ -14,7 +14,7 @@ import { useExamSessionDetail, type ExamResult } from '@/features/student-portal
 function formatTime(t: string | null): string {
   if (!t) return '';
   const [h, m] = t.split(':');
-  const hour = parseInt(h, 10);
+  const hour = Number.parseInt(h, 10);
   return `${hour % 12 || 12}:${m} ${hour >= 12 ? 'PM' : 'AM'}`;
 }
 
@@ -166,11 +166,12 @@ export default function StudentExamDetailScreen() {
               </View>
               {detail.exams.map((exam: ExamResult) => {
                 const pct = exam.percentage ?? 0;
-                const barColor = exam.is_absent
-                  ? colors.gray[300]
-                  : exam.passed
-                    ? colors.success[500]
-                    : colors.danger[500];
+                let barColor: string = colors.danger[500];
+                if (exam.is_absent) {
+                  barColor = colors.gray[300];
+                } else if (exam.passed) {
+                  barColor = colors.success[500];
+                }
                 return (
                   <View key={exam.exam_public_id} className="border-t border-gray-50 px-4 py-3">
                     <View className="flex-row items-center justify-between">

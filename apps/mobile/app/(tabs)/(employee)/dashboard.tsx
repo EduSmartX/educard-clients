@@ -9,7 +9,6 @@ import {
   BookOpen,
   ClipboardCheck,
   Clock,
-  Bell,
   GraduationCap,
   CalendarDays,
   Star,
@@ -27,7 +26,7 @@ import {
   Dimensions,
   useWindowDimensions,
 } from 'react-native';
-import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
+import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 
 import {
   TodaySchedule,
@@ -35,6 +34,7 @@ import {
   VerificationBanner,
   type StatCardData,
 } from '@/components/dashboard';
+import { GradientHeader, PressableScale } from '@/components/ui';
 import { useDashboardAttendanceStats, useAttendanceDisplay } from '@/features/attendance/hooks';
 import { useClasses } from '@/features/classes';
 import { useStudents } from '@/features/students';
@@ -195,59 +195,35 @@ export default function EmployeeDashboard() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={['#059669', '#10b981', '#14b8a6', '#06b6d4']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.headerGradient}
-      >
-        <Animated.View entering={FadeIn.delay(100).duration(800)} style={styles.circle1} />
-        <Animated.View entering={FadeIn.delay(200).duration(800)} style={styles.circle2} />
-        <Animated.View entering={FadeIn.delay(300).duration(800)} style={styles.circle3} />
-
-        <Animated.View
-          entering={FadeInDown.delay(100).springify().damping(15)}
-          style={styles.headerContent}
-        >
-          <View style={styles.headerTop}>
-            <View>
-              <Text style={styles.greeting}>
-                {getGreeting()} {getGreetingEmoji()}
-              </Text>
-              <Text style={styles.userName}>
-                {user?.full_name ?? user?.first_name ?? 'Teacher'}
-              </Text>
-              <Text style={styles.roleTag}>{user?.role ?? 'Teacher'}</Text>
-            </View>
-            <View style={styles.headerRight}>
-              <TouchableOpacity style={styles.notificationBtn} activeOpacity={0.7}>
-                <Bell size={18} color="#fff" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.profileBtn}
-                onPress={() => router.push('/(tabs)/(employee)/settings')}
-                activeOpacity={0.8}
-              >
-                {profileImageUrl && !imgError ? (
-                  <Image
-                    source={{ uri: profileImageUrl }}
-                    style={styles.profileImage}
-                    contentFit="cover"
-                    transition={200}
-                    onError={() => setImgError(true)}
-                  />
-                ) : (
-                  <View style={styles.profileFallback}>
-                    <Text style={styles.fallbackText}>
-                      {(user?.full_name ?? user?.first_name ?? 'T').charAt(0).toUpperCase()}
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Animated.View>
-      </LinearGradient>
+      <GradientHeader
+        greeting={`${getGreeting()} ${getGreetingEmoji()}`}
+        title={user?.full_name ?? user?.first_name ?? 'Teacher'}
+        subtitle={user?.role ?? 'Teacher'}
+        onNotificationPress={() => router.push('/(shared-screens)/notifications')}
+        right={
+          <TouchableOpacity
+            style={styles.profileBtn}
+            onPress={() => router.push('/(tabs)/(employee)/settings')}
+            activeOpacity={0.8}
+          >
+            {profileImageUrl && !imgError ? (
+              <Image
+                source={{ uri: profileImageUrl }}
+                style={styles.profileImage}
+                contentFit="cover"
+                transition={200}
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <View style={styles.profileFallback}>
+                <Text style={styles.fallbackText}>
+                  {(user?.full_name ?? user?.first_name ?? 'T').charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        }
+      />
 
       <ScrollView
         style={styles.content}
@@ -295,10 +271,9 @@ export default function EmployeeDashboard() {
                   { width: viewportWidth >= 768 ? '33.333%' : '50%' },
                 ]}
               >
-                <TouchableOpacity
+                <PressableScale
                   style={styles.quickActionCard}
                   onPress={() => router.push(action.route as never)} // NOSONAR
-                  activeOpacity={0.75}
                 >
                   <LinearGradient
                     colors={action.gradient}
@@ -309,7 +284,7 @@ export default function EmployeeDashboard() {
                     <action.icon size={22} color="#fff" strokeWidth={2} />
                   </LinearGradient>
                   <Text style={styles.quickActionLabel}>{action.title}</Text>
-                </TouchableOpacity>
+                </PressableScale>
               </Animated.View>
             ))}
           </View>

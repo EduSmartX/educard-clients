@@ -330,6 +330,49 @@ export function BulkUploadDialog({
     }
   };
 
+  const endCriticalOperationIfNeeded = () => {
+    if (criticalOperationOptions) {
+      endCriticalOperation();
+    }
+  };
+
+  const handleValidationFailure = (validationFailure: BulkUploadResult) => {
+    if (validationFailure.failed_count === -1) {
+      // Validation threw an error
+      setIsUploading(false);
+      endCriticalOperationIfNeeded();
+      return;
+    }
+    setUploadResult(validationFailure);
+    setIsUploading(false);
+    toast.error(`Validation failed: ${validationFailure.failed_count} error(s) found`);
+    endCriticalOperationIfNeeded();
+  };
+
+  const processUploadResponse = (result: BulkUploadResult) => {
+    setUploadResult(result);
+
+    invalidateQueryKeys.forEach((key) => {
+      queryClient.invalidateQueries({ queryKey: [key] });
+    });
+
+    const createdCount = result.created_count ?? 0;
+    const failedCount = result.failed_count ?? 0;
+    const pluralSuffix = createdCount > 1 ? 's' : '';
+    const message =
+      failedCount === 0
+        ? `${createdCount} record${pluralSuffix} uploaded successfully`
+        : `Created: ${createdCount}, Failed: ${failedCount}`;
+
+    if (failedCount === 0) {
+      toast.success(message);
+    } else {
+      toast.error(message);
+    }
+
+    onUploadSuccess?.(result);
+  };
+
   const handleUpload = async () => {
     if (!selectedFile) {
       toast.error(ErrorMessages.FILE_NOT_SELECTED);
@@ -349,54 +392,13 @@ export function BulkUploadDialog({
     // Run client-side validation if provided
     const validationFailure = await runClientValidation(selectedFile);
     if (validationFailure) {
-      if (validationFailure.failed_count === -1) {
-        // Validation threw an error
-        setIsUploading(false);
-        if (criticalOperationOptions) {
-          endCriticalOperation();
-        }
-        return;
-      }
-      setUploadResult(validationFailure);
-      setIsUploading(false);
-      toast.error(`Validation failed: ${validationFailure.failed_count} error(s) found`);
-      if (criticalOperationOptions) {
-        endCriticalOperation();
-      }
+      handleValidationFailure(validationFailure);
       return;
     }
 
     try {
       const response = await uploadFile(selectedFile);
-      const result = normalizeSuccessResult(response.data);
-
-      setUploadResult(result);
-
-      // Invalidate cache
-      invalidateQueryKeys.forEach((key) => {
-        queryClient.invalidateQueries({
-          queryKey: [key],
-        });
-      });
-
-      // Show success/partial success toast
-      const createdCount = result.created_count ?? 0;
-      const failedCount = result.failed_count ?? 0;
-      const pluralSuffix = createdCount > 1 ? 's' : '';
-      const message =
-        failedCount === 0
-          ? `${createdCount} record${pluralSuffix} uploaded successfully`
-          : `Created: ${createdCount}, Failed: ${failedCount}`;
-
-      if (failedCount === 0) {
-        toast.success(message);
-      } else {
-        toast.error(message);
-      }
-
-      if (onUploadSuccess) {
-        onUploadSuccess(result);
-      }
+      processUploadResponse(normalizeSuccessResult(response.data));
     } catch (error) {
       const result = extractErrorResult(error);
       if (result) {
@@ -407,9 +409,7 @@ export function BulkUploadDialog({
       }
     } finally {
       setIsUploading(false);
-      if (criticalOperationOptions) {
-        endCriticalOperation();
-      }
+      endCriticalOperationIfNeeded();
     }
   };
 

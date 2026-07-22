@@ -80,9 +80,10 @@ export function SyncProfilesForm() {
       {
         onSuccess: (data) => {
           const count = data.linked_profiles_count;
+          const profileWord = count === 1 ? 'profile' : 'profiles';
           toast.success(
             count > 0
-              ? `Profiles synced! ${count} other student profile${count === 1 ? '' : 's'} linked to this email.`
+              ? `Profiles synced! ${count} other student ${profileWord} linked to this email.`
               : data.message
           );
           form.reset();

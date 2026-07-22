@@ -299,6 +299,7 @@ export function ExamSchedulePage() {
                 <div className="flex items-center justify-between">
                   <h4 className="font-semibold text-gray-900">Schedule Summary</h4>
                   <button
+                    type="button"
                     onClick={() => navigate(ROUTES.EXAMS_LIST)}
                     className="text-sm font-medium text-purple-600 hover:text-purple-700"
                   >
@@ -491,6 +492,7 @@ function ExamCard({ exam, isAdmin, onEdit }: ExamCardProps) {
                 </>
               )}
               <button
+                type="button"
                 onClick={() => setExpanded(!expanded)}
                 className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
               >

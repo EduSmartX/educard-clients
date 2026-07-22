@@ -129,7 +129,10 @@ export function DashboardHeader({
           {/* User Profile */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 rounded-xl px-2 py-2 transition-all hover:bg-white/15 sm:gap-3 sm:px-3">
+              <button
+                type="button"
+                className="flex items-center gap-2 rounded-xl px-2 py-2 transition-all hover:bg-white/15 sm:gap-3 sm:px-3"
+              >
                 {userAvatar ? (
                   <img
                     src={userAvatar}

@@ -215,6 +215,7 @@ export function VerifyOtpStep({
   return (
     <>
       <button
+        type="button"
         onClick={onBack}
         className="inline-flex items-center gap-2 font-medium text-teal-600 transition-colors hover:text-teal-700"
       >

@@ -125,6 +125,16 @@ function getSubjectColor(subjectName: string) {
   return SUBJECT_COLORS[hash % SUBJECT_COLORS.length];
 }
 
+function getMarksStatusHeadline(isMarksLocked: boolean, completionPercent: number): string {
+  if (isMarksLocked) {
+    return '🔒 All marks published — unpublish to allow editing';
+  }
+  if (completionPercent === 100) {
+    return 'All marks entered — ready to publish';
+  }
+  return `${completionPercent}% complete — enter all marks to enable publishing`;
+}
+
 export function MarksOverviewPage() {
   const [selectedSessionId, setSelectedSessionId] = useState<string>('');
   const [selectedClassId, setSelectedClassId] = useState<string>('');
@@ -932,11 +942,7 @@ export function MarksOverviewPage() {
                         isMarksLocked ? 'text-blue-800' : 'text-green-800'
                       )}
                     >
-                      {isMarksLocked
-                        ? '🔒 All marks published — unpublish to allow editing'
-                        : stats.completionPercent === 100
-                          ? 'All marks entered — ready to publish'
-                          : `${stats.completionPercent}% complete — enter all marks to enable publishing`}
+                      {getMarksStatusHeadline(isMarksLocked, stats.completionPercent)}
                     </p>
                     <p
                       className={cn('text-sm', isMarksLocked ? 'text-blue-600' : 'text-green-600')}

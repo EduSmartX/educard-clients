@@ -426,6 +426,7 @@ export default function HomePage() {
           transition={{ duration: 2, repeat: Infinity }}
         >
           <button
+            type="button"
             onClick={scrollToFeatures}
             className="text-muted-foreground hover:text-foreground transition-colors"
           >

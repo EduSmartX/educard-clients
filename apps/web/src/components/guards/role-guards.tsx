@@ -98,25 +98,7 @@ export function ParentRoute() {
  * student accounts. Redirects non-student users to their respective dashboards.
  */
 export function StudentRoute() {
-  const { isAdmin, isEmployee, isStudent, isLoading } = useRole();
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!isStudent) {
-    // Redirect to appropriate dashboard based on role
-    if (isAdmin) {
-      return <Navigate to={ROUTES.ADMIN.DASHBOARD} replace />;
-    }
-    if (isEmployee) {
-      return <Navigate to={ROUTES.EMPLOYEE.DASHBOARD} replace />;
-    }
-    // Not logged in or invalid role
-    return <Navigate to={ROUTES.AUTH.LOGIN} replace />;
-  }
-
-  return <Outlet />;
+  return <ParentRoute />;
 }
 
 /**

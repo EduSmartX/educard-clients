@@ -26,10 +26,10 @@ export const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 // Indian Government Standard Patterns
 
 /** CIN: L/U + 5-digit industry + 2-letter state + 4-digit year + 3-letter type + 6 digits */
-export const CIN_REGEX = /^[LU][0-9]{5}[A-Z]{2}[0-9]{4}[A-Z]{3}[0-9]{6}$/;
+export const CIN_REGEX = /^[LU]\d{5}[A-Z]{2}\d{4}[A-Z]{3}\d{6}$/;
 
 /** GSTIN: 2-digit state + PAN (5 letters+4 digits+1 letter) + entity + Z + checksum */
-export const GSTIN_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
+export const GSTIN_REGEX = /^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
 
 /** Registration number: alphanumeric with slashes/hyphens, 3-50 chars */
 export const REGISTRATION_NUMBER_REGEX = /^[A-Za-z0-9/-]{3,50}$/;

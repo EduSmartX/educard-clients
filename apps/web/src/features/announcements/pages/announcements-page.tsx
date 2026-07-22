@@ -376,52 +376,62 @@ export default function AnnouncementsPage() {
           <CardDescription>The 50 most recent announcements for your school.</CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoadingAnnouncements ? (
-            <div className="space-y-2">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-          ) : announcements.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-500">No announcements sent yet.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Delivery</TableHead>
-                    <TableHead>Recipients</TableHead>
-                    <TableHead className="text-right">Sent to</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Sent</TableHead>
-                    <TableHead>By</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {announcements.map((item) => {
-                    const statusMeta = ANNOUNCEMENT_STATUS_META[item.status] ?? {
-                      label: item.status,
-                      variant: 'secondary' as const,
-                    };
-                    return (
-                      <TableRow key={item.public_id}>
-                        <TableCell className="font-medium">{item.subject}</TableCell>
-                        <TableCell>{DELIVERY_METHOD_LABELS[item.delivery_methods]}</TableCell>
-                        <TableCell>{RECIPIENT_TYPE_LABELS[item.recipient_type]}</TableCell>
-                        <TableCell className="text-right">{item.recipient_count}</TableCell>
-                        <TableCell>
-                          <Badge variant={statusMeta.variant}>{statusMeta.label}</Badge>
-                        </TableCell>
-                        <TableCell>{formatDateTime(item.sent_at ?? item.created_at)}</TableCell>
-                        <TableCell>{item.sent_by_name ?? '—'}</TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+          {(() => {
+            if (isLoadingAnnouncements) {
+              return (
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              );
+            }
+            if (announcements.length === 0) {
+              return (
+                <p className="py-8 text-center text-sm text-slate-500">
+                  No announcements sent yet.
+                </p>
+              );
+            }
+            return (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Subject</TableHead>
+                      <TableHead>Delivery</TableHead>
+                      <TableHead>Recipients</TableHead>
+                      <TableHead className="text-right">Sent to</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Sent</TableHead>
+                      <TableHead>By</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {announcements.map((item) => {
+                      const statusMeta = ANNOUNCEMENT_STATUS_META[item.status] ?? {
+                        label: item.status,
+                        variant: 'secondary' as const,
+                      };
+                      return (
+                        <TableRow key={item.public_id}>
+                          <TableCell className="font-medium">{item.subject}</TableCell>
+                          <TableCell>{DELIVERY_METHOD_LABELS[item.delivery_methods]}</TableCell>
+                          <TableCell>{RECIPIENT_TYPE_LABELS[item.recipient_type]}</TableCell>
+                          <TableCell className="text-right">{item.recipient_count}</TableCell>
+                          <TableCell>
+                            <Badge variant={statusMeta.variant}>{statusMeta.label}</Badge>
+                          </TableCell>
+                          <TableCell>{formatDateTime(item.sent_at ?? item.created_at)}</TableCell>
+                          <TableCell>{item.sent_by_name ?? '—'}</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            );
+          })()}
         </CardContent>
       </Card>
     </div>

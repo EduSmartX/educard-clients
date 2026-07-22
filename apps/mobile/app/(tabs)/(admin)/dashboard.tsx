@@ -12,7 +12,6 @@ import {
   GraduationCap,
   BookOpen,
   Clock,
-  Bell,
   Calendar,
   CalendarCheck,
   Settings,
@@ -32,7 +31,7 @@ import {
   RefreshControl,
   useWindowDimensions,
 } from 'react-native';
-import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
+import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 
 import {
   TodaySchedule,
@@ -40,6 +39,7 @@ import {
   VerificationBanner,
   type StatCardData,
 } from '@/components/dashboard';
+import { GradientHeader, PressableScale } from '@/components/ui';
 import { getMediaUrl } from '@/constants/config';
 import { useDashboardAttendanceStats, useAttendanceDisplay } from '@/features/attendance/hooks';
 import { useClasses } from '@/features/classes';
@@ -220,58 +220,35 @@ export default function AdminDashboard() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={['#059669', '#10b981', '#14b8a6', '#06b6d4']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.headerGradient}
-      >
-        <Animated.View entering={FadeIn.delay(100).duration(800)} style={styles.circle1} />
-        <Animated.View entering={FadeIn.delay(200).duration(800)} style={styles.circle2} />
-        <Animated.View entering={FadeIn.delay(300).duration(800)} style={styles.circle3} />
-
-        <Animated.View
-          entering={FadeInDown.delay(100).springify().damping(15)}
-          style={styles.headerContent}
-        >
-          <View style={styles.headerTop}>
-            <View>
-              <Text style={styles.greeting}>
-                {getGreeting()} {getGreetingEmoji()}
-              </Text>
-              <Text style={styles.userName}>{user?.full_name ?? 'Principal Admin'}</Text>
-              <Text style={styles.roleTag}>Administrator</Text>
-            </View>
-            <View style={styles.headerRight}>
-              <TouchableOpacity style={styles.notificationBtn} activeOpacity={0.7}>
-                <Bell size={18} color="#fff" />
-                <View style={styles.notificationBadge} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.profileBtn}
-                onPress={() => router.push('/(tabs)/(admin)/settings')}
-                activeOpacity={0.8}
-              >
-                {profileImageUrl && !imgError ? (
-                  <Image
-                    source={{ uri: profileImageUrl }}
-                    style={styles.profileImage}
-                    contentFit="cover"
-                    transition={200}
-                    onError={() => setImgError(true)}
-                  />
-                ) : (
-                  <View style={styles.profileFallback}>
-                    <Text style={{ color: '#fff', fontSize: 16, fontWeight: '800' }}>
-                      {(user?.full_name ?? 'A').charAt(0).toUpperCase()}
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Animated.View>
-      </LinearGradient>
+      <GradientHeader
+        greeting={`${getGreeting()} ${getGreetingEmoji()}`}
+        title={user?.full_name ?? 'Principal Admin'}
+        subtitle="Administrator"
+        onNotificationPress={() => router.push('/(shared-screens)/notifications')}
+        right={
+          <TouchableOpacity
+            style={styles.profileBtn}
+            onPress={() => router.push('/(tabs)/(admin)/settings')}
+            activeOpacity={0.8}
+          >
+            {profileImageUrl && !imgError ? (
+              <Image
+                source={{ uri: profileImageUrl }}
+                style={styles.profileImage}
+                contentFit="cover"
+                transition={200}
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <View style={styles.profileFallback}>
+                <Text style={{ color: '#fff', fontSize: 16, fontWeight: '800' }}>
+                  {(user?.full_name ?? 'A').charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        }
+      />
 
       <ScrollView
         style={styles.content}
@@ -314,14 +291,13 @@ export default function AdminDashboard() {
                   .damping(14)}
                 style={[styles.adminLinkItem, { width: viewportWidth >= 768 ? '25%' : '33.333%' }]}
               >
-                <TouchableOpacity
+                <PressableScale
                   style={styles.adminLinkCard}
                   onPress={() => {
                     if (link.route) {
                       router.push(link.route as never); // NOSONAR
                     }
                   }}
-                  activeOpacity={0.75}
                 >
                   <LinearGradient
                     colors={link.gradient}
@@ -332,7 +308,7 @@ export default function AdminDashboard() {
                     <link.icon size={22} color="#fff" strokeWidth={2} />
                   </LinearGradient>
                   <Text style={styles.adminLinkLabel}>{link.title}</Text>
-                </TouchableOpacity>
+                </PressableScale>
               </Animated.View>
             ))}
           </View>

@@ -109,6 +109,74 @@ function initDraft(slot: ClassTimetableDateSlot): OverrideDraft {
   };
 }
 
+function OverrideAssignmentFields({
+  draft,
+  onDraftChange,
+  onSubjectChange,
+  teacherOptions,
+  subjectOptions,
+  isCancelled,
+  isOtherAssignment,
+}: Readonly<{
+  draft: OverrideDraft;
+  onDraftChange: (next: Partial<OverrideDraft>) => void;
+  onSubjectChange: (subjectId: string) => void;
+  teacherOptions: Array<{ label: string; value: string }>;
+  subjectOptions: Array<{ label: string; value: string }>;
+  isCancelled: boolean;
+  isOtherAssignment: boolean;
+}>) {
+  return (
+    <div className="grid gap-3 md:grid-cols-4">
+      <SearchableSelect
+        value={draft.overrideType}
+        onValueChange={(v) => onDraftChange({ overrideType: v as TimetableOverrideType })}
+        options={OVERRIDE_TYPE_OPTIONS}
+        placeholder="Select override type"
+        searchPlaceholder="Search type..."
+      />
+
+      <SearchableSelect
+        value={draft.substituteAssignmentType}
+        onValueChange={(v) => onDraftChange({ substituteAssignmentType: v as 'subject' | 'other' })}
+        options={[...ASSIGNMENT_TYPE_OPTIONS]}
+        placeholder="Assignment mode"
+        searchPlaceholder="Search mode..."
+        disabled={isCancelled}
+      />
+
+      {isOtherAssignment ? (
+        <SearchableSelect
+          value={draft.substituteOtherType}
+          onValueChange={(v) => onDraftChange({ substituteOtherType: v })}
+          options={OTHER_TYPE_OPTIONS}
+          placeholder="Other activity type"
+          searchPlaceholder="Search activity type..."
+          disabled={isCancelled}
+        />
+      ) : (
+        <SearchableSelect
+          value={draft.substituteSubjectId}
+          onValueChange={onSubjectChange}
+          options={subjectOptions}
+          placeholder={isCancelled ? 'Not required for cancelled' : 'Substitute subject (optional)'}
+          searchPlaceholder="Search subjects..."
+          disabled={isCancelled}
+        />
+      )}
+
+      <SearchableSelect
+        value={draft.substituteTeacherId}
+        onValueChange={(v) => onDraftChange({ substituteTeacherId: v })}
+        options={teacherOptions}
+        placeholder={isCancelled ? 'Not required for cancelled' : 'Substitute teacher (optional)'}
+        searchPlaceholder="Search staff..."
+        disabled={isCancelled}
+      />
+    </div>
+  );
+}
+
 function OverrideEditorRow({
   slot,
   slotOptions,
@@ -122,17 +190,17 @@ function OverrideEditorRow({
   teacherOptions,
   subjectOptions,
 }: {
-  slot: ClassTimetableDateSlot;
-  slotOptions: Array<{ label: string; value: string }>;
-  selectedSlotId: string;
-  onSlotChange: (slotId: string) => void;
-  onRemove: () => void;
-  canRemove: boolean;
-  draft: OverrideDraft;
-  onDraftChange: (next: Partial<OverrideDraft>) => void;
-  onSubjectChange: (subjectId: string) => void;
-  teacherOptions: Array<{ label: string; value: string }>;
-  subjectOptions: Array<{ label: string; value: string }>;
+  readonly slot: ClassTimetableDateSlot;
+  readonly slotOptions: Array<{ label: string; value: string }>;
+  readonly selectedSlotId: string;
+  readonly onSlotChange: (slotId: string) => void;
+  readonly onRemove: () => void;
+  readonly canRemove: boolean;
+  readonly draft: OverrideDraft;
+  readonly onDraftChange: (next: Partial<OverrideDraft>) => void;
+  readonly onSubjectChange: (subjectId: string) => void;
+  readonly teacherOptions: Array<{ label: string; value: string }>;
+  readonly subjectOptions: Array<{ label: string; value: string }>;
 }) {
   const isCancelled = draft.overrideType === 'cancelled';
   const isOtherAssignment = draft.substituteAssignmentType === 'other';
@@ -194,59 +262,15 @@ function OverrideEditorRow({
       </CardHeader>
 
       <CardContent className="space-y-3">
-        <div className="grid gap-3 md:grid-cols-4">
-          <SearchableSelect
-            value={draft.overrideType}
-            onValueChange={(v) => onDraftChange({ overrideType: v as TimetableOverrideType })}
-            options={OVERRIDE_TYPE_OPTIONS}
-            placeholder="Select override type"
-            searchPlaceholder="Search type..."
-          />
-
-          <SearchableSelect
-            value={draft.substituteAssignmentType}
-            onValueChange={(v) =>
-              onDraftChange({ substituteAssignmentType: v as 'subject' | 'other' })
-            }
-            options={[...ASSIGNMENT_TYPE_OPTIONS]}
-            placeholder="Assignment mode"
-            searchPlaceholder="Search mode..."
-            disabled={isCancelled}
-          />
-
-          {!isOtherAssignment ? (
-            <SearchableSelect
-              value={draft.substituteSubjectId}
-              onValueChange={onSubjectChange}
-              options={subjectOptions}
-              placeholder={
-                isCancelled ? 'Not required for cancelled' : 'Substitute subject (optional)'
-              }
-              searchPlaceholder="Search subjects..."
-              disabled={isCancelled}
-            />
-          ) : (
-            <SearchableSelect
-              value={draft.substituteOtherType}
-              onValueChange={(v) => onDraftChange({ substituteOtherType: v })}
-              options={OTHER_TYPE_OPTIONS}
-              placeholder="Other activity type"
-              searchPlaceholder="Search activity type..."
-              disabled={isCancelled}
-            />
-          )}
-
-          <SearchableSelect
-            value={draft.substituteTeacherId}
-            onValueChange={(v) => onDraftChange({ substituteTeacherId: v })}
-            options={teacherOptions}
-            placeholder={
-              isCancelled ? 'Not required for cancelled' : 'Substitute teacher (optional)'
-            }
-            searchPlaceholder="Search staff..."
-            disabled={isCancelled}
-          />
-        </div>
+        <OverrideAssignmentFields
+          draft={draft}
+          onDraftChange={onDraftChange}
+          onSubjectChange={onSubjectChange}
+          teacherOptions={teacherOptions}
+          subjectOptions={subjectOptions}
+          isCancelled={isCancelled}
+          isOtherAssignment={isOtherAssignment}
+        />
 
         {isOtherAssignment && (
           <div className="grid gap-3 md:grid-cols-2">
@@ -299,7 +323,7 @@ function OverrideEditorRow({
               type="checkbox"
               checked={draft.clearOverride}
               onChange={(e) => onDraftChange({ clearOverride: e.target.checked })}
-            />
+            />{' '}
             Remove existing override for this period
           </label>
         )}
@@ -590,95 +614,109 @@ export default function TimetableOverridePage() {
         </CardContent>
       </Card>
 
-      {!classesLoading && !isAdmin && classOptions.length === 0 ? (
-        <Card className="border-blue-200 bg-blue-50">
-          <CardContent className="flex items-center gap-2 py-8 text-sm text-blue-700">
-            <Info className="h-4 w-4 shrink-0" />
-            You are not a class teacher. Only class teachers can manage period overrides.
-          </CardContent>
-        </Card>
-      ) : !selectedClassId ? (
-        <Card className="border-dashed">
-          <CardContent className="flex items-center gap-2 py-8 text-sm text-slate-500">
-            <CalendarRange className="h-4 w-4" />
-            Select a class and date to manage period overrides.
-          </CardContent>
-        </Card>
-      ) : dayLoading ? (
-        <PageLoader />
-      ) : isError ? (
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="flex items-center gap-2 py-6 text-sm text-red-700">
-            <AlertTriangle className="h-4 w-4" />
-            {(error as Error)?.message || 'Unable to load day timetable.'}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {overridableSlots.length === 0 ? (
-            <Card className="border-dashed">
-              <CardContent className="py-8 text-sm text-slate-500">
-                No overridable periods available for this class/date. Configure weekly timetable
-                entries first.
+      {(() => {
+        if (!classesLoading && !isAdmin && classOptions.length === 0) {
+          return (
+            <Card className="border-blue-200 bg-blue-50">
+              <CardContent className="flex items-center gap-2 py-8 text-sm text-blue-700">
+                <Info className="h-4 w-4 shrink-0" />
+                You are not a class teacher. Only class teachers can manage period overrides.
               </CardContent>
             </Card>
-          ) : (
-            <>
-              {selectedSlotIds.map((slotId, index) => {
-                const slot = slotById.get(slotId);
-                if (!slot) {
-                  return null;
-                }
+          );
+        }
+        if (!selectedClassId) {
+          return (
+            <Card className="border-dashed">
+              <CardContent className="flex items-center gap-2 py-8 text-sm text-slate-500">
+                <CalendarRange className="h-4 w-4" />
+                Select a class and date to manage period overrides.
+              </CardContent>
+            </Card>
+          );
+        }
+        if (dayLoading) {
+          return <PageLoader />;
+        }
+        if (isError) {
+          return (
+            <Card className="border-red-200 bg-red-50">
+              <CardContent className="flex items-center gap-2 py-6 text-sm text-red-700">
+                <AlertTriangle className="h-4 w-4" />
+                {(error as Error)?.message || 'Unable to load day timetable.'}
+              </CardContent>
+            </Card>
+          );
+        }
+        return (
+          <div className="space-y-4">
+            {overridableSlots.length === 0 ? (
+              <Card className="border-dashed">
+                <CardContent className="py-8 text-sm text-slate-500">
+                  No overridable periods available for this class/date. Configure weekly timetable
+                  entries first.
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                {selectedSlotIds.map((slotId, index) => {
+                  const slot = slotById.get(slotId);
+                  if (!slot) {
+                    return null;
+                  }
 
-                const usedByOtherRows = new Set(selectedSlotIds.filter((id, idx) => idx !== index));
-                const periodOptions = overridableSlots
-                  .filter(
-                    (item) =>
-                      item.slot_public_id === slotId || !usedByOtherRows.has(item.slot_public_id)
-                  )
-                  .map((item) => ({
-                    value: item.slot_public_id,
-                    label: `${item.label} (${item.start_time} - ${item.end_time})`,
-                  }));
+                  const usedByOtherRows = new Set(
+                    selectedSlotIds.filter((id, idx) => idx !== index)
+                  );
+                  const periodOptions = overridableSlots
+                    .filter(
+                      (item) =>
+                        item.slot_public_id === slotId || !usedByOtherRows.has(item.slot_public_id)
+                    )
+                    .map((item) => ({
+                      value: item.slot_public_id,
+                      label: `${item.label} (${item.start_time} - ${item.end_time})`,
+                    }));
 
-                return (
-                  <OverrideEditorRow
-                    key={`${slotId}-${index}`}
-                    slot={slot}
-                    slotOptions={periodOptions}
-                    selectedSlotId={slotId}
-                    onSlotChange={(value) => updatePeriodSelection(index, value)}
-                    onRemove={() => removePeriodRow(index)}
-                    canRemove={selectedSlotIds.length > 1}
-                    draft={drafts[slotId] ?? initDraft(slot)}
-                    onDraftChange={(patch) => updateDraft(slotId, patch)}
-                    onSubjectChange={(subjectId) => handleSubjectChange(slotId, subjectId)}
-                    teacherOptions={teacherOptions}
-                    subjectOptions={subjectOptions}
-                  />
-                );
-              })}
+                  return (
+                    <OverrideEditorRow
+                      key={`${slotId}-${index}`}
+                      slot={slot}
+                      slotOptions={periodOptions}
+                      selectedSlotId={slotId}
+                      onSlotChange={(value) => updatePeriodSelection(index, value)}
+                      onRemove={() => removePeriodRow(index)}
+                      canRemove={selectedSlotIds.length > 1}
+                      draft={drafts[slotId] ?? initDraft(slot)}
+                      onDraftChange={(patch) => updateDraft(slotId, patch)}
+                      onSubjectChange={(subjectId) => handleSubjectChange(slotId, subjectId)}
+                      teacherOptions={teacherOptions}
+                      subjectOptions={subjectOptions}
+                    />
+                  );
+                })}
 
-              <div className="flex flex-wrap items-center gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={addPeriodRow}
-                  disabled={!hasMorePeriodsToAdd || isSavingAll}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Another Period
-                </Button>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={addPeriodRow}
+                    disabled={!hasMorePeriodsToAdd || isSavingAll}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Another Period
+                  </Button>
 
-                <Button type="button" onClick={saveAllOverrides} disabled={isSavingAll}>
-                  <Save className="mr-2 h-4 w-4" />
-                  {isSavingAll ? 'Saving All...' : 'Save All Period Overrides'}
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
-      )}
+                  <Button type="button" onClick={saveAllOverrides} disabled={isSavingAll}>
+                    <Save className="mr-2 h-4 w-4" />
+                    {isSavingAll ? 'Saving All...' : 'Save All Period Overrides'}
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }

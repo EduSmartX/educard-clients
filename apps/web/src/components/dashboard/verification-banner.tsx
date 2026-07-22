@@ -12,9 +12,9 @@ import { AlertTriangle, Mail, Phone, X, ArrowRight } from 'lucide-react';
 import type { User } from '@/hooks/use-auth';
 
 interface VerificationBannerProps {
-  user: User;
-  onVerifyEmail?: () => void;
-  onVerifyPhone?: () => void;
+  readonly user: User;
+  readonly onVerifyEmail?: () => void;
+  readonly onVerifyPhone?: () => void;
 }
 
 interface PendingVerification {
@@ -67,6 +67,7 @@ export function VerificationBanner({
       >
         {/* Dismiss button */}
         <button
+          type="button"
           onClick={() => setDismissed(true)}
           className="absolute top-3 right-3 rounded-full p-1 text-amber-500 transition-colors hover:bg-amber-100 hover:text-amber-700"
           aria-label="Dismiss"
@@ -89,6 +90,7 @@ export function VerificationBanner({
               {pendingVerifications.map((item) => (
                 <button
                   key={`${item.type}-${item.value}`}
+                  type="button"
                   onClick={() => {
                     if (item.type === 'email') {
                       onVerifyEmail?.();

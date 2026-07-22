@@ -53,6 +53,7 @@ function SidebarNavItem({
     return (
       <div>
         <button
+          type="button"
           onClick={() => setIsOpen((prev) => !prev)}
           className={cn(
             'flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',

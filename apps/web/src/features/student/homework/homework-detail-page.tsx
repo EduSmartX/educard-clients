@@ -35,6 +35,169 @@ function formatDateTime(dtStr: string): string {
   });
 }
 
+function getSubmissionTypeLabel(submissionType: string): string {
+  if (submissionType === 'online') {
+    return 'Online';
+  }
+  if (submissionType === 'both') {
+    return 'Online / Offline';
+  }
+  return 'Offline';
+}
+
+function getSubmitButtonLabel(isPending: boolean, showResubmit: boolean): string {
+  if (isPending) {
+    return 'Submitting...';
+  }
+  return showResubmit ? 'Re-submit' : 'Submit Homework';
+}
+
+type HomeworkDetailData = NonNullable<ReturnType<typeof useHomeworkDetail>['data']>;
+type SubmissionData = NonNullable<HomeworkDetailData['my_submission']>;
+
+function PreviousSubmissionCard({
+  submission,
+  isReviewed,
+  canSubmitOnline,
+  acceptingSubmissions,
+  onResubmit,
+}: Readonly<{
+  submission: SubmissionData;
+  isReviewed: boolean;
+  canSubmitOnline: boolean;
+  acceptingSubmissions: boolean;
+  onResubmit: () => void;
+}>) {
+  const outcome = submission.review_outcome;
+  const isRejected = outcome === 'rejected';
+  const isApproved = outcome === 'approved';
+  let headerBg = 'bg-gradient-to-r from-emerald-50 to-green-50';
+  if (isRejected) {
+    headerBg = 'bg-gradient-to-r from-red-50 to-orange-50';
+  } else if (isApproved) {
+    headerBg = 'bg-gradient-to-r from-emerald-50 to-green-50';
+  } else if (isReviewed) {
+    headerBg = 'bg-gradient-to-r from-blue-50 to-indigo-50';
+  }
+  let outcomeBadge = { bg: 'bg-emerald-100 text-emerald-700', label: '📤 Submitted' };
+  if (isRejected) {
+    outcomeBadge = { bg: 'bg-red-100 text-red-700', label: '❌ Rejected' };
+  } else if (isApproved) {
+    outcomeBadge = { bg: 'bg-emerald-100 text-emerald-700', label: '✅ Approved' };
+  } else if (isReviewed) {
+    outcomeBadge = { bg: 'bg-blue-100 text-blue-700', label: '📋 Reviewed' };
+  }
+  const feedbackBorder = isRejected
+    ? 'border-red-200 bg-gradient-to-r from-red-50 to-orange-50'
+    : 'border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50';
+  const feedbackTextColor = isRejected ? 'text-red-700' : 'text-blue-700';
+  const feedbackIconColor = isRejected ? 'text-red-600' : 'text-blue-600';
+
+  return (
+    <Card className={`overflow-hidden ${isRejected ? 'border-red-200' : ''}`}>
+      <CardHeader className={`border-b ${headerBg}`}>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <CheckCircle2
+              className={`h-5 w-5 ${isRejected ? 'text-red-400' : 'text-emerald-500'}`}
+            />
+            Your Submission
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            {submission.is_late && (
+              <Badge className="bg-amber-100 text-xs text-amber-700">⚠️ Late</Badge>
+            )}
+            <Badge className={outcomeBadge.bg}>{outcomeBadge.label}</Badge>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4 p-5">
+        <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
+          <span className="flex items-center gap-1.5">
+            <Clock className="h-3.5 w-3.5" />
+            Submitted on {formatDateTime(submission.submitted_at)}
+          </span>
+          {submission.reviewed_by_name && (
+            <span className="flex items-center gap-1.5">
+              <span className="text-gray-300">•</span>
+              Reviewed by{' '}
+              <span className="font-medium text-gray-700">{submission.reviewed_by_name}</span>
+            </span>
+          )}
+          {submission.reviewed_at && (
+            <span className="flex items-center gap-1.5">
+              <span className="text-gray-300">•</span>
+              on {formatDateTime(submission.reviewed_at)}
+            </span>
+          )}
+        </div>
+
+        {submission.notes && (
+          <div className="rounded-lg bg-gray-50 p-4">
+            <p className="mb-1 text-xs font-medium text-gray-500">Your Notes</p>
+            <p className="text-sm whitespace-pre-wrap text-gray-700">{submission.notes}</p>
+          </div>
+        )}
+
+        {submission.attachments && submission.attachments.length > 0 && (
+          <div>
+            <p className="mb-2 text-xs font-medium text-gray-500">Your Files</p>
+            <div className="flex flex-wrap gap-2">
+              {submission.attachments.map((att) => (
+                <a
+                  key={att.public_id}
+                  href={att.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border bg-white px-3 py-2 text-xs text-gray-600 hover:border-emerald-300 hover:text-emerald-600"
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                  {att.file_name}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {isReviewed && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`rounded-xl border p-4 ${feedbackBorder}`}
+          >
+            <div className="mb-2 flex items-center gap-2">
+              <MessageSquare className={`h-4 w-4 ${feedbackIconColor}`} />
+              <span className={`text-sm font-semibold ${feedbackTextColor}`}>
+                Teacher&apos;s Feedback
+              </span>
+            </div>
+            {submission.feedback ? (
+              <p className="text-sm leading-relaxed whitespace-pre-wrap text-gray-700">
+                {submission.feedback}
+              </p>
+            ) : (
+              <p className="text-sm text-gray-400 italic">No written feedback provided</p>
+            )}
+          </motion.div>
+        )}
+
+        {isReviewed && isRejected && canSubmitOnline && acceptingSubmissions && (
+          <div className="pt-2">
+            <Button
+              variant="outline"
+              className="gap-2 border-orange-200 text-orange-600 hover:bg-orange-50"
+              onClick={onResubmit}
+            >
+              <Upload className="h-4 w-4" />
+              Re-submit Homework
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function HomeworkDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -215,11 +378,7 @@ export default function HomeworkDetailPage() {
               <div>
                 <p className="text-[10px] text-gray-400 uppercase">Submission</p>
                 <p className="font-medium text-gray-700">
-                  {homework.submission_type === 'online'
-                    ? 'Online'
-                    : homework.submission_type === 'both'
-                      ? 'Online / Offline'
-                      : 'Offline'}
+                  {getSubmissionTypeLabel(homework.submission_type)}
                 </p>
               </div>
             </div>
@@ -293,143 +452,15 @@ export default function HomeworkDetailPage() {
       </Card>
 
       {/* Previous Submission (shown when reviewed) */}
-      {submission &&
-        !showResubmit &&
-        (() => {
-          const outcome = submission.review_outcome;
-          const isRejected = outcome === 'rejected';
-          const isApproved = outcome === 'approved';
-          const headerBg = isRejected
-            ? 'bg-gradient-to-r from-red-50 to-orange-50'
-            : isApproved
-              ? 'bg-gradient-to-r from-emerald-50 to-green-50'
-              : isReviewed
-                ? 'bg-gradient-to-r from-blue-50 to-indigo-50'
-                : 'bg-gradient-to-r from-emerald-50 to-green-50';
-          const outcomeBadge = isRejected
-            ? { bg: 'bg-red-100 text-red-700', label: '❌ Rejected' }
-            : isApproved
-              ? { bg: 'bg-emerald-100 text-emerald-700', label: '✅ Approved' }
-              : isReviewed
-                ? { bg: 'bg-blue-100 text-blue-700', label: '📋 Reviewed' }
-                : { bg: 'bg-emerald-100 text-emerald-700', label: '📤 Submitted' };
-          const feedbackBorder = isRejected
-            ? 'border-red-200 bg-gradient-to-r from-red-50 to-orange-50'
-            : 'border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50';
-          const feedbackTextColor = isRejected ? 'text-red-700' : 'text-blue-700';
-          const feedbackIconColor = isRejected ? 'text-red-600' : 'text-blue-600';
-
-          return (
-            <Card className={`overflow-hidden ${isRejected ? 'border-red-200' : ''}`}>
-              <CardHeader className={`border-b ${headerBg}`}>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <CheckCircle2
-                      className={`h-5 w-5 ${isRejected ? 'text-red-400' : 'text-emerald-500'}`}
-                    />
-                    Your Submission
-                  </CardTitle>
-                  <div className="flex items-center gap-2">
-                    {submission.is_late && (
-                      <Badge className="bg-amber-100 text-xs text-amber-700">⚠️ Late</Badge>
-                    )}
-                    <Badge className={outcomeBadge.bg}>{outcomeBadge.label}</Badge>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4 p-5">
-                <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="h-3.5 w-3.5" />
-                    Submitted on {formatDateTime(submission.submitted_at)}
-                  </span>
-                  {submission.reviewed_by_name && (
-                    <span className="flex items-center gap-1.5">
-                      <span className="text-gray-300">•</span>
-                      Reviewed by{' '}
-                      <span className="font-medium text-gray-700">
-                        {submission.reviewed_by_name}
-                      </span>
-                    </span>
-                  )}
-                  {submission.reviewed_at && (
-                    <span className="flex items-center gap-1.5">
-                      <span className="text-gray-300">•</span>
-                      on {formatDateTime(submission.reviewed_at)}
-                    </span>
-                  )}
-                </div>
-
-                {submission.notes && (
-                  <div className="rounded-lg bg-gray-50 p-4">
-                    <p className="mb-1 text-xs font-medium text-gray-500">Your Notes</p>
-                    <p className="text-sm whitespace-pre-wrap text-gray-700">{submission.notes}</p>
-                  </div>
-                )}
-
-                {submission.attachments && submission.attachments.length > 0 && (
-                  <div>
-                    <p className="mb-2 text-xs font-medium text-gray-500">Your Files</p>
-                    <div className="flex flex-wrap gap-2">
-                      {submission.attachments.map((att) => (
-                        <a
-                          key={att.public_id}
-                          href={att.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 rounded-lg border bg-white px-3 py-2 text-xs text-gray-600 hover:border-emerald-300 hover:text-emerald-600"
-                        >
-                          <FileText className="h-3.5 w-3.5" />
-                          {att.file_name}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Teacher Feedback */}
-                {isReviewed && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`rounded-xl border p-4 ${feedbackBorder}`}
-                  >
-                    <div className="mb-2 flex items-center gap-2">
-                      <MessageSquare className={`h-4 w-4 ${feedbackIconColor}`} />
-                      <span className={`text-sm font-semibold ${feedbackTextColor}`}>
-                        Teacher&apos;s Feedback
-                      </span>
-                    </div>
-                    {submission.feedback ? (
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap text-gray-700">
-                        {submission.feedback}
-                      </p>
-                    ) : (
-                      <p className="text-sm text-gray-400 italic">No written feedback provided</p>
-                    )}
-                  </motion.div>
-                )}
-
-                {/* Re-submit button (shown for rejected) */}
-                {isReviewed &&
-                  isRejected &&
-                  canSubmitOnline &&
-                  homework.is_accepting_submissions && (
-                    <div className="pt-2">
-                      <Button
-                        variant="outline"
-                        className="gap-2 border-orange-200 text-orange-600 hover:bg-orange-50"
-                        onClick={() => setShowResubmit(true)}
-                      >
-                        <Upload className="h-4 w-4" />
-                        Re-submit Homework
-                      </Button>
-                    </div>
-                  )}
-              </CardContent>
-            </Card>
-          );
-        })()}
+      {submission && !showResubmit && (
+        <PreviousSubmissionCard
+          submission={submission}
+          isReviewed={isReviewed}
+          canSubmitOnline={canSubmitOnline}
+          acceptingSubmissions={homework.is_accepting_submissions}
+          onResubmit={() => setShowResubmit(true)}
+        />
+      )}
 
       {/* Submission History (past rejected submissions) */}
       {homework.submission_history && homework.submission_history.length > 0 && (
@@ -479,110 +510,133 @@ export default function HomeworkDetailPage() {
       )}
 
       {/* Submission Form (new or re-submit) */}
-      {showSubmitForm ? (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <Card>
-            <CardHeader className="border-b bg-gradient-to-r from-orange-50 to-amber-50">
-              <CardTitle className="text-base">
-                {showResubmit ? 'Re-submit Your Work' : 'Submit Your Work'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-5 p-5">
-              {/* Notes */}
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                  Notes <span className="text-gray-400">(optional)</span>
-                </label>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Add any notes for your teacher..."
-                  rows={4}
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm placeholder:text-gray-400 focus:border-orange-300 focus:ring-2 focus:ring-orange-100 focus:outline-none"
-                />
-              </div>
-
-              {/* File Upload */}
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                  Attachment <span className="text-gray-400">(optional)</span>
-                </label>
-                {file ? (
-                  <div className="flex items-center gap-3 rounded-lg border border-orange-200 bg-orange-50 p-3">
-                    <FileText className="h-5 w-5 text-orange-500" />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-gray-700">{file.name}</p>
-                      <p className="text-xs text-gray-400">{(file.size / 1024).toFixed(1)} KB</p>
-                    </div>
-                    <button
-                      onClick={() => setFile(null)}
-                      className="rounded-full p-1 hover:bg-orange-100"
+      {(() => {
+        if (showSubmitForm) {
+          return (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+              <Card>
+                <CardHeader className="border-b bg-gradient-to-r from-orange-50 to-amber-50">
+                  <CardTitle className="text-base">
+                    {showResubmit ? 'Re-submit Your Work' : 'Submit Your Work'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-5 p-5">
+                  {/* Notes */}
+                  <div>
+                    <label
+                      htmlFor="homework-submission-notes"
+                      className="mb-1.5 block text-sm font-medium text-gray-700"
                     >
-                      <X className="h-4 w-4 text-gray-500" />
-                    </button>
+                      Notes <span className="text-gray-400">(optional)</span>
+                    </label>
+                    <textarea
+                      id="homework-submission-notes"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Add any notes for your teacher..."
+                      rows={4}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm placeholder:text-gray-400 focus:border-orange-300 focus:ring-2 focus:ring-orange-100 focus:outline-none"
+                    />
                   </div>
-                ) : (
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-200 py-8 text-sm text-gray-500 transition-colors hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
-                  >
-                    Click to upload a file (PDF, DOC, JPG, PNG, ZIP)
-                  </button>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.zip"
-                />
-              </div>
 
-              {/* Actions */}
-              <div className="flex items-center justify-between pt-2">
-                {showResubmit && (
-                  <Button variant="ghost" onClick={() => setShowResubmit(false)}>
-                    Cancel
-                  </Button>
-                )}
-                <div className="ml-auto">
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={submitMutation.isPending}
-                    className="gap-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-200 hover:from-orange-600 hover:to-amber-600"
-                  >
-                    {submitMutation.isPending
-                      ? 'Submitting...'
-                      : showResubmit
-                        ? 'Re-submit'
-                        : 'Submit Homework'}
-                  </Button>
+                  {/* File Upload */}
+                  <div>
+                    <label
+                      htmlFor="homework-submission-file"
+                      className="mb-1.5 block text-sm font-medium text-gray-700"
+                    >
+                      Attachment <span className="text-gray-400">(optional)</span>
+                    </label>
+                    {file ? (
+                      <div className="flex items-center gap-3 rounded-lg border border-orange-200 bg-orange-50 p-3">
+                        <FileText className="h-5 w-5 text-orange-500" />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-gray-700">{file.name}</p>
+                          <p className="text-xs text-gray-400">
+                            {(file.size / 1024).toFixed(1)} KB
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setFile(null)}
+                          className="rounded-full p-1 hover:bg-orange-100"
+                        >
+                          <X className="h-4 w-4 text-gray-500" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-200 py-8 text-sm text-gray-500 transition-colors hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
+                      >
+                        Click to upload a file (PDF, DOC, JPG, PNG, ZIP)
+                      </button>
+                    )}
+                    <input
+                      id="homework-submission-file"
+                      ref={fileInputRef}
+                      type="file"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.zip"
+                    />
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-between pt-2">
+                    {showResubmit && (
+                      <Button variant="ghost" onClick={() => setShowResubmit(false)}>
+                        Cancel
+                      </Button>
+                    )}
+                    <div className="ml-auto">
+                      <Button
+                        onClick={handleSubmit}
+                        disabled={submitMutation.isPending}
+                        className="gap-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-200 hover:from-orange-600 hover:to-amber-600"
+                      >
+                        {getSubmitButtonLabel(submitMutation.isPending, showResubmit)}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          );
+        }
+        if (!submission && canSubmitOnline && !homework.is_accepting_submissions) {
+          return (
+            <Card className="border-red-200 bg-red-50/30">
+              <CardContent className="flex items-center gap-3 p-5">
+                <XCircle className="h-6 w-6 text-red-400" />
+                <div>
+                  <p className="font-medium text-red-700">Submission deadline has passed</p>
+                  <p className="text-sm text-red-500">
+                    You can no longer submit this homework online
+                  </p>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      ) : !submission && canSubmitOnline && !homework.is_accepting_submissions ? (
-        <Card className="border-red-200 bg-red-50/30">
-          <CardContent className="flex items-center gap-3 p-5">
-            <XCircle className="h-6 w-6 text-red-400" />
-            <div>
-              <p className="font-medium text-red-700">Submission deadline has passed</p>
-              <p className="text-sm text-red-500">You can no longer submit this homework online</p>
-            </div>
-          </CardContent>
-        </Card>
-      ) : !submission && !canSubmitOnline ? (
-        <Card className="border-gray-200 bg-gray-50/50">
-          <CardContent className="flex items-center gap-3 p-5">
-            <FileText className="h-6 w-6 text-gray-400" />
-            <div>
-              <p className="font-medium text-gray-700">Offline submission required</p>
-              <p className="text-sm text-gray-500">Submit this homework directly to your teacher</p>
-            </div>
-          </CardContent>
-        </Card>
-      ) : null}
+              </CardContent>
+            </Card>
+          );
+        }
+        if (!submission && !canSubmitOnline) {
+          return (
+            <Card className="border-gray-200 bg-gray-50/50">
+              <CardContent className="flex items-center gap-3 p-5">
+                <FileText className="h-6 w-6 text-gray-400" />
+                <div>
+                  <p className="font-medium text-gray-700">Offline submission required</p>
+                  <p className="text-sm text-gray-500">
+                    Submit this homework directly to your teacher
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        }
+        return null;
+      })()}
     </div>
   );
 }

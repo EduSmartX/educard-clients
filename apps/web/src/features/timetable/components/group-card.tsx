@@ -108,6 +108,7 @@ export function GroupCard({ group, colorIdx, onEdit }: Readonly<GroupCardProps>)
                   <GraduationCap className="h-3 w-3 shrink-0" />
                   {mapping.class_name}
                   <button
+                    type="button"
                     className="ml-0.5 shrink-0 rounded-full p-0.5 hover:bg-black/10"
                     onClick={() => handleRemoveClass(mapping.class_public_id)}
                   >

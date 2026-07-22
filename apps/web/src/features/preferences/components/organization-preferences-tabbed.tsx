@@ -49,13 +49,13 @@ interface PreferencesByCategoryProps {
 
 function PreferenceWithChildren({
   preference,
-  children,
+  childPreferences,
   changedValues,
   savingStates,
   handlePreferenceChange,
 }: Readonly<{
   preference: OrganizationPreference;
-  children: OrganizationPreference[];
+  childPreferences: OrganizationPreference[];
   changedValues: Record<string, string | string[]>;
   savingStates: Record<string, boolean>;
   handlePreferenceChange: (publicId: string, value: string | string[]) => void;
@@ -72,7 +72,7 @@ function PreferenceWithChildren({
         onChange={(value) => handlePreferenceChange(preference.public_id, value)}
         disabled={savingStates[preference.public_id]}
       />
-      {children.length > 0 && (
+      {childPreferences.length > 0 && (
         <div
           className={`ml-6 border-l-2 py-1 pl-3 transition-all duration-200 ${
             isParentEnabled
@@ -80,7 +80,7 @@ function PreferenceWithChildren({
               : 'pointer-events-none border-gray-100 opacity-40'
           }`}
         >
-          {children.map((child) => (
+          {childPreferences.map((child) => (
             <PreferenceField
               key={child.public_id}
               preference={child}
@@ -228,7 +228,7 @@ function PreferencesByCategory({ preferences }: Readonly<PreferencesByCategoryPr
                     <PreferenceWithChildren
                       key={preference.public_id}
                       preference={preference}
-                      children={children}
+                      childPreferences={children}
                       changedValues={changedValues}
                       savingStates={savingStates}
                       handlePreferenceChange={handlePreferenceChange}
