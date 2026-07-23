@@ -174,6 +174,12 @@ export default function HomeworkListPage() {
     return selectedDate < oneWeekFromToday;
   }, [selectedDate]);
 
+  // Past dates are view-only: no creating/adding homework.
+  const isPastDate = useMemo(
+    () => format(selectedDate, 'yyyy-MM-dd') < format(new Date(), 'yyyy-MM-dd'),
+    [selectedDate]
+  );
+
   const handlePrevDay = useCallback(async () => {
     try {
       const result = await navigateWorkingDay({
@@ -219,9 +225,12 @@ export default function HomeworkListPage() {
   }, [selectedDate, selectedClassId, navigateWorkingDay, canNavigateNext]);
 
   const handleCreateHomework = useCallback(() => {
+    if (isPastDate) {
+      return;
+    }
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
     navigate(`${ROUTES.HOMEWORK_NEW}?class=${selectedClass?.public_id}&date=${dateStr}`);
-  }, [navigate, selectedClass, selectedDate]);
+  }, [navigate, selectedClass, selectedDate, isPastDate]);
 
   const handleViewHomework = useCallback(
     (homework: Homework) => {
@@ -232,12 +241,15 @@ export default function HomeworkListPage() {
 
   const handleAddSubjectHomework = useCallback(
     (subjectId: string) => {
+      if (isPastDate) {
+        return;
+      }
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
       navigate(
         `${ROUTES.HOMEWORK_NEW}?class=${selectedClass?.public_id}&subject=${subjectId}&date=${dateStr}`
       );
     },
-    [navigate, selectedClass, selectedDate]
+    [navigate, selectedClass, selectedDate, isPastDate]
   );
 
   const deleteHomework = useDeleteHomework();
@@ -279,7 +291,7 @@ export default function HomeworkListPage() {
             onClick: handleCreateHomework,
             variant: 'brand' as const,
             icon: Plus,
-            disabled: !selectedClass,
+            disabled: !selectedClass || isPastDate,
           },
         ]}
       />
@@ -496,6 +508,7 @@ export default function HomeworkListPage() {
                     subject={subject}
                     homework={homework}
                     color={color}
+                    canAdd={!isPastDate}
                     onView={handleViewHomework}
                     onAdd={() => handleAddSubjectHomework(subject.public_id)}
                     onDelete={handleDeleteHomework}
@@ -531,6 +544,7 @@ interface SubjectCardProps {
   subject: { public_id: string; subject_name: string; teacher_name?: string };
   homework: Homework | null;
   color: SubjectColorScheme;
+  canAdd: boolean;
   onView: (homework: Homework) => void;
   onAdd: () => void;
   onDelete: (publicId: string) => void;
@@ -540,6 +554,7 @@ function SubjectCard({
   subject,
   homework,
   color,
+  canAdd,
   onView,
   onAdd,
   onDelete,
@@ -649,15 +664,17 @@ function SubjectCard({
               <Plus className={cn('h-5 w-5', color.text)} />
             </div>
             <p className="text-muted-foreground mb-3 text-sm">No homework assigned</p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onAdd}
-              className={cn('border-dashed', color.border)}
-            >
-              <Plus className="mr-1 h-4 w-4" />
-              Add Homework
-            </Button>
+            {canAdd && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onAdd}
+                className={cn('border-dashed', color.border)}
+              >
+                <Plus className="mr-1 h-4 w-4" />
+                Add Homework
+              </Button>
+            )}
           </div>
         )}
       </div>

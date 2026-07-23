@@ -1,4 +1,4 @@
-import { format, eachDayOfInterval, isBefore, isSameDay, getDay } from 'date-fns';
+import { format, eachDayOfInterval, isSameDay, getDay } from 'date-fns';
 
 interface WorkingDayPolicy {
   sunday_off: boolean;
@@ -33,17 +33,12 @@ export function isLastWorkingDayOfWeek({
   const holidays = holidaySet || new Set<string>();
   const exceptions = exceptionsMap || new Map<string, { type: string; reason: string }>();
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
   const submittedDateKey = format(date, 'yyyy-MM-dd');
 
+  // Evaluate the whole week (including days after today) so the last working day
+  // reflects the policy/holidays, not whichever day happens to be current.
   const workingDays = weekDays.filter((day) => {
-    if (isBefore(today, day) && !isSameDay(today, day)) {
-      return false;
-    }
-
     const key = format(day, 'yyyy-MM-dd');
 
     if (key === submittedDateKey) {

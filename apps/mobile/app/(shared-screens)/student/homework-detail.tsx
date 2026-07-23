@@ -188,6 +188,7 @@ export default function StudentHomeworkDetailScreen() {
   }
 
   const submission = homework.my_submission;
+  const isNotSubmitted = submission?.status === 'not_submitted';
   const canSubmitOnline =
     homework.submission_type === 'online' || homework.submission_type === 'both';
   const isReviewed = submission?.status === 'reviewed';
@@ -276,7 +277,7 @@ export default function StudentHomeworkDetailScreen() {
         </View>
 
         {/* Submission Status */}
-        {submission && !showResubmit && (
+        {submission && !isNotSubmitted && !showResubmit && (
           <SubmissionStatusCard
             submission={submission}
             isReviewed={isReviewed}
@@ -365,12 +366,15 @@ export default function StudentHomeworkDetailScreen() {
           </View>
         )}
 
-        {/* Deadline passed */}
-        {!submission && canSubmitOnline && !homework.is_accepting_submissions && (
+        {/* Deadline passed / not submitted */}
+        {(isNotSubmitted ||
+          (!submission && canSubmitOnline && !homework.is_accepting_submissions)) && (
           <View className="mx-4 mt-4 flex-row items-center rounded-xl bg-red-50 p-4">
             <XCircle size={20} color={colors.danger[500]} />
             <Text className="ml-3 text-sm font-medium text-red-700">
-              Submission deadline has passed
+              {isNotSubmitted
+                ? 'Not submitted — deadline has passed'
+                : 'Submission deadline has passed'}
             </Text>
           </View>
         )}

@@ -54,13 +54,32 @@ const homeworkItemSchema = z.object({
   reference_link: z.string().url().optional().or(z.literal('')),
 });
 
-const formSchema = z.object({
-  class_public_id: z.string().min(1, 'Class is required'),
-  assigned_date: z.date({ required_error: 'Assignment date is required' }), // The date FOR which homework is given
-  due_datetime: z.date({ required_error: 'Due date and time is required' }),
-  status: z.enum(['draft', 'published']),
-  items: z.array(homeworkItemSchema),
-});
+const formSchema = z
+  .object({
+    class_public_id: z.string().min(1, 'Class is required'),
+    assigned_date: z.date({ required_error: 'Assignment date is required' }), // The date FOR which homework is given
+    due_datetime: z.date({ required_error: 'Due date and time is required' }),
+    status: z.enum(['draft', 'published']),
+    items: z.array(homeworkItemSchema),
+  })
+  .superRefine((data, ctx) => {
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    if (data.assigned_date < startOfToday) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['assigned_date'],
+        message: 'Assignment date cannot be in the past',
+      });
+    }
+    if (data.due_datetime.getTime() < Date.now()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['due_datetime'],
+        message: 'Due date and time cannot be in the past',
+      });
+    }
+  });
 
 type FormData = z.infer<typeof formSchema>;
 

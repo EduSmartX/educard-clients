@@ -24,7 +24,7 @@ import { VerificationBanner } from '@/components/dashboard';
 import { useAuth } from '@/hooks/use-auth';
 import { ROUTES } from '@/constants/app-config';
 import { useStudentDashboard } from '../hooks/use-dashboard-data';
-import { getSubjectTheme } from '../../utils/subject-theme';
+import { SubjectAvatar } from '@/components/common';
 
 const STAGGER_CHILDREN = {
   hidden: { opacity: 0 },
@@ -306,8 +306,6 @@ export default function StudentDashboardPage() {
           {!isLoading && todayTimetable.length > 0 && (
             <div className="max-h-96 space-y-3 overflow-y-auto pr-1">
               {todayTimetable.map((entry, idx) => {
-                const theme = getSubjectTheme(entry.subject_name);
-                const SubjectIcon = theme.icon;
                 return (
                   <motion.div
                     key={entry.slot_public_id}
@@ -321,9 +319,7 @@ export default function StudentDashboardPage() {
                     }`}
                   >
                     <div className="flex min-w-0 flex-1 items-center gap-3">
-                      <div className={`shrink-0 rounded-lg p-2 ${theme.bgColor}`}>
-                        <SubjectIcon className="h-4 w-4 text-gray-600" />
-                      </div>
+                      <SubjectAvatar name={entry.subject_name} size="lg" />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <p className="truncate font-medium text-gray-900">

@@ -1,4 +1,5 @@
 import api from '@/lib/api';
+import { API_CONFIG } from '@educard/shared';
 import type {
   Student,
   StudentListItem,
@@ -144,6 +145,7 @@ export async function resetClassPasswords(
 ): Promise<ResetClassPasswordsResult> {
   const response = await api.post(`${CLASS_STUDENTS_BASE(classId)}reset-passwords/`, payload, {
     responseType: 'blob',
+    timeout: API_CONFIG.HEAVY_TIMEOUT,
   });
 
   const disposition = response.headers?.['content-disposition'] as string | undefined;
@@ -175,6 +177,7 @@ export async function bulkUploadStudents(file: File): Promise<BulkUploadResult> 
     formData,
     {
       headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: API_CONFIG.HEAVY_TIMEOUT,
     }
   );
   return response.data;
@@ -183,6 +186,7 @@ export async function bulkUploadStudents(file: File): Promise<BulkUploadResult> 
 export async function exportStudents(payload: ExportStudentsPayload = {}): Promise<Blob> {
   const response = await api.post(`${STUDENTS_BULK_BASE}/export_students_data/`, payload, {
     responseType: 'blob',
+    timeout: API_CONFIG.HEAVY_TIMEOUT,
   });
   return response.data;
 }

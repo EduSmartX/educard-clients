@@ -3,12 +3,12 @@
  * Compose and send a school-wide announcement (email / SMS) and review sent history.
  */
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { Send, Loader2, Megaphone } from 'lucide-react';
+import { Send, Loader2, Megaphone, Paperclip } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,8 @@ import { FormError } from '@/components/ui/form-error';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DatePicker } from '@/components/ui/date-picker';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { FileUpload, type UploadedFile } from '@/components/ui/file-upload';
 import { MultiSelect, type MultiSelectOption } from '@/components/ui/multi-select';
 import {
   Select,
@@ -47,6 +49,9 @@ import {
   DELIVERY_METHOD_LABELS,
   RECIPIENT_TYPE_LABELS,
   ANNOUNCEMENT_STATUS_META,
+  MAX_ATTACHMENTS,
+  MAX_ATTACHMENT_SIZE,
+  ATTACHMENT_ACCEPT,
   type CreateAnnouncementPayload,
 } from '../types';
 
@@ -122,6 +127,7 @@ export default function AnnouncementsPage() {
   });
   const { data: announcements = [], isLoading: isLoadingAnnouncements } = useAnnouncements();
   const createMutation = useCreateAnnouncement();
+  const [attachments, setAttachments] = useState<UploadedFile[]>([]);
 
   const classOptions = useMemo<MultiSelectOption[]>(
     () =>
@@ -174,12 +180,14 @@ export default function AnnouncementsPage() {
       event_date: withSms && data.event_date ? format(data.event_date, 'yyyy-MM-dd') : null,
       class_ids: data.recipient_type === 'specific_classes' ? data.class_ids : [],
       manual_emails: data.recipient_type === 'manual_emails' ? (data.manual_emails ?? '') : '',
+      attachments: withEmail ? attachments.map((item) => item.file) : [],
     };
 
     createMutation.mutate(payload, {
       onSuccess: () => {
         toast.success('Announcement queued for delivery');
         reset();
+        setAttachments([]);
       },
       onError: (error) => {
         const { toastMessage } = applyFieldErrors(error, setError);
@@ -299,13 +307,39 @@ export default function AnnouncementsPage() {
             {includesEmail && (
               <div className="space-y-2">
                 <Label htmlFor="body_html">Email body</Label>
-                <Textarea
-                  id="body_html"
-                  rows={6}
-                  placeholder="Write the email message. Basic HTML is supported."
-                  {...register('body_html')}
+                <Controller
+                  control={control}
+                  name="body_html"
+                  render={({ field }) => (
+                    <RichTextEditor
+                      id="body_html"
+                      value={field.value ?? ''}
+                      onChange={field.onChange}
+                      placeholder="Write the email message. Use the toolbar to format text, add lists and links."
+                      error={!!errors.body_html}
+                    />
+                  )}
                 />
                 <FormError message={errors.body_html?.message} />
+              </div>
+            )}
+
+            {includesEmail && (
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1.5">
+                  <Paperclip className="h-4 w-4" />
+                  Attachments
+                </Label>
+                <FileUpload
+                  files={attachments}
+                  onFilesChange={setAttachments}
+                  maxFiles={MAX_ATTACHMENTS}
+                  maxSize={MAX_ATTACHMENT_SIZE}
+                  accept={ATTACHMENT_ACCEPT}
+                  multiple
+                  placeholder="Drag files here or click to attach"
+                  helperText={`Up to ${MAX_ATTACHMENTS} files, 10 MB each (25 MB total). Images, PDF, Word, Excel, PowerPoint, text and CSV.`}
+                />
               </div>
             )}
 

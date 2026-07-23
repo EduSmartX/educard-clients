@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SCHOOL_WEEKDAYS, SLOT_TYPE_COLORS, formatSlotTime } from '@educard/shared';
-import { getSubjectTheme } from '../utils/subject-theme';
-import { PageHeader } from '@/components/common';
+import { getSubjectTheme } from '@/lib/subject-theme';
+import { PageHeader, SubjectAvatar } from '@/components/common';
 import { useTimetableForWeek } from './hooks';
 
 export default function StudentTimetablePage() {
@@ -126,7 +126,6 @@ export default function StudentTimetablePage() {
                   {periods.map((period, index) => {
                     const color = SLOT_TYPE_COLORS[period.slot_type] || SLOT_TYPE_COLORS.class;
                     const subjectTheme = getSubjectTheme(period.subject_name);
-                    const SubjectIcon = subjectTheme.icon;
                     const isBreak = period.slot_type !== 'class';
                     let rowStateClass = 'hover:bg-blue-50/40';
                     if (period.is_cancelled) {
@@ -153,11 +152,7 @@ export default function StudentTimetablePage() {
                         </div>
                         {/* Subject */}
                         <div className="flex items-center gap-2">
-                          {!isBreak && (
-                            <div className={`rounded-lg p-1.5 ${subjectTheme.bgColor}`}>
-                              <SubjectIcon className="h-4 w-4 text-gray-600" />
-                            </div>
-                          )}
+                          {!isBreak && <SubjectAvatar name={period.subject_name} size="md" />}
                           <div className="min-w-0">
                             <p className="font-medium text-gray-800">
                               {isBreak

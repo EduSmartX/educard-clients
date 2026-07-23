@@ -16,6 +16,7 @@ import { DataTable } from '@/components/ui/data-table';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import {
   PageHeader,
+  ActionButtonGroup,
   DeletedViewToggle,
   DeleteConfirmationDialog,
   ReactivateConfirmationDialog,
@@ -199,12 +200,12 @@ export function ExamSessionsPage() {
 
       <Card className="border shadow-sm">
         <CardHeader className="bg-muted/30 flex flex-col gap-4 border-b px-6 py-4">
-          <div className="flex flex-row items-center justify-between">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h3 className="text-lg font-semibold text-gray-900">All Exam Sessions</h3>
               <p className="text-sm text-gray-500">{pagination?.count || 0} session(s) found</p>
             </div>
-            <div className="flex items-center gap-3">
+            <ActionButtonGroup>
               {/* Export Button */}
               <Button
                 onClick={handleExport}
@@ -227,7 +228,7 @@ export function ExamSessionsPage() {
               {isAdmin && (
                 <DeletedViewToggle showDeleted={showDeleted} onToggle={toggleDeletedView} />
               )}
-            </div>
+            </ActionButtonGroup>
           </div>
           {/* Filters Row */}
           <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

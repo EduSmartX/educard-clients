@@ -20,9 +20,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PageHeader } from '@/components/common';
+import { PageHeader, SubjectAvatar } from '@/components/common';
 import { useHomeworkDetail, useStudentHomework, useSubmitHomework } from './hooks';
-import { getSubjectTheme } from '../utils/subject-theme';
 
 function formatDateTime(dtStr: string): string {
   return new Date(dtStr).toLocaleDateString('en-IN', {
@@ -280,8 +279,6 @@ export default function HomeworkDetailPage() {
     );
   }
 
-  const theme = getSubjectTheme(homework.subject_name);
-  const SubjectIcon = theme.icon;
   const submission = homework.my_submission;
   const canSubmitOnline =
     homework.submission_type === 'online' || homework.submission_type === 'both';
@@ -337,13 +334,11 @@ export default function HomeworkDetailPage() {
       <Card className="overflow-hidden">
         <CardHeader className="border-b bg-gradient-to-r from-orange-50 to-amber-50">
           <div className="flex items-start gap-3">
-            <div className={`rounded-xl p-2.5 ${theme.bgColor}`}>
-              <SubjectIcon className="h-6 w-6 text-gray-600" />
-            </div>
+            <SubjectAvatar name={homework.subject_name} size="xl" />
             <div className="flex-1">
               <CardTitle className="text-xl">{homework.title}</CardTitle>
               <p className="mt-1 text-sm text-gray-500">
-                {theme.emoji} {homework.subject_name}
+                {homework.subject_name}
                 {homework.chapter && (
                   <span className="ml-2 text-gray-400">• {homework.chapter}</span>
                 )}

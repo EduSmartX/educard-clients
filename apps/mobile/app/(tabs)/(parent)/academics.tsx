@@ -202,6 +202,8 @@ function HomeworkSection() {
   })();
 
   const statusStyle = (hw: HomeworkItem) => {
+    if (hw.my_submission_status === 'not_submitted')
+      return { bg: 'bg-red-100', text: 'text-red-700', label: 'Not Submitted' };
     if (hw.is_overdue) return { bg: 'bg-red-100', text: 'text-red-700', label: 'Overdue' };
     if (hw.my_submission_status === 'reviewed')
       return { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Reviewed' };

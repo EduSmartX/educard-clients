@@ -14,8 +14,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PageHeader } from '@/components/common';
-import { getSubjectTheme } from '../utils/subject-theme';
+import { PageHeader, SubjectAvatar } from '@/components/common';
 import { useStudentHomework } from './hooks';
 
 type FilterTab = 'all' | 'pending' | 'submitted' | 'overdue';
@@ -237,14 +236,7 @@ export default function StudentHomeworkPage() {
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
-                      <div
-                        className={`mt-1 rounded-lg p-2 ${getSubjectTheme(hw.subject_name).bgColor}`}
-                      >
-                        {(() => {
-                          const Icon = getSubjectTheme(hw.subject_name).icon;
-                          return <Icon className="h-5 w-5 text-gray-600" />;
-                        })()}
-                      </div>
+                      <SubjectAvatar name={hw.subject_name} size="lg" className="mt-1" />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
                           <h3 className="font-semibold text-gray-800">{hw.title}</h3>
@@ -254,7 +246,7 @@ export default function StudentHomeworkPage() {
                           </Badge>
                         </div>
                         <p className="mt-0.5 text-sm text-gray-500">
-                          {getSubjectTheme(hw.subject_name).emoji} {hw.subject_name}
+                          {hw.subject_name}
                           {hw.chapter && <span className="ml-2 text-gray-400">• {hw.chapter}</span>}
                         </p>
                         <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-400">

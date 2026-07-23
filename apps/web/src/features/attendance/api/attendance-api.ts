@@ -1,4 +1,5 @@
 import apiClient from '@/lib/api';
+import { API_CONFIG } from '@educard/shared';
 import type {
   EligibleClass,
   DateValidation,
@@ -86,7 +87,8 @@ export const bulkMarkAttendance = async (
 ): Promise<{ message: string; data: { failed: number; records: AttendanceRecord[] } }> => {
   const response = await apiClient.post(
     `/attendance/class/${classId}/student-attendance/bulk-mark/`,
-    payload
+    payload,
+    { timeout: API_CONFIG.HEAVY_TIMEOUT }
   );
   return response.data;
 };
@@ -204,7 +206,9 @@ export const bulkSubmitEmployeeAttendance = async (
     week_end_date?: string;
   }
 ) => {
-  const response = await apiClient.post('/attendance/employee-attendance/bulk_submit/', payload);
+  const response = await apiClient.post('/attendance/employee-attendance/bulk_submit/', payload, {
+    timeout: API_CONFIG.HEAVY_TIMEOUT,
+  });
   return response.data;
 };
 

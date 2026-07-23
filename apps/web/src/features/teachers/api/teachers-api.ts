@@ -4,6 +4,7 @@
  */
 
 import api from '@/lib/api';
+import { API_CONFIG } from '@educard/shared';
 import { isAdminUser } from '@/lib/utils/auth-utils';
 import type {
   Teacher,
@@ -119,6 +120,7 @@ export async function bulkUploadTeachers(file: File): Promise<TeacherBulkUploadR
     headers: {
       'Content-Type': 'multipart/form-data',
     },
+    timeout: API_CONFIG.HEAVY_TIMEOUT,
   });
 
   return response.data.data;
