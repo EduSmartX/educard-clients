@@ -1,6 +1,9 @@
 /**
  * Subject Icon & Color Mapping
  * Maps subject names to icons, colors, and emoji for student-friendly visuals.
+ *
+ * Shared across roles (student/parent/teacher/admin) — used as the fallback
+ * styling for `SubjectAvatar` when no subject illustration is available.
  */
 
 import {

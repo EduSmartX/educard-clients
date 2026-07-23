@@ -42,7 +42,7 @@ export function AuthActionButtons({
   primarySize = 'xl',
 }: AuthActionButtonsProps) {
   return (
-    <div className={cn('flex gap-3 pt-6', containerClassName)}>
+    <div className={cn('flex flex-col gap-3 pt-6 sm:flex-row', containerClassName)}>
       <Button
         type={secondaryType}
         variant={secondaryVariant}

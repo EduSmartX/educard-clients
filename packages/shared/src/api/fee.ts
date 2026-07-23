@@ -4,6 +4,7 @@
  */
 
 import type { AxiosInstance } from "axios";
+import { API_CONFIG } from "../constants/config";
 import { API_ENDPOINTS } from "../constants/api-endpoints";
 import type { ApiResponse, PaginatedResponse } from "../types/api";
 import type {
@@ -79,6 +80,7 @@ export function createFeeStructureApi(client: AxiosInstance) {
       const response = await client.post<ApiResponse<FeeStructure>>(
         API_ENDPOINTS.FEE.ADMIN.STRUCTURES.CREATE,
         data,
+        { timeout: API_CONFIG.HEAVY_TIMEOUT },
       );
       return response.data.data;
     },
@@ -91,7 +93,13 @@ export function createFeeStructureApi(client: AxiosInstance) {
       data: FeeStructureUpdatePayload,
     ): Promise<FeeStructure> => {
       const url = API_ENDPOINTS.FEE.ADMIN.STRUCTURES.UPDATE(id);
-      const response = await client.patch<ApiResponse<FeeStructure>>(url, data);
+      const response = await client.patch<ApiResponse<FeeStructure>>(
+        url,
+        data,
+        {
+          timeout: API_CONFIG.HEAVY_TIMEOUT,
+        },
+      );
       return response.data.data;
     },
 

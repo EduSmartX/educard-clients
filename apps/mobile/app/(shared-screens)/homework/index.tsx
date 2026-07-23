@@ -154,6 +154,12 @@ export default function HomeworkListScreen() {
     return selectedDate < oneWeekFromToday;
   }, [selectedDate]);
 
+  // Past dates are view-only: no create/add
+  const isPastDate = useMemo(
+    () => formatDateYYYYMMDD(selectedDate) < formatDateYYYYMMDD(new Date()),
+    [selectedDate]
+  );
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     void refetch().finally(() => setRefreshing(false));
@@ -192,6 +198,7 @@ export default function HomeworkListScreen() {
   }, [selectedDate, selectedClassId, navigateWorkingDay, canNavigateNext]);
 
   const handleCreateHomework = (subjectId?: string) => {
+    if (isPastDate) return;
     const dateStr = formatDateYYYYMMDD(new Date());
     const subjectParam = subjectId ? `&subject=${subjectId}` : '';
     router.push(
@@ -230,7 +237,7 @@ export default function HomeworkListScreen() {
 
   const renderSubjectCard = ({ item, index }: { item: SubjectHomework; index: number }) => {
     const { subject, homework, color } = item;
-    const canAdd = canAddForSubject(subject);
+    const canAdd = canAddForSubject(subject) && !isPastDate;
 
     return (
       <Animated.View entering={FadeInDown.delay(index * 50).duration(400)}>

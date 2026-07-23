@@ -184,6 +184,28 @@ export default function CreateHomeworkScreen() {
       return;
     }
 
+    // Block past dates (view-only for past dates)
+    const todayStr = getTodayDate();
+    if (assignedDate < todayStr) {
+      setFieldError('assigned_date', 'Assigned date cannot be in the past');
+      showToast({
+        type: 'error',
+        title: 'Invalid date',
+        message: 'Assigned date cannot be in the past',
+      });
+      return;
+    }
+    const dueDateTime = new Date(`${dueDate}T${dueTime}:00`);
+    if (!Number.isNaN(dueDateTime.getTime()) && dueDateTime.getTime() < Date.now()) {
+      setFieldError('dueDate', 'Due date and time cannot be in the past');
+      showToast({
+        type: 'error',
+        title: 'Invalid date',
+        message: 'Due date and time cannot be in the past',
+      });
+      return;
+    }
+
     const payload: HomeworkCreatePayload = {
       title: title.trim(),
       description: description.trim() || undefined,
@@ -403,11 +425,25 @@ export default function CreateHomeworkScreen() {
               <FormDatePicker
                 label="Assigned Date"
                 value={assignedDate}
-                onChange={setAssignedDate}
+                onChange={(v) => {
+                  setAssignedDate(v);
+                  clearFieldError('assigned_date');
+                }}
+                minDate={getTodayDate()}
+                error={errors.assigned_date}
               />
             </View>
             <View style={{ flex: 1 }}>
-              <FormDatePicker label="Due Date" value={dueDate} onChange={setDueDate} />
+              <FormDatePicker
+                label="Due Date"
+                value={dueDate}
+                onChange={(v) => {
+                  setDueDate(v);
+                  clearFieldError('dueDate');
+                }}
+                minDate={assignedDate || getTodayDate()}
+                error={errors.dueDate}
+              />
             </View>
           </View>
           <View style={styles.timeRow}>

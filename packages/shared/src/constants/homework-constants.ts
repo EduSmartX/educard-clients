@@ -27,6 +27,7 @@ export const SUBMISSION_STATUS = {
   PENDING: "pending",
   SUBMITTED: "submitted",
   REVIEWED: "reviewed",
+  NOT_SUBMITTED: "not_submitted",
 } as const;
 
 export const ATTACHMENT_TYPE = {
@@ -79,6 +80,7 @@ export const SUBMISSION_STATUS_OPTIONS = [
   { value: SUBMISSION_STATUS.PENDING, label: "Pending" },
   { value: SUBMISSION_STATUS.SUBMITTED, label: "Submitted" },
   { value: SUBMISSION_STATUS.REVIEWED, label: "Reviewed" },
+  { value: SUBMISSION_STATUS.NOT_SUBMITTED, label: "Not Submitted" },
 ] as const;
 
 // ============== Color Maps ==============
@@ -93,6 +95,7 @@ export const SUBMISSION_STATUS_COLORS: Record<SubmissionStatus, string> = {
   [SUBMISSION_STATUS.PENDING]: "#94A3B8",
   [SUBMISSION_STATUS.SUBMITTED]: "#3B82F6",
   [SUBMISSION_STATUS.REVIEWED]: "#10B981",
+  [SUBMISSION_STATUS.NOT_SUBMITTED]: "#EF4444",
 };
 
 export const HOMEWORK_STATUS_LABELS: Record<HomeworkStatus, string> = {
@@ -105,6 +108,7 @@ export const SUBMISSION_STATUS_LABELS: Record<SubmissionStatus, string> = {
   [SUBMISSION_STATUS.PENDING]: "Pending",
   [SUBMISSION_STATUS.SUBMITTED]: "Submitted",
   [SUBMISSION_STATUS.REVIEWED]: "Reviewed",
+  [SUBMISSION_STATUS.NOT_SUBMITTED]: "Not Submitted",
 };
 
 // ============== Utility Functions ==============

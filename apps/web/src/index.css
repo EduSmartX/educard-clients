@@ -512,3 +512,82 @@
     animation-delay: 0.4s;
   }
 }
+
+/* Rich text editor (TipTap) content styling */
+.rte-content {
+  min-height: 11rem;
+  max-height: 28rem;
+  overflow-y: auto;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: hsl(222 47% 11%);
+}
+
+.rte-content p {
+  margin: 0 0 0.6rem;
+}
+
+.rte-content p:last-child {
+  margin-bottom: 0;
+}
+
+.rte-content h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 1rem 0 0.5rem;
+}
+
+.rte-content h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0.9rem 0 0.45rem;
+}
+
+.rte-content ul,
+.rte-content ol {
+  padding-left: 1.5rem;
+  margin: 0 0 0.6rem;
+}
+
+.rte-content ul {
+  list-style: disc;
+}
+
+.rte-content ol {
+  list-style: decimal;
+}
+
+.rte-content li {
+  margin: 0.15rem 0;
+}
+
+.rte-content li p {
+  margin: 0;
+}
+
+.rte-content a {
+  color: hsl(250 91% 62%);
+  text-decoration: underline;
+}
+
+.rte-content strong {
+  font-weight: 700;
+}
+
+.rte-content blockquote {
+  border-left: 3px solid hsl(220 13% 85%);
+  padding-left: 0.85rem;
+  margin: 0 0 0.6rem;
+  color: hsl(220 9% 40%);
+  font-style: italic;
+}
+
+/* Placeholder shown when the editor is empty */
+.rte-content p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: hsl(220 9% 55%);
+}

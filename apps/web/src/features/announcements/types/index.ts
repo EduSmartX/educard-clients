@@ -24,6 +24,7 @@ export interface CreateAnnouncementPayload {
   recipient_type: RecipientType;
   class_ids?: string[];
   manual_emails?: string;
+  attachments?: File[];
 }
 
 export interface AnnouncementListItem {
@@ -77,4 +78,24 @@ export const ANNOUNCEMENT_STATUS_META: Record<
   sent: { label: 'Sent', variant: 'success' },
   draft: { label: 'Draft', variant: 'secondary' },
   failed: { label: 'Failed', variant: 'destructive' },
+};
+
+// Email attachment limits — kept in sync with backend AnnouncementAttachmentConfig.
+export const MAX_ATTACHMENTS = 5;
+export const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
+
+export const ATTACHMENT_ACCEPT: Record<string, string[]> = {
+  'image/jpeg': ['.jpg', '.jpeg'],
+  'image/png': ['.png'],
+  'image/gif': ['.gif'],
+  'image/webp': ['.webp'],
+  'application/pdf': ['.pdf'],
+  'application/msword': ['.doc'],
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+  'application/vnd.ms-excel': ['.xls'],
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+  'application/vnd.ms-powerpoint': ['.ppt'],
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
+  'text/plain': ['.txt'],
+  'text/csv': ['.csv'],
 };

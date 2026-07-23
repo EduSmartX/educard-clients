@@ -11,6 +11,7 @@ import { useClasses } from '@/features/classes/hooks/use-classes';
 import { useAcademicYears, useCurrentAcademicYear } from '@/features/organizations/hooks/queries';
 import type { FeeStructureCreatePayload } from '@educard/shared';
 import { ROUTES } from '@/constants/app-config';
+import { useCriticalOperation } from '@/providers/critical-operation-provider';
 
 export function CreateFeeStructurePage() {
   const navigate = useNavigate();
@@ -23,11 +24,20 @@ export function CreateFeeStructurePage() {
 
   // Mutation
   const createMutation = useCreateFeeStructure();
+  const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
 
   const handleSubmit = (data: FeeStructureCreatePayload) => {
+    beginCriticalOperation({
+      title: 'Creating fee structure',
+      description:
+        'Creating this fee structure generates fee records for every applicable student. This may take some time…',
+    });
     createMutation.mutate(data, {
       onSuccess: () => {
         navigate(ROUTES.FEES.STRUCTURES);
+      },
+      onSettled: () => {
+        endCriticalOperation();
       },
     });
   };

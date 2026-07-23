@@ -4,6 +4,7 @@
  */
 
 import api from '../api';
+import { API_CONFIG } from '@educard/shared';
 import { isAdminUser } from '../utils/auth-utils';
 import {
   handleListResponse,
@@ -250,7 +251,9 @@ export const leaveApi = {
    */
   createAllocation: async (payload: LeaveAllocationPayload): Promise<LeaveAllocation> => {
     const endpoint = getEndpoint('allocations', true); // Write operation
-    const { data } = await api.post(endpoint, payload);
+    const { data } = await api.post(endpoint, payload, {
+      timeout: API_CONFIG.HEAVY_TIMEOUT,
+    });
     return handleDetailResponse<LeaveAllocation>(data, 'createAllocation');
   },
 
@@ -262,7 +265,9 @@ export const leaveApi = {
     payload: Partial<LeaveAllocationPayload>
   ): Promise<LeaveAllocation> => {
     const endpoint = getEndpoint('allocations', true); // Write operation
-    const { data } = await api.patch(`${endpoint}${publicId}/`, payload);
+    const { data } = await api.patch(`${endpoint}${publicId}/`, payload, {
+      timeout: API_CONFIG.HEAVY_TIMEOUT,
+    });
     return handleDetailResponse<LeaveAllocation>(data, 'updateAllocation');
   },
 

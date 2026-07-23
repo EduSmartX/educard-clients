@@ -4,7 +4,7 @@
  */
 
 import api from '@/lib/api';
-import { isAdminUser } from '@/lib/utils/auth-utils';
+import { API_CONFIG } from '@educard/shared';
 import type {
   ClassGroup,
   ClassGroupCreatePayload,
@@ -91,7 +91,8 @@ export async function bulkSaveSlots(
 ): Promise<TimetableSlot[]> {
   const response = await api.post<ApiResponse<TimetableSlot[]>>(
     `${ADMIN_BASE}/class-groups/${groupPublicId}/slots/`,
-    data
+    data,
+    { timeout: API_CONFIG.HEAVY_TIMEOUT }
   );
   return response.data.data;
 }
@@ -124,9 +125,9 @@ export async function deleteEntry(publicId: string): Promise<void> {
 }
 
 export async function fetchClassTimetable(classPublicId: string): Promise<ClassTimetableResponse> {
-  const baseUrl = isAdminUser() ? ADMIN_BASE : EMPLOYEE_BASE;
+  // Class timetable read is served under the employee namespace (admins allowed via IsOrgAdminOrTeacher).
   const response = await api.get<ApiResponse<ClassTimetableResponse>>(
-    `${baseUrl}/class/${classPublicId}/timetable/`
+    `${EMPLOYEE_BASE}/class/${classPublicId}/timetable/`
   );
   return response.data.data;
 }

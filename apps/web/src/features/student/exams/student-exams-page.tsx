@@ -4,10 +4,9 @@ import { FileText, Calendar, Trophy, ChevronRight, Award, Target, Clock, User } 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PageHeader } from '@/components/common';
+import { PageHeader, SubjectAvatar } from '@/components/common';
 import { useStudentExamSessions, useExamSessionDetail } from './hooks';
 import type { ExamSession, ExamResult } from './api';
-import { getSubjectTheme } from '../utils/subject-theme';
 
 function formatDate(dateStr: string | null) {
   if (!dateStr) {
@@ -264,8 +263,6 @@ function ScheduleView({ detail }: Readonly<{ detail: ExamSessionDetailData }>) {
         {/* Rows */}
         <div className="divide-y">
           {detail.exams.map((exam, idx) => {
-            const theme = getSubjectTheme(exam.subject_name);
-            const SubjectIcon = theme.icon;
             return (
               <motion.div
                 key={exam.exam_public_id}
@@ -279,9 +276,7 @@ function ScheduleView({ detail }: Readonly<{ detail: ExamSessionDetailData }>) {
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-sm font-bold text-blue-600">
                     {idx + 1}
                   </div>
-                  <div className={`rounded-lg p-1.5 ${theme.bgColor}`}>
-                    <SubjectIcon className="h-4 w-4 text-gray-600" />
-                  </div>
+                  <SubjectAvatar name={exam.subject_name} size="md" />
                   <div className="min-w-0">
                     <p className="font-medium text-gray-800">{exam.subject_name}</p>
                   </div>
@@ -435,8 +430,6 @@ function ResultsView({ detail }: Readonly<{ detail: ExamSessionDetailData }>) {
 }
 
 function SubjectResultRow({ exam }: { readonly exam: ExamResult }) {
-  const theme = getSubjectTheme(exam.subject_name);
-  const SubjectIcon = theme.icon;
   const percentage = exam.percentage ?? 0;
   const passed = exam.passed;
 
@@ -450,11 +443,8 @@ function SubjectResultRow({ exam }: { readonly exam: ExamResult }) {
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className={`rounded-lg p-1.5 ${theme.bgColor}`}>
-            <SubjectIcon className="h-4 w-4 text-gray-600" />
-          </div>
+          <SubjectAvatar name={exam.subject_name} size="md" />
           <span className="text-sm font-medium text-gray-800">{exam.subject_name}</span>
-          <span className="text-lg">{theme.emoji}</span>
         </div>
         <div className="flex items-center gap-2 text-sm">
           {exam.is_absent ? (

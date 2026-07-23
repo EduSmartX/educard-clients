@@ -38,6 +38,7 @@ import {
 } from '@/components/ui/dialog';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { toast } from 'sonner';
+import { useCriticalOperation } from '@/providers/critical-operation-provider';
 import { useClassGroups, useSlots } from '../hooks/queries';
 import { useBulkSaveSlots, useClearDaySlots } from '../hooks/mutations';
 import {
@@ -394,6 +395,7 @@ function SlotEditor({
   onSaved: () => void;
 }>) {
   const saveMutation = useBulkSaveSlots(group.public_id);
+  const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
 
   const [slots, setSlots] = useState<BulkSlotItem[]>([]);
   const [loadedDayKey, setLoadedDayKey] = useState<string>('');
@@ -515,6 +517,11 @@ function SlotEditor({
       return;
     }
 
+    beginCriticalOperation({
+      title: 'Saving timetable slots',
+      description:
+        'Applying the schedule to the selected day(s) also updates the related teacher/subject assignments. This may take some time…',
+    });
     saveMutation.mutate(
       {
         days_of_week: saveToDays,
@@ -527,6 +534,9 @@ function SlotEditor({
       {
         onSuccess: () => {
           onSaved();
+        },
+        onSettled: () => {
+          endCriticalOperation();
         },
       }
     );
@@ -685,6 +695,7 @@ export function TimeSlotsTab() {
   );
 
   const saveMutation = useBulkSaveSlots(selectedGroupId);
+  const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
   const clearDayMutation = useClearDaySlots(selectedGroupId, {
     onSuccess: () => {
       setShowDeleteDayConfirm(false);
@@ -713,6 +724,11 @@ export function TimeSlotsTab() {
 
       // Save the same slots for ALL target days (plus the active day)
       const allDays = [...new Set([activeDay, ...targetDays])].sort((a, b) => a - b);
+      beginCriticalOperation({
+        title: 'Copying timetable slots',
+        description:
+          "Copying this day's schedule replaces slots on the selected days and updates related teacher/subject assignments. This may take some time…",
+      });
       saveMutation.mutate(
         {
           days_of_week: allDays,
@@ -731,10 +747,13 @@ export function TimeSlotsTab() {
             setCopyCounter((c) => c + 1);
             refetch();
           },
+          onSettled: () => {
+            endCriticalOperation();
+          },
         }
       );
     },
-    [activeDay, daySlotMap, saveMutation, refetch]
+    [activeDay, daySlotMap, saveMutation, refetch, beginCriticalOperation, endCriticalOperation]
   );
 
   if (groupsLoading) {

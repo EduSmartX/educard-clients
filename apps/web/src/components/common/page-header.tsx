@@ -203,7 +203,7 @@ export function PageHeader({
                     onClick={action.onClick}
                     variant={action.variant || 'brand'}
                     disabled={action.disabled}
-                    className={cn('transition-all duration-200', action.className)}
+                    className={cn('w-full transition-all duration-200 sm:w-auto', action.className)}
                   >
                     {ActionIcon && <ActionIcon className="h-4 w-4" strokeWidth={2} />}
                     <span>{action.label}</span>

@@ -10,18 +10,19 @@
 import apiClient from '@/lib/api';
 import { isAdminUser } from '@/lib/utils/auth-utils';
 import type { ApiListResponse } from '@/lib/utils/api-response-handler';
-import type {
-  ExamSession,
-  ExamSessionListParams,
-  ExamSessionCreatePayload,
-  ExamSessionUpdatePayload,
-  Exam,
-  ExamListParams,
-  ExamCreatePayload,
-  ExamUpdatePayload,
-  BulkExamCreatePayload,
-  Mark,
-  BulkMarkEntry,
+import {
+  API_CONFIG,
+  type ExamSession,
+  type ExamSessionListParams,
+  type ExamSessionCreatePayload,
+  type ExamSessionUpdatePayload,
+  type Exam,
+  type ExamListParams,
+  type ExamCreatePayload,
+  type ExamUpdatePayload,
+  type BulkExamCreatePayload,
+  type Mark,
+  type BulkMarkEntry,
 } from '@educard/shared';
 
 // Role-based endpoints
@@ -141,7 +142,8 @@ export async function createExam(data: ExamCreatePayload): Promise<Exam> {
 export async function bulkCreateExams(data: BulkExamCreatePayload): Promise<Exam[]> {
   const response = await apiClient.post<{ success: boolean; data: Exam[] }>(
     `${ADMIN_BASE_URL}/exams/bulk-create/`,
-    data
+    data,
+    { timeout: API_CONFIG.HEAVY_TIMEOUT }
   );
   return response.data.data;
 }
@@ -197,7 +199,7 @@ export async function bulkUpsertMarks(
     success: boolean;
     message: string;
     data: Mark[] | BulkUpsertPublishSummary;
-  }>(`${baseUrl}/marks/bulk-upsert/`, data);
+  }>(`${baseUrl}/marks/bulk-upsert/`, data, { timeout: API_CONFIG.HEAVY_TIMEOUT });
   return response.data;
 }
 

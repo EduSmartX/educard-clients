@@ -3,6 +3,7 @@
  */
 
 import api from '@/lib/api';
+import { API_CONFIG } from '@educard/shared';
 import type {
   Homework,
   HomeworkDetail,
@@ -69,7 +70,9 @@ export async function fetchHomeworkDetail(publicId: string): Promise<HomeworkDet
 }
 
 export async function createHomework(data: HomeworkCreatePayload): Promise<HomeworkDetail> {
-  const response = await api.post<ApiResponse<HomeworkDetail>>(`${BASE_URL}/`, data);
+  const response = await api.post<ApiResponse<HomeworkDetail>>(`${BASE_URL}/`, data, {
+    timeout: API_CONFIG.HEAVY_TIMEOUT,
+  });
   return response.data.data;
 }
 
@@ -82,9 +85,11 @@ export interface BulkCreateHomeworkResponse {
 export async function bulkCreateHomework(
   items: HomeworkCreatePayload[]
 ): Promise<BulkCreateHomeworkResponse> {
-  const response = await api.post<ApiResponse<BulkCreateHomeworkResponse>>(`${BASE_URL}/bulk/`, {
-    items,
-  });
+  const response = await api.post<ApiResponse<BulkCreateHomeworkResponse>>(
+    `${BASE_URL}/bulk/`,
+    { items },
+    { timeout: API_CONFIG.HEAVY_TIMEOUT }
+  );
   return response.data.data;
 }
 
