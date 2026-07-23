@@ -56,3 +56,10 @@ export async function createAnnouncement(
   const response = await api.post<ApiResponse<{ public_id: string }>>(`${BASE_URL}/`, jsonPayload);
   return response.data.data;
 }
+
+export async function retryAnnouncement(publicId: string): Promise<{ public_id: string }> {
+  const response = await api.post<ApiResponse<{ public_id: string }>>(`${BASE_URL}/retry/`, {
+    public_id: publicId,
+  });
+  return response.data.data;
+}

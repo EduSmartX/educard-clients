@@ -31,3 +31,14 @@ export function useCreateAnnouncement() {
     },
   });
 }
+
+export function useRetryAnnouncement() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (publicId: string) => announcementsApi.retryAnnouncement(publicId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: announcementKeys.lists() });
+    },
+  });
+}

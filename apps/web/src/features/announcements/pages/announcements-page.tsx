@@ -8,7 +8,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { Send, Loader2, Megaphone, Paperclip } from 'lucide-react';
+import { Send, Loader2, Megaphone, Paperclip, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -42,7 +42,7 @@ import { PageHeader } from '@/components/common';
 import { applyFieldErrors } from '@/lib/utils/error-handler';
 import { useClasses } from '@/features/classes/hooks/use-classes';
 
-import { useAnnouncements, useCreateAnnouncement } from '../hooks';
+import { useAnnouncements, useCreateAnnouncement, useRetryAnnouncement } from '../hooks';
 import {
   DELIVERY_METHOD_OPTIONS,
   RECIPIENT_TYPE_OPTIONS,
@@ -127,7 +127,9 @@ export default function AnnouncementsPage() {
   });
   const { data: announcements = [], isLoading: isLoadingAnnouncements } = useAnnouncements();
   const createMutation = useCreateAnnouncement();
+  const retryMutation = useRetryAnnouncement();
   const [attachments, setAttachments] = useState<UploadedFile[]>([]);
+  const [retryingId, setRetryingId] = useState<string | null>(null);
 
   const classOptions = useMemo<MultiSelectOption[]>(
     () =>
@@ -192,6 +194,22 @@ export default function AnnouncementsPage() {
       onError: (error) => {
         const { toastMessage } = applyFieldErrors(error, setError);
         toast.error(toastMessage || 'Failed to send announcement');
+      },
+    });
+  };
+
+  const handleRetry = (publicId: string) => {
+    setRetryingId(publicId);
+    retryMutation.mutate(publicId, {
+      onSuccess: () => {
+        toast.success('Failed announcement queued for retry');
+      },
+      onError: (error) => {
+        const { toastMessage } = applyFieldErrors(error, setError);
+        toast.error(toastMessage || 'Failed to retry announcement');
+      },
+      onSettled: () => {
+        setRetryingId(null);
       },
     });
   };
@@ -439,6 +457,7 @@ export default function AnnouncementsPage() {
                       <TableHead>Status</TableHead>
                       <TableHead>Sent</TableHead>
                       <TableHead>By</TableHead>
+                      <TableHead className="text-right">Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -458,6 +477,26 @@ export default function AnnouncementsPage() {
                           </TableCell>
                           <TableCell>{formatDateTime(item.sent_at ?? item.created_at)}</TableCell>
                           <TableCell>{item.sent_by_name ?? '—'}</TableCell>
+                          <TableCell className="text-right">
+                            {item.status === 'failed' ? (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleRetry(item.public_id)}
+                                disabled={retryMutation.isPending && retryingId === item.public_id}
+                              >
+                                {retryMutation.isPending && retryingId === item.public_id ? (
+                                  <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <RotateCcw className="mr-2 h-3.5 w-3.5" />
+                                )}
+                                Retry
+                              </Button>
+                            ) : (
+                              '—'
+                            )}
+                          </TableCell>
                         </TableRow>
                       );
                     })}

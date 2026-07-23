@@ -37,6 +37,8 @@ export default function SharedScreensLayout() {
       <Stack.Screen name="leave/edit" />
       {/* Holidays */}
       <Stack.Screen name="holidays/index" />
+      {/* Announcements */}
+      <Stack.Screen name="announcements/index" />
       {/* Organization Preferences */}
       <Stack.Screen name="preferences/index" />
       {/* Timesheets */}

@@ -20,6 +20,7 @@ import {
   ChevronRight,
   SlidersHorizontal,
   Calendar,
+  Megaphone,
   Info,
   Mail,
   Phone,
@@ -79,6 +80,15 @@ export default function SettingsScreen() {
         iconColor: '#0284c7',
         iconBg: '#e0f2fe',
         route: '/(shared-screens)/preferences',
+      },
+      {
+        id: 'announcements',
+        title: 'Announcements',
+        subtitle: 'View status and retry failed sends',
+        icon: Megaphone,
+        iconColor: '#7c3aed',
+        iconBg: '#f3e8ff',
+        route: '/(shared-screens)/announcements',
       },
       {
         id: 'holidays',
