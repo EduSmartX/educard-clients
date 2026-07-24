@@ -18,7 +18,7 @@
       "infoPlist": {
         "NSCameraUsageDescription": "EduCard uses the camera to scan documents and capture photos.",
         "NSPhotoLibraryUsageDescription": "EduCard needs access to your photos to upload profile pictures.",
-        "UIBackgroundModes": ["remote-notification"]
+        "UIBackgroundModes": ["remote-notification", "remote-notification"]
       }
     },
     "android": {
@@ -32,7 +32,17 @@
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.RECEIVE_BOOT_COMPLETED",
-        "android.permission.VIBRATE"
+        "android.permission.VIBRATE",
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
+        "android.permission.ACCESS_MEDIA_LOCATION",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_AUDIO"
       ]
     },
     "plugins": [
@@ -70,15 +80,15 @@
         "origin": false
       },
       "eas": {
-        "projectId": "d9c6670e-79ff-407d-a750-2775e4ff067d"
+        "projectId": "446a1726-8af2-4012-9eb1-40563167e821"
       }
     },
-    "owner": "educard-org",
+    "owner": "vinodreddem",
     "runtimeVersion": {
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/d9c6670e-79ff-407d-a750-2775e4ff067d"
+      "url": "https://u.expo.dev/446a1726-8af2-4012-9eb1-40563167e821"
     }
   }
 }

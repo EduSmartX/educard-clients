@@ -15,7 +15,8 @@
       },
       "env": {
         "APP_VARIANT": "development"
-      }
+      },
+      "channel": "development"
     },
     "preview": {
       "distribution": "internal",
