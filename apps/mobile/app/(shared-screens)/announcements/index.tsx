@@ -143,10 +143,33 @@ export default function AnnouncementsScreen() {
                     <Text style={s.metaLine}>
                       Recipients: {RECIPIENT_TYPE_LABELS[item.recipient_type]}
                     </Text>
-                    <Text style={s.metaLine}>Sent to: {item.recipient_count}</Text>
                     <Text style={s.metaLine}>
                       Sent: {formatDateTime(item.sent_at ?? item.created_at)}
                     </Text>
+
+                    {(() => {
+                      const stats = item.delivery_stats?.recipients;
+                      const totalUsers = stats?.target_users;
+                      const verifiedUsers = stats?.eligible_users;
+                      return (
+                        <View style={s.statsRow}>
+                          <View style={s.statBox}>
+                            <Text style={s.statValue}>{totalUsers ?? '—'}</Text>
+                            <Text style={s.statLabel}>Total users</Text>
+                          </View>
+                          <View style={s.statBox}>
+                            <Text style={s.statValue}>{verifiedUsers ?? '—'}</Text>
+                            <Text style={s.statLabel}>Verified</Text>
+                          </View>
+                          <View style={s.statBox}>
+                            <Text style={[s.statValue, s.statValueAccent]}>
+                              {item.recipient_count}
+                            </Text>
+                            <Text style={s.statLabel}>Sent to</Text>
+                          </View>
+                        </View>
+                      );
+                    })()}
 
                     {item.status === 'failed' && (
                       <View style={s.retryRow}>
@@ -259,6 +282,33 @@ const s = StyleSheet.create({
     color: '#334155',
     fontSize: 13,
     marginBottom: 3,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 10,
+  },
+  statBox: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 10,
+    paddingVertical: 8,
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+  },
+  statValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  statValueAccent: {
+    color: '#1d4ed8',
+  },
+  statLabel: {
+    fontSize: 11,
+    color: '#64748b',
+    marginTop: 2,
   },
   retryRow: {
     marginTop: 10,

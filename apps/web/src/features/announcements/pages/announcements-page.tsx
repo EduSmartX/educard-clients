@@ -8,7 +8,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { Send, Loader2, Megaphone, Paperclip, RotateCcw } from 'lucide-react';
+import { Send, Loader2, Megaphone, Paperclip, RotateCcw, Info } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,7 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import {
   Table,
   TableHeader,
@@ -53,6 +54,7 @@ import {
   MAX_ATTACHMENT_SIZE,
   ATTACHMENT_ACCEPT,
   type CreateAnnouncementPayload,
+  type AnnouncementListItem,
 } from '../types';
 
 const announcementSchema = z
@@ -118,6 +120,65 @@ function formatDateTime(value: string | null): string {
     return '—';
   }
   return format(parsed, 'dd MMM yyyy, HH:mm');
+}
+
+function RecipientStatsCell({ item }: { item: AnnouncementListItem }) {
+  const recipients = item.delivery_stats?.recipients;
+  const totalUsers = recipients?.target_users;
+  const eligibleUsers = recipients?.eligible_users;
+  const hasStats = recipients !== undefined && totalUsers !== undefined;
+
+  const rows: { label: string; value: number | undefined }[] = [
+    { label: 'Total users', value: recipients?.target_users },
+    { label: 'Active users', value: recipients?.active_users },
+    { label: 'Verified (reachable)', value: recipients?.eligible_users },
+    { label: 'Verified email', value: recipients?.eligible_email_users },
+    { label: 'Verified phone', value: recipients?.eligible_phone_users },
+    { label: 'Unverified email', value: recipients?.unverified_email_users },
+    { label: 'Unverified phone', value: recipients?.unverified_phone_users },
+  ];
+
+  return (
+    <div className="flex flex-col items-end gap-0.5">
+      <div className="flex items-center gap-1">
+        <span className="font-medium">{item.recipient_count}</span>
+        {hasStats && totalUsers ? (
+          <span className="text-xs text-slate-400">/ {totalUsers}</span>
+        ) : null}
+        {hasStats ? (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  className="text-slate-400 hover:text-slate-600"
+                  aria-label="Delivery statistics"
+                >
+                  <Info className="h-3.5 w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-[220px] bg-white text-slate-700 shadow-md ring-1 ring-slate-200">
+                <div className="space-y-1">
+                  <p className="font-semibold text-slate-900">Recipient breakdown</p>
+                  {rows
+                    .filter((r) => r.value !== undefined)
+                    .map((r) => (
+                      <div key={r.label} className="flex justify-between gap-4">
+                        <span className="text-slate-500">{r.label}</span>
+                        <span className="font-medium text-slate-800">{r.value}</span>
+                      </div>
+                    ))}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : null}
+      </div>
+      {hasStats && eligibleUsers !== undefined && totalUsers !== undefined ? (
+        <span className="text-[11px] text-slate-400">{eligibleUsers} verified</span>
+      ) : null}
+    </div>
+  );
 }
 
 export default function AnnouncementsPage() {
@@ -453,7 +514,7 @@ export default function AnnouncementsPage() {
                       <TableHead>Subject</TableHead>
                       <TableHead>Delivery</TableHead>
                       <TableHead>Recipients</TableHead>
-                      <TableHead className="text-right">Sent to</TableHead>
+                      <TableHead className="text-right">Sent to / Total</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Sent</TableHead>
                       <TableHead>By</TableHead>
@@ -471,7 +532,9 @@ export default function AnnouncementsPage() {
                           <TableCell className="font-medium">{item.subject}</TableCell>
                           <TableCell>{DELIVERY_METHOD_LABELS[item.delivery_methods]}</TableCell>
                           <TableCell>{RECIPIENT_TYPE_LABELS[item.recipient_type]}</TableCell>
-                          <TableCell className="text-right">{item.recipient_count}</TableCell>
+                          <TableCell className="text-right">
+                            <RecipientStatsCell item={item} />
+                          </TableCell>
                           <TableCell>
                             <Badge variant={statusMeta.variant}>{statusMeta.label}</Badge>
                           </TableCell>
