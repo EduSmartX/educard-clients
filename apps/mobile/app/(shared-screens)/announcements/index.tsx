@@ -1,8 +1,8 @@
 import { extractApiError, getRoleGradient } from '@educard/shared';
+import { format } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Loader2, Megaphone, RotateCcw } from 'lucide-react-native';
-import { format } from 'date-fns';
 import { useState } from 'react';
 import {
   ActivityIndicator,
