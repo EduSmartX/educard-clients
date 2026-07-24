@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "EduCard",
-    "slug": "educard",
+    "slug": "educard-dev-apk",
     "version": "1.0.0",
     "orientation": "default",
     "icon": "./assets/icon.png",
@@ -73,7 +73,7 @@
         "projectId": "d9c6670e-79ff-407d-a750-2775e4ff067d"
       }
     },
-    "owner": "vinodreddem",
+    "owner": "educard-org",
     "runtimeVersion": {
       "policy": "appVersion"
     },
