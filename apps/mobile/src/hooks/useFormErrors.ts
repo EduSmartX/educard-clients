@@ -17,68 +17,31 @@ interface UseFormErrorsOptions {
 }
 
 interface UseFormErrorsReturn {
-  /** Current field errors */
   errors: FormErrors;
-  /** Set error for a specific field */
   setFieldError: (field: string, message: string) => void;
-  /** Clear error for a specific field */
   clearFieldError: (field: string) => void;
-  /** Clear all errors */
   clearAllErrors: () => void;
-  /** Get error for a specific field */
   getError: (field: string) => string | undefined;
-  /** Check if a field has an error */
   hasError: (field: string) => boolean;
-  /** Check if any errors exist */
   hasAnyError: () => boolean;
-  /** Handle API error response - sets field errors and shows alert for non-field errors */
   handleApiError: (error: unknown, fallbackMessage?: string) => void;
-  /** Validate required fields - returns true if all valid */
   validateRequired: (
-    fields: { name: string; value: string | undefined; label: string }[]
+    fields: { name: string; value: string | undefined; label: string }[],
   ) => boolean;
 }
 
-/**
- * Hook for managing form field errors with API error handling
- *
- * @example
- * ```tsx
- * const { errors, setFieldError, handleApiError, validateRequired } = useFormErrors();
- *
- * // Client-side validation
- * const handleSubmit = () => {
- *   const isValid = validateRequired([
- *     { name: 'title', value: title, label: 'Title' },
- *     { name: 'subject_public_id', value: selectedSubject, label: 'Subject' },
- *   ]);
- *   if (!isValid) return;
- *
- *   createMutation.mutate(payload, {
- *     onError: (error) => handleApiError(error, 'Failed to create homework'),
- *   });
- * };
- *
- * // In form
- * <FormInput
- *   label="Title"
- *   value={title}
- *   onChangeText={(text) => { setTitle(text); clearFieldError('title'); }}
- *   error={errors.title}
- *   required
- * />
- * ```
- */
-export function useFormErrors(options: UseFormErrorsOptions = {}): UseFormErrorsReturn {
+export function useFormErrors(
+  options: UseFormErrorsOptions = {},
+): UseFormErrorsReturn {
   const { showAlert = true, fieldMap = {} } = options;
   const [errors, setErrors] = useState<FormErrors>({});
 
   const setFieldError = useCallback((field: string, message: string) => {
-    setErrors((prev) => ({ ...prev, [field]: message }));
+    setErrors(prev => ({ ...prev, [field]: message }));
   }, []);
 
   const clearFieldError = useCallback((field: string) => {
-    setErrors((prev) => {
+    setErrors(prev => {
       const next = { ...prev };
       delete next[field];
       return next;
@@ -93,14 +56,14 @@ export function useFormErrors(options: UseFormErrorsOptions = {}): UseFormErrors
     (field: string): string | undefined => {
       return errors[field];
     },
-    [errors]
+    [errors],
   );
 
   const hasError = useCallback(
     (field: string): boolean => {
       return !!errors[field];
     },
-    [errors]
+    [errors],
   );
 
   const hasAnyError = useCallback((): boolean => {
@@ -124,7 +87,7 @@ export function useFormErrors(options: UseFormErrorsOptions = {}): UseFormErrors
 
       // Set field errors for inline display
       if (hasFieldErrors) {
-        setErrors((prev) => ({ ...prev, ...mappedErrors }));
+        setErrors(prev => ({ ...prev, ...mappedErrors }));
         // Inline field errors are sufficient - no alert needed
         return;
       }
@@ -135,11 +98,13 @@ export function useFormErrors(options: UseFormErrorsOptions = {}): UseFormErrors
         Alert.alert('Error', alertMessage);
       }
     },
-    [fieldMap, showAlert]
+    [fieldMap, showAlert],
   );
 
   const validateRequired = useCallback(
-    (fields: { name: string; value: string | undefined; label: string }[]): boolean => {
+    (
+      fields: { name: string; value: string | undefined; label: string }[],
+    ): boolean => {
       let isValid = true;
       const newErrors: FormErrors = {};
 
@@ -151,7 +116,7 @@ export function useFormErrors(options: UseFormErrorsOptions = {}): UseFormErrors
       });
 
       if (!isValid) {
-        setErrors((prev) => ({ ...prev, ...newErrors }));
+        setErrors(prev => ({ ...prev, ...newErrors }));
         if (showAlert) {
           Alert.alert('Validation Error', 'Please fill in all required fields');
         }
@@ -159,7 +124,7 @@ export function useFormErrors(options: UseFormErrorsOptions = {}): UseFormErrors
 
       return isValid;
     },
-    [showAlert]
+    [showAlert],
   );
 
   return {

@@ -15,17 +15,27 @@ import { SubjectsList } from './index';
 import { ROUTES } from '@/constants/app-config';
 import { useDeletedView } from '@/hooks/use-deleted-view';
 import { useAuth } from '@/hooks/use-auth';
+import { useFilterParams } from '@/hooks/use-filter-params';
 import type { Subject } from '../types';
 
 export function SubjectsManagement() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Pagination state
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState<Record<string, string>>({});
+  // Filter/search/pagination state — persisted in URL search params
+  const {
+    filters,
+    search: searchQuery,
+    page,
+    pageSize,
+    setFilters,
+    setSearch: setSearchQuery,
+    setPage,
+    setPageSize,
+  } = useFilterParams<Record<string, string>>(
+    { class_assigned: '', subject_master: '', teacher: '' },
+    { defaultPageSize: 10 }
+  );
 
   // Dialog states
   const [subjectToDelete, setSubjectToDelete] = useState<Subject | undefined>();

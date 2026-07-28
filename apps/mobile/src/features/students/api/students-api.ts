@@ -11,7 +11,11 @@ import type {
 } from '@educard/shared';
 
 import { apiClient } from '@/api/client';
-import { safeDelete, bulkUploadExcel, type BulkUploadResponse } from '@/api/shared-api-utils';
+import {
+  safeDelete,
+  bulkUploadExcel,
+  type BulkUploadResponse,
+} from '@/api/shared-api-utils';
 
 export type StudentListResponse = ApiListResponse<Student>;
 export type StudentDetailResponse = ApiDetailResponse<Student>;
@@ -26,31 +30,34 @@ export interface StudentQueryParams {
   embed_images?: boolean;
 }
 
-export async function getStudents(params?: StudentQueryParams): Promise<StudentListResponse> {
-  // By default, embed images to reduce HTTP requests (Base64 data URIs)
+export async function getStudents(
+  params?: StudentQueryParams,
+): Promise<StudentListResponse> {
   const queryParams = { embed_images: true, ...params };
-  const response = await apiClient.get<StudentListResponse>(API_ENDPOINTS.STUDENTS.LIST, {
-    params: queryParams,
-  });
+  const response = await apiClient.get<StudentListResponse>(
+    API_ENDPOINTS.STUDENTS.LIST,
+    {
+      params: queryParams,
+    },
+  );
   return response.data;
 }
 
 export async function getStudentById(
   publicId: string,
-  isDeleted?: boolean
+  isDeleted?: boolean,
 ): Promise<StudentDetailResponse> {
   const response = await apiClient.get<StudentDetailResponse>(
     API_ENDPOINTS.STUDENTS.DETAIL(publicId),
-    isDeleted ? { params: { is_deleted: true } } : undefined
+    isDeleted ? { params: { is_deleted: true } } : undefined,
   );
   return response.data;
 }
 
 export async function createStudent(
   data: Partial<Student> & { class_id: string },
-  forceCreate?: boolean
+  forceCreate?: boolean,
 ): Promise<StudentDetailResponse> {
-  // Students must be created via class-level endpoint
   const classId = data.class_id;
   if (!classId) {
     throw new Error('class_id is required to create a student');
@@ -59,25 +66,25 @@ export async function createStudent(
   const response = await apiClient.post<StudentDetailResponse>(
     API_ENDPOINTS.STUDENTS.CLASS_LEVEL.CREATE(classId),
     data,
-    { params }
+    { params },
   );
   return response.data;
 }
 
 export async function updateStudent(
   publicId: string,
-  data: Partial<Student>
+  data: Partial<Student>,
 ): Promise<ApiMessageResponse> {
   const response = await apiClient.patch<ApiMessageResponse>(
     API_ENDPOINTS.STUDENTS.PATCH(publicId),
-    data
+    data,
   );
   return response.data;
 }
 
 export async function deleteStudent(
   publicId: string,
-  classId?: string
+  classId?: string,
 ): Promise<ApiMessageResponse> {
   const url = classId
     ? API_ENDPOINTS.STUDENTS.CLASS_LEVEL.DELETE(classId, publicId)
@@ -87,7 +94,7 @@ export async function deleteStudent(
 
 export async function restoreStudent(
   publicId: string,
-  classId?: string
+  classId?: string,
 ): Promise<StudentDetailResponse> {
   const url = classId
     ? API_ENDPOINTS.STUDENTS.CLASS_LEVEL.ACTIVATE(classId, publicId)
@@ -104,16 +111,20 @@ export async function downloadStudentTemplate(minimalFields = false): Promise<{
   message: string;
   filePath?: string;
 }> {
-  // Import dynamically to avoid circular dependencies
   const { downloadAndSaveTemplate } = await import('@/utils/download-template');
 
   const params = minimalFields ? { minimal_fields: 'true' } : {};
-  const response = await apiClient.get('/students/bulk-operations/download_template/', {
-    params,
-    responseType: 'arraybuffer',
-  });
+  const response = await apiClient.get(
+    '/students/bulk-operations/download_template/',
+    {
+      params,
+      responseType: 'arraybuffer',
+    },
+  );
 
-  const fileName = minimalFields ? 'students_template_minimal.xlsx' : 'students_template.xlsx';
+  const fileName = minimalFields
+    ? 'students_template_minimal.xlsx'
+    : 'students_template.xlsx';
   return downloadAndSaveTemplate(response.data as ArrayBuffer, fileName);
 }
 
@@ -123,15 +134,17 @@ export async function downloadStudentTemplate(minimalFields = false): Promise<{
 export async function bulkUploadStudents(
   fileUri: string,
   fileName: string,
-  minimalFields = false
+  minimalFields = false,
 ): Promise<BulkUploadResponse> {
   const params = minimalFields ? { minimal_fields: 'true' } : undefined;
-  return bulkUploadExcel('/students/bulk-operations/bulk_upload/', fileUri, fileName, params);
+  return bulkUploadExcel(
+    '/students/bulk-operations/bulk_upload/',
+    fileUri,
+    fileName,
+    params,
+  );
 }
 
-/**
- * Export students data payload
- */
 export interface ExportStudentsPayload {
   class_id?: string;
   class_ids?: string[];
@@ -143,10 +156,9 @@ export interface ExportStudentsPayload {
 
 /**
  * Export students data as Excel and optionally send via email.
- * Returns the file saved to device.
  */
 export async function exportStudentsData(
-  payload: ExportStudentsPayload = {}
+  payload: ExportStudentsPayload = {},
 ): Promise<{ success: boolean; message: string; filePath?: string }> {
   const { downloadAndSaveTemplate } = await import('@/utils/download-template');
 
@@ -155,7 +167,7 @@ export async function exportStudentsData(
     payload,
     {
       responseType: 'arraybuffer',
-    }
+    },
   );
 
   const timestamp = new Date().toISOString().slice(0, 10);

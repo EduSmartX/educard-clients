@@ -1,7 +1,5 @@
 // Re-export timetable types from shared package
-// Note: api.ts also re-exports some of these types, so we only export the ones not in api.ts here
 export {
-  // Types not exported from api.ts
   type SlotType,
   type ClassGroupMapping,
   type ClassGroupUpdatePayload,

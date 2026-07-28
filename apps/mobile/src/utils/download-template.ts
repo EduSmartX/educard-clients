@@ -1,12 +1,13 @@
 /**
  * Download Template Utility
- * Downloads Excel templates and saves them to the Downloads folder on Android
+ * Downloads Excel templates and saves them to Downloads (Android) or shares (iOS).
+ * Bare RN implementation using react-native-fs + react-native-share.
  */
 
-import { File, Paths } from 'expo-file-system';
-import * as MediaLibrary from 'expo-media-library';
-import * as Sharing from 'expo-sharing';
-import { Platform, Alert } from 'react-native';
+/* eslint-disable no-bitwise */
+import { Platform } from 'react-native';
+import RNFS from 'react-native-fs';
+import Share from 'react-native-share';
 
 interface DownloadResult {
   success: boolean;
@@ -14,89 +15,97 @@ interface DownloadResult {
   filePath?: string;
 }
 
+const XLSX_MIME =
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+const BASE64_CHARS =
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let result = '';
+  let i = 0;
+  for (; i + 2 < bytes.length; i += 3) {
+    const n = (bytes[i] << 16) | (bytes[i + 1] << 8) | bytes[i + 2];
+    result +=
+      BASE64_CHARS[(n >> 18) & 63] +
+      BASE64_CHARS[(n >> 12) & 63] +
+      BASE64_CHARS[(n >> 6) & 63] +
+      BASE64_CHARS[n & 63];
+  }
+  const remaining = bytes.length - i;
+  if (remaining === 1) {
+    const n = bytes[i] << 16;
+    result +=
+      BASE64_CHARS[(n >> 18) & 63] + BASE64_CHARS[(n >> 12) & 63] + '==';
+  } else if (remaining === 2) {
+    const n = (bytes[i] << 16) | (bytes[i + 1] << 8);
+    result +=
+      BASE64_CHARS[(n >> 18) & 63] +
+      BASE64_CHARS[(n >> 12) & 63] +
+      BASE64_CHARS[(n >> 6) & 63] +
+      '=';
+  }
+  return result;
+}
+
 /**
  * Download template data and save to Downloads folder (Android) or share (iOS)
- * @param templateData - ArrayBuffer containing the file data
- * @param fileName - Name of the file (e.g., 'subjects_template.xlsx')
- * @returns Promise with download result
  */
 export async function downloadAndSaveTemplate(
   templateData: ArrayBuffer,
-  fileName: string
+  fileName: string,
 ): Promise<DownloadResult> {
   try {
-    // Create file in cache directory
-    const cacheFile = new File(Paths.cache, fileName);
-
-    // Write the data to the file
-    const uint8Array = new Uint8Array(templateData);
-    await cacheFile.write(uint8Array);
+    const base64 = arrayBufferToBase64(templateData);
+    const cachePath = `${RNFS.CachesDirectoryPath}/${fileName}`;
+    await RNFS.writeFile(cachePath, base64, 'base64');
 
     if (Platform.OS === 'android') {
-      // On Android, save to MediaLibrary (Downloads folder)
       try {
-        // Request permissions
-        const { status } = await MediaLibrary.requestPermissionsAsync();
-
-        if (status !== 'granted') {
-          // Fallback to sharing if permission denied
-          Alert.alert(
-            'Permission Required',
-            'Storage permission is needed to save files. Using share instead.'
-          );
-          return await shareFile(cacheFile.uri, fileName);
-        }
-
-        // Create asset in MediaLibrary (saves to Downloads)
-        const asset = await MediaLibrary.createAssetAsync(cacheFile.uri);
-
-        // Clean up cache file
-        if (cacheFile.exists) {
-          await cacheFile.delete();
-        }
-
+        const downloadPath = `${RNFS.DownloadDirectoryPath}/${fileName}`;
+        await RNFS.copyFile(cachePath, downloadPath);
         return {
           success: true,
           message: `Template saved to Downloads folder: ${fileName}`,
-          filePath: asset.uri,
+          filePath: downloadPath,
         };
       } catch {
-        // MediaLibrary save failed, fallback to sharing
-        return await shareFile(cacheFile.uri, fileName);
+        return await shareFile(cachePath, fileName);
       }
-    } else {
-      // On iOS, use sharing
-      return await shareFile(cacheFile.uri, fileName);
     }
+
+    return await shareFile(cachePath, fileName);
   } catch (error) {
     return {
       success: false,
-      message: error instanceof Error ? error.message : 'Failed to download template',
+      message:
+        error instanceof Error ? error.message : 'Failed to download template',
     };
   }
 }
 
-/**
- * Share file using system share sheet
- */
-async function shareFile(filePath: string, fileName: string): Promise<DownloadResult> {
-  const isAvailable = await Sharing.isAvailableAsync();
-
-  if (!isAvailable) {
+async function shareFile(
+  filePath: string,
+  fileName: string,
+): Promise<DownloadResult> {
+  try {
+    await Share.open({
+      url: `file://${filePath}`,
+      type: XLSX_MIME,
+      title: `Save ${fileName}`,
+      failOnCancel: false,
+    });
+    return {
+      success: true,
+      message:
+        'Template shared successfully. Please save it to your preferred location.',
+      filePath,
+    };
+  } catch {
     return {
       success: false,
-      message: 'Sharing is not available on this device',
+      message: 'Sharing was cancelled or is not available',
     };
   }
-
-  await Sharing.shareAsync(filePath, {
-    mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    dialogTitle: `Save ${fileName}`,
-  });
-
-  return {
-    success: true,
-    message: 'Template shared successfully. Please save it to your preferred location.',
-    filePath,
-  };
 }

@@ -1,5 +1,5 @@
 /**
- * Students Feature — Barrel Exports
+ * Students Feature — Barrel Exports (data layer + list component)
  */
 
 export {
@@ -23,5 +23,5 @@ export {
   useRestoreStudent,
 } from './hooks/use-students';
 
-// Components
-export { StudentList, type StudentListProps } from './components';
+export { StudentList, ExportStudentsModal } from './components';
+export type { StudentListProps } from './components';

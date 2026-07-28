@@ -3,7 +3,6 @@
  * Supports select chips, toggle switches with vibrant colors
  */
 
-import { LinearGradient } from 'expo-linear-gradient';
 import { X, RotateCcw, SlidersHorizontal } from 'lucide-react-native';
 import { useState, useEffect, useMemo } from 'react';
 import {
@@ -15,11 +14,12 @@ import {
   StyleSheet,
   Pressable,
   Switch,
-  Dimensions,
+  type TextStyle,
+  type ViewStyle,
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
-const { width: _SCREEN_WIDTH } = Dimensions.get('window');
+import { LinearGradient } from '@/lib/linear-gradient';
 
 // ── Color palette for chips ──────────────────────────────────────
 const CHIP_COLORS = [
@@ -73,19 +73,20 @@ export function FilterModal({
   }, [visible, currentFilters]);
 
   const activeCount = useMemo(() => {
-    return Object.values(localFilters).filter((v) => v !== '' && v !== undefined && v !== false)
-      .length;
+    return Object.values(localFilters).filter(
+      v => v !== '' && v !== undefined && v !== false,
+    ).length;
   }, [localFilters]);
 
   const handleSelectOption = (fieldName: string, value: string) => {
-    setLocalFilters((prev) => ({
+    setLocalFilters(prev => ({
       ...prev,
       [fieldName]: prev[fieldName] === value ? '' : value,
     }));
   };
 
   const handleToggle = (fieldName: string) => {
-    setLocalFilters((prev) => ({
+    setLocalFilters(prev => ({
       ...prev,
       [fieldName]: !prev[fieldName],
     }));
@@ -106,10 +107,16 @@ export function FilterModal({
     onClose();
   };
 
-  const getChipColor = (sectionIdx: number) => CHIP_COLORS[sectionIdx % CHIP_COLORS.length];
+  const getChipColor = (sectionIdx: number) =>
+    CHIP_COLORS[sectionIdx % CHIP_COLORS.length];
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent
+      onRequestClose={onClose}
+    >
       <Pressable style={styles.backdrop} onPress={onClose} />
       <View style={styles.sheet}>
         {/* Drag handle */}
@@ -157,14 +164,18 @@ export function FilterModal({
                     value={!!localFilters[field.name]}
                     onValueChange={() => handleToggle(field.name)}
                     trackColor={{ false: '#e2e8f0', true: '#c4b5fd' }}
-                    thumbColor={localFilters[field.name] ? '#7c3aed' : '#94a3b8'}
+                    thumbColor={
+                      localFilters[field.name] ? '#7c3aed' : '#94a3b8'
+                    }
                   />
                 </Animated.View>
               );
             }
 
             // select type
-            const selectOptions = (field.options ?? []).filter((o) => o.value !== '');
+            const selectOptions = (field.options ?? []).filter(
+              o => o.value !== '',
+            );
 
             return (
               <Animated.View
@@ -177,31 +188,29 @@ export function FilterModal({
                   {field.label}
                 </Text>
                 <View style={styles.chipRow}>
-                  {selectOptions.map((opt) => {
+                  {selectOptions.map(opt => {
                     const isActive = localFilters[field.name] === opt.value;
+                    const chipStyle: ViewStyle = {
+                      backgroundColor: isActive ? colors.activeBg : colors.bg,
+                      borderColor: isActive ? colors.active : 'transparent',
+                    };
+                    const chipTextStyle: TextStyle = {
+                      color: isActive ? '#fff' : colors.text,
+                      fontWeight: isActive ? '700' : '500',
+                    };
                     return (
                       <TouchableOpacity
                         key={opt.value}
                         activeOpacity={0.7}
-                        onPress={() => handleSelectOption(field.name, opt.value)}
-                        style={[
-                          styles.chip,
-                          {
-                            backgroundColor: isActive ? colors.activeBg : colors.bg,
-                            borderColor: isActive ? colors.active : 'transparent',
-                          },
-                        ]}
+                        onPress={() =>
+                          handleSelectOption(field.name, opt.value)
+                        }
+                        style={[styles.chip, chipStyle]}
                       >
-                        {opt.icon && <Text style={styles.chipIcon}>{opt.icon}</Text>}
-                        <Text
-                          style={[
-                            styles.chipText,
-                            {
-                              color: isActive ? '#fff' : colors.text,
-                              fontWeight: isActive ? '700' : '500',
-                            },
-                          ]}
-                        >
+                        {opt.icon && (
+                          <Text style={styles.chipIcon}>{opt.icon}</Text>
+                        )}
+                        <Text style={[styles.chipText, chipTextStyle]}>
                           {opt.label}
                         </Text>
                       </TouchableOpacity>

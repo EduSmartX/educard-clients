@@ -2,7 +2,6 @@
  * FormPhotoUpload - Profile photo picker (camera + gallery)
  */
 
-import * as ImagePicker from 'expo-image-picker';
 import { Camera, ImageIcon, X, User } from 'lucide-react-native';
 import {
   View,
@@ -14,11 +13,16 @@ import {
   ActionSheetIOS,
   Platform,
 } from 'react-native';
+import {
+  launchCamera,
+  launchImageLibrary,
+  type Asset,
+} from 'react-native-image-picker';
 
 interface FormPhotoUploadProps {
   label?: string;
   imageUri: string | null;
-  onImageSelected: (uri: string | null, asset: ImagePicker.ImagePickerAsset | null) => void;
+  onImageSelected: (uri: string | null, asset: Asset | null) => void;
   disabled?: boolean;
   name?: string;
   gender?: string;
@@ -32,45 +36,41 @@ export function FormPhotoUpload({
   name,
   gender: _gender,
 }: FormPhotoUploadProps) {
-  const requestPermissions = async () => {
-    const camera = await ImagePicker.requestCameraPermissionsAsync();
-    const media = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!camera.granted || !media.granted) {
-      Alert.alert(
-        'Permission Required',
-        'Camera and photo library permissions are needed to upload a photo.'
-      );
-      return false;
-    }
-    return true;
-  };
-
   const pickFromCamera = async () => {
-    const ok = await requestPermissions();
-    if (!ok) return;
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
+    const result = await launchCamera({
+      mediaType: 'photo',
       quality: 0.8,
+      saveToPhotos: false,
     });
-    if (!result.canceled && result.assets[0]) {
-      onImageSelected(result.assets[0].uri, result.assets[0]);
+    if (result.didCancel) return;
+    if (result.errorCode) {
+      Alert.alert(
+        'Camera Unavailable',
+        result.errorMessage ?? 'Camera permission is required to take a photo.',
+      );
+      return;
     }
+    const asset = result.assets?.[0];
+    if (asset?.uri) onImageSelected(asset.uri, asset);
   };
 
   const pickFromGallery = async () => {
-    const ok = await requestPermissions();
-    if (!ok) return;
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
+    const result = await launchImageLibrary({
+      mediaType: 'photo',
       quality: 0.8,
+      selectionLimit: 1,
     });
-    if (!result.canceled && result.assets[0]) {
-      onImageSelected(result.assets[0].uri, result.assets[0]);
+    if (result.didCancel) return;
+    if (result.errorCode) {
+      Alert.alert(
+        'Gallery Unavailable',
+        result.errorMessage ??
+          'Photo library permission is required to choose a photo.',
+      );
+      return;
     }
+    const asset = result.assets?.[0];
+    if (asset?.uri) onImageSelected(asset.uri, asset);
   };
 
   const showOptions = () => {
@@ -85,11 +85,11 @@ export function FormPhotoUpload({
           cancelButtonIndex: opts.length - 1,
           destructiveButtonIndex: imageUri ? 2 : undefined,
         },
-        (idx) => {
+        idx => {
           if (idx === 0) void pickFromCamera();
           else if (idx === 1) void pickFromGallery();
           else if (idx === 2 && imageUri) onImageSelected(null, null);
-        }
+        },
       );
     } else {
       Alert.alert('Upload Photo', 'Choose an option', [
@@ -113,7 +113,7 @@ export function FormPhotoUpload({
   const initials = name
     ? name
         .split(' ')
-        .map((n) => n[0])
+        .map(n => n[0])
         .join('')
         .toUpperCase()
         .slice(0, 2)
@@ -122,7 +122,11 @@ export function FormPhotoUpload({
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
-      <TouchableOpacity style={styles.photoArea} onPress={showOptions} activeOpacity={0.7}>
+      <TouchableOpacity
+        style={styles.photoArea}
+        onPress={showOptions}
+        activeOpacity={0.7}
+      >
         {imageUri ? (
           <View style={styles.photoWrapper}>
             <Image source={{ uri: imageUri }} style={styles.photo} />
@@ -173,7 +177,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
   },
   photoWrapper: { position: 'relative' },
-  photo: { width: 90, height: 90, borderRadius: 45, borderWidth: 3, borderColor: '#7c3aed' },
+  photo: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 3,
+    borderColor: '#7c3aed',
+  },
   removeBtn: {
     position: 'absolute',
     top: -4,

@@ -4,20 +4,34 @@
  */
 
 import { getRoleGradient } from '@educard/shared';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import { ChevronLeft } from 'lucide-react-native';
 import React from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { ProfileAvatar } from '@/components/common/ProfileAvatar';
+import { LinearGradient } from '@/lib/linear-gradient';
+import type { SharedStackNavigation } from '@/navigation/types';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
 
 // ─── Row ──────────────────────────────────────────
-export function DetailRow({ label, value }: { label: string; value?: string | number | null }) {
+export function DetailRow({
+  label,
+  value,
+}: {
+  label: string;
+  value?: string | number | null;
+}) {
   if (!value && value !== 0) return null;
   return (
     <View style={styles.row}>
@@ -48,10 +62,14 @@ export function DetailSection({
 }
 
 // ─── Chip row ─────────────────────────────────────
-export function ChipRow({ items }: { items: { key: string; label: string }[] }) {
+export function ChipRow({
+  items,
+}: {
+  items: { key: string; label: string }[];
+}) {
   return (
     <View style={styles.chipRow}>
-      {items.map((item) => (
+      {items.map(item => (
         <View key={item.key} style={styles.chip}>
           <Text style={styles.chipText}>{item.label}</Text>
         </View>
@@ -68,7 +86,7 @@ interface DetailScreenShellProps {
   isError: boolean;
   errorMessage?: string;
   children: React.ReactNode;
-  /** Explicit back navigation. Falls back to router.back(). */
+  /** Explicit back navigation. Falls back to navigation.goBack(). */
   onBack?: () => void;
   /** Name for profile avatar initials */
   avatarName?: string;
@@ -87,13 +105,13 @@ export function DetailScreenShell({
   avatarName,
   avatarImageUri,
 }: DetailScreenShellProps) {
-  const router = useRouter();
+  const navigation = useNavigation<SharedStackNavigation>();
 
   const handleBack = () => {
     if (onBack) {
       onBack();
-    } else {
-      router.back();
+    } else if (navigation.canGoBack()) {
+      navigation.goBack();
     }
   };
 
@@ -121,9 +139,11 @@ export function DetailScreenShell({
             </Pressable>
             <View style={headerStyles.titleContainer}>
               <Text style={headerStyles.title}>{title}</Text>
-              {subtitle ? <Text style={headerStyles.subtitle}>{subtitle}</Text> : null}
+              {subtitle ? (
+                <Text style={headerStyles.subtitle}>{subtitle}</Text>
+              ) : null}
             </View>
-            <View style={{ width: 40 }} />
+            <View style={styles.spacer} />
           </View>
         </View>
       </LinearGradient>
@@ -135,14 +155,26 @@ export function DetailScreenShell({
       )}
       {!isLoading && isError && (
         <View style={styles.center}>
-          <Text style={styles.errorText}>{errorMessage ?? 'Failed to load details.'}</Text>
+          <Text style={styles.errorText}>
+            {errorMessage ?? 'Failed to load details.'}
+          </Text>
         </View>
       )}
       {!isLoading && !isError && (
-        <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.container}
+          showsVerticalScrollIndicator={false}
+        >
           {avatarName ? (
-            <Animated.View entering={FadeIn.delay(150)} style={styles.avatarWrapper}>
-              <ProfileAvatar name={avatarName} imageUri={avatarImageUri} size={80} />
+            <Animated.View
+              entering={FadeIn.delay(150)}
+              style={styles.avatarWrapper}
+            >
+              <ProfileAvatar
+                name={avatarName}
+                imageUri={avatarImageUri}
+                size={80}
+              />
               <Text style={styles.avatarName}>{avatarName}</Text>
             </Animated.View>
           ) : null}
@@ -155,6 +187,7 @@ export function DetailScreenShell({
 
 const styles = StyleSheet.create({
   container: { padding: 16, paddingBottom: 40 },
+  spacer: { width: 40 },
   avatarWrapper: {
     alignItems: 'center',
     marginBottom: 16,
@@ -176,7 +209,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#f0f0f0',
   },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#1e293b', marginBottom: 12 },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1e293b',
+    marginBottom: 12,
+  },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -185,8 +223,19 @@ const styles = StyleSheet.create({
     borderBottomColor: '#f5f5f5',
   },
   rowLabel: { fontSize: 14, color: '#64748b', flex: 1 },
-  rowValue: { fontSize: 14, fontWeight: '600', color: '#1e293b', flex: 1.5, textAlign: 'right' },
+  rowValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1e293b',
+    flex: 1.5,
+    textAlign: 'right',
+  },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { backgroundColor: '#ede9fe', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
+  chip: {
+    backgroundColor: '#ede9fe',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
   chipText: { color: '#7c3aed', fontSize: 13, fontWeight: '600' },
 });

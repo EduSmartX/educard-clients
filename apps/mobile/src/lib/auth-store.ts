@@ -2,14 +2,27 @@
  * Authentication store using Zustand
  */
 
-import * as SecureStore from 'expo-secure-store';
 import { create } from 'zustand';
 
-import { login as apiLogin, logout as apiLogout, signup as apiSignup, checkAuth } from '@/api/auth';
+import {
+  login as apiLogin,
+  logout as apiLogout,
+  signup as apiSignup,
+  selectProfile as apiSelectProfile,
+  switchProfile as apiSwitchProfile,
+  checkAuth,
+  type LoginResult,
+} from '@/api/auth';
 import { getUserProfile } from '@/api/profile';
 import { STORAGE_KEYS } from '@/constants/config';
 import { clearQueryCache } from '@/lib/query-client';
-import type { User, LoginCredentials, SignupData, AuthTokens } from '@/types/user';
+import * as SecureStore from '@/lib/secure-store';
+import type {
+  User,
+  LoginCredentials,
+  SignupData,
+  AuthTokens,
+} from '@/types/user';
 
 interface AuthState {
   user: User | null;
@@ -22,7 +35,12 @@ interface AuthState {
 
 interface AuthActions {
   initialize: () => Promise<void>;
-  login: (credentials: LoginCredentials) => Promise<void>;
+  login: (credentials: LoginCredentials) => Promise<LoginResult>;
+  selectProfile: (
+    selectionToken: string,
+    userPublicId: string,
+  ) => Promise<void>;
+  switchProfile: (userPublicId: string) => Promise<void>;
   signup: (data: SignupData) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
@@ -46,8 +64,12 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
       set({ isLoading: true, error: null });
 
       const user = await checkAuth();
-      const accessToken = await SecureStore.getItemAsync(STORAGE_KEYS.ACCESS_TOKEN);
-      const refreshToken = await SecureStore.getItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
+      const accessToken = await SecureStore.getItemAsync(
+        STORAGE_KEYS.ACCESS_TOKEN,
+      );
+      const refreshToken = await SecureStore.getItemAsync(
+        STORAGE_KEYS.REFRESH_TOKEN,
+      );
 
       if (user && accessToken && refreshToken) {
         set({
@@ -59,9 +81,9 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
         });
 
         // Best-effort refresh so a stale verification banner self-heals on app load.
-        void getUserProfile()
-          .then((profile) => {
-            set((state) =>
+        getUserProfile()
+          .then(profile => {
+            set(state =>
               state.user
                 ? {
                     user: {
@@ -72,7 +94,7 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
                       is_mobile_verified: profile.is_mobile_verified,
                     },
                   }
-                : {}
+                : {},
             );
           })
           .catch(() => {
@@ -104,7 +126,40 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const { user, tokens } = await apiLogin(credentials);
+      const result = await apiLogin(credentials);
+
+      if (result.requiresProfileSelection) {
+        // Do not authenticate yet - caller navigates to the profile picker.
+        set({ isLoading: false });
+        return result;
+      }
+
+      set({
+        user: result.user,
+        tokens: result.tokens,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null,
+      });
+      return result;
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Login failed',
+      });
+      throw error;
+    }
+  },
+
+  // Complete a shared-email login by picking a specific student profile
+  selectProfile: async (selectionToken: string, userPublicId: string) => {
+    try {
+      set({ isLoading: true, error: null });
+
+      const { user, tokens } = await apiSelectProfile({
+        selection_token: selectionToken,
+        user_public_id: userPublicId,
+      });
 
       set({
         user,
@@ -116,10 +171,28 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
     } catch (error) {
       set({
         isLoading: false,
-        error: error instanceof Error ? error.message : 'Login failed',
+        error:
+          error instanceof Error ? error.message : 'Unable to select profile',
       });
       throw error;
     }
+  },
+
+  // Switch an authenticated student session to another linked profile
+  switchProfile: async (userPublicId: string) => {
+    const { user, tokens } = await apiSwitchProfile({
+      user_public_id: userPublicId,
+    });
+
+    // Reset cached data so the new profile starts clean (mirrors web's full reload).
+    clearQueryCache();
+
+    set({
+      user,
+      tokens,
+      isAuthenticated: true,
+      error: null,
+    });
   },
 
   // Signup
@@ -149,7 +222,6 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
   logout: async () => {
     clearQueryCache();
 
-    // Set state atomically to prevent multiple re-renders
     set({
       user: null,
       tokens: null,
@@ -158,7 +230,6 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
       error: null,
     });
 
-    // Then perform cleanup in background (don't block UI)
     try {
       await apiLogout();
     } catch {
@@ -179,6 +250,7 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
 
 // Selectors
 export const selectUser = (state: AuthStore) => state.user;
-export const selectIsAuthenticated = (state: AuthStore) => state.isAuthenticated;
+export const selectIsAuthenticated = (state: AuthStore) =>
+  state.isAuthenticated;
 export const selectIsLoading = (state: AuthStore) => state.isLoading;
 export const selectAuthError = (state: AuthStore) => state.error;

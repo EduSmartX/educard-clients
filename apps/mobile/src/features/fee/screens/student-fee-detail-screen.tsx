@@ -1,15 +1,14 @@
 /**
- * Student Fee Detail Scimport { EmptyState, ErrorState, LoadingState } from '@/components/common/ListStates';
-import { RecordPaymentModal } from '../components/record-payment-modal';
-import { FeeStatusBadge } from '../components/fee-status-badge';
-import { PaymentModeBadge } from '../components/payment-mode-badge';
-import { FeeProgress } from '../components/fee-amount';
-import { useStudentFee, usePayments, useSendFeeReminder } from '../hooks';* Full breakdown of a student's fee: components, payment history, actions
+ * Student Fee Detail Screen
+ * Full breakdown of a student's fee: components, payment history, actions
  */
 
 import { FeeStatus, type ReminderChannelType } from '@educard/shared';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import {
+  useNavigation,
+  useRoute,
+  type RouteProp,
+} from '@react-navigation/native';
 import {
   ChevronLeft,
   CreditCard,
@@ -22,14 +21,25 @@ import {
   BookOpen,
   AlertCircle,
 } from 'lucide-react-native';
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  RefreshControl,
+} from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { ErrorState, LoadingState } from '@/components/common/ListStates';
 import { RecordPaymentModal } from '@/features/fee/components/record-payment-modal';
 import { SendReminderModal } from '@/features/fee/components/send-reminder-modal';
-import { useAndroidBack } from '@/hooks';
+import { LinearGradient } from '@/lib/linear-gradient';
+import type {
+  SharedStackNavigation,
+  SharedStackParamList,
+} from '@/navigation/types';
 
 import { FeeProgress } from '../components/fee-amount';
 import { FeeStatusBadge } from '../components/fee-status-badge';
@@ -52,11 +62,19 @@ const ComponentRow = ({ name, amount, isSelected }: ComponentRowProps) => (
       ) : (
         <XCircle size={16} color="#94a3b8" />
       )}
-      <Text style={[styles.componentName, !isSelected && { color: '#94a3b8' }]} numberOfLines={1}>
+      <Text
+        style={[styles.componentName, !isSelected && styles.componentNameMuted]}
+        numberOfLines={1}
+      >
         {name}
       </Text>
     </View>
-    <Text style={[styles.componentAmount, !isSelected && { color: '#94a3b8' }]}>
+    <Text
+      style={[
+        styles.componentAmount,
+        !isSelected && styles.componentAmountMuted,
+      ]}
+    >
       ₹{amount.toLocaleString('en-IN')}
     </Text>
   </View>
@@ -65,16 +83,28 @@ const ComponentRow = ({ name, amount, isSelected }: ComponentRowProps) => (
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function StudentFeeDetailScreen() {
-  const router = useRouter();
-  useAndroidBack('/(tabs)/(admin)/fee-student-fees');
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const navigation = useNavigation<SharedStackNavigation>();
+  const route = useRoute<RouteProp<SharedStackParamList, 'FeeStudentDetail'>>();
+  const { id } = route.params;
+
+  const handleBack = useCallback(() => {
+    if (navigation.canGoBack()) navigation.goBack();
+  }, [navigation]);
+
   const [showPayment, setShowPayment] = useState(false);
   const [showReminderModal, setShowReminderModal] = useState(false);
 
-  const { data: fee, isLoading, isError, refetch, isRefetching } = useStudentFee(id ?? '');
+  const {
+    data: fee,
+    isLoading,
+    isError,
+    refetch,
+    isRefetching,
+  } = useStudentFee(id ?? '');
   const { data: paymentsData } = usePayments({ student_fee_public_id: id });
 
-  const { mutate: sendReminder, isPending: reminderPending } = useSendFeeReminder();
+  const { mutate: sendReminder, isPending: reminderPending } =
+    useSendFeeReminder();
   const handleReminder = () => {
     setShowReminderModal(true);
   };
@@ -86,13 +116,19 @@ export default function StudentFeeDetailScreen() {
         onSuccess: () => {
           setShowReminderModal(false);
         },
-      }
+      },
     );
   };
 
-  if (isLoading) return <LoadingState color="#7c3aed" message="Loading fee details..." />;
+  if (isLoading)
+    return <LoadingState color="#7c3aed" message="Loading fee details..." />;
   if (isError || !fee)
-    return <ErrorState message="Failed to load fee details" onRetry={() => void refetch()} />;
+    return (
+      <ErrorState
+        message="Failed to load fee details"
+        onRetry={() => void refetch()}
+      />
+    );
 
   const payments = paymentsData?.items ?? [];
   const paidAmount = Number(fee.amount_paid);
@@ -108,6 +144,7 @@ export default function StudentFeeDetailScreen() {
     !isOverpaid &&
     fee.status !== FeeStatus.PAID &&
     fee.status !== FeeStatus.WAIVED;
+  const balanceColor = isRefunding || isRefunded ? '#ea580c' : '#dc2626';
 
   return (
     <View style={styles.container}>
@@ -115,13 +152,10 @@ export default function StudentFeeDetailScreen() {
       <LinearGradient colors={['#7c3aed', '#a855f7']} style={styles.header}>
         <Animated.View entering={FadeIn} style={styles.circle1} />
         <View style={styles.headerContent}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => router.push('/(tabs)/(admin)/fee-student-fees')}
-          >
+          <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
             <ChevronLeft size={24} color="#fff" />
           </TouchableOpacity>
-          <View style={{ flex: 1, marginLeft: 10 }}>
+          <View style={styles.headerTextWrap}>
             <Text style={styles.headerTitle} numberOfLines={1}>
               {fee.student_name}
             </Text>
@@ -131,10 +165,7 @@ export default function StudentFeeDetailScreen() {
             <TouchableOpacity
               style={styles.editBtn}
               onPress={() =>
-                router.push({
-                  pathname: '/(tabs)/(admin)/fee-student-edit',
-                  params: { id: fee.public_id },
-                })
+                navigation.navigate('FeeStudentEdit', { id: fee.public_id })
               }
             >
               <Pencil size={16} color="#fff" />
@@ -157,14 +188,19 @@ export default function StudentFeeDetailScreen() {
         }
       >
         {/* Summary card */}
-        <Animated.View entering={FadeInDown.delay(100)} style={styles.summaryCard}>
+        <Animated.View
+          entering={FadeInDown.delay(100)}
+          style={styles.summaryCard}
+        >
           <Text style={styles.sectionTitle}>Fee Summary</Text>
           <FeeProgress amountPaid={paidAmount} totalAmount={totalAmount} />
 
           {isRefunding && (
             <View style={styles.refundInfoTag}>
               <AlertCircle size={14} color="#c2410c" />
-              <Text style={styles.refundInfoText}>Admin refund processing in progress</Text>
+              <Text style={styles.refundInfoText}>
+                Admin refund processing in progress
+              </Text>
             </View>
           )}
 
@@ -172,8 +208,9 @@ export default function StudentFeeDetailScreen() {
             <View style={styles.refundInfoTag}>
               <AlertCircle size={14} color="#c2410c" />
               <Text style={styles.refundInfoText}>
-                Excess paid: ₹{(paidAmount - totalAmount).toLocaleString('en-IN')} — eligible for
-                refund
+                Excess paid: ₹
+                {(paidAmount - totalAmount).toLocaleString('en-IN')} — eligible
+                for refund
               </Text>
             </View>
           )}
@@ -181,13 +218,13 @@ export default function StudentFeeDetailScreen() {
           <View style={styles.amountGrid}>
             <View style={styles.amountItem}>
               <Text style={styles.amountLabel}>Total</Text>
-              <Text style={[styles.amountValue, { color: '#1e293b' }]}>
+              <Text style={[styles.amountValue, styles.amountValueDark]}>
                 ₹{totalAmount.toLocaleString('en-IN')}
               </Text>
             </View>
             <View style={styles.amountItem}>
               <Text style={styles.amountLabel}>Paid</Text>
-              <Text style={[styles.amountValue, { color: '#059669' }]}>
+              <Text style={[styles.amountValue, styles.amountValueGreen]}>
                 ₹{paidAmount.toLocaleString('en-IN')}
               </Text>
             </View>
@@ -195,22 +232,18 @@ export default function StudentFeeDetailScreen() {
               <Text style={styles.amountLabel}>
                 {isRefunding || isRefunded ? 'Refundable' : 'Balance'}
               </Text>
-              <Text
-                style={[
-                  styles.amountValue,
-                  { color: isRefunding || isRefunded ? '#ea580c' : '#dc2626' },
-                ]}
-              >
+              <Text style={[styles.amountValue, { color: balanceColor }]}>
                 ₹
-                {(isRefunding || isRefunded ? paidAmount : totalAmount - paidAmount).toLocaleString(
-                  'en-IN'
-                )}
+                {(isRefunding || isRefunded
+                  ? paidAmount
+                  : totalAmount - paidAmount
+                ).toLocaleString('en-IN')}
               </Text>
             </View>
             {discountAmount > 0 && (
               <View style={styles.amountItem}>
                 <Text style={styles.amountLabel}>Discount</Text>
-                <Text style={[styles.amountValue, { color: '#f59e0b' }]}>
+                <Text style={[styles.amountValue, styles.amountValueAmber]}>
                   ₹{discountAmount.toLocaleString('en-IN')}
                 </Text>
               </View>
@@ -232,7 +265,7 @@ export default function StudentFeeDetailScreen() {
               <BookOpen size={16} color="#7c3aed" />
               <Text style={styles.sectionTitle}>Fee Components</Text>
             </View>
-            {fee.components.map((comp) => (
+            {fee.components.map(comp => (
               <ComponentRow
                 key={comp.public_id ?? comp.name}
                 name={comp.name}
@@ -247,20 +280,25 @@ export default function StudentFeeDetailScreen() {
         <Animated.View entering={FadeInDown.delay(200)} style={styles.card}>
           <View style={styles.cardHeader}>
             <CreditCard size={16} color="#7c3aed" />
-            <Text style={styles.sectionTitle}>Payment History ({payments.length})</Text>
+            <Text style={styles.sectionTitle}>
+              Payment History ({payments.length})
+            </Text>
           </View>
           {payments.length === 0 ? (
             <View style={styles.emptyHistory}>
-              <Text style={styles.emptyHistoryText}>No payments recorded yet</Text>
+              <Text style={styles.emptyHistoryText}>
+                No payments recorded yet
+              </Text>
             </View>
           ) : (
-            payments.map((pay) => (
+            payments.map(pay => (
               <View key={pay.public_id} style={styles.paymentRow}>
-                <View style={{ flex: 1 }}>
+                <View style={styles.flex1}>
                   <Text
                     style={[
                       styles.paymentAmount,
-                      pay.transaction_type === 'debit' && { color: '#dc2626' },
+                      pay.transaction_type === 'debit' &&
+                        styles.paymentAmountDebit,
                     ]}
                   >
                     {pay.transaction_type === 'debit' ? '-' : '+'}₹
@@ -268,7 +306,7 @@ export default function StudentFeeDetailScreen() {
                   </Text>
                   <Text style={styles.paymentDate}>{pay.payment_date}</Text>
                 </View>
-                <View style={{ alignItems: 'flex-end', gap: 4 }}>
+                <View style={styles.alignEndGap}>
                   <PaymentModeBadge mode={pay.payment_mode} size="sm" />
                   <Text style={styles.receiptNo}>#{pay.receipt_number}</Text>
                 </View>
@@ -278,10 +316,13 @@ export default function StudentFeeDetailScreen() {
         </Animated.View>
 
         {/* Actions */}
-        <Animated.View entering={FadeInDown.delay(250)} style={styles.actionsRow}>
+        <Animated.View
+          entering={FadeInDown.delay(250)}
+          style={styles.actionsRow}
+        >
           {showRefundPayment && (
             <TouchableOpacity
-              style={[styles.primaryBtn, { backgroundColor: '#ea580c' }]}
+              style={[styles.primaryBtn, styles.primaryBtnOrange]}
               onPress={() => setShowPayment(true)}
             >
               <CreditCard size={16} color="#fff" />
@@ -290,7 +331,7 @@ export default function StudentFeeDetailScreen() {
           )}
 
           {isRefunded && (
-            <View style={[styles.primaryBtn, { backgroundColor: '#0284c7', opacity: 0.7 }]}>
+            <View style={[styles.primaryBtn, styles.primaryBtnBlueDim]}>
               <CheckCircle2 size={16} color="#fff" />
               <Text style={styles.primaryBtnText}>Refunded</Text>
             </View>
@@ -307,7 +348,10 @@ export default function StudentFeeDetailScreen() {
             </TouchableOpacity>
           )}
           {showRecordPayment && (
-            <TouchableOpacity style={styles.primaryBtn} onPress={() => setShowPayment(true)}>
+            <TouchableOpacity
+              style={styles.primaryBtn}
+              onPress={() => setShowPayment(true)}
+            >
               <IndianRupee size={16} color="#fff" />
               <Text style={styles.primaryBtnText}>Record Payment</Text>
             </TouchableOpacity>
@@ -335,7 +379,12 @@ export default function StudentFeeDetailScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
-  header: { paddingTop: 52, paddingBottom: 16, paddingHorizontal: 16, overflow: 'hidden' },
+  header: {
+    paddingTop: 52,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    overflow: 'hidden',
+  },
   circle1: {
     position: 'absolute',
     width: 200,
@@ -390,12 +439,27 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
   sectionTitle: { fontSize: 15, fontWeight: '700', color: '#1e293b' },
 
-  amountGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 14 },
+  amountGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginTop: 14,
+  },
   amountItem: { flex: 1, minWidth: '40%' },
-  amountLabel: { fontSize: 11, color: '#94a3b8', fontWeight: '500', marginBottom: 2 },
+  amountLabel: {
+    fontSize: 11,
+    color: '#94a3b8',
+    fontWeight: '500',
+    marginBottom: 2,
+  },
   amountValue: { fontSize: 18, fontWeight: '800' },
 
   dueRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 10 },
@@ -426,7 +490,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#f1f5f9',
   },
-  componentLeft: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
+  componentLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
   componentName: { fontSize: 13, fontWeight: '600', color: '#1e293b', flex: 1 },
   mandatoryBadge: {
     backgroundColor: '#e0f2fe',
@@ -473,4 +542,15 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   secondaryBtnText: { fontSize: 14, fontWeight: '700', color: '#7c3aed' },
+  headerTextWrap: { flex: 1, marginLeft: 10 },
+  flex1: { flex: 1 },
+  alignEndGap: { alignItems: 'flex-end', gap: 4 },
+  componentNameMuted: { color: '#94a3b8' },
+  componentAmountMuted: { color: '#94a3b8' },
+  amountValueDark: { color: '#1e293b' },
+  amountValueGreen: { color: '#059669' },
+  amountValueAmber: { color: '#f59e0b' },
+  paymentAmountDebit: { color: '#dc2626' },
+  primaryBtnOrange: { backgroundColor: '#ea580c' },
+  primaryBtnBlueDim: { backgroundColor: '#0284c7', opacity: 0.7 },
 });

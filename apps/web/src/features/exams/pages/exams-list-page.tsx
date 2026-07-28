@@ -27,6 +27,7 @@ import { useDeleteExam, useReactivateExam } from '../hooks/mutations';
 import { createExamColumns } from '../components/exam-columns';
 import { useDeletedView } from '@/hooks/use-deleted-view';
 import { useRole } from '@/hooks/use-role';
+import { useFilterParams } from '@/hooks/use-filter-params';
 import { useClasses } from '@/features/classes/hooks/use-classes';
 import {
   EXAM_STATUS_OPTIONS,
@@ -42,11 +43,16 @@ export function ExamsListPage() {
   const { isAdmin } = useRole();
 
   // ── State ────────────────────────────────
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [sessionFilter, setSessionFilter] = useState<string>('');
-  const [classFilter, setClassFilter] = useState<string>('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const { filters, page, pageSize, setFilter, setPage, setPageSize } = useFilterParams(
+    { session: '', class: '', status: '' },
+    { defaultPageSize: 10 }
+  );
+  const sessionFilter = filters.session;
+  const classFilter = filters.class;
+  const statusFilter = filters.status;
+  const setSessionFilter = (v: string) => setFilter('session', v);
+  const setClassFilter = (v: string) => setFilter('class', v);
+  const setStatusFilter = (v: string) => setFilter('status', v);
   const [examToDelete, setExamToDelete] = useState<Exam | undefined>();
   const [examToReactivate, setExamToReactivate] = useState<Exam | undefined>();
 

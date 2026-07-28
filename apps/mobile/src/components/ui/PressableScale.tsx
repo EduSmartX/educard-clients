@@ -4,19 +4,32 @@
  */
 
 import React from 'react';
-import { Pressable, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import {
+  Pressable,
+  type PressableProps,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export interface PressableScaleProps extends Omit<PressableProps, 'style'> {
   children: React.ReactNode;
-  /** Target scale while pressed (default 0.96). */
   scaleTo?: number;
   style?: StyleProp<ViewStyle>;
 }
 
-export function PressableScale({ children, scaleTo = 0.96, style, ...props }: PressableScaleProps) {
+export function PressableScale({
+  children,
+  scaleTo = 0.96,
+  style,
+  ...props
+}: PressableScaleProps) {
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({

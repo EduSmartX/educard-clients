@@ -3,11 +3,12 @@
  * Responsive grid of gradient action tiles with icon + label and press feedback.
  */
 
-import { LinearGradient } from 'expo-linear-gradient';
 import { type LucideIcon } from 'lucide-react-native';
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, type DimensionValue } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+
+import { LinearGradient } from '@/lib/linear-gradient';
 
 import { PressableScale } from './PressableScale';
 
@@ -25,7 +26,12 @@ export interface QuickActionsGridProps {
   columns?: number;
 }
 
-export function QuickActionsGrid({ actions, columns = 4 }: QuickActionsGridProps) {
+export function QuickActionsGrid({
+  actions,
+  columns = 4,
+}: QuickActionsGridProps) {
+  const cellWidthStyle = { width: `${100 / columns}%` as DimensionValue };
+
   return (
     <View style={styles.grid}>
       {actions.map((action, index) => {
@@ -36,7 +42,7 @@ export function QuickActionsGrid({ actions, columns = 4 }: QuickActionsGridProps
             entering={FadeInDown.delay(index * 60)
               .springify()
               .damping(15)}
-            style={[styles.cell, { width: `${100 / columns}%` }]}
+            style={[styles.cell, cellWidthStyle]}
           >
             <PressableScale onPress={action.onPress} style={styles.pressable}>
               <View style={styles.tile}>

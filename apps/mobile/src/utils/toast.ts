@@ -1,7 +1,6 @@
 /**
  * Toast utility — event-based bridge to the ToastProvider.
  * Used in non-component code (hooks, services) where React context isn't available.
- * The ToastProvider subscribes to these events and renders the beautiful toast UI.
  */
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';
@@ -23,10 +22,9 @@ export function showToast(type: ToastType, message: string): void {
   lastToastTime = now;
 
   if (listeners.size > 0) {
-    listeners.forEach((listener) => listener(type, message));
+    listeners.forEach(listener => listener(type, message));
   } else if (__DEV__) {
     // Fallback if ToastProvider hasn't mounted yet
-    // eslint-disable-next-line no-console
     console.log(`[Toast:${type}] ${message}`);
   }
 }

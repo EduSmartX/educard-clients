@@ -1,60 +1,39 @@
-const { getDefaultConfig } = require('expo/metro-config');
 const path = require('path');
+const { getDefaultConfig } = require('@react-native/metro-config');
+const { withNativeWind } = require('nativewind/metro');
+const exclusionList = require('metro-config/src/defaults/exclusionList');
 
-// Monorepo root and shared package
-const monorepoRoot = path.resolve(__dirname, '../..');
-const sharedPackage = path.resolve(monorepoRoot, 'packages/shared');
+const projectRoot = __dirname;
+const workspaceRoot = path.resolve(projectRoot, '../..');
+const sharedPackage = path.resolve(workspaceRoot, 'packages/shared');
 
-const config = getDefaultConfig(__dirname);
+const config = getDefaultConfig(projectRoot);
 
-// 1. Set the project root to this app (not the monorepo root)
-config.projectRoot = __dirname;
+config.watchFolders = [sharedPackage, workspaceRoot];
 
-// 2. Watch the shared package and monorepo root for changes
-config.watchFolders = [sharedPackage, monorepoRoot];
-
-// 3. Ensure all modules resolve from the mobile app's node_modules FIRST,
-//    then fall back to the monorepo root's node_modules.
 config.resolver.nodeModulesPaths = [
-  path.resolve(__dirname, 'node_modules'),
-  path.resolve(monorepoRoot, 'node_modules'),
+	path.resolve(projectRoot, 'node_modules'),
+	path.resolve(workspaceRoot, 'node_modules'),
 ];
 
-// 4. Force critical packages to resolve from the app's copy
-//    (prevents duplicate React instances & pnpm symlink issues)
-//    Also shim native modules that crash in Expo Go with TurboModule errors
-const shimMap = {
-  'react-native-reanimated': path.resolve(__dirname, 'src/lib/animated-shim.tsx'),
-  'lucide-react-native': path.resolve(__dirname, 'src/lib/lucide-shim.tsx'),
-  'expo-linear-gradient': path.resolve(__dirname, 'src/lib/linear-gradient-shim.tsx'),
-};
-
 config.resolver.extraNodeModules = new Proxy(
-  {
-    react: path.resolve(__dirname, 'node_modules/react'),
-    'react-native': path.resolve(__dirname, 'node_modules/react-native'),
-    'expo-router': path.resolve(__dirname, 'node_modules/expo-router'),
-    '@expo/metro-runtime': path.resolve(__dirname, 'node_modules/@expo/metro-runtime'),
-  },
-  {
-    // For any module not explicitly listed, try the app's node_modules first
-    get: (target, name) => target[name] || path.resolve(__dirname, 'node_modules', name),
-  }
+	{
+		react: path.resolve(projectRoot, 'node_modules/react'),
+		'react-native': path.resolve(projectRoot, 'node_modules/react-native'),
+	},
+	{
+		get: (target, name) => target[name] || path.resolve(projectRoot, 'node_modules', String(name)),
+	}
 );
 
-// Intercept resolution for shimmed modules
-config.resolver.resolveRequest = (context, moduleName, platform) => {
-  if (shimMap[moduleName]) {
-    return {
-      filePath: shimMap[moduleName],
-      type: 'sourceFile',
-    };
-  }
-  // Fall back to default resolution
-  return context.resolveRequest(context, moduleName, platform);
-};
-
-// 5. Follow symlinks (needed for pnpm)
 config.resolver.unstable_enableSymlinks = true;
 
-module.exports = config;
+config.resolver.blockList = exclusionList([
+	new RegExp(`${path.resolve(workspaceRoot, 'apps/mobile-expo')}/.*`),
+]);
+
+config.transformer.babelTransformerPath = require.resolve('react-native-svg-transformer');
+config.resolver.assetExts = config.resolver.assetExts.filter((ext) => ext !== 'svg');
+config.resolver.sourceExts = [...config.resolver.sourceExts, 'svg'];
+
+module.exports = withNativeWind(config, { input: './global.css' });

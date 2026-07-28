@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return */
 import { apiClient } from '@/api/client';
 
 export interface DashboardStats {
@@ -50,10 +49,16 @@ export interface AttendanceReportData {
   }[];
 }
 
-export type StudentRecord = NonNullable<AttendanceReportData['student_wise']>[number];
+export type StudentRecord = NonNullable<
+  AttendanceReportData['student_wise']
+>[number];
 
-export const getDashboardStats = async (date: string): Promise<DashboardStats> => {
-  const response = await apiClient.get(`/attendance/admin/dashboard-stats/?date=${date}`);
+export const getDashboardStats = async (
+  date: string,
+): Promise<DashboardStats> => {
+  const response = await apiClient.get(
+    `/attendance/admin/dashboard-stats/?date=${date}`,
+  );
   return response.data.data || response.data;
 };
 
@@ -62,7 +67,7 @@ export const getAttendanceReport = async (
   fromDate: string,
   toDate: string,
   page: number = 1,
-  pageSize: number = 50
+  pageSize: number = 50,
 ): Promise<AttendanceReportData> => {
   let url = `/attendance/admin/student-report/?page=${page}&page_size=${pageSize}`;
   if (classId) {
@@ -86,21 +91,30 @@ export const getAttendanceReport = async (
   let totalHalfDay = 0;
 
   studentWise.forEach(
-    (s: { present_days?: number; absent_days?: number; halfday_count?: number }) => {
+    (s: {
+      present_days?: number;
+      absent_days?: number;
+      halfday_count?: number;
+    }) => {
       totalPresent += s.present_days || 0;
       totalAbsent += s.absent_days || 0;
       totalHalfDay += s.halfday_count || 0;
-    }
+    },
   );
 
   const currentPageStudents = studentWise.length;
   const totalPossible = currentPageStudents * totalWorkingDays;
   const attendancePercentage =
-    totalPossible > 0 ? Math.round(((totalPresent + totalHalfDay * 0.5) / totalPossible) * 100) : 0;
+    totalPossible > 0
+      ? Math.round(((totalPresent + totalHalfDay * 0.5) / totalPossible) * 100)
+      : 0;
 
-  const avgPresent = currentPageStudents > 0 ? totalPresent / currentPageStudents : 0;
-  const avgAbsent = currentPageStudents > 0 ? totalAbsent / currentPageStudents : 0;
-  const avgHalfDay = currentPageStudents > 0 ? totalHalfDay / currentPageStudents : 0;
+  const avgPresent =
+    currentPageStudents > 0 ? totalPresent / currentPageStudents : 0;
+  const avgAbsent =
+    currentPageStudents > 0 ? totalAbsent / currentPageStudents : 0;
+  const avgHalfDay =
+    currentPageStudents > 0 ? totalHalfDay / currentPageStudents : 0;
 
   return {
     total_students: totalStudents,
@@ -121,7 +135,8 @@ export const getAttendanceReport = async (
         total_days?: number;
       }) => ({
         student_id: s.user__public_id,
-        student_name: `${s.user__first_name || ''} ${s.user__last_name || ''}`.trim(),
+        student_name:
+          `${s.user__first_name || ''} ${s.user__last_name || ''}`.trim(),
         present: s.present_days || 0,
         absent: s.absent_days || 0,
         half_day: s.halfday_count || 0,
@@ -129,10 +144,12 @@ export const getAttendanceReport = async (
         percentage:
           (s.total_days || 0) > 0
             ? Math.round(
-                (((s.present_days || 0) + (s.halfday_count || 0) * 0.5) / (s.total_days || 1)) * 100
+                (((s.present_days || 0) + (s.halfday_count || 0) * 0.5) /
+                  (s.total_days || 1)) *
+                  100,
               )
             : 0,
-      })
+      }),
     ),
   };
 };

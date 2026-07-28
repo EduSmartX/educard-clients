@@ -14,16 +14,24 @@ import { FeeStructureTable } from '../components/fee-structure-table';
 import { useFeeStructures } from '../../hooks/use-fee-queries';
 import { FEE_UI_TEXT } from '@educard/shared';
 import { ROUTES } from '@/constants/app-config';
+import { useFilterParams } from '@/hooks/use-filter-params';
 import { PageHeader } from '@/components/common';
 import { useClasses } from '@/features/classes/hooks/use-classes';
 import { cn } from '@/lib/utils';
 
 export function FeeStructuresPage() {
   const navigate = useNavigate();
+  const {
+    filters,
+    search: searchQuery,
+    setFilter,
+    setSearch: setSearchQuery,
+  } = useFilterParams({ class: 'all', status: 'all' });
+  const classFilter = filters.class;
+  const statusFilter = filters.status;
+  const setClassFilter = (v: string) => setFilter('class', v);
+  const setStatusFilter = (v: string) => setFilter('status', v);
   const [showFilters, setShowFilters] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [classFilter, setClassFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
 
   let isActiveFilter: boolean | undefined;
   if (statusFilter === 'active') {

@@ -4,10 +4,13 @@
  */
 
 import type { StudentFeeComponentItem } from '@educard/shared';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import {
+  useNavigation,
+  useRoute,
+  type RouteProp,
+} from '@react-navigation/native';
 import { ChevronLeft, Lock, Save, Settings } from 'lucide-react-native';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -23,11 +26,19 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { ErrorState, LoadingState } from '@/components/common/ListStates';
 import { SubmitButton } from '@/components/common/SubmitButton';
 import { FormInput } from '@/components/forms/FormInput';
-import { useAndroidBack } from '@/hooks';
+import { LinearGradient } from '@/lib/linear-gradient';
+import type {
+  SharedStackNavigation,
+  SharedStackParamList,
+} from '@/navigation/types';
 import { extractApiError } from '@/utils/api-error';
 import { showToast } from '@/utils/toast';
 
-import { useStudentFee, useUpdateStudentFee, useUpdateStudentFeeComponents } from '../hooks';
+import {
+  useStudentFee,
+  useUpdateStudentFee,
+  useUpdateStudentFeeComponents,
+} from '../hooks';
 
 type ComponentSelection = {
   is_selected: boolean;
@@ -35,11 +46,21 @@ type ComponentSelection = {
 };
 
 export default function StudentFeeEditScreen() {
-  const router = useRouter();
-  useAndroidBack('/(tabs)/(admin)/fee-student-fees');
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const navigation = useNavigation<SharedStackNavigation>();
+  const route = useRoute<RouteProp<SharedStackParamList, 'FeeStudentEdit'>>();
+  const { id } = route.params;
 
-  const { data: fee, isLoading, isError, refetch, isRefetching } = useStudentFee(id ?? '');
+  const handleBack = useCallback(() => {
+    if (navigation.canGoBack()) navigation.goBack();
+  }, [navigation]);
+
+  const {
+    data: fee,
+    isLoading,
+    isError,
+    refetch,
+    isRefetching,
+  } = useStudentFee(id ?? '');
   const updateStudentFee = useUpdateStudentFee();
   const updateComponents = useUpdateStudentFeeComponents();
 
@@ -72,14 +93,14 @@ export default function StudentFeeEditScreen() {
 
   const selectedOptionalCount = useMemo(
     () =>
-      (fee?.components ?? []).filter((component) => {
+      (fee?.components ?? []).filter(component => {
         if (component.component_type === 'mandatory') return true;
         return (
           componentSelections[component.fee_component_public_id]?.is_selected ??
           component.is_selected
         );
       }).length,
-    [componentSelections, fee?.components]
+    [componentSelections, fee?.components],
   );
 
   const validateDiscount = () => {
@@ -102,7 +123,9 @@ export default function StudentFeeEditScreen() {
       {
         id,
         data: {
-          discount_percentage: discountPercentage.trim() ? Number(discountPercentage) : 0,
+          discount_percentage: discountPercentage.trim()
+            ? Number(discountPercentage)
+            : 0,
           discount_reason: discountReason.trim() || '',
           referral_name: referralName.trim() || '',
           referral_code: referralCode.trim() || '',
@@ -110,43 +133,53 @@ export default function StudentFeeEditScreen() {
       },
       {
         onSuccess: () => {
-          Alert.alert('Success', 'Discount & referral info updated successfully.');
+          Alert.alert(
+            'Success',
+            'Discount & referral info updated successfully.',
+          );
         },
-        onError: (err) => {
+        onError: err => {
           Alert.alert('Error', extractApiError(err));
         },
-      }
+      },
     );
   };
 
   const handleSaveComponents = () => {
     if (!id || !fee?.components?.length) return;
 
-    const components = fee.components.map((component: StudentFeeComponentItem) => ({
-      component_public_id: component.fee_component_public_id,
-      is_selected:
-        componentSelections[component.fee_component_public_id]?.is_selected ??
-        component.is_selected,
-      admin_note: componentSelections[component.fee_component_public_id]?.admin_note ?? '',
-    }));
+    const components = fee.components.map(
+      (component: StudentFeeComponentItem) => ({
+        component_public_id: component.fee_component_public_id,
+        is_selected:
+          componentSelections[component.fee_component_public_id]?.is_selected ??
+          component.is_selected,
+        admin_note:
+          componentSelections[component.fee_component_public_id]?.admin_note ??
+          '',
+      }),
+    );
 
     updateComponents.mutate(
       { id, data: { components } },
       {
         onSuccess: () => {
           showToast('success', 'Fee components updated successfully');
-          router.push({
-            pathname: '/(tabs)/(admin)/fee-student-detail',
-            params: { id },
-          });
+          navigation.navigate('FeeStudentDetail', { id });
         },
-      }
+      },
     );
   };
 
-  if (isLoading) return <LoadingState color="#7c3aed" message="Loading edit form..." />;
+  if (isLoading)
+    return <LoadingState color="#7c3aed" message="Loading edit form..." />;
   if (isError || !fee) {
-    return <ErrorState message="Failed to load student fee" onRetry={() => void refetch()} />;
+    return (
+      <ErrorState
+        message="Failed to load student fee"
+        onRetry={() => void refetch()}
+      />
+    );
   }
 
   return (
@@ -154,13 +187,10 @@ export default function StudentFeeEditScreen() {
       <LinearGradient colors={['#7c3aed', '#a78bfa']} style={styles.header}>
         <Animated.View entering={FadeIn} style={styles.circle1} />
         <View style={styles.headerContent}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => router.push('/(tabs)/(admin)/fee-student-fees')}
-          >
+          <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
             <ChevronLeft size={24} color="#fff" />
           </TouchableOpacity>
-          <View style={{ flex: 1, marginLeft: 10 }}>
+          <View style={styles.headerTextWrap}>
             <Text style={styles.headerTitle} numberOfLines={1}>
               Edit Fee — {fee.student_name}
             </Text>
@@ -233,14 +263,15 @@ export default function StudentFeeEditScreen() {
 
           {(fee.components ?? []).map((component: StudentFeeComponentItem) => {
             const isMandatory = component.component_type === 'mandatory';
-            const selection = componentSelections[component.fee_component_public_id];
+            const selection =
+              componentSelections[component.fee_component_public_id];
             const isSelected = selection?.is_selected ?? component.is_selected;
             const adminNote = selection?.admin_note ?? '';
 
             return (
               <View key={component.public_id} style={styles.componentCard}>
                 <View style={styles.componentTopRow}>
-                  <View style={{ flex: 1 }}>
+                  <View style={styles.flex1}>
                     <Text style={styles.componentName}>{component.name}</Text>
                     <Text style={styles.componentMeta}>
                       {isMandatory ? 'Mandatory' : 'Optional'} • ₹
@@ -256,8 +287,8 @@ export default function StudentFeeEditScreen() {
                   ) : (
                     <Switch
                       value={isSelected}
-                      onValueChange={(value) => {
-                        setComponentSelections((prev) => ({
+                      onValueChange={value => {
+                        setComponentSelections(prev => ({
                           ...prev,
                           [component.fee_component_public_id]: {
                             ...prev[component.fee_component_public_id],
@@ -275,8 +306,8 @@ export default function StudentFeeEditScreen() {
                   <FormInput
                     label="Admin Note (optional)"
                     value={adminNote}
-                    onChangeText={(value) => {
-                      setComponentSelections((prev) => ({
+                    onChangeText={value => {
+                      setComponentSelections(prev => ({
                         ...prev,
                         [component.fee_component_public_id]: {
                           ...prev[component.fee_component_public_id],
@@ -306,7 +337,12 @@ export default function StudentFeeEditScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
-  header: { paddingTop: 52, paddingBottom: 16, paddingHorizontal: 16, overflow: 'hidden' },
+  header: {
+    paddingTop: 52,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    overflow: 'hidden',
+  },
   circle1: {
     position: 'absolute',
     width: 180,
@@ -339,7 +375,12 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: '#1e293b', marginBottom: 10 },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#1e293b',
+    marginBottom: 10,
+  },
   sectionHint: { fontSize: 12, color: '#64748b', marginBottom: 10 },
 
   componentCard: {
@@ -368,4 +409,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   mandatoryText: { fontSize: 11, fontWeight: '700', color: '#475569' },
+  headerTextWrap: { flex: 1, marginLeft: 10 },
+  flex1: { flex: 1 },
 });

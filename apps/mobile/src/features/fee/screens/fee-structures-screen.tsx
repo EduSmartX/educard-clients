@@ -4,8 +4,7 @@
  */
 
 import type { FeeStructure, FeeStructureFilters } from '@educard/shared';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import {
   ChevronLeft,
   Plus,
@@ -29,7 +28,12 @@ import {
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { ConfirmDialog } from '@/components/common';
-import { ErrorState, EmptyState, LoadingState, ListFooter } from '@/components/common/ListStates';
+import {
+  ErrorState,
+  EmptyState,
+  LoadingState,
+  ListFooter,
+} from '@/components/common/ListStates';
 import { SearchBar } from '@/components/common/SearchBar';
 import {
   ActiveFilters,
@@ -39,7 +43,9 @@ import {
   buildClassOptions,
 } from '@/components/filters';
 import { useClasses } from '@/features/classes';
-import { useAndroidBack } from '@/hooks';
+import { useScreenFilters } from '@/hooks/useScreenFilters';
+import { LinearGradient } from '@/lib/linear-gradient';
+import type { SharedStackNavigation } from '@/navigation/types';
 
 import { useFeeStructures, useDeleteFeeStructure } from '../hooks';
 
@@ -64,19 +70,30 @@ const StructureCard = React.memo(
         <View style={styles.cardIconBox}>
           <FileText size={18} color="#059669" />
         </View>
-        <View style={{ flex: 1, marginLeft: 10 }}>
+        <View style={styles.cardTitleWrap}>
           <Text style={styles.cardTitle} numberOfLines={1}>
             {item.name}
           </Text>
           <Text style={styles.cardYear}>{item.academic_year}</Text>
         </View>
         <View
-          style={[styles.activeBadge, { backgroundColor: item.is_active ? '#dcfce7' : '#fee2e2' }]}
+          style={[
+            styles.activeBadge,
+            item.is_active ? styles.activeBadgeOn : styles.activeBadgeOff,
+          ]}
         >
           <View
-            style={[styles.activeDot, { backgroundColor: item.is_active ? '#059669' : '#dc2626' }]}
+            style={[
+              styles.activeDot,
+              item.is_active ? styles.activeDotOn : styles.activeDotOff,
+            ]}
           />
-          <Text style={[styles.activeText, { color: item.is_active ? '#059669' : '#dc2626' }]}>
+          <Text
+            style={[
+              styles.activeText,
+              item.is_active ? styles.activeTextOn : styles.activeTextOff,
+            ]}
+          >
             {item.is_active ? 'Active' : 'Inactive'}
           </Text>
         </View>
@@ -103,51 +120,65 @@ const StructureCard = React.memo(
             {item.class_names?.join(', ') || 'No classes'}
           </Text>
         </View>
-        <Text style={styles.totalAmount}>₹{Number(item.total_amount).toLocaleString('en-IN')}</Text>
+        <Text style={styles.totalAmount}>
+          ₹{Number(item.total_amount).toLocaleString('en-IN')}
+        </Text>
       </View>
 
       <View style={styles.cardActions}>
         <TouchableOpacity
-          style={[styles.actionBtn, { backgroundColor: '#eff6ff' }]}
+          style={[styles.actionBtn, styles.actionBtnBlue]}
           onPress={() => onEdit(item.public_id)}
         >
           <FileText size={14} color="#3b82f6" />
-          <Text style={[styles.actionText, { color: '#3b82f6' }]}>Edit</Text>
+          <Text style={[styles.actionText, styles.actionTextEditBlue]}>
+            Edit
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.actionBtn, { backgroundColor: '#fef2f2' }]}
+          style={[styles.actionBtn, styles.actionBtnRed]}
           onPress={() => onDelete(item)}
         >
           <Trash2 size={14} color="#dc2626" />
-          <Text style={[styles.actionText, { color: '#dc2626' }]}>Delete</Text>
+          <Text style={[styles.actionText, styles.actionTextRed]}>Delete</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.actionBtn, { backgroundColor: '#eff6ff' }]}
+          style={[styles.actionBtn, styles.actionBtnBlue]}
           onPress={() => onViewDetail(item.public_id)}
         >
-          <Text style={[styles.actionText, { color: '#2563eb' }]}>View</Text>
+          <Text style={[styles.actionText, styles.actionTextViewBlue]}>
+            View
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.actionBtn, { backgroundColor: '#f0fdf4', marginLeft: 'auto' }]}
+          style={[styles.actionBtn, styles.actionBtnGreenAuto]}
           onPress={() => onPress(item.public_id)}
         >
-          <Text style={[styles.actionText, { color: '#059669' }]}>View fees</Text>
+          <Text style={[styles.actionText, styles.actionTextGreen]}>
+            View fees
+          </Text>
           <ChevronRight size={14} color="#059669" />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
-  )
+  ),
 );
 StructureCard.displayName = 'StructureCard';
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function FeeStructuresScreen() {
-  const router = useRouter();
-  useAndroidBack('/(tabs)/(admin)/fee-dashboard');
-  const [search, setSearch] = useState('');
+  const navigation = useNavigation<SharedStackNavigation>();
+  const handleBack = useCallback(() => {
+    if (navigation.canGoBack()) navigation.goBack();
+  }, [navigation]);
+  const {
+    filters,
+    search,
+    setSearch,
+    setAllFilters: setFilters,
+  } = useScreenFilters<Record<string, unknown>>('FeeStructures', {});
   const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState<Record<string, unknown>>({});
   const [deleteTarget, setDeleteTarget] = useState<FeeStructure | null>(null);
 
   const scrollY = useRef(0);
@@ -176,13 +207,15 @@ export default function FeeStructuresScreen() {
     isRefetching,
   } = useFeeStructures(apiFilters);
 
-  const { mutate: deleteStructure, isPending: isDeleting } = useDeleteFeeStructure();
+  const { mutate: deleteStructure, isPending: isDeleting } =
+    useDeleteFeeStructure();
 
   const items = data?.items ?? [];
   const filtered = search
     ? items.filter(
-        (s) =>
-          s.name.toLowerCase().includes(search.toLowerCase()) || s.academic_year.includes(search)
+        s =>
+          s.name.toLowerCase().includes(search.toLowerCase()) ||
+          s.academic_year.includes(search),
       )
     : items;
 
@@ -192,15 +225,18 @@ export default function FeeStructuresScreen() {
     }
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-  const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    scrollY.current = e.nativeEvent.contentOffset.y;
-  }, []);
+  const handleScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      scrollY.current = e.nativeEvent.contentOffset.y;
+    },
+    [],
+  );
 
   const handleEdit = useCallback(
     (id: string) => {
-      router.push({ pathname: '/(tabs)/(admin)/fee-structure-form', params: { id } });
+      navigation.navigate('FeeStructureForm', { id });
     },
-    [router]
+    [navigation],
   );
 
   const handleDelete = useCallback((item: FeeStructure) => {
@@ -209,48 +245,65 @@ export default function FeeStructuresScreen() {
 
   const handlePress = useCallback(
     (id: string) => {
-      router.push({
-        pathname: '/(tabs)/(admin)/fee-student-fees',
-        params: { fee_structure_public_id: id },
-      });
+      navigation.navigate('FeeStudentFees', { fee_structure_public_id: id });
     },
-    [router]
+    [navigation],
   );
 
   const handleViewDetail = useCallback(
     (id: string) => {
-      router.push({ pathname: '/(tabs)/(admin)/fee-structure-detail', params: { id } });
+      navigation.navigate('FeeStructureDetail', { id });
     },
-    [router]
+    [navigation],
   );
 
   const confirmDelete = useCallback(() => {
     if (!deleteTarget) return;
-    deleteStructure(deleteTarget.public_id, { onSuccess: () => setDeleteTarget(null) });
+    deleteStructure(deleteTarget.public_id, {
+      onSuccess: () => setDeleteTarget(null),
+    });
   }, [deleteStructure, deleteTarget]);
 
-  if (isLoading) return <LoadingState color="#059669" message="Loading fee structures..." />;
+  const renderItem = useCallback(
+    ({ item }: { item: FeeStructure }) => (
+      <StructureCard
+        item={item}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onViewDetail={handleViewDetail}
+        onPress={handlePress}
+      />
+    ),
+    [handleEdit, handleDelete, handleViewDetail, handlePress],
+  );
+
+  if (isLoading)
+    return <LoadingState color="#059669" message="Loading fee structures..." />;
   if (isError)
-    return <ErrorState message="Failed to load fee structures" onRetry={() => void refetch()} />;
+    return (
+      <ErrorState
+        message="Failed to load fee structures"
+        onRetry={() => void refetch()}
+      />
+    );
 
   return (
     <View style={styles.container}>
       <LinearGradient colors={['#059669', '#10b981']} style={styles.header}>
         <Animated.View entering={FadeIn.delay(100)} style={styles.circle1} />
         <View style={styles.headerContent}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => router.push('/(tabs)/(admin)/fee-dashboard')}
-          >
+          <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
             <ChevronLeft size={24} color="#fff" />
           </TouchableOpacity>
-          <View style={{ flex: 1, marginLeft: 8 }}>
+          <View style={styles.headerTextWrap}>
             <Text style={styles.headerTitle}>Fee Structures</Text>
-            <Text style={styles.headerSub}>{data?.totalCount ?? 0} structures</Text>
+            <Text style={styles.headerSub}>
+              {data?.totalCount ?? 0} structures
+            </Text>
           </View>
           <TouchableOpacity
             style={styles.addBtn}
-            onPress={() => router.push('/(tabs)/(admin)/fee-structure-form')}
+            onPress={() => navigation.navigate('FeeStructureForm')}
           >
             <Plus size={20} color="#fff" />
           </TouchableOpacity>
@@ -264,14 +317,16 @@ export default function FeeStructuresScreen() {
           placeholder="Search by name or year..."
           onFilterPress={() => setShowFilters(true)}
           activeFilterCount={
-            Object.values(filters).filter((v) => v !== '' && v !== undefined && v !== false).length
+            Object.values(filters).filter(
+              v => v !== '' && v !== undefined && v !== false,
+            ).length
           }
         />
       </Animated.View>
 
       <ActiveFilters
         filters={getFeeStructureFilterLabels(filters, classOptions)}
-        onRemove={(key) => setFilters((prev) => ({ ...prev, [key]: undefined }))}
+        onRemove={key => setFilters({ ...filters, [key]: undefined })}
         onClearAll={() => setFilters({})}
       />
 
@@ -281,7 +336,7 @@ export default function FeeStructuresScreen() {
         fields={filterFields}
         currentFilters={filters}
         title="Filter Fee Structures"
-        onApply={(nextFilters) => {
+        onApply={nextFilters => {
           setFilters(nextFilters);
           setShowFilters(false);
         }}
@@ -289,16 +344,8 @@ export default function FeeStructuresScreen() {
 
       <FlatList
         data={filtered}
-        keyExtractor={(item) => item.public_id}
-        renderItem={({ item }) => (
-          <StructureCard
-            item={item}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onViewDetail={handleViewDetail}
-            onPress={handlePress}
-          />
-        )}
+        keyExtractor={item => item.public_id}
+        renderItem={renderItem}
         contentContainerStyle={styles.list}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
@@ -311,7 +358,9 @@ export default function FeeStructuresScreen() {
             tintColor="#059669"
           />
         }
-        ListFooterComponent={<ListFooter isLoading={isFetchingNextPage} color="#059669" />}
+        ListFooterComponent={
+          <ListFooter isLoading={isFetchingNextPage} color="#059669" />
+        }
         ListEmptyComponent={
           <EmptyState
             icon={<FileText size={48} color="#cbd5e1" />}
@@ -338,7 +387,12 @@ export default function FeeStructuresScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
-  header: { paddingTop: 52, paddingBottom: 16, paddingHorizontal: 16, overflow: 'hidden' },
+  header: {
+    paddingTop: 52,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    overflow: 'hidden',
+  },
   circle1: {
     position: 'absolute',
     width: 180,
@@ -426,4 +480,19 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   actionText: { fontSize: 12, fontWeight: '600' },
+  cardTitleWrap: { flex: 1, marginLeft: 10 },
+  headerTextWrap: { flex: 1, marginLeft: 8 },
+  activeBadgeOn: { backgroundColor: '#dcfce7' },
+  activeBadgeOff: { backgroundColor: '#fee2e2' },
+  activeDotOn: { backgroundColor: '#059669' },
+  activeDotOff: { backgroundColor: '#dc2626' },
+  activeTextOn: { color: '#059669' },
+  activeTextOff: { color: '#dc2626' },
+  actionBtnBlue: { backgroundColor: '#eff6ff' },
+  actionBtnRed: { backgroundColor: '#fef2f2' },
+  actionBtnGreenAuto: { backgroundColor: '#f0fdf4', marginLeft: 'auto' },
+  actionTextEditBlue: { color: '#3b82f6' },
+  actionTextViewBlue: { color: '#2563eb' },
+  actionTextRed: { color: '#dc2626' },
+  actionTextGreen: { color: '#059669' },
 });

@@ -1,14 +1,14 @@
 /**
- * Assign Fee Structure to Stu  const studentOptions = (studentsData?.students ?? []).map((s) => ({
-    value: s.public_id,
-    label: `${s.first_name} ${s.last_name}`,
-  })); Screen
+ * Assign Fee Structure to Student Screen
  */
 
-import { LinearGradient } from 'expo-linear-gradient';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import {
+  useNavigation,
+  useRoute,
+  type RouteProp,
+} from '@react-navigation/native';
 import { ChevronLeft, UserPlus } from 'lucide-react-native';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
@@ -17,23 +17,32 @@ import { SubmitButton } from '@/components/common/SubmitButton';
 import { ClassFilterDropdown } from '@/components/filters';
 import { FormDropdown } from '@/components/forms/FormDropdown';
 import { FormInput } from '@/components/forms/FormInput';
-import { useAndroidBack } from '@/hooks';
+import { LinearGradient } from '@/lib/linear-gradient';
+import type {
+  SharedStackNavigation,
+  SharedStackParamList,
+} from '@/navigation/types';
 import { extractApiError } from '@/utils/api-error';
 import { showToast } from '@/utils/toast';
 
-import { useFeeStructures, useCreateStudentFee, useEligibleStudents } from '../hooks';
+import {
+  useFeeStructures,
+  useCreateStudentFee,
+  useEligibleStudents,
+} from '../hooks';
 
 export default function FeeAssignStudentScreen() {
-  const router = useRouter();
-  useAndroidBack('/(tabs)/(admin)/fee-student-fees');
-  const params = useLocalSearchParams<{
-    class_id?: string;
-    class_public_id?: string;
-    student_id?: string;
-    structure_id?: string;
-  }>();
+  const navigation = useNavigation<SharedStackNavigation>();
+  const route = useRoute<RouteProp<SharedStackParamList, 'FeeAssignStudent'>>();
+  const params = route.params ?? {};
 
-  const [classId, setClassId] = useState(params.class_id ?? params.class_public_id ?? '');
+  const handleBack = useCallback(() => {
+    if (navigation.canGoBack()) navigation.goBack();
+  }, [navigation]);
+
+  const [classId, setClassId] = useState(
+    params.class_id ?? params.class_public_id ?? '',
+  );
   const [studentId, setStudentId] = useState(params.student_id ?? '');
   const [structureId, setStructureId] = useState(params.structure_id ?? '');
   const [discountPct, setDiscountPct] = useState('');
@@ -41,7 +50,8 @@ export default function FeeAssignStudentScreen() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Data
-  const { data: eligibleStudents, isLoading: studentsLoading } = useEligibleStudents(classId);
+  const { data: eligibleStudents, isLoading: studentsLoading } =
+    useEligibleStudents(classId);
   const { data: structuresData } = useFeeStructures({
     is_active: true,
     page_size: 200,
@@ -49,12 +59,12 @@ export default function FeeAssignStudentScreen() {
   });
   const { mutate: assignFee, isPending } = useCreateStudentFee();
 
-  const studentOptions = (eligibleStudents ?? []).map((s) => ({
+  const studentOptions = (eligibleStudents ?? []).map(s => ({
     value: s.public_id,
     label: s.roll_number ? `${s.full_name} (${s.roll_number})` : s.full_name,
   }));
 
-  const structureOptions = (structuresData?.items ?? []).map((s) => ({
+  const structureOptions = (structuresData?.items ?? []).map(s => ({
     value: s.public_id,
     label: `${s.name} (${s.academic_year})`,
   }));
@@ -77,7 +87,7 @@ export default function FeeAssignStudentScreen() {
     setClassId(value);
     setStudentId('');
     setStructureId('');
-    setErrors((prev) => ({
+    setErrors(prev => ({
       ...prev,
       classId: '',
       studentId: '',
@@ -87,12 +97,12 @@ export default function FeeAssignStudentScreen() {
 
   const handleStudentChange = (value: string) => {
     setStudentId(value);
-    setErrors((prev) => ({ ...prev, studentId: '' }));
+    setErrors(prev => ({ ...prev, studentId: '' }));
   };
 
   const handleStructureChange = (value: string) => {
     setStructureId(value);
-    setErrors((prev) => ({ ...prev, structureId: '' }));
+    setErrors(prev => ({ ...prev, structureId: '' }));
   };
 
   const handleSubmit = () => {
@@ -101,18 +111,20 @@ export default function FeeAssignStudentScreen() {
       {
         student_public_id: studentId,
         fee_structure_public_id: structureId,
-        discount_percentage: discountPct ? Number.parseFloat(discountPct) : undefined,
+        discount_percentage: discountPct
+          ? Number.parseFloat(discountPct)
+          : undefined,
         discount_reason: discountReason || undefined,
       },
       {
         onSuccess: () => {
           showToast('success', 'Fee assigned successfully');
-          router.push('/(tabs)/(admin)/fee-student-fees');
+          navigation.navigate('FeeStudentFees');
         },
-        onError: (err) => {
+        onError: err => {
           Alert.alert('Error', extractApiError(err));
         },
-      }
+      },
     );
   };
 
@@ -122,15 +134,14 @@ export default function FeeAssignStudentScreen() {
       <LinearGradient colors={['#0891b2', '#22d3ee']} style={styles.header}>
         <Animated.View entering={FadeIn} style={styles.circle1} />
         <View style={styles.headerContent}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => router.push('/(tabs)/(admin)/fee-student-fees')}
-          >
+          <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
             <ChevronLeft size={24} color="#fff" />
           </TouchableOpacity>
-          <View style={{ flex: 1, marginLeft: 10 }}>
+          <View style={styles.headerTextWrap}>
             <Text style={styles.headerTitle}>Assign Fee Structure</Text>
-            <Text style={styles.headerSub}>Link a fee structure to a student</Text>
+            <Text style={styles.headerSub}>
+              Link a fee structure to a student
+            </Text>
           </View>
           <UserPlus size={24} color="rgba(255,255,255,0.8)" />
         </View>
@@ -174,7 +185,9 @@ export default function FeeAssignStudentScreen() {
             value={structureId}
             onChange={handleStructureChange}
             error={errors.structureId}
-            placeholder={classId ? 'Select fee structure...' : 'Select class first'}
+            placeholder={
+              classId ? 'Select fee structure...' : 'Select class first'
+            }
             disabled={!classId}
             searchable
           />
@@ -204,7 +217,10 @@ export default function FeeAssignStudentScreen() {
           ) : null}
         </Animated.View>
 
-        <Animated.View entering={FadeInDown.delay(200)} style={styles.submitRow}>
+        <Animated.View
+          entering={FadeInDown.delay(200)}
+          style={styles.submitRow}
+        >
           <SubmitButton
             label="Assign Fee Structure"
             onPress={handleSubmit}
@@ -219,7 +235,12 @@ export default function FeeAssignStudentScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
-  header: { paddingTop: 52, paddingBottom: 16, paddingHorizontal: 16, overflow: 'hidden' },
+  header: {
+    paddingTop: 52,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    overflow: 'hidden',
+  },
   circle1: {
     position: 'absolute',
     width: 180,
@@ -255,4 +276,5 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { fontSize: 15, fontWeight: '700', color: '#1e293b' },
   submitRow: { marginTop: 8 },
+  headerTextWrap: { flex: 1, marginLeft: 10 },
 });

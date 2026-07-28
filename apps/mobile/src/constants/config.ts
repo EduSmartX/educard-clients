@@ -1,49 +1,30 @@
 /**
- * Application configuration constants
+ * Application configuration constants (React Native CLI).
+ * Env values come from react-native-config (.env files selected via ENVFILE).
  */
 
-import Constants from 'expo-constants';
+import Config from 'react-native-config';
 import { Platform } from 'react-native';
 
-const getDefaultApiUrl = () => {
-  // If running in Expo Go on a physical device, we need the host machine's IP
-  // Expo provides this in the manifest
-  const expoHostUri = Constants.expoConfig?.hostUri;
-  // Access manifest with type assertion for legacy support
-  const manifest = Constants.manifest as { debuggerHost?: string } | undefined;
-  const manifestDebugger = manifest?.debuggerHost;
-  const debuggerHost = expoHostUri ?? manifestDebugger;
-
-  if (debuggerHost) {
-    // Extract IP from debuggerHost (format: "192.168.1.x:8081")
-    const hostIp = debuggerHost.split(':')[0];
-    return `http://${hostIp}:8000/api`;
-  }
-
-  // Fallback for Android emulator (10.0.2.2 maps to host localhost)
-  if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:8000/api';
-  }
-
-  // iOS simulator can use localhost
-  return 'http://localhost:8000/api';
-};
+const devFallback =
+  Platform.OS === 'android'
+    ? 'http://10.0.2.2:8000/api'
+    : 'http://localhost:8000/api';
 
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: (process.env.EXPO_PUBLIC_API_URL as string | undefined)?.trim() ?? getDefaultApiUrl(),
+  BASE_URL: (Config.API_URL ?? devFallback).trim(),
   TIMEOUT: 30000,
   DEFAULT_PAGE_SIZE: 15,
 } as const;
 
 /**
  * Resolve a media/attachment path from the backend to a full URL.
- * Backend returns paths like "/media/attachments/..." — on mobile we need the full host.
- * Also handles Base64 data URIs (embed_images=true) which are returned directly.
  */
 export function getMediaUrl(path?: string | null): string | undefined {
-  if (!path) return undefined;
-  // Already a full URL, local file URI, or Base64 data URI (embed_images mode)
+  if (!path) {
+    return undefined;
+  }
   if (
     path.startsWith('http://') ||
     path.startsWith('https://') ||
@@ -52,9 +33,7 @@ export function getMediaUrl(path?: string | null): string | undefined {
   ) {
     return path;
   }
-  // Relative path — prepend the server host
-  const baseUrl = API_CONFIG.BASE_URL; // e.g. "http://192.168.x.x:8000/api"
-  const serverOrigin = baseUrl.replace(/\/api\/?$/, ''); // "http://192.168.x.x:8000"
+  const serverOrigin = API_CONFIG.BASE_URL.replace(/\/api\/?$/, '');
   return `${serverOrigin}${path.startsWith('/') ? '' : '/'}${path}`;
 }
 
@@ -95,30 +74,3 @@ export const USER_ROLES = {
 } as const;
 
 export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
-
-// Routes
-export const ROUTES = {
-  // Auth routes
-  LOGIN: '/(auth)/login',
-  SIGNUP: '/(auth)/signup',
-  FORGOT_PASSWORD: '/(auth)/forgot-password',
-
-  // Admin routes
-  ADMIN_DASHBOARD: '/(tabs)/(admin)/dashboard',
-  ADMIN_TEACHERS: '/(tabs)/(admin)/teachers',
-  ADMIN_STUDENTS: '/(tabs)/(admin)/students',
-  ADMIN_CLASSES: '/(tabs)/(admin)/classes',
-  ADMIN_SETTINGS: '/(tabs)/(admin)/settings',
-
-  // Employee routes
-  EMPLOYEE_DASHBOARD: '/(tabs)/(employee)/dashboard',
-  EMPLOYEE_ATTENDANCE: '/(tabs)/(employee)/attendance',
-  EMPLOYEE_TIMETABLE: '/(tabs)/(employee)/timetable',
-  EMPLOYEE_PROFILE: '/(tabs)/(employee)/profile',
-
-  // Parent routes
-  PARENT_DASHBOARD: '/(tabs)/(parent)/dashboard',
-  PARENT_CHILDREN: '/(tabs)/(parent)/children',
-  PARENT_ATTENDANCE: '/(tabs)/(parent)/attendance',
-  PARENT_NOTIFICATIONS: '/(tabs)/(parent)/notifications',
-} as const;

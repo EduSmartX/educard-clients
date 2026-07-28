@@ -4,8 +4,7 @@
  */
 
 import type { FeePaymentListItem } from '@educard/shared';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import {
   IndianRupee,
   TrendingUp,
@@ -15,6 +14,7 @@ import {
   Plus,
   ChevronRight,
   List,
+  ClipboardCheck,
 } from 'lucide-react-native';
 import React, { useCallback } from 'react';
 import {
@@ -25,11 +25,13 @@ import {
   StyleSheet,
   RefreshControl,
   ActivityIndicator,
+  type DimensionValue,
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { HeaderProfileButton } from '@/components/common';
-import { useAndroidBack } from '@/hooks';
+import { LinearGradient } from '@/lib/linear-gradient';
+import type { SharedStackNavigation } from '@/navigation/types';
 
 import { FeeStatusBadge, PaymentModeBadge } from '../components';
 import { useFeeDashboard, usePayments } from '../hooks';
@@ -53,14 +55,16 @@ interface StatCardProps {
   icon: React.ReactNode;
 }
 
-const StatCard = React.memo(({ label, value, sub, gradient, icon }: StatCardProps) => (
-  <LinearGradient colors={gradient} style={styles.statCard}>
-    <View style={styles.statIconBox}>{icon}</View>
-    <Text style={styles.statLabel}>{label}</Text>
-    <Text style={styles.statValue}>{value}</Text>
-    <Text style={styles.statSub}>{sub}</Text>
-  </LinearGradient>
-));
+const StatCard = React.memo(
+  ({ label, value, sub, gradient, icon }: StatCardProps) => (
+    <LinearGradient colors={gradient} style={styles.statCard}>
+      <View style={styles.statIconBox}>{icon}</View>
+      <Text style={styles.statLabel}>{label}</Text>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statSub}>{sub}</Text>
+    </LinearGradient>
+  ),
+);
 StatCard.displayName = 'StatCard';
 
 interface QuickActionProps {
@@ -70,26 +74,39 @@ interface QuickActionProps {
   onPress: () => void;
 }
 
-const QuickAction = React.memo(({ label, icon, gradient, onPress }: QuickActionProps) => (
-  <TouchableOpacity style={styles.quickAction} onPress={onPress} activeOpacity={0.8}>
-    <LinearGradient colors={gradient} style={styles.quickActionIcon}>
-      {icon}
-    </LinearGradient>
-    <Text style={styles.quickActionLabel}>{label}</Text>
-  </TouchableOpacity>
-));
+const QuickAction = React.memo(
+  ({ label, icon, gradient, onPress }: QuickActionProps) => (
+    <TouchableOpacity
+      style={styles.quickAction}
+      onPress={onPress}
+      activeOpacity={0.8}
+    >
+      <LinearGradient colors={gradient} style={styles.quickActionIcon}>
+        {icon}
+      </LinearGradient>
+      <Text style={styles.quickActionLabel}>{label}</Text>
+    </TouchableOpacity>
+  ),
+);
 QuickAction.displayName = 'QuickAction';
 
 // ─── screen ──────────────────────────────────────────────────────────────────
 
 export default function FeeDashboardScreen() {
-  const router = useRouter();
-  useAndroidBack('/(tabs)/(admin)/management');
-  const { data: dashboard, isLoading, refetch, isRefetching } = useFeeDashboard();
-  const { data: paymentsData, isLoading: isPaymentsLoading } = usePayments({ page_size: 5 });
+  const navigation = useNavigation<SharedStackNavigation>();
+  const {
+    data: dashboard,
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useFeeDashboard();
+  const { data: paymentsData, isLoading: isPaymentsLoading } = usePayments({
+    page_size: 5,
+  });
 
   const recentPayments = paymentsData?.items ?? [];
   const pct = dashboard?.collection_percentage ?? 0;
+  const progressWidth: DimensionValue = `${Math.min(pct, 100)}%`;
 
   const handleRefresh = useCallback(() => {
     void refetch();
@@ -114,21 +131,32 @@ export default function FeeDashboardScreen() {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={handleRefresh} tintColor="#059669" />
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={handleRefresh}
+            tintColor="#059669"
+          />
         }
       >
         {isLoading ? (
-          <ActivityIndicator style={styles.loader} size="large" color="#059669" />
+          <ActivityIndicator
+            style={styles.loader}
+            size="large"
+            color="#059669"
+          />
         ) : (
           <>
             {/* Collection progress */}
-            <Animated.View entering={FadeInDown.delay(100)} style={styles.progressCard}>
+            <Animated.View
+              entering={FadeInDown.delay(100)}
+              style={styles.progressCard}
+            >
               <View style={styles.progressHeader}>
                 <Text style={styles.progressTitle}>Collection Progress</Text>
                 <Text style={styles.progressPct}>{pct}%</Text>
               </View>
               <View style={styles.progressBarBg}>
-                <View style={[styles.progressBar, { width: `${Math.min(pct, 100)}%` }]} />
+                <View style={[styles.progressBar, { width: progressWidth }]} />
               </View>
               <View style={styles.progressFooter}>
                 <Text style={styles.progressSub}>
@@ -139,7 +167,10 @@ export default function FeeDashboardScreen() {
             </Animated.View>
 
             {/* Stats grid */}
-            <Animated.View entering={FadeInDown.delay(150)} style={styles.statsGrid}>
+            <Animated.View
+              entering={FadeInDown.delay(150)}
+              style={styles.statsGrid}
+            >
               <StatCard
                 label="Total Collected"
                 value={formatCurrency(dashboard?.total_collected)}
@@ -171,52 +202,68 @@ export default function FeeDashboardScreen() {
             </Animated.View>
 
             {/* Quick Actions */}
-            <Animated.View entering={FadeInDown.delay(200)} style={styles.section}>
+            <Animated.View
+              entering={FadeInDown.delay(200)}
+              style={styles.section}
+            >
               <Text style={styles.sectionTitle}>Quick Actions</Text>
               <View style={styles.quickActions}>
                 <QuickAction
                   label="Fee Structures"
                   gradient={['#0f766e', '#14b8a6']}
                   icon={<List size={20} color="#fff" />}
-                  onPress={() => router.push('/(tabs)/(admin)/fee-structures')}
+                  onPress={() => navigation.navigate('FeeStructures')}
                 />
                 <QuickAction
                   label="New Structure"
                   gradient={['#059669', '#10b981']}
                   icon={<Plus size={20} color="#fff" />}
-                  onPress={() => router.push('/(tabs)/(admin)/fee-structure-form')}
+                  onPress={() => navigation.navigate('FeeStructureForm')}
                 />
                 <QuickAction
                   label="Student Fees"
                   gradient={['#7c3aed', '#a78bfa']}
                   icon={<Users size={20} color="#fff" />}
-                  onPress={() => router.push('/(tabs)/(admin)/fee-student-fees')}
+                  onPress={() => navigation.navigate('FeeStudentFees')}
                 />
                 <QuickAction
                   label="All Payments"
                   gradient={['#d97706', '#f59e0b']}
                   icon={<TrendingUp size={20} color="#fff" />}
-                  onPress={() => router.push('/(tabs)/(admin)/fee-payments')}
+                  onPress={() => navigation.navigate('FeePayments')}
                 />
                 <QuickAction
                   label="Assign Fee"
                   gradient={['#e11d48', '#fb7185']}
                   icon={<IndianRupee size={20} color="#fff" />}
-                  onPress={() => router.push('/(tabs)/(admin)/fee-assign-student')}
+                  onPress={() => navigation.navigate('FeeAssignStudent')}
+                />
+                <QuickAction
+                  label="Requests"
+                  gradient={['#0891b2', '#22d3ee']}
+                  icon={<ClipboardCheck size={20} color="#fff" />}
+                  onPress={() => navigation.navigate('FeeComponentRequests')}
                 />
               </View>
             </Animated.View>
 
             {/* Recent Payments */}
-            <Animated.View entering={FadeInDown.delay(250)} style={styles.section}>
+            <Animated.View
+              entering={FadeInDown.delay(250)}
+              style={styles.section}
+            >
               <View style={styles.sectionRow}>
                 <Text style={styles.sectionTitle}>Recent Payments</Text>
-                <TouchableOpacity onPress={() => router.push('/(tabs)/(admin)/fee-payments')}>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('FeePayments')}
+                >
                   <Text style={styles.seeAll}>See all</Text>
                 </TouchableOpacity>
               </View>
 
-              {isPaymentsLoading && <ActivityIndicator color="#059669" style={{ marginTop: 12 }} />}
+              {isPaymentsLoading && (
+                <ActivityIndicator color="#059669" style={styles.mt12} />
+              )}
               {!isPaymentsLoading && recentPayments.length === 0 && (
                 <Text style={styles.emptyText}>No payments yet.</Text>
               )}
@@ -227,9 +274,8 @@ export default function FeeDashboardScreen() {
                     key={p.public_id}
                     style={styles.paymentRow}
                     onPress={() =>
-                      router.push({
-                        pathname: '/(tabs)/(admin)/fee-payments',
-                        params: { highlight: p.public_id },
+                      navigation.navigate('FeePayments', {
+                        highlight: p.public_id,
                       })
                     }
                     activeOpacity={0.7}
@@ -241,16 +287,25 @@ export default function FeeDashboardScreen() {
                       <Text style={styles.paymentDate}>{p.payment_date}</Text>
                     </View>
                     <View style={styles.paymentRight}>
-                      <Text style={styles.paymentAmount}>₹{p.amount.toLocaleString('en-IN')}</Text>
+                      <Text style={styles.paymentAmount}>
+                        ₹{p.amount.toLocaleString('en-IN')}
+                      </Text>
                       <PaymentModeBadge mode={p.payment_mode} size="sm" />
                     </View>
-                    <ChevronRight size={16} color="#94a3b8" style={{ marginLeft: 4 }} />
+                    <ChevronRight
+                      size={16}
+                      color="#94a3b8"
+                      style={styles.ml4}
+                    />
                   </TouchableOpacity>
                 ))}
             </Animated.View>
 
             {/* Status breakdown */}
-            <Animated.View entering={FadeInDown.delay(300)} style={styles.section}>
+            <Animated.View
+              entering={FadeInDown.delay(300)}
+              style={styles.section}
+            >
               <Text style={styles.sectionTitle}>Status Breakdown</Text>
               <View style={styles.statusGrid}>
                 {[
@@ -292,7 +347,12 @@ export default function FeeDashboardScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
-  header: { paddingTop: 52, paddingBottom: 24, paddingHorizontal: 20, overflow: 'hidden' },
+  header: {
+    paddingTop: 52,
+    paddingBottom: 24,
+    paddingHorizontal: 20,
+    overflow: 'hidden',
+  },
   circle1: {
     position: 'absolute',
     width: 200,
@@ -311,11 +371,26 @@ const styles = StyleSheet.create({
     bottom: -30,
     left: 20,
   },
-  headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  headerTitle: { fontSize: 22, fontWeight: '800', color: '#fff', letterSpacing: -0.3 },
-  headerSubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#fff',
+    letterSpacing: -0.3,
+  },
+  headerSubtitle: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 2,
+  },
   scroll: { paddingHorizontal: 16, paddingBottom: 32 },
   loader: { marginTop: 60 },
+  mt12: { marginTop: 12 },
+  ml4: { marginLeft: 4 },
 
   // Progress card
   progressCard: {
@@ -329,7 +404,11 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
-  progressHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
   progressTitle: { fontSize: 14, fontWeight: '700', color: '#1e293b' },
   progressPct: { fontSize: 14, fontWeight: '800', color: '#059669' },
   progressBarBg: { height: 8, borderRadius: 4, backgroundColor: '#e2e8f0' },
@@ -355,7 +434,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 6,
   },
-  statLabel: { fontSize: 11, color: 'rgba(255,255,255,0.85)', fontWeight: '600' },
+  statLabel: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.85)',
+    fontWeight: '600',
+  },
   statValue: { fontSize: 20, fontWeight: '800', color: '#fff' },
   statSub: { fontSize: 11, color: 'rgba(255,255,255,0.75)' },
 
@@ -371,7 +454,12 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: '#1e293b', marginBottom: 12 },
+  sectionTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1e293b',
+    marginBottom: 12,
+  },
   sectionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -393,7 +481,12 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 6,
   },
-  quickActionLabel: { fontSize: 11, color: '#64748b', fontWeight: '600', textAlign: 'center' },
+  quickActionLabel: {
+    fontSize: 11,
+    color: '#64748b',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
 
   // Recent payments
   paymentRow: {
@@ -408,7 +501,12 @@ const styles = StyleSheet.create({
   paymentDate: { fontSize: 12, color: '#94a3b8', marginTop: 2 },
   paymentRight: { alignItems: 'flex-end', gap: 4 },
   paymentAmount: { fontSize: 14, fontWeight: '700', color: '#059669' },
-  emptyText: { fontSize: 13, color: '#94a3b8', textAlign: 'center', paddingVertical: 16 },
+  emptyText: {
+    fontSize: 13,
+    color: '#94a3b8',
+    textAlign: 'center',
+    paddingVertical: 16,
+  },
 
   // Status breakdown
   statusGrid: { flexDirection: 'row', justifyContent: 'space-between' },

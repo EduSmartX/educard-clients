@@ -3,8 +3,6 @@
  * Re-exports from shared and adds mobile-specific themes
  */
 
-// Re-export colors from shared
-// Import for local use
 import { Colors } from '@educard/shared';
 
 export { Colors, colors } from '@educard/shared';

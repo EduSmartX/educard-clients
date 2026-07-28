@@ -1,13 +1,19 @@
 /**
  * ProfileAvatar — Large circular avatar with image or initials fallback
- * Used on View and Edit detail screens for teachers/students
+ * Used on View and Edit detail screens for teachers/students.
  * When `onPress` is provided, shows a camera edit overlay.
  */
 
 import { Colors } from '@educard/shared';
-import { Image } from 'expo-image';
 import { Camera } from 'lucide-react-native';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+  Image,
+} from 'react-native';
 
 import { getMediaUrl } from '@/constants/config';
 
@@ -51,56 +57,60 @@ export function ProfileAvatar({
   const badgeSize = size * 0.32;
 
   const baseUri = getMediaUrl(imageUri);
-  // Add cache-busting query param when cacheVersion is provided
   const separator = baseUri?.includes('?') ? '&' : '?';
-  const resolvedUri = baseUri && cacheVersion ? `${baseUri}${separator}v=${cacheVersion}` : baseUri;
+  const resolvedUri =
+    baseUri && cacheVersion
+      ? `${baseUri}${separator}v=${cacheVersion}`
+      : baseUri;
+
+  const sizeStyle = { width: size, height: size, borderRadius };
+  const badgeStyle = {
+    width: badgeSize,
+    height: badgeSize,
+    borderRadius: badgeSize / 2,
+  };
 
   const content = resolvedUri ? (
     <Image
       source={{ uri: resolvedUri }}
-      style={[styles.image, { width: size, height: size, borderRadius }]}
-      contentFit="cover"
-      transition={200}
+      style={[styles.image, sizeStyle]}
+      resizeMode="cover"
     />
   ) : (
     <View
       style={[
         styles.initialsContainer,
-        { width: size, height: size, borderRadius, backgroundColor: bgColor },
+        sizeStyle,
+        { backgroundColor: bgColor },
       ]}
     >
-      <Text style={[styles.initialsText, { fontSize }]}>{getInitials(name)}</Text>
+      <Text style={[styles.initialsText, { fontSize }]}>
+        {getInitials(name)}
+      </Text>
     </View>
   );
 
   const overlay = isUploading ? (
-    <View style={[styles.uploadingOverlay, { width: size, height: size, borderRadius }]}>
+    <View style={[styles.uploadingOverlay, sizeStyle]}>
       <ActivityIndicator size="small" color="#fff" />
     </View>
   ) : null;
 
   const badge =
     onPress && !isUploading ? (
-      <View
-        style={[
-          styles.cameraBadge,
-          {
-            width: badgeSize,
-            height: badgeSize,
-            borderRadius: badgeSize / 2,
-            bottom: 0,
-            right: 0,
-          },
-        ]}
-      >
+      <View style={[styles.cameraBadge, styles.cameraBadgeAnchor, badgeStyle]}>
         <Camera size={badgeSize * 0.55} color="#fff" />
       </View>
     ) : null;
 
   if (onPress) {
     return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.7} disabled={isUploading}>
-        <View style={{ width: size, height: size }}>
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.7}
+        disabled={isUploading}
+      >
+        <View style={sizeStyle}>
           {content}
           {overlay}
           {badge}
@@ -144,6 +154,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#fff',
+  },
+  cameraBadgeAnchor: {
+    bottom: 0,
+    right: 0,
   },
   uploadingOverlay: {
     position: 'absolute',

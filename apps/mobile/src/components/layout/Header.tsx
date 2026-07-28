@@ -2,13 +2,13 @@
  * Header Component with gradient background
  */
 
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter, usePathname } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import { ChevronLeft, Bell, Settings, LucideIcon } from 'lucide-react-native';
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 
 import { Colors } from '@/constants/colors';
+import { LinearGradient } from '@/lib/linear-gradient';
 
 interface HeaderProps {
   title: string;
@@ -33,17 +33,21 @@ export function Header({
   transparent = false,
   light = false,
 }: HeaderProps) {
-  const router = useRouter();
-  const _pathname = usePathname();
+  const navigation = useNavigation();
 
   const textColor = light || transparent ? '#ffffff' : Colors.text.primary;
   const iconColor = light || transparent ? '#ffffff' : Colors.secondary[600];
+  const subtitleColor =
+    light || transparent ? 'rgba(255,255,255,0.8)' : Colors.text.secondary;
 
   const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
+    if (navigation.canGoBack()) {
+      navigation.goBack();
     }
   };
+
+  // Notifications/settings destinations are wired once the shared stack is migrated.
+  const pendingNavigation = () => undefined;
 
   const content = (
     <View className="flex-row items-center justify-between px-4 py-3">
@@ -59,15 +63,17 @@ export function Header({
           </TouchableOpacity>
         )}
         <View className="flex-1">
-          <Text className="text-xl font-bold" style={{ color: textColor }} numberOfLines={1}>
+          <Text
+            className="text-xl font-bold"
+            style={{ color: textColor }}
+            numberOfLines={1}
+          >
             {title}
           </Text>
           {subtitle && (
             <Text
               className="mt-0.5 text-sm"
-              style={{
-                color: light || transparent ? 'rgba(255,255,255,0.8)' : Colors.text.secondary,
-              }}
+              style={{ color: subtitleColor }}
               numberOfLines={1}
             >
               {subtitle}
@@ -80,7 +86,7 @@ export function Header({
       <View className="flex-row items-center gap-2">
         {showNotifications && (
           <TouchableOpacity
-            onPress={() => router.push('/(shared-screens)/notifications')}
+            onPress={pendingNavigation}
             className="h-10 w-10 items-center justify-center rounded-full bg-white/10"
             activeOpacity={0.7}
           >
@@ -89,7 +95,7 @@ export function Header({
         )}
         {showSettings && (
           <TouchableOpacity
-            onPress={() => router.push('/(tabs)/(admin)/settings')}
+            onPress={pendingNavigation}
             className="h-10 w-10 items-center justify-center rounded-full bg-white/10"
             activeOpacity={0.7}
           >
@@ -125,7 +131,9 @@ export function Header({
     );
   }
 
-  return <View className="border-b border-secondary-100 bg-white">{content}</View>;
+  return (
+    <View className="border-b border-secondary-100 bg-white">{content}</View>
+  );
 }
 
 export default Header;

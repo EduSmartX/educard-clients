@@ -26,30 +26,29 @@ interface DetailResponse<T> {
 
 /**
  * Navigate to the previous or next working day from a given date.
- *
- * @param params - Navigation parameters
- * @returns The next/previous working day info
  */
 export async function navigateWorkingDay(
-  params: WorkingDayNavigationParams
+  params: WorkingDayNavigationParams,
 ): Promise<WorkingDayNavigationResult> {
   const res = await apiClient.get<DetailResponse<WorkingDayNavigationResult>>(
     `${BASE_URL}/working-day/navigate/`,
-    { params }
+    { params },
   );
   return res.data.data;
 }
 
 /**
  * Check if a specific date is a working day.
- *
- * @param params - Date check parameters
- * @returns Working day status and reason
  */
-export async function getWorkingDayInfo(params: WorkingDayInfoParams): Promise<WorkingDayInfo> {
-  const res = await apiClient.get<DetailResponse<WorkingDayInfo>>(`${BASE_URL}/working-day/info/`, {
-    params,
-  });
+export async function getWorkingDayInfo(
+  params: WorkingDayInfoParams,
+): Promise<WorkingDayInfo> {
+  const res = await apiClient.get<DetailResponse<WorkingDayInfo>>(
+    `${BASE_URL}/working-day/info/`,
+    {
+      params,
+    },
+  );
   return res.data.data;
 }
 

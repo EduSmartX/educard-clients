@@ -3,14 +3,26 @@
  */
 
 import { getRoleGradient, SUBJECT_TYPE_OPTIONS } from '@educard/shared';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import { ChevronLeft, Save } from 'lucide-react-native';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { FormInput, FormSection, FormError, FormDropdown } from '@/components/forms';
+import {
+  FormInput,
+  FormSection,
+  FormError,
+  FormDropdown,
+} from '@/components/forms';
+import { LinearGradient } from '@/lib/linear-gradient';
+import type { SharedStackNavigation } from '@/navigation/types';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -65,23 +77,35 @@ export function SubjectFormBase({
   infoBanner,
   children,
 }: SubjectFormBaseProps) {
-  const router = useRouter();
+  const navigation = useNavigation<SharedStackNavigation>();
+
+  const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
+  };
 
   return (
     <View style={layoutStyles.container}>
-      <LinearGradient colors={[...adminGradient]} style={headerStyles.header}>
-        <Animated.View entering={FadeIn.delay(100)} style={headerStyles.circle1} />
-        <Animated.View entering={FadeIn.delay(200)} style={headerStyles.circle2} />
+      <LinearGradient colors={adminGradient} style={headerStyles.header}>
+        <Animated.View
+          entering={FadeIn.delay(100)}
+          style={headerStyles.circle1}
+        />
+        <Animated.View
+          entering={FadeIn.delay(200)}
+          style={headerStyles.circle2}
+        />
         <View style={headerStyles.content}>
           <View style={headerStyles.topRow}>
-            <TouchableOpacity style={headerStyles.backBtn} onPress={() => router.back()}>
+            <TouchableOpacity style={headerStyles.backBtn} onPress={handleBack}>
               <ChevronLeft size={24} color="#fff" />
             </TouchableOpacity>
             <View style={headerStyles.titleContainer}>
               <Text style={headerStyles.title}>{title}</Text>
               <Text style={headerStyles.subtitle}>{subtitle}</Text>
             </View>
-            <View style={{ width: 40 }} />
+            <View style={styles.spacer} />
           </View>
         </View>
       </LinearGradient>
@@ -92,7 +116,7 @@ export function SubjectFormBase({
         keyboardShouldPersistTaps="handled"
         enableOnAndroid
         extraScrollHeight={20}
-        style={{ flex: 1 }}
+        style={styles.flex1}
       >
         <FormError message={apiError} onDismiss={onDismissError} />
 
@@ -105,7 +129,7 @@ export function SubjectFormBase({
               required
               options={classOpts}
               value={form.class_id}
-              onChange={(v) => updateField('class_id', v)}
+              onChange={v => updateField('class_id', v)}
               error={errors.class_id}
               placeholder="Select a class"
               searchable
@@ -115,7 +139,7 @@ export function SubjectFormBase({
               required
               options={subjectOpts}
               value={form.subject_id}
-              onChange={(v) => updateField('subject_id', v)}
+              onChange={v => updateField('subject_id', v)}
               error={errors.subject_id}
               placeholder="Select a subject"
               searchable
@@ -123,12 +147,12 @@ export function SubjectFormBase({
             />
             <FormDropdown
               label="Subject Type (Optional)"
-              options={SUBJECT_TYPE_OPTIONS.map((opt) => ({
+              options={SUBJECT_TYPE_OPTIONS.map(opt => ({
                 value: opt.value,
                 label: opt.label,
               }))}
               value={form.subject_type}
-              onChange={(v) => updateField('subject_type', v)}
+              onChange={v => updateField('subject_type', v)}
               error={errors.subject_type}
               placeholder="Select subject type"
             />
@@ -136,14 +160,14 @@ export function SubjectFormBase({
               label="Teacher"
               options={teacherOpts}
               value={form.teacher_id}
-              onChange={(v) => updateField('teacher_id', v)}
+              onChange={v => updateField('teacher_id', v)}
               placeholder="Select a teacher (optional)"
               searchable
             />
             <FormInput
               label="Description"
               value={form.description}
-              onChangeText={(v) => updateField('description', v)}
+              onChangeText={v => updateField('description', v)}
               placeholder="Optional description"
               multiline
               numberOfLines={3}
@@ -151,7 +175,7 @@ export function SubjectFormBase({
             <FormInput
               label="Display Order (Optional)"
               value={form.display_order}
-              onChangeText={(v) => updateField('display_order', v)}
+              onChangeText={v => updateField('display_order', v)}
               error={errors.display_order}
               placeholder="e.g. 1 (lower appears first)"
               keyboardType="numeric"
@@ -191,6 +215,8 @@ export function SubjectFormBase({
 
 export const subjectFormStyles = StyleSheet.create({
   form: { padding: 16, paddingBottom: 40 },
+  flex1: { flex: 1 },
+  spacer: { width: 40 },
   infoBanner: {
     backgroundColor: '#dbeafe',
     padding: 14,

@@ -11,7 +11,14 @@ import {
 } from '@educard/shared';
 import { Bell, Mail, MessageSquare, Phone, X } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { View, Text, Modal, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  Modal,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
 
 interface SendReminderModalProps {
   visible: boolean;
@@ -41,7 +48,7 @@ export function SendReminderModal({
   isLoading,
 }: SendReminderModalProps) {
   const [selectedChannel, setSelectedChannel] = useState<ReminderChannelType>(
-    ReminderChannel.EMAIL
+    ReminderChannel.EMAIL,
   );
 
   const handleSend = () => {
@@ -51,7 +58,12 @@ export function SendReminderModal({
   if (!studentFee) return null;
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
       <View style={styles.overlay}>
         <View style={styles.container}>
           {/* Header */}
@@ -77,7 +89,7 @@ export function SendReminderModal({
           {/* Channel Selection */}
           <Text style={styles.sectionLabel}>Select Channel</Text>
           <View style={styles.channelList}>
-            {REMINDER_CHANNEL_OPTIONS.map((option) => {
+            {REMINDER_CHANNEL_OPTIONS.map(option => {
               const isSelected = selectedChannel === option.value;
               const color = CHANNEL_COLORS[option.value] || '#3b82f6';
               return (
@@ -85,17 +97,32 @@ export function SendReminderModal({
                   key={option.value}
                   style={[
                     styles.channelOption,
-                    isSelected && { borderColor: color, backgroundColor: `${color}10` },
+                    isSelected && {
+                      borderColor: color,
+                      backgroundColor: `${color}10`,
+                    },
                   ]}
-                  onPress={() => setSelectedChannel(option.value as ReminderChannelType)}
+                  onPress={() =>
+                    setSelectedChannel(option.value as ReminderChannelType)
+                  }
                 >
                   {CHANNEL_ICONS[option.value]}
-                  <Text style={[styles.channelLabel, isSelected && { color, fontWeight: '700' }]}>
+                  <Text
+                    style={[
+                      styles.channelLabel,
+                      isSelected && styles.channelLabelSelected,
+                      isSelected && { color },
+                    ]}
+                  >
                     {option.label}
                   </Text>
                   {isSelected && (
-                    <View style={[styles.radioSelected, { borderColor: color }]}>
-                      <View style={[styles.radioDot, { backgroundColor: color }]} />
+                    <View
+                      style={[styles.radioSelected, { borderColor: color }]}
+                    >
+                      <View
+                        style={[styles.radioDot, { backgroundColor: color }]}
+                      />
                     </View>
                   )}
                   {!isSelected && <View style={styles.radioUnselected} />}
@@ -106,7 +133,7 @@ export function SendReminderModal({
 
           {/* Send Button */}
           <TouchableOpacity
-            style={[styles.sendBtn, isLoading && { opacity: 0.6 }]}
+            style={[styles.sendBtn, isLoading && styles.dimmed]}
             onPress={handleSend}
             disabled={isLoading}
           >
@@ -235,4 +262,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
   },
+  channelLabelSelected: { fontWeight: '700' },
+  dimmed: { opacity: 0.6 },
 });

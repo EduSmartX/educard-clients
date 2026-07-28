@@ -4,8 +4,7 @@
  */
 
 import { Colors, getRoleGradient, LeaveType, RoleType } from '@educard/shared';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import { ChevronLeft, Save, ChevronDown, Check } from 'lucide-react-native';
 import { useMemo } from 'react';
 import {
@@ -30,9 +29,12 @@ import {
   FormDropdown,
   FormDatePicker,
 } from '@/components/forms';
+import { LinearGradient } from '@/lib/linear-gradient';
+import type { SharedStackNavigation } from '@/navigation/types';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
+const NOOP = () => undefined;
 
 export interface LeaveAllocationFormState {
   leave_type: string;
@@ -87,7 +89,13 @@ export function LeaveAllocationFormBase({
   onDismissError,
   leaveTypeDisabled = false,
 }: LeaveAllocationFormBaseProps) {
-  const router = useRouter();
+  const navigation = useNavigation<SharedStackNavigation>();
+
+  const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
+  };
 
   const leaveTypeOpts = useMemo(
     () =>
@@ -95,7 +103,7 @@ export function LeaveAllocationFormBase({
         value: String(lt.id),
         label: `${lt.name} (${lt.code})`,
       })),
-    [leaveTypes]
+    [leaveTypes],
   );
 
   const roleOpts = useMemo(
@@ -104,19 +112,19 @@ export function LeaveAllocationFormBase({
         value: r.id.toString(),
         label: r.name,
       })),
-    [roleTypes]
+    [roleTypes],
   );
 
   const selectedRoleNames = useMemo(() => {
     return form.roles
-      .map((roleId) => roleOpts.find((r) => r.value === roleId)?.label)
+      .map(roleId => roleOpts.find(r => r.value === roleId)?.label)
       .filter(Boolean)
       .join(', ');
   }, [form.roles, roleOpts]);
 
   return (
     <View style={layoutStyles.container}>
-      <LinearGradient colors={[...adminGradient]} style={headerStyles.header}>
+      <LinearGradient colors={adminGradient} style={headerStyles.header}>
         <Animated.View
           entering={FadeIn.delay(100)}
           style={headerStyles.circle1}
@@ -129,7 +137,7 @@ export function LeaveAllocationFormBase({
         />
         <View style={headerStyles.content}>
           <View style={headerStyles.topRow}>
-            <TouchableOpacity style={headerStyles.backBtn} onPress={() => router.back()}>
+            <TouchableOpacity style={headerStyles.backBtn} onPress={handleBack}>
               <ChevronLeft size={24} color="#fff" />
             </TouchableOpacity>
             <View style={headerStyles.titleContainer}>
@@ -137,7 +145,7 @@ export function LeaveAllocationFormBase({
               <Text style={headerStyles.subtitle}>{subtitle}</Text>
             </View>
             <TouchableOpacity
-              style={[headerStyles.primaryBtn, isSaving && { opacity: 0.5 }]}
+              style={[headerStyles.primaryBtn, isSaving && styles.savingBtn]}
               onPress={onSubmit}
               disabled={isSaving}
             >
@@ -157,7 +165,7 @@ export function LeaveAllocationFormBase({
         keyboardShouldPersistTaps="handled"
         enableOnAndroid
         extraScrollHeight={20}
-        style={{ flex: 1 }}
+        style={styles.flex1}
       >
         <FormError message={apiError} onDismiss={onDismissError} />
 
@@ -168,7 +176,9 @@ export function LeaveAllocationFormBase({
               required
               options={leaveTypeOpts}
               value={form.leave_type}
-              onChange={leaveTypeDisabled ? () => {} : (v) => updateField('leave_type', v)}
+              onChange={
+                leaveTypeDisabled ? NOOP : v => updateField('leave_type', v)
+              }
               error={errors.leave_type}
               placeholder="Select leave type"
               searchable
@@ -178,14 +188,14 @@ export function LeaveAllocationFormBase({
             <FormInput
               label="Policy Name"
               value={form.name}
-              onChangeText={(v) => updateField('name', v)}
+              onChangeText={v => updateField('name', v)}
               error={errors.name}
               placeholder="e.g. Casual Leave - Teaching Staff"
             />
             <FormInput
               label="Description"
               value={form.description}
-              onChangeText={(v) => updateField('description', v)}
+              onChangeText={v => updateField('description', v)}
               placeholder="Optional description"
               multiline
             />
@@ -198,7 +208,7 @@ export function LeaveAllocationFormBase({
               label="Total Days"
               required
               value={form.total_days}
-              onChangeText={(v) => updateField('total_days', v)}
+              onChangeText={v => updateField('total_days', v)}
               error={errors.total_days}
               placeholder="e.g. 12"
               keyboardType="numeric"
@@ -206,7 +216,7 @@ export function LeaveAllocationFormBase({
             <FormInput
               label="Max Carry Forward Days"
               value={form.max_carry_forward_days}
-              onChangeText={(v) => updateField('max_carry_forward_days', v)}
+              onChangeText={v => updateField('max_carry_forward_days', v)}
               placeholder="e.g. 5"
               keyboardType="numeric"
             />
@@ -219,7 +229,7 @@ export function LeaveAllocationFormBase({
               <Text style={styles.switchLabel}>Applies to all roles</Text>
               <Switch
                 value={form.applies_to_all_roles}
-                onValueChange={(v) => updateField('applies_to_all_roles', v)}
+                onValueChange={v => updateField('applies_to_all_roles', v)}
                 trackColor={{ false: '#e2e8f0', true: '#c4b5fd' }}
                 thumbColor={form.applies_to_all_roles ? '#7c3aed' : '#94a3b8'}
               />
@@ -243,10 +253,13 @@ export function LeaveAllocationFormBase({
                 </TouchableOpacity>
                 {form.roles.length > 0 && (
                   <Text style={styles.selectedCount}>
-                    {form.roles.length} role{form.roles.length > 1 ? 's' : ''} selected
+                    {form.roles.length} role{form.roles.length > 1 ? 's' : ''}{' '}
+                    selected
                   </Text>
                 )}
-                {Boolean(errors.roles) && <Text style={styles.errorText}>{errors.roles}</Text>}
+                {Boolean(errors.roles) && (
+                  <Text style={styles.errorText}>{errors.roles}</Text>
+                )}
               </>
             )}
           </FormSection>
@@ -258,24 +271,29 @@ export function LeaveAllocationFormBase({
               label="Effective From"
               required
               value={form.effective_from}
-              onChange={(v) => updateField('effective_from', v)}
+              onChange={v => updateField('effective_from', v)}
               error={errors.effective_from}
               placeholder="Select start date"
             />
             <FormDatePicker
               label="Effective To"
               value={form.effective_to}
-              onChange={(v) => updateField('effective_to', v)}
+              onChange={v => updateField('effective_to', v)}
               placeholder="Select end date (optional)"
             />
           </FormSection>
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(240)}>
-          <SubmitButton label={submitLabel} onPress={onSubmit} isLoading={isSaving} icon={Save} />
+          <SubmitButton
+            label={submitLabel}
+            onPress={onSubmit}
+            isLoading={isSaving}
+            icon={Save}
+          />
         </Animated.View>
 
-        <View style={{ height: 40 }} />
+        <View style={styles.bottomSpacer} />
       </KeyboardAwareScrollView>
 
       {/* Roles Multi-Select Modal */}
@@ -285,31 +303,48 @@ export function LeaveAllocationFormBase({
         animationType="slide"
         onRequestClose={() => setRolesModalVisible(false)}
       >
-        <Pressable style={styles.modalOverlay} onPress={() => setRolesModalVisible(false)}>
-          <Pressable style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setRolesModalVisible(false)}
+        >
+          <Pressable
+            style={styles.modalSheet}
+            onPress={e => e.stopPropagation()}
+          >
             <View style={styles.modalHandle} />
             <Text style={styles.modalTitle}>Select Roles</Text>
             <FlatList
               data={roleOpts}
-              keyExtractor={(item) => item.value}
+              keyExtractor={item => item.value}
               style={styles.modalList}
               renderItem={({ item }) => {
                 const isSelected = form.roles.includes(item.value);
                 return (
                   <TouchableOpacity
-                    style={[styles.modalOption, isSelected && styles.modalOptionSelected]}
+                    style={[
+                      styles.modalOption,
+                      isSelected && styles.modalOptionSelected,
+                    ]}
                     onPress={() => {
                       const newRoles = isSelected
-                        ? form.roles.filter((r) => r !== item.value)
+                        ? form.roles.filter(r => r !== item.value)
                         : [...form.roles, item.value];
                       updateField('roles', newRoles);
                     }}
                   >
-                    <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
+                    <View
+                      style={[
+                        styles.checkbox,
+                        isSelected && styles.checkboxSelected,
+                      ]}
+                    >
                       {isSelected && <Check size={14} color="#fff" />}
                     </View>
                     <Text
-                      style={[styles.modalOptionText, isSelected && styles.modalOptionTextSelected]}
+                      style={[
+                        styles.modalOptionText,
+                        isSelected && styles.modalOptionTextSelected,
+                      ]}
                     >
                       {item.label}
                     </Text>
@@ -321,7 +356,9 @@ export function LeaveAllocationFormBase({
               style={styles.modalDoneBtn}
               onPress={() => setRolesModalVisible(false)}
             >
-              <Text style={styles.modalDoneBtnText}>Done ({form.roles.length} selected)</Text>
+              <Text style={styles.modalDoneBtnText}>
+                Done ({form.roles.length} selected)
+              </Text>
             </TouchableOpacity>
           </Pressable>
         </Pressable>
@@ -331,6 +368,9 @@ export function LeaveAllocationFormBase({
 }
 
 export const leaveAllocationStyles = StyleSheet.create({
+  flex1: { flex: 1 },
+  savingBtn: { opacity: 0.5 },
+  bottomSpacer: { height: 40 },
   form: { padding: 16, paddingBottom: 40 },
   switchRow: {
     flexDirection: 'row',

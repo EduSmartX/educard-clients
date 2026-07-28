@@ -3,10 +3,13 @@
  * All payments with filters + analytics summary
  */
 
-import type { FeePayment, PaymentModeType, TransactionTypeValue } from '@educard/shared';
+import type {
+  FeePayment,
+  PaymentModeType,
+  TransactionTypeValue,
+} from '@educard/shared';
 import { TransactionType } from '@educard/shared';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import {
   ChevronLeft,
   TrendingUp,
@@ -26,9 +29,18 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
-import Animated, { FadeIn, FadeInDown, FadeInRight } from 'react-native-reanimated';
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeInRight,
+} from 'react-native-reanimated';
 
-import { EmptyState, ErrorState, LoadingState, ListFooter } from '@/components/common/ListStates';
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  ListFooter,
+} from '@/components/common/ListStates';
 import { SearchBar } from '@/components/common/SearchBar';
 import {
   FilterModal,
@@ -38,7 +50,9 @@ import {
   type PaymentFiltersState,
 } from '@/components/filters';
 import { FormDatePicker } from '@/components/forms/FormDatePicker';
-import { useAndroidBack } from '@/hooks';
+import { useScreenFilters } from '@/hooks/useScreenFilters';
+import { LinearGradient } from '@/lib/linear-gradient';
+import type { SharedStackNavigation } from '@/navigation/types';
 
 import { PaymentModeBadge } from '../components/payment-mode-badge';
 import { usePayments, useFeeDashboard } from '../hooks';
@@ -59,9 +73,18 @@ interface StatCardProps {
   delay?: number;
 }
 
-function StatCard({ label, value, icon, gradientColors, delay = 0 }: StatCardProps) {
+function StatCard({
+  label,
+  value,
+  icon,
+  gradientColors,
+  delay = 0,
+}: StatCardProps) {
   return (
-    <Animated.View entering={FadeInDown.delay(delay).duration(300)} style={styles.statCardWrapper}>
+    <Animated.View
+      entering={FadeInDown.delay(delay).duration(300)}
+      style={styles.statCardWrapper}
+    >
       <LinearGradient colors={gradientColors} style={styles.statCard}>
         <View style={styles.statIconBox}>{icon}</View>
         <Text style={styles.statLabel}>{label}</Text>
@@ -81,25 +104,38 @@ interface PaymentCardProps {
 const PaymentCard = React.memo(({ item, index }: PaymentCardProps) => {
   const isRefund = item.transaction_type === TransactionType.DEBIT;
   return (
-    <Animated.View entering={FadeInRight.delay(Math.min(index, 10) * 40).duration(300)}>
+    <Animated.View
+      entering={FadeInRight.delay(Math.min(index, 10) * 40).duration(300)}
+    >
       <View style={[styles.card, isRefund && styles.cardRefund]}>
         <View style={styles.cardHeader}>
-          <View style={[styles.iconBox, { backgroundColor: isRefund ? '#fef2f2' : '#f0fdf4' }]}>
+          <View
+            style={[
+              styles.iconBox,
+              isRefund ? styles.iconBoxRefund : styles.iconBoxNormal,
+            ]}
+          >
             {isRefund ? (
               <TrendingDown size={18} color="#dc2626" />
             ) : (
               <IndianRupee size={18} color="#059669" />
             )}
           </View>
-          <View style={{ flex: 1, marginLeft: 10 }}>
+          <View style={styles.cardTitleWrap}>
             <Text style={styles.studentName} numberOfLines={1}>
               {item.student_name}
             </Text>
             <Text style={styles.receiptNo}>#{item.receipt_number}</Text>
           </View>
-          <View style={{ alignItems: 'flex-end' }}>
-            <Text style={[styles.amount, { color: isRefund ? '#dc2626' : '#059669' }]}>
-              {isRefund ? '-' : '+'}₹{Number(item.amount).toLocaleString('en-IN')}
+          <View style={styles.alignEnd}>
+            <Text
+              style={[
+                styles.amount,
+                isRefund ? styles.amountRefund : styles.amountNormal,
+              ]}
+            >
+              {isRefund ? '-' : '+'}₹
+              {Number(item.amount).toLocaleString('en-IN')}
             </Text>
             <Text style={styles.date}>{item.payment_date}</Text>
           </View>
@@ -107,7 +143,9 @@ const PaymentCard = React.memo(({ item, index }: PaymentCardProps) => {
 
         <View style={styles.cardFooter}>
           <PaymentModeBadge mode={item.payment_mode} size="sm" />
-          {item.utr_number ? <Text style={styles.utr}>UTR: {item.utr_number}</Text> : null}
+          {item.utr_number ? (
+            <Text style={styles.utr}>UTR: {item.utr_number}</Text>
+          ) : null}
           <Text style={styles.receivedBy}>by {item.received_by_name}</Text>
         </View>
       </View>
@@ -119,14 +157,37 @@ PaymentCard.displayName = 'PaymentCard';
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function PaymentsScreen() {
-  const router = useRouter();
-  useAndroidBack('/(tabs)/(admin)/fee-dashboard');
-  const [search, setSearch] = useState('');
-  const [appliedSearch, setAppliedSearch] = useState('');
+  const navigation = useNavigation<SharedStackNavigation>();
+  const handleBack = useCallback(() => {
+    if (navigation.canGoBack()) navigation.goBack();
+  }, [navigation]);
+  const {
+    filters: pf,
+    search: appliedSearch,
+    setSearch: setAppliedSearch,
+    setFilter,
+  } = useScreenFilters<{
+    payment: PaymentFiltersState;
+    dateFrom: string;
+    dateTo: string;
+  }>('Payments', { payment: {}, dateFrom: '', dateTo: '' });
+  const filters = pf.payment;
+  const dateFrom = pf.dateFrom;
+  const dateTo = pf.dateTo;
+  const setFilters = useCallback(
+    (v: PaymentFiltersState) => setFilter('payment', v),
+    [setFilter],
+  );
+  const setDateFrom = useCallback(
+    (v: string) => setFilter('dateFrom', v),
+    [setFilter],
+  );
+  const setDateTo = useCallback(
+    (v: string) => setFilter('dateTo', v),
+    [setFilter],
+  );
+  const [search, setSearch] = useState(appliedSearch);
   const [showFilterModal, setShowFilterModal] = useState(false);
-  const [filters, setFilters] = useState<PaymentFiltersState>({});
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
   const [showDatePickers, setShowDatePickers] = useState(false);
   const scrollY = useRef(0);
 
@@ -159,31 +220,43 @@ export default function PaymentsScreen() {
     }
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-  const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    scrollY.current = e.nativeEvent.contentOffset.y;
-  }, []);
+  const handleScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      scrollY.current = e.nativeEvent.contentOffset.y;
+    },
+    [],
+  );
 
-  const handleApplyFilters = useCallback((newFilters: PaymentFiltersState) => {
-    setFilters(newFilters);
-    setShowFilterModal(false);
-  }, []);
+  const handleApplyFilters = useCallback(
+    (newFilters: PaymentFiltersState) => {
+      setFilters(newFilters);
+      setShowFilterModal(false);
+    },
+    [setFilters],
+  );
 
   const handleClearFilters = useCallback(() => {
     setFilters({});
     setDateFrom('');
     setDateTo('');
     setShowFilterModal(false);
-  }, []);
+  }, [setFilters, setDateFrom, setDateTo]);
 
   // Build active filter labels — include date chips too
   const activeFilterLabels = [
     ...getPaymentFilterLabels(filters),
-    ...(dateFrom ? [{ key: 'date_from', label: `From: ${dateFrom}`, value: dateFrom }] : []),
-    ...(dateTo ? [{ key: 'date_to', label: `To: ${dateTo}`, value: dateTo }] : []),
+    ...(dateFrom
+      ? [{ key: 'date_from', label: `From: ${dateFrom}`, value: dateFrom }]
+      : []),
+    ...(dateTo
+      ? [{ key: 'date_to', label: `To: ${dateTo}`, value: dateTo }]
+      : []),
   ];
 
   const activeFilterCount =
-    Object.values(filters).filter(Boolean).length + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0);
+    Object.values(filters).filter(Boolean).length +
+    (dateFrom ? 1 : 0) +
+    (dateTo ? 1 : 0);
 
   const handleRemoveFilter = (key: string) => {
     if (key === 'date_from') {
@@ -194,12 +267,25 @@ export default function PaymentsScreen() {
       setDateTo('');
       return;
     }
-    setFilters((f) => ({ ...f, [key]: undefined }));
+    setFilters({ ...filters, [key]: undefined });
   };
 
-  if (isLoading) return <LoadingState color="#0891b2" message="Loading payments..." />;
+  const renderItem = useCallback(
+    ({ item, index }: { item: FeePayment; index: number }) => (
+      <PaymentCard item={item} index={index} />
+    ),
+    [],
+  );
+
+  if (isLoading)
+    return <LoadingState color="#0891b2" message="Loading payments..." />;
   if (isError)
-    return <ErrorState message="Failed to load payments" onRetry={() => void refetch()} />;
+    return (
+      <ErrorState
+        message="Failed to load payments"
+        onRetry={() => void refetch()}
+      />
+    );
 
   return (
     <View style={styles.container}>
@@ -208,20 +294,22 @@ export default function PaymentsScreen() {
         <Animated.View entering={FadeIn.delay(100)} style={styles.circle1} />
         <Animated.View entering={FadeIn.delay(200)} style={styles.circle2} />
         <View style={styles.headerContent}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => router.push('/(tabs)/(admin)/fee-dashboard')}
-          >
+          <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
             <ChevronLeft size={24} color="#fff" />
           </TouchableOpacity>
-          <View style={{ flex: 1, marginLeft: 8 }}>
+          <View style={styles.headerTextWrap}>
             <Text style={styles.headerTitle}>Payments</Text>
-            <Text style={styles.headerSub}>{data?.totalCount ?? 0} total payments</Text>
+            <Text style={styles.headerSub}>
+              {data?.totalCount ?? 0} total payments
+            </Text>
           </View>
           {/* Analytics toggle for date filters */}
           <TouchableOpacity
-            style={[styles.headerIconBtn, showDatePickers && styles.headerIconBtnActive]}
-            onPress={() => setShowDatePickers((v) => !v)}
+            style={[
+              styles.headerIconBtn,
+              showDatePickers && styles.headerIconBtnActive,
+            ]}
+            onPress={() => setShowDatePickers(v => !v)}
           >
             <TrendingUp size={18} color="#fff" />
           </TouchableOpacity>
@@ -281,7 +369,7 @@ export default function PaymentsScreen() {
         <Animated.View entering={FadeInDown} style={styles.datePanel}>
           <Text style={styles.datePanelTitle}>📅 Filter by Date Range</Text>
           <View style={styles.dateRow}>
-            <View style={{ flex: 1 }}>
+            <View style={styles.flex1}>
               <FormDatePicker
                 label="From Date"
                 value={dateFrom}
@@ -290,7 +378,7 @@ export default function PaymentsScreen() {
                 maxYear={2030}
               />
             </View>
-            <View style={{ flex: 1 }}>
+            <View style={styles.flex1}>
               <FormDatePicker
                 label="To Date"
                 value={dateTo}
@@ -316,8 +404,8 @@ export default function PaymentsScreen() {
       {/* ── Payments List ─────────────────────────────────────── */}
       <FlatList
         data={items}
-        keyExtractor={(item) => item.public_id}
-        renderItem={({ item, index }) => <PaymentCard item={item} index={index} />}
+        keyExtractor={item => item.public_id}
+        renderItem={renderItem}
         contentContainerStyle={styles.list}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
@@ -330,7 +418,9 @@ export default function PaymentsScreen() {
             tintColor="#0891b2"
           />
         }
-        ListFooterComponent={<ListFooter isLoading={isFetchingNextPage} color="#0891b2" />}
+        ListFooterComponent={
+          <ListFooter isLoading={isFetchingNextPage} color="#0891b2" />
+        }
         ListEmptyComponent={
           <EmptyState
             icon={<CreditCard size={48} color="#cbd5e1" />}
@@ -348,7 +438,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
 
   // ── Header ────────────────────────────────────────────────────
-  header: { paddingTop: 52, paddingBottom: 16, paddingHorizontal: 16, overflow: 'hidden' },
+  header: {
+    paddingTop: 52,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    overflow: 'hidden',
+  },
   circle1: {
     position: 'absolute',
     width: 180,
@@ -424,7 +519,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center',
   },
-  statValue: { fontSize: 14, fontWeight: '800', color: '#fff', textAlign: 'center', marginTop: 2 },
+  statValue: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#fff',
+    textAlign: 'center',
+    marginTop: 2,
+  },
 
   // ── Search / Filters ──────────────────────────────────────────
   searchBox: { paddingHorizontal: 14, paddingTop: 10 },
@@ -441,7 +542,12 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
-  datePanelTitle: { fontSize: 13, fontWeight: '700', color: '#475569', marginBottom: 4 },
+  datePanelTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#475569',
+    marginBottom: 4,
+  },
   dateRow: { flexDirection: 'row', gap: 10 },
 
   // ── List ──────────────────────────────────────────────────────
@@ -479,4 +585,12 @@ const styles = StyleSheet.create({
   },
   utr: { fontSize: 11, color: '#64748b' },
   receivedBy: { fontSize: 11, color: '#94a3b8', marginLeft: 'auto' },
+  iconBoxRefund: { backgroundColor: '#fef2f2' },
+  iconBoxNormal: { backgroundColor: '#f0fdf4' },
+  amountRefund: { color: '#dc2626' },
+  amountNormal: { color: '#059669' },
+  cardTitleWrap: { flex: 1, marginLeft: 10 },
+  alignEnd: { alignItems: 'flex-end' },
+  headerTextWrap: { flex: 1, marginLeft: 8 },
+  flex1: { flex: 1 },
 });

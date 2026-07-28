@@ -1,7 +1,6 @@
 /**
  * StatsGrid Component
  * Responsive grid layout for stat cards on dashboards.
- * Shows 2 columns on phones, 4 on tablets.
  */
 
 import { View, StyleSheet } from 'react-native';
@@ -11,14 +10,12 @@ import { useResponsive } from '@/hooks/useResponsive';
 import { StatCard, type StatCardData } from './StatCard';
 
 export interface StatsGridProps {
-  /** Array of stat card configurations */
   stats: StatCardData[];
 }
 
 export function StatsGrid({ stats }: StatsGridProps) {
   const { statColumns, horizontalPadding } = useResponsive();
 
-  // Group stats into rows
   const rows: StatCardData[][] = [];
   for (let i = 0; i < stats.length; i += statColumns) {
     rows.push(stats.slice(i, i + statColumns));
@@ -29,11 +26,16 @@ export function StatsGrid({ stats }: StatsGridProps) {
       {rows.map((row, rowIndex) => (
         <View key={row[0]?.id ?? `row-${rowIndex}`} style={styles.row}>
           {row.map((stat, index) => (
-            <View key={stat.id || `stat-${rowIndex}-${index}`} style={styles.cell}>
-              <StatCard {...stat} animationIndex={rowIndex * statColumns + index} />
+            <View
+              key={stat.id || `stat-${rowIndex}-${index}`}
+              style={styles.cell}
+            >
+              <StatCard
+                {...stat}
+                animationIndex={rowIndex * statColumns + index}
+              />
             </View>
           ))}
-          {/* Fill empty cells to maintain alignment */}
           {row.length < statColumns &&
             Array.from({ length: statColumns - row.length }).map((_, i) => (
               <View key={`empty-${rowIndex}-${i}`} style={styles.cell} />

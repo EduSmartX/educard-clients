@@ -1,12 +1,6 @@
 /**
  * EntityActions — Shared View / Edit / Delete icon buttons rendered as a bottom bar
- *
- * Respects role-based permissions:
- * - Admin: View, Edit, Delete
- * - Teacher (Class Teacher): View, Edit, Delete (for their classes only)
- * - Teacher (Other): View only
- *
- * Use `canManage` prop to control Edit/Delete visibility based on backend permissions
+ * Respects role-based permissions via the `canManage` prop.
  */
 
 import { Colors } from '@educard/shared';
@@ -22,7 +16,6 @@ interface EntityActionsProps {
   /**
    * Controls whether Edit and Delete actions are shown.
    * When false (e.g., teacher viewing another class's data), only View is shown.
-   * Defaults to true for backward compatibility.
    */
   canManage?: boolean;
 }
@@ -34,13 +27,16 @@ export function EntityActions({
   onReactivate,
   canManage = true,
 }: EntityActionsProps) {
-  // Show Edit/Delete only if canManage is true AND the callback is provided
   const showEdit = canManage && onEdit;
   const showDelete = canManage && onDelete;
 
   return (
     <View style={s.bar}>
-      <TouchableOpacity style={[s.btn, s.viewBtn]} onPress={onView} activeOpacity={0.7}>
+      <TouchableOpacity
+        style={[s.btn, s.viewBtn]}
+        onPress={onView}
+        activeOpacity={0.7}
+      >
         <Eye size={16} color={Colors.info[600]} />
       </TouchableOpacity>
       {onReactivate ? (
@@ -54,12 +50,20 @@ export function EntityActions({
       ) : (
         <>
           {showEdit && (
-            <TouchableOpacity style={[s.btn, s.editBtn]} onPress={onEdit} activeOpacity={0.7}>
+            <TouchableOpacity
+              style={[s.btn, s.editBtn]}
+              onPress={onEdit}
+              activeOpacity={0.7}
+            >
               <Edit3 size={16} color={Colors.success[600]} />
             </TouchableOpacity>
           )}
           {showDelete && (
-            <TouchableOpacity style={[s.btn, s.deleteBtn]} onPress={onDelete} activeOpacity={0.7}>
+            <TouchableOpacity
+              style={[s.btn, s.deleteBtn]}
+              onPress={onDelete}
+              activeOpacity={0.7}
+            >
               <Trash2 size={16} color={Colors.error[600]} />
             </TouchableOpacity>
           )}

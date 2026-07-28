@@ -1,12 +1,8 @@
 /**
  * Mobile Constants Index
- * Re-exports from @educard/shared + mobile-specific constants
+ * Re-exports from @educard/shared. Mobile-specific theme constants are added
+ * here as screens that need them are migrated.
  */
-
-// ============================================
-// SHARED CONSTANTS (from @educard/shared)
-// Single source of truth for Web, iOS, Android
-// ============================================
 
 // Core
 export {
@@ -20,7 +16,12 @@ export {
 } from '@educard/shared';
 
 // API
-export { API_ENDPOINTS, buildUrl, QueryKeys, StatusCodes } from '@educard/shared';
+export {
+  API_ENDPOINTS,
+  buildUrl,
+  QueryKeys,
+  StatusCodes,
+} from '@educard/shared';
 
 // User & Auth
 export {
@@ -52,24 +53,10 @@ export {
 } from '@educard/shared';
 
 // Signup Flow
-export { SIGNUP_STEP_LABELS, SIGNUP_STEP_TITLES, SIGNUP_TOTAL_STEPS } from '@educard/shared';
-
-// Attendance
 export {
-  SaturdayOffPattern,
-  SaturdayOffPatternLabels,
-  HolidayType,
-  HolidayTypeLabels,
-  AttendancePermissions,
-  AttendancePermissionLabels,
-  AttendanceStatus,
-  AttendanceStatusLabels,
-  TimesheetStatus,
-  TimesheetStatusLabels,
-  TimesheetReviewAction,
-  DayLockReason,
-  AttendanceSession,
-  AttendanceSessionLabels,
+  SIGNUP_STEP_LABELS,
+  SIGNUP_STEP_TITLES,
+  SIGNUP_TOTAL_STEPS,
 } from '@educard/shared';
 
 // Messages
@@ -96,79 +83,18 @@ export {
   isValidPan,
 } from '@educard/shared';
 
-// Form Schemas (Zod)
-export {
-  // Field schemas
-  emailSchema,
-  passwordSchema,
-  strongPasswordSchema,
-  phoneSchema,
-  nameSchema,
-  firstNameSchema,
-  lastNameSchema,
-  genderSchema,
-  bloodGroupSchema,
-  dateOfBirthSchema,
-  addressSchema,
-  optionalAddressSchema,
-  // Auth schemas
-  loginSchema,
-  signupSchema,
-  forgotPasswordSchema,
-  resetPasswordSchema,
-  changePasswordSchema,
-  // Organization schemas
-  organizationInfoSchema,
-  adminInfoSchema,
-  organizationRegistrationSchema,
-} from '@educard/shared';
-
 // Types from shared
 export type {
   UserRoleValue,
   UserRoleUpper,
   GenderValue,
   BloodGroupValue,
-  RelationshipValue,
-  MaritalStatusValue,
-  AddressTypeValue,
-  SaturdayOffPatternType,
-  HolidayTypeValue,
-  AttendancePermissionType,
-  AttendanceStatusType,
-  TimesheetStatusValue,
-  TimesheetReviewActionValue,
-  DayLockReasonValue,
-  AttendanceSessionValue,
-  StatusCode,
-  // Organization types
-  OrganizationType,
-  BoardAffiliation,
-  // Signup types
   SignupStep,
-  SignupStepLabel,
-  SignupStepTitle,
-  // Form types
-  LoginFormData,
-  SignupFormData,
-  ForgotPasswordFormData,
-  ResetPasswordFormData,
-  ChangePasswordFormData,
-  AddressFormData,
-  OrganizationInfoFormData,
-  AdminInfoFormData,
-  OrganizationRegistrationFormData,
-  // Error types
   NormalizedError,
   ApiError,
 } from '@educard/shared';
 
-// ============================================
-// MOBILE-SPECIFIC CONSTANTS
-// Only for mobile app, not shared
-// ============================================
-
-// Design System Theme
+// Mobile-specific design system theme
 export {
   Theme,
   SemanticColors,
@@ -179,6 +105,3 @@ export {
   IconSize,
   ComponentSize,
 } from './theme';
-
-// Mobile-specific configuration can be added here
-// e.g., animation durations, platform-specific values

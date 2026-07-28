@@ -4,13 +4,21 @@
  */
 
 import { getRoleGradient } from '@educard/shared';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter, type Href } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import { Shield, type LucideIcon } from 'lucide-react-native';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { HeaderProfileButton } from '@/components/common/HeaderProfileButton';
+import { LinearGradient } from '@/lib/linear-gradient';
+import { navigateToScreen, type MenuTarget } from '@/navigation/nav-targets';
+import type { AdminTabNavigation } from '@/navigation/types';
 
 export interface AdminPanelItem {
   id: string;
@@ -18,22 +26,30 @@ export interface AdminPanelItem {
   subtitle?: string;
   icon: LucideIcon;
   gradient: readonly [string, string];
-  route: Href;
+  screen: MenuTarget;
 }
 
 export interface AdminPanelBaseProps {
   subtitle: string;
   items: AdminPanelItem[];
-  settingsRoute: Href;
+  settingsScreen: MenuTarget;
 }
 
-export function AdminPanelBase({ subtitle, items, settingsRoute }: AdminPanelBaseProps) {
-  const router = useRouter();
+export function AdminPanelBase({
+  subtitle,
+  items,
+  settingsScreen,
+}: AdminPanelBaseProps) {
+  const navigation = useNavigation<AdminTabNavigation>();
+
+  const handleNavigate = (screen: MenuTarget) => {
+    navigateToScreen(navigation, screen);
+  };
 
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[...getRoleGradient('admin')]}
+        colors={getRoleGradient('admin')}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
@@ -48,7 +64,7 @@ export function AdminPanelBase({ subtitle, items, settingsRoute }: AdminPanelBas
               <Text style={styles.subtitle}>{subtitle}</Text>
             </View>
           </View>
-          <HeaderProfileButton route={settingsRoute} />
+          <HeaderProfileButton screen={settingsScreen} />
         </View>
       </LinearGradient>
 
@@ -58,31 +74,34 @@ export function AdminPanelBase({ subtitle, items, settingsRoute }: AdminPanelBas
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.grid}>
-          {items.map((item, index) => (
-            <Animated.View
-              key={item.id}
-              entering={FadeInDown.delay(index * 60)
-                .duration(400)
-                .springify()}
-              style={styles.cardWrapper}
-            >
-              <TouchableOpacity
-                style={styles.card}
-                onPress={() => router.push(item.route)}
-                activeOpacity={0.8}
+          {items.map((item, index) => {
+            const ItemIcon = item.icon;
+            return (
+              <Animated.View
+                key={item.id}
+                entering={FadeInDown.delay(index * 60)
+                  .duration(400)
+                  .springify()}
+                style={styles.cardWrapper}
               >
-                <LinearGradient
-                  colors={[...item.gradient]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.iconContainer}
+                <TouchableOpacity
+                  style={styles.card}
+                  onPress={() => handleNavigate(item.screen)}
+                  activeOpacity={0.8}
                 >
-                  <item.icon size={26} color="#fff" strokeWidth={1.8} />
-                </LinearGradient>
-                <Text style={styles.cardTitle}>{item.title}</Text>
-              </TouchableOpacity>
-            </Animated.View>
-          ))}
+                  <LinearGradient
+                    colors={item.gradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.iconContainer}
+                  >
+                    <ItemIcon size={26} color="#fff" strokeWidth={1.8} />
+                  </LinearGradient>
+                  <Text style={styles.cardTitle}>{item.title}</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
         </View>
       </ScrollView>
     </View>

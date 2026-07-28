@@ -3,9 +3,8 @@
  * Handles safe area and common screen layout
  */
 
-import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { View } from 'react-native';
+import { View, StatusBar } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -31,6 +30,12 @@ export function Screen({
   contentContainerClassName = '',
 }: ScreenProps) {
   const Container = safeArea ? SafeAreaView : View;
+  const barStyle =
+    statusBarStyle === 'light'
+      ? 'light-content'
+      : statusBarStyle === 'dark'
+        ? 'dark-content'
+        : 'default';
 
   const content = scrollable ? (
     <KeyboardAwareScrollView
@@ -64,7 +69,7 @@ export function Screen({
 
   return (
     <>
-      <StatusBar style={statusBarStyle} />
+      <StatusBar barStyle={barStyle} />
       <Container className="flex-1" style={{ backgroundColor }} edges={edges}>
         {wrappedContent}
       </Container>

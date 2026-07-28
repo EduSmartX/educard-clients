@@ -3,14 +3,26 @@
  */
 
 import { getRoleGradient } from '@educard/shared';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import { ChevronLeft, Save } from 'lucide-react-native';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { FormInput, FormSection, FormError, FormDropdown } from '@/components/forms';
+import {
+  FormInput,
+  FormSection,
+  FormError,
+  FormDropdown,
+} from '@/components/forms';
+import { LinearGradient } from '@/lib/linear-gradient';
+import type { SharedStackNavigation } from '@/navigation/types';
 import { headerStyles, layoutStyles } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
@@ -65,23 +77,35 @@ export function ClassFormBase({
   classMasterDisabled = false,
   children,
 }: ClassFormBaseProps) {
-  const router = useRouter();
+  const navigation = useNavigation<SharedStackNavigation>();
+
+  const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
+  };
 
   return (
     <View style={layoutStyles.container}>
-      <LinearGradient colors={[...adminGradient]} style={headerStyles.header}>
-        <Animated.View entering={FadeIn.delay(100)} style={headerStyles.circle1} />
-        <Animated.View entering={FadeIn.delay(200)} style={headerStyles.circle2} />
+      <LinearGradient colors={adminGradient} style={headerStyles.header}>
+        <Animated.View
+          entering={FadeIn.delay(100)}
+          style={headerStyles.circle1}
+        />
+        <Animated.View
+          entering={FadeIn.delay(200)}
+          style={headerStyles.circle2}
+        />
         <View style={headerStyles.content}>
           <View style={headerStyles.topRow}>
-            <TouchableOpacity style={headerStyles.backBtn} onPress={() => router.back()}>
+            <TouchableOpacity style={headerStyles.backBtn} onPress={handleBack}>
               <ChevronLeft size={24} color="#fff" />
             </TouchableOpacity>
             <View style={headerStyles.titleContainer}>
               <Text style={headerStyles.title}>{title}</Text>
               <Text style={headerStyles.subtitle}>{subtitle}</Text>
             </View>
-            <View style={{ width: 40 }} />
+            <View style={styles.spacer} />
           </View>
         </View>
       </LinearGradient>
@@ -92,7 +116,7 @@ export function ClassFormBase({
         keyboardShouldPersistTaps="handled"
         enableOnAndroid
         extraScrollHeight={20}
-        style={{ flex: 1 }}
+        style={styles.flex1}
       >
         <FormError message={apiError} onDismiss={onDismissError} />
 
@@ -103,7 +127,11 @@ export function ClassFormBase({
               required
               options={coreClassOpts}
               value={form.class_master}
-              onChange={classMasterDisabled ? () => {} : (v) => updateField('class_master', v)}
+              onChange={
+                classMasterDisabled
+                  ? () => undefined
+                  : v => updateField('class_master', v)
+              }
               error={errors.class_master}
               placeholder="Select class"
               searchable
@@ -114,7 +142,7 @@ export function ClassFormBase({
               label="Section Name"
               required
               value={form.name}
-              onChangeText={(v) => updateField('name', v)}
+              onChangeText={v => updateField('name', v)}
               onBlurValidate={() => blurValidate('name')}
               error={errors.name}
               placeholder="e.g. A, B, Nehru"
@@ -122,7 +150,7 @@ export function ClassFormBase({
             <FormInput
               label="Capacity"
               value={form.capacity}
-              onChangeText={(v) => updateField('capacity', v)}
+              onChangeText={v => updateField('capacity', v)}
               onBlurValidate={() => blurValidate('capacity')}
               error={errors.capacity}
               placeholder="e.g. 50"
@@ -133,20 +161,20 @@ export function ClassFormBase({
               label="Class Teacher"
               options={teacherOpts}
               value={form.class_teacher_id}
-              onChange={(v) => updateField('class_teacher_id', v)}
+              onChange={v => updateField('class_teacher_id', v)}
               placeholder="Select class teacher"
               searchable
             />
             <FormInput
               label="Room Number"
               value={form.room_number}
-              onChangeText={(v) => updateField('room_number', v)}
+              onChangeText={v => updateField('room_number', v)}
               placeholder="e.g. Room 101"
             />
             <FormInput
               label="Description"
               value={form.info}
-              onChangeText={(v) => updateField('info', v)}
+              onChangeText={v => updateField('info', v)}
               placeholder="Optional notes about this class"
               multiline
               numberOfLines={3}
@@ -185,6 +213,8 @@ export function ClassFormBase({
 
 export const classFormStyles = StyleSheet.create({
   form: { padding: 16, paddingBottom: 40 },
+  flex1: { flex: 1 },
+  spacer: { width: 40 },
   subBtn: { marginTop: 8 },
   subGrad: {
     flexDirection: 'row',

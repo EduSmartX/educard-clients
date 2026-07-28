@@ -14,6 +14,7 @@ import { Download, Filter, X, CreditCard, IndianRupee, Plus, Search } from 'luci
 import { format } from 'date-fns';
 import { cn, downloadFile } from '@/lib/utils';
 import { ROUTES } from '@/constants/app-config';
+import { useFilterParams } from '@/hooks/use-filter-params';
 import { PageHeader } from '@/components/common';
 import { PaymentHistoryTable } from '../components/payment-history-table';
 import { usePayments } from '../../hooks/use-fee-queries';
@@ -44,17 +45,28 @@ export function PaymentsPage() {
   const navigate = useNavigate();
 
   // Filters
-  const [searchQuery, setSearchQuery] = useState('');
-  const [classFilter, setClassFilter] = useState<string>('all');
-  const [studentFilter, setStudentFilter] = useState<string>('all');
-  const [paymentModeFilter, setPaymentModeFilter] = useState<string>('all');
+  const {
+    filters,
+    search: searchQuery,
+    page: currentPage,
+    pageSize,
+    setFilter,
+    setSearch: setSearchQuery,
+    setPage: setCurrentPage,
+    setPageSize,
+  } = useFilterParams(
+    { class: 'all', student: 'all', payment_mode: 'all' },
+    { defaultPageSize: 25 }
+  );
+  const classFilter = filters.class;
+  const studentFilter = filters.student;
+  const paymentModeFilter = filters.payment_mode;
+  const setClassFilter = (v: string) => setFilter('class', v);
+  const setStudentFilter = (v: string) => setFilter('student', v);
+  const setPaymentModeFilter = (v: string) => setFilter('payment_mode', v);
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [showFilters, setShowFilters] = useState(true);
-
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
 
   // Data for filter dropdowns
   const { data: classesData } = useClasses();
