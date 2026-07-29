@@ -6,13 +6,13 @@ Gradle toolchain. There is **no Expo / EAS** in this flow (the old Expo app is k
 reference at `apps/mobile-expo`; see [MOBILE_EAS_APK_SETUP.md](./MOBILE_EAS_APK_SETUP.md) for
 the legacy EAS process).
 
-| Item           | Value                                               |
-| -------------- | --------------------------------------------------- |
-| App package    | `apps/mobile` (`@educard/mobile`)                   |
-| Application ID | `com.educardmobile`                                 |
-| React Native   | `0.83.6` (New Architecture + Hermes)                |
-| Gradle project | `apps/mobile/android` (rootProject `EducardMobile`) |
-| Env management | `react-native-config` (`ENVFILE` selects `.env.*`)  |
+| Item           | Value                                                      |
+| -------------- | ---------------------------------------------------------- |
+| App package    | `apps/mobile` (`@educard/mobile`)                          |
+| Application ID | `com.educardmobile`                                        |
+| React Native   | `0.83.6` (New Architecture + Hermes)                       |
+| Gradle project | `apps/mobile/android` (rootProject `EducardMobile`)        |
+| Env management | `react-native-config` (build type selects the `.env` file) |
 
 ---
 
@@ -56,20 +56,72 @@ From the **repo root** (`educard-clients/`):
 # 1. Install all workspace dependencies (pnpm monorepo)
 corepack pnpm install
 
-# 2. Create your local env file for the mobile app
-cp apps/mobile/.env.example apps/mobile/.env.local
+# 2. Create the mobile env files (gitignored - every machine needs its own)
+cp apps/mobile/.env.example apps/mobile/.env.local        # local backend   -> DEBUG builds
+cp apps/mobile/.env.example apps/mobile/.env.production   # EduCard backend -> RELEASE builds
 ```
 
-Then edit `apps/mobile/.env.local` and set `API_URL` for how you run the app:
+Set `API_URL` in each file:
 
-| Target             | `API_URL`                                   |
-| ------------------ | ------------------------------------------- |
-| Android emulator   | `http://10.0.2.2:8000/api` (host localhost) |
-| Physical device    | `http://<YOUR_LAN_IP>:8000/api`             |
-| Staging/Production | the deployed backend `https://…/api`        |
+- `apps/mobile/.env.local` - local backend for development:
+
+  ```env
+  API_URL=http://10.0.2.2:8000/api
+  APP_ENV=development
+  ```
+
+- `apps/mobile/.env.production` - hosted **EduCard** backend:
+
+  ```env
+  API_URL=https://educard-backend-api-272236662775.asia-south1.run.app/api
+  APP_ENV=production
+  ```
+
+| Target           | `API_URL`                                   |
+| ---------------- | ------------------------------------------- |
+| Android emulator | `http://10.0.2.2:8000/api` (host localhost) |
+| Physical device  | `http://<YOUR_LAN_IP>:8000/api`             |
+| EduCard (hosted) | `https://educard-backend-api-…run.app/api`  |
 
 > **Tip:** `10.0.2.2` is the special alias the Android emulator uses to reach the host
 > machine's `localhost`. A physical device must use your computer's LAN IP.
+
+### 2.1 Choosing the backend: local ↔ EduCard
+
+`android/app/build.gradle` wires `react-native-config` to pick the env file **automatically by
+build type**, so the normal flow needs **no flags**:
+
+| Build type                      | Env file          | Backend          |
+| ------------------------------- | ----------------- | ---------------- |
+| **debug** (`pnpm android`)      | `.env.local`      | local            |
+| **release** (`assembleRelease`) | `.env.production` | EduCard (hosted) |
+
+To **override** the file for a single command (e.g. run a debug build against EduCard), set
+`ENVFILE`:
+
+```bash
+# bash / macOS / Linux / WSL
+ENVFILE=.env.production corepack pnpm --filter @educard/mobile android
+```
+
+```powershell
+# Windows PowerShell
+$env:ENVFILE=".env.production"; corepack pnpm --filter @educard/mobile android
+```
+
+```bat
+:: Windows cmd
+set ENVFILE=.env.production && corepack pnpm --filter @educard/mobile android
+```
+
+> Env values are baked in at **build time**. After editing a `.env` file or changing
+> `ENVFILE`, **rebuild** the app (re-run `pnpm android` / `gradlew`); Fast Refresh alone will
+> not pick up a new URL.
+
+> **Which backend runs where:** for the **EduCard (hosted)** backend you don't run anything
+> locally. For a **local** backend, start the Django API first (see
+> [LOCAL_DEV_SETUP.md](./LOCAL_DEV_SETUP.md)) and point `API_URL` at your machine
+> (`10.0.2.2` for the emulator, your LAN IP for a physical device).
 
 ---
 
@@ -86,11 +138,11 @@ corepack pnpm --filter @educard/mobile start
 **Terminal B — build & launch the debug app on the running emulator/device:**
 
 ```bash
-# default env file (.env)
+# debug build → automatically uses .env.local (local backend)
 corepack pnpm --filter @educard/mobile android
 
-# …or pick an explicit env file (react-native-config)
-ENVFILE=.env.local corepack pnpm --filter @educard/mobile android
+# …or point this debug build at the EduCard backend for one run
+ENVFILE=.env.production corepack pnpm --filter @educard/mobile android
 ```
 
 This runs `react-native run-android`, which compiles the debug variant, installs it, and
@@ -151,8 +203,8 @@ that.
 ```bash
 cd apps/mobile/android
 
-# release APK with the production env file
-ENVFILE=.env.production ./gradlew assembleRelease
+# release build → automatically uses .env.production (EduCard backend)
+./gradlew assembleRelease
 ```
 
 Output:
@@ -170,7 +222,7 @@ adb install -r app/build/outputs/apk/release/app-release.apk
 ### Android App Bundle (`.aab`) for the Play Store
 
 ```bash
-ENVFILE=.env.production ./gradlew bundleRelease
+./gradlew bundleRelease
 # → app/build/outputs/bundle/release/app-release.aab
 ```
 
@@ -284,12 +336,12 @@ without a running Metro).
 # --- from repo root (educard-clients/) ---
 corepack pnpm install                                   # install deps
 corepack pnpm --filter @educard/mobile start            # Metro
-ENVFILE=.env.local corepack pnpm --filter @educard/mobile android   # run debug on device
+corepack pnpm --filter @educard/mobile android          # debug run → local backend (.env.local)
 
 # --- from apps/mobile/android ---
-./gradlew assembleDebug                                 # debug APK
-ENVFILE=.env.production ./gradlew assembleRelease       # release APK
-ENVFILE=.env.production ./gradlew bundleRelease         # release AAB (Play Store)
+./gradlew assembleDebug                                 # debug APK  → local backend (.env.local)
+./gradlew assembleRelease                               # release APK → EduCard (.env.production)
+./gradlew bundleRelease                                 # release AAB → EduCard (.env.production)
 ./gradlew clean                                         # clean build
 
 # --- install / inspect ---
