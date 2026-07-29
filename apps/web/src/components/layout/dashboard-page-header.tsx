@@ -19,7 +19,7 @@ export function DashboardPageHeader({
 }: DashboardPageHeaderProps) {
   return (
     <div className={`bg-gradient-to-r ${gradientFrom} ${gradientTo} mb-6 rounded-xl p-6 shadow-lg`}>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         {/* Left Side - Page Title */}
         <div className="flex-1">
           <h1 className="mb-2 text-3xl font-bold text-white">{title}</h1>
