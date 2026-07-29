@@ -25,6 +25,7 @@ import {
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { HeaderProfileButton } from '@/components/common';
+import { useResponsive } from '@/hooks/useResponsive';
 import { LinearGradient } from '@/lib/linear-gradient';
 import { navigateToScreen, type MenuTarget } from '@/navigation/nav-targets';
 import type { AdminTabNavigation } from '@/navigation/types';
@@ -52,6 +53,9 @@ export function MyWorkScreenBase({
   headerIcon,
 }: MyWorkScreenBaseProps) {
   const navigation = useNavigation<AdminTabNavigation>();
+  const { gridColumns } = useResponsive();
+  const colWidth =
+    gridColumns === 4 ? '25%' : gridColumns === 3 ? '33.33%' : '50%';
 
   const handleNavigate = (screen: MenuTarget) => {
     navigateToScreen(navigation, screen);
@@ -93,7 +97,7 @@ export function MyWorkScreenBase({
                 entering={FadeInDown.delay(index * 60)
                   .duration(400)
                   .springify()}
-                style={styles.cardWrapper}
+                style={[styles.cardWrapper, { width: colWidth }]}
               >
                 <TouchableOpacity
                   style={styles.card}
@@ -213,7 +217,6 @@ const styles = StyleSheet.create({
     marginHorizontal: -6,
   },
   cardWrapper: {
-    width: '50%',
     padding: 6,
   },
   card: {
