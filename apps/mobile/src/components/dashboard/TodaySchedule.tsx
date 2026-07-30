@@ -6,22 +6,34 @@
 import { getSubjectColor } from '@educard/shared';
 import { Clock, ChevronRight, AlertCircle } from 'lucide-react-native';
 import { useMemo, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
 import Animated, { FadeInDown, SlideInRight } from 'react-native-reanimated';
 
 import type { TimetableEntry } from '@/features/timetable';
 
 // Day labels (0=Monday, 6=Sunday)
-const DAY_LABELS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const DAY_LABELS = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
 
 interface TodayScheduleProps {
-  /** Timetable data containing days with entries */
-  timetableData: { days: Record<number | string, TimetableEntry[]> } | undefined;
-  /** Whether timetable is loading */
+  timetableData:
+    | { days: Record<number | string, TimetableEntry[]> }
+    | undefined;
   isLoading?: boolean;
-  /** Maximum number of classes to show before "View all" */
   maxDisplay?: number;
-  /** Optional callback when "View all" is pressed */
   onViewAll?: () => void;
 }
 
@@ -31,17 +43,17 @@ export function TodaySchedule({
   maxDisplay = 4,
   onViewAll,
 }: TodayScheduleProps) {
-  // Get today's day index (0=Monday, 6=Sunday)
   const todayDayNum = useMemo(() => {
     const jsDay = new Date().getDay();
     return jsDay === 0 ? 6 : jsDay - 1;
   }, []);
 
-  // Get today's classes sorted by time
   const todayClasses = useMemo((): TimetableEntry[] => {
     if (!timetableData?.days) return [];
     const entries =
-      timetableData.days[todayDayNum] || timetableData.days[String(todayDayNum)] || [];
+      timetableData.days[todayDayNum] ||
+      timetableData.days[String(todayDayNum)] ||
+      [];
     return [...entries].sort((a, b) => {
       const timeA = a.start_time || '';
       const timeB = b.start_time || '';
@@ -49,22 +61,23 @@ export function TodaySchedule({
     });
   }, [timetableData, todayDayNum]);
 
-  // Determine class status: completed, ongoing, or upcoming
   const getClassStatus = useCallback((entry: TimetableEntry) => {
     const now = new Date();
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-    const [startH, startM] = (entry.start_time || '00:00').split(':').map(Number);
+    const [startH, startM] = (entry.start_time || '00:00')
+      .split(':')
+      .map(Number);
     const [endH, endM] = (entry.end_time || '00:00').split(':').map(Number);
     const startMinutes = startH * 60 + startM;
     const endMinutes = endH * 60 + endM;
 
     if (currentMinutes >= endMinutes) return 'completed';
-    if (currentMinutes >= startMinutes && currentMinutes < endMinutes) return 'ongoing';
+    if (currentMinutes >= startMinutes && currentMinutes < endMinutes)
+      return 'ongoing';
     return 'upcoming';
   }, []);
 
-  // Find current or next upcoming class
   const currentOrNextEntry = useMemo(() => {
     for (const entry of todayClasses) {
       const status = getClassStatus(entry);
@@ -83,7 +96,6 @@ export function TodaySchedule({
     return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
-  // Loading state
   if (isLoading) {
     return (
       <Animated.View
@@ -91,7 +103,7 @@ export function TodaySchedule({
         style={styles.section}
       >
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Today's Schedule</Text>
+          <Text style={styles.sectionTitle}>Today&apos;s Schedule</Text>
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="small" color="#059669" />
@@ -101,19 +113,22 @@ export function TodaySchedule({
     );
   }
 
-  // No classes today
   if (todayClasses.length === 0) {
     return null;
   }
 
   return (
-    <Animated.View entering={FadeInDown.delay(550).springify().damping(15)} style={styles.section}>
+    <Animated.View
+      entering={FadeInDown.delay(550).springify().damping(15)}
+      style={styles.section}
+    >
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Today's Schedule — {DAY_LABELS[todayDayNum]}</Text>
+        <Text style={styles.sectionTitle}>
+          Today&apos;s Schedule — {DAY_LABELS[todayDayNum]}
+        </Text>
         <Text style={styles.seeAll}>{todayClasses.length} classes</Text>
       </View>
 
-      {/* Current/Next Class Banner */}
       {currentOrNextEntry && (
         <View style={styles.nextClassBanner}>
           <View style={styles.nextClassIconBg}>
@@ -125,10 +140,13 @@ export function TodaySchedule({
           </View>
           <View style={styles.nextClassContent}>
             <Text style={styles.nextClassLabel}>
-              {currentOrNextEntry.status === 'ongoing' ? 'Currently Teaching' : 'Next Class'}
+              {currentOrNextEntry.status === 'ongoing'
+                ? 'Currently Teaching'
+                : 'Next Class'}
             </Text>
             <Text style={styles.nextClassSubject}>
-              {currentOrNextEntry.entry.subject_name ?? currentOrNextEntry.entry.slot_label}
+              {currentOrNextEntry.entry.subject_name ??
+                currentOrNextEntry.entry.slot_label}
             </Text>
             <Text style={styles.nextClassMeta}>
               {currentOrNextEntry.entry.class_name} •{' '}
@@ -139,13 +157,15 @@ export function TodaySchedule({
           <View
             style={[
               styles.nextClassBadge,
-              currentOrNextEntry.status === 'ongoing' && styles.nextClassBadgeLive,
+              currentOrNextEntry.status === 'ongoing' &&
+                styles.nextClassBadgeLive,
             ]}
           >
             <Text
               style={[
                 styles.nextClassBadgeText,
-                currentOrNextEntry.status === 'ongoing' && styles.nextClassBadgeTextLive,
+                currentOrNextEntry.status === 'ongoing' &&
+                  styles.nextClassBadgeTextLive,
               ]}
             >
               {currentOrNextEntry.status === 'ongoing' ? 'Live' : 'Up Next'}
@@ -154,11 +174,13 @@ export function TodaySchedule({
         </View>
       )}
 
-      {/* Schedule List */}
       {todayClasses.slice(0, maxDisplay).map((entry, index) => {
         const status = getClassStatus(entry);
-        const isCurrentOrNext = currentOrNextEntry?.entry.public_id === entry.public_id;
-        const subjectColor = getSubjectColor(entry.subject_name ?? entry.slot_label ?? 'default');
+        const isCurrentOrNext =
+          currentOrNextEntry?.entry.public_id === entry.public_id;
+        const subjectColor = getSubjectColor(
+          entry.subject_name ?? entry.slot_label ?? 'default',
+        );
 
         return (
           <Animated.View
@@ -167,16 +189,34 @@ export function TodaySchedule({
               .springify()
               .damping(16)}
           >
-            <View style={[styles.scheduleCard, isCurrentOrNext && styles.scheduleCardActive]}>
-              <View style={[styles.scheduleBar, { backgroundColor: subjectColor.hex }]} />
+            <View
+              style={[
+                styles.scheduleCard,
+                isCurrentOrNext && styles.scheduleCardActive,
+              ]}
+            >
+              <View
+                style={[
+                  styles.scheduleBar,
+                  { backgroundColor: subjectColor.hex },
+                ]}
+              />
               <View style={styles.scheduleTimeBox}>
-                <Text style={[styles.scheduleTime, isCurrentOrNext && styles.scheduleTimeActive]}>
+                <Text
+                  style={[
+                    styles.scheduleTime,
+                    isCurrentOrNext && styles.scheduleTimeActive,
+                  ]}
+                >
                   {formatTime(entry.start_time)}
                 </Text>
               </View>
               <View style={styles.scheduleContent}>
                 <Text
-                  style={[styles.scheduleSubject, isCurrentOrNext && styles.scheduleSubjectActive]}
+                  style={[
+                    styles.scheduleSubject,
+                    isCurrentOrNext && styles.scheduleSubjectActive,
+                  ]}
                 >
                   {entry.subject_name ?? entry.slot_label}
                 </Text>
@@ -195,7 +235,8 @@ export function TodaySchedule({
                 <Text
                   style={[
                     styles.scheduleStatusText,
-                    status === 'completed' && styles.scheduleStatusTextCompleted,
+                    status === 'completed' &&
+                      styles.scheduleStatusTextCompleted,
                     status === 'ongoing' && styles.scheduleStatusTextOngoing,
                   ]}
                 >
@@ -211,7 +252,9 @@ export function TodaySchedule({
 
       {todayClasses.length > maxDisplay && (
         <TouchableOpacity style={styles.viewMoreBtn} onPress={onViewAll}>
-          <Text style={styles.viewMoreText}>View all {todayClasses.length} classes</Text>
+          <Text style={styles.viewMoreText}>
+            View all {todayClasses.length} classes
+          </Text>
           <ChevronRight size={16} color="#059669" />
         </TouchableOpacity>
       )}
@@ -227,9 +270,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 14,
   },
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: '#1e293b', letterSpacing: -0.2 },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#1e293b',
+    letterSpacing: -0.2,
+  },
   seeAll: { fontSize: 13, color: '#10b981', fontWeight: '700' },
-  // Next class banner
   nextClassBanner: {
     backgroundColor: '#ecfdf5',
     borderRadius: 16,
@@ -287,7 +334,6 @@ const styles = StyleSheet.create({
   nextClassBadgeTextLive: {
     color: '#fff',
   },
-  // Schedule cards
   scheduleCard: {
     backgroundColor: '#fff',
     borderRadius: 14,

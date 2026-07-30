@@ -4,11 +4,12 @@
  * a notification bell with badge, an optional right slot, and an optional content slot.
  */
 
-import { LinearGradient } from 'expo-linear-gradient';
 import { Bell } from 'lucide-react-native';
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+
+import { LinearGradient } from '@/lib/linear-gradient';
 
 export interface GradientHeaderProps {
   title: string;
@@ -17,9 +18,7 @@ export interface GradientHeaderProps {
   colors?: readonly [string, string, ...string[]];
   onNotificationPress?: () => void;
   notificationCount?: number;
-  /** Custom right-side content (e.g. a profile avatar/button). */
   right?: React.ReactNode;
-  /** Extra content rendered below the header row (e.g. a child selector). */
   children?: React.ReactNode;
   decorative?: boolean;
 }
@@ -46,9 +45,18 @@ export function GradientHeader({
     >
       {decorative && (
         <>
-          <Animated.View entering={FadeIn.delay(100).duration(800)} style={styles.circle1} />
-          <Animated.View entering={FadeIn.delay(200).duration(800)} style={styles.circle2} />
-          <Animated.View entering={FadeIn.delay(300).duration(800)} style={styles.circle3} />
+          <Animated.View
+            entering={FadeIn.delay(100).duration(800)}
+            style={styles.circle1}
+          />
+          <Animated.View
+            entering={FadeIn.delay(200).duration(800)}
+            style={styles.circle2}
+          />
+          <Animated.View
+            entering={FadeIn.delay(300).duration(800)}
+            style={styles.circle3}
+          />
         </>
       )}
 

@@ -7,9 +7,25 @@
  * - Teacher (Other): View-only access
  */
 
-import { Colors, getRoleThemeColors, Student, useDebounce, API_CONFIG } from '@educard/shared';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { GraduationCap, Upload, Plus, Download } from 'lucide-react-native';
+import {
+  Colors,
+  getRoleThemeColors,
+  Student,
+  useDebounce,
+  API_CONFIG,
+} from '@educard/shared';
+import {
+  useNavigation,
+  useRoute,
+  type RouteProp,
+} from '@react-navigation/native';
+import {
+  GraduationCap,
+  Upload,
+  Plus,
+  Download,
+  KeyRound,
+} from 'lucide-react-native';
 import { useState, useCallback, useMemo } from 'react';
 import {
   View,
@@ -22,9 +38,19 @@ import {
 } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 
-import { SearchBar, ListHeader, BulkUploadModal, ConfirmDialog } from '@/components/common';
+import {
+  SearchBar,
+  ListHeader,
+  BulkUploadModal,
+  ConfirmDialog,
+} from '@/components/common';
 import { EntityActions } from '@/components/common/EntityActions';
-import { LoadingState, ErrorState, EmptyState, ListFooter } from '@/components/common/ListStates';
+import {
+  LoadingState,
+  ErrorState,
+  EmptyState,
+  ListFooter,
+} from '@/components/common/ListStates';
 import {
   FilterModal,
   ActiveFilters,
@@ -35,67 +61,101 @@ import { getMediaUrl } from '@/constants/config';
 import { useClasses } from '@/features/classes/hooks/use-classes';
 import { useActionConfirm, useDeleteConfirm } from '@/hooks';
 import { useListScroll } from '@/hooks/useListScroll';
+import { useScreenFilters } from '@/hooks/useScreenFilters';
 import { useAuthStore } from '@/lib/auth-store';
-import { layoutStyles, cardStyles, avatarStyles, listStyles, textStyles } from '@/styles';
+import type {
+  SharedStackNavigation,
+  SharedStackParamList,
+} from '@/navigation/types';
+import {
+  layoutStyles,
+  cardStyles,
+  avatarStyles,
+  listStyles,
+  textStyles,
+} from '@/styles';
 import { isAdminRole, isTeacherRole } from '@/utils/role-utils';
 
-import { downloadStudentTemplate, bulkUploadStudents } from '../api/students-api';
-import { useStudents, useDeleteStudent, useRestoreStudent } from '../hooks/use-students';
+import {
+  downloadStudentTemplate,
+  bulkUploadStudents,
+} from '../api/students-api';
+import {
+  useStudents,
+  useDeleteStudent,
+  useRestoreStudent,
+} from '../hooks/use-students';
 
 import { ExportStudentsModal } from './ExportStudentsModal';
+import { ResetPasswordsModal } from './ResetPasswordsModal';
 
 const adminTheme = getRoleThemeColors('admin');
 
 export interface StudentListProps {
-  /** Custom back navigation handler. If not provided, uses router.back() */
+  /** Custom back navigation handler. If not provided, uses navigation.goBack() */
   onBack?: () => void;
 }
 
 /** Get display name for a class, handling various data shapes */
 function getClassDisplayName(
   classInfo:
-    | { class_master_name?: string; class_master?: { name?: string }; name?: string }
+    | {
+        class_master_name?: string;
+        class_master?: { name?: string };
+        name?: string;
+      }
     | null
-    | undefined
+    | undefined,
 ): string | null {
   if (!classInfo) return null;
-  const masterName = classInfo.class_master_name || classInfo.class_master?.name;
-  return masterName ? `${masterName} - ${classInfo.name}` : classInfo.name || null;
+  const masterName =
+    classInfo.class_master_name || classInfo.class_master?.name;
+  return masterName
+    ? `${masterName} - ${classInfo.name}`
+    : classInfo.name || null;
 }
 
 export function StudentList({ onBack }: StudentListProps) {
-  const router = useRouter();
+  const navigation = useNavigation<SharedStackNavigation>();
+  const route = useRoute<RouteProp<SharedStackParamList, 'Students'>>();
   const { user } = useAuthStore();
-  const { class_id, class_name } = useLocalSearchParams<{
-    class_id?: string;
-    class_name?: string;
-  }>();
-  const [searchQuery, setSearchQuery] = useState('');
+  const { class_id, class_name } = route.params ?? {};
+  const {
+    filters,
+    search: searchQuery,
+    setSearch: setSearchQuery,
+    setAllFilters: setFilters,
+  } = useScreenFilters<Record<string, unknown>>('Students', {});
   const [showFilters, setShowFilters] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [showExport, setShowExport] = useState(false);
-  const [filters, setFilters] = useState<Record<string, unknown>>({});
+  const [showResetPasswords, setShowResetPasswords] = useState(false);
 
   const isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
   const isTeacher = useMemo(() => isTeacherRole(user?.role), [user?.role]);
 
   const debouncedSearch = useDebounce(searchQuery, 300);
   const allStudentFilterFields = useStudentFilterFields();
-  const { data: classesData } = useClasses({ page_size: API_CONFIG.DROPDOWN_PAGE_SIZE });
-  const managedClasses = useMemo(() => classesData?.classes ?? [], [classesData?.classes]);
+  const { data: classesData } = useClasses({
+    page_size: API_CONFIG.DROPDOWN_PAGE_SIZE,
+  });
+  const managedClasses = useMemo(
+    () => classesData?.classes ?? [],
+    [classesData?.classes],
+  );
   const isClassTeacher = isTeacher && managedClasses.length > 0;
 
   const studentFilterFields = useMemo(() => {
     if (isAdmin || isClassTeacher) {
       return allStudentFilterFields;
     }
-    return allStudentFilterFields.filter((f) => f.name !== 'is_deleted');
+    return allStudentFilterFields.filter(f => f.name !== 'is_deleted');
   }, [isAdmin, isClassTeacher, allStudentFilterFields]);
 
   const canCreateStudents = isAdmin || isClassTeacher;
 
   const classOptions = useMemo(() => {
-    return managedClasses.map((c) => ({
+    return managedClasses.map(c => ({
       value: c.public_id,
       label: `${c.class_master?.name ?? ''} - ${c.name}`.trim(),
     }));
@@ -128,19 +188,22 @@ export function StudentList({ onBack }: StudentListProps) {
   });
 
   const restoreMutation = useRestoreStudent();
-  const { confirmAction: confirmReactivate, dialogProps: reactivateDialogProps } =
-    useActionConfirm<{
-      publicId: string;
-      classId: string | undefined;
-    }>({
-      title: 'Reactivate Student',
-      confirmText: 'Reactivate',
-      confirmVariant: 'success',
-      makeMessage: (name) => `Are you sure you want to reactivate ${name}?`,
-      runAction: ({ publicId, classId }) => restoreMutation.mutateAsync({ publicId, classId }),
-      errorMessage: 'Failed to reactivate student',
-      onSuccess: () => void refetch(),
-    });
+  const {
+    confirmAction: confirmReactivate,
+    dialogProps: reactivateDialogProps,
+  } = useActionConfirm<{
+    publicId: string;
+    classId: string | undefined;
+  }>({
+    title: 'Reactivate Student',
+    confirmText: 'Reactivate',
+    confirmVariant: 'success',
+    makeMessage: name => `Are you sure you want to reactivate ${name}?`,
+    runAction: ({ publicId, classId }) =>
+      restoreMutation.mutateAsync({ publicId, classId }),
+    errorMessage: 'Failed to reactivate student',
+    onSuccess: () => void refetch(),
+  });
 
   const isDeletedView = !!filters.is_deleted;
   const students = data?.students ?? [];
@@ -158,29 +221,26 @@ export function StudentList({ onBack }: StudentListProps) {
   const handleBack = useCallback(() => {
     if (onBack) {
       onBack();
-    } else {
-      router.back();
+    } else if (navigation.canGoBack()) {
+      navigation.goBack();
     }
-  }, [onBack, router]);
+  }, [onBack, navigation]);
 
   const handleView = useCallback(
     (s: Student) => {
-      router.push({
-        pathname: '/(shared-screens)/students/[id]',
-        params: { id: s.public_id, ...(isDeletedView ? { is_deleted: 'true' } : {}) },
+      navigation.navigate('StudentDetail', {
+        id: s.public_id,
+        is_deleted: isDeletedView ? 'true' : undefined,
       });
     },
-    [router, isDeletedView]
+    [navigation, isDeletedView],
   );
 
   const handleEdit = useCallback(
     (s: Student) => {
-      router.push({
-        pathname: '/(shared-screens)/students/edit',
-        params: { id: s.public_id },
-      });
+      navigation.navigate('StudentEdit', { id: s.public_id });
     },
-    [router]
+    [navigation],
   );
 
   const renderStudentCard = useCallback(
@@ -205,7 +265,9 @@ export function StudentList({ onBack }: StudentListProps) {
         : '?';
 
       return (
-        <Animated.View entering={FadeInRight.delay(Math.min(index, 10) * 50).duration(300)}>
+        <Animated.View
+          entering={FadeInRight.delay(Math.min(index, 10) * 50).duration(300)}
+        >
           <TouchableOpacity
             style={[cardStyles.card, styles.studentCard]}
             onPress={() => handleView(item)}
@@ -229,7 +291,9 @@ export function StudentList({ onBack }: StudentListProps) {
                 <Text style={textStyles.title} numberOfLines={1}>
                   {fullName || 'Unnamed Student'}
                 </Text>
-                {rollNumber ? <Text style={textStyles.subtitle}>Roll No: {rollNumber}</Text> : null}
+                {rollNumber ? (
+                  <Text style={textStyles.subtitle}>Roll No: {rollNumber}</Text>
+                ) : null}
                 <View style={styles.metaRow}>
                   {className ? (
                     <View style={styles.classTag}>
@@ -251,26 +315,41 @@ export function StudentList({ onBack }: StudentListProps) {
                   ? undefined
                   : () =>
                       confirmDelete(
-                        { publicId: item.public_id, classId: item.class_info?.public_id },
-                        fullName || 'this student'
+                        {
+                          publicId: item.public_id,
+                          classId: item.class_info?.public_id,
+                        },
+                        fullName || 'this student',
                       )
               }
               onReactivate={
                 isDeletedView
                   ? () =>
                       confirmReactivate(
-                        { publicId: item.public_id, classId: item.class_info?.public_id },
-                        fullName ?? 'this student'
+                        {
+                          publicId: item.public_id,
+                          classId: item.class_info?.public_id,
+                        },
+                        fullName ?? 'this student',
                       )
                   : undefined
               }
-              canManage={(item as { can_manage?: boolean }).can_manage ?? isAdmin}
+              canManage={
+                (item as { can_manage?: boolean }).can_manage ?? isAdmin
+              }
             />
           </TouchableOpacity>
         </Animated.View>
       );
     },
-    [handleView, handleEdit, confirmDelete, confirmReactivate, isDeletedView, isAdmin]
+    [
+      handleView,
+      handleEdit,
+      confirmDelete,
+      confirmReactivate,
+      isDeletedView,
+      isAdmin,
+    ],
   );
 
   // Info message for class teachers
@@ -289,12 +368,13 @@ export function StudentList({ onBack }: StudentListProps) {
           canCreateStudents
             ? [
                 { icon: Download, onPress: () => setShowExport(true) },
+                { icon: KeyRound, onPress: () => setShowResetPasswords(true) },
                 ...(canCreateStudents
                   ? [{ icon: Upload, onPress: () => setShowBulkUpload(true) }]
                   : []),
                 {
                   icon: Plus,
-                  onPress: () => router.push('/(shared-screens)/students/create'),
+                  onPress: () => navigation.navigate('StudentCreate'),
                   variant: 'primary' as const,
                 },
               ]
@@ -315,7 +395,18 @@ export function StudentList({ onBack }: StudentListProps) {
       />
 
       {/* Export Students Modal */}
-      <ExportStudentsModal visible={showExport} onClose={() => setShowExport(false)} />
+      <ExportStudentsModal
+        visible={showExport}
+        onClose={() => setShowExport(false)}
+      />
+
+      {/* Reset Class Passwords Modal */}
+      <ResetPasswordsModal
+        visible={showResetPasswords}
+        onClose={() => setShowResetPasswords(false)}
+        classOptions={classOptions}
+        onSuccess={() => void refetch()}
+      />
 
       <SearchBar
         value={searchQuery}
@@ -327,7 +418,7 @@ export function StudentList({ onBack }: StudentListProps) {
 
       <ActiveFilters
         filters={getStudentFilterLabels(filters, classOptions)}
-        onRemove={(key) => setFilters((f) => ({ ...f, [key]: undefined }))}
+        onRemove={key => setFilters({ ...filters, [key]: undefined })}
         onClearAll={() => setFilters({})}
       />
 
@@ -343,7 +434,9 @@ export function StudentList({ onBack }: StudentListProps) {
         title="Filter Students"
       />
 
-      {isLoading && <LoadingState color={adminTheme.accent} message="Loading students..." />}
+      {isLoading && (
+        <LoadingState color={adminTheme.accent} message="Loading students..." />
+      )}
       {!isLoading && isError && (
         <ErrorState
           message="Failed to load students"
@@ -355,7 +448,7 @@ export function StudentList({ onBack }: StudentListProps) {
         <FlatList
           data={students}
           renderItem={renderStudentCard}
-          keyExtractor={(item) => item.public_id}
+          keyExtractor={item => item.public_id}
           contentContainerStyle={listStyles.content}
           showsVerticalScrollIndicator={false}
           refreshControl={
@@ -371,13 +464,20 @@ export function StudentList({ onBack }: StudentListProps) {
           onScroll={handleScroll}
           scrollEventThrottle={16}
           ListFooterComponent={
-            <ListFooter isLoading={isFetchingNextPage} color={adminTheme.accent} />
+            <ListFooter
+              isLoading={isFetchingNextPage}
+              color={adminTheme.accent}
+            />
           }
           ListEmptyComponent={
             <EmptyState
               icon={<GraduationCap size={48} color={Colors.gray[300]} />}
               message="No students found"
-              subMessage={searchQuery ? 'Try adjusting your search' : 'Add your first student'}
+              subMessage={
+                searchQuery
+                  ? 'Try adjusting your search'
+                  : 'Add your first student'
+              }
             />
           }
         />
@@ -393,7 +493,13 @@ const styles = StyleSheet.create({
   studentCard: { flexDirection: 'column' },
   topRow: { flexDirection: 'row', alignItems: 'center' },
   studentInfo: { flex: 1, gap: 2 },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4, flexWrap: 'wrap' },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
+    flexWrap: 'wrap',
+  },
   classTag: {
     backgroundColor: Colors.primary[50],
     paddingHorizontal: 8,

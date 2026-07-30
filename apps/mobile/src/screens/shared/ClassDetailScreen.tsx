@@ -1,0 +1,120 @@
+/**
+ * Class Detail Screen — shared-stack "ClassDetail"
+ */
+
+import { useRoute, type RouteProp } from '@react-navigation/native';
+import { View, Text, StyleSheet } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+
+import {
+  DetailScreenShell,
+  DetailSection,
+  DetailRow,
+  ChipRow,
+} from '@/components/detail';
+import { useClassDetail } from '@/features/classes';
+import type { SharedStackParamList } from '@/navigation/types';
+
+export default function ClassDetailScreen() {
+  const route = useRoute<RouteProp<SharedStackParamList, 'ClassDetail'>>();
+  const { id, is_deleted } = route.params;
+  const isDeleted = is_deleted === 'true';
+  const { data: cls, isLoading, isError } = useClassDetail(id || '', isDeleted);
+
+  const c = cls;
+  let isFullDisplay: string | undefined;
+  if (c?.is_full != null) {
+    isFullDisplay = c.is_full ? 'Yes' : 'No';
+  }
+  const displayName = c?.class_master?.name
+    ? `${c.class_master.name} - ${c.name}`
+    : c?.name || '...';
+
+  return (
+    <DetailScreenShell
+      title="Class Details"
+      subtitle={displayName}
+      isLoading={isLoading}
+      isError={isError || !cls}
+    >
+      <Animated.View entering={FadeInDown.delay(100)}>
+        <DetailSection title="Class Info" icon="🏫">
+          <DetailRow label="Grade / Class" value={c?.class_master?.name} />
+          <DetailRow label="Section" value={c?.name} />
+          <DetailRow label="Room Number" value={c?.room_number} />
+          <DetailRow label="Capacity" value={c?.capacity} />
+          <DetailRow label="Students" value={c?.student_count} />
+          <DetailRow label="Subjects" value={c?.subjects_count} />
+          <DetailRow label="Available Seats" value={c?.available_seats} />
+          <DetailRow label="Full" value={isFullDisplay} />
+          <DetailRow label="Info" value={c?.info} />
+        </DetailSection>
+      </Animated.View>
+
+      {c?.class_teacher && (
+        <Animated.View entering={FadeInDown.delay(200)}>
+          <DetailSection title="Class Teacher" icon="👨‍🏫">
+            <DetailRow label="Name" value={c.class_teacher.full_name} />
+            <DetailRow label="Email" value={c.class_teacher.email} />
+            <DetailRow label="Phone" value={c.class_teacher.phone} />
+          </DetailSection>
+        </Animated.View>
+      )}
+
+      {c?.subjects?.length ? (
+        <Animated.View entering={FadeInDown.delay(300)}>
+          <DetailSection title="Subjects" icon="📚">
+            <ChipRow
+              items={c.subjects.map(
+                (s: {
+                  public_id: string;
+                  name?: string;
+                  code?: string;
+                  subject_info?: { name?: string; code?: string };
+                }) => {
+                  const name = s.subject_info?.name || s.name;
+                  const code = s.subject_info?.code || s.code;
+                  const label = code ? `${name} (${code})` : String(name);
+                  return { key: s.public_id, label };
+                },
+              )}
+            />
+          </DetailSection>
+        </Animated.View>
+      ) : null}
+
+      {c?.students?.length ? (
+        <Animated.View entering={FadeInDown.delay(400)}>
+          <DetailSection title={`Students (${c.students.length})`} icon="🎓">
+            {c.students.map(
+              (s: {
+                public_id: string;
+                full_name: string;
+                admission_number: string;
+              }) => (
+                <View key={s.public_id} style={extraStyles.studentRow}>
+                  <Text style={extraStyles.studentName}>{s.full_name}</Text>
+                  <Text style={extraStyles.studentAdm}>
+                    {s.admission_number}
+                  </Text>
+                </View>
+              ),
+            )}
+          </DetailSection>
+        </Animated.View>
+      ) : null}
+    </DetailScreenShell>
+  );
+}
+
+const extraStyles = StyleSheet.create({
+  studentRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f5f5f5',
+  },
+  studentName: { fontSize: 14, fontWeight: '600', color: '#1e293b' },
+  studentAdm: { fontSize: 13, color: '#64748b' },
+});

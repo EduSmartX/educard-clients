@@ -143,7 +143,7 @@ export default function HomeworkDetailPage() {
         </div>
 
         {/* Dates inline */}
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-3">
           {!!homework.assigned_date && (
             <div className="flex items-center gap-2 rounded-lg border bg-green-50 px-3 py-2">
               <Calendar className="h-4 w-4 text-green-600" />

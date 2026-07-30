@@ -1,36 +1,22 @@
 /**
  * AddressForm - Reusable Address Form Component
  *
- * A modern, field-level address form component for React Native.
- * Supports:
- * - Individual address fields (Street, City, State, ZIP, Country)
- * - Optional address line 2
- * - Location auto-fill (when permissions granted)
- * - Compact and full modes
- * - Customizable field names for API compatibility
- * - Validation error display
- *
- * Usage:
- * <AddressForm
- *   values={addressValues}
- *   onChange={handleAddressChange}
- *   errors={addressErrors}
- *   required={false}
- * />
+ * Field-level address form (Street, City, State, ZIP, Country) with optional
+ * address line 2. Location auto-fill is deferred to the permissions/location
+ * migration track and intentionally omitted here.
  */
 
 import { Colors } from '@educard/shared';
-import * as Location from 'expo-location';
-import { MapPin, Navigation, Home, Building2, MapPinned, Hash, Globe } from 'lucide-react-native';
-import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-} from 'react-native';
+  MapPin,
+  Home,
+  Building2,
+  MapPinned,
+  Hash,
+  Globe,
+} from 'lucide-react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, StyleSheet } from 'react-native';
 
 import { useResponsive } from '@/hooks/useResponsive';
 
@@ -72,55 +58,12 @@ export function AddressForm({
   errors = {},
   required = false,
   showHeader = true,
-  showLocationButton = true,
   compact: _compact = false,
   disabled = false,
-  onLocationFetched,
 }: AddressFormProps) {
   const [focusedField, setFocusedField] = useState<string | null>(null);
-  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const { width } = useResponsive();
   const useTwoColumnRows = width >= 400;
-
-  // Handle location auto-fill
-  const handleUseLocation = async () => {
-    setIsLoadingLocation(true);
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== Location.PermissionStatus.GRANTED) {
-        throw new Error('Location permission denied');
-      }
-
-      const location = await Location.getCurrentPositionAsync({});
-      const [result] = await Location.reverseGeocodeAsync({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      });
-
-      if (result) {
-        const addressData: Partial<AddressData> = {
-          streetAddress: [result.streetNumber, result.street].filter(Boolean).join(' ') ?? '',
-          city: result.city ?? result.subregion ?? '',
-          state: result.region ?? '',
-          zipCode: result.postalCode ?? '',
-          country: result.country ?? 'India',
-        };
-
-        // Update all fields
-        Object.entries(addressData).forEach(([key, value]) => {
-          if (value) {
-            onChange(key as keyof AddressData, value);
-          }
-        });
-
-        onLocationFetched?.(addressData);
-      }
-    } catch {
-      // Location fetch failed silently
-    } finally {
-      setIsLoadingLocation(false);
-    }
-  };
 
   // Render individual input field
   const renderField = (
@@ -133,14 +76,16 @@ export function AddressForm({
       keyboardType?: 'default' | 'numeric' | 'email-address';
       autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
       halfWidth?: boolean;
-    }
+    },
   ) => {
     const isFocused = focusedField === field;
     const hasError = !!errors[field];
     const isOptional = options?.optional ?? false;
 
     return (
-      <View style={[styles.fieldContainer, options?.halfWidth && styles.halfWidth]}>
+      <View
+        style={[styles.fieldContainer, options?.halfWidth && styles.halfWidth]}
+      >
         <View style={styles.labelRow}>
           <Text style={styles.label}>
             {label}
@@ -156,13 +101,15 @@ export function AddressForm({
             disabled && styles.inputDisabled,
           ]}
         >
-          <View style={[styles.iconContainer, isFocused && styles.iconFocused]}>{icon}</View>
+          <View style={[styles.iconContainer, isFocused && styles.iconFocused]}>
+            {icon}
+          </View>
           <TextInput
             style={styles.input}
             placeholder={placeholder}
             placeholderTextColor={Colors.gray[400]}
             value={values[field] ?? ''}
-            onChangeText={(text) => onChange(field, text)}
+            onChangeText={text => onChange(field, text)}
             onFocus={() => setFocusedField(field)}
             onBlur={() => setFocusedField(null)}
             editable={!disabled}
@@ -177,7 +124,6 @@ export function AddressForm({
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       {showHeader && (
         <View style={styles.header}>
           <View style={styles.headerLeft}>
@@ -187,58 +133,46 @@ export function AddressForm({
             <View>
               <Text style={styles.headerTitle}>Address Information</Text>
               <Text style={styles.headerSubtitle}>
-                {required ? 'Complete address required' : 'Optional address details'}
+                {required
+                  ? 'Complete address required'
+                  : 'Optional address details'}
               </Text>
             </View>
           </View>
         </View>
       )}
 
-      {/* Use Location Button - Below Header */}
-      {showLocationButton && (
-        <TouchableOpacity
-          style={[styles.useLocationButton, isLoadingLocation && styles.locationButtonLoading]}
-          onPress={() => void handleUseLocation()}
-          disabled={isLoadingLocation || disabled}
-        >
-          {isLoadingLocation ? (
-            <ActivityIndicator size="small" color={Colors.primary[600]} />
-          ) : (
-            <Navigation size={16} color={Colors.primary[600]} />
-          )}
-          <Text style={styles.useLocationButtonText}>
-            {isLoadingLocation ? 'Getting Location...' : 'Use Current Location'}
-          </Text>
-        </TouchableOpacity>
-      )}
-
-      {/* Form Fields */}
       <View style={styles.fieldsContainer}>
-        {/* Street Address */}
         {renderField(
           'streetAddress',
           'Street Address',
           '123 Main Street',
           <Home
             size={18}
-            color={focusedField === 'streetAddress' ? Colors.primary[500] : Colors.gray[400]}
+            color={
+              focusedField === 'streetAddress'
+                ? Colors.primary[500]
+                : Colors.gray[400]
+            }
           />,
-          { autoCapitalize: 'words' }
+          { autoCapitalize: 'words' },
         )}
 
-        {/* Address Line 2 */}
         {renderField(
           'addressLine2',
           'Address Line 2',
           'Apartment, Suite, Building',
           <Building2
             size={18}
-            color={focusedField === 'addressLine2' ? Colors.primary[500] : Colors.gray[400]}
+            color={
+              focusedField === 'addressLine2'
+                ? Colors.primary[500]
+                : Colors.gray[400]
+            }
           />,
-          { optional: true, autoCapitalize: 'words' }
+          { optional: true, autoCapitalize: 'words' },
         )}
 
-        {/* City & State Row */}
         <View style={[styles.row, !useTwoColumnRows && styles.rowStacked]}>
           {renderField(
             'city',
@@ -246,9 +180,11 @@ export function AddressForm({
             'City',
             <MapPinned
               size={18}
-              color={focusedField === 'city' ? Colors.primary[500] : Colors.gray[400]}
+              color={
+                focusedField === 'city' ? Colors.primary[500] : Colors.gray[400]
+              }
             />,
-            { halfWidth: true, autoCapitalize: 'words' }
+            { halfWidth: true, autoCapitalize: 'words' },
           )}
           {renderField(
             'state',
@@ -256,13 +192,16 @@ export function AddressForm({
             'State',
             <MapPin
               size={18}
-              color={focusedField === 'state' ? Colors.primary[500] : Colors.gray[400]}
+              color={
+                focusedField === 'state'
+                  ? Colors.primary[500]
+                  : Colors.gray[400]
+              }
             />,
-            { halfWidth: true, autoCapitalize: 'words' }
+            { halfWidth: true, autoCapitalize: 'words' },
           )}
         </View>
 
-        {/* ZIP Code & Country Row */}
         <View style={[styles.row, !useTwoColumnRows && styles.rowStacked]}>
           {renderField(
             'zipCode',
@@ -270,9 +209,13 @@ export function AddressForm({
             '123456',
             <Hash
               size={18}
-              color={focusedField === 'zipCode' ? Colors.primary[500] : Colors.gray[400]}
+              color={
+                focusedField === 'zipCode'
+                  ? Colors.primary[500]
+                  : Colors.gray[400]
+              }
             />,
-            { halfWidth: true, keyboardType: 'numeric' }
+            { halfWidth: true, keyboardType: 'numeric' },
           )}
           {renderField(
             'country',
@@ -280,9 +223,13 @@ export function AddressForm({
             'India',
             <Globe
               size={18}
-              color={focusedField === 'country' ? Colors.primary[500] : Colors.gray[400]}
+              color={
+                focusedField === 'country'
+                  ? Colors.primary[500]
+                  : Colors.gray[400]
+              }
             />,
-            { halfWidth: true, autoCapitalize: 'words' }
+            { halfWidth: true, autoCapitalize: 'words' },
           )}
         </View>
       </View>
@@ -294,8 +241,6 @@ const styles = StyleSheet.create({
   container: {
     gap: 16,
   },
-
-  // Header styles
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -330,47 +275,6 @@ const styles = StyleSheet.create({
     color: Colors.gray[500],
     marginTop: 2,
   },
-  locationButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#fff',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: Colors.primary[200],
-  },
-  locationButtonLoading: {
-    opacity: 0.7,
-  },
-  locationButtonText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.primary[600],
-  },
-
-  // Use Location Button - Standalone
-  useLocationButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: Colors.primary[50],
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: Colors.primary[200],
-    borderStyle: 'dashed',
-  },
-  useLocationButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.primary[600],
-  },
-
-  // Fields container
   fieldsContainer: {
     gap: 16,
   },
@@ -382,8 +286,6 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     gap: 16,
   },
-
-  // Field styles
   fieldContainer: {
     flex: 1,
   },

@@ -6,45 +6,83 @@
  * - Teacher: View-only access (No Add, Edit, Delete buttons)
  */
 
-import { Colors, getRoleThemeColors, Class, useDebounce } from '@educard/shared';
-import { useRouter } from 'expo-router';
-import { Plus, School, GraduationCap, BookOpen, Upload } from 'lucide-react-native';
+import {
+  Colors,
+  getRoleThemeColors,
+  Class,
+  useDebounce,
+} from '@educard/shared';
+import { useNavigation } from '@react-navigation/native';
+import {
+  Plus,
+  School,
+  GraduationCap,
+  BookOpen,
+  Upload,
+} from 'lucide-react-native';
 import { useState, useCallback, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  RefreshControl,
+} from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 
-import { SearchBar, ListHeader, BulkUploadModal, ConfirmDialog } from '@/components/common';
-import { EntityActions } from '@/components/common/EntityActions';
-import { LoadingState, ErrorState, EmptyState, ListFooter } from '@/components/common/ListStates';
+import {
+  SearchBar,
+  ListHeader,
+  BulkUploadModal,
+  EntityActions,
+  ConfirmDialog,
+  LoadingState,
+  ErrorState,
+  EmptyState,
+  ListFooter,
+} from '@/components/common';
 import {
   FilterModal,
   ActiveFilters,
   CLASS_FILTER_FIELDS,
   getClassFilterLabels,
 } from '@/components/filters';
-import { useActionConfirm, useDeleteConfirm } from '@/hooks';
-import { useListScroll } from '@/hooks/useListScroll';
+import { useActionConfirm, useDeleteConfirm, useListScroll } from '@/hooks';
+import { useScreenFilters } from '@/hooks/useScreenFilters';
 import { useAuthStore } from '@/lib/auth-store';
+import type { SharedStackNavigation } from '@/navigation/types';
 import { layoutStyles, listStyles } from '@/styles';
 import { isAdminRole } from '@/utils/role-utils';
 
 import { downloadClassTemplate, bulkUploadClasses } from '../api/classes-api';
-import { useClasses, useDeleteClass, useRestoreClass } from '../hooks/use-classes';
+import {
+  useClasses,
+  useDeleteClass,
+  useRestoreClass,
+} from '../hooks/use-classes';
 
 const adminTheme = getRoleThemeColors('admin');
 
 export interface ClassListProps {
-  /** Custom back navigation handler. If not provided, uses router.back() */
+  /** Custom back navigation handler. If not provided, uses navigation.goBack() */
   onBack?: () => void;
 }
 
 export function ClassList({ onBack }: ClassListProps) {
-  const router = useRouter();
+  const navigation = useNavigation<SharedStackNavigation>();
   const { user } = useAuthStore();
-  const [searchQuery, setSearchQuery] = useState('');
+  const {
+    filters,
+    search: searchQuery,
+    setSearch: setSearchQuery,
+    setAllFilters: setFilters,
+  } = useScreenFilters<Record<string, string | boolean | undefined>>(
+    'Classes',
+    {},
+  );
   const [showFilters, setShowFilters] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
-  const [filters, setFilters] = useState<Record<string, string | boolean | undefined>>({});
 
   const canManage = useMemo(() => isAdminRole(user?.role), [user?.role]);
 
@@ -52,7 +90,7 @@ export function ClassList({ onBack }: ClassListProps) {
     if (canManage) {
       return CLASS_FILTER_FIELDS;
     }
-    return CLASS_FILTER_FIELDS.filter((f) => f.name !== 'is_deleted');
+    return CLASS_FILTER_FIELDS.filter(f => f.name !== 'is_deleted');
   }, [canManage]);
 
   const debouncedSearch = useDebounce(searchQuery, 300);
@@ -77,17 +115,18 @@ export function ClassList({ onBack }: ClassListProps) {
   });
 
   const restoreMutation = useRestoreClass();
-  const { confirmAction: confirmReactivate, dialogProps: reactivateDialogProps } = useActionConfirm(
-    {
-      title: 'Reactivate Class',
-      confirmText: 'Reactivate',
-      confirmVariant: 'success',
-      makeMessage: (name) => `Are you sure you want to reactivate ${name}?`,
-      runAction: (id: string) => restoreMutation.mutateAsync(id),
-      errorMessage: 'Failed to reactivate class',
-      onSuccess: () => void refetch(),
-    }
-  );
+  const {
+    confirmAction: confirmReactivate,
+    dialogProps: reactivateDialogProps,
+  } = useActionConfirm({
+    title: 'Reactivate Class',
+    confirmText: 'Reactivate',
+    confirmVariant: 'success',
+    makeMessage: name => `Are you sure you want to reactivate ${name}?`,
+    runAction: (id: string) => restoreMutation.mutateAsync(id),
+    errorMessage: 'Failed to reactivate class',
+    onSuccess: () => void refetch(),
+  });
 
   const isDeletedView = !!filters.is_deleted;
   const classes = data?.classes ?? [];
@@ -101,32 +140,21 @@ export function ClassList({ onBack }: ClassListProps) {
     refetch: () => void refetch(),
   });
 
-  const handleBack = useCallback(() => {
-    if (onBack) {
-      onBack();
-    } else {
-      router.back();
-    }
-  }, [onBack, router]);
-
   const handleView = useCallback(
     (classItem: Class) => {
-      router.push({
-        pathname: '/(shared-screens)/classes/[id]',
-        params: { id: classItem.public_id, ...(isDeletedView ? { is_deleted: 'true' } : {}) },
+      navigation.navigate('ClassDetail', {
+        id: classItem.public_id,
+        is_deleted: isDeletedView ? 'true' : undefined,
       });
     },
-    [router, isDeletedView]
+    [navigation, isDeletedView],
   );
 
   const handleEdit = useCallback(
     (classItem: Class) => {
-      router.push({
-        pathname: '/(shared-screens)/classes/edit',
-        params: { id: classItem.public_id },
-      });
+      navigation.navigate('ClassEdit', { id: classItem.public_id });
     },
-    [router]
+    [navigation],
   );
 
   const getClassDisplayName = (classItem: Class): string => {
@@ -139,16 +167,16 @@ export function ClassList({ onBack }: ClassListProps) {
   };
 
   const handleViewStudents = (classItem: Class) => {
-    router.push({
-      pathname: '/(shared-screens)/students',
-      params: { class_id: classItem.public_id, class_name: getClassDisplayName(classItem) },
+    navigation.navigate('Students', {
+      class_id: classItem.public_id,
+      class_name: getClassDisplayName(classItem),
     });
   };
 
   const handleViewSubjects = (classItem: Class) => {
-    router.push({
-      pathname: '/(shared-screens)/subjects',
-      params: { class_id: classItem.public_id, class_name: getClassDisplayName(classItem) },
+    navigation.navigate('Subjects', {
+      class_id: classItem.public_id,
+      class_name: getClassDisplayName(classItem),
     });
   };
 
@@ -181,10 +209,12 @@ export function ClassList({ onBack }: ClassListProps) {
             onPress={() => handleViewStudents(item)}
             activeOpacity={0.7}
           >
-            <View style={[styles.actionIcon, { backgroundColor: '#fef3c7' }]}>
+            <View style={[styles.actionIcon, styles.actionIconStudents]}>
               <GraduationCap size={16} color="#d97706" />
             </View>
-            <Text style={styles.actionCount}>{item.student_count ?? item.students_count ?? 0}</Text>
+            <Text style={styles.actionCount}>
+              {item.student_count ?? item.students_count ?? 0}
+            </Text>
             <Text style={styles.actionLabel}>Students</Text>
           </TouchableOpacity>
 
@@ -195,7 +225,7 @@ export function ClassList({ onBack }: ClassListProps) {
             onPress={() => handleViewSubjects(item)}
             activeOpacity={0.7}
           >
-            <View style={[styles.actionIcon, { backgroundColor: '#d1fae5' }]}>
+            <View style={[styles.actionIcon, styles.actionIconSubjects]}>
               <BookOpen size={16} color="#059669" />
             </View>
             <Text style={styles.actionCount}>{item.subjects_count ?? 0}</Text>
@@ -205,7 +235,9 @@ export function ClassList({ onBack }: ClassListProps) {
 
         <EntityActions
           onView={() => handleView(item)}
-          onEdit={isDeletedView || !canManage ? undefined : () => handleEdit(item)}
+          onEdit={
+            isDeletedView || !canManage ? undefined : () => handleEdit(item)
+          }
           onDelete={
             isDeletedView || !canManage
               ? undefined
@@ -213,7 +245,8 @@ export function ClassList({ onBack }: ClassListProps) {
           }
           onReactivate={
             isDeletedView && canManage
-              ? () => confirmReactivate(item.public_id, getClassDisplayName(item))
+              ? () =>
+                  confirmReactivate(item.public_id, getClassDisplayName(item))
               : undefined
           }
           canManage={canManage}
@@ -228,7 +261,7 @@ export function ClassList({ onBack }: ClassListProps) {
         title="Classes"
         subtitle={`${totalCount} total`}
         role="admin"
-        onBack={handleBack}
+        onBack={onBack}
         actions={
           canManage
             ? [
@@ -238,7 +271,7 @@ export function ClassList({ onBack }: ClassListProps) {
                 },
                 {
                   icon: Plus,
-                  onPress: () => router.push('/(shared-screens)/classes/create'),
+                  onPress: () => navigation.navigate('ClassCreate'),
                   variant: 'primary',
                 },
               ]
@@ -267,7 +300,7 @@ export function ClassList({ onBack }: ClassListProps) {
 
       <ActiveFilters
         filters={getClassFilterLabels(filters)}
-        onRemove={(key) => setFilters((f) => ({ ...f, [key]: undefined }))}
+        onRemove={key => setFilters({ ...filters, [key]: undefined })}
         onClearAll={() => setFilters({})}
       />
 
@@ -275,15 +308,17 @@ export function ClassList({ onBack }: ClassListProps) {
         visible={showFilters}
         onClose={() => setShowFilters(false)}
         currentFilters={filters}
-        onApply={(f) => {
-          setFilters(f as Record<string, string | boolean | undefined>); // NOSONAR
+        onApply={f => {
+          setFilters(f as Record<string, string | boolean | undefined>);
           setShowFilters(false);
         }}
         fields={filterFields}
         title="Filter Classes"
       />
 
-      {isLoading && <LoadingState color={adminTheme.accent} message="Loading classes..." />}
+      {isLoading && (
+        <LoadingState color={adminTheme.accent} message="Loading classes..." />
+      )}
       {!isLoading && isError && (
         <ErrorState
           message="Failed to load classes"
@@ -295,7 +330,7 @@ export function ClassList({ onBack }: ClassListProps) {
         <FlatList
           data={classes}
           renderItem={renderClassCard}
-          keyExtractor={(item) => item.public_id}
+          keyExtractor={item => item.public_id}
           contentContainerStyle={listStyles.content}
           showsVerticalScrollIndicator={false}
           refreshControl={
@@ -311,13 +346,20 @@ export function ClassList({ onBack }: ClassListProps) {
           onScroll={handleScroll}
           scrollEventThrottle={16}
           ListFooterComponent={
-            <ListFooter isLoading={isFetchingNextPage} color={adminTheme.accent} />
+            <ListFooter
+              isLoading={isFetchingNextPage}
+              color={adminTheme.accent}
+            />
           }
           ListEmptyComponent={
             <EmptyState
               icon={<School size={48} color={Colors.gray[300]} />}
               message="No classes found"
-              subMessage={searchQuery ? 'Try adjusting your search' : 'Add your first class'}
+              subMessage={
+                searchQuery
+                  ? 'Try adjusting your search'
+                  : 'Add your first class'
+              }
             />
           }
         />
@@ -389,6 +431,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  actionIconStudents: { backgroundColor: '#fef3c7' },
+  actionIconSubjects: { backgroundColor: '#d1fae5' },
   actionCount: {
     fontSize: 16,
     fontWeight: '700',

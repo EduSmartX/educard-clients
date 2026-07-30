@@ -1,1 +1,2 @@
-export { ClassList, type ClassListProps } from './ClassList';
+export { ClassList } from './ClassList';
+export type { ClassListProps } from './ClassList';

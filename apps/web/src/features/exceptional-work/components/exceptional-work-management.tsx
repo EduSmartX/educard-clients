@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
 import { useRole } from '@/hooks/use-role';
+import { useFilterParams } from '@/hooks/use-filter-params';
 import { cn } from '@/lib/utils';
 import { fetchCalendarExceptions } from '../api/calendar-exception-api';
 import { useDeleteCalendarException } from '../hooks';
@@ -121,12 +122,12 @@ export function ExceptionalWorkManagement() {
   const { isAdmin } = useRole();
 
   // State
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const { filters, page, pageSize, setFilters, setPage, setPageSize } = useFilterParams<
+    Record<string, string>
+  >({ override_type: '', from_date: '', to_date: '' }, { defaultPageSize: 10 });
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingException, setEditingException] = useState<CalendarException | undefined>();
   const [deletingException, setDeletingException] = useState<CalendarException | undefined>();
-  const [filters, setFilters] = useState<Record<string, string>>({});
   const [showFilters, setShowFilters] = useState(false);
 
   // Fetch exceptions
@@ -185,7 +186,7 @@ export function ExceptionalWorkManagement() {
   };
 
   const handleResetFilters = () => {
-    setFilters({});
+    setFilters({ override_type: '', from_date: '', to_date: '' });
     setPage(1);
   };
 

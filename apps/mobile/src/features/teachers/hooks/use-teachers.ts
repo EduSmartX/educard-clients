@@ -5,10 +5,19 @@
 
 import { QueryKeys } from '@educard/shared';
 import type { TeacherDetail, ApiDetailResponse } from '@educard/shared';
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useQuery,
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 import { DEFAULT_PAGE_SIZE } from '@/api/client';
-import { handleMutationError, type MutationOptions } from '@/lib/mutation-utils';
+import {
+  handleMutationError,
+  type MutationOptions,
+} from '@/lib/mutation-utils';
+import { useCriticalOperation } from '@/providers/critical-operation-context';
 import { showToast } from '@/utils/toast';
 
 import {
@@ -21,19 +30,17 @@ import {
   type TeacherQueryParams,
 } from '../api/teachers-api';
 
-// Query Keys — thin wrappers over shared QueryKeys for backward compat
 export const teacherKeys = {
   all: QueryKeys.TEACHERS.ALL,
   lists: () => QueryKeys.TEACHERS.LISTS(),
-  list: (params?: Omit<TeacherQueryParams, 'page'>) => QueryKeys.TEACHERS.LIST(params),
-  infinite: (params?: Omit<TeacherQueryParams, 'page'>) => QueryKeys.TEACHERS.INFINITE(params),
+  list: (params?: Omit<TeacherQueryParams, 'page'>) =>
+    QueryKeys.TEACHERS.LIST(params),
+  infinite: (params?: Omit<TeacherQueryParams, 'page'>) =>
+    QueryKeys.TEACHERS.INFINITE(params),
   details: () => QueryKeys.TEACHERS.DETAILS(),
   detail: (id: string) => QueryKeys.TEACHERS.DETAIL(id),
 };
 
-/**
- * Hook to fetch teachers with infinite scroll
- */
 export function useTeachers(params?: Omit<TeacherQueryParams, 'page'>) {
   const pageSize = params?.page_size ?? DEFAULT_PAGE_SIZE;
 
@@ -46,14 +53,14 @@ export function useTeachers(params?: Omit<TeacherQueryParams, 'page'>) {
         page_size: pageSize,
       }),
     initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: lastPage => {
       if (lastPage.pagination.has_next) {
         return lastPage.pagination.current_page + 1;
       }
       return undefined;
     },
-    select: (data) => ({
-      teachers: data.pages.flatMap((page) => page.data),
+    select: data => ({
+      teachers: data.pages.flatMap(page => page.data),
       totalCount: data.pages[0]?.pagination.count ?? 0,
       hasMore: data.pages[data.pages.length - 1]?.pagination.has_next ?? false,
     }),
@@ -64,23 +71,21 @@ export function useTeachers(params?: Omit<TeacherQueryParams, 'page'>) {
   });
 }
 
-/**
- * Hook to fetch teacher details
- */
-export function useTeacherDetail(publicId: string, isDeleted?: boolean, userRole?: string | null) {
+export function useTeacherDetail(
+  publicId: string,
+  isDeleted?: boolean,
+  userRole?: string | null,
+) {
   return useQuery<ApiDetailResponse<TeacherDetail>, Error, TeacherDetail>({
     queryKey: [...teacherKeys.detail(publicId), isDeleted],
     queryFn: () => getTeacherById(publicId, isDeleted, userRole),
-    select: (response) => response.data,
+    select: response => response.data,
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     enabled: !!publicId,
   });
 }
 
-/**
- * Hook to create a teacher
- */
 export function useCreateTeacher(options?: MutationOptions) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -91,7 +96,7 @@ export function useCreateTeacher(options?: MutationOptions) {
       data: Parameters<typeof createTeacher>[0];
       forceCreate?: boolean;
     }) => createTeacher(data, forceCreate),
-    onSuccess: (response) => {
+    onSuccess: response => {
       showToast('success', response.message || 'Teacher created successfully');
       void queryClient.invalidateQueries({ queryKey: teacherKeys.all });
       options?.onSuccess?.();
@@ -102,9 +107,6 @@ export function useCreateTeacher(options?: MutationOptions) {
   });
 }
 
-/**
- * Hook to update a teacher
- */
 export function useUpdateTeacher(options?: MutationOptions) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -115,7 +117,7 @@ export function useUpdateTeacher(options?: MutationOptions) {
       publicId: string;
       data: Parameters<typeof updateTeacher>[1];
     }) => updateTeacher(publicId, data),
-    onSuccess: (response) => {
+    onSuccess: response => {
       showToast('success', response.message || 'Teacher updated successfully');
       void queryClient.invalidateQueries({ queryKey: teacherKeys.all });
       options?.onSuccess?.();
@@ -126,33 +128,37 @@ export function useUpdateTeacher(options?: MutationOptions) {
   });
 }
 
-/**
- * Hook to delete a teacher
- */
 export function useDeleteTeacher(options?: MutationOptions) {
   const queryClient = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: (publicId: string) => deleteTeacher(publicId),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Deleting teacher',
+        description: 'Removing the teacher and related assignments...',
+      });
+    },
     onSuccess: () => {
-      // Delete returns 204 — use fallback message
       showToast('success', 'Teacher deleted successfully');
-      void queryClient.invalidateQueries({ queryKey: teacherKeys.lists() });
       options?.onSuccess?.();
     },
     onError: (error: unknown) => {
       handleMutationError(error, 'Failed to delete teacher', options?.onError);
     },
+    onSettled: () => {
+      endCriticalOperation();
+      void queryClient.invalidateQueries({ queryKey: teacherKeys.lists() });
+    },
   });
 }
 
-/**
- * Hook to restore a deleted teacher
- */
 export function useRestoreTeacher(options?: MutationOptions) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (publicId: string) => restoreTeacher(publicId),
-    onSuccess: (response) => {
+    onSuccess: response => {
       showToast('success', response.message || 'Teacher restored successfully');
       void queryClient.invalidateQueries({ queryKey: teacherKeys.lists() });
       options?.onSuccess?.();

@@ -1,8 +1,7 @@
 /**
- * Teachers Feature — Barrel Exports
+ * Teachers Feature — Barrel Exports (data layer + list component)
  */
 
-// API
 export {
   getTeachers,
   getTeacherById,
@@ -14,7 +13,6 @@ export {
   type TeacherListResponse,
 } from './api/teachers-api';
 
-// Hooks
 export {
   teacherKeys,
   useTeachers,
@@ -25,5 +23,5 @@ export {
   useRestoreTeacher,
 } from './hooks/use-teachers';
 
-// Components
-export { TeacherList, type TeacherListProps } from './components';
+export { TeacherList } from './components';
+export type { TeacherListProps } from './components';

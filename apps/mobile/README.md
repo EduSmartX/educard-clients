@@ -1,167 +1,97 @@
-# EduCard Mobile
+This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
-Cross-platform mobile application for EduCard School Management System.
+# Getting Started
 
-Built with **Expo SDK 52+** | Supports **iOS**, **Android**, and **Web**
+> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
 
-## 📱 Features
+## Step 1: Start Metro
 
-- **Multi-Role Support**: Admin, Employee (Teacher), and Parent views
-- **Offline First**: Works without internet, syncs when connected
-- **Push Notifications**: Real-time alerts for attendance, exams, announcements
-- **Cross-Platform**: Single codebase for iOS, Android, and Web
+First, you will need to run **Metro**, the JavaScript build tool for React Native.
 
-## 🚀 Quick Start
+To start the Metro dev server, run the following command from the root of your React Native project:
 
-### Prerequisites
+```sh
+# Using npm
+npm start
 
-- Node.js 18+
-- npm or yarn
-- Expo CLI (`npm install -g expo-cli`)
-- EAS CLI (`npm install -g eas-cli`)
-- iOS: Xcode (macOS only)
-- Android: Android Studio
-
-### Installation
-
-```bash
-# Clone the repository
-git clone git@github.com:EduSmartX/educard-mobile.git
-cd educard-mobile
-
-# Install dependencies
-npm install
-
-# Create environment file
-cp .env.example .env.development
-
-# Start development server
-npx expo start
+# OR using Yarn
+yarn start
 ```
 
-### Running on Devices
+## Step 2: Build and run your app
 
-```bash
-# iOS Simulator
-npx expo start --ios
+With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
 
-# Android Emulator
-npx expo start --android
+### Android
 
-# Web Browser
-npx expo start --web
+```sh
+# Using npm
+npm run android
 
-# Physical Device (scan QR code with Expo Go)
-npx expo start
+# OR using Yarn
+yarn android
 ```
 
-## 📁 Project Structure
+### iOS
 
-```
-educard-mobile/
-├── app/                    # Expo Router screens
-│   ├── (auth)/            # Authentication screens
-│   ├── (tabs)/            # Main tab navigation
-│   │   ├── (admin)/       # Admin role screens
-│   │   ├── (employee)/    # Employee role screens
-│   │   └── (parent)/      # Parent role screens
-│   └── (modals)/          # Modal screens
-├── src/
-│   ├── api/               # API client and endpoints
-│   ├── components/        # Reusable components
-│   │   ├── ui/           # Base UI components
-│   │   ├── forms/        # Form components
-│   │   └── layout/       # Layout components
-│   ├── features/          # Feature modules
-│   ├── hooks/             # Custom hooks
-│   ├── lib/               # Utilities
-│   ├── providers/         # Context providers
-│   ├── constants/         # App constants
-│   ├── types/             # TypeScript types
-│   └── utils/             # Helper functions
-├── assets/                # Static assets
-├── docs/                  # Documentation
-│   ├── ARCHITECTURE_DESIGN.md
-│   ├── DEVELOPMENT_GUIDELINES.md
-│   ├── TESTING_GUIDE.md
-│   └── DEPLOYMENT_GUIDE.md
-└── __tests__/             # Test files
+For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+
+The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+
+```sh
+bundle install
 ```
 
-## 🧪 Testing
+Then, and every time you update your native dependencies, run:
 
-```bash
-# Run all tests
-npm test
-
-# Watch mode
-npm test -- --watch
-
-# Coverage report
-npm test -- --coverage
-
-# E2E tests (Detox)
-detox build --configuration ios.sim.debug
-detox test --configuration ios.sim.debug
+```sh
+bundle exec pod install
 ```
 
-## 🏗️ Building
+For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
 
-```bash
-# Development build
-npm run build:dev
+```sh
+# Using npm
+npm run ios
 
-# Preview build (internal testing)
-npm run build:preview
-
-# Production build
-npm run build:prod
+# OR using Yarn
+yarn ios
 ```
 
-## 📦 Deployment
+If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
 
-```bash
-# Submit to App Store
-npm run submit:ios
+This is one way to run your app — you can also build it directly from Android Studio or Xcode.
 
-# Submit to Play Store
-npm run submit:android
+## Step 3: Modify your app
 
-# Deploy web to Vercel
-npx expo export --platform web
-vercel --prod
-```
+Now that you have successfully run the app, let's make changes!
 
-## 📚 Documentation
+Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
 
-- [Architecture Design](./docs/ARCHITECTURE_DESIGN.md)
-- [Development Guidelines](./docs/DEVELOPMENT_GUIDELINES.md)
-- [Testing Guide](./docs/TESTING_GUIDE.md)
-- [Deployment Guide](./docs/DEPLOYMENT_GUIDE.md)
+When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
 
-## 🔧 Scripts
+- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
+- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
 
-| Command | Description |
-|---------|-------------|
-| `npm start` | Start Expo development server |
-| `npm run ios` | Run on iOS device/simulator |
-| `npm run android` | Run on Android device/emulator |
-| `npm run web` | Run in web browser |
-| `npm test` | Run unit tests |
-| `npm run lint` | Run ESLint |
-| `npm run typecheck` | Run TypeScript check |
-| `npm run format` | Format code with Prettier |
+## Congratulations! :tada:
 
-## 🌐 Environment Variables
+You've successfully run and modified your React Native App. :partying_face:
 
-Create `.env.development`, `.env.staging`, and `.env.production` files:
+### Now what?
 
-```env
-EXPO_PUBLIC_API_URL=https://api.educard.com
-EXPO_PUBLIC_APP_ENV=production
-EXPO_PUBLIC_SENTRY_DSN=https://xxx@sentry.io/xxx
-```
+- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
+- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
 
-## 📄 License
+# Troubleshooting
 
-Private - EduSmartX © 2024
+If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+
+# Learn More
+
+To learn more about React Native, take a look at the following resources:
+
+- [React Native Website](https://reactnative.dev) - learn more about React Native.
+- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
+- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
+- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
+- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.

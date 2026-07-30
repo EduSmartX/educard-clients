@@ -3,12 +3,24 @@
  * Compose and send a school-wide announcement (email / SMS) and review sent history.
  */
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { Send, Loader2, Megaphone, Paperclip, RotateCcw, Info } from 'lucide-react';
+import {
+  Send,
+  Loader2,
+  Megaphone,
+  Paperclip,
+  RotateCcw,
+  Info,
+  Eye,
+  Search,
+  X,
+  Mail,
+  MessageSquare,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -39,11 +51,17 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { PageHeader } from '@/components/common';
 import { applyFieldErrors } from '@/lib/utils/error-handler';
 import { useClasses } from '@/features/classes/hooks/use-classes';
 
-import { useAnnouncements, useCreateAnnouncement, useRetryAnnouncement } from '../hooks';
+import {
+  useAnnouncements,
+  useAnnouncementDetail,
+  useCreateAnnouncement,
+  useRetryAnnouncement,
+} from '../hooks';
 import {
   DELIVERY_METHOD_OPTIONS,
   RECIPIENT_TYPE_OPTIONS,
@@ -181,6 +199,164 @@ function RecipientStatsCell({ item }: { item: AnnouncementListItem }) {
   );
 }
 
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-4">
+      <span className="text-slate-500">{label}</span>
+      <span className="text-right font-medium text-slate-800">{value}</span>
+    </div>
+  );
+}
+
+function ChannelStatCard({
+  icon,
+  title,
+  stat,
+}: {
+  icon: ReactNode;
+  title: string;
+  stat: { attempted: number; sent: number; failed: number };
+}) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <div className="mb-2 flex items-center gap-2 font-medium text-slate-700">
+        {icon}
+        {title}
+      </div>
+      <div className="flex justify-between text-xs">
+        <span className="text-slate-500">
+          Attempted <b className="text-slate-800">{stat.attempted}</b>
+        </span>
+        <span className="text-green-600">
+          Sent <b>{stat.sent}</b>
+        </span>
+        <span className="text-red-600">
+          Failed <b>{stat.failed}</b>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function AnnouncementDetailDialog({
+  publicId,
+  onClose,
+}: {
+  publicId: string | null;
+  onClose: () => void;
+}) {
+  const { data, isLoading, isError } = useAnnouncementDetail(publicId);
+  const statusMeta = data
+    ? (ANNOUNCEMENT_STATUS_META[data.status] ?? {
+        label: data.status,
+        variant: 'secondary' as const,
+      })
+    : null;
+  const channels = data?.delivery_stats?.channels;
+
+  return (
+    <Dialog open={!!publicId} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+        {(() => {
+          if (isLoading) {
+            return (
+              <div className="space-y-3 py-6">
+                <Skeleton className="h-6 w-2/3" />
+                <Skeleton className="h-24 w-full" />
+              </div>
+            );
+          }
+          if (isError || !data) {
+            return (
+              <p className="py-8 text-center text-sm text-slate-500">
+                Could not load this announcement.
+              </p>
+            );
+          }
+          return (
+            <>
+              <DialogHeader>
+                <div className="flex items-start justify-between gap-3">
+                  <DialogTitle className="text-lg leading-snug">{data.subject}</DialogTitle>
+                  {statusMeta ? (
+                    <Badge variant={statusMeta.variant}>{statusMeta.label}</Badge>
+                  ) : null}
+                </div>
+              </DialogHeader>
+
+              <div className="space-y-4">
+                <section>
+                  <h4 className="mb-2 text-xs font-semibold tracking-wide text-slate-400 uppercase">
+                    Message
+                  </h4>
+                  {data.body_html ? (
+                    // body_html is sanitized to a safe allowlist on the server before storage.
+                    <div
+                      className="prose prose-sm max-w-none text-slate-700"
+                      dangerouslySetInnerHTML={{ __html: data.body_html }}
+                    />
+                  ) : (
+                    <p className="text-sm text-slate-500">No message content.</p>
+                  )}
+                </section>
+
+                <section className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                  <DetailRow
+                    label="Delivery"
+                    value={DELIVERY_METHOD_LABELS[data.delivery_methods]}
+                  />
+                  <DetailRow
+                    label="Recipients"
+                    value={RECIPIENT_TYPE_LABELS[data.recipient_type]}
+                  />
+                  {data.event_name ? <DetailRow label="Event" value={data.event_name} /> : null}
+                  {data.event_date ? (
+                    <DetailRow label="Event date" value={data.event_date} />
+                  ) : null}
+                  <DetailRow label="Sent by" value={data.sent_by_name ?? '—'} />
+                  <DetailRow
+                    label="Sent at"
+                    value={formatDateTime(data.sent_at ?? data.created_at)}
+                  />
+                  <DetailRow label="Sent to" value={String(data.recipient_count)} />
+                  {data.event_note ? <DetailRow label="Note" value={data.event_note} /> : null}
+                  {data.manual_emails ? (
+                    <DetailRow label="Emails" value={data.manual_emails} />
+                  ) : null}
+                </section>
+
+                {channels?.email || channels?.sms ? (
+                  <section>
+                    <h4 className="mb-2 text-xs font-semibold tracking-wide text-slate-400 uppercase">
+                      Delivery breakdown
+                    </h4>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {channels?.email ? (
+                        <ChannelStatCard
+                          icon={<Mail className="h-4 w-4 text-blue-600" />}
+                          title="Email"
+                          stat={channels.email}
+                        />
+                      ) : null}
+                      {channels?.sms ? (
+                        <ChannelStatCard
+                          icon={<MessageSquare className="h-4 w-4 text-violet-600" />}
+                          title="SMS"
+                          stat={channels.sms}
+                        />
+                      ) : null}
+                    </div>
+                  </section>
+                ) : null}
+              </div>
+            </>
+          );
+        })()}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function AnnouncementsPage() {
   const { data: classesData, isLoading: isLoadingClasses } = useClasses({
     page: 1,
@@ -191,6 +367,60 @@ export default function AnnouncementsPage() {
   const retryMutation = useRetryAnnouncement();
   const [attachments, setAttachments] = useState<UploadedFile[]>([]);
   const [retryingId, setRetryingId] = useState<string | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [deliveryFilter, setDeliveryFilter] = useState('all');
+  const [recipientFilter, setRecipientFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+
+  const hasActiveFilters =
+    search.trim() !== '' ||
+    deliveryFilter !== 'all' ||
+    recipientFilter !== 'all' ||
+    statusFilter !== 'all' ||
+    fromDate !== '' ||
+    toDate !== '';
+
+  const filteredAnnouncements = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return announcements.filter((item) => {
+      if (
+        q &&
+        !item.subject.toLowerCase().includes(q) &&
+        !item.event_name.toLowerCase().includes(q)
+      ) {
+        return false;
+      }
+      if (deliveryFilter !== 'all' && item.delivery_methods !== deliveryFilter) {
+        return false;
+      }
+      if (recipientFilter !== 'all' && item.recipient_type !== recipientFilter) {
+        return false;
+      }
+      if (statusFilter !== 'all' && item.status !== statusFilter) {
+        return false;
+      }
+      const when = (item.sent_at ?? item.created_at)?.slice(0, 10);
+      if (fromDate && when && when < fromDate) {
+        return false;
+      }
+      if (toDate && when && when > toDate) {
+        return false;
+      }
+      return true;
+    });
+  }, [announcements, search, deliveryFilter, recipientFilter, statusFilter, fromDate, toDate]);
+
+  const clearFilters = () => {
+    setSearch('');
+    setDeliveryFilter('all');
+    setRecipientFilter('all');
+    setStatusFilter('all');
+    setFromDate('');
+    setToDate('');
+  };
 
   const classOptions = useMemo<MultiSelectOption[]>(
     () =>
@@ -489,6 +719,84 @@ export default function AnnouncementsPage() {
           <CardDescription>The 50 most recent announcements for your school.</CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="mb-4 flex flex-wrap items-end gap-3">
+            <div className="relative min-w-[200px] flex-1">
+              <Search className="pointer-events-none absolute top-2.5 left-2.5 h-4 w-4 text-slate-400" />
+              <Input
+                className="pl-8"
+                placeholder="Search by subject or event..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <Select value={deliveryFilter} onValueChange={setDeliveryFilter}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Delivery" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All delivery</SelectItem>
+                {DELIVERY_METHOD_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={recipientFilter} onValueChange={setRecipientFilter}>
+              <SelectTrigger className="w-[170px]">
+                <SelectValue placeholder="Recipients" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All recipients</SelectItem>
+                {RECIPIENT_TYPE_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[130px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All status</SelectItem>
+                <SelectItem value="sent">Sent</SelectItem>
+                <SelectItem value="failed">Failed</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs text-slate-500">From</Label>
+              <Input
+                type="date"
+                className="w-[150px]"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs text-slate-500">To</Label>
+              <Input
+                type="date"
+                className="w-[150px]"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+              />
+            </div>
+            {hasActiveFilters ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={clearFilters}
+                className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+              >
+                <X className="mr-1 h-4 w-4" />
+                Clear
+              </Button>
+            ) : null}
+          </div>
           {(() => {
             if (isLoadingAnnouncements) {
               return (
@@ -499,10 +807,12 @@ export default function AnnouncementsPage() {
                 </div>
               );
             }
-            if (announcements.length === 0) {
+            if (filteredAnnouncements.length === 0) {
               return (
                 <p className="py-8 text-center text-sm text-slate-500">
-                  No announcements sent yet.
+                  {announcements.length === 0
+                    ? 'No announcements sent yet.'
+                    : 'No announcements match your filters.'}
                 </p>
               );
             }
@@ -522,7 +832,7 @@ export default function AnnouncementsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {announcements.map((item) => {
+                    {filteredAnnouncements.map((item) => {
                       const statusMeta = ANNOUNCEMENT_STATUS_META[item.status] ?? {
                         label: item.status,
                         variant: 'secondary' as const,
@@ -541,24 +851,35 @@ export default function AnnouncementsPage() {
                           <TableCell>{formatDateTime(item.sent_at ?? item.created_at)}</TableCell>
                           <TableCell>{item.sent_by_name ?? '—'}</TableCell>
                           <TableCell className="text-right">
-                            {item.status === 'failed' ? (
+                            <div className="flex justify-end gap-2">
                               <Button
                                 type="button"
-                                variant="outline"
+                                variant="ghost"
                                 size="sm"
-                                onClick={() => handleRetry(item.public_id)}
-                                disabled={retryMutation.isPending && retryingId === item.public_id}
+                                onClick={() => setDetailId(item.public_id)}
                               >
-                                {retryMutation.isPending && retryingId === item.public_id ? (
-                                  <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                                ) : (
-                                  <RotateCcw className="mr-2 h-3.5 w-3.5" />
-                                )}
-                                Retry
+                                <Eye className="mr-1.5 h-3.5 w-3.5" />
+                                View
                               </Button>
-                            ) : (
-                              '—'
-                            )}
+                              {item.status === 'failed' ? (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleRetry(item.public_id)}
+                                  disabled={
+                                    retryMutation.isPending && retryingId === item.public_id
+                                  }
+                                >
+                                  {retryMutation.isPending && retryingId === item.public_id ? (
+                                    <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                                  ) : (
+                                    <RotateCcw className="mr-2 h-3.5 w-3.5" />
+                                  )}
+                                  Retry
+                                </Button>
+                              ) : null}
+                            </div>
                           </TableCell>
                         </TableRow>
                       );
@@ -570,6 +891,8 @@ export default function AnnouncementsPage() {
           })()}
         </CardContent>
       </Card>
+
+      <AnnouncementDetailDialog publicId={detailId} onClose={() => setDetailId(null)} />
     </div>
   );
 }

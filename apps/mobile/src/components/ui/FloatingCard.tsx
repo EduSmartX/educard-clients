@@ -25,10 +25,11 @@ export function FloatingCard({
   padding = 16,
   style,
 }: FloatingCardProps) {
+  const paddingStyle = { padding };
   const content = (
     <Animated.View
       entering={FadeInDown.delay(delay).springify().damping(16)}
-      style={[styles.card, { padding }, style]}
+      style={[styles.card, paddingStyle, style]}
     >
       {children}
     </Animated.View>

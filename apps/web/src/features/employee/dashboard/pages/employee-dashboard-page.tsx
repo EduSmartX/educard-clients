@@ -10,6 +10,7 @@
 
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ContactSupportCard } from '@/components/common';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -781,6 +782,8 @@ export default function EmployeeDashboardPage() {
           </Card>
         </motion.div>
       </div>
+
+      <ContactSupportCard className="mt-6" />
     </div>
   );
 }

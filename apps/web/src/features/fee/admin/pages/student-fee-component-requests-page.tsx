@@ -6,6 +6,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/app-config';
+import { useFilterParams } from '@/hooks/use-filter-params';
 import { PageHeader } from '@/components/common';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -69,8 +70,14 @@ function QueueItem({
 export function StudentFeeComponentRequestsPage() {
   const navigate = useNavigate();
 
-  const [classFilter, setClassFilter] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const {
+    filters,
+    search: searchQuery,
+    setFilter,
+    setSearch: setSearchQuery,
+  } = useFilterParams({ class: 'all' });
+  const classFilter = filters.class;
+  const setClassFilter = (v: string) => setFilter('class', v);
   const [selectedStudentFeeId, setSelectedStudentFeeId] = useState<string>();
   const [rejectNotes, setRejectNotes] = useState<Record<string, string>>({});
 

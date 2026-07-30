@@ -35,6 +35,7 @@ import {
   type ExamSession,
 } from '@educard/shared';
 import { format } from 'date-fns';
+import * as XLSX from 'xlsx';
 import { downloadFile } from '@/lib/utils';
 
 // How It Works content for Exam Sessions
@@ -156,13 +157,14 @@ export function ExamSessionsPage() {
       session.description || '',
     ]);
 
-    const csvContent = [
-      headers.join(','),
-      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const filename = `exam_sessions_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Exam Sessions');
+    const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' }) as ArrayBuffer;
+    const blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const filename = `exam_sessions_${format(new Date(), 'yyyy-MM-dd')}.xlsx`;
     downloadFile(blob, filename);
   };
 

@@ -5,11 +5,26 @@
  */
 
 import { Colors } from '@educard/shared';
-import * as DocumentPicker from 'expo-document-picker';
-// NOTE: Using aliased imports as Paperclip and File may not resolve correctly
-import { PaperclipIcon, X, FileTextIcon, ImageIcon, FileIcon } from 'lucide-react-native';
+import {
+  PaperclipIcon,
+  X,
+  FileTextIcon,
+  ImageIcon,
+  FileIcon,
+} from 'lucide-react-native';
 import { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
+import DocumentPicker, {
+  isCancel,
+  type DocumentPickerResponse,
+} from 'react-native-document-picker';
 
 export interface SelectedFile {
   uri: string;
@@ -72,13 +87,15 @@ export function FormAttachmentPicker({
   const [isLoading, setIsLoading] = useState(false);
 
   const validateAndCollectFiles = useCallback(
-    (assets: DocumentPicker.DocumentPickerAsset[]) => {
+    (assets: DocumentPickerResponse[]) => {
       const validFiles: SelectedFile[] = [];
       const errors: string[] = [];
 
       for (const asset of assets) {
         if (asset.size && asset.size > maxFileSize) {
-          errors.push(`${asset.name} exceeds ${formatFileSize(maxFileSize)} limit`);
+          errors.push(
+            `${asset.name ?? 'File'} exceeds ${formatFileSize(maxFileSize)} limit`,
+          );
           continue;
         }
 
@@ -88,16 +105,16 @@ export function FormAttachmentPicker({
         }
 
         validFiles.push({
-          uri: asset.uri,
-          name: asset.name,
-          type: asset.mimeType || 'application/octet-stream',
-          size: asset.size,
+          uri: asset.fileCopyUri ?? asset.uri,
+          name: asset.name ?? 'file',
+          type: asset.type ?? 'application/octet-stream',
+          size: asset.size ?? undefined,
         });
       }
 
       return { validFiles, errors };
     },
-    [files.length, maxFiles, maxFileSize]
+    [files.length, maxFiles, maxFileSize],
   );
 
   const handlePickAttachment = useCallback(async () => {
@@ -110,15 +127,13 @@ export function FormAttachmentPicker({
 
     setIsLoading(true);
     try {
-      const result = await DocumentPicker.getDocumentAsync({
+      const results = await DocumentPicker.pick({
         type: allowedTypes,
-        multiple: multiple && files.length < maxFiles - 1,
-        copyToCacheDirectory: true,
+        allowMultiSelection: multiple && files.length < maxFiles - 1,
+        copyTo: 'cachesDirectory',
       });
 
-      if (result.canceled || !result.assets) return;
-
-      const { validFiles, errors } = validateAndCollectFiles(result.assets);
+      const { validFiles, errors } = validateAndCollectFiles(results);
 
       if (validFiles.length > 0) {
         onChange([...files, ...validFiles]);
@@ -127,18 +142,28 @@ export function FormAttachmentPicker({
       if (errors.length > 0) {
         Alert.alert('Some files skipped', errors.join('\n'));
       }
-    } catch {
-      Alert.alert('Error', 'Failed to pick document');
+    } catch (err) {
+      if (!isCancel(err)) {
+        Alert.alert('Error', 'Failed to pick document');
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [files, onChange, maxFiles, allowedTypes, multiple, disabled, validateAndCollectFiles]);
+  }, [
+    files,
+    onChange,
+    maxFiles,
+    allowedTypes,
+    multiple,
+    disabled,
+    validateAndCollectFiles,
+  ]);
 
   const handleRemoveFile = useCallback(
     (index: number) => {
       onChange(files.filter((_, i) => i !== index));
     },
-    [files, onChange]
+    [files, onChange],
   );
 
   const canAddMore = files.length < maxFiles && !disabled;
@@ -156,8 +181,16 @@ export function FormAttachmentPicker({
           <ActivityIndicator size="small" color={Colors.primary[500]} />
         ) : (
           <>
-            <PaperclipIcon size={20} color={canAddMore ? Colors.primary[500] : Colors.gray[400]} />
-            <Text style={[styles.addButtonText, !canAddMore && styles.addButtonTextDisabled]}>
+            <PaperclipIcon
+              size={20}
+              color={canAddMore ? Colors.primary[500] : Colors.gray[400]}
+            />
+            <Text
+              style={[
+                styles.addButtonText,
+                !canAddMore && styles.addButtonTextDisabled,
+              ]}
+            >
               {buttonText}
             </Text>
           </>
@@ -177,7 +210,11 @@ export function FormAttachmentPicker({
                   <Text style={styles.fileName} numberOfLines={1}>
                     {file.name}
                   </Text>
-                  {file.size && <Text style={styles.fileSize}>{formatFileSize(file.size)}</Text>}
+                  {file.size && (
+                    <Text style={styles.fileSize}>
+                      {formatFileSize(file.size)}
+                    </Text>
+                  )}
                 </View>
                 {!disabled && (
                   <TouchableOpacity

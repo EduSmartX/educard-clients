@@ -20,7 +20,7 @@ import { create } from 'zustand';
 // ── Types ───────────────────────────────────────────────────────────────────────
 
 interface ScreenState {
-  filters: Record<string, string>;
+  filters: Record<string, unknown>;
   search: string;
   page: number;
   pageSize: number;
@@ -30,11 +30,15 @@ interface ScreenState {
 interface FilterStoreState {
   screens: Record<string, ScreenState>;
   setScreenState: (screenKey: string, state: Partial<ScreenState>) => void;
+  replaceScreenFilters: (
+    screenKey: string,
+    filters: Record<string, unknown>,
+  ) => void;
   clearScreen: (screenKey: string) => void;
   clearAll: () => void;
 }
 
-interface UseScreenFiltersReturn<TDefaults extends Record<string, string>> {
+interface UseScreenFiltersReturn<TDefaults extends Record<string, unknown>> {
   /** Current filter values */
   filters: TDefaults;
   /** Current search query */
@@ -47,8 +51,10 @@ interface UseScreenFiltersReturn<TDefaults extends Record<string, string>> {
   scrollY: number;
   /** Set a single filter value. Resets page to 1. */
   setFilter: <K extends keyof TDefaults>(key: K, value: TDefaults[K]) => void;
-  /** Set multiple filter values at once. Resets page to 1. */
+  /** Set multiple filter values at once (merged). Resets page to 1. */
   setFilters: (updates: Partial<TDefaults>) => void;
+  /** Replace the entire filter object (e.g. from a filter modal). Resets page to 1. */
+  setAllFilters: (filters: TDefaults) => void;
   /** Set search query. Resets page to 1. */
   setSearch: (query: string) => void;
   /** Set the current page */
@@ -63,11 +69,11 @@ interface UseScreenFiltersReturn<TDefaults extends Record<string, string>> {
 
 // ── Zustand Store ───────────────────────────────────────────────────────────────
 
-export const useFilterStore = create<FilterStoreState>((set) => ({
+export const useFilterStore = create<FilterStoreState>(set => ({
   screens: {},
 
   setScreenState: (screenKey, partial) =>
-    set((state) => ({
+    set(state => ({
       screens: {
         ...state.screens,
         [screenKey]: {
@@ -83,11 +89,25 @@ export const useFilterStore = create<FilterStoreState>((set) => ({
       },
     })),
 
-  clearScreen: (screenKey) =>
-    set((state) => {
-      const { [screenKey]: _, ...rest } = state.screens;
+  clearScreen: screenKey =>
+    set(state => {
+      const rest = { ...state.screens };
+      delete rest[screenKey];
       return { screens: rest };
     }),
+
+  replaceScreenFilters: (screenKey, filters) =>
+    set(state => ({
+      screens: {
+        ...state.screens,
+        [screenKey]: {
+          ...getDefaultScreenState(),
+          ...state.screens[screenKey],
+          filters,
+          page: 1,
+        },
+      },
+    })),
 
   clearAll: () => set({ screens: {} }),
 }));
@@ -104,27 +124,21 @@ function getDefaultScreenState(): ScreenState {
 
 // ── Hook ────────────────────────────────────────────────────────────────────────
 
-export function useScreenFilters<TDefaults extends Record<string, string>>(
+export function useScreenFilters<TDefaults extends Record<string, unknown>>(
   screenKey: string,
   defaults: TDefaults,
-  options?: { defaultPageSize?: number }
+  options?: { defaultPageSize?: number },
 ): UseScreenFiltersReturn<TDefaults> {
   const store = useFilterStore();
   const screenState = store.screens[screenKey];
   const defaultPageSize = options?.defaultPageSize ?? 20;
 
-  // Merge stored filters with defaults (stored values take precedence)
-  const filters = useMemo(() => {
-    const result = { ...defaults };
-    if (screenState?.filters) {
-      for (const key of Object.keys(defaults)) {
-        if (key in screenState.filters) {
-          result[key as keyof TDefaults] = screenState.filters[key] as TDefaults[keyof TDefaults];
-        }
-      }
-    }
-    return result;
-  }, [defaults, screenState?.filters]);
+  // Merge stored filters over defaults (stored values take precedence). Spreading
+  // both keeps dynamic filter keys (e.g. filter-modal screens with empty defaults).
+  const filters = useMemo(
+    () => ({ ...defaults, ...(screenState?.filters ?? {}) }) as TDefaults,
+    [defaults, screenState?.filters],
+  );
 
   const search = screenState?.search ?? '';
   const page = screenState?.page ?? 1;
@@ -138,45 +152,52 @@ export function useScreenFilters<TDefaults extends Record<string, string>>(
         page: 1,
       });
     },
-    [store, screenKey]
+    [store, screenKey],
   );
 
   const setFilters = useCallback(
     (updates: Partial<TDefaults>) => {
       store.setScreenState(screenKey, {
-        filters: updates as Record<string, string>,
+        filters: updates as Record<string, unknown>,
         page: 1,
       });
     },
-    [store, screenKey]
+    [store, screenKey],
+  );
+
+  const setAllFilters = useCallback(
+    (newFilters: TDefaults) => {
+      store.replaceScreenFilters(screenKey, newFilters);
+    },
+    [store, screenKey],
   );
 
   const setSearch = useCallback(
     (query: string) => {
       store.setScreenState(screenKey, { search: query, page: 1 });
     },
-    [store, screenKey]
+    [store, screenKey],
   );
 
   const setPage = useCallback(
     (newPage: number) => {
       store.setScreenState(screenKey, { page: newPage });
     },
-    [store, screenKey]
+    [store, screenKey],
   );
 
   const setPageSize = useCallback(
     (size: number) => {
       store.setScreenState(screenKey, { pageSize: size, page: 1 });
     },
-    [store, screenKey]
+    [store, screenKey],
   );
 
   const setScrollY = useCallback(
     (y: number) => {
       store.setScreenState(screenKey, { scrollY: y });
     },
-    [store, screenKey]
+    [store, screenKey],
   );
 
   const resetFilters = useCallback(() => {
@@ -191,6 +212,7 @@ export function useScreenFilters<TDefaults extends Record<string, string>>(
     scrollY,
     setFilter,
     setFilters,
+    setAllFilters,
     setSearch,
     setPage,
     setPageSize,

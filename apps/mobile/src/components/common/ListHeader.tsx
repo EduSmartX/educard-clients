@@ -4,11 +4,13 @@
  */
 
 import { getRoleGradient, getRoleThemeColors } from '@educard/shared';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import { ChevronLeft, LucideIcon } from 'lucide-react-native';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
+
+import { LinearGradient } from '@/lib/linear-gradient';
+import type { SharedStackNavigation } from '@/navigation/types';
 
 interface HeaderAction {
   icon: LucideIcon;
@@ -22,7 +24,7 @@ interface ListHeaderProps {
   role?: 'admin' | 'teacher' | 'parent' | 'student';
   showBack?: boolean;
   actions?: HeaderAction[];
-  /** Explicit back navigation. Falls back to router.back() then management tab. */
+  /** Explicit back navigation. Falls back to navigation.goBack(). */
   onBack?: () => void;
 }
 
@@ -34,16 +36,15 @@ export function ListHeader({
   actions = [],
   onBack,
 }: ListHeaderProps) {
-  const router = useRouter();
+  const navigation = useNavigation<SharedStackNavigation>();
   const gradient = getRoleGradient(role);
   const theme = getRoleThemeColors(role);
 
   const handleBack = () => {
     if (onBack) {
       onBack();
-    } else {
-      // Use navigate to properly switch tabs within the Tabs navigator
-      router.navigate('/(tabs)/(admin)/management');
+    } else if (navigation.canGoBack()) {
+      navigation.goBack();
     }
   };
 
@@ -64,18 +65,24 @@ export function ListHeader({
             {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
           </View>
           <View style={styles.actions}>
-            {actions.map((action, index) => (
-              <TouchableOpacity
-                key={`action-${action.icon.displayName || index}`}
-                style={[styles.actionBtn, action.variant === 'primary' && styles.primaryBtn]}
-                onPress={action.onPress}
-              >
-                <action.icon
-                  size={20}
-                  color={action.variant === 'primary' ? theme.accent : '#fff'}
-                />
-              </TouchableOpacity>
-            ))}
+            {actions.map((action, index) => {
+              const ActionIcon = action.icon;
+              return (
+                <TouchableOpacity
+                  key={`action-${action.icon.displayName ?? index}`}
+                  style={[
+                    styles.actionBtn,
+                    action.variant === 'primary' && styles.primaryBtn,
+                  ]}
+                  onPress={action.onPress}
+                >
+                  <ActionIcon
+                    size={20}
+                    color={action.variant === 'primary' ? theme.accent : '#fff'}
+                  />
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
       </View>
@@ -84,7 +91,12 @@ export function ListHeader({
 }
 
 const styles = StyleSheet.create({
-  header: { paddingTop: 44, paddingBottom: 16, paddingHorizontal: 16, overflow: 'hidden' },
+  header: {
+    paddingTop: 44,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    overflow: 'hidden',
+  },
   circle1: {
     position: 'absolute',
     top: -40,

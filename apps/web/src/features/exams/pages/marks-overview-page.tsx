@@ -574,7 +574,7 @@ export function MarksOverviewPage() {
                     {marksOverview.class_info.section_name}
                   </p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-2">
                   <Badge variant="outline" className="px-3 py-1 text-base">
                     <Users className="mr-1 h-4 w-4" />
                     {stats.totalStudents} Students

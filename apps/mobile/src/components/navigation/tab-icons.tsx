@@ -3,12 +3,18 @@
  * Reusable gradient icon components for tab bar navigation
  */
 
-import { LinearGradient } from 'expo-linear-gradient';
-import { LayoutDashboard, Building2, User, Shield, Settings } from 'lucide-react-native';
+import {
+  LayoutDashboard,
+  Building2,
+  User,
+  Shield,
+  Settings,
+} from 'lucide-react-native';
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 
-// Icon props type
+import { LinearGradient } from '@/lib/linear-gradient';
+
 type IconProps = { size: number; color: string; strokeWidth?: number };
 
 export const GradientIcon = ({
@@ -38,21 +44,41 @@ export const GradientIcon = ({
   );
 };
 
-export const DashboardIcon = ({ focused, size }: { focused: boolean; size: number }) => (
-  <GradientIcon Icon={LayoutDashboard} size={size} focused={focused} />
-);
-export const ManageIcon = ({ focused, size }: { focused: boolean; size: number }) => (
-  <GradientIcon Icon={Building2} size={size} focused={focused} />
-);
-export const MyWorkIcon = ({ focused, size }: { focused: boolean; size: number }) => (
-  <GradientIcon Icon={User} size={size} focused={focused} />
-);
-export const AdminIcon = ({ focused, size }: { focused: boolean; size: number }) => (
-  <GradientIcon Icon={Shield} size={size} focused={focused} />
-);
-export const SettingsIcon = ({ focused, size }: { focused: boolean; size: number }) => (
-  <GradientIcon Icon={Settings} size={size} focused={focused} />
-);
+export const DashboardIcon = ({
+  focused,
+  size,
+}: {
+  focused: boolean;
+  size: number;
+}) => <GradientIcon Icon={LayoutDashboard} size={size} focused={focused} />;
+export const ManageIcon = ({
+  focused,
+  size,
+}: {
+  focused: boolean;
+  size: number;
+}) => <GradientIcon Icon={Building2} size={size} focused={focused} />;
+export const MyWorkIcon = ({
+  focused,
+  size,
+}: {
+  focused: boolean;
+  size: number;
+}) => <GradientIcon Icon={User} size={size} focused={focused} />;
+export const AdminIcon = ({
+  focused,
+  size,
+}: {
+  focused: boolean;
+  size: number;
+}) => <GradientIcon Icon={Shield} size={size} focused={focused} />;
+export const SettingsIcon = ({
+  focused,
+  size,
+}: {
+  focused: boolean;
+  size: number;
+}) => <GradientIcon Icon={Settings} size={size} focused={focused} />;
 
 export const tabIconStyles = StyleSheet.create({
   iconContainer: {

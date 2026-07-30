@@ -1,9 +1,8 @@
 /**
  * Profile API endpoints
- * Handles profile data and photo management
  */
 
-import { API_ENDPOINTS } from '@/constants';
+import { API_ENDPOINTS } from '@educard/shared';
 
 import { apiClient } from './client';
 
@@ -94,7 +93,7 @@ interface ApiResponse<T> {
 export async function getMyProfilePhoto(): Promise<ProfileImage | null> {
   try {
     const response = await apiClient.get<ApiResponse<ProfileImage | null>>(
-      API_ENDPOINTS.ATTACHMENTS.MY_PHOTO
+      API_ENDPOINTS.ATTACHMENTS.MY_PHOTO,
     );
     return response.data.data;
   } catch {
@@ -106,14 +105,20 @@ export async function getMyProfilePhoto(): Promise<ProfileImage | null> {
  * Get current user's full profile
  */
 export async function getUserProfile(): Promise<UserProfile> {
-  const response = await apiClient.get<ApiResponse<UserProfile>>('/users/profile/me/');
+  const response =
+    await apiClient.get<ApiResponse<UserProfile>>('/users/profile/me/');
   return response.data.data;
 }
 
 /**
  * Update user profile information
  */
-export async function updateProfile(payload: UpdateProfilePayload): Promise<UserProfile> {
-  const response = await apiClient.patch<ApiResponse<UserProfile>>('/users/profile/me/', payload);
+export async function updateProfile(
+  payload: UpdateProfilePayload,
+): Promise<UserProfile> {
+  const response = await apiClient.patch<ApiResponse<UserProfile>>(
+    '/users/profile/me/',
+    payload,
+  );
   return response.data.data;
 }

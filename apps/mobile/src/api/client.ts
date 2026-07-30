@@ -4,12 +4,13 @@
  */
 
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { router } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 
 import { API_CONFIG, STORAGE_KEYS } from '@/constants/config';
 import { useAuthStore } from '@/lib/auth-store';
 import { clearQueryCache } from '@/lib/query-client';
+import * as SecureStore from '@/lib/secure-store';
+import { resetToAuth } from '@/navigation/navigation-service';
+
 // Use shared error handler
 export {
   parseApiError,
@@ -47,14 +48,16 @@ apiClient.interceptors.request.use(
     }
     return config;
   },
-  (error: Error) => Promise.reject(error)
+  (error: Error) => Promise.reject(error),
 );
 
 // Response interceptor - Handle token refresh
 apiClient.interceptors.response.use(
-  (response) => response,
+  response => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }; // NOSONAR
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
 
     // Skip token refresh for auth endpoints (login, register, etc.)
     const isAuthEndpoint =
@@ -65,7 +68,6 @@ apiClient.interceptors.response.use(
       originalRequest.url?.includes('/organizations/otp');
 
     // Handle 401 - Token expired (but not for auth endpoints)
-    // Also prevent multiple 401 handlers from running simultaneously
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
@@ -76,10 +78,11 @@ apiClient.interceptors.response.use(
       isHandling401 = true;
 
       try {
-        const refreshToken = await SecureStore.getItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
+        const refreshToken = await SecureStore.getItemAsync(
+          STORAGE_KEYS.REFRESH_TOKEN,
+        );
 
         if (!refreshToken) {
-          // No refresh token - redirect to login
           await forceLogout();
           throw new Error('Session expired. Please login again.');
         }
@@ -87,33 +90,28 @@ apiClient.interceptors.response.use(
         // Try to refresh the token
         const response = await axios.post<{ access: string }>(
           `${API_CONFIG.BASE_URL}/auth/token/refresh/`,
-          {
-            refresh: refreshToken,
-          }
+          { refresh: refreshToken },
         );
 
         const { access } = response.data;
 
-        // Store new access token
         await SecureStore.setItemAsync(STORAGE_KEYS.ACCESS_TOKEN, access);
 
         isHandling401 = false;
 
-        // Retry original request with new token
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${access}`;
         }
 
         return apiClient(originalRequest);
       } catch {
-        // Clear tokens and redirect to login
         await forceLogout();
         throw new Error('Session expired. Please login again.');
       }
     }
 
     throw error;
-  }
+  },
 );
 
 // Helper to force logout - clears tokens and auth store state
@@ -123,7 +121,6 @@ async function forceLogout(): Promise<void> {
   clearQueryCache();
 
   try {
-    // Clear stored tokens
     await SecureStore.deleteItemAsync(STORAGE_KEYS.ACCESS_TOKEN);
     await SecureStore.deleteItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
     await SecureStore.deleteItemAsync(STORAGE_KEYS.USER_DATA);
@@ -131,7 +128,7 @@ async function forceLogout(): Promise<void> {
     // Silent fail - best effort cleanup
   }
 
-  // Clear auth store state to prevent redirect loops
+  // Clearing auth state makes RootNavigator switch to the Auth stack.
   useAuthStore.setState({
     user: null,
     tokens: null,
@@ -140,7 +137,7 @@ async function forceLogout(): Promise<void> {
     error: null,
   });
 
-  router.replace('/(auth)/login');
+  resetToAuth();
 }
 
 // Helper to clear auth tokens (for external use)

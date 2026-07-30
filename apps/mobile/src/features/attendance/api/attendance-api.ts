@@ -24,7 +24,7 @@ export interface DashboardAttendanceStats {
   is_working_day: boolean;
   is_holiday: boolean;
   holiday_name: string | null;
-  reason?: string | null; // Added: reason for non-working day
+  reason?: string | null;
   overall_attendance_percentage: number | null;
   students: AttendanceCategorySummary;
   employees: AttendanceCategorySummary;
@@ -33,12 +33,13 @@ export interface DashboardAttendanceStats {
 /**
  * Get dashboard attendance stats for admin
  */
-export const getDashboardAttendanceStats = async (): Promise<DashboardAttendanceStats> => {
-  const response = await apiClient.get<ApiResponse<DashboardAttendanceStats>>(
-    '/attendance/admin/dashboard-stats/'
-  );
-  return response.data.data;
-};
+export const getDashboardAttendanceStats =
+  async (): Promise<DashboardAttendanceStats> => {
+    const response = await apiClient.get<ApiResponse<DashboardAttendanceStats>>(
+      '/attendance/admin/dashboard-stats/',
+    );
+    return response.data.data;
+  };
 
 // ============== MARK ATTENDANCE TYPES ==============
 
@@ -120,11 +121,12 @@ export interface BulkAttendancePayload {
 /**
  * Get eligible classes for attendance marking
  */
-export const getEligibleClasses = async (purpose = 'attendance'): Promise<EligibleClass[]> => {
-  const response = await apiClient.get<ApiResponse<EligibleClass[]> | EligibleClass[]>(
-    '/classes/employee/eligible/',
-    { params: { purpose } }
-  );
+export const getEligibleClasses = async (
+  purpose = 'attendance',
+): Promise<EligibleClass[]> => {
+  const response = await apiClient.get<
+    ApiResponse<EligibleClass[]> | EligibleClass[]
+  >('/classes/employee/eligible/', { params: { purpose } });
   const data = response.data;
   return 'data' in data ? data.data : data;
 };
@@ -134,12 +136,13 @@ export const getEligibleClasses = async (purpose = 'attendance'): Promise<Eligib
  */
 export const validateAttendanceDate = async (
   classId: string,
-  date: string
+  date: string,
 ): Promise<DateValidation> => {
-  const response = await apiClient.get<ApiResponse<DateValidation> | DateValidation>(
-    `/attendance/class/${classId}/student-attendance/validate-date/`,
-    { params: { date } }
-  );
+  const response = await apiClient.get<
+    ApiResponse<DateValidation> | DateValidation
+  >(`/attendance/class/${classId}/student-attendance/validate-date/`, {
+    params: { date },
+  });
   const data = response.data;
   return 'data' in data ? data.data : data;
 };
@@ -149,11 +152,11 @@ export const validateAttendanceDate = async (
  */
 export const getComprehensiveAttendance = async (
   classId: string,
-  date: string
+  date: string,
 ): Promise<ComprehensiveAttendanceRecord[]> => {
-  // Embed images to reduce HTTP requests (Base64 data URIs for profile photos)
   const response = await apiClient.get<
-    ApiResponse<ComprehensiveAttendanceRecord[]> | ComprehensiveAttendanceRecord[]
+    | ApiResponse<ComprehensiveAttendanceRecord[]>
+    | ComprehensiveAttendanceRecord[]
   >(`/attendance/class/${classId}/student-attendance/comprehensive/`, {
     params: { date, embed_images: true },
   });
@@ -166,11 +169,11 @@ export const getComprehensiveAttendance = async (
  */
 export const bulkMarkAttendance = async (
   classId: string,
-  payload: BulkAttendancePayload
+  payload: BulkAttendancePayload,
 ): Promise<{ message: string }> => {
   const response = await apiClient.post<{ message: string }>(
     `/attendance/class/${classId}/student-attendance/bulk-mark/`,
-    payload
+    payload,
   );
   return response.data;
 };
@@ -235,14 +238,11 @@ export interface SubmitTimesheetPayload {
 
 /**
  * Get employee's own attendance records for a date range
- * Uses the same endpoint as web for consistency
  */
 export const getMyAttendance = async (
   fromDate: string,
-  toDate: string
+  toDate: string,
 ): Promise<EmployeeAttendanceResponse> => {
-  // Try the employee-attendance endpoint first (same as web)
-  // Fall back to my-attendance if needed
   try {
     const response = await apiClient.get<
       ApiResponse<EmployeeAttendanceResponse> | EmployeeAttendanceResponse
@@ -250,7 +250,8 @@ export const getMyAttendance = async (
       params: { from_date: fromDate, to_date: toDate },
     });
     const rawData = response.data;
-    const data: EmployeeAttendanceResponse = 'data' in rawData ? rawData.data : rawData;
+    const data: EmployeeAttendanceResponse =
+      'data' in rawData ? rawData.data : rawData;
     return {
       records: data.records ?? [],
       stats: data.stats ?? {
@@ -266,7 +267,6 @@ export const getMyAttendance = async (
       working_day_policy: data.working_day_policy ?? null,
     };
   } catch {
-    // Fallback to my-attendance endpoint
     const response = await apiClient.get<
       ApiResponse<EmployeeAttendanceResponse> | EmployeeAttendanceResponse
     >('/attendance/employee/my-attendance/', {
@@ -282,12 +282,13 @@ export const getMyAttendance = async (
  */
 export const checkTimesheetStatus = async (
   fromDate: string,
-  toDate: string
+  toDate: string,
 ): Promise<TimesheetStatus> => {
-  const response = await apiClient.get<ApiResponse<TimesheetStatus> | TimesheetStatus>(
-    '/attendance/employee/timesheets/status/',
-    { params: { from_date: fromDate, to_date: toDate } }
-  );
+  const response = await apiClient.get<
+    ApiResponse<TimesheetStatus> | TimesheetStatus
+  >('/attendance/employee/timesheets/status/', {
+    params: { from_date: fromDate, to_date: toDate },
+  });
   const data = response.data;
   return 'data' in data ? data.data : data;
 };
@@ -296,11 +297,11 @@ export const checkTimesheetStatus = async (
  * Submit timesheet for approval
  */
 export const submitTimesheet = async (
-  payload: SubmitTimesheetPayload
+  payload: SubmitTimesheetPayload,
 ): Promise<{ message: string }> => {
   const response = await apiClient.post<{ message: string }>(
     '/attendance/employee/timesheets/submit/',
-    payload
+    payload,
   );
   return response.data;
 };
@@ -310,14 +311,14 @@ export const submitTimesheet = async (
  */
 export const returnTimesheetToDraft = async (
   fromDate: string,
-  toDate: string
+  toDate: string,
 ): Promise<{ message: string }> => {
   const response = await apiClient.post<{ message: string }>(
     '/attendance/employee/timesheets/return-to-draft/',
     {
       from_date: fromDate,
       to_date: toDate,
-    }
+    },
   );
   return response.data;
 };

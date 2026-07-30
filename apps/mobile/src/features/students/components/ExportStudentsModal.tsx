@@ -4,7 +4,6 @@
  */
 
 import { Colors, GENDER_OPTIONS_WITH_ALL, API_CONFIG } from '@educard/shared';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Download, Mail, X, FileSpreadsheet } from 'lucide-react-native';
 import { useState, useMemo } from 'react';
 import {
@@ -23,15 +22,22 @@ import {
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { useClasses } from '@/features/classes/hooks/use-classes';
+import { LinearGradient } from '@/lib/linear-gradient';
 
-import { exportStudentsData, type ExportStudentsPayload } from '../api/students-api';
+import {
+  exportStudentsData,
+  type ExportStudentsPayload,
+} from '../api/students-api';
 
 interface ExportStudentsModalProps {
   readonly visible: boolean;
   readonly onClose: () => void;
 }
 
-export function ExportStudentsModal({ visible, onClose }: ExportStudentsModalProps) {
+export function ExportStudentsModal({
+  visible,
+  onClose,
+}: ExportStudentsModalProps) {
   const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
   const [gender, setGender] = useState<string>('');
   const [searchFilter, setSearchFilter] = useState('');
@@ -40,16 +46,21 @@ export function ExportStudentsModal({ visible, onClose }: ExportStudentsModalPro
   const [isExporting, setIsExporting] = useState(false);
 
   // Fetch classes for selection
-  const { data: classesData } = useClasses({ page_size: API_CONFIG.DROPDOWN_PAGE_SIZE });
-  const classes = useMemo(() => classesData?.classes ?? [], [classesData?.classes]);
+  const { data: classesData } = useClasses({
+    page_size: API_CONFIG.DROPDOWN_PAGE_SIZE,
+  });
+  const classes = useMemo(
+    () => classesData?.classes ?? [],
+    [classesData?.classes],
+  );
 
   const classOptions = useMemo(
     () =>
-      classes.map((c) => ({
+      classes.map(c => ({
         value: c.public_id,
         label: `${c.class_master?.name ?? ''} - ${c.name}`.trim(),
       })),
-    [classes]
+    [classes],
   );
 
   const resetForm = () => {
@@ -66,14 +77,19 @@ export function ExportStudentsModal({ visible, onClose }: ExportStudentsModalPro
   };
 
   const toggleClass = (classId: string) => {
-    setSelectedClassIds((prev) =>
-      prev.includes(classId) ? prev.filter((id) => id !== classId) : [...prev, classId]
+    setSelectedClassIds(prev =>
+      prev.includes(classId)
+        ? prev.filter(id => id !== classId)
+        : [...prev, classId],
     );
   };
 
   const handleExport = async () => {
     if (sendEmail && !emailInput.trim()) {
-      Alert.alert('Validation', 'Please enter email addresses for email delivery.');
+      Alert.alert(
+        'Validation',
+        'Please enter email addresses for email delivery.',
+      );
       return;
     }
 
@@ -94,8 +110,8 @@ export function ExportStudentsModal({ visible, onClose }: ExportStudentsModalPro
         payload.send_email = true;
         payload.emails = emailInput
           .split(',')
-          .map((e) => e.trim())
-          .filter((e) => e.length > 0);
+          .map(e => e.trim())
+          .filter(e => e.length > 0);
       }
 
       const result = await exportStudentsData(payload);
@@ -105,10 +121,16 @@ export function ExportStudentsModal({ visible, onClose }: ExportStudentsModalPro
         Alert.alert('Success', `Export downloaded${emailMsg} successfully!`);
         handleClose();
       } else {
-        Alert.alert('Error', result.message || 'Export failed. Please try again.');
+        Alert.alert(
+          'Error',
+          result.message || 'Export failed. Please try again.',
+        );
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Export failed. Please try again.';
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Export failed. Please try again.';
       Alert.alert('Error', message);
     } finally {
       setIsExporting(false);
@@ -116,12 +138,23 @@ export function ExportStudentsModal({ visible, onClose }: ExportStudentsModalPro
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={handleClose}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent
+      onRequestClose={handleClose}
+    >
       <Pressable style={styles.overlay} onPress={handleClose}>
-        <Pressable style={styles.container} onPress={() => {}}>
-          <Animated.View entering={FadeInDown.duration(300)} style={styles.content}>
+        <Pressable style={styles.container}>
+          <Animated.View
+            entering={FadeInDown.duration(300)}
+            style={styles.content}
+          >
             {/* Header */}
-            <LinearGradient colors={[Colors.accent[600], Colors.accent[500]]} style={styles.header}>
+            <LinearGradient
+              colors={[Colors.accent[600], Colors.accent[500]]}
+              style={styles.header}
+            >
               <View style={styles.headerContent}>
                 <View style={styles.headerLeft}>
                   <FileSpreadsheet size={24} color={Colors.text.inverse} />
@@ -136,12 +169,17 @@ export function ExportStudentsModal({ visible, onClose }: ExportStudentsModalPro
               </Text>
             </LinearGradient>
 
-            <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
+            <ScrollView
+              style={styles.body}
+              showsVerticalScrollIndicator={false}
+            >
               {/* Class Selection */}
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>📚 Filter by Class (optional)</Text>
+                <Text style={styles.sectionTitle}>
+                  📚 Filter by Class (optional)
+                </Text>
                 <View style={styles.chipContainer}>
-                  {classOptions.map((opt) => {
+                  {classOptions.map(opt => {
                     const isSelected = selectedClassIds.includes(opt.value);
                     return (
                       <TouchableOpacity
@@ -150,7 +188,12 @@ export function ExportStudentsModal({ visible, onClose }: ExportStudentsModalPro
                         onPress={() => toggleClass(opt.value)}
                         activeOpacity={0.7}
                       >
-                        <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
+                        <Text
+                          style={[
+                            styles.chipText,
+                            isSelected && styles.chipTextSelected,
+                          ]}
+                        >
                           {opt.label}
                         </Text>
                       </TouchableOpacity>
@@ -162,17 +205,19 @@ export function ExportStudentsModal({ visible, onClose }: ExportStudentsModalPro
                 </View>
                 {selectedClassIds.length > 0 && (
                   <Text style={styles.selectionCount}>
-                    {selectedClassIds.length} class{selectedClassIds.length > 1 ? 'es' : ''}{' '}
-                    selected
+                    {selectedClassIds.length} class
+                    {selectedClassIds.length > 1 ? 'es' : ''} selected
                   </Text>
                 )}
               </View>
 
               {/* Gender Selection */}
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>👤 Filter by Gender (optional)</Text>
+                <Text style={styles.sectionTitle}>
+                  👤 Filter by Gender (optional)
+                </Text>
                 <View style={styles.chipContainer}>
-                  {GENDER_OPTIONS_WITH_ALL.map((opt) => {
+                  {GENDER_OPTIONS_WITH_ALL.map(opt => {
                     const isSelected = gender === opt.value;
                     return (
                       <TouchableOpacity
@@ -181,7 +226,12 @@ export function ExportStudentsModal({ visible, onClose }: ExportStudentsModalPro
                         onPress={() => setGender(opt.value)}
                         activeOpacity={0.7}
                       >
-                        <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
+                        <Text
+                          style={[
+                            styles.chipText,
+                            isSelected && styles.chipTextSelected,
+                          ]}
+                        >
                           {opt.label}
                         </Text>
                       </TouchableOpacity>
@@ -212,8 +262,13 @@ export function ExportStudentsModal({ visible, onClose }: ExportStudentsModalPro
                   <Switch
                     value={sendEmail}
                     onValueChange={setSendEmail}
-                    trackColor={{ false: Colors.gray[200], true: Colors.primary[200] }}
-                    thumbColor={sendEmail ? Colors.primary[600] : Colors.gray[400]}
+                    trackColor={{
+                      false: Colors.gray[200],
+                      true: Colors.primary[200],
+                    }}
+                    thumbColor={
+                      sendEmail ? Colors.primary[600] : Colors.gray[400]
+                    }
                   />
                 </View>
                 {sendEmail && (
@@ -229,7 +284,8 @@ export function ExportStudentsModal({ visible, onClose }: ExportStudentsModalPro
                       multiline
                     />
                     <Text style={styles.helpText}>
-                      Enter emails of admins or teachers in your organization. Separate with commas.
+                      Enter emails of admins or teachers in your organization.
+                      Separate with commas.
                     </Text>
                   </View>
                 )}
@@ -239,7 +295,10 @@ export function ExportStudentsModal({ visible, onClose }: ExportStudentsModalPro
             {/* Footer Actions */}
             <View style={styles.footer}>
               <TouchableOpacity
-                style={[styles.exportBtn, isExporting && styles.exportBtnDisabled]}
+                style={[
+                  styles.exportBtn,
+                  isExporting && styles.exportBtnDisabled,
+                ]}
                 onPress={() => {
                   void handleExport();
                 }}
@@ -254,9 +313,18 @@ export function ExportStudentsModal({ visible, onClose }: ExportStudentsModalPro
                   }
                   style={styles.exportBtnGradient}
                 >
-                  {isExporting && <ActivityIndicator color={Colors.text.inverse} size="small" />}
-                  {!isExporting && sendEmail && <Mail size={20} color={Colors.text.inverse} />}
-                  {!isExporting && !sendEmail && <Download size={20} color={Colors.text.inverse} />}
+                  {isExporting && (
+                    <ActivityIndicator
+                      color={Colors.text.inverse}
+                      size="small"
+                    />
+                  )}
+                  {!isExporting && sendEmail && (
+                    <Mail size={20} color={Colors.text.inverse} />
+                  )}
+                  {!isExporting && !sendEmail && (
+                    <Download size={20} color={Colors.text.inverse} />
+                  )}
                   <Text style={styles.exportBtnText}>
                     {isExporting && 'Exporting...'}
                     {!isExporting && sendEmail && 'Download & Email'}

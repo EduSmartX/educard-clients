@@ -70,7 +70,7 @@ export function DashboardLayout({
       </Button>
 
       {/* Main Content - Responsive padding */}
-      <main className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">{children}</main>
+      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">{children}</main>
     </div>
   );
 }

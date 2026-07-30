@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Download, Search, Filter, X, Plus, ClipboardCheck } from 'lucide-react';
 import { ROUTES } from '@/constants/app-config';
+import { useFilterParams } from '@/hooks/use-filter-params';
 import { StudentFeeTable } from '../components/student-fee-table';
 import { SendReminderDialog } from '../components/send-reminder-dialog';
 import { useStudentFees, useFeeStructures } from '../../hooks/use-fee-queries';
@@ -30,13 +31,23 @@ export function StudentFeesPage() {
   const navigate = useNavigate();
 
   // Filters
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [classFilter, setClassFilter] = useState<string>('all');
-  const [structureFilter, setStructureFilter] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const {
+    filters,
+    search: searchQuery,
+    page: currentPage,
+    pageSize,
+    setFilter,
+    setSearch: setSearchQuery,
+    setPage: setCurrentPage,
+    setPageSize,
+  } = useFilterParams({ status: 'all', class: 'all', structure: 'all' }, { defaultPageSize: 25 });
+  const statusFilter = filters.status;
+  const classFilter = filters.class;
+  const structureFilter = filters.structure;
+  const setStatusFilter = (v: string) => setFilter('status', v);
+  const setClassFilter = (v: string) => setFilter('class', v);
+  const setStructureFilter = (v: string) => setFilter('structure', v);
   const [showFilters, setShowFilters] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
 
   // Reminder dialog state
   const [selectedStudentFee, setSelectedStudentFee] = useState<StudentFee | null>(null);

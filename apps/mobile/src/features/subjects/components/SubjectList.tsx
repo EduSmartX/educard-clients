@@ -7,64 +7,110 @@
  * - Teacher (Other): View-only access
  */
 
-import { Colors, getRoleThemeColors, useDebounce, Subject } from '@educard/shared';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import {
+  Colors,
+  getRoleThemeColors,
+  useDebounce,
+  Subject,
+} from '@educard/shared';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { BookOpen, Plus, Upload } from 'lucide-react-native';
 import { useState, useCallback, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  RefreshControl,
+} from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 
-import { SearchBar, ListHeader, BulkUploadModal, ConfirmDialog } from '@/components/common';
-import { EntityActions } from '@/components/common/EntityActions';
-import { LoadingState, ErrorState, EmptyState, ListFooter } from '@/components/common/ListStates';
+import {
+  SearchBar,
+  ListHeader,
+  BulkUploadModal,
+  EntityActions,
+  ConfirmDialog,
+  LoadingState,
+  ErrorState,
+  EmptyState,
+  ListFooter,
+} from '@/components/common';
 import {
   FilterModal,
   ActiveFilters,
-  SUBJECT_FILTER_FIELDS,
+  buildSubjectFilterFields,
   getSubjectFilterLabels,
 } from '@/components/filters';
-import { useClasses } from '@/features/classes/hooks/use-classes';
-import { useActionConfirm, useDeleteConfirm } from '@/hooks';
-import { useListScroll } from '@/hooks/useListScroll';
+import { useClasses } from '@/features/classes';
+import {
+  useSubjects,
+  useDeleteSubject,
+  useRestoreSubject,
+} from '@/features/subjects';
+import { useActionConfirm, useDeleteConfirm, useListScroll } from '@/hooks';
+import { useScreenFilters } from '@/hooks/useScreenFilters';
 import { useAuthStore } from '@/lib/auth-store';
+import type { SharedStackNavigation } from '@/navigation/types';
 import { layoutStyles, cardStyles, listStyles, textStyles } from '@/styles';
 import { isAdminRole, isTeacherRole } from '@/utils/role-utils';
 
-import { downloadSubjectTemplate, bulkUploadSubjects } from '../api/subjects-api';
-import { useSubjects, useDeleteSubject, useRestoreSubject } from '../hooks/use-subjects';
+import {
+  downloadSubjectTemplate,
+  bulkUploadSubjects,
+} from '../api/subjects-api';
 
 const adminTheme = getRoleThemeColors('admin');
 
 export interface SubjectListProps {
-  /** Custom back navigation handler. If not provided, uses router.back() */
+  /** Custom back navigation handler. If not provided, uses navigation.goBack() */
   onBack?: () => void;
 }
 
 export function SubjectList({ onBack }: SubjectListProps) {
-  const router = useRouter();
+  const navigation = useNavigation<SharedStackNavigation>();
+  const route = useRoute();
   const { user } = useAuthStore();
-  const { class_id, class_name } = useLocalSearchParams<{
+  const { class_id, class_name } = (route.params ?? {}) as {
     class_id?: string;
     class_name?: string;
-  }>();
-  const [searchQuery, setSearchQuery] = useState('');
+  };
+  const {
+    filters,
+    search: searchQuery,
+    setSearch: setSearchQuery,
+    setAllFilters: setFilters,
+  } = useScreenFilters<Record<string, unknown>>('Subjects', {});
   const [showFilters, setShowFilters] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
-  const [filters, setFilters] = useState<Record<string, unknown>>({});
 
   const isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
   const isTeacher = useMemo(() => isTeacherRole(user?.role), [user?.role]);
 
-  const { data: classesData } = useClasses({ page_size: 100, for_subject_form: true });
+  const { data: classesData } = useClasses({
+    page_size: 100,
+    for_subject_form: true,
+  });
   const managedClasses = classesData?.classes ?? [];
 
   const isClassTeacher = isTeacher && managedClasses.length > 0;
   const canCreateSubjects = isAdmin || isClassTeacher;
 
+  const classOptions = useMemo(
+    () =>
+      (classesData?.classes ?? []).map(c => ({
+        value: c.public_id,
+        label: `${c.class_master?.name ?? ''} - ${c.name}`.trim(),
+      })),
+    [classesData],
+  );
+
   const subjectFilterFields = useMemo(() => {
-    if (isAdmin || isClassTeacher) return SUBJECT_FILTER_FIELDS;
-    return SUBJECT_FILTER_FIELDS.filter((f) => f.name !== 'is_deleted');
-  }, [isAdmin, isClassTeacher]);
+    const fields = buildSubjectFilterFields(classOptions);
+    if (isAdmin || isClassTeacher) return fields;
+    return fields.filter(f => f.name !== 'is_deleted');
+  }, [classOptions, isAdmin, isClassTeacher]);
 
   const debouncedSearch = useDebounce(searchQuery, 300);
 
@@ -80,8 +126,8 @@ export function SubjectList({ onBack }: SubjectListProps) {
     isFetchingNextPage,
   } = useSubjects({
     search: debouncedSearch ?? undefined,
-    class_assigned: class_id ?? undefined,
     ...(filters as Record<string, string | boolean | undefined>),
+    class_assigned: (filters.class_assigned as string) || class_id || undefined,
   });
 
   const deleteMutation = useDeleteSubject();
@@ -92,17 +138,18 @@ export function SubjectList({ onBack }: SubjectListProps) {
   });
 
   const restoreMutation = useRestoreSubject();
-  const { confirmAction: confirmReactivate, dialogProps: reactivateDialogProps } = useActionConfirm(
-    {
-      title: 'Reactivate Subject',
-      confirmText: 'Reactivate',
-      confirmVariant: 'success',
-      makeMessage: (name) => `Are you sure you want to reactivate ${name}?`,
-      runAction: (id: string) => restoreMutation.mutateAsync(id),
-      errorMessage: 'Failed to reactivate subject',
-      onSuccess: () => void refetch(),
-    }
-  );
+  const {
+    confirmAction: confirmReactivate,
+    dialogProps: reactivateDialogProps,
+  } = useActionConfirm({
+    title: 'Reactivate Subject',
+    confirmText: 'Reactivate',
+    confirmVariant: 'success',
+    makeMessage: name => `Are you sure you want to reactivate ${name}?`,
+    runAction: (id: string) => restoreMutation.mutateAsync(id),
+    errorMessage: 'Failed to reactivate subject',
+    onSuccess: () => void refetch(),
+  });
 
   const isDeletedView = !!filters.is_deleted;
   const subjects = data?.subjects ?? [];
@@ -117,35 +164,30 @@ export function SubjectList({ onBack }: SubjectListProps) {
     refetch: () => void refetch(),
   });
 
-  const handleBack = useCallback(() => {
-    if (onBack) {
-      onBack();
-    } else {
-      router.back();
-    }
-  }, [onBack, router]);
-
   const handleView = useCallback(
     (subject: Subject) => {
-      router.push({
-        pathname: '/(shared-screens)/subjects/[id]',
-        params: { id: subject.public_id, ...(isDeletedView ? { is_deleted: 'true' } : {}) },
+      navigation.navigate('SubjectDetail', {
+        id: subject.public_id,
+        is_deleted: isDeletedView ? 'true' : undefined,
       });
     },
-    [router, isDeletedView]
+    [navigation, isDeletedView],
   );
 
   const handleEdit = useCallback(
     (subject: Subject) => {
-      router.push({
-        pathname: '/(shared-screens)/subjects/edit',
-        params: { id: subject.public_id },
-      });
+      navigation.navigate('SubjectEdit', { id: subject.public_id });
     },
-    [router]
+    [navigation],
   );
 
-  const renderSubjectCard = ({ item, index }: { item: Subject; index: number }) => (
+  const renderSubjectCard = ({
+    item,
+    index,
+  }: {
+    item: Subject;
+    index: number;
+  }) => (
     <Animated.View entering={FadeInRight.delay(index * 50).duration(300)}>
       <TouchableOpacity
         style={[cardStyles.card, styles.subjectCard]}
@@ -163,7 +205,9 @@ export function SubjectList({ onBack }: SubjectListProps) {
             </Text>
 
             {(item.subject_info?.code ?? item.code) && (
-              <Text style={textStyles.subtitle}>Code: {item.subject_info?.code ?? item.code}</Text>
+              <Text style={textStyles.subtitle}>
+                Code: {item.subject_info?.code ?? item.code}
+              </Text>
             )}
 
             {item.class_info && (
@@ -176,7 +220,9 @@ export function SubjectList({ onBack }: SubjectListProps) {
             )}
 
             {item.teacher_info?.full_name && (
-              <Text style={textStyles.caption}>Teacher: {item.teacher_info.full_name}</Text>
+              <Text style={textStyles.caption}>
+                Teacher: {item.teacher_info.full_name}
+              </Text>
             )}
           </View>
         </View>
@@ -190,7 +236,7 @@ export function SubjectList({ onBack }: SubjectListProps) {
               : () =>
                   confirmDelete(
                     item.public_id,
-                    item.subject_info?.name ?? item.name ?? 'this subject'
+                    item.subject_info?.name ?? item.name ?? 'this subject',
                   )
           }
           onReactivate={
@@ -198,11 +244,13 @@ export function SubjectList({ onBack }: SubjectListProps) {
               ? () =>
                   confirmReactivate(
                     item.public_id,
-                    item.subject_info?.name ?? item.name ?? 'this subject'
+                    item.subject_info?.name ?? item.name ?? 'this subject',
                   )
               : undefined
           }
-          canManage={(item as Subject & { can_manage?: boolean }).can_manage ?? isAdmin}
+          canManage={
+            (item as Subject & { can_manage?: boolean }).can_manage ?? isAdmin
+          }
         />
       </TouchableOpacity>
     </Animated.View>
@@ -219,14 +267,14 @@ export function SubjectList({ onBack }: SubjectListProps) {
         title={screenTitle}
         subtitle={`${totalCount} total`}
         role="admin"
-        onBack={handleBack}
+        onBack={onBack}
         actions={
           canCreateSubjects
             ? [
                 { icon: Upload, onPress: () => setShowBulkUpload(true) },
                 {
                   icon: Plus,
-                  onPress: () => router.push('/(shared-screens)/subjects/create'),
+                  onPress: () => navigation.navigate('SubjectCreate'),
                   variant: 'primary' as const,
                 },
               ]
@@ -255,8 +303,8 @@ export function SubjectList({ onBack }: SubjectListProps) {
       />
 
       <ActiveFilters
-        filters={getSubjectFilterLabels(filters)}
-        onRemove={(key) => setFilters((f) => ({ ...f, [key]: undefined }))}
+        filters={getSubjectFilterLabels(filters, classOptions)}
+        onRemove={key => setFilters({ ...filters, [key]: undefined })}
         onClearAll={() => setFilters({})}
       />
 
@@ -264,7 +312,7 @@ export function SubjectList({ onBack }: SubjectListProps) {
         visible={showFilters}
         onClose={() => setShowFilters(false)}
         currentFilters={filters}
-        onApply={(f) => {
+        onApply={f => {
           setFilters(f);
           setShowFilters(false);
         }}
@@ -272,7 +320,9 @@ export function SubjectList({ onBack }: SubjectListProps) {
         title="Filter Subjects"
       />
 
-      {isLoading && <LoadingState color={adminTheme.accent} message="Loading subjects..." />}
+      {isLoading && (
+        <LoadingState color={adminTheme.accent} message="Loading subjects..." />
+      )}
       {!isLoading && isError && (
         <ErrorState
           message="Failed to load subjects"
@@ -284,7 +334,7 @@ export function SubjectList({ onBack }: SubjectListProps) {
         <FlatList
           data={subjects}
           renderItem={renderSubjectCard}
-          keyExtractor={(item) => item.public_id}
+          keyExtractor={item => item.public_id}
           contentContainerStyle={listStyles.content}
           showsVerticalScrollIndicator={false}
           refreshControl={
@@ -300,13 +350,20 @@ export function SubjectList({ onBack }: SubjectListProps) {
           onScroll={handleScroll}
           scrollEventThrottle={16}
           ListFooterComponent={
-            <ListFooter isLoading={isFetchingNextPage} color={adminTheme.accent} />
+            <ListFooter
+              isLoading={isFetchingNextPage}
+              color={adminTheme.accent}
+            />
           }
           ListEmptyComponent={
             <EmptyState
               icon={<BookOpen size={48} color={Colors.gray[300]} />}
               message="No subjects found"
-              subMessage={searchQuery ? 'Try adjusting your search' : 'Add your first subject'}
+              subMessage={
+                searchQuery
+                  ? 'Try adjusting your search'
+                  : 'Add your first subject'
+              }
             />
           }
         />

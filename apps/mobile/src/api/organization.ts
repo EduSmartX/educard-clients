@@ -1,11 +1,9 @@
 /**
  * Organization API endpoints
- * Based on web frontend's organization-api.ts
  */
 
 import apiClient from './client';
 
-// Types matching backend API structure
 export interface OrganizationInfo {
   name: string;
   type: string;
@@ -96,11 +94,108 @@ export interface OrganizationRegistrationResponse {
  * Endpoint: POST /organizations/register/
  */
 export async function registerOrganization(
-  data: OrganizationRegistrationData
+  data: OrganizationRegistrationData,
 ): Promise<OrganizationRegistrationResponse> {
   const response = await apiClient.post<OrganizationRegistrationResponse>(
     '/organizations/register/',
-    data
+    data,
   );
   return response.data;
+}
+
+// ─── Organization Profile & Settings (admin) ────────────────────────────────
+
+interface OrgApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+  code: number;
+}
+
+export interface OrganizationAddressDetail {
+  public_id?: string;
+  street_address: string;
+  address_line_2?: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  country: string;
+  full_address?: string;
+}
+
+export interface OrganizationProfile {
+  public_id: string;
+  name: string;
+  organization_type: string;
+  email: string;
+  phone: string;
+  registration_number?: string;
+  corporate_identification_number?: string;
+  tax_id?: string;
+  website_url?: string;
+  board_affiliation?: string;
+  address?: OrganizationAddressDetail;
+  is_active: boolean;
+  is_approved: boolean;
+}
+
+export interface UpdateOrganizationPayload {
+  name?: string;
+  organization_type?: string;
+  email?: string;
+  phone?: string;
+  registration_number?: string;
+  corporate_identification_number?: string;
+  tax_id?: string;
+  website_url?: string;
+  board_affiliation?: string;
+}
+
+export interface UpdateOrganizationAddressPayload {
+  street_address?: string;
+  address_line_2?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  country?: string;
+}
+
+/**
+ * Get the current user's organization profile.
+ * Endpoint: GET /organizations/profile/
+ */
+export async function getOrganizationProfile(): Promise<OrganizationProfile> {
+  const response = await apiClient.get<OrgApiResponse<OrganizationProfile>>(
+    '/organizations/profile/',
+  );
+  return response.data.data;
+}
+
+/**
+ * Update organization information.
+ * Endpoint: PATCH /organizations/{publicId}/
+ */
+export async function updateOrganization(
+  publicId: string,
+  payload: UpdateOrganizationPayload,
+): Promise<OrganizationProfile> {
+  const response = await apiClient.patch<OrgApiResponse<OrganizationProfile>>(
+    `/organizations/${publicId}/`,
+    payload,
+  );
+  return response.data.data;
+}
+
+/**
+ * Update organization address.
+ * Endpoint: PATCH /organizations/{publicId}/update-address/
+ */
+export async function updateOrganizationAddress(
+  publicId: string,
+  payload: UpdateOrganizationAddressPayload,
+): Promise<OrganizationAddressDetail> {
+  const response = await apiClient.patch<
+    OrgApiResponse<{ address_info: OrganizationAddressDetail }>
+  >(`/organizations/${publicId}/update-address/`, payload);
+  return response.data.data.address_info;
 }

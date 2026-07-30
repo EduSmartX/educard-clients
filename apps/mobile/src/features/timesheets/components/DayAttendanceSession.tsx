@@ -3,10 +3,11 @@
  * Extracted to reduce cognitive complexity of DayAttendanceModal.
  */
 
-import { Text, TouchableOpacity } from 'react-native';
+import type { ReactNode } from 'react';
+import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 
 interface DayAttendanceSessionProps {
-  icon: React.ReactNode;
+  icon: ReactNode;
   label: string;
   isPresent: boolean;
   onToggle: () => void;
@@ -26,38 +27,32 @@ export function DayAttendanceSession({
 
   return (
     <TouchableOpacity
-      style={{
-        flex: 1,
-        padding: 16,
-        borderRadius: 12,
-        borderWidth: 2,
-        backgroundColor: bgColor,
-        borderColor: borderColor,
-        alignItems: 'center',
-      }}
+      style={[styles.session, { backgroundColor: bgColor, borderColor }]}
       onPress={onToggle}
       activeOpacity={0.7}
     >
       {icon}
-      <Text
-        style={{
-          fontSize: 14,
-          fontWeight: '600',
-          color: labelColor,
-          marginTop: 8,
-        }}
-      >
-        {label}
-      </Text>
-      <Text
-        style={{
-          fontSize: 12,
-          color: statusColor,
-          marginTop: 4,
-        }}
-      >
-        {statusText}
-      </Text>
+      <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
+      <Text style={[styles.status, { color: statusColor }]}>{statusText}</Text>
     </TouchableOpacity>
   );
 }
+
+const styles = StyleSheet.create({
+  session: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    alignItems: 'center',
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 8,
+  },
+  status: {
+    fontSize: 12,
+    marginTop: 4,
+  },
+});

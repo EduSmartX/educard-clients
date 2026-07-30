@@ -10,7 +10,11 @@ import type {
 } from '@educard/shared';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { handleMutationError, type MutationOptions } from '@/lib/mutation-utils';
+import {
+  handleMutationError,
+  type MutationOptions,
+} from '@/lib/mutation-utils';
+import { useCriticalOperation } from '@/providers/critical-operation-context';
 import { showToast } from '@/utils/toast';
 
 import {
@@ -35,7 +39,10 @@ import {
   sendExamProgressNotification,
 } from './api';
 
-export function useExamSessions(params?: Record<string, unknown>, userRole?: string | null) {
+export function useExamSessions(
+  params?: Record<string, unknown>,
+  userRole?: string | null,
+) {
   return useQuery({
     queryKey: ['exam-sessions', params, userRole],
     queryFn: () => fetchExamSessions(params, userRole),
@@ -51,7 +58,10 @@ export function useExamSession(id?: string, userRole?: string | null) {
   });
 }
 
-export function useExams(params?: Record<string, unknown>, userRole?: string | null) {
+export function useExams(
+  params?: Record<string, unknown>,
+  userRole?: string | null,
+) {
   return useQuery({
     queryKey: ['exams', params, userRole],
     queryFn: () => fetchExams(params, userRole),
@@ -67,11 +77,18 @@ export function useExam(id?: string, userRole?: string | null) {
   });
 }
 
-export function useMarksOverview(sessionId?: string, classId?: string, userRole?: string | null) {
+export function useMarksOverview(
+  sessionId?: string,
+  classId?: string,
+  userRole?: string | null,
+) {
   return useQuery({
     queryKey: ['marks-overview', sessionId, classId, userRole],
     queryFn: () =>
-      fetchMarksOverview({ session_id: sessionId ?? '', class_id: classId ?? '' }, userRole),
+      fetchMarksOverview({
+        session_id: sessionId ?? '',
+        class_id: classId ?? '',
+      }),
     enabled: !!sessionId && !!classId,
   });
 }
@@ -84,10 +101,22 @@ export function useExamMarks(examId?: string) {
   });
 }
 
-export function useBulkUpsertMarks(userRole?: string | null, options?: MutationOptions) {
+export function useBulkUpsertMarks(
+  userRole?: string | null,
+  options?: MutationOptions,
+) {
   const qc = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
-    mutationFn: (data: Parameters<typeof bulkUpsertMarks>[0]) => bulkUpsertMarks(data, userRole),
+    mutationFn: (data: Parameters<typeof bulkUpsertMarks>[0]) =>
+      bulkUpsertMarks(data),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Saving marks',
+        description: 'Saving marks for the class...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'Marks saved successfully');
       void qc.invalidateQueries({ queryKey: ['marks-overview'] });
@@ -98,13 +127,27 @@ export function useBulkUpsertMarks(userRole?: string | null, options?: MutationO
     onError: (error: unknown) => {
       handleMutationError(error, 'Failed to save marks', options?.onError);
     },
+    onSettled: () => {
+      endCriticalOperation();
+    },
   });
 }
 
-export function useBulkSaveAllMarks(userRole?: string | null, options?: MutationOptions) {
+export function useBulkSaveAllMarks(
+  userRole?: string | null,
+  options?: MutationOptions,
+) {
   const qc = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
-    mutationFn: (data: BulkSaveAllMarksPayload) => bulkSaveAllMarks(data, userRole),
+    mutationFn: (data: BulkSaveAllMarksPayload) => bulkSaveAllMarks(data),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Saving all marks',
+        description: 'Saving marks across all subjects...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'All marks saved successfully');
       void qc.invalidateQueries({ queryKey: ['marks-overview'] });
@@ -113,6 +156,9 @@ export function useBulkSaveAllMarks(userRole?: string | null, options?: Mutation
     },
     onError: (error: unknown) => {
       handleMutationError(error, 'Failed to save marks', options?.onError);
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 }
@@ -128,7 +174,11 @@ export function useCreateExamSession(options?: MutationOptions) {
       options?.onSuccess?.();
     },
     onError: (error: unknown) => {
-      handleMutationError(error, 'Failed to create exam session', options?.onError);
+      handleMutationError(
+        error,
+        'Failed to create exam session',
+        options?.onError,
+      );
     },
   });
 }
@@ -136,15 +186,24 @@ export function useCreateExamSession(options?: MutationOptions) {
 export function useUpdateExamSession(options?: MutationOptions) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<ExamSessionCreatePayload> }) =>
-      updateExamSession(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Partial<ExamSessionCreatePayload>;
+    }) => updateExamSession(id, data),
     onSuccess: () => {
       showToast('success', 'Exam session updated successfully');
       void qc.invalidateQueries({ queryKey: ['exam-sessions'] });
       options?.onSuccess?.();
     },
     onError: (error: unknown) => {
-      handleMutationError(error, 'Failed to update exam session', options?.onError);
+      handleMutationError(
+        error,
+        'Failed to update exam session',
+        options?.onError,
+      );
     },
   });
 }
@@ -159,7 +218,11 @@ export function useDeleteExamSession(options?: MutationOptions) {
       options?.onSuccess?.();
     },
     onError: (error: unknown) => {
-      handleMutationError(error, 'Failed to delete exam session', options?.onError);
+      handleMutationError(
+        error,
+        'Failed to delete exam session',
+        options?.onError,
+      );
     },
   });
 }
@@ -180,11 +243,19 @@ export function useCreateExam(options?: MutationOptions) {
   });
 }
 
-export function useUpdateExam(userRole?: string | null, options?: MutationOptions) {
+export function useUpdateExam(
+  userRole?: string | null,
+  options?: MutationOptions,
+) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<ExamCreatePayload> }) =>
-      updateExam(id, data, userRole),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Partial<ExamCreatePayload>;
+    }) => updateExam(id, data, userRole),
     onSuccess: () => {
       showToast('success', 'Exam updated successfully');
       void qc.invalidateQueries({ queryKey: ['exams'] });
@@ -215,8 +286,16 @@ export function useDeleteExam(options?: MutationOptions) {
 
 export function usePublishExamMarks(options?: MutationOptions) {
   const qc = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: (examId: string) => publishExamMarks(examId),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Publishing marks',
+        description: 'Publishing marks for the class...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'Marks published successfully');
       void qc.invalidateQueries({ queryKey: ['exams'] });
@@ -226,13 +305,24 @@ export function usePublishExamMarks(options?: MutationOptions) {
     onError: (error: unknown) => {
       handleMutationError(error, 'Failed to publish marks', options?.onError);
     },
+    onSettled: () => {
+      endCriticalOperation();
+    },
   });
 }
 
 export function useUnpublishExamMarks(options?: MutationOptions) {
   const qc = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: (examId: string) => unpublishExamMarks(examId),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Unpublishing marks',
+        description: 'Unpublishing marks for the class...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'Marks unpublished successfully');
       void qc.invalidateQueries({ queryKey: ['exams'] });
@@ -242,6 +332,9 @@ export function useUnpublishExamMarks(options?: MutationOptions) {
     onError: (error: unknown) => {
       handleMutationError(error, 'Failed to unpublish marks', options?.onError);
     },
+    onSettled: () => {
+      endCriticalOperation();
+    },
   });
 }
 
@@ -249,42 +342,69 @@ export function useUnpublishExamMarks(options?: MutationOptions) {
 
 export function useSendExamScheduleNotification(options?: MutationOptions) {
   return useMutation({
-    mutationFn: ({ sessionId, classId }: { sessionId: string; classId: string }) =>
-      sendExamScheduleNotification(sessionId, classId),
+    mutationFn: ({
+      sessionId,
+      classId,
+    }: {
+      sessionId: string;
+      classId: string;
+    }) => sendExamScheduleNotification(sessionId, classId),
     onSuccess: () => {
       showToast('success', 'Schedule notification sent successfully');
       options?.onSuccess?.();
     },
     onError: (error: unknown) => {
-      handleMutationError(error, 'Failed to send schedule notification', options?.onError);
+      handleMutationError(
+        error,
+        'Failed to send schedule notification',
+        options?.onError,
+      );
     },
   });
 }
 
 export function useSendExamResultsNotification(options?: MutationOptions) {
   return useMutation({
-    mutationFn: ({ sessionId, classId }: { sessionId: string; classId: string }) =>
-      sendExamResultsNotification(sessionId, classId),
+    mutationFn: ({
+      sessionId,
+      classId,
+    }: {
+      sessionId: string;
+      classId: string;
+    }) => sendExamResultsNotification(sessionId, classId),
     onSuccess: () => {
       showToast('success', 'Results notification sent successfully');
       options?.onSuccess?.();
     },
     onError: (error: unknown) => {
-      handleMutationError(error, 'Failed to send results notification', options?.onError);
+      handleMutationError(
+        error,
+        'Failed to send results notification',
+        options?.onError,
+      );
     },
   });
 }
 
 export function useSendExamProgressNotification(options?: MutationOptions) {
   return useMutation({
-    mutationFn: ({ sessionId, classId }: { sessionId: string; classId: string }) =>
-      sendExamProgressNotification(sessionId, classId),
+    mutationFn: ({
+      sessionId,
+      classId,
+    }: {
+      sessionId: string;
+      classId: string;
+    }) => sendExamProgressNotification(sessionId, classId),
     onSuccess: () => {
       showToast('success', 'Progress report notification sent successfully');
       options?.onSuccess?.();
     },
     onError: (error: unknown) => {
-      handleMutationError(error, 'Failed to send progress notification', options?.onError);
+      handleMutationError(
+        error,
+        'Failed to send progress notification',
+        options?.onError,
+      );
     },
   });
 }

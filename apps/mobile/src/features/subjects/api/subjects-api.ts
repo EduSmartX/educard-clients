@@ -5,8 +5,6 @@
  * - Admin: Full CRUD access
  * - Teacher (Class Teacher): Can manage subjects in their assigned classes
  * - Teacher (Other): Read-only access
- *
- * The backend returns `can_manage` field indicating whether the user can edit/delete
  */
 
 import type {
@@ -17,9 +15,12 @@ import type {
 } from '@educard/shared';
 
 import { apiClient } from '@/api/client';
-import { safeDelete, bulkUploadExcel, type BulkUploadResponse } from '@/api/shared-api-utils';
+import {
+  safeDelete,
+  bulkUploadExcel,
+  type BulkUploadResponse,
+} from '@/api/shared-api-utils';
 
-// Subjects use a single endpoint, backend handles permissions via can_manage field
 const BASE_URL = '/subjects/';
 
 export type SubjectListResponse = ApiListResponse<Subject>;
@@ -36,52 +37,66 @@ export interface SubjectQueryParams {
   is_deleted?: boolean;
 }
 
-export async function getSubjects(params?: SubjectQueryParams): Promise<SubjectListResponse> {
+export async function getSubjects(
+  params?: SubjectQueryParams,
+): Promise<SubjectListResponse> {
   const response = await apiClient.get<SubjectListResponse>(BASE_URL, {
     params,
   });
-  // Backend returns can_manage field per subject based on user role
   return response.data;
 }
 
 export async function getSubjectById(
   publicId: string,
-  isDeleted?: boolean
+  isDeleted?: boolean,
 ): Promise<SubjectDetailResponse> {
   const response = await apiClient.get<SubjectDetailResponse>(
     `${BASE_URL}${publicId}/`,
-    isDeleted ? { params: { is_deleted: true } } : undefined
+    isDeleted ? { params: { is_deleted: true } } : undefined,
   );
   return response.data;
 }
 
 export async function createSubject(
   data: Partial<Subject>,
-  forceCreate?: boolean
+  forceCreate?: boolean,
 ): Promise<SubjectDetailResponse> {
   const params = forceCreate ? { force_create: 'true' } : {};
-  const response = await apiClient.post<SubjectDetailResponse>(BASE_URL, data, { params });
+  const response = await apiClient.post<SubjectDetailResponse>(BASE_URL, data, {
+    params,
+  });
   return response.data;
 }
 
 export async function updateSubject(
   publicId: string,
-  data: Partial<Subject>
+  data: Partial<Subject>,
 ): Promise<ApiMessageResponse> {
-  const response = await apiClient.patch<ApiMessageResponse>(`${BASE_URL}${publicId}/`, data);
+  const response = await apiClient.patch<ApiMessageResponse>(
+    `${BASE_URL}${publicId}/`,
+    data,
+  );
   return response.data;
 }
 
-export async function deleteSubject(publicId: string): Promise<ApiMessageResponse> {
+export async function deleteSubject(
+  publicId: string,
+): Promise<ApiMessageResponse> {
   return safeDelete(`${BASE_URL}${publicId}/`, 'Subject deleted successfully');
 }
 
-export async function restoreSubject(publicId: string): Promise<SubjectDetailResponse> {
-  const response = await apiClient.post<SubjectDetailResponse>(`${BASE_URL}${publicId}/activate/`);
+export async function restoreSubject(
+  publicId: string,
+): Promise<SubjectDetailResponse> {
+  const response = await apiClient.post<SubjectDetailResponse>(
+    `${BASE_URL}${publicId}/activate/`,
+  );
   return response.data;
 }
 
-export async function getSubjectsByClass(classId: string): Promise<SubjectListResponse> {
+export async function getSubjectsByClass(
+  classId: string,
+): Promise<SubjectListResponse> {
   const response = await apiClient.get<SubjectListResponse>(BASE_URL, {
     params: { class_assigned: classId, page_size: 100 },
   });
@@ -96,14 +111,16 @@ export async function downloadSubjectTemplate(): Promise<{
   message: string;
   filePath?: string;
 }> {
-  // Import dynamically to avoid circular dependencies
   const { downloadAndSaveTemplate } = await import('@/utils/download-template');
 
   const response = await apiClient.get(`${BASE_URL}download-template/`, {
     responseType: 'arraybuffer',
   });
 
-  return downloadAndSaveTemplate(response.data as ArrayBuffer, 'subjects_template.xlsx');
+  return downloadAndSaveTemplate(
+    response.data as ArrayBuffer,
+    'subjects_template.xlsx',
+  );
 }
 
 /**
@@ -111,7 +128,7 @@ export async function downloadSubjectTemplate(): Promise<{
  */
 export async function bulkUploadSubjects(
   fileUri: string,
-  fileName: string
+  fileName: string,
 ): Promise<BulkUploadResponse> {
   return bulkUploadExcel(`${BASE_URL}bulk-upload/`, fileUri, fileName);
 }

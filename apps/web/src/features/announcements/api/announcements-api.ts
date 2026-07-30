@@ -4,7 +4,7 @@
  */
 
 import api from '@/lib/api';
-import type { AnnouncementListItem, CreateAnnouncementPayload } from '../types';
+import type { AnnouncementDetail, AnnouncementListItem, CreateAnnouncementPayload } from '../types';
 
 const BASE_URL = '/notifications/announcements';
 
@@ -16,6 +16,11 @@ interface ApiResponse<T> {
 
 export async function fetchAnnouncements(): Promise<AnnouncementListItem[]> {
   const response = await api.get<ApiResponse<AnnouncementListItem[]>>(`${BASE_URL}/`);
+  return response.data.data;
+}
+
+export async function fetchAnnouncementDetail(publicId: string): Promise<AnnouncementDetail> {
+  const response = await api.get<ApiResponse<AnnouncementDetail>>(`${BASE_URL}/${publicId}/`);
   return response.data.data;
 }
 

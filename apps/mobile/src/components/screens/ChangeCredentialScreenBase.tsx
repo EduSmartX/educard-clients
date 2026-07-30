@@ -4,9 +4,14 @@
  */
 
 import { getErrorMessage } from '@educard/shared';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
-import { type LucideIcon, ArrowLeft, KeyRound, CheckCircle, Send } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import {
+  type LucideIcon,
+  ArrowLeft,
+  KeyRound,
+  CheckCircle,
+  Send,
+} from 'lucide-react-native';
 import { useState, useCallback, useEffect } from 'react';
 import {
   View,
@@ -20,7 +25,9 @@ import {
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 
+import { LinearGradient } from '@/lib/linear-gradient';
 import { useAuthStore } from '@/lib/auth-store';
+import type { SharedStackNavigation } from '@/navigation/types';
 
 export interface ChangeCredentialConfig {
   /** Screen title */
@@ -54,7 +61,11 @@ export interface ChangeCredentialConfig {
   /** Update API call */
   update: (value: string, otp: string) => Promise<Record<string, unknown>>;
   /** Update user store after success */
-  updateStore: (user: unknown, value: string, result: Record<string, unknown>) => unknown;
+  updateStore: (
+    user: unknown,
+    value: string,
+    result: Record<string, unknown>,
+  ) => unknown;
   /** Success alert title */
   successTitle: string;
   /** Success alert message */
@@ -68,7 +79,7 @@ interface Props {
 }
 
 export function ChangeCredentialScreenBase({ config }: Props) {
-  const router = useRouter();
+  const navigation = useNavigation<SharedStackNavigation>();
   const { user } = useAuthStore();
 
   const [newValue, setNewValue] = useState(config.initialValue ?? '');
@@ -85,11 +96,17 @@ export function ChangeCredentialScreenBase({ config }: Props) {
 
   const accentColor = config.gradientColors[0];
 
+  const handleBack = useCallback(() => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
+  }, [navigation]);
+
   const startCountdown = useCallback((minutes: number) => {
     const seconds = minutes * 60;
     setCountdown(seconds);
     const timer = setInterval(() => {
-      setCountdown((prev) => {
+      setCountdown(prev => {
         if (prev <= 1) {
           clearInterval(timer);
           return 0;
@@ -112,7 +129,10 @@ export function ChangeCredentialScreenBase({ config }: Props) {
       setIsOtpSent(true);
       const expiryMinutes = result.expires_in_minutes || 10;
       startCountdown(expiryMinutes);
-      Alert.alert(config.otpSentTitle, config.otpSentMessage(newValue, expiryMinutes));
+      Alert.alert(
+        config.otpSentTitle,
+        config.otpSentMessage(newValue, expiryMinutes),
+      );
     } catch (err) {
       Alert.alert('Error', getErrorMessage(err, 'Failed to send OTP'));
     } finally {
@@ -136,22 +156,25 @@ export function ChangeCredentialScreenBase({ config }: Props) {
       }
 
       Alert.alert(config.successTitle, config.successMessage, [
-        { text: 'OK', onPress: () => router.back() },
+        { text: 'OK', onPress: handleBack },
       ]);
     } catch (err) {
       Alert.alert('Error', getErrorMessage(err, `Failed to update`));
     } finally {
       setIsUpdating(false);
     }
-  }, [newValue, otp, router, user, config]);
+  }, [newValue, otp, handleBack, user, config]);
 
   const InputIcon = config.inputIcon;
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={[...config.gradientColors]} style={styles.header}>
-        <Animated.View entering={FadeInUp.delay(100)} style={styles.headerContent}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+      <LinearGradient colors={config.gradientColors} style={styles.header}>
+        <Animated.View
+          entering={FadeInUp.delay(100)}
+          style={styles.headerContent}
+        >
+          <TouchableOpacity onPress={handleBack} style={styles.backButton}>
             <ArrowLeft size={24} color="#fff" />
           </TouchableOpacity>
           <View style={styles.headerText}>
@@ -170,13 +193,21 @@ export function ChangeCredentialScreenBase({ config }: Props) {
         style={styles.content}
       >
         {/* Current Value Display */}
-        <Animated.View entering={FadeInDown.delay(100)} style={styles.currentCard}>
+        <Animated.View
+          entering={FadeInDown.delay(100)}
+          style={styles.currentCard}
+        >
           <Text style={styles.currentLabel}>{config.currentLabel}</Text>
-          <Text style={styles.currentValue}>{config.currentValue || 'Not set'}</Text>
+          <Text style={styles.currentValue}>
+            {config.currentValue || 'Not set'}
+          </Text>
         </Animated.View>
 
         {/* New Value Input */}
-        <Animated.View entering={FadeInDown.delay(200)} style={styles.inputGroup}>
+        <Animated.View
+          entering={FadeInDown.delay(200)}
+          style={styles.inputGroup}
+        >
           <Text style={styles.inputLabel}>{config.inputLabel}</Text>
           <View
             style={[
@@ -184,7 +215,10 @@ export function ChangeCredentialScreenBase({ config }: Props) {
               focusedInput === 'value' && { borderColor: accentColor },
             ]}
           >
-            <InputIcon size={20} color={focusedInput === 'value' ? accentColor : '#9ca3af'} />
+            <InputIcon
+              size={20}
+              color={focusedInput === 'value' ? accentColor : '#9ca3af'}
+            />
             <TextInput
               style={styles.input}
               placeholder={config.placeholder}
@@ -219,7 +253,9 @@ export function ChangeCredentialScreenBase({ config }: Props) {
               ) : (
                 <>
                   <Send size={20} color="#fff" />
-                  <Text style={styles.actionButtonText}>Send Verification Code</Text>
+                  <Text style={styles.actionButtonText}>
+                    Send Verification Code
+                  </Text>
                 </>
               )}
             </TouchableOpacity>
@@ -229,7 +265,10 @@ export function ChangeCredentialScreenBase({ config }: Props) {
         {/* OTP Input */}
         {isOtpSent && (
           <>
-            <Animated.View entering={FadeInDown.delay(100)} style={styles.inputGroup}>
+            <Animated.View
+              entering={FadeInDown.delay(100)}
+              style={styles.inputGroup}
+            >
               <Text style={styles.inputLabel}>Verification Code</Text>
               <View
                 style={[
@@ -237,7 +276,10 @@ export function ChangeCredentialScreenBase({ config }: Props) {
                   focusedInput === 'otp' && { borderColor: accentColor },
                 ]}
               >
-                <KeyRound size={20} color={focusedInput === 'otp' ? accentColor : '#9ca3af'} />
+                <KeyRound
+                  size={20}
+                  color={focusedInput === 'otp' ? accentColor : '#9ca3af'}
+                />
                 <TextInput
                   style={styles.input}
                   placeholder="Enter 6-digit code"
@@ -250,11 +292,16 @@ export function ChangeCredentialScreenBase({ config }: Props) {
                   maxLength={6}
                 />
               </View>
-              <Text style={styles.otpHint}>Enter the code sent to {newValue}</Text>
+              <Text style={styles.otpHint}>
+                Enter the code sent to {newValue}
+              </Text>
             </Animated.View>
 
             {/* Resend OTP */}
-            <Animated.View entering={FadeInDown.delay(200)} style={styles.resendContainer}>
+            <Animated.View
+              entering={FadeInDown.delay(200)}
+              style={styles.resendContainer}
+            >
               {countdown > 0 ? (
                 <Text style={styles.countdownText}>
                   Resend code in {Math.floor(countdown / 60)}:
@@ -267,7 +314,9 @@ export function ChangeCredentialScreenBase({ config }: Props) {
                   }}
                   disabled={isSendingOtp}
                 >
-                  <Text style={[styles.resendText, { color: accentColor }]}>Resend Code</Text>
+                  <Text style={[styles.resendText, { color: accentColor }]}>
+                    Resend Code
+                  </Text>
                 </TouchableOpacity>
               )}
             </Animated.View>
@@ -290,7 +339,9 @@ export function ChangeCredentialScreenBase({ config }: Props) {
                 ) : (
                   <>
                     <CheckCircle size={20} color="#fff" />
-                    <Text style={styles.actionButtonText}>{config.updateButtonLabel}</Text>
+                    <Text style={styles.actionButtonText}>
+                      {config.updateButtonLabel}
+                    </Text>
                   </>
                 )}
               </TouchableOpacity>

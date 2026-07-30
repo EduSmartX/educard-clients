@@ -8,6 +8,7 @@
 import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
+import { ContactSupportCard } from '@/components/common';
 import {
   Users,
   GraduationCap,
@@ -656,6 +657,8 @@ export default function AdminDashboardPage() {
           />
         </div>
       </section>
+
+      <ContactSupportCard className="mt-6" />
     </div>
   );
 }

@@ -31,13 +31,15 @@ export function TeachersManagement({ viewMode = 'admin' }: Readonly<TeachersMana
 
   // Filter/search/pagination state — persisted in URL search params
   const {
+    filters,
     search: searchQuery,
     page: currentPage,
     pageSize,
+    setFilters,
     setSearch: setSearchQuery,
     setPage: setCurrentPage,
     setPageSize,
-  } = useFilterParams({}, { defaultPageSize: 10 });
+  } = useFilterParams<Record<string, string>>({}, { defaultPageSize: 10 });
 
   // Dialog states
   const [teacherToDelete, setTeacherToDelete] = useState<Teacher | null>(null);
@@ -66,7 +68,9 @@ export function TeachersManagement({ viewMode = 'admin' }: Readonly<TeachersMana
     page: currentPage,
     page_size: pageSize,
     is_deleted: showDeleted,
-  });
+    designation: filters.designation || undefined,
+    gender: filters.gender || undefined,
+  } as Parameters<typeof useTeachers>[0]);
 
   // Delete mutation
   const deleteMutation = useDeleteTeacher({
@@ -137,7 +141,8 @@ export function TeachersManagement({ viewMode = 'admin' }: Readonly<TeachersMana
     setSearchQuery(query);
   };
 
-  const handleFilterChange = (_newFilters: Record<string, string>) => {
+  const handleFilterChange = (newFilters: Record<string, string>) => {
+    setFilters(newFilters);
     setCurrentPage(1); // Reset to first page on filter change
   };
 

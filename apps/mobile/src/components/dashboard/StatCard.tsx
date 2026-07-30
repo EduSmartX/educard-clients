@@ -3,27 +3,20 @@
  * Reusable stat card for dashboards with gradient background
  */
 
-import { LinearGradient } from 'expo-linear-gradient';
 import { TrendingUp, TrendingDown, type LucideIcon } from 'lucide-react-native';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 
+import { LinearGradient } from '@/lib/linear-gradient';
+
 export interface StatCardProps {
-  /** Display title */
   title: string;
-  /** Value to display (string for flexibility - can be number, percentage, text) */
   value: string;
-  /** Icon component from lucide-react-native */
   icon: LucideIcon;
-  /** Gradient colors [start, middle, end] */
   gradient: readonly [string, string, string];
-  /** Shadow color for the card */
   shadowColor: string;
-  /** Animation delay index (for staggered animations) */
   animationIndex?: number;
-  /** Optional trend indicator: 'up', 'down', or undefined for no trend */
   trend?: 'up' | 'down';
-  /** Optional trend value (e.g., "+5%") */
   trendValue?: string;
 }
 
@@ -61,7 +54,12 @@ export function StatCard({
             <Icon size={16} color="#fff" strokeWidth={2.5} />
           </View>
           {trend && (
-            <View style={[styles.trendBadge, trend === 'up' ? styles.trendUp : styles.trendDown]}>
+            <View
+              style={[
+                styles.trendBadge,
+                trend === 'up' ? styles.trendUp : styles.trendDown,
+              ]}
+            >
               {trend === 'up' ? (
                 <TrendingUp size={10} color="#fff" strokeWidth={2.5} />
               ) : (

@@ -66,14 +66,16 @@ export function validateEmployeeId(value: string): ValidationResult {
     return { isValid: true };
   }
 
-  if (value.length < 3) {
+  const id = value.trim();
+
+  if (id.length < 3) {
     return {
       isValid: false,
       error: 'Employee ID must be at least 3 characters',
     };
   }
 
-  if (value.length > 50) {
+  if (id.length > 50) {
     return {
       isValid: false,
       error: 'Employee ID cannot exceed 50 characters',
@@ -81,7 +83,7 @@ export function validateEmployeeId(value: string): ValidationResult {
   }
 
   const alphanumericRegex = /^[a-zA-Z0-9-_]+$/;
-  if (!alphanumericRegex.test(value)) {
+  if (!alphanumericRegex.test(id)) {
     return {
       isValid: false,
       error: 'Employee ID can only contain letters, numbers, hyphens, and underscores',

@@ -9,6 +9,9 @@ build/
 .expo/
 android/
 ios/
+# RN CLI app: native projects are source, not build output (Expo app's generated ones stay ignored)
+!apps/mobile/android/
+!apps/mobile/ios/
 
 # Environment files
 .env

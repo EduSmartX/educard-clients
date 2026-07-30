@@ -1,16 +1,17 @@
 /**
  * SearchBar Component
  * Reusable search bar with filter button
- *
- * Features:
- * - Only triggers search on submit/blur (not every keystroke)
- * - Clear button when text is present
- * - Optional filter button with badge
  */
 
 import { Colors } from '@educard/shared';
 import { Search, Filter, X } from 'lucide-react-native';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
 
 interface SearchBarProps {
   value: string;
@@ -62,10 +63,16 @@ export function SearchBar({
       </View>
       {showFilter && onFilterPress && (
         <TouchableOpacity
-          style={[styles.filterBtn, activeFilterCount > 0 && styles.filterBtnActive]}
+          style={[
+            styles.filterBtn,
+            activeFilterCount > 0 && styles.filterBtnActive,
+          ]}
           onPress={onFilterPress}
         >
-          <Filter size={18} color={activeFilterCount > 0 ? '#fff' : Colors.gray[600]} />
+          <Filter
+            size={18}
+            color={activeFilterCount > 0 ? '#fff' : Colors.gray[600]}
+          />
           {activeFilterCount > 0 && (
             <View style={styles.filterBadge}>
               <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>

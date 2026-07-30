@@ -13,7 +13,14 @@ import {
 } from '@educard/shared';
 import { X, CreditCard } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, Modal, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  Modal,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 import { SubmitButton } from '@/components/common/SubmitButton';
@@ -41,7 +48,10 @@ const UTR_REQUIRED_MODES = [PaymentMode.UPI, PaymentMode.BANK_TRANSFER];
 const CARD_MODES = [PaymentMode.CARD];
 const CHEQUE_MODES = [PaymentMode.CHEQUE];
 
-function getDefaultAmount(studentFee: StudentFee, mode: 'payment' | 'refund'): string {
+function getDefaultAmount(
+  studentFee: StudentFee,
+  mode: 'payment' | 'refund',
+): string {
   if (mode === 'refund') {
     const refundableFromBalance = Math.abs(Number(studentFee.balance_due || 0));
     const refundable =
@@ -118,7 +128,9 @@ export function RecordPaymentModal({
     const payload: PaymentCreatePayload = {
       student_fee_public_id: studentFee.public_id,
       amount: Number(amount),
-      transaction_type: isRefundMode ? TransactionType.DEBIT : TransactionType.CREDIT,
+      transaction_type: isRefundMode
+        ? TransactionType.DEBIT
+        : TransactionType.CREDIT,
       payment_mode: paymentMode as PaymentModeType,
       payment_date: paymentDate,
       utr_number: utrNumber || undefined,
@@ -135,7 +147,9 @@ export function RecordPaymentModal({
         Alert.alert(
           'Error',
           extractApiError(err) ||
-            (isRefundMode ? 'Failed to record refund' : 'Failed to record payment')
+            (isRefundMode
+              ? 'Failed to record refund'
+              : 'Failed to record payment'),
         );
       },
     });
@@ -156,17 +170,24 @@ export function RecordPaymentModal({
     isRefundMode,
   ]);
 
-  const showUtr = (UTR_REQUIRED_MODES as readonly string[]).includes(paymentMode);
+  const showUtr = (UTR_REQUIRED_MODES as readonly string[]).includes(
+    paymentMode,
+  );
   const showCard = (CARD_MODES as readonly string[]).includes(paymentMode);
   const showCheque = (CHEQUE_MODES as readonly string[]).includes(paymentMode);
   const showUpi = paymentMode === PaymentMode.UPI;
   const actionLabel = useMemo(
     () => (isRefundMode ? 'Record Refund' : 'Record Payment'),
-    [isRefundMode]
+    [isRefundMode],
   );
 
   return (
-    <Modal visible={visible} animationType="slide" transparent statusBarTranslucent>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent
+      statusBarTranslucent
+    >
       <View style={styles.overlay}>
         <View style={styles.sheet}>
           {/* Handle */}
@@ -176,7 +197,7 @@ export function RecordPaymentModal({
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <CreditCard size={20} color="#059669" />
-              <View style={{ marginLeft: 8 }}>
+              <View style={styles.headerTextWrap}>
                 <Text style={styles.headerTitle}>{actionLabel}</Text>
                 <Text style={styles.headerSub} numberOfLines={1}>
                   {studentFee.student_name}
@@ -198,21 +219,30 @@ export function RecordPaymentModal({
             </View>
             <View style={styles.balanceItem}>
               <Text style={styles.balanceLabel}>Paid</Text>
-              <Text style={[styles.balanceValue, { color: '#059669' }]}>
+              <Text style={[styles.balanceValue, styles.balanceValueGreen]}>
                 ₹{Number(studentFee.amount_paid).toLocaleString('en-IN')}
               </Text>
             </View>
             <View style={styles.balanceItem}>
-              <Text style={styles.balanceLabel}>{isRefundMode ? 'Refundable' : 'Balance'}</Text>
-              <Text style={[styles.balanceValue, { color: isRefundMode ? '#ea580c' : '#dc2626' }]}>
+              <Text style={styles.balanceLabel}>
+                {isRefundMode ? 'Refundable' : 'Balance'}
+              </Text>
+              <Text
+                style={[
+                  styles.balanceValue,
+                  isRefundMode
+                    ? styles.balanceValueOrange
+                    : styles.balanceValueRed,
+                ]}
+              >
                 ₹
                 {Number(
                   isRefundMode
                     ? Math.min(
                         Math.abs(Number(studentFee.balance_due || 0)),
-                        Number(studentFee.amount_paid || 0)
+                        Number(studentFee.amount_paid || 0),
                       ) || Number(studentFee.amount_paid || 0)
-                    : studentFee.balance_due
+                    : studentFee.balance_due,
                 ).toLocaleString('en-IN')}
               </Text>
             </View>
@@ -310,7 +340,7 @@ export function RecordPaymentModal({
               placeholder="Any notes..."
               multiline
               numberOfLines={2}
-              style={{ height: 60, textAlignVertical: 'top' }}
+              style={styles.remarksInput}
             />
 
             <SubmitButton
@@ -327,7 +357,11 @@ export function RecordPaymentModal({
 }
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' },
+  overlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
   sheet: {
     backgroundColor: '#fff',
     borderTopLeftRadius: 24,
@@ -373,6 +407,16 @@ const styles = StyleSheet.create({
   },
   balanceItem: { flex: 1, alignItems: 'center' },
   balanceLabel: { fontSize: 11, color: '#94a3b8', fontWeight: '500' },
-  balanceValue: { fontSize: 14, fontWeight: '700', color: '#1e293b', marginTop: 2 },
+  balanceValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1e293b',
+    marginTop: 2,
+  },
   form: { padding: 16, gap: 4, paddingBottom: 40 },
+  headerTextWrap: { marginLeft: 8 },
+  balanceValueGreen: { color: '#059669' },
+  balanceValueOrange: { color: '#ea580c' },
+  balanceValueRed: { color: '#dc2626' },
+  remarksInput: { height: 60, textAlignVertical: 'top' },
 });

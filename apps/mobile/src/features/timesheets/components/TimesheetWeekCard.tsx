@@ -13,7 +13,13 @@ import {
   Send,
   X,
 } from 'lucide-react-native';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  StyleSheet,
+} from 'react-native';
 
 import type { WeekBlock } from '../types';
 
@@ -29,10 +35,8 @@ function StatusBadge({ status }: { status: string | null | undefined }) {
   };
   const c = config[status] || config.DRAFT;
   return (
-    <View
-      style={{ backgroundColor: c.bg, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}
-    >
-      <Text style={{ fontSize: 10, fontWeight: '600', color: c.text }}>{c.label}</Text>
+    <View style={[styles.badge, { backgroundColor: c.bg }]}>
+      <Text style={[styles.badgeText, { color: c.text }]}>{c.label}</Text>
     </View>
   );
 }
@@ -48,24 +52,20 @@ function AttendanceToggle({
   disabled?: boolean;
   onToggle: () => void;
 }) {
+  const bgColor = isPresent ? '#dcfce7' : '#fee2e2';
+  const borderColor = isPresent ? '#22c55e' : '#ef4444';
+  const opacity = disabled ? 0.5 : 1;
   return (
     <TouchableOpacity
       onPress={disabled ? undefined : onToggle}
       disabled={disabled}
       activeOpacity={disabled ? 1 : 0.7}
-      style={{
-        flex: 1,
-        paddingVertical: 8,
-        paddingHorizontal: 12,
-        borderRadius: 8,
-        borderWidth: 2,
-        backgroundColor: isPresent ? '#dcfce7' : '#fee2e2',
-        borderColor: isPresent ? '#22c55e' : '#ef4444',
-        alignItems: 'center',
-        opacity: disabled ? 0.5 : 1,
-      }}
+      style={[
+        styles.toggle,
+        { backgroundColor: bgColor, borderColor, opacity },
+      ]}
     >
-      <Text style={{ fontSize: 10, color: '#6b7280', marginBottom: 2 }}>{label}</Text>
+      <Text style={styles.toggleLabel}>{label}</Text>
       {isPresent ? (
         <Check size={16} color="#16a34a" strokeWidth={3} />
       ) : (
@@ -84,7 +84,7 @@ export interface TimesheetWeekCardProps {
   onToggleAttendance: (
     weekId: string,
     date: string,
-    field: 'morning_present' | 'afternoon_present'
+    field: 'morning_present' | 'afternoon_present',
   ) => void;
   onSubmit: (week: WeekBlock) => void;
   onReturnToDraft: (week: WeekBlock) => void;
@@ -103,39 +103,26 @@ export function TimesheetWeekCard({
   isReturningToDraft,
 }: TimesheetWeekCardProps) {
   const isExpanded = week && !week.collapsed;
+  const headerBg = isExpanded ? '#f0fdfa' : 'white';
+  const headerBorderWidth = isExpanded ? 1 : 0;
 
   return (
-    <View
-      style={{
-        backgroundColor: 'white',
-        borderRadius: 12,
-        marginBottom: 12,
-        shadowColor: '#000',
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 3,
-        overflow: 'hidden',
-      }}
-    >
+    <View style={styles.card}>
       {/* Header */}
       <TouchableOpacity
         onPress={() => onExpandToggle(weekInfo.start, weekInfo.end)}
         activeOpacity={0.7}
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: 14,
-          backgroundColor: isExpanded ? '#f0fdfa' : 'white',
-          borderBottomWidth: isExpanded ? 1 : 0,
-          borderBottomColor: '#e5e7eb',
-        }}
+        style={[
+          styles.header,
+          { backgroundColor: headerBg, borderBottomWidth: headerBorderWidth },
+        ]}
       >
-        <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View style={styles.flex1}>
+          <View style={styles.titleRow}>
             <CalendarDays size={16} color="#0d9488" />
-            <Text style={{ fontSize: 14, fontWeight: '600', color: '#1f2937' }}>
-              {format(weekInfo.start, 'MMM d')} - {format(weekInfo.end, 'MMM d, yyyy')}
+            <Text style={styles.title}>
+              {format(weekInfo.start, 'MMM d')} -{' '}
+              {format(weekInfo.end, 'MMM d, yyyy')}
             </Text>
           </View>
           {week?.submissionStatus && <WeekStatusInfo week={week} />}
@@ -149,7 +136,7 @@ export function TimesheetWeekCard({
 
       {/* Expanded Content */}
       {isExpanded && week && (
-        <View style={{ padding: 12 }}>
+        <View style={styles.content}>
           {week.rows.map((row, idx) => (
             <WeekRowItem
               key={row.date}
@@ -160,7 +147,7 @@ export function TimesheetWeekCard({
                 week.submissionStatus === 'SUBMITTED' ||
                 week.submissionStatus === 'APPROVED'
               }
-              onToggle={(field) => onToggleAttendance(week.id, row.date, field)}
+              onToggle={field => onToggleAttendance(week.id, row.date, field)}
             />
           ))}
           <WeekActions
@@ -180,28 +167,27 @@ export function TimesheetWeekCard({
 
 function WeekStatusInfo({ week }: { week: WeekBlock }) {
   return (
-    <View style={{ marginTop: 6 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+    <View style={styles.statusInfo}>
+      <View style={styles.statusRow}>
         <StatusBadge status={week.submissionStatus} />
         {week.submissionStatus === 'REJECTED' && week.reviewComments && (
-          <Text style={{ fontSize: 11, color: '#dc2626', flex: 1 }} numberOfLines={1}>
+          <Text style={styles.rejectedText} numberOfLines={1}>
             {week.reviewComments}
           </Text>
         )}
       </View>
-      {(week.submissionStatus === 'APPROVED' || week.submissionStatus === 'REJECTED') &&
+      {(week.submissionStatus === 'APPROVED' ||
+        week.submissionStatus === 'REJECTED') &&
         week.reviewedByName && (
-          <View
-            style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4, flexWrap: 'wrap' }}
-          >
-            <Text style={{ fontSize: 10, color: '#64748b' }}>
-              {week.submissionStatus === 'APPROVED' ? '✓ Approved by ' : '✗ Rejected by '}
+          <View style={styles.reviewerRow}>
+            <Text style={styles.reviewerMeta}>
+              {week.submissionStatus === 'APPROVED'
+                ? '✓ Approved by '
+                : '✗ Rejected by '}
             </Text>
-            <Text style={{ fontSize: 10, color: '#1e40af', fontWeight: '600' }}>
-              {week.reviewedByName}
-            </Text>
+            <Text style={styles.reviewerName}>{week.reviewedByName}</Text>
             {!!week.reviewedAt && (
-              <Text style={{ fontSize: 10, color: '#64748b' }}>
+              <Text style={styles.reviewerMeta}>
                 {' on '}
                 {format(parseISO(week.reviewedAt), 'dd MMM yyyy')}
               </Text>
@@ -233,42 +219,32 @@ function WeekRowItem({
     lockedBgColor = '#ffedd5';
     lockedTextColor = '#ea580c';
   }
+  const rowBorderWidth = isLast ? 0 : 1;
+  const rowOpacity = isLocked ? 0.6 : 1;
 
   return (
     <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 10,
-        borderBottomWidth: isLast ? 0 : 1,
-        borderBottomColor: '#f3f4f6',
-        opacity: isLocked ? 0.6 : 1,
-      }}
+      style={[
+        styles.row,
+        { borderBottomWidth: rowBorderWidth, opacity: rowOpacity },
+      ]}
     >
-      <View style={{ width: 70 }}>
-        <Text style={{ fontSize: 12, fontWeight: '600', color: '#374151' }}>{row.dayName}</Text>
-        <Text style={{ fontSize: 11, color: '#9ca3af' }}>
+      <View style={styles.dayCol}>
+        <Text style={styles.dayName}>{row.dayName}</Text>
+        <Text style={styles.dayDate}>
           {format(parseISO(row.date), 'MMM d')}
         </Text>
       </View>
       {isLocked ? (
-        <View style={{ flex: 1, paddingHorizontal: 8 }}>
-          <View
-            style={{
-              backgroundColor: lockedBgColor,
-              paddingVertical: 8,
-              paddingHorizontal: 12,
-              borderRadius: 8,
-              alignItems: 'center',
-            }}
-          >
-            <Text style={{ fontSize: 12, fontWeight: '500', color: lockedTextColor }}>
+        <View style={styles.lockedWrap}>
+          <View style={[styles.lockedBox, { backgroundColor: lockedBgColor }]}>
+            <Text style={[styles.lockedText, { color: lockedTextColor }]}>
               {row.holiday_name || row.leave_name || 'Non-working day'}
             </Text>
           </View>
         </View>
       ) : (
-        <View style={{ flex: 1, flexDirection: 'row', gap: 8, paddingHorizontal: 8 }}>
+        <View style={styles.togglesWrap}>
           <AttendanceToggle
             label="AM"
             isPresent={row.morning_present}
@@ -305,30 +281,23 @@ function WeekActions({
     week.submissionStatus === 'DRAFT' ||
     week.submissionStatus === 'REJECTED';
   const canReturnToDraft =
-    week.submissionStatus === 'SUBMITTED' || week.submissionStatus === 'REJECTED';
+    week.submissionStatus === 'SUBMITTED' ||
+    week.submissionStatus === 'REJECTED';
 
   return (
-    <View style={{ marginTop: 12, gap: 8 }}>
+    <View style={styles.actions}>
       {canSubmit && (
         <TouchableOpacity
           onPress={() => onSubmit(week)}
           disabled={isSubmitting}
-          style={{
-            backgroundColor: '#4f46e5',
-            paddingVertical: 12,
-            borderRadius: 8,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-          }}
+          style={styles.submitBtn}
         >
           {isSubmitting ? (
             <ActivityIndicator size="small" color="white" />
           ) : (
             <>
               <Send size={16} color="white" />
-              <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>Submit Week</Text>
+              <Text style={styles.submitText}>Submit Week</Text>
             </>
           )}
         </TouchableOpacity>
@@ -337,40 +306,115 @@ function WeekActions({
         <TouchableOpacity
           onPress={() => onReturnToDraft(week)}
           disabled={isReturningToDraft}
-          style={{
-            backgroundColor: '#f3f4f6',
-            paddingVertical: 12,
-            borderRadius: 8,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-          }}
+          style={styles.returnBtn}
         >
           {isReturningToDraft ? (
             <ActivityIndicator size="small" color="#6b7280" />
           ) : (
             <>
               <RotateCcw size={16} color="#6b7280" />
-              <Text style={{ color: '#6b7280', fontWeight: '600', fontSize: 14 }}>
-                Return to Draft
-              </Text>
+              <Text style={styles.returnText}>Return to Draft</Text>
             </>
           )}
         </TouchableOpacity>
       )}
       {week.submissionStatus === 'APPROVED' && (
-        <View
-          style={{
-            backgroundColor: '#dcfce7',
-            paddingVertical: 12,
-            borderRadius: 8,
-            alignItems: 'center',
-          }}
-        >
-          <Text style={{ color: '#16a34a', fontWeight: '600', fontSize: 14 }}>✓ Approved</Text>
+        <View style={styles.approvedBox}>
+          <Text style={styles.approvedText}>✓ Approved</Text>
         </View>
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  flex1: { flex: 1 },
+  badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 },
+  badgeText: { fontSize: 10, fontWeight: '600' },
+  toggle: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 2,
+    alignItems: 'center',
+  },
+  toggleLabel: { fontSize: 10, color: '#6b7280', marginBottom: 2 },
+  card: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
+    overflow: 'hidden',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 14,
+    borderBottomColor: '#e5e7eb',
+  },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  title: { fontSize: 14, fontWeight: '600', color: '#1f2937' },
+  content: { padding: 12 },
+  statusInfo: { marginTop: 6 },
+  statusRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  rejectedText: { fontSize: 11, color: '#dc2626', flex: 1 },
+  reviewerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    flexWrap: 'wrap',
+  },
+  reviewerMeta: { fontSize: 10, color: '#64748b' },
+  reviewerName: { fontSize: 10, color: '#1e40af', fontWeight: '600' },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomColor: '#f3f4f6',
+  },
+  dayCol: { width: 70 },
+  dayName: { fontSize: 12, fontWeight: '600', color: '#374151' },
+  dayDate: { fontSize: 11, color: '#9ca3af' },
+  lockedWrap: { flex: 1, paddingHorizontal: 8 },
+  lockedBox: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  lockedText: { fontSize: 12, fontWeight: '500' },
+  togglesWrap: { flex: 1, flexDirection: 'row', gap: 8, paddingHorizontal: 8 },
+  actions: { marginTop: 12, gap: 8 },
+  submitBtn: {
+    backgroundColor: '#4f46e5',
+    paddingVertical: 12,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  submitText: { color: 'white', fontWeight: '600', fontSize: 14 },
+  returnBtn: {
+    backgroundColor: '#f3f4f6',
+    paddingVertical: 12,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  returnText: { color: '#6b7280', fontWeight: '600', fontSize: 14 },
+  approvedBox: {
+    backgroundColor: '#dcfce7',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  approvedText: { color: '#16a34a', fontWeight: '600', fontSize: 14 },
+});

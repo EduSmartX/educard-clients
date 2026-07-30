@@ -11,7 +11,7 @@ import {
   type UpdateOrganizationPayload,
   type UpdateOrganizationAddressPayload,
 } from '../api/organization-api';
-import { ErrorMessages, SuccessMessages } from '@/constants';
+import { SuccessMessages } from '@/constants';
 
 /**
  * Hook to update organization information
@@ -24,9 +24,6 @@ export function useUpdateOrganization(publicId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organization', publicId] });
       toast.success(SuccessMessages.ORGANIZATION.UPDATE_SUCCESS);
-    },
-    onError: () => {
-      toast.error(ErrorMessages.ORGANIZATION.UPDATE_FAILED);
     },
   });
 }
@@ -43,9 +40,6 @@ export function useUpdateOrganizationAddress(publicId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organization', publicId] });
       toast.success(SuccessMessages.ORGANIZATION.ADDRESS_UPDATE_SUCCESS);
-    },
-    onError: () => {
-      toast.error(ErrorMessages.ORGANIZATION.UPDATE_FAILED);
     },
   });
 }

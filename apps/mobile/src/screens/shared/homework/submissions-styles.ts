@@ -1,0 +1,258 @@
+import { Colors } from '@educard/shared';
+import { StyleSheet } from 'react-native';
+
+export const styles = StyleSheet.create({
+  statValueBlue: { color: '#3b82f6' },
+  statValueGreen: { color: '#10b981' },
+  statValueGray: { color: '#94a3b8' },
+
+  statsBar: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray[100],
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.gray[800],
+  },
+  statLabel: {
+    fontSize: 10,
+    color: Colors.gray[500],
+    marginTop: 2,
+  },
+  statDivider: {
+    width: 1,
+    backgroundColor: Colors.gray[200],
+  },
+  permissionNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#fef3c7',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#fcd34d',
+  },
+  permissionText: {
+    fontSize: 12,
+    color: '#92400e',
+    flex: 1,
+  },
+  filterRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray[100],
+  },
+  filterChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: Colors.gray[100],
+  },
+  filterChipText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.gray[600],
+  },
+  filterChipTextActive: {
+    color: '#fff',
+  },
+  searchSection: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.gray[50],
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: Colors.gray[800],
+  },
+  listContent: {
+    padding: 16,
+    paddingBottom: 100,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  studentAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.gray[100],
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  studentInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  studentName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.gray[800],
+  },
+  rollNumber: {
+    fontSize: 12,
+    color: Colors.gray[500],
+    marginTop: 2,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  cardDetails: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: Colors.gray[100],
+  },
+  detailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  detailText: {
+    fontSize: 12,
+    color: Colors.gray[500],
+  },
+  lateBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#fee2e2',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  lateText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#dc2626',
+  },
+  reviewInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+  },
+  reviewText: {
+    fontSize: 11,
+    color: '#10b981',
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: Colors.gray[100],
+  },
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  viewBtn: {
+    backgroundColor: Colors.primary[50],
+  },
+  reviewBtn: {
+    backgroundColor: Colors.primary[500],
+  },
+  actionBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  viewBtnText: {
+    color: Colors.primary[500],
+  },
+  reviewBtnText: {
+    color: '#fff',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.gray[600],
+    marginTop: 16,
+  },
+  emptyText: {
+    fontSize: 13,
+    color: Colors.gray[400],
+    marginTop: 4,
+    textAlign: 'center',
+    paddingHorizontal: 40,
+  },
+  clearFilterBtn: {
+    marginTop: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: Colors.gray[100],
+  },
+  clearFilterBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.primary[500],
+  },
+});

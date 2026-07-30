@@ -191,6 +191,14 @@ export async function exportStudents(payload: ExportStudentsPayload = {}): Promi
   return response.data;
 }
 
+/** Organization's default student password - used to pre-fill the reset-passwords dialog. */
+export async function fetchDefaultStudentPassword(): Promise<string> {
+  const response = await api.get<{ data?: { default_password?: string } }>(
+    `${STUDENTS_BULK_BASE}/default_password/`
+  );
+  return response.data?.data?.default_password ?? '';
+}
+
 // Managed Classes - This endpoint doesn't exist in the reverted backend
 // Remove this function as it's not supported
 // export async function fetchManagedClasses(): Promise<ManagedClass[]> {

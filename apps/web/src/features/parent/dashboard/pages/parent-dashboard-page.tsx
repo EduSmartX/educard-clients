@@ -8,6 +8,7 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Users, BarChart3, CalendarDays, Bell, Clock, Sparkles } from 'lucide-react';
+import { ContactSupportCard } from '@/components/common';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { VerificationBanner } from '@/components/dashboard';
 import { useAuth } from '@/hooks/use-auth';
@@ -241,6 +242,8 @@ export default function ParentDashboardPage() {
           </CardContent>
         </Card>
       </motion.div>
+
+      <ContactSupportCard className="mt-6" />
     </div>
   );
 }

@@ -4,6 +4,7 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCriticalOperation } from '@/providers/critical-operation-provider';
 import { toast } from 'sonner';
 import {
   handleMutationError,
@@ -63,9 +64,16 @@ export function useUpdateSubject(options?: MutationOptions<SubjectFieldErrors>) 
 
 export function useDeleteSubject(options?: MutationOptions<SubjectFieldErrors>) {
   const queryClient = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
 
   return useMutation({
     mutationFn: deleteSubject,
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Deleting subject',
+        description: 'Removing the subject and related records...',
+      });
+    },
     onSuccess: (_data, publicId) => {
       queryClient.removeQueries({ queryKey: ['subjects', publicId] });
       queryClient.invalidateQueries({ queryKey: ['subjects'] });
@@ -74,6 +82,9 @@ export function useDeleteSubject(options?: MutationOptions<SubjectFieldErrors>) 
     },
     onError: (error: Error) => {
       handleMutationError(error, ErrorMessages.SUBJECT.DELETE_FAILED, options?.onError);
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 }

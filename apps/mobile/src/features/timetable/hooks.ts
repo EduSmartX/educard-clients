@@ -11,6 +11,7 @@ import type {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { showToast } from '@/utils/toast';
+import { useCriticalOperation } from '@/providers/critical-operation-context';
 
 import {
   fetchClassGroups,
@@ -76,7 +77,10 @@ export function useTeacherTimetable(teacherPublicId: string | undefined) {
   });
 }
 
-export function useClassTimetableForDate(classId: string | undefined, date: string | undefined) {
+export function useClassTimetableForDate(
+  classId: string | undefined,
+  date: string | undefined,
+) {
   return useQuery({
     queryKey: ['timetable', 'class-timetable-date', classId, date],
     queryFn: () => fetchClassTimetableForDate(classId ?? '', date ?? ''),
@@ -110,8 +114,13 @@ export function useCreateClassGroup() {
 export function useUpdateClassGroup() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ publicId, data }: { publicId: string; data: ClassGroupCreatePayload }) =>
-      updateClassGroup(publicId, data),
+    mutationFn: ({
+      publicId,
+      data,
+    }: {
+      publicId: string;
+      data: ClassGroupCreatePayload;
+    }) => updateClassGroup(publicId, data),
     onSuccess: () => {
       showToast('success', 'Class group updated successfully');
       void qc.invalidateQueries({ queryKey: ['timetable', 'class-groups'] });
@@ -156,24 +165,46 @@ export function useRemoveClassFromGroup() {
 
 export function useBulkSaveSlots(groupId: string) {
   const qc = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: (data: BulkSlotPayload) => bulkSaveSlots(groupId, data),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Saving timetable',
+        description: 'Saving all slots for the class...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'Slots saved successfully');
       void qc.invalidateQueries({ queryKey: ['timetable', 'slots', groupId] });
       void qc.invalidateQueries({ queryKey: ['timetable', 'class-timetable'] });
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 }
 
 export function useClearDaySlots(groupId: string) {
   const qc = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: (day: number) => clearDaySlots(groupId, day),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Clearing slots',
+        description: 'Clearing the timetable slots for the day...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'Day slots cleared');
       void qc.invalidateQueries({ queryKey: ['timetable', 'slots', groupId] });
       void qc.invalidateQueries({ queryKey: ['timetable', 'class-timetable'] });
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 }
@@ -203,13 +234,21 @@ export function useDeleteEntry() {
 export function useUpsertOverride(classId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: TimetableOverrideUpsertPayload) => upsertOverride(classId, data),
+    mutationFn: (data: TimetableOverrideUpsertPayload) =>
+      upsertOverride(classId, data),
     onSuccess: (_data, variables) => {
       showToast('success', 'Timetable override saved');
       void qc.invalidateQueries({
-        queryKey: ['timetable', 'class-timetable-date', classId, variables.override_date],
+        queryKey: [
+          'timetable',
+          'class-timetable-date',
+          classId,
+          variables.override_date,
+        ],
       });
-      void qc.invalidateQueries({ queryKey: ['timetable', 'class-timetable', classId] });
+      void qc.invalidateQueries({
+        queryKey: ['timetable', 'class-timetable', classId],
+      });
       void qc.invalidateQueries({
         queryKey: ['timetable', 'overrides', classId, variables.override_date],
       });
@@ -220,13 +259,24 @@ export function useUpsertOverride(classId: string) {
 export function useDeleteOverride(classId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ overridePublicId, date }: { overridePublicId: string; date: string }) =>
-      deleteOverride(overridePublicId).then(() => date),
-    onSuccess: (date) => {
+    mutationFn: ({
+      overridePublicId,
+      date,
+    }: {
+      overridePublicId: string;
+      date: string;
+    }) => deleteOverride(overridePublicId).then(() => date),
+    onSuccess: date => {
       showToast('success', 'Timetable override removed');
-      void qc.invalidateQueries({ queryKey: ['timetable', 'class-timetable-date', classId, date] });
-      void qc.invalidateQueries({ queryKey: ['timetable', 'class-timetable', classId] });
-      void qc.invalidateQueries({ queryKey: ['timetable', 'overrides', classId, date] });
+      void qc.invalidateQueries({
+        queryKey: ['timetable', 'class-timetable-date', classId, date],
+      });
+      void qc.invalidateQueries({
+        queryKey: ['timetable', 'class-timetable', classId],
+      });
+      void qc.invalidateQueries({
+        queryKey: ['timetable', 'overrides', classId, date],
+      });
     },
   });
 }

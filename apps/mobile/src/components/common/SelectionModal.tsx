@@ -34,9 +34,14 @@ function BaseSelectionModal({
   footer,
 }: Readonly<BaseSelectionModalProps>) {
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
       <Pressable style={styles.modalOverlay} onPress={onClose}>
-        <Pressable style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
+        <Pressable style={styles.modalSheet} onPress={e => e.stopPropagation()}>
           <View style={styles.modalHandle} />
           <Text style={styles.modalTitle}>{title}</Text>
           <ScrollView style={styles.modalList}>{children}</ScrollView>
@@ -73,7 +78,12 @@ export function SelectionOption({
           {isSelected && <Check size={12} color="#fff" />}
         </View>
       )}
-      <Text style={[styles.modalOptionText, isSelected && styles.modalOptionTextSelected]}>
+      <Text
+        style={[
+          styles.modalOptionText,
+          isSelected && styles.modalOptionTextSelected,
+        ]}
+      >
         {label}
       </Text>
       {!showCheckbox && isSelected && (
@@ -90,7 +100,9 @@ export interface SingleSelectOption {
   label: string;
 }
 
-interface SingleSelectModalProps<T extends SingleSelectOption = SingleSelectOption> {
+interface SingleSelectModalProps<
+  T extends SingleSelectOption = SingleSelectOption,
+> {
   visible: boolean;
   onClose: () => void;
   title: string;
@@ -100,7 +112,9 @@ interface SingleSelectModalProps<T extends SingleSelectOption = SingleSelectOpti
   formatLabel?: (option: T) => string;
 }
 
-export function SingleSelectModal<T extends SingleSelectOption = SingleSelectOption>({
+export function SingleSelectModal<
+  T extends SingleSelectOption = SingleSelectOption,
+>({
   visible,
   onClose,
   title,
@@ -111,7 +125,7 @@ export function SingleSelectModal<T extends SingleSelectOption = SingleSelectOpt
 }: Readonly<SingleSelectModalProps<T>>) {
   return (
     <BaseSelectionModal visible={visible} onClose={onClose} title={title}>
-      {options.map((option) => (
+      {options.map(option => (
         <SelectionOption
           key={option.value}
           label={formatLabel ? formatLabel(option) : option.label}
@@ -128,7 +142,9 @@ export function SingleSelectModal<T extends SingleSelectOption = SingleSelectOpt
 
 // --- Multi Select Modal ---
 
-interface MultiSelectModalProps<T extends SingleSelectOption = SingleSelectOption> {
+interface MultiSelectModalProps<
+  T extends SingleSelectOption = SingleSelectOption,
+> {
   visible: boolean;
   onClose: () => void;
   title: string;
@@ -140,7 +156,9 @@ interface MultiSelectModalProps<T extends SingleSelectOption = SingleSelectOptio
   saveButtonText?: string;
 }
 
-export function MultiSelectModal<T extends SingleSelectOption = SingleSelectOption>({
+export function MultiSelectModal<
+  T extends SingleSelectOption = SingleSelectOption,
+>({
   visible,
   onClose,
   title,
@@ -165,8 +183,13 @@ export function MultiSelectModal<T extends SingleSelectOption = SingleSelectOpti
   ) : undefined;
 
   return (
-    <BaseSelectionModal visible={visible} onClose={onClose} title={title} footer={footer}>
-      {options.map((option) => (
+    <BaseSelectionModal
+      visible={visible}
+      onClose={onClose}
+      title={title}
+      footer={footer}
+    >
+      {options.map(option => (
         <SelectionOption
           key={option.value}
           label={formatLabel ? formatLabel(option) : option.label}

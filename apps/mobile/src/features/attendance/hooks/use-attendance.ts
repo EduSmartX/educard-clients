@@ -1,7 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { handleMutationError, type MutationOptions } from '@/lib/mutation-utils';
+import {
+  handleMutationError,
+  type MutationOptions,
+} from '@/lib/mutation-utils';
 import { showToast } from '@/utils/toast';
+import { useCriticalOperation } from '@/providers/critical-operation-context';
 
 import {
   getDashboardAttendanceStats,
@@ -50,7 +54,7 @@ export function useEligibleClasses() {
   return useQuery<EligibleClass[]>({
     queryKey: attendanceKeys.eligibleClasses(),
     queryFn: () => getEligibleClasses('attendance'),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 }
 
@@ -60,32 +64,50 @@ export function useValidateDate(classId: string, date: string, enabled = true) {
     queryKey: attendanceKeys.dateValidation(classId, date),
     queryFn: () => validateAttendanceDate(classId, date),
     enabled: enabled && !!classId && !!date,
-    staleTime: 1 * 60 * 1000, // 1 minute
+    staleTime: 1 * 60 * 1000,
   });
 }
 
 // Hook to get comprehensive attendance data
-export function useComprehensiveAttendance(classId: string, date: string, enabled = true) {
+export function useComprehensiveAttendance(
+  classId: string,
+  date: string,
+  enabled = true,
+) {
   return useQuery<ComprehensiveAttendanceRecord[]>({
     queryKey: attendanceKeys.comprehensiveAttendance(classId, date),
     queryFn: () => getComprehensiveAttendance(classId, date),
     enabled: enabled && !!classId && !!date,
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 30 * 1000,
   });
 }
 
 // Hook to bulk mark attendance
-// Hook to bulk mark attendance
 export function useBulkMarkAttendance(options?: MutationOptions) {
   const queryClient = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
 
   return useMutation({
-    mutationFn: ({ classId, payload }: { classId: string; payload: BulkAttendancePayload }) =>
-      bulkMarkAttendance(classId, payload),
+    mutationFn: ({
+      classId,
+      payload,
+    }: {
+      classId: string;
+      payload: BulkAttendancePayload;
+    }) => bulkMarkAttendance(classId, payload),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Saving attendance',
+        description: 'Saving attendance for the whole class...',
+      });
+    },
     onSuccess: (response, variables) => {
-      // Invalidate comprehensive attendance query
       void queryClient.invalidateQueries({
-        queryKey: attendanceKeys.comprehensiveAttendance(variables.classId, variables.payload.date),
+        queryKey: attendanceKeys.comprehensiveAttendance(
+          variables.classId,
+          variables.payload.date,
+        ),
       });
       void queryClient.invalidateQueries({
         queryKey: attendanceKeys.dashboard(),
@@ -97,13 +119,20 @@ export function useBulkMarkAttendance(options?: MutationOptions) {
     onError: (error: unknown) => {
       handleMutationError(error, 'Failed to save attendance', options?.onError);
     },
+    onSettled: () => {
+      endCriticalOperation();
+    },
   });
 }
 
 // ============== EMPLOYEE TIMESHEET HOOKS ==============
 
 // Hook to get employee's own attendance for timesheet
-export function useMyAttendance(fromDate: string, toDate: string, enabled = true) {
+export function useMyAttendance(
+  fromDate: string,
+  toDate: string,
+  enabled = true,
+) {
   return useQuery<EmployeeAttendanceResponse>({
     queryKey: [...attendanceKeys.all, 'my-attendance', fromDate, toDate],
     queryFn: () => getMyAttendance(fromDate, toDate),
@@ -113,7 +142,11 @@ export function useMyAttendance(fromDate: string, toDate: string, enabled = true
 }
 
 // Hook to check timesheet status
-export function useTimesheetStatus(fromDate: string, toDate: string, enabled = true) {
+export function useTimesheetStatus(
+  fromDate: string,
+  toDate: string,
+  enabled = true,
+) {
   return useQuery<TimesheetStatus>({
     queryKey: [...attendanceKeys.all, 'timesheet-status', fromDate, toDate],
     queryFn: () => checkTimesheetStatus(fromDate, toDate),
@@ -135,11 +168,18 @@ export function useSubmitTimesheet(options?: MutationOptions) {
       void queryClient.invalidateQueries({
         queryKey: [...attendanceKeys.all, 'timesheet-status'],
       });
-      showToast('success', response.message || 'Timesheet submitted successfully');
+      showToast(
+        'success',
+        response.message || 'Timesheet submitted successfully',
+      );
       options?.onSuccess?.();
     },
     onError: (error: unknown) => {
-      handleMutationError(error, 'Failed to submit timesheet', options?.onError);
+      handleMutationError(
+        error,
+        'Failed to submit timesheet',
+        options?.onError,
+      );
     },
   });
 }
@@ -151,7 +191,7 @@ export function useReturnTimesheetToDraft() {
   return useMutation({
     mutationFn: ({ fromDate, toDate }: { fromDate: string; toDate: string }) =>
       returnTimesheetToDraft(fromDate, toDate),
-    onSuccess: (response) => {
+    onSuccess: response => {
       void queryClient.invalidateQueries({
         queryKey: [...attendanceKeys.all, 'my-attendance'],
       });

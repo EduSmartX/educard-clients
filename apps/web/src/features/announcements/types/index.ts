@@ -67,6 +67,12 @@ export interface AnnouncementListItem {
   created_at: string;
 }
 
+export interface AnnouncementDetail extends AnnouncementListItem {
+  body_html: string;
+  event_note: string;
+  manual_emails: string;
+}
+
 export const DELIVERY_METHOD_OPTIONS: { value: DeliveryMethod; label: string }[] = [
   { value: 'email', label: 'Email' },
   { value: 'sms', label: 'SMS' },

@@ -23,6 +23,8 @@ import {
 import { useMyProfilePhoto, useUserProfile } from '../hooks/queries';
 import { useUploadProfilePhoto, useDeleteProfilePhoto } from '../hooks/mutations';
 import { getMediaUrl } from '@/lib/utils/media-utils';
+import { compressImage } from '@/lib/utils/image-compression';
+import { CameraCaptureDialog } from '@/components/form/camera-capture-dialog';
 
 const MAX_FILE_SIZE_MB = 5;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -35,7 +37,7 @@ export function ProfilePhotoUpload() {
   const deleteMutation = useDeleteProfilePhoto();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
 
@@ -56,16 +58,24 @@ export function ProfilePhotoUpload() {
   }, []);
 
   const handleUpload = useCallback(
-    (file: File) => {
-      if (!validateFile(file)) {
+    async (file: File) => {
+      // Compress large images client-side so they fit the size budget before any upload.
+      let processed = file;
+      try {
+        processed = await compressImage(file, { maxSizeBytes: MAX_FILE_SIZE_BYTES });
+      } catch {
+        processed = file;
+      }
+
+      if (!validateFile(processed)) {
         return;
       }
 
       // Show local preview immediately
-      const objectUrl = URL.createObjectURL(file);
+      const objectUrl = URL.createObjectURL(processed);
       setPreview(objectUrl);
 
-      uploadMutation.mutate(file, {
+      uploadMutation.mutate(processed, {
         onSuccess: () => {
           setPreview(null);
           URL.revokeObjectURL(objectUrl);
@@ -83,7 +93,7 @@ export function ProfilePhotoUpload() {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
-        handleUpload(file);
+        void handleUpload(file);
       }
       // Reset input so same file can be selected again
       if (fileInputRef.current) {
@@ -99,7 +109,7 @@ export function ProfilePhotoUpload() {
       setIsDragging(false);
       const file = e.dataTransfer.files?.[0];
       if (file) {
-        handleUpload(file);
+        void handleUpload(file);
       }
     },
     [handleUpload]
@@ -152,7 +162,7 @@ export function ProfilePhotoUpload() {
             {/* Camera overlay button */}
             <button
               type="button"
-              onClick={() => cameraInputRef.current?.click()}
+              onClick={() => setCameraOpen(true)}
               disabled={isUploading}
               className="bg-brand hover:bg-brand/90 absolute right-0 bottom-0 rounded-full p-2 text-white shadow-md transition-colors disabled:opacity-50"
               title="Take photo"
@@ -200,14 +210,11 @@ export function ProfilePhotoUpload() {
               className="hidden"
             />
 
-            {/* Hidden camera input for direct camera capture */}
-            <input
-              ref={cameraInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              capture="user"
-              onChange={handleFileChange}
-              className="hidden"
+            {/* Live camera capture (desktop webcam / tablet / mobile) */}
+            <CameraCaptureDialog
+              open={cameraOpen}
+              onClose={() => setCameraOpen(false)}
+              onCapture={handleUpload}
             />
 
             {/* Photo info + actions */}

@@ -3,9 +3,8 @@
  * Handles permission checks and API endpoint selection based on user role
  */
 
-import * as SecureStore from 'expo-secure-store';
-
 import { STORAGE_KEYS, USER_ROLES } from '@/constants/config';
+import * as SecureStore from '@/lib/secure-store';
 import type { User } from '@/types/user';
 
 /**
@@ -59,36 +58,36 @@ export function isAdminRole(role?: string | null): boolean {
 export function isTeacherRole(role?: string | null): boolean {
   if (!role) return false;
   const normalizedRole = role.toLowerCase();
-  return normalizedRole === USER_ROLES.EMPLOYEE || normalizedRole === USER_ROLES.TEACHER;
+  return (
+    normalizedRole === USER_ROLES.EMPLOYEE ||
+    normalizedRole === USER_ROLES.TEACHER
+  );
 }
 
 /**
  * Check if user can perform CRUD operations based on role
- * Admin: Full CRUD
- * Teacher: Read-only (except for classes they're assigned to as class teacher)
  */
 export function canManageEntity(
   userRole?: string | null,
   options?: {
     isClassTeacher?: boolean;
     entityType?: 'teacher' | 'class' | 'student' | 'subject';
-  }
+  },
 ): boolean {
   if (!userRole) return false;
 
-  // Admin has full access
   if (isAdminRole(userRole)) return true;
 
-  // Teacher permissions
   if (isTeacherRole(userRole)) {
     const { isClassTeacher, entityType } = options ?? {};
 
-    // Teachers can manage students and subjects in classes where they're the class teacher
-    if (isClassTeacher && (entityType === 'student' || entityType === 'subject')) {
+    if (
+      isClassTeacher &&
+      (entityType === 'student' || entityType === 'subject')
+    ) {
       return true;
     }
 
-    // Teachers cannot manage other teachers or classes
     return false;
   }
 
@@ -97,22 +96,18 @@ export function canManageEntity(
 
 /**
  * Mask phone number for non-admin users
- * Only shows last 4 digits: ****1234
  */
 export function maskPhoneNumber(
   phone?: string | null,
   userRole?: string | null,
-  options?: { canViewFull?: boolean }
+  options?: { canViewFull?: boolean },
 ): string {
   if (!phone) return '-';
 
-  // Admin can see full phone number
   if (isAdminRole(userRole)) return phone;
 
-  // Allow full view if explicitly permitted (e.g., viewing own profile, or in hierarchy)
   if (options?.canViewFull) return phone;
 
-  // Mask phone number for non-admin
   const cleaned = phone.replace(/\D/g, '');
   if (cleaned.length >= 4) {
     return `****${cleaned.slice(-4)}`;
@@ -122,26 +117,20 @@ export function maskPhoneNumber(
 
 /**
  * Get appropriate API base URL based on user role
- * @param entityType - The type of entity (teacher, class, student, subject)
- * @param userRole - The current user's role
- * @param isWriteOperation - Whether this is a write operation (create/update/delete)
  */
 export function getApiBaseUrl(
   entityType: 'teacher' | 'class' | 'student' | 'subject',
   userRole?: string | null,
-  isWriteOperation = false
+  isWriteOperation = false,
 ): string {
-  // Write operations require admin endpoints
   if (isWriteOperation && isAdminRole(userRole)) {
     return getAdminEndpoint(entityType);
   }
 
-  // Admin uses admin endpoints for reads
   if (isAdminRole(userRole)) {
     return getAdminEndpoint(entityType);
   }
 
-  // Non-admin users use employee endpoints for reads
   return getEmployeeEndpoint(entityType);
 }
 

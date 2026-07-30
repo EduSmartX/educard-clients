@@ -1,50 +1,81 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronLeft, FileText, Calendar, Users, IndianRupee, Layers } from 'lucide-react-native';
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
+import {
+  useNavigation,
+  useRoute,
+  type RouteProp,
+} from '@react-navigation/native';
+import {
+  ChevronLeft,
+  FileText,
+  Calendar,
+  Users,
+  IndianRupee,
+  Layers,
+} from 'lucide-react-native';
+import React, { useCallback } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  RefreshControl,
+} from 'react-native';
 
 import { ErrorState, LoadingState } from '@/components/common/ListStates';
-import { useAndroidBack } from '@/hooks';
+import { LinearGradient } from '@/lib/linear-gradient';
+import type {
+  SharedStackNavigation,
+  SharedStackParamList,
+} from '@/navigation/types';
 
 import { useFeeStructure } from '../hooks';
 
 export default function FeeStructureDetailScreen() {
-  const router = useRouter();
-  useAndroidBack('/(tabs)/(admin)/fee-structures');
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const navigation = useNavigation<SharedStackNavigation>();
+  const route =
+    useRoute<RouteProp<SharedStackParamList, 'FeeStructureDetail'>>();
+  const { id } = route.params;
 
-  const { data: structure, isLoading, isError, refetch, isRefetching } = useFeeStructure(id ?? '');
+  const handleBack = useCallback(() => {
+    if (navigation.canGoBack()) navigation.goBack();
+  }, [navigation]);
 
-  if (isLoading) return <LoadingState color="#059669" message="Loading fee structure..." />;
+  const {
+    data: structure,
+    isLoading,
+    isError,
+    refetch,
+    isRefetching,
+  } = useFeeStructure(id ?? '');
+
+  if (isLoading)
+    return <LoadingState color="#059669" message="Loading fee structure..." />;
   if (isError || !structure)
-    return <ErrorState message="Failed to load fee structure" onRetry={() => void refetch()} />;
+    return (
+      <ErrorState
+        message="Failed to load fee structure"
+        onRetry={() => void refetch()}
+      />
+    );
+
+  const statusBg = structure.is_active ? '#dcfce7' : '#fee2e2';
+  const statusColor = structure.is_active ? '#059669' : '#dc2626';
 
   return (
     <View style={styles.container}>
       <LinearGradient colors={['#059669', '#10b981']} style={styles.header}>
         <View style={styles.headerContent}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => router.push('/(tabs)/(admin)/fee-structures')}
-          >
+          <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
             <ChevronLeft size={24} color="#fff" />
           </TouchableOpacity>
-          <View style={{ flex: 1, marginLeft: 10 }}>
+          <View style={styles.headerTextWrap}>
             <Text style={styles.headerTitle} numberOfLines={1}>
               {structure.name}
             </Text>
             <Text style={styles.headerSub}>{structure.academic_year}</Text>
           </View>
-          <View
-            style={[
-              styles.statusBadge,
-              { backgroundColor: structure.is_active ? '#dcfce7' : '#fee2e2' },
-            ]}
-          >
-            <Text
-              style={[styles.statusText, { color: structure.is_active ? '#059669' : '#dc2626' }]}
-            >
+          <View style={[styles.statusBadge, { backgroundColor: statusBg }]}>
+            <Text style={[styles.statusText, { color: statusColor }]}>
               {structure.is_active ? 'Active' : 'Inactive'}
             </Text>
           </View>
@@ -101,24 +132,27 @@ export default function FeeStructureDetailScreen() {
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Applicable Classes</Text>
           <View style={styles.chipWrap}>
-            {(structure.class_names?.length ? structure.class_names : ['All Classes']).map(
-              (name, idx) => (
-                <View key={`${name}-${idx}`} style={styles.chip}>
-                  <Text style={styles.chipText}>{name}</Text>
-                </View>
-              )
-            )}
+            {(structure.class_names?.length
+              ? structure.class_names
+              : ['All Classes']
+            ).map((name, idx) => (
+              <View key={`${name}-${idx}`} style={styles.chip}>
+                <Text style={styles.chipText}>{name}</Text>
+              </View>
+            ))}
           </View>
         </View>
 
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Fee Components</Text>
           {structure.components?.length ? (
-            structure.components.map((component) => (
+            structure.components.map(component => (
               <View key={component.public_id} style={styles.componentRow}>
-                <View style={{ flex: 1 }}>
+                <View style={styles.flex1}>
                   <Text style={styles.componentName}>{component.name}</Text>
-                  <Text style={styles.componentMeta}>{component.component_type}</Text>
+                  <Text style={styles.componentMeta}>
+                    {component.component_type}
+                  </Text>
                 </View>
                 <Text style={styles.componentAmount}>
                   ₹{Number(component.amount).toLocaleString('en-IN')}
@@ -132,29 +166,31 @@ export default function FeeStructureDetailScreen() {
 
         <View style={styles.actionsRow}>
           <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: '#eff6ff' }]}
+            style={[styles.actionBtn, styles.actionBtnBlue]}
             onPress={() =>
-              router.push({
-                pathname: '/(tabs)/(admin)/fee-structure-form',
-                params: { id: structure.public_id },
+              navigation.navigate('FeeStructureForm', {
+                id: structure.public_id,
               })
             }
           >
             <FileText size={14} color="#2563eb" />
-            <Text style={[styles.actionText, { color: '#2563eb' }]}>Edit Structure</Text>
+            <Text style={[styles.actionText, styles.actionTextBlue]}>
+              Edit Structure
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: '#f0fdf4' }]}
+            style={[styles.actionBtn, styles.actionBtnGreen]}
             onPress={() =>
-              router.push({
-                pathname: '/(tabs)/(admin)/fee-student-fees',
-                params: { fee_structure_public_id: structure.public_id },
+              navigation.navigate('FeeStudentFees', {
+                fee_structure_public_id: structure.public_id,
               })
             }
           >
             <Users size={14} color="#059669" />
-            <Text style={[styles.actionText, { color: '#059669' }]}>View Fees</Text>
+            <Text style={[styles.actionText, styles.actionTextGreen]}>
+              View Fees
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -224,7 +260,12 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e2e8f0',
   },
   componentName: { fontSize: 13, fontWeight: '600', color: '#1e293b' },
-  componentMeta: { fontSize: 11, color: '#94a3b8', marginTop: 2, textTransform: 'capitalize' },
+  componentMeta: {
+    fontSize: 11,
+    color: '#94a3b8',
+    marginTop: 2,
+    textTransform: 'capitalize',
+  },
   componentAmount: { fontSize: 13, fontWeight: '700', color: '#0f172a' },
   emptyText: { fontSize: 13, color: '#94a3b8' },
   actionsRow: { flexDirection: 'row', gap: 10 },
@@ -238,4 +279,10 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   actionText: { fontSize: 13, fontWeight: '700' },
+  headerTextWrap: { flex: 1, marginLeft: 10 },
+  flex1: { flex: 1 },
+  actionBtnBlue: { backgroundColor: '#eff6ff' },
+  actionTextBlue: { color: '#2563eb' },
+  actionBtnGreen: { backgroundColor: '#f0fdf4' },
+  actionTextGreen: { color: '#059669' },
 });

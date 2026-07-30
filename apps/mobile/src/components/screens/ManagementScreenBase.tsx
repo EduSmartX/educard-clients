@@ -3,8 +3,7 @@
  * Used by both admin and employee tabs to avoid code duplication.
  */
 
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter, type Href } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import {
   GraduationCap,
   UserCheck,
@@ -15,7 +14,14 @@ import {
   LucideIcon,
   Layers,
 } from 'lucide-react-native';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
+import type { DimensionValue } from 'react-native';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 
 import { HeaderProfileButton } from '@/components/common';
@@ -24,7 +30,9 @@ import { useStudents } from '@/features/students';
 import { useSubjects } from '@/features/subjects';
 import { useTeachers } from '@/features/teachers';
 import { useResponsive } from '@/hooks/useResponsive';
-import { useAuthStore } from '@/lib/auth-store';
+import { LinearGradient } from '@/lib/linear-gradient';
+import { navigateToScreen, type MenuTarget } from '@/navigation/nav-targets';
+import type { AdminTabNavigation } from '@/navigation/types';
 
 export interface ManagementItem {
   id: string;
@@ -32,29 +40,27 @@ export interface ManagementItem {
   subtitle: string;
   icon: LucideIcon;
   gradient: readonly [string, string];
-  route: string;
+  screen: MenuTarget;
 }
 
-/** Creates management items with role-specific route prefixes */
-export function createManagementItems(
-  routePrefix: '/(tabs)/(admin)' | '/(shared-screens)'
-): ManagementItem[] {
+/** Creates management items. `canManage` only tweaks subtitle wording. */
+export function createManagementItems(canManage: boolean): ManagementItem[] {
   return [
     {
       id: 'teachers',
       title: 'Teachers',
-      subtitle: routePrefix === '/(tabs)/(admin)' ? 'Manage teaching staff' : 'Teaching staff',
+      subtitle: canManage ? 'Manage teaching staff' : 'Teaching staff',
       icon: UserCheck,
       gradient: ['#7c3aed', '#a78bfa'],
-      route: `${routePrefix}/teachers`,
+      screen: 'Teachers',
     },
     {
       id: 'classes',
       title: 'Classes',
-      subtitle: routePrefix === '/(tabs)/(admin)' ? 'Manage class sections' : 'Class sections',
+      subtitle: canManage ? 'Manage class sections' : 'Class sections',
       icon: Building2,
       gradient: ['#0891b2', '#22d3ee'],
-      route: `${routePrefix}/classes`,
+      screen: 'Classes',
     },
     {
       id: 'students',
@@ -62,7 +68,7 @@ export function createManagementItems(
       subtitle: 'Student records',
       icon: GraduationCap,
       gradient: ['#ea580c', '#fb923c'],
-      route: `${routePrefix}/students`,
+      screen: 'Students',
     },
     {
       id: 'subjects',
@@ -70,7 +76,7 @@ export function createManagementItems(
       subtitle: 'Subjects & curriculum',
       icon: BookMarked,
       gradient: ['#059669', '#34d399'],
-      route: `${routePrefix}/subjects`,
+      screen: 'Subjects',
     },
     {
       id: 'timetable',
@@ -78,7 +84,7 @@ export function createManagementItems(
       subtitle: 'Class schedules',
       icon: Calendar,
       gradient: ['#6366f1', '#818cf8'],
-      route: '/(shared-screens)/timetable',
+      screen: 'Timetable',
     },
     {
       id: 'exams',
@@ -86,19 +92,21 @@ export function createManagementItems(
       subtitle: 'Exams & marks',
       icon: ClipboardList,
       gradient: ['#e11d48', '#fb7185'],
-      route: '/(shared-screens)/exams/sessions',
+      screen: 'ExamSessions',
     },
   ];
 }
 
 interface ManagementScreenBaseProps {
   items: ManagementItem[];
-  settingsRoute: string;
+  settingsScreen: MenuTarget;
 }
 
-export function ManagementScreenBase({ items, settingsRoute }: ManagementScreenBaseProps) {
-  const router = useRouter();
-  const { user: _user } = useAuthStore();
+export function ManagementScreenBase({
+  items,
+  settingsScreen,
+}: ManagementScreenBaseProps) {
+  const navigation = useNavigation<AdminTabNavigation>();
   const { gridColumns, horizontalPadding, isTablet } = useResponsive();
 
   const { data: teachersData } = useTeachers({ page_size: 1 });
@@ -113,6 +121,13 @@ export function ManagementScreenBase({ items, settingsRoute }: ManagementScreenB
     subjects: subjectsData?.totalCount,
   };
 
+  const handleNavigate = (screen: MenuTarget) => {
+    navigateToScreen(navigation, screen);
+  };
+
+  const scrollPadding = { paddingHorizontal: horizontalPadding };
+  const gridItemStyle = { width: `${100 / gridColumns}%` as DimensionValue };
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -121,9 +136,18 @@ export function ManagementScreenBase({ items, settingsRoute }: ManagementScreenB
         end={{ x: 1, y: 1 }}
         style={styles.header}
       >
-        <Animated.View entering={FadeIn.delay(100).duration(800)} style={styles.circle1} />
-        <Animated.View entering={FadeIn.delay(200).duration(800)} style={styles.circle2} />
-        <Animated.View entering={FadeIn.delay(300).duration(800)} style={styles.circle3} />
+        <Animated.View
+          entering={FadeIn.delay(100).duration(800)}
+          style={styles.circle1}
+        />
+        <Animated.View
+          entering={FadeIn.delay(200).duration(800)}
+          style={styles.circle2}
+        />
+        <Animated.View
+          entering={FadeIn.delay(300).duration(800)}
+          style={styles.circle3}
+        />
 
         <Animated.View
           entering={FadeInDown.delay(100).springify().damping(15)}
@@ -136,63 +160,70 @@ export function ManagementScreenBase({ items, settingsRoute }: ManagementScreenB
             </View>
             <Text style={styles.headerSubtitle}>Organization data</Text>
           </View>
-          <HeaderProfileButton route={settingsRoute as Href} />
+          <HeaderProfileButton screen={settingsScreen} />
         </Animated.View>
       </LinearGradient>
 
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, { paddingHorizontal: horizontalPadding }]}
+        contentContainerStyle={[styles.scrollContent, scrollPadding]}
       >
-        <View style={[styles.gridContainer, { marginHorizontal: -6 }]}>
-          {items.map((item, index) => (
-            <Animated.View
-              key={item.id}
-              entering={ZoomIn.delay(200 + index * 60)
-                .springify()
-                .damping(13)
-                .stiffness(120)}
-              style={[styles.gridItem, { width: `${100 / gridColumns}%` as unknown as number }]}
-            >
-              <TouchableOpacity
-                style={[styles.iconCard, isTablet && styles.iconCardTablet]}
-                onPress={() => router.push(item.route as Href)}
-                activeOpacity={0.8}
+        <View style={styles.gridContainer}>
+          {items.map((item, index) => {
+            const ItemIcon = item.icon;
+            const count = counts[item.id];
+            const countColor = { color: item.gradient[0] };
+            return (
+              <Animated.View
+                key={item.id}
+                entering={ZoomIn.delay(200 + index * 60)
+                  .springify()
+                  .damping(13)
+                  .stiffness(120)}
+                style={[styles.gridItem, gridItemStyle]}
               >
-                <LinearGradient
-                  colors={item.gradient}
-                  style={styles.iconCircle}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
+                <TouchableOpacity
+                  style={[styles.iconCard, isTablet && styles.iconCardTablet]}
+                  onPress={() => handleNavigate(item.screen)}
+                  activeOpacity={0.8}
                 >
-                  <item.icon size={26} color="#fff" strokeWidth={2} />
-                </LinearGradient>
-                <Text style={styles.iconLabel} numberOfLines={1}>
-                  {item.title}
-                </Text>
-                {counts[item.id] !== undefined && (
-                  <View style={styles.countBadge}>
-                    <Text style={[styles.iconCount, { color: item.gradient[0] }]}>
-                      {counts[item.id]?.toLocaleString()}
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            </Animated.View>
-          ))}
+                  <LinearGradient
+                    colors={item.gradient}
+                    style={styles.iconCircle}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <ItemIcon size={26} color="#fff" strokeWidth={2} />
+                  </LinearGradient>
+                  <Text style={styles.iconLabel} numberOfLines={1}>
+                    {item.title}
+                  </Text>
+                  {count !== undefined && (
+                    <View style={styles.countBadge}>
+                      <Text style={[styles.iconCount, countColor]}>
+                        {count.toLocaleString()}
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
         </View>
       </ScrollView>
     </View>
   );
 }
 
-// Re-export icons for consumers to use in their config
-export { GraduationCap, UserCheck, BookMarked, Building2, Calendar, ClipboardList };
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f0fdf4' },
-  header: { paddingTop: 48, paddingBottom: 20, paddingHorizontal: 20, overflow: 'hidden' },
+  header: {
+    paddingTop: 48,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    overflow: 'hidden',
+  },
   circle1: {
     position: 'absolute',
     top: -50,
@@ -227,8 +258,18 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   headerLeft: {},
-  headerTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  headerTitle: { fontSize: 24, fontWeight: '800', color: '#fff', letterSpacing: -0.3 },
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#fff',
+    letterSpacing: -0.3,
+  },
   headerSubtitle: {
     fontSize: 13,
     color: 'rgba(255,255,255,0.8)',
@@ -237,7 +278,11 @@ const styles = StyleSheet.create({
   },
   content: { flex: 1 },
   scrollContent: { paddingVertical: 16, paddingBottom: 100 },
-  gridContainer: { flexDirection: 'row', flexWrap: 'wrap' },
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -6,
+  },
   gridItem: { padding: 6 },
   iconCard: {
     alignItems: 'center',
@@ -262,7 +307,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 12,
   },
-  iconLabel: { fontSize: 14, fontWeight: '600', color: '#1f2937', textAlign: 'center' },
+  iconLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1f2937',
+    textAlign: 'center',
+  },
   countBadge: {
     backgroundColor: '#f0fdf4',
     paddingHorizontal: 10,
