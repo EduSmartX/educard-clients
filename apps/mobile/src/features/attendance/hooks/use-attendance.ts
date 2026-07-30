@@ -5,6 +5,7 @@ import {
   type MutationOptions,
 } from '@/lib/mutation-utils';
 import { showToast } from '@/utils/toast';
+import { useCriticalOperation } from '@/providers/critical-operation-context';
 
 import {
   getDashboardAttendanceStats,
@@ -84,6 +85,8 @@ export function useComprehensiveAttendance(
 // Hook to bulk mark attendance
 export function useBulkMarkAttendance(options?: MutationOptions) {
   const queryClient = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
 
   return useMutation({
     mutationFn: ({
@@ -93,6 +96,12 @@ export function useBulkMarkAttendance(options?: MutationOptions) {
       classId: string;
       payload: BulkAttendancePayload;
     }) => bulkMarkAttendance(classId, payload),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Saving attendance',
+        description: 'Saving attendance for the whole class...',
+      });
+    },
     onSuccess: (response, variables) => {
       void queryClient.invalidateQueries({
         queryKey: attendanceKeys.comprehensiveAttendance(
@@ -109,6 +118,9 @@ export function useBulkMarkAttendance(options?: MutationOptions) {
     },
     onError: (error: unknown) => {
       handleMutationError(error, 'Failed to save attendance', options?.onError);
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 }

@@ -17,6 +17,8 @@ import { Button } from '@/components/ui/button';
 import api from '@/lib/api';
 import { API_ENDPOINTS } from '@/constants';
 import { getMediaUrl } from '@/lib/utils/media-utils';
+import { compressImage } from '@/lib/utils/image-compression';
+import { CameraCaptureDialog } from '@/components/form/camera-capture-dialog';
 import type { ProfileImage } from '@/features/profile/types/profile.types';
 
 const MAX_FILE_SIZE_MB = 5;
@@ -56,7 +58,7 @@ export function FormProfilePhoto({
   disabled = false,
 }: FormProfilePhotoProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -150,21 +152,29 @@ export function FormProfilePhoto({
   }, [userPublicId]);
 
   const handleFile = useCallback(
-    (file: File) => {
-      if (!validateFile(file)) {
+    async (file: File) => {
+      // Compress large images client-side so they fit the size budget before any upload.
+      let processed = file;
+      try {
+        processed = await compressImage(file, { maxSizeBytes: MAX_FILE_SIZE_BYTES });
+      } catch {
+        processed = file;
+      }
+
+      if (!validateFile(processed)) {
         return;
       }
 
       if (mode === 'create') {
         // In create mode: show preview and pass file to parent
-        const objectUrl = URL.createObjectURL(file);
+        const objectUrl = URL.createObjectURL(processed);
         setPreview(objectUrl);
-        onFileSelected?.(file);
+        onFileSelected?.(processed);
       } else if (mode === 'edit' && userPublicId) {
         // In edit mode: upload directly
-        const objectUrl = URL.createObjectURL(file);
+        const objectUrl = URL.createObjectURL(processed);
         setPreview(objectUrl);
-        uploadForUser(file);
+        uploadForUser(processed);
       }
     },
     [mode, userPublicId, validateFile, onFileSelected, uploadForUser]
@@ -174,7 +184,7 @@ export function FormProfilePhoto({
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
-        handleFile(file);
+        void handleFile(file);
       }
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -221,7 +231,7 @@ export function FormProfilePhoto({
         {!isViewMode && (
           <button
             type="button"
-            onClick={() => cameraInputRef.current?.click()}
+            onClick={() => setCameraOpen(true)}
             disabled={isBusy}
             className="bg-primary text-primary-foreground hover:bg-primary/90 absolute -right-1 -bottom-1 rounded-full p-1.5 shadow-md transition-colors disabled:opacity-50"
             title="Take photo"
@@ -279,14 +289,11 @@ export function FormProfilePhoto({
         className="hidden"
       />
 
-      {/* Hidden camera input for direct camera capture */}
-      <input
-        ref={cameraInputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        capture="user"
-        onChange={handleFileChange}
-        className="hidden"
+      {/* Live camera capture (desktop webcam / tablet / mobile) */}
+      <CameraCaptureDialog
+        open={cameraOpen}
+        onClose={() => setCameraOpen(false)}
+        onCapture={handleFile}
       />
     </div>
   );

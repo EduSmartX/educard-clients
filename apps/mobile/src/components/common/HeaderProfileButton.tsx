@@ -5,12 +5,11 @@
 
 import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { useQuery } from '@tanstack/react-query';
 import { User } from 'lucide-react-native';
 import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
 
-import { getMyProfilePhoto } from '@/api/profile';
 import { getMediaUrl } from '@/constants/config';
+import { useMyProfilePhoto } from '@/hooks';
 import { navigateToScreen, type MenuTarget } from '@/navigation/nav-targets';
 import type { AdminTabParamList } from '@/navigation/types';
 
@@ -28,11 +27,7 @@ export function HeaderProfileButton({
   const navigation =
     useNavigation<BottomTabNavigationProp<AdminTabParamList>>();
 
-  const { data: profilePhoto, dataUpdatedAt } = useQuery({
-    queryKey: ['profile-photo', 'header-button'],
-    queryFn: getMyProfilePhoto,
-    staleTime: 5 * 60 * 1000,
-  });
+  const { data: profilePhoto, dataUpdatedAt } = useMyProfilePhoto();
 
   const serverUrl =
     getMediaUrl(profilePhoto?.thumbnail_url) ?? getMediaUrl(profilePhoto?.url);

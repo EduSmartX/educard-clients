@@ -7,6 +7,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import {
   FeeDashboardScreen,
   FeeStructuresScreen,
@@ -19,6 +20,7 @@ import {
   FeeAssignStudentScreen,
   StudentFeeComponentRequestsScreen,
 } from '@/features/fee/screens';
+import AnnouncementDetailScreen from '@/screens/shared/AnnouncementDetailScreen';
 import AnnouncementsScreen from '@/screens/shared/AnnouncementsScreen';
 import AttendanceReportScreen from '@/screens/shared/attendance/AttendanceReportScreen';
 import MarkAttendanceScreen from '@/screens/shared/attendance/MarkAttendanceScreen';
@@ -93,16 +95,31 @@ type MainStackNavigatorProps = {
   role: string | null;
 };
 
+function renderScreenBoundary({
+  route,
+  children,
+}: {
+  route: { name: string };
+  children: React.ReactElement;
+}) {
+  return <ErrorBoundary label={route.name}>{children}</ErrorBoundary>;
+}
+
 export function MainStackNavigator({ role }: MainStackNavigatorProps) {
   return (
     <Stack.Navigator
       screenOptions={{ headerShown: false, animation: 'slide_from_right' }}
+      screenLayout={renderScreenBoundary}
     >
       <Stack.Screen name="Tabs">
         {() => <MainTabsNavigator role={role} />}
       </Stack.Screen>
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="Announcements" component={AnnouncementsScreen} />
+      <Stack.Screen
+        name="AnnouncementDetail"
+        component={AnnouncementDetailScreen}
+      />
       <Stack.Screen name="Subjects" component={SubjectsScreen} />
       <Stack.Screen name="SubjectDetail" component={SubjectDetailScreen} />
       <Stack.Screen name="SubjectCreate" component={CreateSubjectScreen} />

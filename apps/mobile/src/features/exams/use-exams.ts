@@ -14,6 +14,7 @@ import {
   handleMutationError,
   type MutationOptions,
 } from '@/lib/mutation-utils';
+import { useCriticalOperation } from '@/providers/critical-operation-context';
 import { showToast } from '@/utils/toast';
 
 import {
@@ -105,9 +106,17 @@ export function useBulkUpsertMarks(
   options?: MutationOptions,
 ) {
   const qc = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: (data: Parameters<typeof bulkUpsertMarks>[0]) =>
       bulkUpsertMarks(data),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Saving marks',
+        description: 'Saving marks for the class...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'Marks saved successfully');
       void qc.invalidateQueries({ queryKey: ['marks-overview'] });
@@ -118,6 +127,9 @@ export function useBulkUpsertMarks(
     onError: (error: unknown) => {
       handleMutationError(error, 'Failed to save marks', options?.onError);
     },
+    onSettled: () => {
+      endCriticalOperation();
+    },
   });
 }
 
@@ -126,8 +138,16 @@ export function useBulkSaveAllMarks(
   options?: MutationOptions,
 ) {
   const qc = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: (data: BulkSaveAllMarksPayload) => bulkSaveAllMarks(data),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Saving all marks',
+        description: 'Saving marks across all subjects...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'All marks saved successfully');
       void qc.invalidateQueries({ queryKey: ['marks-overview'] });
@@ -136,6 +156,9 @@ export function useBulkSaveAllMarks(
     },
     onError: (error: unknown) => {
       handleMutationError(error, 'Failed to save marks', options?.onError);
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 }
@@ -263,8 +286,16 @@ export function useDeleteExam(options?: MutationOptions) {
 
 export function usePublishExamMarks(options?: MutationOptions) {
   const qc = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: (examId: string) => publishExamMarks(examId),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Publishing marks',
+        description: 'Publishing marks for the class...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'Marks published successfully');
       void qc.invalidateQueries({ queryKey: ['exams'] });
@@ -274,13 +305,24 @@ export function usePublishExamMarks(options?: MutationOptions) {
     onError: (error: unknown) => {
       handleMutationError(error, 'Failed to publish marks', options?.onError);
     },
+    onSettled: () => {
+      endCriticalOperation();
+    },
   });
 }
 
 export function useUnpublishExamMarks(options?: MutationOptions) {
   const qc = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: (examId: string) => unpublishExamMarks(examId),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Unpublishing marks',
+        description: 'Unpublishing marks for the class...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'Marks unpublished successfully');
       void qc.invalidateQueries({ queryKey: ['exams'] });
@@ -289,6 +331,9 @@ export function useUnpublishExamMarks(options?: MutationOptions) {
     },
     onError: (error: unknown) => {
       handleMutationError(error, 'Failed to unpublish marks', options?.onError);
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 }

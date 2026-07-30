@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCriticalOperation } from '@/providers/critical-operation-provider';
 import { toast } from 'sonner';
 import { ErrorMessages, SuccessMessages } from '@/constants';
 import { handleMutationError, type MutationOptions } from '@/lib/utils/mutation-utils';
@@ -52,10 +53,17 @@ export const useValidateDate = (classId: string, date: string, enabled = true) =
 // Hook to bulk mark attendance
 export const useBulkMarkAttendance = (options?: MutationOptions) => {
   const queryClient = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
 
   return useMutation({
     mutationFn: ({ classId, payload }: { classId: string; payload: BulkAttendancePayload }) =>
       bulkMarkAttendance(classId, payload),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Saving attendance',
+        description: 'Saving attendance for the whole class...',
+      });
+    },
     onSuccess: (response, variables) => {
       queryClient.invalidateQueries({
         queryKey: attendanceKeys.comprehensiveAttendance(variables.classId, variables.payload.date),
@@ -70,6 +78,9 @@ export const useBulkMarkAttendance = (options?: MutationOptions) => {
     },
     onError: (error: Error) => {
       handleMutationError(error, ErrorMessages.ATTENDANCE.MARK_FAILED, options?.onError);
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 };

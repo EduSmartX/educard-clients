@@ -40,7 +40,7 @@ import {
 import {
   FilterModal,
   ActiveFilters,
-  SUBJECT_FILTER_FIELDS,
+  buildSubjectFilterFields,
   getSubjectFilterLabels,
 } from '@/components/filters';
 import { useClasses } from '@/features/classes';
@@ -97,10 +97,20 @@ export function SubjectList({ onBack }: SubjectListProps) {
   const isClassTeacher = isTeacher && managedClasses.length > 0;
   const canCreateSubjects = isAdmin || isClassTeacher;
 
+  const classOptions = useMemo(
+    () =>
+      (classesData?.classes ?? []).map(c => ({
+        value: c.public_id,
+        label: `${c.class_master?.name ?? ''} - ${c.name}`.trim(),
+      })),
+    [classesData],
+  );
+
   const subjectFilterFields = useMemo(() => {
-    if (isAdmin || isClassTeacher) return SUBJECT_FILTER_FIELDS;
-    return SUBJECT_FILTER_FIELDS.filter(f => f.name !== 'is_deleted');
-  }, [isAdmin, isClassTeacher]);
+    const fields = buildSubjectFilterFields(classOptions);
+    if (isAdmin || isClassTeacher) return fields;
+    return fields.filter(f => f.name !== 'is_deleted');
+  }, [classOptions, isAdmin, isClassTeacher]);
 
   const debouncedSearch = useDebounce(searchQuery, 300);
 
@@ -116,8 +126,8 @@ export function SubjectList({ onBack }: SubjectListProps) {
     isFetchingNextPage,
   } = useSubjects({
     search: debouncedSearch ?? undefined,
-    class_assigned: class_id ?? undefined,
     ...(filters as Record<string, string | boolean | undefined>),
+    class_assigned: (filters.class_assigned as string) || class_id || undefined,
   });
 
   const deleteMutation = useDeleteSubject();
@@ -293,7 +303,7 @@ export function SubjectList({ onBack }: SubjectListProps) {
       />
 
       <ActiveFilters
-        filters={getSubjectFilterLabels(filters)}
+        filters={getSubjectFilterLabels(filters, classOptions)}
         onRemove={key => setFilters({ ...filters, [key]: undefined })}
         onClearAll={() => setFilters({})}
       />

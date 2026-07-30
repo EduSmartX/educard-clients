@@ -496,6 +496,7 @@ export function StudentForm({
                       control={form.control}
                       name="gender"
                       disabled={isViewMode || !isClassSelected}
+                      required
                     />
                     <BloodGroupField
                       control={form.control}

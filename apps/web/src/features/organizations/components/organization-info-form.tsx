@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { toast } from 'sonner';
 import { Loader2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,8 +22,9 @@ import {
   GSTIN_REGEX,
   REGISTRATION_NUMBER_REGEX,
 } from '@educard/shared';
-import { CommonUiText, FormPlaceholders } from '@/constants';
+import { CommonUiText, FormPlaceholders, ErrorMessages } from '@/constants';
 import { STANDARD_FORM_VALIDATION_CONFIG } from '@/lib/utils/form-validation';
+import { applyFieldErrors } from '@/lib/utils/error-handler';
 
 const organizationInfoSchema = z.object({
   name: z.string().min(1, 'Organization name is required'),
@@ -47,7 +49,27 @@ const organizationInfoSchema = z.object({
     .refine((val) => !val || GSTIN_REGEX.test(val.toUpperCase()), {
       message: 'Enter a valid 15-character GSTIN (e.g. 27AABCU9603R1ZM)',
     }),
-  website_url: z.string().url('Invalid website URL').optional().or(z.literal('')),
+  website_url: z
+    .string()
+    .optional()
+    .or(z.literal(''))
+    .refine(
+      (val) => {
+        if (!val) {
+          return true;
+        }
+        try {
+          const parsed = new URL(val);
+          return (
+            (parsed.protocol === 'http:' || parsed.protocol === 'https:') &&
+            parsed.hostname.includes('.')
+          );
+        } catch {
+          return false;
+        }
+      },
+      { message: 'Enter a valid website URL (e.g. https://example.com)' }
+    ),
   board_affiliation: z.string().optional(),
 });
 
@@ -97,7 +119,12 @@ export function OrganizationInfoForm({
   }, [organization, form]);
 
   const onSubmit = (values: OrganizationInfoFormData) => {
-    updateMutation.mutate(values);
+    updateMutation.mutate(values, {
+      onError: (error) => {
+        const result = applyFieldErrors(error, form.setError);
+        toast.error(result.toastMessage || ErrorMessages.ORGANIZATION.UPDATE_FAILED);
+      },
+    });
   };
 
   if (isLoading) {

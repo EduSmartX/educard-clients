@@ -186,6 +186,7 @@ export default function EditStudentScreen() {
     if (updateMutation.isPending) return;
     setApiError(null);
     const fe = validateAllFields(studentFullSchema, { ...form });
+    if (!form.gender) fe.gender = 'Please select a gender';
     setErrors(fe);
     if (Object.keys(fe).length > 0) {
       scrollRef.current?.scrollToPosition(0, 0, true);

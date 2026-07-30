@@ -14,7 +14,8 @@ const devFallback =
 // API Configuration
 export const API_CONFIG = {
   BASE_URL: (Config.API_URL ?? devFallback).trim(),
-  TIMEOUT: 30000,
+  TIMEOUT: 60000,
+  HEAVY_TIMEOUT: 120000,
   DEFAULT_PAGE_SIZE: 15,
 } as const;
 

@@ -106,7 +106,7 @@ export function MonthlyCalendarCard({
                   <div className={`text-xs font-bold ${textColor}`}>{format(date, 'd')}</div>
                 </div>
                 <div className="flex w-full flex-1 flex-col items-center justify-center">
-                  <DayIcon iconType={iconType} />
+                  <DayIcon iconType={iconType} attendance={attendance} />
                   {statusLabel ? (
                     <div className="mt-0.5 text-[7px] font-medium text-purple-600">
                       {statusLabel}

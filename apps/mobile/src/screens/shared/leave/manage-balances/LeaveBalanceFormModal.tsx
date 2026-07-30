@@ -9,6 +9,8 @@ import {
   Modal,
   ScrollView,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 
 import { FormDropdown } from '@/components/forms';
@@ -117,7 +119,10 @@ export function LeaveBalanceFormModal({
       animationType="fade"
       onRequestClose={() => onClose()}
     >
-      <View style={styles.overlay}>
+      <KeyboardAvoidingView
+        style={styles.overlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <View style={styles.card}>
           <View style={styles.header}>
             <Text style={styles.title}>
@@ -205,7 +210,7 @@ export function LeaveBalanceFormModal({
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

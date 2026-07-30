@@ -195,6 +195,7 @@ export default function CreateStudentScreen() {
   const handleSubmit = useCallback(() => {
     setApiError(null);
     const fe = validateAllFields(schema, { ...form });
+    if (!form.gender) fe.gender = 'Please select a gender';
     setErrors(fe);
     if (Object.keys(fe).length > 0) return;
 

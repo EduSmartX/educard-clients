@@ -88,6 +88,9 @@ importers:
       react-native-config:
         specifier: ^1.5.9
         version: 1.6.1(react-native@0.83.6(@babel/core@7.29.0)(@react-native-community/cli@20.0.0(typescript@5.9.3))(@react-native/metro-config@0.83.6(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
+      react-native-contacts:
+        specifier: ^8.0.10
+        version: 8.0.10(react-native@0.83.6(@babel/core@7.29.0)(@react-native-community/cli@20.0.0(typescript@5.9.3))(@react-native/metro-config@0.83.6(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
       react-native-css-interop:
         specifier: ^0.2.3
         version: 0.2.3(ud2frskzti2p7pm7zsrwcar7zi)
@@ -12930,6 +12933,15 @@ packages:
       react-native-windows:
         optional: true
 
+  react-native-contacts@8.0.10:
+    resolution:
+      {
+        integrity: sha512-9iBRf/YLYSXQxfbPvz43DwXMv0OcHeit37W/313adYJIWz/W8SypqqxmAg9B/Lg1hzD+KYEn+UpljZnwgp78OQ==,
+      }
+    peerDependencies:
+      react: "*"
+      react-native: "*"
+
   react-native-css-interop@0.1.22:
     resolution:
       {
@@ -24579,6 +24591,11 @@ snapshots:
       - supports-color
 
   react-native-config@1.6.1(react-native@0.83.6(@babel/core@7.29.0)(@react-native-community/cli@20.0.0(typescript@5.9.3))(@react-native/metro-config@0.83.6(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.0))(react@19.2.0):
+    dependencies:
+      react: 19.2.0
+      react-native: 0.83.6(@babel/core@7.29.0)(@react-native-community/cli@20.0.0(typescript@5.9.3))(@react-native/metro-config@0.83.6(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.0)
+
+  react-native-contacts@8.0.10(react-native@0.83.6(@babel/core@7.29.0)(@react-native-community/cli@20.0.0(typescript@5.9.3))(@react-native/metro-config@0.83.6(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.0))(react@19.2.0):
     dependencies:
       react: 19.2.0
       react-native: 0.83.6(@babel/core@7.29.0)(@react-native-community/cli@20.0.0(typescript@5.9.3))(@react-native/metro-config@0.83.6(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.0)

@@ -23,6 +23,7 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import {
   FormInput,
+  FormPhoneInput,
   FormSelect,
   FormSection,
   FormError,
@@ -274,7 +275,7 @@ export function StudentFormBase({
               keyboardType="email-address"
               editable={fieldsEditable}
             />
-            <FormInput
+            <FormPhoneInput
               label="Phone"
               value={form.phone}
               onChangeText={v => updateField('phone', v)}
@@ -291,6 +292,8 @@ export function StudentFormBase({
               options={genderOptionsWithIcons()}
               value={form.gender}
               onChange={v => updateField('gender', v)}
+              required
+              error={errors.gender}
             />
             {!quickAdd && (
               <>
@@ -343,7 +346,7 @@ export function StudentFormBase({
                 placeholder="Enter guardian name"
                 editable={fieldsEditable}
               />
-              <FormInput
+              <FormPhoneInput
                 label="Guardian Phone"
                 value={form.guardian_phone}
                 onChangeText={v => updateField('guardian_phone', v)}

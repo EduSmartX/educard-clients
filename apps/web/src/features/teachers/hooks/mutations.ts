@@ -4,6 +4,7 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCriticalOperation } from '@/providers/critical-operation-provider';
 import { toast } from 'sonner';
 import {
   handleMutationError,
@@ -104,9 +105,16 @@ export function useUpdateTeacher(options?: MutationOptions<TeacherFieldErrors>) 
 
 export function useDeleteTeacher(options?: MutationOptions<TeacherFieldErrors>) {
   const queryClient = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
 
   return useMutation({
     mutationFn: (publicId: string) => deleteTeacher(publicId),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Deleting teacher',
+        description: 'Removing the teacher and related assignments...',
+      });
+    },
     onSuccess: (response, publicId) => {
       queryClient.removeQueries({ queryKey: ['teachers', publicId] });
       queryClient.invalidateQueries({ queryKey: QueryKeys.TEACHERS.ALL });
@@ -115,6 +123,9 @@ export function useDeleteTeacher(options?: MutationOptions<TeacherFieldErrors>) 
     },
     onError: (error: Error) => {
       handleMutationError(error, ErrorMessages.TEACHER.DELETE_FAILED, options?.onError);
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 }

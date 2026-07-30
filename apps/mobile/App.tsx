@@ -4,6 +4,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClientProvider } from '@tanstack/react-query';
 
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { queryClient } from '@/lib/query-client';
 import { ToastProvider } from '@/lib/toast-context';
 import { RootNavigator } from '@/navigation/RootNavigator';
@@ -17,7 +18,9 @@ export default function App() {
           <StatusBar barStyle="light-content" />
           <ToastProvider>
             <CriticalOperationProvider>
-              <RootNavigator />
+              <ErrorBoundary label="App">
+                <RootNavigator />
+              </ErrorBoundary>
             </CriticalOperationProvider>
           </ToastProvider>
         </SafeAreaProvider>

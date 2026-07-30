@@ -16,6 +16,7 @@ import {
   handleMutationError,
   type MutationOptions,
 } from '@/lib/mutation-utils';
+import { useCriticalOperation } from '@/providers/critical-operation-context';
 import { showToast } from '@/utils/toast';
 
 import {
@@ -160,8 +161,16 @@ export function useUpdateClass(options?: MutationOptions) {
 
 export function useDeleteClass(options?: MutationOptions) {
   const queryClient = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: (publicId: string) => deleteClass(publicId),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Deleting class',
+        description: 'Removing the class and its related records...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'Class deleted successfully');
       void queryClient.invalidateQueries({ queryKey: classKeys.lists() });
@@ -169,6 +178,9 @@ export function useDeleteClass(options?: MutationOptions) {
     },
     onError: (error: unknown) => {
       handleMutationError(error, 'Failed to delete class', options?.onError);
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 }

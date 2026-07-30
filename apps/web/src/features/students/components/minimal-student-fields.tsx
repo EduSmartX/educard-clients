@@ -48,7 +48,7 @@ export function MinimalStudentFields({
           required
           validationType="alphanumeric"
         />
-        <GenderField control={control} name="gender" disabled={disabled} />
+        <GenderField control={control} name="gender" disabled={disabled} required />
       </CardContent>
     </Card>
   );

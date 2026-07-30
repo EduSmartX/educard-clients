@@ -17,6 +17,7 @@ import {
   handleMutationError,
   type MutationOptions,
 } from '@/lib/mutation-utils';
+import { useCriticalOperation } from '@/providers/critical-operation-context';
 import { showToast } from '@/utils/toast';
 
 import {
@@ -129,15 +130,26 @@ export function useUpdateTeacher(options?: MutationOptions) {
 
 export function useDeleteTeacher(options?: MutationOptions) {
   const queryClient = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: (publicId: string) => deleteTeacher(publicId),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Deleting teacher',
+        description: 'Removing the teacher and related assignments...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'Teacher deleted successfully');
-      void queryClient.invalidateQueries({ queryKey: teacherKeys.lists() });
       options?.onSuccess?.();
     },
     onError: (error: unknown) => {
       handleMutationError(error, 'Failed to delete teacher', options?.onError);
+    },
+    onSettled: () => {
+      endCriticalOperation();
+      void queryClient.invalidateQueries({ queryKey: teacherKeys.lists() });
     },
   });
 }

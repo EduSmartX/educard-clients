@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient, type UseMutationOptions } from '@tanstack/react-query';
+import { useCriticalOperation } from '@/providers/critical-operation-provider';
 import type {
   CreateStudentPayload,
   UpdateStudentPayload,
@@ -84,12 +85,19 @@ export function useDeleteStudent(
   >
 ) {
   const queryClient = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
   const { onSuccess, ...restOptions } = options || {};
 
   return useMutation({
     ...restOptions,
     mutationFn: ({ classId, publicId }: { classId: string; publicId: string }) =>
       deleteStudent(classId, publicId),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Deleting student',
+        description: 'Removing the student and related records...',
+      });
+    },
     onSuccess: (...args) => {
       const [, { publicId }] = args;
       queryClient.removeQueries({
@@ -103,6 +111,9 @@ export function useDeleteStudent(
         queryKey: ['classes'],
       });
       onSuccess?.(...args);
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 }

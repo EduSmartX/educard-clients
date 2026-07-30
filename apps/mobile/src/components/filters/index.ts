@@ -17,6 +17,7 @@ export {
   type FilterLabel,
 } from './SharedFilterFields';
 export {
+  buildSubjectFilterFields,
   SUBJECT_FILTER_FIELDS,
   getSubjectFilterLabels,
 } from './SubjectFilters';

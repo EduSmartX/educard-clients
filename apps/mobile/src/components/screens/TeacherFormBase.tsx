@@ -22,6 +22,7 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import {
   FormInput,
+  FormPhoneInput,
   FormSelect,
   FormSection,
   FormError,
@@ -256,7 +257,7 @@ export function TeacherFormBase({
             />
             {!quickAdd && (
               <>
-                <FormInput
+                <FormPhoneInput
                   label="Phone"
                   value={form.phone}
                   onChangeText={v => updateField('phone', v)}

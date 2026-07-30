@@ -4,6 +4,7 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCriticalOperation } from '@/providers/critical-operation-provider';
 import { toast } from 'sonner';
 import {
   handleMutationError,
@@ -89,9 +90,16 @@ export function useUpdateClass(options?: MutationOptions<ClassFieldErrors>) {
 
 export function useDeleteClass(options?: MutationOptions<ClassFieldErrors>) {
   const queryClient = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
 
   return useMutation({
     mutationFn: (publicId: string) => deleteClass(publicId),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Deleting class',
+        description: 'Removing the class and its related records...',
+      });
+    },
     onSuccess: (response, publicId) => {
       queryClient.removeQueries({ queryKey: ['classes', publicId] });
       queryClient.invalidateQueries({ queryKey: QueryKeys.CLASSES.ALL });
@@ -100,6 +108,9 @@ export function useDeleteClass(options?: MutationOptions<ClassFieldErrors>) {
     },
     onError: (error: Error) => {
       handleMutationError(error, ErrorMessages.CLASS.DELETE_FAILED, options?.onError);
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 }

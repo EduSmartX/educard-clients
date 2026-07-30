@@ -107,7 +107,10 @@ export const studentFormSchema = z
       )
       .or(z.literal('')),
 
-    gender: z.enum(GENDER_ENUM).or(z.literal('')),
+    gender: z
+      .enum(GENDER_ENUM)
+      .or(z.literal(''))
+      .refine((val) => val !== '', { message: 'Please select a gender' }),
 
     blood_group: z.enum(BLOOD_GROUP_ENUM).optional(),
 

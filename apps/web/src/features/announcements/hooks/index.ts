@@ -20,6 +20,14 @@ export function useAnnouncements() {
   });
 }
 
+export function useAnnouncementDetail(publicId: string | null) {
+  return useQuery({
+    queryKey: [...announcementKeys.all, 'detail', publicId],
+    queryFn: () => announcementsApi.fetchAnnouncementDetail(publicId ?? ''),
+    enabled: !!publicId,
+  });
+}
+
 export function useCreateAnnouncement() {
   const queryClient = useQueryClient();
 

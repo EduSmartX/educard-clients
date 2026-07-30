@@ -14,7 +14,7 @@ interface DayContext {
   isWeekendDay: boolean;
 }
 
-export type DayIconType = 'present' | 'absent' | 'holiday' | 'leave' | null;
+export type DayIconType = 'present' | 'absent' | 'holiday' | 'leave' | 'half-day' | null;
 
 export interface DayState {
   bgColor: string;
@@ -76,6 +76,16 @@ export function resolveDayState(ctx: DayContext): DayState {
       bgColor: 'bg-green-50 border-green-300',
       textColor: 'text-green-900',
       iconType: 'present',
+      statusLabel: '',
+    };
+  }
+
+  // Check for half day (exactly one of the two sessions present)
+  if (ctx.attendance && ctx.attendance.morning_present !== ctx.attendance.afternoon_present) {
+    return {
+      bgColor: 'bg-amber-50 border-amber-300',
+      textColor: 'text-amber-900',
+      iconType: 'half-day',
       statusLabel: '',
     };
   }

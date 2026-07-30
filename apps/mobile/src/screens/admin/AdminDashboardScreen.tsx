@@ -384,8 +384,8 @@ const styles = StyleSheet.create({
     color: '#1e293b',
     letterSpacing: -0.2,
   },
-  adminLinksGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  adminLinkItem: { alignItems: 'center' },
+  adminLinksGrid: { flexDirection: 'row', flexWrap: 'wrap' },
+  adminLinkItem: { alignItems: 'center', padding: 6 },
   adminLinkItemPhone: { width: '33.333%' },
   adminLinkItemTablet: { width: '25%' },
   adminLinkCard: {

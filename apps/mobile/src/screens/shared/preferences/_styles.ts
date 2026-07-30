@@ -95,6 +95,39 @@ export const styles = StyleSheet.create({
   // Preferences list
   prefList: { paddingHorizontal: 16, paddingBottom: 12 },
   divider: { height: 1, backgroundColor: '#f1f5f9', marginVertical: 4 },
+  categorySaveBar: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  catCancelBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.gray[300],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  catCancelBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.gray[600],
+  },
+  catSaveBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#7c3aed',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
+  },
+  catSaveBtnDisabled: { opacity: 0.7 },
+  catSaveBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
 
   // Single preference row
   prefRow: { paddingVertical: 12 },

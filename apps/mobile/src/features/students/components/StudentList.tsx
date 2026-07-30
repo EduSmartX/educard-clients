@@ -19,7 +19,13 @@ import {
   useRoute,
   type RouteProp,
 } from '@react-navigation/native';
-import { GraduationCap, Upload, Plus, Download } from 'lucide-react-native';
+import {
+  GraduationCap,
+  Upload,
+  Plus,
+  Download,
+  KeyRound,
+} from 'lucide-react-native';
 import { useState, useCallback, useMemo } from 'react';
 import {
   View,
@@ -81,6 +87,7 @@ import {
 } from '../hooks/use-students';
 
 import { ExportStudentsModal } from './ExportStudentsModal';
+import { ResetPasswordsModal } from './ResetPasswordsModal';
 
 const adminTheme = getRoleThemeColors('admin');
 
@@ -122,6 +129,7 @@ export function StudentList({ onBack }: StudentListProps) {
   const [showFilters, setShowFilters] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [showExport, setShowExport] = useState(false);
+  const [showResetPasswords, setShowResetPasswords] = useState(false);
 
   const isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
   const isTeacher = useMemo(() => isTeacherRole(user?.role), [user?.role]);
@@ -360,6 +368,7 @@ export function StudentList({ onBack }: StudentListProps) {
           canCreateStudents
             ? [
                 { icon: Download, onPress: () => setShowExport(true) },
+                { icon: KeyRound, onPress: () => setShowResetPasswords(true) },
                 ...(canCreateStudents
                   ? [{ icon: Upload, onPress: () => setShowBulkUpload(true) }]
                   : []),
@@ -389,6 +398,14 @@ export function StudentList({ onBack }: StudentListProps) {
       <ExportStudentsModal
         visible={showExport}
         onClose={() => setShowExport(false)}
+      />
+
+      {/* Reset Class Passwords Modal */}
+      <ResetPasswordsModal
+        visible={showResetPasswords}
+        onClose={() => setShowResetPasswords(false)}
+        classOptions={classOptions}
+        onSuccess={() => void refetch()}
       />
 
       <SearchBar

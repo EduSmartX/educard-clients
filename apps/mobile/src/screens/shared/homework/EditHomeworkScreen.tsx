@@ -45,6 +45,7 @@ import {
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   FormDatePicker,
@@ -71,6 +72,7 @@ const adminGradient = getRoleGradient('admin');
 
 export default function EditHomeworkScreen() {
   const navigation = useNavigation<SharedStackNavigation>();
+  const insets = useSafeAreaInsets();
   const route = useRoute<RouteProp<SharedStackParamList, 'HomeworkEdit'>>();
   const { showToast } = useToast();
   const { id } = route.params;
@@ -301,7 +303,7 @@ export default function EditHomeworkScreen() {
         style={styles.content}
         showsVerticalScrollIndicator={false}
         enableOnAndroid
-        extraScrollHeight={20}
+        extraScrollHeight={120}
         keyboardShouldPersistTaps="handled"
       >
         {/* Class & Subject Display (Readonly) */}
@@ -552,39 +554,39 @@ export default function EditHomeworkScreen() {
         </Animated.View>
 
         <View style={styles.bottomSpacer} />
-      </KeyboardAwareScrollView>
 
-      {/* Submit Button */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[
-            styles.submitBtn,
-            (!canSave || updateMutation.isPending || isUploading) &&
-              styles.submitBtnDisabled,
-          ]}
-          onPress={() => void handleSubmit()}
-          disabled={!canSave || updateMutation.isPending || isUploading}
-        >
-          {updateMutation.isPending || isUploading ? (
-            <>
-              <ActivityIndicator size="small" color="#fff" />
-              <Text style={styles.submitBtnText}>
-                {isUploading ? 'Uploading...' : 'Saving...'}
-              </Text>
-            </>
-          ) : (
-            <>
-              <Save size={18} color="#fff" />
-              <Text style={styles.submitBtnText}>
-                Save Changes
-                {attachments.length > 0
-                  ? ` (${attachments.length} new files)`
-                  : ''}
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
+        {/* Submit Button */}
+        <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
+          <TouchableOpacity
+            style={[
+              styles.submitBtn,
+              (!canSave || updateMutation.isPending || isUploading) &&
+                styles.submitBtnDisabled,
+            ]}
+            onPress={() => void handleSubmit()}
+            disabled={!canSave || updateMutation.isPending || isUploading}
+          >
+            {updateMutation.isPending || isUploading ? (
+              <>
+                <ActivityIndicator size="small" color="#fff" />
+                <Text style={styles.submitBtnText}>
+                  {isUploading ? 'Uploading...' : 'Saving...'}
+                </Text>
+              </>
+            ) : (
+              <>
+                <Save size={18} color="#fff" />
+                <Text style={styles.submitBtnText}>
+                  Save Changes
+                  {attachments.length > 0
+                    ? ` (${attachments.length} new files)`
+                    : ''}
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+      </KeyboardAwareScrollView>
     </View>
   );
 }

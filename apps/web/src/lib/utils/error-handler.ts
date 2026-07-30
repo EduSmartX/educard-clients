@@ -8,7 +8,6 @@ import type { UseFormSetError, FieldValues, Path } from 'react-hook-form';
 // Re-export everything from shared package
 export {
   parseError,
-  getErrorMessage,
   getFieldErrors,
   getNonFieldErrors,
   isValidationError,
@@ -22,7 +21,40 @@ export {
 } from '@educard/shared';
 export type { NormalizedError } from '@educard/shared';
 
-import { parseError } from '@educard/shared';
+import {
+  parseError,
+  getErrorMessage as sharedGetErrorMessage,
+  isNetworkError,
+} from '@educard/shared';
+
+/**
+ * Shown when the browser gets no usable response — axios "Network Error" (no
+ * response received) or a client timeout. The request can still have reached the
+ * server (e.g. a delete that succeeded) while the response was lost, so we ask the
+ * user to refresh instead of asserting failure with the raw, misleading text.
+ */
+const NO_RESPONSE_MESSAGE =
+  "The server didn't respond, so the result couldn't be confirmed. Please refresh — your change may already be applied.";
+
+/** True for no-response failures: network errors and client timeouts. */
+function isNoResponseError(error: unknown): boolean {
+  if (isNetworkError(error)) {
+    return true;
+  }
+  return error instanceof Error && error.message.toLowerCase().includes('timeout');
+}
+
+/**
+ * User-friendly error message. Overrides the shared version so a no-response
+ * failure returns an honest "refresh to confirm" message rather than the raw
+ * "Network Error"/timeout text, which was confusing when the action succeeded.
+ */
+export function getErrorMessage(error: unknown, fallback?: string): string {
+  if (isNoResponseError(error)) {
+    return NO_RESPONSE_MESSAGE;
+  }
+  return sharedGetErrorMessage(error, fallback);
+}
 
 function getFieldCandidates(field: string, fieldMap?: Record<string, string>): string[] {
   const explicit = fieldMap?.[field];

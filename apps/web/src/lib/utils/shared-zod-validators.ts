@@ -80,15 +80,16 @@ export const nameSchema = (fieldName: string, required = true, minLength = 2, ma
 export const employeeIdSchema = (required = true, maxLength = 50) => {
   const base = z
     .string()
+    .trim()
     .max(maxLength, `Employee ID must not exceed ${maxLength} characters`)
     .regex(
       EMPLOYEE_ID_REGEX,
       'Employee ID can only contain letters, numbers, hyphens, and underscores'
     )
-    .transform((val) => val.trim().toUpperCase());
+    .transform((val) => val.toUpperCase());
 
   if (required) {
-    return z.string().min(1, 'Employee ID is required').pipe(base);
+    return z.string().trim().min(1, 'Employee ID is required').pipe(base);
   }
   return base.optional();
 };

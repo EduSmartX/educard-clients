@@ -5,6 +5,8 @@
 export { AddressForm } from './AddressForm';
 export type { AddressData, AddressErrors } from './AddressForm';
 export { FormInput } from './FormInput';
+export { FormPhoneInput } from './FormPhoneInput';
+export { ContactPickerModal } from './ContactPickerModal';
 export { FormError } from './FormError';
 export { FormSection } from './FormSection';
 export { FormDropdown } from './FormDropdown';

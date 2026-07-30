@@ -8,6 +8,7 @@ import {
   handleMutationError,
   type MutationOptions,
 } from '@/lib/mutation-utils';
+import { useCriticalOperation } from '@/providers/critical-operation-context';
 import { showToast } from '@/utils/toast';
 
 import {
@@ -92,8 +93,16 @@ export function useLeaveAllocationDetail(publicId: string) {
 
 export function useCreateLeaveAllocation(options?: MutationOptions) {
   const qc = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: createLeaveAllocation,
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Allocating leave',
+        description: 'Applying leave balances for the selected users...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'Leave allocation created successfully');
       void qc.invalidateQueries({ queryKey: leaveKeys.allocations() });
@@ -106,11 +115,16 @@ export function useCreateLeaveAllocation(options?: MutationOptions) {
         options?.onError,
       );
     },
+    onSettled: () => {
+      endCriticalOperation();
+    },
   });
 }
 
 export function useUpdateLeaveAllocation(options?: MutationOptions) {
   const qc = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: ({
       publicId,
@@ -119,6 +133,12 @@ export function useUpdateLeaveAllocation(options?: MutationOptions) {
       publicId: string;
       data: Parameters<typeof updateLeaveAllocation>[1];
     }) => updateLeaveAllocation(publicId, data),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Updating leave allocation',
+        description: 'Recalculating leave balances for affected users...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'Leave allocation updated successfully');
       void qc.invalidateQueries({ queryKey: leaveKeys.allocations() });
@@ -131,13 +151,24 @@ export function useUpdateLeaveAllocation(options?: MutationOptions) {
         options?.onError,
       );
     },
+    onSettled: () => {
+      endCriticalOperation();
+    },
   });
 }
 
 export function useDeleteLeaveAllocation(options?: MutationOptions) {
   const qc = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: deleteLeaveAllocation,
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Deleting leave allocation',
+        description: 'Removing leave balances for affected users...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'Leave allocation deleted successfully');
       void qc.invalidateQueries({ queryKey: leaveKeys.allocations() });
@@ -149,6 +180,9 @@ export function useDeleteLeaveAllocation(options?: MutationOptions) {
         'Failed to delete leave allocation',
         options?.onError,
       );
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 }

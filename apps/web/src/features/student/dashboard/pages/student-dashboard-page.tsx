@@ -24,7 +24,7 @@ import { VerificationBanner } from '@/components/dashboard';
 import { useAuth } from '@/hooks/use-auth';
 import { ROUTES } from '@/constants/app-config';
 import { useStudentDashboard } from '../hooks/use-dashboard-data';
-import { SubjectAvatar } from '@/components/common';
+import { SubjectAvatar, ContactSupportCard } from '@/components/common';
 
 const STAGGER_CHILDREN = {
   hidden: { opacity: 0 },
@@ -347,6 +347,8 @@ export default function StudentDashboardPage() {
           )}
         </CardContent>
       </Card>
+
+      <ContactSupportCard className="mt-6" />
     </div>
   );
 }

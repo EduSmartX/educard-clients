@@ -42,6 +42,7 @@ import {
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   useSubmissionDetail,
@@ -69,11 +70,14 @@ function formatFileSize(bytes: number): string {
   const k = 1024;
   const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${Number.parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+  return `${Number.parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${
+    sizes[i]
+  }`;
 }
 
 export default function ReviewScreen() {
   const navigation = useNavigation<SharedStackNavigation>();
+  const insets = useSafeAreaInsets();
   const route = useRoute<RouteProp<SharedStackParamList, 'HomeworkReview'>>();
   const { showToast } = useToast();
   const { homework_id, submission_id, index, total } = route.params;
@@ -301,7 +305,7 @@ export default function ReviewScreen() {
         style={styles.content}
         showsVerticalScrollIndicator={false}
         enableOnAndroid
-        extraScrollHeight={20}
+        extraScrollHeight={120}
         keyboardShouldPersistTaps="handled"
       >
         {/* Student Info Card */}
@@ -466,51 +470,57 @@ export default function ReviewScreen() {
         )}
 
         <View style={styles.bottomSpacer} />
+
+        {/* Submit Button */}
+        {canSubmitReview && (
+          <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
+            <TouchableOpacity
+              style={[
+                styles.submitBtn,
+                isSubmitting && styles.submitBtnDisabled,
+              ]}
+              onPress={handleSubmitReview}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <>
+                  <CheckCircle size={18} color="#fff" />
+                  <Text style={styles.submitBtnText}>
+                    {HOMEWORK_UI.SUBMIT_REVIEW}
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Update Button for Already Reviewed */}
+        {canReview && isAlreadyReviewed && (
+          <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
+            <TouchableOpacity
+              style={[
+                styles.updateBtn,
+                isSubmitting && styles.submitBtnDisabled,
+              ]}
+              onPress={handleSubmitReview}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color={Colors.primary[500]} />
+              ) : (
+                <>
+                  <FileText size={18} color={Colors.primary[500]} />
+                  <Text style={styles.updateBtnText}>
+                    {HOMEWORK_UI.UPDATE_REVIEW}
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
       </KeyboardAwareScrollView>
-
-      {/* Submit Button */}
-      {canSubmitReview && (
-        <View style={styles.footer}>
-          <TouchableOpacity
-            style={[styles.submitBtn, isSubmitting && styles.submitBtnDisabled]}
-            onPress={handleSubmitReview}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <>
-                <CheckCircle size={18} color="#fff" />
-                <Text style={styles.submitBtnText}>
-                  {HOMEWORK_UI.SUBMIT_REVIEW}
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Update Button for Already Reviewed */}
-      {canReview && isAlreadyReviewed && (
-        <View style={styles.footer}>
-          <TouchableOpacity
-            style={[styles.updateBtn, isSubmitting && styles.submitBtnDisabled]}
-            onPress={handleSubmitReview}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator size="small" color={Colors.primary[500]} />
-            ) : (
-              <>
-                <FileText size={18} color={Colors.primary[500]} />
-                <Text style={styles.updateBtnText}>
-                  {HOMEWORK_UI.UPDATE_REVIEW}
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
-      )}
     </View>
   );
 }

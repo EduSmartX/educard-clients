@@ -224,6 +224,10 @@ export default function OrgPreferencesScreen() {
   const [multiSelectValues, setMultiSelectValues] = useState<string[]>([]);
   const [editingTextPref, setEditingTextPref] = useState<string | null>(null);
   const [editTextValue, setEditTextValue] = useState('');
+  const [changedValues, setChangedValues] = useState<
+    Record<string, string | string[]>
+  >({});
+  const [savingCategory, setSavingCategory] = useState<string | null>(null);
 
   const { user } = useAuthStore();
   const canManage = useMemo(() => isAdminRole(user?.role), [user?.role]);
@@ -262,17 +266,52 @@ export default function OrgPreferencesScreen() {
   };
 
   const handleUpdate = (publicId: string, value: string | string[]) => {
-    updateMutation.mutate(
-      { publicId, value },
-      {
-        onError: (err: unknown) => {
-          showToast({
-            type: 'error',
-            title: 'Error',
-            message: extractApiError(err, 'Failed to update preference'),
-          });
-        },
-      },
+    // Stage the change locally; it persists only when the user taps Save.
+    setChangedValues(prev => ({ ...prev, [publicId]: value }));
+  };
+
+  const handleSaveCategory = async (
+    category: string,
+    prefs: OrganizationPreference[],
+  ) => {
+    const changed = prefs.filter(p => p.public_id in changedValues);
+    if (changed.length === 0) return;
+    setSavingCategory(category);
+    try {
+      await Promise.all(
+        changed.map(p =>
+          updateMutation.mutateAsync({
+            publicId: p.public_id,
+            value: changedValues[p.public_id],
+          }),
+        ),
+      );
+      const savedIds = new Set(changed.map(p => p.public_id));
+      setChangedValues(prev =>
+        Object.fromEntries(
+          Object.entries(prev).filter(([k]) => !savedIds.has(k)),
+        ),
+      );
+      showToast({
+        type: 'success',
+        title: 'Saved',
+        message: 'Settings updated successfully',
+      });
+    } catch (err) {
+      showToast({
+        type: 'error',
+        title: 'Error',
+        message: extractApiError(err, 'Failed to update settings'),
+      });
+    } finally {
+      setSavingCategory(null);
+    }
+  };
+
+  const handleCancelCategory = (prefs: OrganizationPreference[]) => {
+    const ids = new Set(prefs.map(p => p.public_id));
+    setChangedValues(prev =>
+      Object.fromEntries(Object.entries(prev).filter(([k]) => !ids.has(k))),
     );
   };
 
@@ -285,7 +324,14 @@ export default function OrgPreferencesScreen() {
         {
           text: 'Reset',
           style: 'destructive',
-          onPress: () => resetMutation.mutate(pref.public_id),
+          onPress: () => {
+            resetMutation.mutate(pref.public_id);
+            setChangedValues(prev =>
+              Object.fromEntries(
+                Object.entries(prev).filter(([k]) => k !== pref.public_id),
+              ),
+            );
+          },
         },
       ],
     );
@@ -391,7 +437,11 @@ export default function OrgPreferencesScreen() {
                   {isExpanded && (
                     <View style={styles.prefList}>
                       <PreferenceGroupContent
-                        preferences={group.preferences}
+                        preferences={group.preferences.map(p =>
+                          p.public_id in changedValues
+                            ? { ...p, value: changedValues[p.public_id] }
+                            : p,
+                        )}
                         canManage={canManage}
                         updateMutation={updateMutation}
                         tooltipPref={tooltipPref}
@@ -406,6 +456,46 @@ export default function OrgPreferencesScreen() {
                         setMultiSelectPref={setMultiSelectPref}
                         setMultiSelectValues={setMultiSelectValues}
                       />
+                      {canManage &&
+                        group.preferences.some(
+                          p => p.public_id in changedValues,
+                        ) && (
+                          <View style={styles.categorySaveBar}>
+                            <TouchableOpacity
+                              style={styles.catCancelBtn}
+                              onPress={() =>
+                                handleCancelCategory(group.preferences)
+                              }
+                              disabled={savingCategory === group.category}
+                            >
+                              <Text style={styles.catCancelBtnText}>
+                                Cancel
+                              </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={[
+                                styles.catSaveBtn,
+                                savingCategory === group.category &&
+                                  styles.catSaveBtnDisabled,
+                              ]}
+                              onPress={() =>
+                                void handleSaveCategory(
+                                  group.category,
+                                  group.preferences,
+                                )
+                              }
+                              disabled={savingCategory === group.category}
+                            >
+                              {savingCategory === group.category ? (
+                                <ActivityIndicator size="small" color="#fff" />
+                              ) : (
+                                <Text style={styles.catSaveBtnText}>
+                                  Save Changes
+                                </Text>
+                              )}
+                            </TouchableOpacity>
+                          </View>
+                        )}
                     </View>
                   )}
                 </Animated.View>

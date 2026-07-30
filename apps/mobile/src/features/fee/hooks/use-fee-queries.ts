@@ -23,7 +23,11 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { apiClient } from '@/api/client';
-import { handleMutationError, type MutationOptions } from '@/lib/mutation-utils';
+import {
+  handleMutationError,
+  type MutationOptions,
+} from '@/lib/mutation-utils';
+import { useCriticalOperation } from '@/providers/critical-operation-context';
 import { showToast } from '@/utils/toast';
 
 const feeStructureApi = createFeeStructureApi(apiClient);
@@ -118,49 +122,106 @@ export function useFeeDashboard() {
 
 export function useCreateFeeStructure(options?: MutationOptions) {
   const queryClient = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
 
   return useMutation({
-    mutationFn: (data: FeeStructureCreatePayload) => feeStructureApi.create(data),
+    mutationFn: (data: FeeStructureCreatePayload) =>
+      feeStructureApi.create(data),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Creating fee structure',
+        description: 'Generating fee records for all applicable students...',
+      });
+    },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: [FeeQueryKeys.FEE_STRUCTURES] });
+      void queryClient.invalidateQueries({
+        queryKey: [FeeQueryKeys.FEE_STRUCTURES],
+      });
       showToast('success', FeeMessages.FEE_STRUCTURE_CREATED);
       options?.onSuccess?.();
     },
     onError: (error: unknown) => {
-      handleMutationError(error, 'Failed to create fee structure', options?.onError);
+      handleMutationError(
+        error,
+        'Failed to create fee structure',
+        options?.onError,
+      );
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 }
 
 export function useUpdateFeeStructure(options?: MutationOptions) {
   const queryClient = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: FeeStructureCreatePayload }) =>
-      feeStructureApi.update(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: FeeStructureCreatePayload;
+    }) => feeStructureApi.update(id, data),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Updating fee structure',
+        description: 'Recalculating fee records for affected students...',
+      });
+    },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: [FeeQueryKeys.FEE_STRUCTURES] });
+      void queryClient.invalidateQueries({
+        queryKey: [FeeQueryKeys.FEE_STRUCTURES],
+      });
       showToast('success', FeeMessages.FEE_STRUCTURE_UPDATED);
       options?.onSuccess?.();
     },
     onError: (error: unknown) => {
-      handleMutationError(error, 'Failed to update fee structure', options?.onError);
+      handleMutationError(
+        error,
+        'Failed to update fee structure',
+        options?.onError,
+      );
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 }
 
 export function useDeleteFeeStructure(options?: MutationOptions) {
   const queryClient = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
 
   return useMutation({
     mutationFn: (id: string) => feeStructureApi.delete(id),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Deleting fee structure',
+        description: 'Removing the fee structure and related records...',
+      });
+    },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: [FeeQueryKeys.FEE_STRUCTURES] });
+      void queryClient.invalidateQueries({
+        queryKey: [FeeQueryKeys.FEE_STRUCTURES],
+      });
       showToast('success', FeeMessages.FEE_STRUCTURE_DELETED);
       options?.onSuccess?.();
     },
     onError: (error: unknown) => {
-      handleMutationError(error, 'Failed to delete fee structure', options?.onError);
+      handleMutationError(
+        error,
+        'Failed to delete fee structure',
+        options?.onError,
+      );
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 }
@@ -171,9 +232,13 @@ export function useRecordPayment(options?: MutationOptions) {
   return useMutation({
     mutationFn: (data: PaymentCreatePayload) => feePaymentApi.create(data),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: [FeeQueryKeys.STUDENT_FEES] });
+      void queryClient.invalidateQueries({
+        queryKey: [FeeQueryKeys.STUDENT_FEES],
+      });
       void queryClient.invalidateQueries({ queryKey: [FeeQueryKeys.PAYMENTS] });
-      void queryClient.invalidateQueries({ queryKey: [FeeQueryKeys.FEE_DASHBOARD] });
+      void queryClient.invalidateQueries({
+        queryKey: [FeeQueryKeys.FEE_DASHBOARD],
+      });
       showToast('success', FeeMessages.PAYMENT_RECORDED);
       options?.onSuccess?.();
     },
@@ -189,7 +254,9 @@ export function useSendReminder(options?: MutationOptions) {
   return useMutation({
     mutationFn: (data: SendReminderPayload) => feeReminderApi.send(data),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: [FeeQueryKeys.REMINDERS] });
+      void queryClient.invalidateQueries({
+        queryKey: [FeeQueryKeys.REMINDERS],
+      });
       showToast('success', FeeMessages.REMINDER_SENT);
       options?.onSuccess?.();
     },

@@ -2,7 +2,8 @@
  * Reset Class Passwords Dialog
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { KeyRound, Eye, EyeOff, Loader2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -27,7 +28,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useCriticalOperation } from '@/providers/critical-operation-provider';
 import { useManagedClasses } from '../hooks/use-managed-classes';
-import { resetClassPasswords } from '../api/students-api';
+import { resetClassPasswords, fetchDefaultStudentPassword } from '../api/students-api';
 
 async function extractErrorMessage(error: unknown, fallback: string): Promise<string> {
   const maybeBlob = (error as { response?: { data?: unknown } })?.response?.data;
@@ -65,6 +66,21 @@ export function ResetClassPasswordsDialog({
 
   const { data: managedClasses = [] } = useManagedClasses();
   const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
+
+  // Organization's default student password — pre-fills the fields (teacher can override).
+  const { data: defaultPassword } = useQuery({
+    queryKey: ['default-student-password'],
+    queryFn: fetchDefaultStudentPassword,
+    enabled: open,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  useEffect(() => {
+    if (open && defaultPassword) {
+      setNewPassword((prev) => prev || defaultPassword);
+      setConfirmPassword((prev) => prev || defaultPassword);
+    }
+  }, [open, defaultPassword]);
 
   const classOptions = managedClasses.map((cls) => ({
     value: cls.public_id,

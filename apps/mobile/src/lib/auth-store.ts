@@ -134,6 +134,9 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
         return result;
       }
 
+      // Drop any cached data from a previous session before the new user loads.
+      clearQueryCache();
+
       set({
         user: result.user,
         tokens: result.tokens,
@@ -160,6 +163,9 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
         selection_token: selectionToken,
         user_public_id: userPublicId,
       });
+
+      // Drop any cached data from a previous session before the new profile loads.
+      clearQueryCache();
 
       set({
         user,

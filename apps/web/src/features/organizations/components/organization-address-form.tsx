@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { toast } from 'sonner';
 import { Loader2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +16,8 @@ import { AddressForm } from '@/components/form/address-form';
 import { useUpdateOrganizationAddress } from '../hooks/mutations';
 import type { Organization } from '../api/organization-api';
 import { STANDARD_FORM_VALIDATION_CONFIG } from '@/lib/utils/form-validation';
+import { applyFieldErrors } from '@/lib/utils/error-handler';
+import { ErrorMessages } from '@/constants';
 
 const organizationAddressSchema = z.object({
   street_address: z.string().min(1, 'Street address is required'),
@@ -65,7 +68,12 @@ export function OrganizationAddressForm({
   }, [organization, form]);
 
   const onSubmit = (values: OrganizationAddressFormData) => {
-    updateMutation.mutate(values);
+    updateMutation.mutate(values, {
+      onError: (error) => {
+        const result = applyFieldErrors(error, form.setError);
+        toast.error(result.toastMessage || ErrorMessages.ORGANIZATION.UPDATE_FAILED);
+      },
+    });
   };
 
   if (isLoading) {

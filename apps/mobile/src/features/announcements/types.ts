@@ -50,6 +50,12 @@ export interface AnnouncementListItem {
   created_at: string;
 }
 
+export interface AnnouncementDetail extends AnnouncementListItem {
+  body_html: string;
+  event_note: string;
+  manual_emails: string;
+}
+
 export const DELIVERY_METHOD_LABELS: Record<DeliveryMethod, string> = {
   email: 'Email',
   sms: 'SMS',

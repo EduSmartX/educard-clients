@@ -7,23 +7,35 @@ import { extractApiError, getRoleGradient } from '@educard/shared';
 import { useNavigation } from '@react-navigation/native';
 import { format } from 'date-fns';
 import {
+  ChevronDown,
   ChevronLeft,
+  ChevronUp,
+  Eye,
   Loader2,
   Megaphone,
   RotateCcw,
+  Search,
+  SlidersHorizontal,
+  X,
 } from 'lucide-react-native';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
+import {
+  FilterModal,
+  type FilterField,
+} from '@/components/filters/FilterModal';
+import { FormDatePicker } from '@/components/forms';
 import {
   DELIVERY_METHOD_LABELS,
   RECIPIENT_TYPE_LABELS,
@@ -42,6 +54,48 @@ import {
 } from '@/styles';
 
 const adminGradient = getRoleGradient('admin');
+
+const ANNOUNCEMENT_FILTER_FIELDS: FilterField[] = [
+  {
+    name: 'delivery_methods',
+    label: 'Delivery',
+    type: 'select',
+    icon: '📤',
+    options: [
+      { value: '', label: 'All' },
+      { value: 'email', label: '✉️ Email' },
+      { value: 'sms', label: '💬 SMS' },
+      { value: 'both', label: '📨 Email & SMS' },
+    ],
+  },
+  {
+    name: 'recipient_type',
+    label: 'Recipients',
+    type: 'select',
+    icon: '👥',
+    options: [
+      { value: '', label: 'All' },
+      { value: 'all_users', label: 'All Users' },
+      { value: 'all_students', label: 'All Students' },
+      { value: 'all_teachers', label: 'All Teachers' },
+      { value: 'all_parents', label: 'All Parents' },
+      { value: 'specific_classes', label: 'Specific Classes' },
+      { value: 'manual_emails', label: 'Manual Emails' },
+    ],
+  },
+  {
+    name: 'status',
+    label: 'Status',
+    type: 'select',
+    icon: '🏷️',
+    options: [
+      { value: '', label: 'All' },
+      { value: 'sent', label: '✅ Sent' },
+      { value: 'failed', label: '❌ Failed' },
+      { value: 'draft', label: '📝 Draft' },
+    ],
+  },
+];
 
 function formatDateTime(value: string | null): string {
   if (!value) return '—';
@@ -70,6 +124,66 @@ export default function AnnouncementsScreen() {
   const { data = [], isLoading, refetch, isRefetching } = useAnnouncements();
   const retryMutation = useRetryAnnouncement();
   const [retryingId, setRetryingId] = useState<string | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [filters, setFilters] = useState<Record<string, unknown>>({});
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const activeFilterCount =
+    (filters.delivery_methods ? 1 : 0) +
+    (filters.recipient_type ? 1 : 0) +
+    (filters.status ? 1 : 0) +
+    (fromDate ? 1 : 0) +
+    (toDate ? 1 : 0) +
+    (searchQuery.trim() ? 1 : 0);
+
+  const filteredData = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return data.filter(item => {
+      if (
+        q &&
+        !item.subject.toLowerCase().includes(q) &&
+        !item.event_name.toLowerCase().includes(q)
+      ) {
+        return false;
+      }
+      if (
+        filters.delivery_methods &&
+        item.delivery_methods !== filters.delivery_methods
+      ) {
+        return false;
+      }
+      if (
+        filters.recipient_type &&
+        item.recipient_type !== filters.recipient_type
+      ) {
+        return false;
+      }
+      if (filters.status && item.status !== filters.status) return false;
+      const when = (item.sent_at ?? item.created_at)?.slice(0, 10);
+      if (fromDate && when && when < fromDate) return false;
+      if (toDate && when && when > toDate) return false;
+      return true;
+    });
+  }, [data, filters, fromDate, toDate, searchQuery]);
+
+  const toggleExpand = (id: string) => {
+    setExpandedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const clearFilters = () => {
+    setFilters({});
+    setFromDate('');
+    setToDate('');
+    setSearchQuery('');
+  };
 
   const handleBack = () => {
     if (navigation.canGoBack()) {
@@ -124,7 +238,17 @@ export default function AnnouncementsScreen() {
                 View status and retry failed deliveries
               </Text>
             </View>
-            <View style={s.spacer} />
+            <TouchableOpacity
+              style={s.filterBtn}
+              onPress={() => setShowFilterModal(true)}
+            >
+              <SlidersHorizontal size={18} color="#fff" />
+              {activeFilterCount > 0 && (
+                <View style={s.filterBadge}>
+                  <Text style={s.filterBadgeText}>{activeFilterCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
           </View>
         </View>
       </LinearGradient>
@@ -137,7 +261,7 @@ export default function AnnouncementsScreen() {
           </View>
         ) : (
           <FlatList
-            data={data}
+            data={filteredData}
             keyExtractor={item => item.public_id}
             contentContainerStyle={s.listContent}
             refreshControl={
@@ -146,12 +270,65 @@ export default function AnnouncementsScreen() {
                 onRefresh={() => void refetch()}
               />
             }
+            ListHeaderComponent={
+              <View style={s.filterBar}>
+                <View style={s.searchWrap}>
+                  <Search size={16} color="#94a3b8" />
+                  <TextInput
+                    style={s.searchInput}
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    placeholder="Search by subject or event..."
+                    placeholderTextColor="#94a3b8"
+                    returnKeyType="search"
+                  />
+                  {searchQuery.length > 0 && (
+                    <TouchableOpacity
+                      onPress={() => setSearchQuery('')}
+                      hitSlop={8}
+                    >
+                      <X size={16} color="#94a3b8" />
+                    </TouchableOpacity>
+                  )}
+                </View>
+                <View style={s.dateRow}>
+                  <View style={s.dateCol}>
+                    <FormDatePicker
+                      label="From"
+                      value={fromDate}
+                      onChange={setFromDate}
+                      placeholder="Start date"
+                    />
+                  </View>
+                  <View style={s.dateCol}>
+                    <FormDatePicker
+                      label="To"
+                      value={toDate}
+                      onChange={setToDate}
+                      placeholder="End date"
+                    />
+                  </View>
+                </View>
+                {activeFilterCount > 0 && (
+                  <TouchableOpacity style={s.clearBtn} onPress={clearFilters}>
+                    <X size={14} color="#dc2626" />
+                    <Text style={s.clearBtnText}>
+                      Clear filters ({activeFilterCount})
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            }
             ListEmptyComponent={
               <View style={s.emptyState}>
                 <Megaphone size={20} color="#94a3b8" />
-                <Text style={s.emptyTitle}>No announcements yet</Text>
+                <Text style={s.emptyTitle}>
+                  {data.length === 0 ? 'No announcements yet' : 'No matches'}
+                </Text>
                 <Text style={s.emptyText}>
-                  Create an announcement from web to start delivery.
+                  {data.length === 0
+                    ? 'Create an announcement from web to start delivery.'
+                    : 'Try adjusting or clearing your filters.'}
                 </Text>
               </View>
             }
@@ -162,13 +339,19 @@ export default function AnnouncementsScreen() {
               const stats = item.delivery_stats?.recipients;
               const totalUsers = stats?.target_users;
               const verifiedUsers = stats?.eligible_users;
+              const isOpen = expandedIds.has(item.public_id);
               return (
                 <Animated.View
                   entering={FadeInDown.delay(40 * (index + 1)).springify()}
                 >
                   <View style={cardStyles.cardLarge}>
                     <View style={s.rowTop}>
-                      <Text style={s.subject}>{item.subject}</Text>
+                      <View style={s.titleWrap}>
+                        <Text style={s.subject}>{item.subject}</Text>
+                        <Text style={s.deliveryTag}>
+                          {DELIVERY_METHOD_LABELS[item.delivery_methods]}
+                        </Text>
+                      </View>
                       <View style={[s.statusBadge, status.container]}>
                         <Text style={[s.statusLabel, status.text]}>
                           {status.label}
@@ -176,34 +359,66 @@ export default function AnnouncementsScreen() {
                       </View>
                     </View>
 
-                    <View style={dividerStyles.spaced} />
-
-                    <Text style={s.metaLine}>
-                      Delivery: {DELIVERY_METHOD_LABELS[item.delivery_methods]}
-                    </Text>
-                    <Text style={s.metaLine}>
-                      Recipients: {RECIPIENT_TYPE_LABELS[item.recipient_type]}
-                    </Text>
-                    <Text style={s.metaLine}>
-                      Sent: {formatDateTime(item.sent_at ?? item.created_at)}
-                    </Text>
-
-                    <View style={s.statsRow}>
-                      <View style={s.statBox}>
-                        <Text style={s.statValue}>{totalUsers ?? '—'}</Text>
-                        <Text style={s.statLabel}>Total users</Text>
-                      </View>
-                      <View style={s.statBox}>
-                        <Text style={s.statValue}>{verifiedUsers ?? '—'}</Text>
-                        <Text style={s.statLabel}>Verified</Text>
-                      </View>
-                      <View style={s.statBox}>
-                        <Text style={[s.statValue, s.statValueAccent]}>
-                          {item.recipient_count}
+                    <View style={s.actionsRow}>
+                      <TouchableOpacity
+                        style={s.viewBtn}
+                        onPress={() =>
+                          navigation.navigate('AnnouncementDetail', {
+                            publicId: item.public_id,
+                          })
+                        }
+                      >
+                        <Eye size={15} color="#2563eb" />
+                        <Text style={s.viewBtnText}>View</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={s.expandBtn}
+                        onPress={() => toggleExpand(item.public_id)}
+                      >
+                        <Text style={s.expandBtnText}>
+                          {isOpen ? 'Hide' : 'Details'}
                         </Text>
-                        <Text style={s.statLabel}>Sent to</Text>
-                      </View>
+                        {isOpen ? (
+                          <ChevronUp size={16} color="#64748b" />
+                        ) : (
+                          <ChevronDown size={16} color="#64748b" />
+                        )}
+                      </TouchableOpacity>
                     </View>
+
+                    {isOpen && (
+                      <>
+                        <View style={dividerStyles.spaced} />
+
+                        <Text style={s.metaLine}>
+                          Recipients:{' '}
+                          {RECIPIENT_TYPE_LABELS[item.recipient_type]}
+                        </Text>
+                        <Text style={s.metaLine}>
+                          Sent:{' '}
+                          {formatDateTime(item.sent_at ?? item.created_at)}
+                        </Text>
+
+                        <View style={s.statsRow}>
+                          <View style={s.statBox}>
+                            <Text style={s.statValue}>{totalUsers ?? '—'}</Text>
+                            <Text style={s.statLabel}>Total users</Text>
+                          </View>
+                          <View style={s.statBox}>
+                            <Text style={s.statValue}>
+                              {verifiedUsers ?? '—'}
+                            </Text>
+                            <Text style={s.statLabel}>Verified</Text>
+                          </View>
+                          <View style={s.statBox}>
+                            <Text style={[s.statValue, s.statValueAccent]}>
+                              {item.recipient_count}
+                            </Text>
+                            <Text style={s.statLabel}>Sent to</Text>
+                          </View>
+                        </View>
+                      </>
+                    )}
 
                     {item.status === 'failed' && (
                       <View style={s.retryRow}>
@@ -233,12 +448,95 @@ export default function AnnouncementsScreen() {
           />
         )}
       </View>
+
+      <FilterModal
+        visible={showFilterModal}
+        onClose={() => setShowFilterModal(false)}
+        onApply={f => {
+          setFilters(f);
+          setShowFilterModal(false);
+        }}
+        fields={ANNOUNCEMENT_FILTER_FIELDS}
+        currentFilters={filters}
+        title="Filter announcements"
+      />
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  spacer: { width: 40 },
+  filterBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  filterBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    paddingHorizontal: 4,
+    backgroundColor: '#ef4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterBadgeText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  filterBar: { marginBottom: 4 },
+  searchWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 10,
+  },
+  searchInput: { flex: 1, fontSize: 14, color: '#0f172a', padding: 0 },
+  dateRow: { flexDirection: 'row', gap: 12 },
+  dateCol: { flex: 1 },
+  clearBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    marginTop: 4,
+  },
+  clearBtnText: { color: '#dc2626', fontSize: 13, fontWeight: '600' },
+  titleWrap: { flex: 1, gap: 4 },
+  deliveryTag: { fontSize: 12, color: '#7c3aed', fontWeight: '600' },
+  actionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  viewBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+    backgroundColor: '#eff6ff',
+  },
+  viewBtnText: { color: '#2563eb', fontSize: 13, fontWeight: '700' },
+  expandBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    padding: 6,
+  },
+  expandBtnText: { color: '#64748b', fontSize: 13, fontWeight: '600' },
   body: {
     flex: 1,
   },

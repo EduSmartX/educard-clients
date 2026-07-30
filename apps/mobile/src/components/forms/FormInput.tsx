@@ -4,16 +4,24 @@
  */
 
 import { AlertCircle } from 'lucide-react-native';
-import { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, type TextInputProps } from 'react-native';
+import { useState, type ReactNode } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  type TextInputProps,
+} from 'react-native';
 
-interface FormInputProps extends TextInputProps {
+export interface FormInputProps extends TextInputProps {
   label: string;
   error?: string;
   required?: boolean;
   hint?: string;
   /** Called on blur with field value — use for per-field validation */
   onBlurValidate?: () => void;
+  /** Optional trailing element rendered inside the input (e.g. a contacts picker button). */
+  rightSlot?: ReactNode;
 }
 
 export function FormInput({
@@ -24,11 +32,12 @@ export function FormInput({
   style,
   onBlurValidate,
   onBlur,
+  rightSlot,
   ...props
 }: FormInputProps) {
   const [focused, setFocused] = useState(false);
 
-  const handleBlur: NonNullable<TextInputProps['onBlur']> = (e) => {
+  const handleBlur: NonNullable<TextInputProps['onBlur']> = e => {
     setFocused(false);
     onBlurValidate?.();
     onBlur?.(e);
@@ -58,6 +67,7 @@ export function FormInput({
           onFocus={() => setFocused(true)}
           {...props}
         />
+        {rightSlot}
       </View>
       {hasError && (
         <View style={styles.errorRow}>
@@ -76,6 +86,8 @@ const styles = StyleSheet.create({
   labelError: { color: '#dc2626' },
   required: { color: '#ef4444' },
   inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1.5,
     borderColor: '#e2e8f0',
     borderRadius: 12,
@@ -91,12 +103,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#faf5ff',
   },
   input: {
+    flex: 1,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
     color: '#1e293b',
   },
-  errorRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, marginLeft: 4 },
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+    marginLeft: 4,
+  },
   error: { fontSize: 12, color: '#ef4444', flex: 1 },
   hint: { fontSize: 12, color: '#94a3b8', marginTop: 4, marginLeft: 4 },
 });
