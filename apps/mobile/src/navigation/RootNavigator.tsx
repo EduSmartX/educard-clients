@@ -7,7 +7,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import ForcePasswordChangeScreen from '@/screens/auth/ForcePasswordChangeScreen';
 
 import { AuthNavigator } from './AuthNavigator';
-import { MainStackNavigator } from './MainStackNavigator';
+import MainStackNavigator from './MainStackNavigator';
 import { navigationRef } from './navigation-service';
 import type { RootStackParamList } from './types';
 
