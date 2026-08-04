@@ -31,7 +31,12 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import DocumentPicker, { types, isCancel } from 'react-native-document-picker';
+import {
+  pick,
+  types,
+  isErrorWithCode,
+  errorCodes,
+} from '@react-native-documents/picker';
 
 import { Screen, Header } from '@/components/layout';
 import { colors } from '@/constants/colors';
@@ -164,17 +169,21 @@ export default function StudentHomeworkDetailScreen() {
 
   const pickFile = async () => {
     try {
-      const [a] = await DocumentPicker.pick({
+      const result = await pick({
         type: [types.allFiles],
-        copyTo: 'cachesDirectory',
+        copyToCacheDirectory: true,
       });
+
+      if (!result || result.length === 0) return;
+
+      const a = result[0];
       setFile({
-        uri: a.fileCopyUri ?? a.uri,
+        uri: a.uri,
         name: a.name ?? 'file',
         type: a.type ?? 'application/octet-stream',
       });
     } catch (err) {
-      if (!isCancel(err)) {
+      if (!isErrorWithCode(err) || err.code !== errorCodes.OPERATION_CANCELED) {
         Alert.alert('Error', 'Could not pick file. Please try again.');
       }
     }

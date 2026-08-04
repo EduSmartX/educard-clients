@@ -21,10 +21,13 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import DocumentPicker, {
-  isCancel,
+import {
+  pick,
+  types,
+  isErrorWithCode,
+  errorCodes,
   type DocumentPickerResponse,
-} from 'react-native-document-picker';
+} from '@react-native-documents/picker';
 
 export interface SelectedFile {
   uri: string;
@@ -105,7 +108,7 @@ export function FormAttachmentPicker({
         }
 
         validFiles.push({
-          uri: asset.fileCopyUri ?? asset.uri,
+          uri: asset.uri,
           name: asset.name ?? 'file',
           type: asset.type ?? 'application/octet-stream',
           size: asset.size ?? undefined,
@@ -127,11 +130,13 @@ export function FormAttachmentPicker({
 
     setIsLoading(true);
     try {
-      const results = await DocumentPicker.pick({
+      const results = await pick({
         type: allowedTypes,
         allowMultiSelection: multiple && files.length < maxFiles - 1,
-        copyTo: 'cachesDirectory',
+        copyToCacheDirectory: true,
       });
+
+      if (!results || results.length === 0) return;
 
       const { validFiles, errors } = validateAndCollectFiles(results);
 
@@ -143,7 +148,7 @@ export function FormAttachmentPicker({
         Alert.alert('Some files skipped', errors.join('\n'));
       }
     } catch (err) {
-      if (!isCancel(err)) {
+      if (!isErrorWithCode(err) || err.code !== errorCodes.OPERATION_CANCELED) {
         Alert.alert('Error', 'Failed to pick document');
       }
     } finally {

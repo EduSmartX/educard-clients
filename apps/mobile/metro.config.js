@@ -1,7 +1,6 @@
 const path = require('path');
 const { getDefaultConfig } = require('@react-native/metro-config');
 const { withNativeWind } = require('nativewind/metro');
-const exclusionList = require('metro-config/src/defaults/exclusionList');
 
 const projectRoot = __dirname;
 const workspaceRoot = path.resolve(projectRoot, '../..');
@@ -19,7 +18,7 @@ config.resolver.nodeModulesPaths = [
 config.resolver.extraNodeModules = new Proxy(
 	{
 		react: path.resolve(projectRoot, 'node_modules/react'),
-		'react-native': path.resolve(projectRoot, 'node_modules/react-native'),
+	'react-native': path.resolve(projectRoot, 'node_modules/react-native'),
 	},
 	{
 		get: (target, name) => target[name] || path.resolve(projectRoot, 'node_modules', String(name)),
@@ -28,9 +27,10 @@ config.resolver.extraNodeModules = new Proxy(
 
 config.resolver.unstable_enableSymlinks = true;
 
-config.resolver.blockList = exclusionList([
+// Use blockList directly without exclusionList wrapper
+config.resolver.blockList = [
 	new RegExp(`${path.resolve(workspaceRoot, 'apps/mobile-expo')}/.*`),
-]);
+];
 
 config.transformer.babelTransformerPath = require.resolve('react-native-svg-transformer');
 config.resolver.assetExts = config.resolver.assetExts.filter((ext) => ext !== 'svg');

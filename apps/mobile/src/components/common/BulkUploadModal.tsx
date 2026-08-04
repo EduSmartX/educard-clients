@@ -13,7 +13,12 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import DocumentPicker, { types, isCancel } from 'react-native-document-picker';
+import {
+  pick,
+  types,
+  isErrorWithCode,
+  errorCodes,
+} from '@react-native-documents/picker';
 
 import {
   transformErrors,
@@ -100,18 +105,26 @@ export function BulkUploadModal({
 
   const handleSelectFile = async () => {
     try {
-      const asset = await DocumentPicker.pickSingle({
+      const asset = await pick({
         type: [types.xlsx, types.xls],
-        copyTo: 'cachesDirectory',
+        copyToCacheDirectory: true,
       });
+
+      if (!asset || asset.length === 0) return;
+
+      const selectedAsset = asset[0];
       setSelectedFile({
-        uri: asset.fileCopyUri ?? asset.uri,
-        name: asset.name ?? 'upload.xlsx',
-        size: asset.size ?? undefined,
+        uri: selectedAsset.uri,
+        name: selectedAsset.name ?? 'upload.xlsx',
+        size: selectedAsset.size ?? undefined,
       });
       setUploadResult(null);
     } catch (error) {
-      if (isCancel(error)) return;
+      if (
+        isErrorWithCode(error) &&
+        error.code === errorCodes.OPERATION_CANCELED
+      )
+        return;
       const err = error as Error;
       Alert.alert('Error', err?.message || 'Failed to select file');
     }
