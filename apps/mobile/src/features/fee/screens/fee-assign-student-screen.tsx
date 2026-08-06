@@ -10,7 +10,7 @@ import {
 import { ChevronLeft, UserPlus } from 'lucide-react-native';
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { SubmitButton } from '@/components/common/SubmitButton';

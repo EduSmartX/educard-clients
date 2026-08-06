@@ -13,7 +13,7 @@ import {
   type StyleProp,
   type RefreshControlProps,
 } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 
 interface KeyboardAwareFormProps {
   children: React.ReactNode;

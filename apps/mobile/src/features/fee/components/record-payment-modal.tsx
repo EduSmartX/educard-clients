@@ -21,7 +21,7 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 
 import { SubmitButton } from '@/components/common/SubmitButton';
 import { FormDatePicker } from '@/components/forms/FormDatePicker';

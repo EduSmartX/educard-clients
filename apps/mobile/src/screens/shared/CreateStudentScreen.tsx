@@ -18,7 +18,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { useState, useCallback, useMemo, useRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import type { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import type { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { DeletedDuplicateModal } from '@/components/common/DeletedDuplicateModal';
