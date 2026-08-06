@@ -131,6 +131,7 @@ function TimetableSection() {
   return (
     <ScrollView
       className="flex-1"
+      contentContainerClassName="pb-[100px]"
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl refreshing={false} onRefresh={() => void refetch()} />
@@ -322,6 +323,7 @@ function HomeworkSection() {
   return (
     <ScrollView
       className="flex-1"
+      contentContainerClassName="pb-[100px]"
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl refreshing={false} onRefresh={() => void refetch()} />
@@ -364,6 +366,7 @@ function ExamsSection() {
   return (
     <ScrollView
       className="flex-1"
+      contentContainerClassName="pb-[100px]"
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl refreshing={false} onRefresh={() => void refetch()} />

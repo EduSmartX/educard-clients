@@ -21,13 +21,18 @@ import { useState, useCallback } from 'react';
 import {
   View,
   Text,
+  Image,
   ScrollView,
   TouchableOpacity,
   RefreshControl,
   StyleSheet,
 } from 'react-native';
 
-import { VerificationBanner } from '@/components/dashboard';
+import {
+  VerificationBanner,
+  StatsGrid,
+  type StatCardData,
+} from '@/components/dashboard';
 import { Screen } from '@/components/layout';
 import {
   Avatar,
@@ -40,6 +45,7 @@ import {
   type QuickAction,
 } from '@/components/ui';
 import { colors } from '@/constants/colors';
+import { useProfileImageUrl } from '@/hooks';
 import { useAuthStore } from '@/lib/auth-store';
 import type { ParentTabNavigation } from '@/navigation/types';
 
@@ -114,6 +120,8 @@ const mockUpcomingEvents = [
 export default function ParentDashboardScreen() {
   const navigation = useNavigation<ParentTabNavigation>();
   const { user } = useAuthStore();
+  const { profileImageUrl } = useProfileImageUrl();
+  const [imgError, setImgError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedChildIndex, setSelectedChildIndex] = useState(0);
   const [showChildSelector, setShowChildSelector] = useState(false);
@@ -136,8 +144,44 @@ export default function ParentDashboardScreen() {
   // Message-teacher and event-calendar destinations are not part of the app yet.
   const pendingScreen = () => undefined;
   const goToNotifications = () => navigation.navigate('Notifications');
+  const goToSettings = () => navigation.navigate('Settings');
   const goToFees = () => navigation.navigate('Fees');
   const goToAcademics = () => navigation.navigate('Academics');
+
+  const parentStats: StatCardData[] = [
+    {
+      id: 'attendance',
+      title: 'Attendance',
+      value: `${mockSelectedChild.attendance}%`,
+      icon: ClipboardCheck,
+      gradient: ['#10b981', '#059669', '#047857'],
+      shadowColor: '#059669',
+    },
+    {
+      id: 'grade',
+      title: 'Grade',
+      value: mockSelectedChild.grade,
+      icon: Award,
+      gradient: ['#667eea', '#764ba2', '#8b5cf6'],
+      shadowColor: '#764ba2',
+    },
+    {
+      id: 'rank',
+      title: 'Class Rank',
+      value: `#${mockSelectedChild.rank}`,
+      icon: Star,
+      gradient: ['#f59e0b', '#d97706', '#b45309'],
+      shadowColor: '#d97706',
+    },
+    {
+      id: 'fees',
+      title: 'Pending Fees',
+      value: `\u20b9${(mockSelectedChild.pendingFees / 1000).toFixed(0)}K`,
+      icon: CreditCard,
+      gradient: ['#ef4444', '#dc2626', '#b91c1c'],
+      shadowColor: '#dc2626',
+    },
+  ];
 
   const quickActions: QuickAction[] = [
     {
@@ -167,6 +211,7 @@ export default function ParentDashboardScreen() {
     <Screen scrollable={false} edges={[]} statusBarStyle="light">
       <ScrollView
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -181,10 +226,28 @@ export default function ParentDashboardScreen() {
           notificationCount={2}
           onNotificationPress={goToNotifications}
           right={
-            <Avatar
-              name={user?.full_name ?? user?.first_name ?? 'P'}
-              size="md"
-            />
+            <TouchableOpacity
+              style={styles.profileBtn}
+              onPress={goToSettings}
+              activeOpacity={0.8}
+            >
+              {profileImageUrl && !imgError ? (
+                <Image
+                  source={{ uri: profileImageUrl }}
+                  style={styles.profileImage}
+                  resizeMode="cover"
+                  onError={() => setImgError(true)}
+                />
+              ) : (
+                <View style={styles.profileFallback}>
+                  <Text style={styles.profileFallbackText}>
+                    {(user?.full_name ?? user?.first_name ?? 'P')
+                      .charAt(0)
+                      .toUpperCase()}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
           }
         >
           {/* Child Selector */}
@@ -241,57 +304,8 @@ export default function ParentDashboardScreen() {
         </GradientHeader>
 
         {/* Stats Row */}
-        <View className="-mt-4 px-4">
-          <View className="-mx-1.5 flex-row flex-wrap">
-            <View className="mb-3 w-1/2 px-1.5">
-              <FloatingCard delay={80} style={styles.statCard}>
-                <ClipboardCheck
-                  size={24}
-                  color={colors.success[500]}
-                  strokeWidth={1.5}
-                />
-                <Text className="mt-2 text-2xl font-bold text-gray-900">
-                  {mockSelectedChild.attendance}%
-                </Text>
-                <Text className="text-xs text-gray-500">Attendance</Text>
-              </FloatingCard>
-            </View>
-            <View className="mb-3 w-1/2 px-1.5">
-              <FloatingCard delay={140} style={styles.statCard}>
-                <Award
-                  size={24}
-                  color={colors.primary[500]}
-                  strokeWidth={1.5}
-                />
-                <Text className="mt-2 text-2xl font-bold text-gray-900">
-                  {mockSelectedChild.grade}
-                </Text>
-                <Text className="text-xs text-gray-500">Grade</Text>
-              </FloatingCard>
-            </View>
-            <View className="w-1/2 px-1.5">
-              <FloatingCard delay={200} style={styles.statCard}>
-                <Star size={24} color={colors.warning[500]} strokeWidth={1.5} />
-                <Text className="mt-2 text-2xl font-bold text-gray-900">
-                  #{mockSelectedChild.rank}
-                </Text>
-                <Text className="text-xs text-gray-500">Class Rank</Text>
-              </FloatingCard>
-            </View>
-            <View className="w-1/2 px-1.5">
-              <FloatingCard delay={260} style={styles.statCard}>
-                <CreditCard
-                  size={24}
-                  color={colors.danger[500]}
-                  strokeWidth={1.5}
-                />
-                <Text className="mt-2 text-2xl font-bold text-gray-900">
-                  ₹{(mockSelectedChild.pendingFees / 1000).toFixed(0)}K
-                </Text>
-                <Text className="text-xs text-gray-500">Pending Fees</Text>
-              </FloatingCard>
-            </View>
-          </View>
+        <View style={styles.statsWrap}>
+          <StatsGrid stats={parentStats} />
         </View>
 
         {/* Content */}
@@ -299,6 +313,7 @@ export default function ParentDashboardScreen() {
           {user && (
             <VerificationBanner
               user={user}
+              includeGuardianChecks={false}
               onVerifyEmail={() =>
                 navigation.navigate('ChangeEmail', {
                   mode: 'verify',
@@ -447,6 +462,24 @@ export default function ParentDashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  statCard: { alignItems: 'center', paddingVertical: 16 },
+  statsWrap: { marginTop: -16 },
+  scrollContent: { paddingBottom: 100 },
+  profileBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.35)',
+  },
+  profileImage: { width: 42, height: 42, borderRadius: 14 },
+  profileFallback: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  profileFallbackText: { color: '#fff', fontSize: 16, fontWeight: '800' },
   rounded16: { borderRadius: 16 },
 });

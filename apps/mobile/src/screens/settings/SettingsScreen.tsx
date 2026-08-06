@@ -338,7 +338,7 @@ const st = StyleSheet.create({
   },
 
   body: { flex: 1, backgroundColor: '#f8fafc' },
-  bodyContent: { padding: 16, paddingBottom: 40 },
+  bodyContent: { padding: 16, paddingBottom: 100 },
 
   sectionTitle: {
     fontSize: 12,

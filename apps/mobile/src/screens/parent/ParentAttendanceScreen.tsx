@@ -145,6 +145,7 @@ export default function ParentAttendanceScreen() {
       <Header title="Attendance" showBack={false} />
       <ScrollView
         className="flex-1"
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={false} onRefresh={() => void refetch()} />
@@ -158,4 +159,5 @@ export default function ParentAttendanceScreen() {
 
 const styles = StyleSheet.create({
   overallBox: { backgroundColor: colors.success[500] },
+  scrollContent: { paddingBottom: 100 },
 });

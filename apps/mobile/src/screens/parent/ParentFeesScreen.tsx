@@ -83,6 +83,7 @@ export default function ParentFeesScreen() {
       <Header title="Fees" showBack={false} />
       <ScrollView
         className="flex-1"
+        contentContainerClassName="pb-[100px]"
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={false} onRefresh={refresh} />
