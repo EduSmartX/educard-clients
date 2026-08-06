@@ -19,7 +19,13 @@ import {
   useRoute,
   type RouteProp,
 } from '@react-navigation/native';
-import { ChevronLeft, ChevronDown, Plus } from 'lucide-react-native';
+import {
+  ChevronLeft,
+  ChevronDown,
+  Plus,
+  Calendar,
+  Clock,
+} from 'lucide-react-native';
 import { useState, useCallback } from 'react';
 import {
   View,
@@ -56,6 +62,24 @@ import { ExamNotificationActions } from './ExamNotificationActions';
 import { styles } from './dashboard-styles';
 
 const adminGradient = getRoleGradient('admin');
+
+function formatExamDate(d: string | null): string {
+  if (!d) return 'Date not set';
+  return new Date(d).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+function formatExamTime(t: string | null): string {
+  if (!t) return '';
+  const [h, m] = t.split(':');
+  const hour = Number.parseInt(h, 10);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const h12 = hour % 12 || 12;
+  return `${h12}:${m} ${ampm}`;
+}
 
 interface StudentSummaryItem {
   student_public_id: string;
@@ -220,6 +244,25 @@ export default function ExamDashboardScreen() {
                 </Text>
               </TouchableOpacity>
             </View>
+            <View style={styles.examMetaRow}>
+              <Calendar size={13} color="#7c3aed" />
+              <Text style={styles.examMetaText}>
+                {formatExamDate(item.date)}
+              </Text>
+              {!!item.start_time && (
+                <>
+                  <Clock
+                    size={13}
+                    color="#7c3aed"
+                    style={styles.examMetaClock}
+                  />
+                  <Text style={styles.examMetaText}>
+                    {formatExamTime(item.start_time)}
+                    {item.end_time ? ` – ${formatExamTime(item.end_time)}` : ''}
+                  </Text>
+                </>
+              )}
+            </View>
             <Text style={styles.examDetails}>
               Max: {item.max_marks} • Pass: {item.passing_marks} • Marks:{' '}
               {item.marks_count}
@@ -317,8 +360,8 @@ export default function ExamDashboardScreen() {
               <ChevronLeft size={24} color="#fff" />
             </TouchableOpacity>
             <View style={headerStyles.titleContainer}>
-              <Text style={headerStyles.title}>Exam Dashboard</Text>
-              <Text style={headerStyles.subtitle}>
+              <Text style={styles.sessionEyebrow}>Exam Dashboard</Text>
+              <Text style={styles.sessionTitle} numberOfLines={2}>
                 {decodeURIComponent(sessionName || '')}
               </Text>
             </View>

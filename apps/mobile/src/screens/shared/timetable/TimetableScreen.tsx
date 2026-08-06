@@ -24,6 +24,7 @@ import {
   User,
   Settings,
   CalendarRange,
+  Plus,
 } from 'lucide-react-native';
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import {
@@ -224,21 +225,39 @@ export default function TimetableScreen() {
             </Text>
           ) : (
             <View style={styles.slotContent}>
-              <View style={styles.slotRow}>
-                <BookOpen size={14} color={colors.text} />
-                <Text style={[styles.slotSubject, { color: colors.text }]}>
-                  {slot.subject_name ?? 'No subject assigned'}
-                </Text>
-              </View>
-              {!!slot.teacher_name && (
+              {slot.subject_name ? (
+                <>
+                  <View style={styles.slotRow}>
+                    <BookOpen size={14} color={colors.text} />
+                    <Text style={[styles.slotSubject, { color: colors.text }]}>
+                      {slot.subject_name}
+                    </Text>
+                  </View>
+                  {!!slot.teacher_name && (
+                    <View style={styles.slotRow}>
+                      <User size={14} color="#64748b" />
+                      <Text style={styles.slotTeacher}>
+                        {slot.teacher_name}
+                      </Text>
+                    </View>
+                  )}
+                  {slot.room ? (
+                    <Text style={styles.slotRoom}>Room: {slot.room}</Text>
+                  ) : null}
+                </>
+              ) : canManage ? (
+                <View style={styles.addSubjectPill}>
+                  <Plus size={16} color="#7c3aed" />
+                  <Text style={styles.addSubjectText}>Add subject</Text>
+                </View>
+              ) : (
                 <View style={styles.slotRow}>
-                  <User size={14} color="#64748b" />
-                  <Text style={styles.slotTeacher}>{slot.teacher_name}</Text>
+                  <BookOpen size={14} color={colors.text} />
+                  <Text style={[styles.slotSubject, { color: colors.text }]}>
+                    No subject assigned
+                  </Text>
                 </View>
               )}
-              {slot.room ? (
-                <Text style={styles.slotRoom}>Room: {slot.room}</Text>
-              ) : null}
             </View>
           )}
 
@@ -517,6 +536,19 @@ const styles = StyleSheet.create({
   slotSubject: { fontSize: 15, fontWeight: '600' },
   slotTeacher: { fontSize: 13, color: '#64748b' },
   slotRoom: { fontSize: 12, color: '#94a3b8', marginTop: 2 },
+  addSubjectPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 6,
+    backgroundColor: '#f3e8ff',
+    borderWidth: 1,
+    borderColor: '#c4b5fd',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  addSubjectText: { fontSize: 13, fontWeight: '700', color: '#7c3aed' },
   slotDuration: {
     fontSize: 11,
     color: '#94a3b8',

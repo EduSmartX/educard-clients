@@ -1,20 +1,22 @@
 /**
- * KeyboardAwareScrollView adapter (New Architecture / Fabric safe).
- *
+ * KeyboardAwareScrollView adapter (New Architecture / Fabric safe, no native deps).
+ * Core ScrollView + KeyboardAvoidingView, replacing the abandoned
+ * react-native-keyboard-aware-scroll-view (which called removed UIManager methods).
  */
 
 import { forwardRef, useImperativeHandle, useRef } from 'react';
-import type { ScrollViewProps } from 'react-native';
 import {
-  KeyboardAwareScrollView as KCKeyboardAwareScrollView,
-  type KeyboardAwareScrollViewRef,
-} from 'react-native-keyboard-controller';
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  type ScrollViewProps,
+} from 'react-native';
 
 export interface KeyboardAwareScrollViewHandle {
   scrollToPosition: (x: number, y: number, animated?: boolean) => void;
   scrollToEnd: (animated?: boolean) => void;
   scrollTo: (options: { x?: number; y?: number; animated?: boolean }) => void;
-  assureFocusedInputVisible: () => void;
 }
 
 /** Legacy props from the old library — accepted for back-compat, now handled natively. */
@@ -47,41 +49,50 @@ export const KeyboardAwareScrollView = forwardRef<
     enableAutomaticScroll: _enableAutomaticScroll,
     enableResetScrollToCoords: _enableResetScrollToCoords,
     resetScrollToCoords: _resetScrollToCoords,
-    extraScrollHeight,
+    extraScrollHeight: _extraScrollHeight,
     extraScrollHeightAndroid: _extraScrollHeightAndroid,
     extraHeight: _extraHeight,
     keyboardOpeningTime: _keyboardOpeningTime,
     viewIsInsideTabBar: _viewIsInsideTabBar,
     innerRef: _innerRef,
-    bottomOffset,
+    bottomOffset: _bottomOffset,
+    extraKeyboardSpace: _extraKeyboardSpace,
+    style,
+    keyboardShouldPersistTaps = 'handled',
     ...scrollViewProps
   },
   ref,
 ) {
-  const kcRef = useRef<KeyboardAwareScrollViewRef>(null);
+  const scrollRef = useRef<ScrollView>(null);
 
   useImperativeHandle(
     ref,
     () => ({
       scrollToPosition: (x, y, animated = true) =>
-        kcRef.current?.scrollTo({ x, y, animated }),
+        scrollRef.current?.scrollTo({ x, y, animated }),
       scrollToEnd: (animated = true) =>
-        kcRef.current?.scrollToEnd({ animated }),
-      scrollTo: options => kcRef.current?.scrollTo(options),
-      assureFocusedInputVisible: () =>
-        kcRef.current?.assureFocusedInputVisible(),
+        scrollRef.current?.scrollToEnd({ animated }),
+      scrollTo: options => scrollRef.current?.scrollTo(options),
     }),
     [],
   );
 
   return (
-    <KCKeyboardAwareScrollView
-      ref={kcRef}
-      bottomOffset={bottomOffset ?? extraScrollHeight ?? 20}
-      {...scrollViewProps}
-    />
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView
+        ref={scrollRef}
+        style={style}
+        keyboardShouldPersistTaps={keyboardShouldPersistTaps}
+        {...scrollViewProps}
+      />
+    </KeyboardAvoidingView>
   );
 });
 
 /** Back-compat type alias so `useRef<KeyboardAwareScrollView>()` keeps working. */
 export type KeyboardAwareScrollView = KeyboardAwareScrollViewHandle;
+
+const styles = StyleSheet.create({ flex: { flex: 1 } });
