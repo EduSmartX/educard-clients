@@ -18,6 +18,7 @@ import {
   Alert,
   StyleSheet,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Screen, Header } from '@/components/layout';
 import { FormDropdown } from '@/components/forms';
@@ -37,6 +38,7 @@ import { LeaveBalanceFormModal } from './LeaveBalanceFormModal';
 type UserRoleTab = 'staff' | 'student';
 
 export default function ManageLeaveBalancesScreen() {
+  const insets = useSafeAreaInsets();
   const role = useAuthStore(s => s.user?.role);
   const currentUserId = useAuthStore(s => s.user?.public_id);
   const isAdmin = isAdminRole(role);
@@ -127,9 +129,14 @@ export default function ManageLeaveBalancesScreen() {
   if (contextLoading) {
     return (
       <Screen>
-        <Header title="Manage Leave Balances" />
+        <Header
+          title="Manage Leave Balances"
+          subtitle="Assign and track leave balances"
+          showBack
+        />
         <View style={styles.centerBox}>
-          <ActivityIndicator color={Colors.primary[600]} />
+          <ActivityIndicator size="large" color={Colors.primary[600]} />
+          <Text style={styles.loadingText}>Loading permissions...</Text>
         </View>
       </Screen>
     );
@@ -138,7 +145,11 @@ export default function ManageLeaveBalancesScreen() {
   if (!hasPermission) {
     return (
       <Screen>
-        <Header title="Manage Leave Balances" />
+        <Header
+          title="Manage Leave Balances"
+          subtitle="Assign and track leave balances"
+          showBack
+        />
         <View style={styles.centerBox}>
           <Text style={styles.permTitle}>No access</Text>
           <Text style={styles.permText}>
@@ -152,7 +163,11 @@ export default function ManageLeaveBalancesScreen() {
 
   return (
     <Screen>
-      <Header title="Manage Leave Balances" />
+      <Header
+        title="Manage Leave Balances"
+        subtitle="Assign and track leave balances"
+        showBack
+      />
       <ScrollView
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
@@ -261,7 +276,8 @@ export default function ManageLeaveBalancesScreen() {
           </View>
         ) : balancesLoading ? (
           <View style={styles.centerBox}>
-            <ActivityIndicator color={Colors.primary[600]} />
+            <ActivityIndicator size="large" color={Colors.primary[600]} />
+            <Text style={styles.loadingText}>Loading leave balances...</Text>
           </View>
         ) : (
           <>
@@ -285,10 +301,6 @@ export default function ManageLeaveBalancesScreen() {
               <Text style={styles.listTitle}>
                 Leave Balances ({balances.length})
               </Text>
-              <TouchableOpacity style={styles.addBtn} onPress={handleAdd}>
-                <Plus size={16} color="#ffffff" />
-                <Text style={styles.addBtnText}>Add</Text>
-              </TouchableOpacity>
             </View>
 
             {balances.length === 0 ? (
@@ -351,6 +363,23 @@ export default function ManageLeaveBalancesScreen() {
         )}
       </ScrollView>
 
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
+        <TouchableOpacity
+          style={[
+            styles.footerBtn,
+            !effectiveUserId && styles.footerBtnDisabled,
+          ]}
+          onPress={handleAdd}
+          disabled={!effectiveUserId}
+        >
+          <Plus size={18} color="#ffffff" />
+          <Text style={styles.footerBtnText}>Add Leave Balance</Text>
+        </TouchableOpacity>
+        {!effectiveUserId && (
+          <Text style={styles.footerHint}>Select a person to continue.</Text>
+        )}
+      </View>
+
       <LeaveBalanceFormModal
         visible={modalOpen}
         mode={modalMode}
@@ -366,13 +395,18 @@ export default function ManageLeaveBalancesScreen() {
 const styles = StyleSheet.create({
   scroll: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
   centerBox: {
     paddingVertical: 40,
     paddingHorizontal: 24,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  loadingText: {
+    fontSize: 13,
+    color: Colors.gray[500],
+    marginTop: 10,
   },
   permTitle: {
     fontSize: 16,
@@ -509,19 +543,39 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.gray[900],
   },
-  addBtn: {
+  footer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#ffffff',
+    borderTopWidth: 1,
+    borderTopColor: Colors.gray[100],
+    paddingHorizontal: 16,
+    paddingTop: 10,
+  },
+  footerBtn: {
+    height: 46,
+    borderRadius: 12,
+    backgroundColor: Colors.primary[600],
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: Colors.primary[600],
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
+    justifyContent: 'center',
+    gap: 8,
   },
-  addBtnText: {
+  footerBtnDisabled: {
+    opacity: 0.5,
+  },
+  footerBtnText: {
     color: '#ffffff',
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  footerHint: {
+    fontSize: 12,
+    textAlign: 'center',
+    color: Colors.gray[500],
+    marginTop: 8,
   },
   balanceCard: {
     backgroundColor: '#ffffff',

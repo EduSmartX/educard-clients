@@ -435,6 +435,7 @@ export default function LeaveApprovalsScreen() {
       {isLoading && !refreshing ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary[500]} />
+          <Text style={styles.loadingText}>Loading leave requests...</Text>
         </View>
       ) : (
         <FlatList
@@ -450,6 +451,11 @@ export default function LeaveApprovalsScreen() {
             <View style={styles.emptyContainer}>
               <Clock size={48} color={Colors.gray[300]} />
               <Text style={styles.emptyText}>No leave requests to review</Text>
+              <Text style={styles.emptySubtext}>
+                {hasActiveFilters
+                  ? 'No results match current filters.'
+                  : 'New requests will appear here when submitted.'}
+              </Text>
               {hasActiveFilters && (
                 <TouchableOpacity
                   style={styles.clearFiltersBtn}

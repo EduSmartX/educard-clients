@@ -470,6 +470,7 @@ export default function LeaveAllocationsScreen() {
       {isLoading && !refreshing ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary[500]} />
+          <Text style={styles.loadingText}>Loading leave policies...</Text>
         </View>
       ) : (
         <SectionList
@@ -487,6 +488,11 @@ export default function LeaveAllocationsScreen() {
             <View style={styles.emptyContainer}>
               <FileText size={48} color={Colors.gray[300]} />
               <Text style={styles.emptyTitle}>No leave allocations found</Text>
+              <Text style={styles.emptySubtitle}>
+                {activeFilterCount > 0
+                  ? 'Try clearing filters to view all leave policies.'
+                  : 'No leave policy has been created yet.'}
+              </Text>
               {activeFilterCount > 0 && (
                 <TouchableOpacity onPress={clearFilters}>
                   <Text style={styles.emptyLink}>Clear filters</Text>
