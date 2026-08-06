@@ -74,11 +74,9 @@ export default function EditStudentScreen() {
   const navigation = useNavigation<SharedStackNavigation>();
   const route = useRoute<RouteProp<SharedStackParamList, 'StudentEdit'>>();
   const { id } = route.params;
-  const {
-    data: student,
-    isLoading: detailLoading,
-    dataUpdatedAt,
-  } = useStudentDetail(id || '');
+  const { data: student, isLoading: detailLoading } = useStudentDetail(
+    id || '',
+  );
   const updateMutation = useUpdateStudent();
   const scrollRef = useRef<KeyboardAwareScrollView>(null);
   const { data: classesData } = useManagedClasses('student');
@@ -260,7 +258,6 @@ export default function EditStudentScreen() {
             size={90}
             onPress={pickAndUpload}
             isUploading={isPhotoUploading}
-            cacheVersion={dataUpdatedAt}
           />
           <Text style={styles.avatarName}>
             {form.first_name} {form.last_name}

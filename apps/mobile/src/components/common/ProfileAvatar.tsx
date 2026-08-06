@@ -30,8 +30,6 @@ interface ProfileAvatarProps {
   onPress?: () => void;
   /** Show a spinner overlay while uploading */
   isUploading?: boolean;
-  /** Cache version - change this to bust the image cache (e.g., dataUpdatedAt timestamp) */
-  cacheVersion?: number | string;
 }
 
 function getInitials(name?: string): string {
@@ -50,18 +48,13 @@ export function ProfileAvatar({
   bgColor = Colors.primary[100],
   onPress,
   isUploading,
-  cacheVersion,
 }: ProfileAvatarProps) {
   const fontSize = size * 0.36;
   const borderRadius = size / 2;
   const badgeSize = size * 0.32;
 
-  const baseUri = getMediaUrl(imageUri);
-  const separator = baseUri?.includes('?') ? '&' : '?';
-  const resolvedUri =
-    baseUri && cacheVersion
-      ? `${baseUri}${separator}v=${cacheVersion}`
-      : baseUri;
+  // Backend serves signed URLs; no cache-bust param (would break the signature).
+  const resolvedUri = getMediaUrl(imageUri);
 
   const sizeStyle = { width: size, height: size, borderRadius };
   const badgeStyle = {

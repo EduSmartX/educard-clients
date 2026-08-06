@@ -83,26 +83,23 @@ export function useUpdateProfile() {
 }
 
 /**
- * Unified hook to get profile image URL with cache-busting
+ * Unified hook to get profile image URL.
+ * No cache-bust param: backend serves signed URLs (R2/S3/GCS) whose signature
+ * covers the query string, so appending ?v= would 403. Signed URLs rotate on
+ * each fetch, which already busts the cache after an upload.
  */
 export function useProfileImageUrl() {
   const { data: profilePhoto, isLoading, dataUpdatedAt } = useMyProfilePhoto();
 
-  const serverUrl = useMemo(() => {
+  const profileImageUrl = useMemo(() => {
     return (
       getMediaUrl(profilePhoto?.thumbnail_url) ?? getMediaUrl(profilePhoto?.url)
     );
   }, [profilePhoto?.thumbnail_url, profilePhoto?.url]);
 
-  const profileImageUrl = useMemo(() => {
-    if (!serverUrl) return undefined;
-    const separator = serverUrl.includes('?') ? '&' : '?';
-    return `${serverUrl}${separator}v=${dataUpdatedAt || Date.now()}`;
-  }, [serverUrl, dataUpdatedAt]);
-
   return {
     profileImageUrl,
-    serverUrl,
+    serverUrl: profileImageUrl,
     isLoading,
     dataUpdatedAt,
   };
