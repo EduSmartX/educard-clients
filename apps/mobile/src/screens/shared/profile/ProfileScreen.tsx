@@ -67,6 +67,7 @@ export default function ProfileScreen() {
   const updateMutation = useUpdateProfile();
   const [addressExpanded, setAddressExpanded] = useState(false);
   const [formLoaded, setFormLoaded] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   const handleBack = useCallback(() => {
     if (navigation.canGoBack()) {
@@ -205,6 +206,10 @@ export default function ProfileScreen() {
     profile?.full_name || profile?.first_name || user?.full_name || 'U';
   const initials = displayName.charAt(0).toUpperCase();
 
+  useEffect(() => {
+    setImgError(false);
+  }, [photoUrl]);
+
   if (isLoading) {
     return (
       <View style={layoutStyles.container}>
@@ -280,11 +285,12 @@ export default function ProfileScreen() {
             onPress={pickAndUpload}
             disabled={isPhotoUploading}
           >
-            {photoUrl ? (
+            {photoUrl && !imgError ? (
               <Image
                 source={{ uri: photoUrl }}
                 style={s.avatarImage}
                 resizeMode="cover"
+                onError={() => setImgError(true)}
               />
             ) : (
               <View style={s.avatarCircle}>

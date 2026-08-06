@@ -14,22 +14,26 @@ import {
   LucideIcon,
   Layers,
 } from 'lucide-react-native';
+import { useState, useCallback } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  Image,
 } from 'react-native';
 import type { DimensionValue } from 'react-native';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 
-import { HeaderProfileButton } from '@/components/common';
 import { useClasses } from '@/features/classes';
 import { useStudents } from '@/features/students';
 import { useSubjects } from '@/features/subjects';
 import { useTeachers } from '@/features/teachers';
+import { getMediaUrl } from '@/constants/config';
+import { useMyProfilePhoto } from '@/hooks';
 import { useResponsive } from '@/hooks/useResponsive';
+import { useAuthStore } from '@/lib/auth-store';
 import { LinearGradient } from '@/lib/linear-gradient';
 import { navigateToScreen, type MenuTarget } from '@/navigation/nav-targets';
 import type { AdminTabNavigation } from '@/navigation/types';
@@ -108,6 +112,9 @@ export function ManagementScreenBase({
 }: ManagementScreenBaseProps) {
   const navigation = useNavigation<AdminTabNavigation>();
   const { gridColumns, horizontalPadding, isTablet } = useResponsive();
+  const { user } = useAuthStore();
+  const { data: profilePhoto } = useMyProfilePhoto();
+  const [imgError, setImgError] = useState(false);
 
   const { data: teachersData } = useTeachers({ page_size: 1 });
   const { data: studentsData } = useStudents({ page_size: 1 });
@@ -124,6 +131,13 @@ export function ManagementScreenBase({
   const handleNavigate = (screen: MenuTarget) => {
     navigateToScreen(navigation, screen);
   };
+
+  const goToSettings = useCallback(() => {
+    navigateToScreen(navigation, settingsScreen);
+  }, [navigation, settingsScreen]);
+
+  const profileImageUrl =
+    getMediaUrl(profilePhoto?.thumbnail_url) ?? getMediaUrl(profilePhoto?.url);
 
   const scrollPadding = { paddingHorizontal: horizontalPadding };
   const gridItemStyle = { width: `${100 / gridColumns}%` as DimensionValue };
@@ -160,7 +174,26 @@ export function ManagementScreenBase({
             </View>
             <Text style={styles.headerSubtitle}>Organization data</Text>
           </View>
-          <HeaderProfileButton screen={settingsScreen} />
+          <TouchableOpacity
+            style={styles.profileBtn}
+            onPress={goToSettings}
+            activeOpacity={0.8}
+          >
+            {profileImageUrl && !imgError ? (
+              <Image
+                source={{ uri: profileImageUrl }}
+                style={styles.profileImage}
+                resizeMode="cover"
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <View style={styles.profileFallback}>
+                <Text style={styles.profileFallbackText}>
+                  {(user?.full_name ?? 'A').charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
         </Animated.View>
       </LinearGradient>
 
@@ -321,4 +354,32 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   iconCount: { fontSize: 12, fontWeight: '700' },
+  profileBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 15,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.35)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 15,
+  },
+  profileFallback: {
+    width: 44,
+    height: 44,
+    borderRadius: 15,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileFallbackText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#fff',
+  },
 });

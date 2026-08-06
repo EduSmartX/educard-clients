@@ -15,17 +15,21 @@ import {
   FileText,
 } from 'lucide-react-native';
 import type { ReactNode } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  Image,
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { HeaderProfileButton } from '@/components/common';
+import { getMediaUrl } from '@/constants/config';
+import { useMyProfilePhoto } from '@/hooks';
 import { useResponsive } from '@/hooks/useResponsive';
+import { useAuthStore } from '@/lib/auth-store';
 import { LinearGradient } from '@/lib/linear-gradient';
 import { navigateToScreen, type MenuTarget } from '@/navigation/nav-targets';
 import type { AdminTabNavigation } from '@/navigation/types';
@@ -54,12 +58,22 @@ export function MyWorkScreenBase({
 }: MyWorkScreenBaseProps) {
   const navigation = useNavigation<AdminTabNavigation>();
   const { gridColumns } = useResponsive();
+  const { user } = useAuthStore();
+  const { data: profilePhoto } = useMyProfilePhoto();
+  const [imgError, setImgError] = useState(false);
   const colWidth =
     gridColumns === 4 ? '25%' : gridColumns === 3 ? '33.33%' : '50%';
 
   const handleNavigate = (screen: MenuTarget) => {
     navigateToScreen(navigation, screen);
   };
+
+  const goToSettings = useCallback(() => {
+    navigateToScreen(navigation, settingsScreen);
+  }, [navigation, settingsScreen]);
+
+  const profileImageUrl =
+    getMediaUrl(profilePhoto?.thumbnail_url) ?? getMediaUrl(profilePhoto?.url);
 
   return (
     <View style={styles.container}>
@@ -79,7 +93,26 @@ export function MyWorkScreenBase({
               </Text>
             </View>
           </View>
-          <HeaderProfileButton screen={settingsScreen} />
+          <TouchableOpacity
+            style={styles.profileBtn}
+            onPress={goToSettings}
+            activeOpacity={0.8}
+          >
+            {profileImageUrl && !imgError ? (
+              <Image
+                source={{ uri: profileImageUrl }}
+                style={styles.profileImage}
+                resizeMode="cover"
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <View style={styles.profileFallback}>
+                <Text style={styles.profileFallbackText}>
+                  {(user?.full_name ?? 'A').charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
         </View>
       </LinearGradient>
 
@@ -243,5 +276,33 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1f2937',
     textAlign: 'center',
+  },
+  profileBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 15,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.35)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 15,
+  },
+  profileFallback: {
+    width: 44,
+    height: 44,
+    borderRadius: 15,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileFallbackText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#fff',
   },
 });

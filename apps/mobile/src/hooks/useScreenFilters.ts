@@ -17,6 +17,8 @@
 import { useCallback, useMemo } from 'react';
 import { create } from 'zustand';
 
+import { useAuthStore } from '@/lib/auth-store';
+
 // ── Types ───────────────────────────────────────────────────────────────────────
 
 interface ScreenState {
@@ -112,6 +114,10 @@ export const useFilterStore = create<FilterStoreState>(set => ({
   clearAll: () => set({ screens: {} }),
 }));
 
+export function clearScreenFilters(): void {
+  useFilterStore.getState().clearAll();
+}
+
 function getDefaultScreenState(): ScreenState {
   return {
     filters: {},
@@ -129,8 +135,10 @@ export function useScreenFilters<TDefaults extends Record<string, unknown>>(
   defaults: TDefaults,
   options?: { defaultPageSize?: number },
 ): UseScreenFiltersReturn<TDefaults> {
+  const currentUserId = useAuthStore(s => s.user?.public_id ?? 'guest');
+  const scopedScreenKey = `${currentUserId}:${screenKey}`;
   const store = useFilterStore();
-  const screenState = store.screens[screenKey];
+  const screenState = store.screens[scopedScreenKey];
   const defaultPageSize = options?.defaultPageSize ?? 20;
 
   // Merge stored filters over defaults (stored values take precedence). Spreading
@@ -147,62 +155,62 @@ export function useScreenFilters<TDefaults extends Record<string, unknown>>(
 
   const setFilter = useCallback(
     <K extends keyof TDefaults>(key: K, value: TDefaults[K]) => {
-      store.setScreenState(screenKey, {
+      store.setScreenState(scopedScreenKey, {
         filters: { [key as string]: value },
         page: 1,
       });
     },
-    [store, screenKey],
+    [store, scopedScreenKey],
   );
 
   const setFilters = useCallback(
     (updates: Partial<TDefaults>) => {
-      store.setScreenState(screenKey, {
+      store.setScreenState(scopedScreenKey, {
         filters: updates as Record<string, unknown>,
         page: 1,
       });
     },
-    [store, screenKey],
+    [store, scopedScreenKey],
   );
 
   const setAllFilters = useCallback(
     (newFilters: TDefaults) => {
-      store.replaceScreenFilters(screenKey, newFilters);
+      store.replaceScreenFilters(scopedScreenKey, newFilters);
     },
-    [store, screenKey],
+    [store, scopedScreenKey],
   );
 
   const setSearch = useCallback(
     (query: string) => {
-      store.setScreenState(screenKey, { search: query, page: 1 });
+      store.setScreenState(scopedScreenKey, { search: query, page: 1 });
     },
-    [store, screenKey],
+    [store, scopedScreenKey],
   );
 
   const setPage = useCallback(
     (newPage: number) => {
-      store.setScreenState(screenKey, { page: newPage });
+      store.setScreenState(scopedScreenKey, { page: newPage });
     },
-    [store, screenKey],
+    [store, scopedScreenKey],
   );
 
   const setPageSize = useCallback(
     (size: number) => {
-      store.setScreenState(screenKey, { pageSize: size, page: 1 });
+      store.setScreenState(scopedScreenKey, { pageSize: size, page: 1 });
     },
-    [store, screenKey],
+    [store, scopedScreenKey],
   );
 
   const setScrollY = useCallback(
     (y: number) => {
-      store.setScreenState(screenKey, { scrollY: y });
+      store.setScreenState(scopedScreenKey, { scrollY: y });
     },
-    [store, screenKey],
+    [store, scopedScreenKey],
   );
 
   const resetFilters = useCallback(() => {
-    store.clearScreen(screenKey);
-  }, [store, screenKey]);
+    store.clearScreen(scopedScreenKey);
+  }, [store, scopedScreenKey]);
 
   return {
     filters,
