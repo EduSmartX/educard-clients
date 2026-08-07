@@ -224,7 +224,7 @@ export function createTimetableApi(config: TimetableApiConfig) {
 
     async getClassTimetable(classId: string): Promise<ClassTimetableResponse> {
       const res = await client.get<ApiResponse<ClassTimetableResponse>>(
-        `${ADMIN_BASE}/class/${classId}/timetable/`,
+        `${EMPLOYEE_BASE}/class/${classId}/timetable/`,
       );
       return res.data.data;
     },
@@ -293,7 +293,7 @@ export function createTimetableApi(config: TimetableApiConfig) {
       teacherPublicId: string,
     ): Promise<MyTimetableResponse> {
       const res = await client.get<ApiResponse<MyTimetableResponse>>(
-        `${ADMIN_BASE}/teacher/${teacherPublicId}/timetable/`,
+        `${EMPLOYEE_BASE}/teacher/${teacherPublicId}/timetable/`,
       );
       return res.data.data;
     },
