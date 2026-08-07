@@ -63,20 +63,31 @@ export default function EditLeaveAllocationScreen() {
   // Pre-populate form
   useEffect(() => {
     if (allocation && leaveTypes && !formLoaded) {
+      // Detail response nests `leave_type`; fall back to matching by name
       const matchedLeaveType = leaveTypes.find(
-        (lt: LeaveType) => lt.name === allocation.leave_type_name,
+        (lt: LeaveType) =>
+          lt.id === allocation.leave_type?.id ||
+          lt.name ===
+            (allocation.leave_type?.name ?? allocation.leave_type_name),
       );
+
+      // Detail response returns `roles_details` objects; fall back to role_ids
+      const roleIds =
+        allocation.roles_details?.map(role => role.id) ??
+        allocation.role_ids ??
+        [];
 
       setForm({
         leave_type: matchedLeaveType ? String(matchedLeaveType.id) : '',
-        leave_type_name: allocation.leave_type_name ?? '',
+        leave_type_name:
+          allocation.leave_type?.name ?? allocation.leave_type_name ?? '',
         name: allocation.name ?? '',
         description: allocation.description ?? '',
         total_days: allocation.total_days?.toString() ?? '',
         max_carry_forward_days:
           allocation.max_carry_forward_days?.toString() ?? '0',
         applies_to_all_roles: allocation.applies_to_all_roles ?? true,
-        roles: (allocation.role_ids ?? []).map(String),
+        roles: roleIds.map(String),
         effective_from: allocation.effective_from ?? '',
         effective_to: allocation.effective_to ?? '',
       });

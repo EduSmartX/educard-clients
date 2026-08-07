@@ -17,9 +17,6 @@ import {
   BookOpen,
   Calendar,
   Bell,
-  CheckCircle,
-  ChevronDown,
-  X,
 } from 'lucide-react-native';
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
@@ -29,12 +26,10 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Modal,
-  Pressable,
-  ScrollView,
 } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
+import { SearchableSelect } from '@/components/ui';
 import { useNavigateWorkingDay } from '@/features/calendar';
 import {
   useTeacherClasses,
@@ -76,7 +71,6 @@ export default function HomeworkListScreen() {
     (id: string) => setFilter('classId', id),
     [setFilter],
   );
-  const [showClassPicker, setShowClassPicker] = useState(false);
 
   const handleBack = useCallback(() => {
     if (navigation.canGoBack()) {
@@ -100,6 +94,15 @@ export default function HomeworkListScreen() {
   const selectedClass = useMemo(
     () => teacherClasses.find(c => c.public_id === selectedClassId),
     [teacherClasses, selectedClassId],
+  );
+
+  const classOptions = useMemo(
+    () =>
+      teacherClasses.map(c => ({
+        value: c.public_id,
+        label: c.is_class_teacher ? `${c.name} • Class Teacher` : c.name,
+      })),
+    [teacherClasses],
   );
 
   const queryParams = useMemo(() => {
@@ -340,88 +343,17 @@ export default function HomeworkListScreen() {
           </View>
         )}
         {!classesLoading && !classesError && teacherClasses.length > 0 && (
-          <TouchableOpacity
-            style={styles.classDropdown}
-            onPress={() => setShowClassPicker(true)}
-          >
-            <View style={styles.classDropdownContent}>
-              <Text style={styles.classDropdownLabel}>Class</Text>
-              <View style={styles.classDropdownValue}>
-                <Text style={styles.classDropdownText}>
-                  {selectedClass?.name || 'Select a class'}
-                </Text>
-                {selectedClass?.is_class_teacher && (
-                  <View style={styles.ctBadge}>
-                    <Text style={styles.ctBadgeText}>CT</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-            <ChevronDown size={20} color={Colors.gray[500]} />
-          </TouchableOpacity>
+          <SearchableSelect
+            label="Class"
+            value={selectedClassId}
+            onValueChange={setSelectedClassId}
+            options={classOptions}
+            placeholder="Select a class"
+            searchPlaceholder="Search classes..."
+            emptyText="No classes found"
+          />
         )}
       </View>
-
-      {/* Class Picker Modal */}
-      <Modal
-        visible={showClassPicker}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowClassPicker(false)}
-      >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => setShowClassPicker(false)}
-        >
-          <Pressable
-            style={styles.modalContent}
-            onPress={e => e.stopPropagation()}
-          >
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Class</Text>
-              <TouchableOpacity onPress={() => setShowClassPicker(false)}>
-                <X size={24} color={Colors.gray[500]} />
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.modalList}>
-              {teacherClasses.map(cls => (
-                <TouchableOpacity
-                  key={cls.public_id}
-                  style={[
-                    styles.modalItem,
-                    selectedClassId === cls.public_id &&
-                      styles.modalItemSelected,
-                  ]}
-                  onPress={() => {
-                    setSelectedClassId(cls.public_id);
-                    setShowClassPicker(false);
-                  }}
-                >
-                  <View style={styles.modalItemContent}>
-                    <Text
-                      style={[
-                        styles.modalItemText,
-                        selectedClassId === cls.public_id &&
-                          styles.modalItemTextSelected,
-                      ]}
-                    >
-                      {cls.name}
-                    </Text>
-                    {!!cls.is_class_teacher && (
-                      <View style={[styles.ctBadge, styles.ml8]}>
-                        <Text style={styles.ctBadgeText}>Class Teacher</Text>
-                      </View>
-                    )}
-                  </View>
-                  {selectedClassId === cls.public_id && (
-                    <CheckCircle size={20} color={Colors.primary[500]} />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </Pressable>
-        </Pressable>
-      </Modal>
 
       {/* Date Navigation */}
       <View style={styles.dateNav}>

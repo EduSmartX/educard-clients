@@ -121,6 +121,7 @@ export function useBulkUpsertMarks(
       showToast('success', 'Marks saved successfully');
       void qc.invalidateQueries({ queryKey: ['marks-overview'] });
       void qc.invalidateQueries({ queryKey: ['exams'] });
+      void qc.invalidateQueries({ queryKey: ['exam'] });
       void qc.invalidateQueries({ queryKey: ['exam-marks'] });
       options?.onSuccess?.();
     },
@@ -299,6 +300,8 @@ export function usePublishExamMarks(options?: MutationOptions) {
     onSuccess: () => {
       showToast('success', 'Marks published successfully');
       void qc.invalidateQueries({ queryKey: ['exams'] });
+      // single-exam detail drives the publish/unpublish toggle
+      void qc.invalidateQueries({ queryKey: ['exam'] });
       void qc.invalidateQueries({ queryKey: ['marks-overview'] });
       options?.onSuccess?.();
     },
@@ -326,6 +329,8 @@ export function useUnpublishExamMarks(options?: MutationOptions) {
     onSuccess: () => {
       showToast('success', 'Marks unpublished successfully');
       void qc.invalidateQueries({ queryKey: ['exams'] });
+      // single-exam detail drives the publish/unpublish toggle
+      void qc.invalidateQueries({ queryKey: ['exam'] });
       void qc.invalidateQueries({ queryKey: ['marks-overview'] });
       options?.onSuccess?.();
     },

@@ -33,6 +33,7 @@ import {
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { ConfirmDialog } from '@/components/common';
+import { SearchableSelect } from '@/components/ui';
 import { getLeaveTypeColor, getLeaveTypeBg } from '@/constants/leave-colors';
 import { useScreenFilters } from '@/hooks/useScreenFilters';
 import {
@@ -335,42 +336,20 @@ export default function LeaveAllocationsScreen() {
     );
   };
 
-  const renderFilterChip = (
+  const renderFilterDropdown = (
     label: string,
     value: string,
     options: { value: string; label: string }[],
     onSelect: (v: string) => void,
   ) => (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      style={styles.chipScroll}
-    >
-      <TouchableOpacity
-        style={[styles.chip, !value && styles.chipActive]}
-        onPress={() => onSelect('')}
-      >
-        <Text style={[styles.chipText, !value && styles.chipTextActive]}>
-          All {label}
-        </Text>
-      </TouchableOpacity>
-      {options.map(opt => (
-        <TouchableOpacity
-          key={opt.value}
-          style={[styles.chip, value === opt.value && styles.chipActive]}
-          onPress={() => onSelect(value === opt.value ? '' : opt.value)}
-        >
-          <Text
-            style={[
-              styles.chipText,
-              value === opt.value && styles.chipTextActive,
-            ]}
-          >
-            {opt.label}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
+    <SearchableSelect
+      value={value}
+      onValueChange={onSelect}
+      options={[{ value: '', label: `All ${label}` }, ...options]}
+      placeholder={`All ${label}`}
+      searchPlaceholder={`Search ${label.toLowerCase()}...`}
+      emptyText={`No ${label.toLowerCase()} found`}
+    />
   );
 
   return (
@@ -445,7 +424,7 @@ export default function LeaveAllocationsScreen() {
             )}
           </View>
           <Text style={styles.filterLabel}>Leave Type</Text>
-          {renderFilterChip(
+          {renderFilterDropdown(
             'Types',
             filterLeaveType,
             leaveTypeOptions,
@@ -456,7 +435,7 @@ export default function LeaveAllocationsScreen() {
               <Text style={[styles.filterLabel, styles.filterLabelSpaced]}>
                 Role
               </Text>
-              {renderFilterChip(
+              {renderFilterDropdown(
                 'Roles',
                 filterRole,
                 roleOptions,

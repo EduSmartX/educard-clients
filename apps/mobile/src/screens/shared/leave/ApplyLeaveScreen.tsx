@@ -9,15 +9,7 @@ import {
 } from '@educard/shared';
 import { useNavigation } from '@react-navigation/native';
 import { parseISO, isAfter, format } from 'date-fns';
-import {
-  ChevronLeft,
-  Send,
-  Calendar,
-  ChevronDown,
-  X,
-  Check,
-  Info,
-} from 'lucide-react-native';
+import { ChevronLeft, Send, Info } from 'lucide-react-native';
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
@@ -25,14 +17,13 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   TextInput,
-  Modal,
-  FlatList,
 } from 'react-native';
 import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { SubmitButton } from '@/components/common';
 import { FormDatePicker } from '@/components/forms/FormDatePicker';
+import { SearchableSelect } from '@/components/ui';
 import {
   useMyLeaveBalances,
   useCreateLeaveRequest,
@@ -69,100 +60,6 @@ interface LeaveBalance {
   carried_forward: number;
 }
 
-interface LeaveTypeOption {
-  value: string;
-  label: string;
-  name: string;
-  code: string;
-  available: number;
-}
-
-function LeaveTypePickerModal({
-  visible,
-  onClose,
-  options,
-  selectedValue,
-  onSelect,
-  accentColor,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  options: LeaveTypeOption[];
-  selectedValue: string;
-  onSelect: (value: string) => void;
-  accentColor: string;
-}) {
-  return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.pickerModal}>
-          <View style={styles.pickerHeader}>
-            <Text style={styles.pickerTitle}>Select Leave Type</Text>
-            <TouchableOpacity onPress={onClose}>
-              <X size={24} color="#64748b" />
-            </TouchableOpacity>
-          </View>
-
-          {options.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Info size={40} color="#9ca3af" />
-              <Text style={styles.emptyText}>No leave types available</Text>
-              <Text style={styles.emptySubtext}>
-                You either have no leave balance or have used all your days
-              </Text>
-            </View>
-          ) : (
-            <FlatList
-              data={options}
-              keyExtractor={(item, index) => item.value || `option-${index}`}
-              style={styles.optionsList}
-              renderItem={({ item: option }) => {
-                const isSelected = option.value === selectedValue;
-                return (
-                  <TouchableOpacity
-                    style={[
-                      styles.optionItem,
-                      isSelected && { backgroundColor: `${accentColor}10` },
-                    ]}
-                    onPress={() => {
-                      onSelect(option.value);
-                      onClose();
-                    }}
-                  >
-                    <View style={styles.optionContent}>
-                      <Text
-                        style={[
-                          styles.optionLabel,
-                          isSelected && { color: accentColor },
-                        ]}
-                      >
-                        {option.name}
-                      </Text>
-                      <Text style={styles.optionSubtext}>
-                        {option.available} days available
-                      </Text>
-                    </View>
-                    {isSelected && <Check size={20} color={accentColor} />}
-                  </TouchableOpacity>
-                );
-              }}
-            />
-          )}
-
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeButtonText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  );
-}
-
 export default function ApplyLeaveScreen() {
   const navigation = useNavigation<SharedStackNavigation>();
   const { data: balancesData, isLoading: balancesLoading } =
@@ -183,7 +80,6 @@ export default function ApplyLeaveScreen() {
     useState<WorkingDaysCalculation | null>(null);
   const [conflictingLeaves, setConflictingLeaves] = useState<string[]>([]);
   const [calcError, setCalcError] = useState<string | null>(null);
-  const [showLeaveTypePicker, setShowLeaveTypePicker] = useState(false);
 
   // Theme accent color for consistent styling
   const accentColor = employeeTheme.accent;
@@ -440,27 +336,15 @@ export default function ApplyLeaveScreen() {
             {/* Leave Type Selection */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>LEAVE TYPE</Text>
-              <TouchableOpacity
-                style={[
-                  styles.selectField,
-                  errors.leave_balance && styles.fieldError,
-                ]}
-                onPress={() => setShowLeaveTypePicker(true)}
-                activeOpacity={0.7}
-              >
-                <Calendar size={20} color="#94a3b8" />
-                <Text
-                  style={[
-                    styles.selectText,
-                    !form.leave_balance && styles.placeholderText,
-                  ]}
-                >
-                  {selectedBalance
-                    ? getLeaveTypeName(selectedBalance)
-                    : 'Select Leave Type'}
-                </Text>
-                <ChevronDown size={20} color="#94a3b8" />
-              </TouchableOpacity>
+              <SearchableSelect
+                title="Select Leave Type"
+                value={form.leave_balance}
+                onValueChange={value => updateField('leave_balance', value)}
+                options={leaveTypeOptions}
+                placeholder="Select Leave Type"
+                searchPlaceholder="Search leave types..."
+                emptyText="No leave types available — you may have no balance or have used all your days"
+              />
               {errors.leave_balance && (
                 <Text style={styles.errorText}>{errors.leave_balance}</Text>
               )}
@@ -656,16 +540,6 @@ export default function ApplyLeaveScreen() {
           </View>
         )}
       </KeyboardAwareScrollView>
-
-      {/* Leave Type Picker Modal */}
-      <LeaveTypePickerModal
-        visible={showLeaveTypePicker}
-        onClose={() => setShowLeaveTypePicker(false)}
-        options={leaveTypeOptions}
-        selectedValue={form.leave_balance}
-        onSelect={value => updateField('leave_balance', value)}
-        accentColor={accentColor}
-      />
     </View>
   );
 }

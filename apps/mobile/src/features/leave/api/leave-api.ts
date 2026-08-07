@@ -21,6 +21,8 @@ export interface LeaveAllocation {
   applies_to_all_roles: boolean;
   roles: string;
   role_ids?: number[];
+  roles_details?: Array<{ id: number; name: string; code?: string }>;
+  leave_type?: { id: number; name: string; code?: string } | null;
   effective_from: string | null;
   effective_to: string | null;
   created_at: string;

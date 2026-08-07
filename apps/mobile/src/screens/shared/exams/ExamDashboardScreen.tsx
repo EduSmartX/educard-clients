@@ -19,13 +19,7 @@ import {
   useRoute,
   type RouteProp,
 } from '@react-navigation/native';
-import {
-  ChevronLeft,
-  ChevronDown,
-  Plus,
-  Calendar,
-  Clock,
-} from 'lucide-react-native';
+import { ChevronLeft, Plus, Calendar, Clock } from 'lucide-react-native';
 import { useState, useCallback } from 'react';
 import {
   View,
@@ -34,11 +28,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  ScrollView,
   Modal,
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
+import { SearchableSelect } from '@/components/ui';
 import { useClasses } from '@/features/classes';
 import type { Class } from '@/features/classes/types';
 import {
@@ -103,7 +97,6 @@ export default function ExamDashboardScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'exams' | 'students'>('exams');
-  const [showClassPicker, setShowClassPicker] = useState(false);
   const [statusModalExam, setStatusModalExam] = useState<Exam | null>(null);
 
   const handleBack = useCallback(() => {
@@ -116,6 +109,11 @@ export default function ExamDashboardScreen() {
   const selectedClass = classes.find(
     (c: { public_id: string }) => c.public_id === selectedClassId,
   );
+
+  const classOptions = classes.map((c: Class) => ({
+    value: c.public_id,
+    label: c.display_name ?? `${c.class_master?.name ?? ''} - ${c.name}`.trim(),
+  }));
 
   // Get full class name (e.g., "Class 10 - A")
   const getFullClassName = (
@@ -374,38 +372,15 @@ export default function ExamDashboardScreen() {
           </View>
 
           {/* Class Picker */}
-          <TouchableOpacity
-            style={styles.classPicker}
-            onPress={() => setShowClassPicker(!showClassPicker)}
-          >
-            <Text style={styles.classPickerText}>
-              {selectedClass
-                ? (selectedClass.display_name ??
-                  `${selectedClass.class_master?.name ?? ''} - ${selectedClass.name}`.trim())
-                : 'Select Class'}
-            </Text>
-            <ChevronDown size={20} color="#fff" />
-          </TouchableOpacity>
-
-          {showClassPicker && (
-            <ScrollView style={styles.classDropdown}>
-              {classes.map((cls: Class) => (
-                <TouchableOpacity
-                  key={cls.public_id}
-                  style={styles.classOption}
-                  onPress={() => {
-                    setSelectedClassId(cls.public_id);
-                    setShowClassPicker(false);
-                  }}
-                >
-                  <Text style={styles.classOptionText}>
-                    {cls.display_name ??
-                      `${cls.class_master?.name || ''} - ${cls.name}`.trim()}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          )}
+          <SearchableSelect
+            title="Select Class"
+            value={selectedClassId}
+            onValueChange={setSelectedClassId}
+            options={classOptions}
+            placeholder="Select Class"
+            searchPlaceholder="Search classes..."
+            emptyText="No classes found"
+          />
         </View>
       </LinearGradient>
 

@@ -16,3 +16,7 @@ export { SectionHeader } from './SectionHeader';
 export type { SectionHeaderProps } from './SectionHeader';
 export { QuickActionsGrid } from './QuickActionsGrid';
 export type { QuickAction, QuickActionsGridProps } from './QuickActionsGrid';
+export { SearchableSelect } from './SearchableSelect';
+export type { SearchableSelectOption } from './SearchableSelect';
+export { SearchableMultiSelect } from './SearchableMultiSelect';
+export type { SearchableMultiSelectOption } from './SearchableMultiSelect';
