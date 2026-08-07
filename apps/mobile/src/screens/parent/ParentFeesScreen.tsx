@@ -15,9 +15,13 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
-  type DimensionValue,
 } from 'react-native';
 
+import {
+  DonutChart,
+  ChartLegend,
+  type ChartSegment,
+} from '@/components/charts';
 import { Screen, Header } from '@/components/layout';
 import { colors } from '@/constants/colors';
 import {
@@ -67,9 +71,12 @@ export default function ParentFeesScreen() {
   const isLoading = summaryLoading || paymentsLoading || componentsLoading;
 
   const paidPct = summary ? Number(summary.paid_percentage) : 0;
-  const progressWidth = {
-    width: `${Math.min(paidPct, 100)}%` as DimensionValue,
-  };
+  const feeSegments: ChartSegment[] = summary
+    ? [
+        { label: 'Paid', value: Number(summary.amount_paid), color: '#10b981' },
+        { label: 'Due', value: Number(summary.balance_due), color: '#f59e0b' },
+      ]
+    : [];
 
   const mandatoryComponents = (components ?? []).filter(
     (c: FeeComponent) => c.component_type === 'mandatory',
@@ -119,34 +126,30 @@ export default function ParentFeesScreen() {
                   </View>
                 </View>
 
-                {/* Progress Bar */}
-                <View className="mt-4 rounded-xl bg-white p-4">
-                  <View className="flex-row items-center justify-between">
-                    <Text className="text-xs text-gray-500">
-                      Payment Progress
-                    </Text>
-                    <Text className="text-xs font-medium text-emerald-600">
-                      {paidPct}%
-                    </Text>
-                  </View>
-                  <View className="mt-2 h-3 overflow-hidden rounded-full bg-gray-100">
-                    <View
-                      className="h-full rounded-full bg-emerald-500"
-                      style={progressWidth}
-                    />
-                  </View>
-                  {summary.due_date && (
-                    <Text className="mt-2 text-[10px] text-gray-400">
-                      Due: {format(new Date(summary.due_date), 'd MMM yyyy')}
-                    </Text>
-                  )}
-                  {summary.is_overdue && (
-                    <View className="mt-2 self-start rounded-md bg-red-100 px-2 py-0.5">
-                      <Text className="text-[10px] font-medium text-red-600">
-                        Overdue
+                {/* Payment progress donut */}
+                <View className="mt-4 flex-row items-center rounded-xl bg-white p-4">
+                  <DonutChart
+                    data={feeSegments}
+                    size={120}
+                    thickness={16}
+                    centerValue={`${paidPct}%`}
+                    centerLabel="Paid"
+                  />
+                  <View className="ml-4 flex-1">
+                    <ChartLegend data={feeSegments} showValues />
+                    {summary.due_date && (
+                      <Text className="mt-3 text-[10px] text-gray-400">
+                        Due: {format(new Date(summary.due_date), 'd MMM yyyy')}
                       </Text>
-                    </View>
-                  )}
+                    )}
+                    {summary.is_overdue && (
+                      <View className="mt-2 self-start rounded-md bg-red-100 px-2 py-0.5">
+                        <Text className="text-[10px] font-medium text-red-600">
+                          Overdue
+                        </Text>
+                      </View>
+                    )}
+                  </View>
                 </View>
               </>
             )}

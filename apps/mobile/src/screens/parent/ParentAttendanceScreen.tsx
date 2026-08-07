@@ -14,6 +14,11 @@ import {
   type DimensionValue,
 } from 'react-native';
 
+import {
+  DonutChart,
+  ChartLegend,
+  type ChartSegment,
+} from '@/components/charts';
 import { Screen, Header } from '@/components/layout';
 import { colors } from '@/constants/colors';
 import { useAttendanceSummary } from '@/features/student-portal';
@@ -59,17 +64,23 @@ export default function ParentAttendanceScreen() {
         </View>
       );
     }
+    const segments: ChartSegment[] = [
+      { label: 'Present', value: summary.present, color: colors.success[500] },
+      { label: 'Absent', value: summary.absent, color: colors.danger[500] },
+      { label: 'Late', value: summary.late, color: colors.warning[500] },
+    ];
     return (
       <View className="px-4 pb-6 pt-4">
-        {/* Overall Percentage */}
-        <View
-          className="items-center rounded-2xl p-6"
-          style={styles.overallBox}
-        >
-          <Text className="text-4xl font-bold text-white">
-            {summary.percentage.toFixed(1)}%
-          </Text>
-          <Text className="mt-1 text-sm text-white/80">Overall Attendance</Text>
+        {/* Overall donut */}
+        <View className="items-center rounded-2xl border border-gray-100 bg-white p-5">
+          <DonutChart
+            data={segments}
+            size={168}
+            thickness={22}
+            centerValue={`${summary.percentage.toFixed(0)}%`}
+            centerLabel="Attendance"
+          />
+          <ChartLegend data={segments} showValues style={styles.legend} />
         </View>
 
         {/* Stats Row */}
@@ -158,6 +169,6 @@ export default function ParentAttendanceScreen() {
 }
 
 const styles = StyleSheet.create({
-  overallBox: { backgroundColor: colors.success[500] },
+  legend: { marginTop: 16, alignSelf: 'stretch' },
   scrollContent: { paddingBottom: 100 },
 });
