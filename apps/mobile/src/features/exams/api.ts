@@ -151,6 +151,7 @@ export async function bulkUpsertMarks(data: {
   session_id: string;
   exam_id: string;
   marks: BulkMarkEntry[];
+  publish_after_save?: boolean;
 }): Promise<Mark[]> {
   const res = await apiClient.post<{ success: boolean; data: Mark[] }>(
     `${EMPLOYEE_BASE}/marks/bulk-upsert/`,
