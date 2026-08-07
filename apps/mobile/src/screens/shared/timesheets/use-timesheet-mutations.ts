@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { handleMutationError } from '@/lib/mutation-utils';
 import { useToast } from '@/lib/toast-context';
+import { useCriticalOperation } from '@/providers/critical-operation-context';
 
 import {
   bulkSubmitAttendance,
@@ -26,9 +27,17 @@ export function useTimesheetMutations({
 }: UseTimesheetMutationsOptions) {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
 
   const submitMutation = useMutation({
     mutationFn: bulkSubmitAttendance,
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Submitting timesheet',
+        description: 'Submitting attendance for approval...',
+      });
+    },
     onSuccess: response => {
       showToast({
         type: 'success',
@@ -40,6 +49,9 @@ export function useTimesheetMutations({
     },
     onError: (error: unknown) => {
       handleMutationError(error, 'Failed to submit timesheet');
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 
@@ -61,6 +73,12 @@ export function useTimesheetMutations({
 
   const dailyAttendanceMutation = useMutation({
     mutationFn: bulkSubmitAttendance,
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Saving attendance',
+        description: 'Saving attendance records...',
+      });
+    },
     onSuccess: response => {
       showToast({
         type: 'success',
@@ -72,6 +90,9 @@ export function useTimesheetMutations({
     },
     onError: (error: unknown) => {
       handleMutationError(error, 'Failed to save attendance');
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 

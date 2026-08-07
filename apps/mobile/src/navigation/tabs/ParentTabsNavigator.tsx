@@ -52,6 +52,7 @@ export function ParentTabsNavigator() {
         tabBarActiveTintColor: colors.primary[600],
         tabBarInactiveTintColor: colors.gray[400],
         tabBarStyle: {
+          display: 'none',
           backgroundColor: '#ffffff',
           borderTopWidth: 1,
           borderTopColor: colors.gray[100],

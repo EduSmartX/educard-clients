@@ -6,14 +6,16 @@
 
 import { ComponentApprovalStatus } from '@educard/shared';
 import type { StudentFeeComponentItem } from '@educard/shared';
+import { useNavigation } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   CheckCircle2,
   XCircle,
   ClipboardCheck,
   ChevronRight,
+  ChevronLeft,
 } from 'lucide-react-native';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -23,8 +25,8 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 
-import { Screen, Header } from '@/components/layout';
 import { SearchBar } from '@/components/common/SearchBar';
 import { ClassFilterDropdown } from '@/components/filters';
 import { colors } from '@/constants/colors';
@@ -33,9 +35,16 @@ import {
   useStudentFee,
   useReviewComponentRequests,
 } from '@/features/fee';
+import { LinearGradient } from '@/lib/linear-gradient';
+import type { SharedStackNavigation } from '@/navigation/types';
 
 export default function StudentFeeComponentRequestsScreen() {
   const qc = useQueryClient();
+  const navigation = useNavigation<SharedStackNavigation>();
+
+  const handleBack = useCallback(() => {
+    if (navigation.canGoBack()) navigation.goBack();
+  }, [navigation]);
 
   const [classFilter, setClassFilter] = useState('');
   const [search, setSearch] = useState('');
@@ -123,12 +132,21 @@ export default function StudentFeeComponentRequestsScreen() {
   };
 
   return (
-    <Screen>
-      <Header
-        title="Component Requests"
-        showBack
-        subtitle="Approve or reject opt-in/out requests"
-      />
+    <View style={styles.container}>
+      <LinearGradient colors={['#7c3aed', '#a78bfa']} style={styles.header}>
+        <Animated.View entering={FadeIn.delay(100)} style={styles.circle1} />
+        <View style={styles.headerContent}>
+          <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
+            <ChevronLeft size={24} color="#fff" />
+          </TouchableOpacity>
+          <View style={styles.headerTextWrap}>
+            <Text style={styles.headerTitle}>Component Requests</Text>
+            <Text style={styles.headerSub}>
+              Approve or reject opt-in/out requests
+            </Text>
+          </View>
+        </View>
+      </LinearGradient>
       <ScrollView
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
@@ -264,11 +282,39 @@ export default function StudentFeeComponentRequestsScreen() {
           </View>
         )}
       </ScrollView>
-    </Screen>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#f8fafc' },
+  header: {
+    paddingTop: 52,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    overflow: 'hidden',
+  },
+  circle1: {
+    position: 'absolute',
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    top: -50,
+    right: -30,
+  },
+  headerContent: { flexDirection: 'row', alignItems: 'center' },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTextWrap: { flex: 1, marginLeft: 8 },
+  headerTitle: { fontSize: 18, fontWeight: '800', color: '#fff' },
+  headerSub: { fontSize: 12, color: 'rgba(255,255,255,0.8)' },
   scroll: {
     padding: 16,
     paddingBottom: 40,

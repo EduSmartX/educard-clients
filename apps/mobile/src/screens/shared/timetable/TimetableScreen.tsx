@@ -10,6 +10,7 @@ import {
   DAY_LABELS,
   SLOT_TYPE_LABELS,
   BREAK_TYPES,
+  extractApiError,
   type ClassTimetableSlot,
 } from '@educard/shared';
 import {
@@ -25,6 +26,8 @@ import {
   Settings,
   CalendarRange,
   Plus,
+  Copy,
+  X,
 } from 'lucide-react-native';
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import {
@@ -40,7 +43,7 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { FormDropdown } from '@/components/forms';
 import { useClasses } from '@/features/classes';
-import { useClassTimetable } from '@/features/timetable';
+import { useClassTimetable, useCreateEntry } from '@/features/timetable';
 import { useAuthStore } from '@/lib/auth-store';
 import { LinearGradient } from '@/lib/linear-gradient';
 import type {
@@ -49,6 +52,7 @@ import type {
 } from '@/navigation/types';
 import { headerStyles, layoutStyles } from '@/styles';
 import { isAdminRole } from '@/utils/role-utils';
+import { showToast } from '@/utils/toast';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -90,6 +94,12 @@ export default function TimetableScreen() {
   // Role-based access check
   const { user } = useAuthStore();
   const canManage = useMemo(() => isAdminRole(user?.role), [user?.role]);
+
+  const createEntry = useCreateEntry();
+  const [copySource, setCopySource] = useState<{
+    subjectPublicId: string;
+    subjectName: string;
+  } | null>(null);
 
   // Today in 0=Mon format
   const jsDay = new Date().getDay();
@@ -171,8 +181,31 @@ export default function TimetableScreen() {
       colors = SLOT_COLORS[slot.slot_type] ?? SLOT_COLORS.period;
     }
 
+    const handlePaste = async () => {
+      if (!copySource) return;
+      if (slot.subject_public_id) {
+        showToast('info', 'Slot already has a subject — skipped');
+        return;
+      }
+      try {
+        await createEntry.mutateAsync({
+          slot_public_id: slot.public_id,
+          day_of_week: activeDay,
+          class_public_id: selectedClassId,
+          assignment_type: 'subject',
+          subject_public_id: copySource.subjectPublicId,
+        });
+      } catch (err) {
+        showToast('error', extractApiError(err));
+      }
+    };
+
     const handleSlotPress = () => {
       if (isBreak || !canManage) return;
+      if (copySource) {
+        void handlePaste();
+        return;
+      }
       const classLabel =
         classOptions.find(c => c.value === selectedClassId)?.label ?? '';
       navigation.navigate('TimetableAssignEntry', {
@@ -186,6 +219,20 @@ export default function TimetableScreen() {
       });
     };
 
+    const handleSlotLongPress = () => {
+      if (isBreak || !canManage) return;
+      if (slot.subject_public_id && slot.subject_name) {
+        setCopySource({
+          subjectPublicId: slot.subject_public_id,
+          subjectName: slot.subject_name,
+        });
+        showToast(
+          'info',
+          `Copying "${slot.subject_name}" — tap slots to paste`,
+        );
+      }
+    };
+
     return (
       <Animated.View
         key={slot.public_id || index}
@@ -197,9 +244,14 @@ export default function TimetableScreen() {
           style={[
             styles.slotCard,
             { backgroundColor: colors.bg, borderLeftColor: colors.border },
+            !!copySource &&
+              copySource.subjectPublicId === slot.subject_public_id &&
+              styles.slotCardCopied,
           ]}
           activeOpacity={isBreak || !canManage ? 1 : 0.7}
           onPress={handleSlotPress}
+          onLongPress={handleSlotLongPress}
+          delayLongPress={300}
           disabled={isBreak || !canManage}
         >
           <View style={styles.slotTime}>
@@ -247,8 +299,17 @@ export default function TimetableScreen() {
                 </>
               ) : canManage ? (
                 <View style={styles.addSubjectPill}>
-                  <Plus size={16} color="#7c3aed" />
-                  <Text style={styles.addSubjectText}>Add subject</Text>
+                  {copySource ? (
+                    <>
+                      <Copy size={16} color="#7c3aed" />
+                      <Text style={styles.addSubjectText}>Tap to paste</Text>
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={16} color="#7c3aed" />
+                      <Text style={styles.addSubjectText}>Add subject</Text>
+                    </>
+                  )}
                 </View>
               ) : (
                 <View style={styles.slotRow}>
@@ -327,6 +388,22 @@ export default function TimetableScreen() {
           </View>
         </View>
       </LinearGradient>
+
+      {copySource && (
+        <View style={styles.copyBanner}>
+          <Copy size={16} color="#fff" />
+          <Text style={styles.copyBannerText} numberOfLines={1}>
+            Copying “{copySource.subjectName}” — tap empty slots to paste
+          </Text>
+          <TouchableOpacity
+            style={styles.copyBannerBtn}
+            onPress={() => setCopySource(null)}
+          >
+            <X size={14} color="#7c3aed" />
+            <Text style={styles.copyBannerBtnText}>Done</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <ScrollView
         style={styles.body}
@@ -429,6 +506,15 @@ export default function TimetableScreen() {
                 })}
               </ScrollView>
 
+              {canManage && !copySource && (
+                <View style={styles.copyHint}>
+                  <Copy size={13} color="#7c3aed" />
+                  <Text style={styles.copyHintText}>
+                    Long-press a subject to copy it to other days & periods.
+                  </Text>
+                </View>
+              )}
+
               {/* Slots */}
               {daySlots.length === 0 ? (
                 <View style={styles.emptyState}>
@@ -453,6 +539,35 @@ export default function TimetableScreen() {
 const styles = StyleSheet.create({
   body: { flex: 1, backgroundColor: '#f8fafc' },
   bodyContent: { padding: 16, paddingBottom: 40 },
+
+  copyBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#7c3aed',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  copyBannerText: { flex: 1, fontSize: 13, fontWeight: '600', color: '#fff' },
+  copyBannerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#fff',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  copyBannerBtnText: { fontSize: 12, fontWeight: '700', color: '#7c3aed' },
+  slotCardCopied: { borderWidth: 1.5, borderColor: '#7c3aed' },
+  copyHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 10,
+    paddingHorizontal: 4,
+  },
+  copyHintText: { flex: 1, fontSize: 12, color: '#7c3aed' },
 
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   headerBtn: {

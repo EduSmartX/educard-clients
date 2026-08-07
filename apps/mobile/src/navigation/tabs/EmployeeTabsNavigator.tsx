@@ -41,7 +41,9 @@ export function EmployeeTabsNavigator() {
   const screenOptions = useTabScreenOptions();
 
   return (
-    <Tab.Navigator screenOptions={screenOptions}>
+    <Tab.Navigator
+      screenOptions={{ ...screenOptions, tabBarStyle: { display: 'none' } }}
+    >
       {VISIBLE_TABS.map(tab => (
         <Tab.Screen
           key={tab.name}

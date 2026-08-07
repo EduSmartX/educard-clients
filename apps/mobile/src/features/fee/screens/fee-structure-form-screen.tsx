@@ -109,8 +109,8 @@ export default function FeeStructureFormScreen() {
 
   // Pre-fill academic year from DB (only for new structures)
   useEffect(() => {
-    if (!isEditing && currentAcademicYear?.name) {
-      setAcademicYear(currentAcademicYear.name);
+    if (!isEditing && currentAcademicYear?.public_id) {
+      setAcademicYear(currentAcademicYear.public_id);
     }
   }, [currentAcademicYear, isEditing]);
 
@@ -119,7 +119,7 @@ export default function FeeStructureFormScreen() {
     if (existing) {
       setName(existing.name);
       setDescription(existing.description ?? '');
-      setAcademicYear(existing.academic_year);
+      setAcademicYear(existing.academic_year_public_id ?? '');
       setDueDate(existing.due_date);
       setClassIds(existing.class_public_ids ?? []);
       setIsActive(existing.is_active);
@@ -433,6 +433,16 @@ export default function FeeStructureFormScreen() {
             onChange={setAcademicYear}
             error={errors.academic_year}
             required
+            extraOptions={
+              existing?.academic_year_public_id
+                ? [
+                    {
+                      label: existing.academic_year,
+                      value: existing.academic_year_public_id,
+                    },
+                  ]
+                : undefined
+            }
           />
           <FormDatePicker
             label="Due Date"

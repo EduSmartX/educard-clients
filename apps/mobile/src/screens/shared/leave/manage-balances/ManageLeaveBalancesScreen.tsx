@@ -181,6 +181,7 @@ export default function ManageLeaveBalancesScreen() {
         showBack
       />
       <ScrollView
+        style={styles.scrollView}
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
       >
@@ -442,11 +443,16 @@ export default function ManageLeaveBalancesScreen() {
 }
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
   scroll: {
+    flexGrow: 1,
     padding: 16,
     paddingBottom: 120,
   },
   centerBox: {
+    flex: 1,
     paddingVertical: 40,
     paddingHorizontal: 24,
     alignItems: 'center',

@@ -15,6 +15,8 @@ import {
   X,
   Search,
   Filter,
+  FileText,
+  Download,
 } from 'lucide-react-native';
 import { useState, useCallback, useMemo } from 'react';
 import {
@@ -27,11 +29,12 @@ import {
   Alert,
   TextInput,
   Modal,
+  Linking,
 } from 'react-native';
 import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { AttachmentViewer } from '@/components/attachments';
+import { apiClient } from '@/api/client';
 import { ConfirmDialog } from '@/components/common';
 import { FormDatePicker } from '@/components/forms/FormDatePicker';
 import {
@@ -197,6 +200,23 @@ export default function LeaveApprovalsScreen() {
     );
   };
 
+  const handleOpenAttachment = useCallback(async (item: LeaveRequest) => {
+    try {
+      const res = await apiClient.get<{
+        data?: { url?: string };
+        url?: string;
+      }>(`/leave/employee/reviews/${item.public_id}/attachment/`);
+      const url = res.data?.data?.url ?? res.data?.url;
+      if (!url) {
+        Alert.alert('No attachment', 'No attachment is available to view.');
+        return;
+      }
+      await Linking.openURL(url);
+    } catch {
+      Alert.alert('Unable to open', 'Could not open the attachment.');
+    }
+  }, []);
+
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '';
     const d = new Date(dateStr + 'T00:00:00');
@@ -268,12 +288,20 @@ export default function LeaveApprovalsScreen() {
           ) : null}
 
           {item.attachment_url ? (
-            <View style={styles.attachmentWrap}>
-              <AttachmentViewer
-                url={item.attachment_url}
-                fileName={item.attachment_name}
-              />
-            </View>
+            <TouchableOpacity
+              style={styles.attachmentRow}
+              onPress={() => void handleOpenAttachment(item)}
+              activeOpacity={0.7}
+            >
+              <FileText size={16} color="#059669" />
+              <Text style={styles.attachmentName} numberOfLines={1}>
+                {item.attachment_name || 'Attached document'}
+              </Text>
+              <View style={styles.attachmentViewBtn}>
+                <Download size={12} color="#047857" />
+                <Text style={styles.attachmentViewText}>View</Text>
+              </View>
+            </TouchableOpacity>
           ) : null}
 
           {item.status !== 'pending' && item.reviewed_by_name && (
