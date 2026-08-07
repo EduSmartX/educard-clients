@@ -40,6 +40,7 @@ import {
   fetchUpcomingHomework,
   fetchCalendarHomework,
   fetchTeacherClasses,
+  sendHomeworkNotification,
 } from './api';
 
 // ============== Query Keys ==============
@@ -314,5 +315,25 @@ export function useCalendarHomework(params?: CalendarParams) {
   return useQuery({
     queryKey: homeworkKeys.calendar(params),
     queryFn: () => fetchCalendarHomework(params),
+  });
+}
+
+// ============== Notifications ==============
+
+export function useSendHomeworkNotification(options?: MutationOptions) {
+  return useMutation({
+    mutationFn: (data: { class_public_id: string; date: string }) =>
+      sendHomeworkNotification(data),
+    onSuccess: () => {
+      showToast('success', 'Notification sent successfully');
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(
+        error,
+        'Failed to send notification',
+        options?.onError,
+      );
+    },
   });
 }

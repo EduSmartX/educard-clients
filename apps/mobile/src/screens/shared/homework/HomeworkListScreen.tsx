@@ -16,6 +16,7 @@ import {
   ChevronRight,
   BookOpen,
   Calendar,
+  Bell,
   CheckCircle,
   ChevronDown,
   X,
@@ -39,11 +40,14 @@ import {
   useTeacherClasses,
   useHomeworkList,
   useDeleteHomework,
+  useSendHomeworkNotification,
 } from '@/features/homework';
 import { useScreenFilters } from '@/hooks/useScreenFilters';
+import { useAuthStore } from '@/lib/auth-store';
 import { LinearGradient } from '@/lib/linear-gradient';
 import type { SharedStackNavigation } from '@/navigation/types';
 import { headerStyles, layoutStyles } from '@/styles';
+import { isAdminRole } from '@/utils/role-utils';
 
 import { SubjectHomeworkCard } from './SubjectHomeworkCard';
 import { styles } from './homework-list-styles';
@@ -57,6 +61,7 @@ const adminGradient = getRoleGradient('admin');
 
 export default function HomeworkListScreen() {
   const navigation = useNavigation<SharedStackNavigation>();
+  const { user } = useAuthStore();
 
   const [refreshing, setRefreshing] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // Start with today
@@ -133,6 +138,14 @@ export default function HomeworkListScreen() {
     ).length;
     return { total, assigned, published, pending: total - assigned };
   }, [subjectsWithHomework]);
+
+  const hasPublishedHomework = viewStats.published > 0;
+  const canSendNotification = useMemo(() => {
+    if (!selectedClass || !hasPublishedHomework) {
+      return false;
+    }
+    return isAdminRole(user?.role) || !!selectedClass.is_class_teacher;
+  }, [selectedClass, hasPublishedHomework, user?.role]);
 
   // Working day navigation mutation
   const { mutateAsync: navigateWorkingDay, isPending: isNavigating } =
@@ -227,6 +240,22 @@ export default function HomeworkListScreen() {
       }),
     [navigation],
   );
+
+  const sendNotificationMutation = useSendHomeworkNotification();
+  const handleSendNotification = useCallback(() => {
+    if (!selectedClass || !canSendNotification) {
+      return;
+    }
+    sendNotificationMutation.mutate({
+      class_public_id: selectedClass.public_id,
+      date: formatDateYYYYMMDD(selectedDate),
+    });
+  }, [
+    selectedClass,
+    canSendNotification,
+    sendNotificationMutation,
+    selectedDate,
+  ]);
 
   const isToday =
     formatDateYYYYMMDD(selectedDate) === formatDateYYYYMMDD(new Date());
@@ -472,6 +501,39 @@ export default function HomeworkListScreen() {
             </Text>
             <Text style={styles.statLabel}>Pending</Text>
           </View>
+        </View>
+      )}
+
+      {canSendNotification && (
+        <View style={styles.notificationSection}>
+          <View style={styles.notificationBanner}>
+            <Bell size={16} color="#1d4ed8" />
+            <Text style={styles.notificationBannerText}>
+              Send a consolidated notification to parents and students for all
+              published homework in this class.
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={[
+              styles.sendNotificationBtn,
+              sendNotificationMutation.isPending &&
+                styles.sendNotificationBtnDisabled,
+            ]}
+            onPress={handleSendNotification}
+            disabled={sendNotificationMutation.isPending}
+          >
+            {sendNotificationMutation.isPending ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Bell size={16} color="#fff" />
+            )}
+            <Text style={styles.sendNotificationBtnText}>
+              {sendNotificationMutation.isPending
+                ? 'Sending...'
+                : 'Send Notification'}
+            </Text>
+          </TouchableOpacity>
         </View>
       )}
 
