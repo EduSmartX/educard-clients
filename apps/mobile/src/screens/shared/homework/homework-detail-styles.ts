@@ -179,6 +179,9 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.primary[500],
   },
+  attachmentList: {
+    gap: 8,
+  },
   attachmentCard: {
     flexDirection: 'row',
     alignItems: 'center',

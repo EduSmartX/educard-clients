@@ -142,6 +142,9 @@ export const styles = StyleSheet.create({
     borderColor: '#a7f3d0',
     backgroundColor: '#ecfdf5',
   },
+  attachmentWrap: {
+    marginBottom: 10,
+  },
   attachmentName: {
     flex: 1,
     fontSize: 13,

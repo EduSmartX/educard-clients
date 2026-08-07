@@ -6,6 +6,7 @@ import {
   User as UserIcon,
   Users,
   Briefcase,
+  PieChart,
 } from 'lucide-react-native';
 import { useState, useMemo } from 'react';
 import {
@@ -20,6 +21,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { DonutChart, ChartLegend } from '@/components/charts';
 import { Screen, Header } from '@/components/layout';
 import { FormDropdown } from '@/components/forms';
 import { useManageableUsers } from '@/hooks/use-manageable-users';
@@ -89,6 +91,16 @@ export default function ManageLeaveBalancesScreen() {
       ),
     [balances],
   );
+
+  const chartSegments = useMemo(
+    () => [
+      { label: 'Available', value: totals.available, color: '#22c55e' },
+      { label: 'Used', value: totals.used, color: '#ef4444' },
+      { label: 'Pending', value: totals.pending, color: '#f59e0b' },
+    ],
+    [totals],
+  );
+  const chartTotal = totals.available + totals.used + totals.pending;
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
@@ -281,83 +293,120 @@ export default function ManageLeaveBalancesScreen() {
           </View>
         ) : (
           <>
-            {/* Summary */}
-            <View style={styles.summaryRow}>
-              <View style={[styles.summaryCard, styles.summaryGreen]}>
-                <Text style={styles.summaryValueGreen}>{totals.available}</Text>
-                <Text style={styles.summaryLabel}>Available</Text>
-              </View>
-              <View style={[styles.summaryCard, styles.summaryRed]}>
-                <Text style={styles.summaryValueRed}>{totals.used}</Text>
-                <Text style={styles.summaryLabel}>Used</Text>
-              </View>
-              <View style={[styles.summaryCard, styles.summaryAmber]}>
-                <Text style={styles.summaryValueAmber}>{totals.pending}</Text>
-                <Text style={styles.summaryLabel}>Pending</Text>
-              </View>
-            </View>
-
-            <View style={styles.listHeader}>
-              <Text style={styles.listTitle}>
-                Leave Balances ({balances.length})
-              </Text>
-            </View>
-
             {balances.length === 0 ? (
-              <View style={styles.hintBox}>
-                <Text style={styles.hintText}>
-                  No leave balances yet. Tap Add to create one.
+              <View style={styles.emptyCard}>
+                <View style={styles.emptyIconWrap}>
+                  <PieChart size={30} color={Colors.primary[500]} />
+                </View>
+                <Text style={styles.emptyTitle}>No leave balances yet</Text>
+                <Text style={styles.emptyText}>
+                  This person has no leave balances allocated. Tap “Add Leave
+                  Balance” below to allocate leave.
                 </Text>
               </View>
             ) : (
-              balances.map(b => (
-                <View key={b.public_id} style={styles.balanceCard}>
-                  <View style={styles.balanceTop}>
-                    <Text style={styles.balanceName}>
-                      {b.leave_allocation.display_name ||
-                        b.leave_allocation.leave_type_name}
-                    </Text>
-                    <View style={styles.balanceActions}>
-                      <TouchableOpacity
-                        onPress={() => handleEdit(b)}
-                        hitSlop={styles.hitSlop}
-                      >
-                        <Pencil size={18} color={Colors.primary[600]} />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() => handleDelete(b)}
-                        hitSlop={styles.hitSlop}
-                      >
-                        <Trash2 size={18} color={Colors.danger[600]} />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                  <View style={styles.statsRow}>
-                    <View style={styles.statCell}>
-                      <Text style={styles.statValue}>
-                        {Number(b.total_allocated)}
-                      </Text>
-                      <Text style={styles.statLabel}>Allocated</Text>
-                    </View>
-                    <View style={styles.statCell}>
-                      <Text style={styles.statValueRed}>{Number(b.used)}</Text>
-                      <Text style={styles.statLabel}>Used</Text>
-                    </View>
-                    <View style={styles.statCell}>
-                      <Text style={styles.statValueGreen}>
-                        {Number(b.carried_forward)}
-                      </Text>
-                      <Text style={styles.statLabel}>Carried</Text>
-                    </View>
-                    <View style={styles.statCell}>
-                      <Text style={styles.statValueBlue}>
-                        {Number(b.available)}
-                      </Text>
-                      <Text style={styles.statLabel}>Available</Text>
-                    </View>
+              <>
+                {/* Overview chart */}
+                <View style={styles.overviewCard}>
+                  <Text style={styles.overviewTitle}>Leave Overview</Text>
+                  <View style={styles.overviewBody}>
+                    <DonutChart
+                      data={chartSegments}
+                      centerValue={chartTotal}
+                      centerLabel="Total days"
+                    />
+                    <ChartLegend
+                      data={chartSegments}
+                      showValues
+                      style={styles.legend}
+                    />
                   </View>
                 </View>
-              ))
+
+                {/* Balance list */}
+                <View style={styles.listHeader}>
+                  <Text style={styles.listTitle}>
+                    Leave Balances ({balances.length})
+                  </Text>
+                </View>
+
+                {balances.map(b => {
+                  const allocated = Number(b.total_allocated);
+                  const carried = Number(b.carried_forward);
+                  const used = Number(b.used);
+                  const pending = Number(b.pending);
+                  const available = Number(b.available);
+                  const capacity = allocated + carried || 1;
+                  const usedPct = Math.min(100, (used / capacity) * 100);
+                  const pendingPct = Math.min(
+                    100 - usedPct,
+                    (pending / capacity) * 100,
+                  );
+                  return (
+                    <View key={b.public_id} style={styles.balanceCard}>
+                      <View style={styles.balanceTop}>
+                        <View style={styles.balanceNameWrap}>
+                          <Text style={styles.balanceName} numberOfLines={1}>
+                            {b.leave_allocation.display_name ||
+                              b.leave_allocation.leave_type_name}
+                          </Text>
+                          <Text style={styles.balanceMeta}>
+                            {available} of {allocated + carried} days left
+                          </Text>
+                        </View>
+                        <View style={styles.balanceActions}>
+                          <TouchableOpacity
+                            onPress={() => handleEdit(b)}
+                            hitSlop={styles.hitSlop}
+                          >
+                            <Pencil size={18} color={Colors.primary[600]} />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={() => handleDelete(b)}
+                            hitSlop={styles.hitSlop}
+                          >
+                            <Trash2 size={18} color={Colors.danger[600]} />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+
+                      <View style={styles.progressTrack}>
+                        <View
+                          style={[
+                            styles.progressUsed,
+                            { width: `${usedPct}%` },
+                          ]}
+                        />
+                        <View
+                          style={[
+                            styles.progressPending,
+                            { width: `${pendingPct}%` },
+                          ]}
+                        />
+                      </View>
+
+                      <View style={styles.statsRow}>
+                        <View style={styles.statCell}>
+                          <Text style={styles.statValue}>{allocated}</Text>
+                          <Text style={styles.statLabel}>Allocated</Text>
+                        </View>
+                        <View style={styles.statCell}>
+                          <Text style={styles.statValueRed}>{used}</Text>
+                          <Text style={styles.statLabel}>Used</Text>
+                        </View>
+                        <View style={styles.statCell}>
+                          <Text style={styles.statValueGreen}>{carried}</Text>
+                          <Text style={styles.statLabel}>Carried</Text>
+                        </View>
+                        <View style={styles.statCell}>
+                          <Text style={styles.statValueBlue}>{available}</Text>
+                          <Text style={styles.statLabel}>Available</Text>
+                        </View>
+                      </View>
+                    </View>
+                  );
+                })}
+              </>
             )}
           </>
         )}
@@ -491,45 +540,57 @@ const styles = StyleSheet.create({
     color: Colors.gray[500],
     textAlign: 'center',
   },
-  summaryRow: {
-    flexDirection: 'row',
-    gap: 10,
+  overviewCard: {
     marginTop: 20,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: Colors.gray[100],
+    borderRadius: 16,
+    padding: 16,
   },
-  summaryCard: {
-    flex: 1,
-    borderRadius: 12,
-    paddingVertical: 14,
+  overviewTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Colors.gray[900],
+    marginBottom: 12,
+  },
+  overviewBody: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 16,
   },
-  summaryGreen: {
-    backgroundColor: Colors.success[50],
+  legend: {
+    flex: 1,
   },
-  summaryRed: {
-    backgroundColor: Colors.danger[50],
+  emptyCard: {
+    marginTop: 20,
+    alignItems: 'center',
+    padding: 28,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.gray[100],
+    backgroundColor: '#ffffff',
   },
-  summaryAmber: {
-    backgroundColor: Colors.warning[50],
+  emptyIconWrap: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary[50],
+    marginBottom: 12,
   },
-  summaryValueGreen: {
-    fontSize: 20,
+  emptyTitle: {
+    fontSize: 15,
     fontWeight: '700',
-    color: Colors.success[600],
+    color: Colors.gray[900],
+    marginBottom: 6,
   },
-  summaryValueRed: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: Colors.danger[600],
-  },
-  summaryValueAmber: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: Colors.warning[600],
-  },
-  summaryLabel: {
-    fontSize: 11,
+  emptyText: {
+    fontSize: 13,
     color: Colors.gray[500],
-    marginTop: 2,
+    textAlign: 'center',
+    lineHeight: 19,
   },
   listHeader: {
     flexDirection: 'row',
@@ -606,6 +667,31 @@ const styles = StyleSheet.create({
     bottom: 8,
     left: 8,
     right: 8,
+  },
+  balanceNameWrap: {
+    flex: 1,
+    marginRight: 12,
+  },
+  balanceMeta: {
+    fontSize: 12,
+    color: Colors.gray[500],
+    marginTop: 2,
+  },
+  progressTrack: {
+    flexDirection: 'row',
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#dcfce7',
+    overflow: 'hidden',
+    marginTop: 12,
+  },
+  progressUsed: {
+    height: 8,
+    backgroundColor: '#ef4444',
+  },
+  progressPending: {
+    height: 8,
+    backgroundColor: '#f59e0b',
   },
   statsRow: {
     flexDirection: 'row',

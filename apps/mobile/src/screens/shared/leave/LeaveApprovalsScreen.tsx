@@ -15,8 +15,6 @@ import {
   X,
   Search,
   Filter,
-  FileText,
-  Download,
 } from 'lucide-react-native';
 import { useState, useCallback, useMemo } from 'react';
 import {
@@ -29,14 +27,13 @@ import {
   Alert,
   TextInput,
   Modal,
-  Linking,
 } from 'react-native';
 import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
+import { AttachmentViewer } from '@/components/attachments';
 import { ConfirmDialog } from '@/components/common';
 import { FormDatePicker } from '@/components/forms/FormDatePicker';
-import { getMediaUrl } from '@/constants/config';
 import {
   useLeaveReviews,
   useApproveLeave,
@@ -200,14 +197,6 @@ export default function LeaveApprovalsScreen() {
     );
   };
 
-  const handleOpenAttachment = useCallback((item: LeaveRequest) => {
-    const url = getMediaUrl(item.attachment_url);
-    if (!url) return;
-    Linking.openURL(url).catch(() => {
-      Alert.alert('Unable to open', 'Could not open the attachment.');
-    });
-  }, []);
-
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '';
     const d = new Date(dateStr + 'T00:00:00');
@@ -279,20 +268,12 @@ export default function LeaveApprovalsScreen() {
           ) : null}
 
           {item.attachment_url ? (
-            <TouchableOpacity
-              style={styles.attachmentRow}
-              onPress={() => handleOpenAttachment(item)}
-              activeOpacity={0.7}
-            >
-              <FileText size={16} color="#059669" />
-              <Text style={styles.attachmentName} numberOfLines={1}>
-                {item.attachment_name || 'Attached document'}
-              </Text>
-              <View style={styles.attachmentViewBtn}>
-                <Download size={12} color="#047857" />
-                <Text style={styles.attachmentViewText}>View</Text>
-              </View>
-            </TouchableOpacity>
+            <View style={styles.attachmentWrap}>
+              <AttachmentViewer
+                url={item.attachment_url}
+                fileName={item.attachment_name}
+              />
+            </View>
           ) : null}
 
           {item.status !== 'pending' && item.reviewed_by_name && (

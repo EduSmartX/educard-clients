@@ -24,10 +24,8 @@ import {
   User,
   Clock,
   FileText,
-  Paperclip,
   CheckCircle,
   AlertTriangle,
-  ExternalLink,
   MessageSquare,
 } from 'lucide-react-native';
 import { useState, useMemo, useEffect, useCallback } from 'react';
@@ -36,14 +34,13 @@ import {
   Text,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   TextInput,
-  Linking,
 } from 'react-native';
 import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AttachmentViewer } from '@/components/attachments';
 import {
   useSubmissionDetail,
   useSubmissions,
@@ -179,14 +176,6 @@ export default function ReviewScreen() {
         },
       },
     );
-  };
-
-  const handleOpenAttachment = async (url: string) => {
-    try {
-      await Linking.openURL(url);
-    } catch {
-      Alert.alert('Error', 'Could not open attachment');
-    }
   };
 
   const formatDate = (dateStr: string) => {
@@ -383,24 +372,16 @@ export default function ReviewScreen() {
             <Text style={styles.sectionTitle}>
               {HOMEWORK_UI.ATTACHMENTS} ({submission.attachments.length})
             </Text>
-            {submission.attachments.map(attachment => (
-              <TouchableOpacity
-                key={attachment.public_id}
-                style={styles.attachmentCard}
-                onPress={() => void handleOpenAttachment(attachment.url)}
-              >
-                <Paperclip size={16} color={Colors.gray[400]} />
-                <View style={styles.attachmentInfo}>
-                  <Text style={styles.attachmentName} numberOfLines={1}>
-                    {attachment.file_name}
-                  </Text>
-                  <Text style={styles.attachmentSize}>
-                    {formatFileSize(attachment.file_size)}
-                  </Text>
-                </View>
-                <ExternalLink size={14} color={Colors.gray[400]} />
-              </TouchableOpacity>
-            ))}
+            <View style={styles.attachmentList}>
+              {submission.attachments.map(attachment => (
+                <AttachmentViewer
+                  key={attachment.public_id}
+                  url={attachment.url}
+                  fileName={attachment.file_name}
+                  subtitle={formatFileSize(attachment.file_size)}
+                />
+              ))}
+            </View>
           </Animated.View>
         )}
 

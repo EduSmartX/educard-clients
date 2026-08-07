@@ -265,3 +265,15 @@ export const selectIsAuthenticated = (state: AuthStore) =>
   state.isAuthenticated;
 export const selectIsLoading = (state: AuthStore) => state.isLoading;
 export const selectAuthError = (state: AuthStore) => state.error;
+
+// Single source of truth for per-user cleanup: whenever the authenticated
+// user's identity changes (login, logout, profile switch, signup), drop cached
+// screen filters and queries so nothing leaks across accounts.
+useAuthStore.subscribe((state, prevState) => {
+  const nextUserId = state.user?.public_id ?? null;
+  const prevUserId = prevState.user?.public_id ?? null;
+  if (nextUserId !== prevUserId) {
+    clearScreenFilters();
+    clearQueryCache();
+  }
+});
