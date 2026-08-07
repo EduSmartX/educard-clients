@@ -8,7 +8,7 @@ import {
   extractApiError,
 } from '@educard/shared';
 import { useNavigation } from '@react-navigation/native';
-import { parseISO, differenceInDays, isAfter } from 'date-fns';
+import { parseISO, isAfter, format } from 'date-fns';
 import {
   ChevronLeft,
   Send,
@@ -37,6 +37,7 @@ import {
   useMyLeaveBalances,
   useCreateLeaveRequest,
   useCalculateWorkingDays,
+  type WorkingDaysCalculation,
 } from '@/features/leave';
 import { LinearGradient } from '@/lib/linear-gradient';
 import type { SharedStackNavigation } from '@/navigation/types';
@@ -178,6 +179,10 @@ export default function ApplyLeaveScreen() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [apiError, setApiError] = useState<string | null>(null);
   const [calculatedDays, setCalculatedDays] = useState<number | null>(null);
+  const [workingDaysInfo, setWorkingDaysInfo] =
+    useState<WorkingDaysCalculation | null>(null);
+  const [conflictingLeaves, setConflictingLeaves] = useState<string[]>([]);
+  const [calcError, setCalcError] = useState<string | null>(null);
   const [showLeaveTypePicker, setShowLeaveTypePicker] = useState(false);
 
   // Theme accent color for consistent styling
@@ -228,7 +233,7 @@ export default function ApplyLeaveScreen() {
     return balances.find(b => b.public_id === form.leave_balance);
   }, [balances, form.leave_balance]);
 
-  // Calculate working days when dates change
+  // Calculate working days when dates change (backend is the source of truth)
   useEffect(() => {
     if (form.start_date && form.end_date) {
       const startDate = parseISO(form.start_date);
@@ -236,6 +241,9 @@ export default function ApplyLeaveScreen() {
 
       if (isAfter(startDate, endDate)) {
         setCalculatedDays(null);
+        setWorkingDaysInfo(null);
+        setConflictingLeaves([]);
+        setCalcError(null);
         return;
       }
 
@@ -243,17 +251,42 @@ export default function ApplyLeaveScreen() {
         { startDate: form.start_date, endDate: form.end_date },
         {
           onSuccess: data => {
-            setCalculatedDays(data?.data?.working_days ?? 1);
+            const calc = data?.data ?? null;
+            setWorkingDaysInfo(calc);
+            setCalculatedDays(calc?.working_days ?? calc?.leave_days ?? 0);
+            setConflictingLeaves([]);
+            setCalcError(null);
           },
-          onError: () => {
-            // Fallback to simple calculation
-            const days = differenceInDays(endDate, startDate) + 1;
-            setCalculatedDays(days > 0 ? days : 1);
+          onError: (err: unknown) => {
+            setWorkingDaysInfo(null);
+            setCalculatedDays(null);
+            const conflicts = (
+              err as {
+                response?: {
+                  data?: { data?: { conflicting_leaves?: string[] } };
+                };
+              }
+            )?.response?.data?.data?.conflicting_leaves;
+            if (conflicts && conflicts.length > 0) {
+              setConflictingLeaves(conflicts);
+              setCalcError(null);
+              return;
+            }
+            setConflictingLeaves([]);
+            setCalcError(
+              extractApiError(
+                err,
+                "Couldn't calculate working days. Please try again.",
+              ),
+            );
           },
         },
       );
     } else {
       setCalculatedDays(null);
+      setWorkingDaysInfo(null);
+      setConflictingLeaves([]);
+      setCalcError(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.start_date, form.end_date]);
@@ -309,9 +342,29 @@ export default function ApplyLeaveScreen() {
       errs.leave_balance = `You only have ${selectedBalance.available} days available`;
     }
 
+    if (conflictingLeaves.length > 0) {
+      errs.end_date =
+        'You already have a leave request that overlaps these dates';
+    }
+
+    if (form.start_date && form.end_date && calculatedDays === 0) {
+      errs.end_date =
+        'Selected dates are all holidays or weekends. Please choose working days to apply leave.';
+    }
+
+    if (
+      form.start_date &&
+      form.end_date &&
+      !errs.end_date &&
+      calculatedDays === null
+    ) {
+      errs.end_date =
+        calcError ?? 'Please wait for the working days to be calculated';
+    }
+
     setErrors(errs);
     return Object.keys(errs).length === 0;
-  }, [form, selectedBalance, calculatedDays]);
+  }, [form, selectedBalance, calculatedDays, conflictingLeaves, calcError]);
 
   const handleSubmit = useCallback(() => {
     if (!validate()) return;
@@ -320,7 +373,7 @@ export default function ApplyLeaveScreen() {
       leave_balance: form.leave_balance,
       start_date: form.start_date,
       end_date: form.end_date,
-      number_of_days: calculatedDays ?? 1,
+      number_of_days: calculatedDays ?? 0,
       reason: form.reason.trim(),
     };
 
@@ -457,29 +510,122 @@ export default function ApplyLeaveScreen() {
                 </View>
               </View>
 
-              {calculatedDays !== null && (
-                <View
-                  style={[
-                    styles.daysCalculated,
-                    { backgroundColor: employeeTheme.accentLight },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.daysLabel,
-                      { color: employeeTheme.accentDark },
-                    ]}
-                  >
-                    Working Days:
-                  </Text>
-                  <Text
-                    style={[styles.daysValue, { color: employeeTheme.accent }]}
-                  >
-                    {calculatedDays} days
+              {calculateMutation.isPending && (
+                <View style={styles.calcStatusRow}>
+                  <ActivityIndicator size="small" color={accentColor} />
+                  <Text style={styles.calcStatusText}>
+                    Calculating working days…
                   </Text>
                 </View>
               )}
             </View>
+
+            {/* Could not calculate working days */}
+            {calcError && (
+              <View style={styles.errorBanner}>
+                <Text style={styles.errorBannerText}>{calcError}</Text>
+              </View>
+            )}
+
+            {/* Overlapping leave conflict */}
+            {conflictingLeaves.length > 0 && (
+              <View style={styles.conflictBanner}>
+                <Text style={styles.conflictTitle}>
+                  Overlapping leave request
+                </Text>
+                <Text style={styles.conflictText}>
+                  You already have a pending or approved leave overlapping these
+                  dates:
+                </Text>
+                {conflictingLeaves.map(leave => (
+                  <Text key={leave} style={styles.conflictItem}>
+                    • {leave}
+                  </Text>
+                ))}
+              </View>
+            )}
+
+            {/* Leave days breakdown + holidays */}
+            {workingDaysInfo && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>LEAVE DAYS</Text>
+
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Total Days</Text>
+                  <Text style={styles.summaryValue}>
+                    {workingDaysInfo.total_days}
+                  </Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Weekends + Holidays</Text>
+                  <Text style={styles.summaryValue}>
+                    {workingDaysInfo.holidays.length}
+                  </Text>
+                </View>
+                <View style={[styles.summaryRow, styles.summaryTotal]}>
+                  <Text style={styles.summaryTotalLabel}>Leave Days</Text>
+                  <Text
+                    style={[
+                      styles.summaryTotalValue,
+                      calculatedDays === 0 && styles.summaryTotalValueZero,
+                    ]}
+                  >
+                    {workingDaysInfo.working_days}
+                  </Text>
+                </View>
+
+                {calculatedDays === 0 && (
+                  <View style={styles.holidayBlock}>
+                    <Info size={16} color="#b91c1c" />
+                    <Text style={styles.holidayBlockText}>
+                      All selected dates are holidays or weekends. You cannot
+                      apply leave for non-working days.
+                    </Text>
+                  </View>
+                )}
+
+                {workingDaysInfo.holidays.length > 0 && (
+                  <View style={styles.holidayList}>
+                    <Text style={styles.holidayListTitle}>
+                      Holidays & Non-Working Days
+                    </Text>
+                    {workingDaysInfo.holidays.map(holiday => {
+                      const isWeekend =
+                        holiday.type?.toUpperCase() === 'WEEKEND';
+                      return (
+                        <View key={holiday.date} style={styles.holidayItem}>
+                          <Text style={styles.holidayDate}>
+                            {format(parseISO(holiday.date), 'dd MMM')}
+                          </Text>
+                          <Text style={styles.holidayDesc} numberOfLines={1}>
+                            {holiday.description || holiday.name || '—'}
+                          </Text>
+                          <View
+                            style={[
+                              styles.holidayTypeBadge,
+                              isWeekend
+                                ? styles.holidayTypeWeekend
+                                : styles.holidayTypeOther,
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.holidayTypeText,
+                                isWeekend
+                                  ? styles.holidayTypeTextWeekend
+                                  : styles.holidayTypeTextOther,
+                              ]}
+                            >
+                              {holiday.type}
+                            </Text>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
+              </View>
+            )}
 
             {/* Reason */}
             <View style={styles.section}>

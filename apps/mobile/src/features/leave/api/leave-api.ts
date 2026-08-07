@@ -298,13 +298,28 @@ export async function cancelMyLeaveRequest(
   return response.data;
 }
 
+export interface HolidayInfo {
+  date: string;
+  name?: string;
+  description?: string;
+  type: string;
+}
+
+export interface WorkingDaysCalculation {
+  working_days: number;
+  total_days: number;
+  weekends?: number;
+  holidays: HolidayInfo[];
+  leave_days?: number;
+}
+
 export async function calculateWorkingDays(
   startDate: string,
   endDate: string,
-): Promise<ApiDetailResponse<{ working_days: number; holidays: string[] }>> {
+): Promise<ApiDetailResponse<WorkingDaysCalculation>> {
   const response = await apiClient.post<
-    ApiDetailResponse<{ working_days: number; holidays: string[] }>
-  >('/leave/employee/calculate-working-days/', {
+    ApiDetailResponse<WorkingDaysCalculation>
+  >('/leave/user/requests/calculate-working-days/', {
     start_date: startDate,
     end_date: endDate,
   });
