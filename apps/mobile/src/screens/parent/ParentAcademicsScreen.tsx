@@ -23,7 +23,9 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
+  StyleSheet,
 } from 'react-native';
+import Animated, { ZoomIn } from 'react-native-reanimated';
 
 import { Screen } from '@/components/layout';
 import { ScreenHeader } from '@/components/ui';
@@ -37,6 +39,7 @@ import {
   type ExamSession,
 } from '@/features/student-portal';
 import { useAuthStore } from '@/lib/auth-store';
+import { LinearGradient } from '@/lib/linear-gradient';
 import type { SharedStackNavigation } from '@/navigation/types';
 
 type Tab = 'timetable' | 'homework' | 'exams';
@@ -491,13 +494,12 @@ function ExamsSection() {
 export default function ParentAcademicsScreen() {
   const navigation = useNavigation<SharedStackNavigation>();
   const isStudent = useAuthStore(s => s.user?.role) === 'student';
-  const [activeTab, setActiveTab] = useState<Tab>('timetable');
 
   return (
-    <Screen safeArea={false} statusBarStyle="light" backgroundColor="#f8fafc">
+    <Screen safeArea={false} statusBarStyle="light" backgroundColor="#f0fdf4">
       <ScreenHeader
         title="Academics"
-        subtitle="Timetable, homework and exams"
+        subtitle="Learning and class activities"
         showBack={false}
         right={
           isStudent ? (
@@ -510,31 +512,114 @@ export default function ParentAcademicsScreen() {
           ) : undefined
         }
       />
-      <View className="mx-4 mt-4 flex-row rounded-xl border border-gray-200 bg-white p-1">
-        {TABS.map(tab => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.key;
-          return (
-            <TouchableOpacity
-              key={tab.key}
-              onPress={() => setActiveTab(tab.key)}
-              className={`flex-1 flex-row items-center justify-center gap-1.5 rounded-lg py-2.5 ${isActive ? 'bg-emerald-50' : ''}`}
-            >
-              <Icon size={16} color={isActive ? '#059669' : colors.gray[400]} />
-              <Text
-                className={`text-sm font-medium ${isActive ? 'text-emerald-700' : 'text-gray-400'}`}
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={menuStyles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={menuStyles.grid}>
+          {TABS.map((tab, index) => {
+            const Icon = tab.icon;
+            return (
+              <Animated.View
+                key={tab.key}
+                entering={ZoomIn.delay(index * 70)
+                  .springify()
+                  .damping(13)}
+                style={menuStyles.gridItem}
               >
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+                <TouchableOpacity
+                  style={menuStyles.iconCard}
+                  onPress={() =>
+                    navigation.navigate('StudentAcademicsTask', {
+                      task: tab.key,
+                    })
+                  }
+                  activeOpacity={0.8}
+                >
+                  <LinearGradient
+                    colors={ACADEMIC_GRADIENTS[tab.key]}
+                    style={menuStyles.iconCircle}
+                  >
+                    <Icon size={28} color="#fff" strokeWidth={2} />
+                  </LinearGradient>
+                  <Text style={menuStyles.iconLabel}>{tab.label}</Text>
+                  <Text style={menuStyles.iconSubtitle}>
+                    {ACADEMIC_SUBTITLES[tab.key]}
+                  </Text>
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
+        </View>
+      </ScrollView>
+    </Screen>
+  );
+}
+
+const ACADEMIC_GRADIENTS: Record<Tab, readonly [string, string]> = {
+  timetable: ['#6366f1', '#818cf8'],
+  homework: ['#ea580c', '#fb923c'],
+  exams: ['#e11d48', '#fb7185'],
+};
+
+const ACADEMIC_SUBTITLES: Record<Tab, string> = {
+  timetable: 'Daily class schedule',
+  homework: 'Assignments and submissions',
+  exams: 'Schedules and results',
+};
+
+export function ParentAcademicsTaskScreen({
+  route,
+}: {
+  route: { params: { task: Tab } };
+}) {
+  const { task } = route.params;
+  const title = TABS.find(tab => tab.key === task)?.label ?? 'Academics';
+
+  return (
+    <Screen safeArea={false} statusBarStyle="light" backgroundColor="#f8fafc">
+      <ScreenHeader title={title} subtitle={ACADEMIC_SUBTITLES[task]} />
       <View className="flex-1">
-        {activeTab === 'timetable' && <TimetableSection />}
-        {activeTab === 'homework' && <HomeworkSection />}
-        {activeTab === 'exams' && <ExamsSection />}
+        {task === 'timetable' && <TimetableSection />}
+        {task === 'homework' && <HomeworkSection />}
+        {task === 'exams' && <ExamsSection />}
       </View>
     </Screen>
   );
 }
+
+const menuStyles = StyleSheet.create({
+  content: { padding: 16, paddingBottom: 32 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -6 },
+  gridItem: { width: '50%', padding: 6 },
+  iconCard: {
+    minHeight: 170,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  iconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  iconLabel: { fontSize: 15, fontWeight: '700', color: '#1f2937' },
+  iconSubtitle: {
+    marginTop: 5,
+    fontSize: 11,
+    lineHeight: 16,
+    color: '#64748b',
+    textAlign: 'center',
+  },
+});

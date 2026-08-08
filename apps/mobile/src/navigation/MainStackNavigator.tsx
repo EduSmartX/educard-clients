@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -23,6 +23,7 @@ import {
   StudentFeeComponentRequestsScreen,
 } from '@/features/fee/screens';
 import AnnouncementDetailScreen from '@/screens/shared/AnnouncementDetailScreen';
+import { ParentAcademicsTaskScreen } from '@/screens/parent/ParentAcademicsScreen';
 import AnnouncementsScreen from '@/screens/shared/AnnouncementsScreen';
 import AttendanceReportScreen from '@/screens/shared/attendance/AttendanceReportScreen';
 import MarkAttendanceScreen from '@/screens/shared/attendance/MarkAttendanceScreen';
@@ -109,7 +110,7 @@ function renderScreenBoundary({
 
 export function MainStackNavigator({ role }: MainStackNavigatorProps) {
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.container}>
       <Stack.Navigator
         screenOptions={{ headerShown: false, animation: 'slide_from_right' }}
         screenLayout={renderScreenBoundary}
@@ -178,6 +179,10 @@ export function MainStackNavigator({ role }: MainStackNavigatorProps) {
         <Stack.Screen name="SwitchProfile" component={SwitchProfileScreen} />
         <Stack.Screen name="SyncProfiles" component={SyncProfilesScreen} />
         <Stack.Screen name="StudentLeave" component={StudentLeaveScreen} />
+        <Stack.Screen
+          name="StudentAcademicsTask"
+          component={ParentAcademicsTaskScreen}
+        />
         <Stack.Screen name="Preferences" component={OrgPreferencesScreen} />
         <Stack.Screen name="Timetable" component={TimetableScreen} />
         <Stack.Screen
@@ -275,3 +280,7 @@ export function MainStackNavigator({ role }: MainStackNavigatorProps) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+});

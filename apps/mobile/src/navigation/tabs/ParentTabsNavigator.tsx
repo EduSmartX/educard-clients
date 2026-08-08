@@ -15,7 +15,7 @@ import ParentAcademicsScreen from '@/screens/parent/ParentAcademicsScreen';
 import ParentAttendanceScreen from '@/screens/parent/ParentAttendanceScreen';
 import ParentDashboardScreen from '@/screens/parent/ParentDashboardScreen';
 import ParentFeesScreen from '@/screens/parent/ParentFeesScreen';
-import ParentSettingsScreen from '@/screens/parent/ParentSettingsScreen';
+import SettingsScreen from '@/screens/settings/SettingsScreen';
 import type { ParentTabParamList } from '@/navigation/types';
 
 const Tab = createBottomTabNavigator<ParentTabParamList>();
@@ -89,7 +89,7 @@ export function ParentTabsNavigator() {
       />
       <Tab.Screen
         name="Settings"
-        component={ParentSettingsScreen}
+        component={SettingsScreen}
         options={{ title: 'Settings', tabBarIcon: SettingsTabIcon }}
       />
     </Tab.Navigator>
