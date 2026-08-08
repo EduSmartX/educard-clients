@@ -77,11 +77,18 @@ function formatGreeting() {
   return 'Good Evening';
 }
 
-function formatCurrency(amount: number) {
-  if (amount >= 1000) {
-    return `\u20b9${(amount / 1000).toFixed(amount % 1000 === 0 ? 0 : 1)}K`;
+function formatCurrency(amount: number | string | null | undefined) {
+  const n = Number(amount) || 0;
+  if (n >= 1000) {
+    return `\u20b9${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}K`;
   }
-  return `\u20b9${amount}`;
+  return `\u20b9${n}`;
+}
+
+// API may return numeric fields as strings or omit them; coerce safely.
+function toPercent(value: number | string | null | undefined) {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.round(n) : 0;
 }
 
 function shortLabel(name: string) {
@@ -150,7 +157,7 @@ export default function ParentDashboardScreen() {
       title: 'Attendance',
       value:
         dashboard?.attendance_percentage != null
-          ? `${dashboard.attendance_percentage.toFixed(0)}%`
+          ? `${toPercent(dashboard.attendance_percentage)}%`
           : '\u2014',
       icon: ClipboardCheck,
       gradient: ['#10b981', '#059669', '#047857'],
@@ -174,7 +181,7 @@ export default function ParentDashboardScreen() {
     },
     {
       id: 'fees',
-      title: fee && fee.balance_due > 0 ? 'Fees Due' : 'Fees',
+      title: fee && Number(fee.balance_due) > 0 ? 'Fees Due' : 'Fees',
       value: fee ? formatCurrency(fee.balance_due) : '\u2014',
       icon: CreditCard,
       gradient: ['#ef4444', '#dc2626', '#b91c1c'],
@@ -184,26 +191,49 @@ export default function ParentDashboardScreen() {
 
   const attendanceSegments: ChartSegment[] = attendance
     ? [
-        { label: 'Present', value: attendance.present, color: '#10b981' },
-        { label: 'Absent', value: attendance.absent, color: '#ef4444' },
-        { label: 'Late', value: attendance.late, color: '#f59e0b' },
+        {
+          label: 'Present',
+          value: Number(attendance.present) || 0,
+          color: '#10b981',
+        },
+        {
+          label: 'Absent',
+          value: Number(attendance.absent) || 0,
+          color: '#ef4444',
+        },
+        {
+          label: 'Late',
+          value: Number(attendance.late) || 0,
+          color: '#f59e0b',
+        },
       ]
     : [];
 
   const feeSegments: ChartSegment[] = fee
     ? [
-        { label: 'Paid', value: fee.amount_paid, color: '#10b981' },
-        { label: 'Due', value: fee.balance_due, color: '#ef4444' },
+        {
+          label: 'Paid',
+          value: Number(fee.amount_paid) || 0,
+          color: '#10b981',
+        },
+        {
+          label: 'Due',
+          value: Number(fee.balance_due) || 0,
+          color: '#ef4444',
+        },
       ]
     : [];
 
   const gradedExams = (examDetail?.exams ?? []).filter(
     exam =>
-      exam.marks_obtained != null && exam.max_marks > 0 && !exam.is_absent,
+      exam.marks_obtained != null &&
+      Number(exam.max_marks) > 0 &&
+      !exam.is_absent,
   );
 
   const marksData: BarDatum[] = gradedExams.slice(0, 6).map(exam => {
-    const pct = Math.round(((exam.marks_obtained ?? 0) / exam.max_marks) * 100);
+    const max = Number(exam.max_marks) || 1;
+    const pct = Math.round((Number(exam.marks_obtained ?? 0) / max) * 100);
     return {
       label: shortLabel(exam.subject_name),
       value: pct,
@@ -340,7 +370,7 @@ export default function ParentDashboardScreen() {
                       data={attendanceSegments}
                       size={128}
                       thickness={16}
-                      centerValue={`${attendance.percentage.toFixed(0)}%`}
+                      centerValue={`${toPercent(attendance.percentage)}%`}
                       centerLabel="Present"
                     />
                   </View>
@@ -357,14 +387,17 @@ export default function ParentDashboardScreen() {
 
             <FloatingCard style={styles.chartCard}>
               <Text style={styles.chartTitle}>Fees</Text>
-              {fee && fee.total_amount > 0 ? (
+              {fee && Number(fee.total_amount) > 0 ? (
                 <>
                   <View className="items-center">
                     <DonutChart
                       data={feeSegments}
                       size={128}
                       thickness={16}
-                      centerValue={`${fee.paid_percentage.toFixed(0)}%`}
+                      centerValue={`${toPercent(
+                        (Number(fee.amount_paid) / Number(fee.total_amount)) *
+                          100,
+                      )}%`}
                       centerLabel="Paid"
                     />
                   </View>

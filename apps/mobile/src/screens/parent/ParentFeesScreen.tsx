@@ -70,7 +70,12 @@ export default function ParentFeesScreen() {
   };
   const isLoading = summaryLoading || paymentsLoading || componentsLoading;
 
-  const paidPct = summary ? Number(summary.paid_percentage) : 0;
+  const paidPct =
+    summary && Number(summary.total_amount) > 0
+      ? Math.round(
+          (Number(summary.amount_paid) / Number(summary.total_amount)) * 100,
+        )
+      : 0;
   const feeSegments: ChartSegment[] = summary
     ? [
         { label: 'Paid', value: Number(summary.amount_paid), color: '#10b981' },

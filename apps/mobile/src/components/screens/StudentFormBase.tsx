@@ -47,8 +47,6 @@ export interface StudentFormState {
   admission_number: string;
   admission_date: string;
   guardian_name: string;
-  guardian_phone: string;
-  guardian_email: string;
   guardian_relationship: string;
   medical_conditions: string;
   description: string;
@@ -344,27 +342,6 @@ export function StudentFormBase({
                 value={form.guardian_name}
                 onChangeText={v => updateField('guardian_name', v)}
                 placeholder="Enter guardian name"
-                editable={fieldsEditable}
-              />
-              <FormPhoneInput
-                label="Guardian Phone"
-                value={form.guardian_phone}
-                onChangeText={v => updateField('guardian_phone', v)}
-                onBlurValidate={() => blurValidate('guardian_phone')}
-                error={errors.guardian_phone}
-                placeholder="Enter guardian phone"
-                keyboardType="phone-pad"
-                maxLength={15}
-                editable={fieldsEditable}
-              />
-              <FormInput
-                label="Guardian Email"
-                value={form.guardian_email}
-                onChangeText={v => updateField('guardian_email', v)}
-                onBlurValidate={() => blurValidate('guardian_email')}
-                error={errors.guardian_email}
-                placeholder="Enter guardian email"
-                keyboardType="email-address"
                 editable={fieldsEditable}
               />
               <FormDropdown

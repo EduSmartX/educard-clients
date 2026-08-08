@@ -1,4 +1,4 @@
-import { Colors } from '@educard/shared';
+import { Colors, getFieldErrors } from '@educard/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Save } from 'lucide-react-native';
 import { useState, useEffect } from 'react';
@@ -10,7 +10,11 @@ import {
   type OrganizationProfile,
   type UpdateOrganizationAddressPayload,
 } from '@/api/organization';
-import { AddressForm, type AddressData } from '@/components/forms/AddressForm';
+import {
+  AddressForm,
+  type AddressData,
+  type AddressErrors,
+} from '@/components/forms/AddressForm';
 import { useToast } from '@/lib/toast-context';
 
 interface OrganizationAddressFormProps {
@@ -26,12 +30,22 @@ const EMPTY: AddressData = {
   country: 'India',
 };
 
+const BACKEND_FIELD_MAP: Record<string, keyof AddressData> = {
+  street_address: 'streetAddress',
+  address_line_2: 'addressLine2',
+  city: 'city',
+  state: 'state',
+  zip_code: 'zipCode',
+  country: 'country',
+};
+
 export function OrganizationAddressForm({
   organization,
 }: OrganizationAddressFormProps) {
   const { showToast } = useToast();
   const qc = useQueryClient();
   const [values, setValues] = useState<AddressData>(EMPTY);
+  const [errors, setErrors] = useState<AddressErrors>({});
 
   useEffect(() => {
     const address = organization.address;
@@ -55,6 +69,21 @@ export function OrganizationAddressForm({
       showToast({ type: 'success', title: 'Address updated' });
     },
     onError: err => {
+      // Prefer inline field errors from the API; only popup for non-field errors.
+      const apiErrors = getFieldErrors(err);
+      const mapped: AddressErrors = {};
+      let hasFieldError = false;
+      for (const [backendField, message] of Object.entries(apiErrors)) {
+        const field = BACKEND_FIELD_MAP[backendField];
+        if (field) {
+          mapped[field] = message;
+          hasFieldError = true;
+        }
+      }
+      if (hasFieldError) {
+        setErrors(mapped);
+        return;
+      }
       showToast({
         type: 'error',
         title: 'Update failed',
@@ -65,22 +94,27 @@ export function OrganizationAddressForm({
 
   const handleChange = (field: keyof AddressData, value: string) => {
     setValues(prev => ({ ...prev, [field]: value }));
+    setErrors(prev => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
   };
 
   const handleSave = () => {
-    if (
-      !values.streetAddress.trim() ||
-      !values.city.trim() ||
-      !values.state.trim() ||
-      !values.zipCode.trim() ||
-      !values.country.trim()
-    ) {
-      showToast({
-        type: 'error',
-        title: 'Please fill all required address fields',
-      });
+    const nextErrors: AddressErrors = {};
+    if (!values.streetAddress.trim())
+      nextErrors.streetAddress = 'Street address is required';
+    if (!values.city.trim()) nextErrors.city = 'City is required';
+    if (!values.state.trim()) nextErrors.state = 'State is required';
+    if (!values.zipCode.trim()) nextErrors.zipCode = 'ZIP code is required';
+    if (!values.country.trim()) nextErrors.country = 'Country is required';
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
       return;
     }
+    setErrors({});
     mutation.mutate({
       street_address: values.streetAddress,
       address_line_2: values.addressLine2,
@@ -93,7 +127,12 @@ export function OrganizationAddressForm({
 
   return (
     <View style={styles.container}>
-      <AddressForm values={values} onChange={handleChange} required />
+      <AddressForm
+        values={values}
+        onChange={handleChange}
+        errors={errors}
+        required
+      />
 
       <TouchableOpacity
         style={[styles.saveBtn, mutation.isPending && styles.dimmed]}

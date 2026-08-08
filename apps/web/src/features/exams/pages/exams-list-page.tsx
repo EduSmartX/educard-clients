@@ -43,7 +43,7 @@ export function ExamsListPage() {
   const { isAdmin } = useRole();
 
   // ── State ────────────────────────────────
-  const { filters, page, pageSize, setFilter, setPage, setPageSize } = useFilterParams(
+  const { filters, page, pageSize, setFilter, setFilters, setPage, setPageSize } = useFilterParams(
     { session: '', class: '', status: '' },
     { defaultPageSize: 10 }
   );
@@ -229,7 +229,6 @@ export function ExamsListPage() {
               value={sessionFilter || 'all'}
               onValueChange={(value) => {
                 setSessionFilter(value === 'all' ? '' : value);
-                setPage(1);
               }}
               placeholder="All Sessions"
               searchPlaceholder="Search sessions..."
@@ -246,7 +245,6 @@ export function ExamsListPage() {
               value={classFilter || 'all'}
               onValueChange={(value) => {
                 setClassFilter(value === 'all' ? '' : value);
-                setPage(1);
               }}
               placeholder="All Classes"
               searchPlaceholder="Search classes..."
@@ -263,7 +261,6 @@ export function ExamsListPage() {
               value={statusFilter || 'all'}
               onValueChange={(value) => {
                 setStatusFilter(value === 'all' ? '' : value);
-                setPage(1);
               }}
               placeholder="All Statuses"
               className="w-full"
@@ -273,10 +270,7 @@ export function ExamsListPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => {
-                  setSessionFilter('');
-                  setClassFilter('');
-                  setStatusFilter('');
-                  setPage(1);
+                  setFilters({ session: '', class: '', status: '' });
                 }}
                 className="h-10 justify-start text-xs text-gray-500 hover:text-gray-700"
               >
@@ -294,7 +288,6 @@ export function ExamsListPage() {
             onPageChange={setPage}
             onPageSizeChange={(size) => {
               setPageSize(size);
-              setPage(1);
             }}
             emptyMessage={
               showDeleted

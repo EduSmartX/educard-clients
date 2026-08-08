@@ -2,7 +2,11 @@
  * Create Exam Session Screen
  */
 
-import { getRoleGradient, extractApiError } from '@educard/shared';
+import {
+  getRoleGradient,
+  extractApiError,
+  getFieldErrors,
+} from '@educard/shared';
 import {
   EXAM_SESSION_TYPE_LABELS,
   type ExamSessionType,
@@ -16,7 +20,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
@@ -75,19 +78,27 @@ export default function CreateExamSessionScreen() {
     }
   }, [currentAcademicYear, academicYear, startDate, endDate]);
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const clearError = (field: string) =>
+    setErrors(prev => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+
   const handleSubmit = async () => {
-    if (!name.trim()) {
-      Alert.alert('Error', 'Session name is required');
+    const fe: Record<string, string> = {};
+    if (!name.trim()) fe.name = 'Session name is required';
+    if (!sessionType) fe.session_type = 'Session type is required';
+    if (!academicYear.trim())
+      fe.academic_year = 'Academic year is required (e.g., 2024-2025)';
+    if (Object.keys(fe).length > 0) {
+      setErrors(fe);
       return;
     }
-    if (!sessionType) {
-      Alert.alert('Error', 'Session type is required');
-      return;
-    }
-    if (!academicYear.trim()) {
-      Alert.alert('Error', 'Academic year is required (e.g., 2024-2025)');
-      return;
-    }
+    setErrors({});
 
     try {
       await createSession.mutateAsync({
@@ -100,6 +111,12 @@ export default function CreateExamSessionScreen() {
       });
       handleBack();
     } catch (err) {
+      // Prefer inline field errors from the API; only popup for non-field errors.
+      const fieldErrors = getFieldErrors(err);
+      if (Object.keys(fieldErrors).length > 0) {
+        setErrors(fieldErrors);
+        return;
+      }
       showToast({
         type: 'error',
         title: 'Error',
@@ -149,21 +166,33 @@ export default function CreateExamSessionScreen() {
             <FormInput
               label="Session Name"
               value={name}
-              onChangeText={setName}
+              onChangeText={v => {
+                setName(v);
+                clearError('name');
+              }}
               placeholder="e.g., Unit Test 1 - 2024"
+              error={errors.name}
               required
             />
             <FormDropdown
               label="Session Type"
               value={sessionType}
-              onChange={setSessionType}
+              onChange={v => {
+                setSessionType(v);
+                clearError('session_type');
+              }}
               options={SESSION_TYPE_OPTIONS}
               placeholder="Select type"
+              error={errors.session_type}
               required
             />
             <AcademicYearDropdown
               value={academicYear}
-              onChange={setAcademicYear}
+              onChange={v => {
+                setAcademicYear(v);
+                clearError('academic_year');
+              }}
+              error={errors.academic_year}
               required
             />
             <FormInput

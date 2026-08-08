@@ -35,6 +35,7 @@ import type { SharedStackNavigation } from '@/navigation/types';
 import { headerStyles, layoutStyles } from '@/styles';
 
 import { styles } from './apply-leave-styles';
+import { LeaveDaysCalendar } from './LeaveDaysCalendar';
 
 // Use teacher/employee theme for consistency
 const employeeTheme = getRoleThemeColors('employee');
@@ -457,6 +458,17 @@ export default function ApplyLeaveScreen() {
                     {workingDaysInfo.working_days}
                   </Text>
                 </View>
+
+                {form.start_date && form.end_date && (
+                  <View style={styles.calendarWrap}>
+                    <LeaveDaysCalendar
+                      startDate={form.start_date}
+                      endDate={form.end_date}
+                      holidays={workingDaysInfo.holidays}
+                      accentColor={accentColor}
+                    />
+                  </View>
+                )}
 
                 {calculatedDays === 0 && (
                   <View style={styles.holidayBlock}>

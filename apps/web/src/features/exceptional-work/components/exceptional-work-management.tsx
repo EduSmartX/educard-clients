@@ -182,12 +182,10 @@ export function ExceptionalWorkManagement() {
   // Handlers
   const handleFilter = (appliedFilters: Record<string, string>) => {
     setFilters(appliedFilters);
-    setPage(1); // Reset to first page when filtering
   };
 
   const handleResetFilters = () => {
     setFilters({ override_type: '', from_date: '', to_date: '' });
-    setPage(1);
   };
 
   // Delete mutation
@@ -364,7 +362,6 @@ export function ExceptionalWorkManagement() {
                       const newFilters = { ...filters };
                       delete newFilters[key];
                       setFilters(newFilters);
-                      setPage(1);
                     }}
                     className="hover:bg-muted rounded-full p-0.5"
                   >
@@ -420,7 +417,6 @@ export function ExceptionalWorkManagement() {
               onPageChange={setPage}
               onPageSizeChange={(newSize: number) => {
                 setPageSize(newSize);
-                setPage(1);
               }}
               emptyMessage="No exceptions configured yet"
               emptyAction={{

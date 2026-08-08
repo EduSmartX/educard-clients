@@ -41,6 +41,9 @@ export const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
+  calendarWrap: {
+    marginTop: 12,
+  },
   sectionTitle: {
     fontSize: 12,
     fontWeight: '600',

@@ -55,8 +55,6 @@ const INITIAL_FORM: StudentFormState = {
   admission_number: '',
   admission_date: '',
   guardian_name: '',
-  guardian_phone: '',
-  guardian_email: '',
   guardian_relationship: '',
   medical_conditions: '',
   description: '',

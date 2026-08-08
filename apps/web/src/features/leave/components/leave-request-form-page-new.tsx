@@ -46,6 +46,7 @@ import {
 } from '../hooks';
 import { leaveRequestFormSchema, type LeaveRequestFormData } from '../schemas';
 import { LEAVE_STATUS_CONFIG, type HolidayInfo } from '../types';
+import { LeaveDaysCalendar } from './leave-days-calendar';
 
 type PageMode = 'create' | 'edit' | 'view';
 
@@ -339,6 +340,11 @@ export function LeaveRequestFormPageNew() {
                     {dateRangeError}
                   </AlertDescription>
                 </Alert>
+              )}
+
+              {/* Leave Calendar */}
+              {!!startDate && !!endDate && !dateRangeError && (
+                <LeaveDaysCalendar startDate={startDate} endDate={endDate} holidays={holidays} />
               )}
 
               {/* Holidays Table */}
