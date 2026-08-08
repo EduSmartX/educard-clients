@@ -24,6 +24,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
+  StatusBar,
   StyleSheet,
 } from 'react-native';
 
@@ -39,7 +40,6 @@ import {
   StatsGrid,
   type StatCardData,
 } from '@/components/dashboard';
-import { Screen } from '@/components/layout';
 import {
   GradientHeader,
   FloatingCard,
@@ -187,21 +187,22 @@ export default function ParentDashboardScreen() {
     },
   ];
 
-  const attendanceSegments: ChartSegment[] = attendance
+  const attendanceStats = attendance?.current_month;
+  const attendanceSegments: ChartSegment[] = attendanceStats
     ? [
         {
           label: 'Present',
-          value: Number(attendance.current_month.present_days) || 0,
+          value: Number(attendanceStats.present_days) || 0,
           color: '#10b981',
         },
         {
           label: 'Absent',
-          value: Number(attendance.current_month.absent_days) || 0,
+          value: Number(attendanceStats.absent_days) || 0,
           color: '#ef4444',
         },
         {
           label: 'Half Day',
-          value: Number(attendance.current_month.half_days) || 0,
+          value: Number(attendanceStats.half_days) || 0,
           color: '#f59e0b',
         },
       ]
@@ -269,7 +270,8 @@ export default function ParentDashboardScreen() {
   ];
 
   return (
-    <Screen scrollable={false} edges={[]} statusBarStyle="light">
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" />
       {/* Fixed hero header — same structure as Admin/Employee dashboards */}
       <GradientHeader
         greeting={`${formatGreeting()},`}
@@ -348,14 +350,14 @@ export default function ParentDashboardScreen() {
             <FloatingCard style={styles.chartCard}>
               <Text style={styles.chartTitle}>Attendance</Text>
               <Text style={styles.chartSubtitle}>This Month</Text>
-              {attendance && attendance.current_month.working_days > 0 ? (
+              {attendanceStats && attendanceStats.working_days > 0 ? (
                 <>
                   <View className="items-center">
                     <DonutChart
                       data={attendanceSegments}
                       size={128}
                       thickness={16}
-                      centerValue={`${toPercent(attendance.current_month.percentage)}%`}
+                      centerValue={`${toPercent(attendanceStats.percentage)}%`}
                       centerLabel="Present"
                     />
                   </View>
@@ -532,11 +534,12 @@ export default function ParentDashboardScreen() {
           </View>
         </View>
       </ScrollView>
-    </Screen>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#f0fdf4' },
   content: { flex: 1 },
   statsWrap: { marginTop: 12 },
   scrollContent: { paddingBottom: 100 },

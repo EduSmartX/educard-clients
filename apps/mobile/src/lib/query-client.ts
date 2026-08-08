@@ -10,8 +10,11 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 2,
+      retry: 1,
+      // RN has no reliable online/focus signal; auto-refetch fires queries
+      // repeatedly on every reconnect/focus flip, so disable both.
       refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
     },
   },
 });

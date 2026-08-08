@@ -47,8 +47,6 @@ const STAFF_ITEMS: FooterItem[] = [
   { name: 'Settings', label: 'Settings', Icon: Settings },
 ];
 
-// Parent AND student roles both render ParentTabsNavigator, so they share these
-// tabs. Keep in sync with MainTabsNavigator + ParentTabsNavigator screen names.
 const PARENT_ITEMS: FooterItem[] = [
   { name: 'Dashboard', label: 'Dashboard', Icon: LayoutDashboard },
   { name: 'Academics', label: 'Academics', Icon: GraduationCap },
@@ -57,30 +55,29 @@ const PARENT_ITEMS: FooterItem[] = [
   { name: 'Settings', label: 'Settings', Icon: Settings },
 ];
 
-const PARENT_ROLES = new Set(['parent', 'student']);
-
 type NavState = NavigationState | PartialState<NavigationState> | undefined;
 type RouteWithState = Route<string> & { state?: NavState };
 
-function findTabsRoute(state: NavState): RouteWithState | undefined {
-  if (!state?.routes) return undefined;
-  for (const route of state.routes) {
-    if (route.name === 'Tabs') return route as RouteWithState;
-    const child = (route as RouteWithState).state;
-    if (child) {
-      const found = findTabsRoute(child);
-      if (found) return found;
-    }
-  }
-  return undefined;
-}
+function selectActiveTabFromMainTabs(state: NavState): string | undefined {
+  if (!state?.routes || state.routes.length === 0) return undefined;
+  const rootIndex = state.index ?? 0;
+  const rootRoute = state.routes[rootIndex] as RouteWithState | undefined;
+  if (!rootRoute || rootRoute.name !== 'Main') return undefined;
 
-// Active tab is whichever tab is selected underneath any open detail screen.
-function selectActiveTab(state: NavState): string | undefined {
-  const tabsRoute = findTabsRoute(state);
-  const tabState = tabsRoute?.state as NavigationState | undefined;
-  if (!tabState || tabState.routes.length === 0) return undefined;
-  return tabState.routes[tabState.index ?? 0]?.name;
+  const mainState = rootRoute.state as NavigationState | undefined;
+  const tabsRoute = mainState?.routes.find(r => r.name === 'Tabs') as
+    | RouteWithState
+    | undefined;
+  if (!tabsRoute) return undefined;
+
+  const tabState = tabsRoute.state as NavigationState | undefined;
+  if (tabState && tabState.routes.length > 0) {
+    return tabState.routes[tabState.index ?? 0]?.name;
+  }
+
+  const screenParam = (tabsRoute.params as { screen?: string } | undefined)
+    ?.screen;
+  return screenParam;
 }
 
 interface AppFooterNavProps {
@@ -89,25 +86,32 @@ interface AppFooterNavProps {
 
 export function AppFooterNav({ role }: AppFooterNavProps) {
   const insets = useSafeAreaInsets();
+  const items = role?.toLowerCase() === 'parent' ? PARENT_ITEMS : STAFF_ITEMS;
   const [activeTab, setActiveTab] = useState<string | undefined>(() =>
     navigationRef.isReady()
-      ? selectActiveTab(navigationRef.getRootState())
+      ? selectActiveTabFromMainTabs(navigationRef.getRootState())
       : undefined,
   );
-  const items = PARENT_ROLES.has(role?.toLowerCase() ?? '')
-    ? PARENT_ITEMS
-    : STAFF_ITEMS;
 
   // Footer sits outside the tab navigator; sync via the container's global state.
   useEffect(() => {
     const sync = () => {
-      if (navigationRef.isReady()) {
-        setActiveTab(selectActiveTab(navigationRef.getRootState()));
+      if (!navigationRef.isReady()) return;
+
+      const focusedRouteName = navigationRef.getCurrentRoute()?.name;
+      if (
+        focusedRouteName &&
+        items.some(item => item.name === focusedRouteName)
+      ) {
+        setActiveTab(focusedRouteName);
+        return;
       }
+
+      setActiveTab(selectActiveTabFromMainTabs(navigationRef.getRootState()));
     };
     sync();
     return navigationRef.addListener('state', sync);
-  }, []);
+  }, [items]);
 
   const handlePress = (name: string) => {
     if (!navigationRef.isReady()) return;

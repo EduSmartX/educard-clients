@@ -85,7 +85,7 @@ export default function ParentSettingsScreen() {
 
   return (
     <Screen>
-      <Header title="Settings" showBack={false} />
+      <Header title="Settings" showBack={false} light />
 
       <ScrollView
         className="flex-1"

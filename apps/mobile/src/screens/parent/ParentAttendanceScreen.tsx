@@ -143,7 +143,7 @@ export default function ParentAttendanceScreen() {
 
   return (
     <Screen>
-      <Header title="Attendance" showBack={false} />
+      <Header title="Attendance" showBack={false} light />
       <ScrollView
         className="flex-1"
         contentContainerStyle={styles.scrollContent}

@@ -71,7 +71,18 @@ export function OrganizationInfoForm({
       tax_id: organization.tax_id ?? '',
       website_url: organization.website_url ?? '',
     });
-  }, [organization]);
+  }, [
+    organization.public_id,
+    organization.name,
+    organization.organization_type,
+    organization.board_affiliation,
+    organization.email,
+    organization.phone,
+    organization.registration_number,
+    organization.corporate_identification_number,
+    organization.tax_id,
+    organization.website_url,
+  ]);
 
   const mutation = useMutation({
     mutationFn: (payload: UpdateOrganizationPayload) =>

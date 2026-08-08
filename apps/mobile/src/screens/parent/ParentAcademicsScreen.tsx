@@ -473,6 +473,7 @@ export default function ParentAcademicsScreen() {
       <Header
         title="Academics"
         showBack={false}
+        light
         rightIcon={isStudent ? CalendarOff : undefined}
         onRightIconPress={
           isStudent ? () => navigation.navigate('StudentLeave') : undefined

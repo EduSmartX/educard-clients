@@ -92,7 +92,7 @@ export default function ParentFeesScreen() {
 
   return (
     <Screen>
-      <Header title="Fees" showBack={false} />
+      <Header title="Fees" showBack={false} light />
       <ScrollView
         className="flex-1"
         contentContainerClassName="pb-[100px]"

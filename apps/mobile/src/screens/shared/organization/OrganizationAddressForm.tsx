@@ -58,8 +58,11 @@ export function OrganizationAddressForm({
         zipCode: address.zip_code ?? '',
         country: address.country ?? 'India',
       });
+    } else {
+      // Reset to empty if address is null/undefined
+      setValues(EMPTY);
     }
-  }, [organization]);
+  }, [organization.address, organization.public_id]);
 
   const mutation = useMutation({
     mutationFn: (payload: UpdateOrganizationAddressPayload) =>

@@ -64,6 +64,16 @@ export function OrganizationAddressForm({
         zip_code: organization.address.zip_code || '',
         country: organization.address.country || 'India',
       });
+    } else if (organization) {
+      // Reset to default empty values if organization exists but has no address
+      form.reset({
+        street_address: '',
+        address_line_2: '',
+        city: '',
+        state: '',
+        zip_code: '',
+        country: 'India',
+      });
     }
   }, [organization, form]);
 
