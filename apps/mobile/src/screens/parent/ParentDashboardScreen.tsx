@@ -12,7 +12,6 @@ import {
   ClipboardCheck,
   Clock,
   CreditCard,
-  GraduationCap,
   Megaphone,
   Star,
 } from 'lucide-react-native';
@@ -42,7 +41,6 @@ import {
 } from '@/components/dashboard';
 import { Screen } from '@/components/layout';
 import {
-  Avatar,
   GradientHeader,
   FloatingCard,
   SectionHeader,
@@ -193,17 +191,17 @@ export default function ParentDashboardScreen() {
     ? [
         {
           label: 'Present',
-          value: Number(attendance.present) || 0,
+          value: Number(attendance.current_month.present_days) || 0,
           color: '#10b981',
         },
         {
           label: 'Absent',
-          value: Number(attendance.absent) || 0,
+          value: Number(attendance.current_month.absent_days) || 0,
           color: '#ef4444',
         },
         {
-          label: 'Late',
-          value: Number(attendance.late) || 0,
+          label: 'Half Day',
+          value: Number(attendance.current_month.half_days) || 0,
           color: '#f59e0b',
         },
       ]
@@ -272,7 +270,38 @@ export default function ParentDashboardScreen() {
 
   return (
     <Screen scrollable={false} edges={[]} statusBarStyle="light">
+      {/* Fixed hero header — same structure as Admin/Employee dashboards */}
+      <GradientHeader
+        greeting={`${formatGreeting()},`}
+        title={studentName}
+        subtitle={className ? `Class ${className}` : undefined}
+        onNotificationPress={goToNotifications}
+        right={
+          <TouchableOpacity
+            style={styles.profileBtn}
+            onPress={goToSettings}
+            activeOpacity={0.8}
+          >
+            {profileImageUrl && !imgError ? (
+              <Image
+                source={{ uri: profileImageUrl }}
+                style={styles.profileImage}
+                resizeMode="cover"
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <View style={styles.profileFallback}>
+                <Text style={styles.profileFallbackText}>
+                  {(studentName ?? 'S').charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        }
+      />
+
       <ScrollView
+        style={styles.content}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
@@ -282,51 +311,6 @@ export default function ParentDashboardScreen() {
           />
         }
       >
-        {/* Header */}
-        <GradientHeader
-          greeting={`${formatGreeting()},`}
-          title={user?.full_name ?? user?.first_name ?? 'Parent'}
-          onNotificationPress={goToNotifications}
-          right={
-            <TouchableOpacity
-              style={styles.profileBtn}
-              onPress={goToSettings}
-              activeOpacity={0.8}
-            >
-              {profileImageUrl && !imgError ? (
-                <Image
-                  source={{ uri: profileImageUrl }}
-                  style={styles.profileImage}
-                  resizeMode="cover"
-                  onError={() => setImgError(true)}
-                />
-              ) : (
-                <View style={styles.profileFallback}>
-                  <Text style={styles.profileFallbackText}>
-                    {(user?.full_name ?? user?.first_name ?? 'P')
-                      .charAt(0)
-                      .toUpperCase()}
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          }
-        >
-          {/* Student identity */}
-          <View className="mt-4 flex-row items-center rounded-2xl bg-white/20 p-3">
-            <Avatar name={studentName} size="md" />
-            <View className="ml-3 flex-1">
-              <Text className="text-lg font-semibold text-white">
-                {studentName}
-              </Text>
-              {!!className && (
-                <Text className="text-green-100">Class {className}</Text>
-              )}
-            </View>
-            <GraduationCap size={20} color="#ffffff" />
-          </View>
-        </GradientHeader>
-
         {/* Stats Row */}
         <View style={styles.statsWrap}>
           <StatsGrid stats={parentStats} />
@@ -363,14 +347,15 @@ export default function ParentDashboardScreen() {
           <View style={styles.chartsRow}>
             <FloatingCard style={styles.chartCard}>
               <Text style={styles.chartTitle}>Attendance</Text>
-              {attendance && attendance.total_days > 0 ? (
+              <Text style={styles.chartSubtitle}>This Month</Text>
+              {attendance && attendance.current_month.working_days > 0 ? (
                 <>
                   <View className="items-center">
                     <DonutChart
                       data={attendanceSegments}
                       size={128}
                       thickness={16}
-                      centerValue={`${toPercent(attendance.percentage)}%`}
+                      centerValue={`${toPercent(attendance.current_month.percentage)}%`}
                       centerLabel="Present"
                     />
                   </View>
@@ -552,7 +537,8 @@ export default function ParentDashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  statsWrap: { marginTop: -16 },
+  content: { flex: 1 },
+  statsWrap: { marginTop: 12 },
   scrollContent: { paddingBottom: 100 },
   chartsRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
   chartCard: { flex: 1 },
@@ -562,6 +548,13 @@ const styles = StyleSheet.create({
     color: '#334155',
     marginBottom: 8,
     textAlign: 'center',
+  },
+  chartSubtitle: {
+    fontSize: 11,
+    color: '#94a3b8',
+    textAlign: 'center',
+    marginTop: -4,
+    marginBottom: 8,
   },
   legend: { marginTop: 12 },
   emptyText: {

@@ -23,13 +23,19 @@ export interface StudentDashboardData {
   upcoming_exams: number;
 }
 
-export interface AttendanceSummary {
-  total_days: number;
-  present: number;
-  absent: number;
-  late: number;
+export interface AttendancePeriodStats {
+  working_days: number;
+  present_days: number;
+  absent_days: number;
+  half_days: number;
   percentage: number;
-  monthly_breakdown: { month: string; present: number; absent: number; total: number }[];
+}
+
+export interface AttendanceSummary {
+  current_month: AttendancePeriodStats;
+  previous_month_percentage: number;
+  academic_year_percentage: number;
+  growth_rate: number;
 }
 
 export interface AttendanceCalendarDay {
@@ -69,7 +75,12 @@ export interface HomeworkItem {
 
 export interface HomeworkDetail extends HomeworkItem {
   instructions: string;
-  attachments: { public_id: string; file_name: string; file_type: string; file_url: string }[];
+  attachments: {
+    public_id: string;
+    file_name: string;
+    file_type: string;
+    file_url: string;
+  }[];
   is_accepting_submissions: boolean;
   my_submission: {
     public_id: string;
@@ -180,25 +191,25 @@ export interface LeaveRequest {
 
 export async function fetchDashboard(): Promise<StudentDashboardData> {
   const res = await apiClient.get<ApiResponse<StudentDashboardData>>(
-    API_ENDPOINTS.STUDENT_PORTAL.DASHBOARD
+    API_ENDPOINTS.STUDENT_PORTAL.DASHBOARD,
   );
   return res.data.data;
 }
 
 export async function fetchAttendanceSummary(): Promise<AttendanceSummary> {
   const res = await apiClient.get<ApiResponse<AttendanceSummary>>(
-    API_ENDPOINTS.STUDENT_PORTAL.ATTENDANCE.SUMMARY
+    API_ENDPOINTS.STUDENT_PORTAL.ATTENDANCE.SUMMARY,
   );
   return res.data.data;
 }
 
 export async function fetchAttendanceCalendar(
   month: number,
-  year: number
+  year: number,
 ): Promise<AttendanceCalendarDay[]> {
   const res = await apiClient.get<ApiResponse<AttendanceCalendarDay[]>>(
     API_ENDPOINTS.STUDENT_PORTAL.ATTENDANCE.CALENDAR,
-    { params: { month, year } }
+    { params: { month, year } },
   );
   return res.data.data;
 }
@@ -206,7 +217,7 @@ export async function fetchAttendanceCalendar(
 export async function fetchTimetable(date: string): Promise<TimetableEntry[]> {
   const res = await apiClient.get<ApiResponse<TimetableEntry[]>>(
     API_ENDPOINTS.STUDENT_PORTAL.TIMETABLE,
-    { params: { date } }
+    { params: { date } },
   );
   return res.data.data;
 }
@@ -215,97 +226,105 @@ export async function fetchHomework(date?: string): Promise<HomeworkItem[]> {
   const params = date ? { date } : undefined;
   const res = await apiClient.get<ApiResponse<HomeworkItem[]>>(
     API_ENDPOINTS.STUDENT_PORTAL.HOMEWORK.LIST,
-    { params }
+    { params },
   );
   return res.data.data;
 }
 
-export async function fetchHomeworkDetail(publicId: string): Promise<HomeworkDetail> {
+export async function fetchHomeworkDetail(
+  publicId: string,
+): Promise<HomeworkDetail> {
   const res = await apiClient.get<ApiResponse<HomeworkDetail>>(
-    API_ENDPOINTS.STUDENT_PORTAL.HOMEWORK.DETAIL(publicId)
+    API_ENDPOINTS.STUDENT_PORTAL.HOMEWORK.DETAIL(publicId),
   );
   return res.data.data;
 }
 
 export async function submitHomework(
   publicId: string,
-  data: { notes?: string; file?: { uri: string; name: string; type: string } }
+  data: { notes?: string; file?: { uri: string; name: string; type: string } },
 ): Promise<void> {
   const formData = new FormData();
   if (data.notes) formData.append('notes', data.notes);
   if (data.file) formData.append('file', data.file as unknown as Blob);
-  await apiClient.post(API_ENDPOINTS.STUDENT_PORTAL.HOMEWORK.SUBMIT(publicId), formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  await apiClient.post(
+    API_ENDPOINTS.STUDENT_PORTAL.HOMEWORK.SUBMIT(publicId),
+    formData,
+    {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    },
+  );
 }
 
 export async function fetchExamSessions(): Promise<ExamSession[]> {
   const res = await apiClient.get<ApiResponse<ExamSession[]>>(
-    API_ENDPOINTS.STUDENT_PORTAL.EXAMS.SESSIONS
+    API_ENDPOINTS.STUDENT_PORTAL.EXAMS.SESSIONS,
   );
   return res.data.data;
 }
 
-export async function fetchExamSessionDetail(publicId: string): Promise<ExamSessionDetail> {
+export async function fetchExamSessionDetail(
+  publicId: string,
+): Promise<ExamSessionDetail> {
   const res = await apiClient.get<ApiResponse<ExamSessionDetail>>(
-    API_ENDPOINTS.STUDENT_PORTAL.EXAMS.SESSION_DETAIL(publicId)
+    API_ENDPOINTS.STUDENT_PORTAL.EXAMS.SESSION_DETAIL(publicId),
   );
   return res.data.data;
 }
 
 export async function fetchFeeSummary(): Promise<FeeSummary> {
   const res = await apiClient.get<ApiResponse<FeeSummary>>(
-    API_ENDPOINTS.STUDENT_PORTAL.FEE.SUMMARY
+    API_ENDPOINTS.STUDENT_PORTAL.FEE.SUMMARY,
   );
   return res.data.data;
 }
 
 export async function fetchFeePayments(): Promise<FeePayment[]> {
   const res = await apiClient.get<ApiResponse<FeePayment[]>>(
-    API_ENDPOINTS.STUDENT_PORTAL.FEE.PAYMENTS
+    API_ENDPOINTS.STUDENT_PORTAL.FEE.PAYMENTS,
   );
   return res.data.data;
 }
 
 export async function fetchFeeComponents(): Promise<FeeComponent[]> {
   const res = await apiClient.get<ApiResponse<FeeComponent[]>>(
-    API_ENDPOINTS.STUDENT_PORTAL.FEE.COMPONENTS
+    API_ENDPOINTS.STUDENT_PORTAL.FEE.COMPONENTS,
   );
   return res.data.data;
 }
 
 export async function requestFeeOptOut(
   publicId: string,
-  requestNote: string
+  requestNote: string,
 ): Promise<FeeComponent> {
   const res = await apiClient.post<ApiResponse<FeeComponent>>(
     API_ENDPOINTS.STUDENT_PORTAL.FEE.COMPONENT_OPT_OUT(publicId),
-    { request_note: requestNote }
+    { request_note: requestNote },
   );
   return res.data.data;
 }
 
 export async function requestFeeOptIn(
   publicId: string,
-  requestNote: string
+  requestNote: string,
 ): Promise<FeeComponent> {
   const res = await apiClient.post<ApiResponse<FeeComponent>>(
     API_ENDPOINTS.STUDENT_PORTAL.FEE.COMPONENT_OPT_IN(publicId),
-    { request_note: requestNote }
+    { request_note: requestNote },
   );
   return res.data.data;
 }
 
 export async function fetchLeaveBalance(): Promise<LeaveBalance[]> {
   const res = await apiClient.get<ApiResponse<LeaveBalance[]>>(
-    API_ENDPOINTS.STUDENT_PORTAL.LEAVE.BALANCE
+    API_ENDPOINTS.STUDENT_PORTAL.LEAVE.BALANCE,
   );
   return res.data.data;
 }
 
 export async function fetchLeaveRequests(): Promise<LeaveRequest[]> {
   const res = await apiClient.get<ApiResponse<LeaveRequest[]>>(
-    API_ENDPOINTS.STUDENT_PORTAL.LEAVE.REQUESTS
+    API_ENDPOINTS.STUDENT_PORTAL.LEAVE.REQUESTS,
   );
   return res.data.data;
 }

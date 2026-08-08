@@ -47,6 +47,8 @@ const STAFF_ITEMS: FooterItem[] = [
   { name: 'Settings', label: 'Settings', Icon: Settings },
 ];
 
+// Parent AND student roles both render ParentTabsNavigator, so they share these
+// tabs. Keep in sync with MainTabsNavigator + ParentTabsNavigator screen names.
 const PARENT_ITEMS: FooterItem[] = [
   { name: 'Dashboard', label: 'Dashboard', Icon: LayoutDashboard },
   { name: 'Academics', label: 'Academics', Icon: GraduationCap },
@@ -54,6 +56,8 @@ const PARENT_ITEMS: FooterItem[] = [
   { name: 'Fees', label: 'Fees', Icon: CreditCard },
   { name: 'Settings', label: 'Settings', Icon: Settings },
 ];
+
+const PARENT_ROLES = new Set(['parent', 'student']);
 
 type NavState = NavigationState | PartialState<NavigationState> | undefined;
 type RouteWithState = Route<string> & { state?: NavState };
@@ -90,7 +94,9 @@ export function AppFooterNav({ role }: AppFooterNavProps) {
       ? selectActiveTab(navigationRef.getRootState())
       : undefined,
   );
-  const items = role?.toLowerCase() === 'parent' ? PARENT_ITEMS : STAFF_ITEMS;
+  const items = PARENT_ROLES.has(role?.toLowerCase() ?? '')
+    ? PARENT_ITEMS
+    : STAFF_ITEMS;
 
   // Footer sits outside the tab navigator; sync via the container's global state.
   useEffect(() => {
