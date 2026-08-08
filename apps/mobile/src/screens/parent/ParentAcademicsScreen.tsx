@@ -25,7 +25,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 
-import { Screen, Header } from '@/components/layout';
+import { Screen } from '@/components/layout';
+import { ScreenHeader } from '@/components/ui';
 import { colors } from '@/constants/colors';
 import {
   useTimetable,
@@ -469,14 +470,19 @@ export default function ParentAcademicsScreen() {
   const [activeTab, setActiveTab] = useState<Tab>('timetable');
 
   return (
-    <Screen>
-      <Header
+    <Screen safeArea={false} statusBarStyle="light">
+      <ScreenHeader
         title="Academics"
         showBack={false}
-        light
-        rightIcon={isStudent ? CalendarOff : undefined}
-        onRightIconPress={
-          isStudent ? () => navigation.navigate('StudentLeave') : undefined
+        right={
+          isStudent ? (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('StudentLeave')}
+              className="h-9 w-9 items-center justify-center rounded-full bg-white/20"
+            >
+              <CalendarOff size={20} color="#fff" />
+            </TouchableOpacity>
+          ) : undefined
         }
       />
       <View className="flex-row border-b border-gray-100 bg-white px-4">
@@ -487,14 +493,11 @@ export default function ParentAcademicsScreen() {
             <TouchableOpacity
               key={tab.key}
               onPress={() => setActiveTab(tab.key)}
-              className={`flex-1 flex-row items-center justify-center gap-1.5 py-3 ${isActive ? 'border-b-2 border-blue-500' : ''}`}
+              className={`flex-1 flex-row items-center justify-center gap-1.5 py-3 ${isActive ? 'border-b-2 border-emerald-600' : ''}`}
             >
-              <Icon
-                size={16}
-                color={isActive ? colors.primary[600] : colors.gray[400]}
-              />
+              <Icon size={16} color={isActive ? '#059669' : colors.gray[400]} />
               <Text
-                className={`text-sm font-medium ${isActive ? 'text-blue-600' : 'text-gray-400'}`}
+                className={`text-sm font-medium ${isActive ? 'text-emerald-700' : 'text-gray-400'}`}
               >
                 {tab.label}
               </Text>

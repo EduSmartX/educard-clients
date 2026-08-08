@@ -38,7 +38,8 @@ import {
   errorCodes,
 } from '@react-native-documents/picker';
 
-import { Screen, Header } from '@/components/layout';
+import { Screen } from '@/components/layout';
+import { ScreenHeader } from '@/components/ui';
 import { colors } from '@/constants/colors';
 import {
   useHomeworkDetail,
@@ -211,8 +212,8 @@ export default function StudentHomeworkDetailScreen() {
 
   if (isLoading) {
     return (
-      <Screen>
-        <Header title="Homework" showBack />
+      <Screen safeArea={false} statusBarStyle="light">
+        <ScreenHeader title="Homework" />
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator color={colors.primary[500]} />
         </View>
@@ -222,8 +223,8 @@ export default function StudentHomeworkDetailScreen() {
 
   if (!homework) {
     return (
-      <Screen>
-        <Header title="Homework" showBack />
+      <Screen safeArea={false} statusBarStyle="light">
+        <ScreenHeader title="Homework" />
         <View className="flex-1 items-center justify-center">
           <Text className="text-3xl">📭</Text>
           <Text className="mt-2 text-sm text-gray-500">Homework not found</Text>
@@ -247,8 +248,8 @@ export default function StudentHomeworkDetailScreen() {
   if (submitMutation.isPending) submitLabel = 'Submitting...';
 
   return (
-    <Screen>
-      <Header title="Homework Details" showBack />
+    <Screen safeArea={false} statusBarStyle="light">
+      <ScreenHeader title="Homework Details" />
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Prev/Next */}
         {total > 1 && (

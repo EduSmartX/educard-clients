@@ -10,12 +10,7 @@ import {
   useRoute,
   type RouteProp,
 } from '@react-navigation/native';
-import {
-  ChevronLeft,
-  Plus,
-  IndianRupee,
-  AlertTriangle,
-} from 'lucide-react-native';
+import { Plus, IndianRupee, AlertTriangle } from 'lucide-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
@@ -26,7 +21,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { SubmitButton } from '@/components/common/SubmitButton';
@@ -35,9 +30,9 @@ import { AcademicYearDropdown } from '@/components/forms/AcademicYearDropdown';
 import { FormDatePicker } from '@/components/forms/FormDatePicker';
 import { FormInput } from '@/components/forms/FormInput';
 import { FormMultiSelect } from '@/components/forms/FormMultiSelect';
+import { ScreenHeader } from '@/components/ui';
 import { useClasses } from '@/features/classes';
 import { useCurrentAcademicYear } from '@/features/core';
-import { LinearGradient } from '@/lib/linear-gradient';
 import type {
   SharedStackNavigation,
   SharedStackParamList,
@@ -382,24 +377,14 @@ export default function FeeStructureFormScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#059669', '#10b981']} style={styles.header}>
-        <Animated.View entering={FadeIn.delay(100)} style={styles.circle1} />
-        <View style={styles.headerContent}>
-          <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
-            <ChevronLeft size={24} color="#fff" />
-          </TouchableOpacity>
-          <View style={styles.headerTextWrap}>
-            <Text style={styles.headerTitle}>
-              {isEditing ? 'Edit Fee Structure' : 'New Fee Structure'}
-            </Text>
-            <Text style={styles.headerSub}>
-              {isEditing
-                ? 'Update structure details'
-                : 'Create a new fee structure'}
-            </Text>
-          </View>
-        </View>
-      </LinearGradient>
+      <ScreenHeader
+        title={isEditing ? 'Edit Fee Structure' : 'New Fee Structure'}
+        subtitle={
+          isEditing ? 'Update structure details' : 'Create a new fee structure'
+        }
+        colors={['#059669', '#10b981']}
+        onBack={handleBack}
+      />
 
       <KeyboardAwareScrollView
         contentContainerStyle={styles.scroll}

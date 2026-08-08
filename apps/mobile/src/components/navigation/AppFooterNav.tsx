@@ -86,7 +86,11 @@ interface AppFooterNavProps {
 
 export function AppFooterNav({ role }: AppFooterNavProps) {
   const insets = useSafeAreaInsets();
-  const items = role?.toLowerCase() === 'parent' ? PARENT_ITEMS : STAFF_ITEMS;
+  const normalizedRole = role?.toLowerCase();
+  const items =
+    normalizedRole === 'parent' || normalizedRole === 'student'
+      ? PARENT_ITEMS
+      : STAFF_ITEMS;
   const [activeTab, setActiveTab] = useState<string | undefined>(() =>
     navigationRef.isReady()
       ? selectActiveTabFromMainTabs(navigationRef.getRootState())

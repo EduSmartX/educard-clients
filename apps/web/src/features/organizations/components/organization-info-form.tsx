@@ -3,7 +3,7 @@
  * Update organization basic information
  */
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -80,43 +80,38 @@ interface OrganizationInfoFormProps {
   isLoading: boolean;
 }
 
+function getOrganizationInfoFormValues(
+  organization: Organization | undefined
+): OrganizationInfoFormData {
+  return {
+    name: organization?.name || '',
+    organization_type: organization?.organization_type || '',
+    email: organization?.email || '',
+    phone: organization?.phone || '',
+    registration_number: organization?.registration_number || '',
+    corporate_identification_number: organization?.corporate_identification_number || '',
+    tax_id: organization?.tax_id || '',
+    website_url: organization?.website_url || '',
+    board_affiliation: organization?.board_affiliation || '',
+  };
+}
+
 export function OrganizationInfoForm({
   organization,
   isLoading,
 }: Readonly<OrganizationInfoFormProps>) {
   const updateMutation = useUpdateOrganization(organization?.public_id || '');
+  const formValues = useMemo(() => getOrganizationInfoFormValues(organization), [organization]);
 
   const form = useForm<OrganizationInfoFormData>({
     resolver: zodResolver(organizationInfoSchema),
     ...STANDARD_FORM_VALIDATION_CONFIG,
-    defaultValues: {
-      name: '',
-      organization_type: '',
-      email: '',
-      phone: '',
-      registration_number: '',
-      corporate_identification_number: '',
-      tax_id: '',
-      website_url: '',
-      board_affiliation: '',
-    },
+    defaultValues: getOrganizationInfoFormValues(undefined),
   });
 
   useEffect(() => {
-    if (organization) {
-      form.reset({
-        name: organization.name || '',
-        organization_type: organization.organization_type || '',
-        email: organization.email || '',
-        phone: organization.phone || '',
-        registration_number: organization.registration_number || '',
-        corporate_identification_number: organization.corporate_identification_number || '',
-        tax_id: organization.tax_id || '',
-        website_url: organization.website_url || '',
-        board_affiliation: organization.board_affiliation || '',
-      });
-    }
-  }, [organization, form]);
+    form.reset(formValues);
+  }, [form, formValues]);
 
   const onSubmit = (values: OrganizationInfoFormData) => {
     updateMutation.mutate(values, {
@@ -220,7 +215,7 @@ export function OrganizationInfoForm({
               <Button
                 type="button"
                 variant="brandOutline"
-                onClick={() => form.reset()}
+                onClick={() => form.reset(formValues)}
                 disabled={updateMutation.isPending || !form.formState.isDirty}
               >
                 {CommonUiText.RESET}

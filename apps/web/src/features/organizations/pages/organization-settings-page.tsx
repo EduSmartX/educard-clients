@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { Building2, MapPin } from 'lucide-react';
+import { Building2, MapPin, RotateCw } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { PageHeader } from '@/components/common';
@@ -16,13 +16,29 @@ import { OrganizationAddressForm } from '../components/organization-address-form
 export default function OrganizationSettingsPage() {
   const [activeTab, setActiveTab] = useState('info');
   const { organization: orgFromStorage } = useAuth();
-  const { data: organization, isLoading } = useOrganization(orgFromStorage?.public_id);
+  const {
+    data: organization,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useOrganization(orgFromStorage?.public_id);
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Organization Settings"
         description="Manage your organization information and address details"
+        actions={[
+          {
+            label: isFetching ? 'Refreshing...' : 'Refresh',
+            onClick: () => {
+              void refetch();
+            },
+            icon: RotateCw,
+            variant: 'brandOutline',
+            disabled: isFetching,
+          },
+        ]}
       />
 
       <Card className="overflow-hidden">

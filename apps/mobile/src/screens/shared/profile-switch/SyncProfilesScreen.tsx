@@ -13,7 +13,8 @@ import {
 
 import { requestProfileSyncOtp, verifyProfileSync } from '@/api/auth';
 import { getErrorMessage } from '@/api/client';
-import { Screen, Header } from '@/components/layout';
+import { Screen } from '@/components/layout';
+import { ScreenHeader } from '@/components/ui';
 import { useAuthStore } from '@/lib/auth-store';
 import { useToast } from '@/lib/toast-context';
 
@@ -139,8 +140,8 @@ export default function SyncProfilesScreen() {
   const canSubmit = otpSent && !verifyMutation.isPending;
 
   return (
-    <Screen>
-      <Header title="Sync Profiles" />
+    <Screen safeArea={false} statusBarStyle="light">
+      <ScreenHeader title="Sync Profiles" />
 
       <View style={styles.body}>
         <View style={styles.infoBox}>

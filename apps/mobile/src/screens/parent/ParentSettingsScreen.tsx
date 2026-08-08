@@ -24,8 +24,8 @@ import {
   Image,
 } from 'react-native';
 
-import { Screen, Header } from '@/components/layout';
-import { Card, Avatar } from '@/components/ui';
+import { Screen } from '@/components/layout';
+import { Card, Avatar, ScreenHeader } from '@/components/ui';
 import { colors } from '@/constants/colors';
 import { useProfileImageUrl } from '@/hooks';
 import { useAuthStore } from '@/lib/auth-store';
@@ -84,8 +84,8 @@ export default function ParentSettingsScreen() {
   };
 
   return (
-    <Screen>
-      <Header title="Settings" showBack={false} light />
+    <Screen safeArea={false} statusBarStyle="light">
+      <ScreenHeader title="Settings" showBack={false} />
 
       <ScrollView
         className="flex-1"

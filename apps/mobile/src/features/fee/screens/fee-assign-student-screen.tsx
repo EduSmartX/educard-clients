@@ -7,17 +7,17 @@ import {
   useRoute,
   type RouteProp,
 } from '@react-navigation/native';
-import { ChevronLeft, UserPlus } from 'lucide-react-native';
+import { UserPlus } from 'lucide-react-native';
 import React, { useCallback, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert } from 'react-native';
 import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { SubmitButton } from '@/components/common/SubmitButton';
 import { ClassFilterDropdown } from '@/components/filters';
 import { FormDropdown } from '@/components/forms/FormDropdown';
 import { FormInput } from '@/components/forms/FormInput';
-import { LinearGradient } from '@/lib/linear-gradient';
+import { ScreenHeader } from '@/components/ui';
 import type {
   SharedStackNavigation,
   SharedStackParamList,
@@ -131,21 +131,13 @@ export default function FeeAssignStudentScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={['#0891b2', '#22d3ee']} style={styles.header}>
-        <Animated.View entering={FadeIn} style={styles.circle1} />
-        <View style={styles.headerContent}>
-          <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
-            <ChevronLeft size={24} color="#fff" />
-          </TouchableOpacity>
-          <View style={styles.headerTextWrap}>
-            <Text style={styles.headerTitle}>Assign Fee Structure</Text>
-            <Text style={styles.headerSub}>
-              Link a fee structure to a student
-            </Text>
-          </View>
-          <UserPlus size={24} color="rgba(255,255,255,0.8)" />
-        </View>
-      </LinearGradient>
+      <ScreenHeader
+        title="Assign Fee Structure"
+        subtitle="Link a fee structure to a student"
+        colors={['#0891b2', '#22d3ee']}
+        onBack={handleBack}
+        right={<UserPlus size={24} color="rgba(255,255,255,0.8)" />}
+      />
 
       <KeyboardAwareScrollView
         contentContainerStyle={styles.scroll}

@@ -13,7 +13,8 @@ import {
   type DimensionValue,
 } from 'react-native';
 
-import { Screen, Header } from '@/components/layout';
+import { Screen } from '@/components/layout';
+import { ScreenHeader } from '@/components/ui';
 import { colors } from '@/constants/colors';
 import {
   useExamSessionDetail,
@@ -36,8 +37,8 @@ export default function StudentExamDetailScreen() {
 
   if (isLoading) {
     return (
-      <Screen>
-        <Header title="Exam" showBack />
+      <Screen safeArea={false} statusBarStyle="light">
+        <ScreenHeader title="Exam" />
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator color={colors.primary[500]} />
         </View>
@@ -47,8 +48,8 @@ export default function StudentExamDetailScreen() {
 
   if (!detail) {
     return (
-      <Screen>
-        <Header title="Exam" showBack />
+      <Screen safeArea={false} statusBarStyle="light">
+        <ScreenHeader title="Exam" />
         <View className="flex-1 items-center justify-center">
           <Text className="text-3xl">📭</Text>
           <Text className="mt-2 text-sm text-gray-500">Exam not found</Text>
@@ -64,8 +65,8 @@ export default function StudentExamDetailScreen() {
   const overallPct = totalMax > 0 ? (totalObt / totalMax) * 100 : 0;
 
   return (
-    <Screen>
-      <Header title={detail.name} showBack />
+    <Screen safeArea={false} statusBarStyle="light">
+      <ScreenHeader title={detail.name} />
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Session Info */}
         <View className="mx-4 mt-4 rounded-xl border border-gray-100 bg-white p-4">

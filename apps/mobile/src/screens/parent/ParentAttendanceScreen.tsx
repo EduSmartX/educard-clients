@@ -18,7 +18,8 @@ import {
   ChartLegend,
   type ChartSegment,
 } from '@/components/charts';
-import { Screen, Header } from '@/components/layout';
+import { Screen } from '@/components/layout';
+import { ScreenHeader } from '@/components/ui';
 import { colors } from '@/constants/colors';
 import { useAttendanceSummary } from '@/features/student-portal';
 
@@ -142,8 +143,8 @@ export default function ParentAttendanceScreen() {
   };
 
   return (
-    <Screen>
-      <Header title="Attendance" showBack={false} light />
+    <Screen safeArea={false} statusBarStyle="light">
+      <ScreenHeader title="Attendance" showBack={false} />
       <ScrollView
         className="flex-1"
         contentContainerStyle={styles.scrollContent}

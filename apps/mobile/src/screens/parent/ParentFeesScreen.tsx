@@ -22,7 +22,8 @@ import {
   ChartLegend,
   type ChartSegment,
 } from '@/components/charts';
-import { Screen, Header } from '@/components/layout';
+import { Screen } from '@/components/layout';
+import { ScreenHeader } from '@/components/ui';
 import { colors } from '@/constants/colors';
 import {
   useFeeSummary,
@@ -79,7 +80,7 @@ export default function ParentFeesScreen() {
   const feeSegments: ChartSegment[] = summary
     ? [
         { label: 'Paid', value: Number(summary.amount_paid), color: '#10b981' },
-        { label: 'Due', value: Number(summary.balance_due), color: '#f59e0b' },
+        { label: 'Due', value: Number(summary.balance_due), color: '#ef4444' },
       ]
     : [];
 
@@ -91,8 +92,8 @@ export default function ParentFeesScreen() {
   );
 
   return (
-    <Screen>
-      <Header title="Fees" showBack={false} light />
+    <Screen safeArea={false} statusBarStyle="light">
+      <ScreenHeader title="Fees" showBack={false} />
       <ScrollView
         className="flex-1"
         contentContainerClassName="pb-[100px]"
@@ -131,30 +132,44 @@ export default function ParentFeesScreen() {
                   </View>
                 </View>
 
-                {/* Payment progress donut */}
-                <View className="mt-4 flex-row items-center rounded-xl bg-white p-4">
-                  <DonutChart
-                    data={feeSegments}
-                    size={120}
-                    thickness={16}
-                    centerValue={`${paidPct}%`}
-                    centerLabel="Paid"
-                  />
-                  <View className="ml-4 flex-1">
-                    <ChartLegend data={feeSegments} showValues />
-                    {summary.due_date && (
-                      <Text className="mt-3 text-[10px] text-gray-400">
-                        Due: {format(new Date(summary.due_date), 'd MMM yyyy')}
-                      </Text>
-                    )}
-                    {summary.is_overdue && (
-                      <View className="mt-2 self-start rounded-md bg-red-100 px-2 py-0.5">
-                        <Text className="text-[10px] font-medium text-red-600">
-                          Overdue
-                        </Text>
+                {/* Fees pie chart — same as dashboard */}
+                <View className="mt-4 rounded-2xl bg-white p-4">
+                  <Text className="mb-2 text-center text-[13px] font-bold text-gray-700">
+                    Fees
+                  </Text>
+                  {Number(summary.total_amount) > 0 ? (
+                    <>
+                      <View className="items-center">
+                        <DonutChart
+                          data={feeSegments}
+                          size={128}
+                          thickness={16}
+                          centerValue={`${paidPct}%`}
+                          centerLabel="Paid"
+                        />
                       </View>
-                    )}
-                  </View>
+                      <View className="mt-3">
+                        <ChartLegend data={feeSegments} showValues />
+                      </View>
+                      {summary.due_date && (
+                        <Text className="mt-3 text-[10px] text-gray-400">
+                          Due:{' '}
+                          {format(new Date(summary.due_date), 'd MMM yyyy')}
+                        </Text>
+                      )}
+                      {summary.is_overdue && (
+                        <View className="mt-2 self-start rounded-md bg-red-100 px-2 py-0.5">
+                          <Text className="text-[10px] font-medium text-red-600">
+                            Overdue
+                          </Text>
+                        </View>
+                      )}
+                    </>
+                  ) : (
+                    <Text className="py-4 text-center text-[13px] text-gray-400">
+                      No data yet
+                    </Text>
+                  )}
                 </View>
               </>
             )}
