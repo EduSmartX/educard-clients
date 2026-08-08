@@ -147,7 +147,7 @@ function TimetableSection() {
       }
     >
       {/* Week Nav */}
-      <View className="mx-4 mt-4 flex-row items-center justify-between rounded-xl bg-blue-50 px-3 py-2.5">
+      <View className="mx-4 mt-4 flex-row items-center justify-between rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2.5">
         <TouchableOpacity
           onPress={() => setWeekOffset(weekOffset - 1)}
           className="p-1"
@@ -176,17 +176,17 @@ function TimetableSection() {
           const isToday =
             format(d, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
           const sel = selectedDay === i;
-          let tabBg = 'bg-gray-50';
+          let tabBg = 'border border-gray-200 bg-white';
           if (sel) {
-            tabBg = 'bg-blue-500';
+            tabBg = 'border border-emerald-600 bg-emerald-600';
           } else if (isToday) {
-            tabBg = 'bg-blue-100';
+            tabBg = 'border border-emerald-200 bg-emerald-50';
           }
           let tabText = 'text-gray-600';
           if (sel) {
             tabText = 'text-white';
           } else if (isToday) {
-            tabText = 'text-blue-600';
+            tabText = 'text-emerald-700';
           }
           return (
             <TouchableOpacity
@@ -203,8 +203,8 @@ function TimetableSection() {
       </ScrollView>
 
       {/* Periods */}
-      <View className="mt-4 px-4 pb-6">
-        <View className="flex-row rounded-t-xl bg-gray-50 px-3 py-2.5">
+      <View className="mx-4 mb-6 mt-4 overflow-hidden rounded-xl border border-gray-200 bg-white">
+        <View className="flex-row bg-gray-50 px-3 py-2.5">
           <Text className="w-10 text-[10px] font-semibold uppercase text-gray-400">
             #
           </Text>
@@ -346,7 +346,7 @@ function HomeworkSection() {
         />
       }
     >
-      <View className="mx-4 mt-4 flex-row items-center justify-between rounded-xl bg-orange-50 px-3 py-2.5">
+      <View className="mx-4 mt-4 flex-row items-center justify-between rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2.5">
         <TouchableOpacity onPress={() => goDay(-1)} className="p-1">
           <ChevronLeft size={18} color={colors.gray[600]} />
         </TouchableOpacity>
@@ -417,7 +417,7 @@ function ExamsSection() {
                       mode: 'schedule',
                     })
                   }
-                  className="mb-3 rounded-xl border border-blue-100 bg-blue-50/50 p-4"
+                  className="mb-3 rounded-xl border border-gray-200 bg-white p-4"
                   activeOpacity={0.7}
                 >
                   <Text className="text-base font-semibold text-gray-800">
@@ -427,8 +427,8 @@ function ExamsSection() {
                     {format(new Date(s.start_date), 'd MMM')} —{' '}
                     {format(new Date(s.end_date), 'd MMM')}
                   </Text>
-                  <View className="mt-2 self-start rounded-lg bg-blue-100 px-2.5 py-1">
-                    <Text className="text-[10px] font-semibold text-blue-700">
+                  <View className="mt-2 self-start rounded-lg bg-emerald-50 px-2.5 py-1">
+                    <Text className="text-[10px] font-semibold text-emerald-700">
                       View Schedule
                     </Text>
                   </View>
@@ -494,9 +494,10 @@ export default function ParentAcademicsScreen() {
   const [activeTab, setActiveTab] = useState<Tab>('timetable');
 
   return (
-    <Screen safeArea={false} statusBarStyle="light">
+    <Screen safeArea={false} statusBarStyle="light" backgroundColor="#f8fafc">
       <ScreenHeader
         title="Academics"
+        subtitle="Timetable, homework and exams"
         showBack={false}
         right={
           isStudent ? (
@@ -509,7 +510,7 @@ export default function ParentAcademicsScreen() {
           ) : undefined
         }
       />
-      <View className="flex-row border-b border-gray-100 bg-white px-4">
+      <View className="mx-4 mt-4 flex-row rounded-xl border border-gray-200 bg-white p-1">
         {TABS.map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.key;
@@ -517,7 +518,7 @@ export default function ParentAcademicsScreen() {
             <TouchableOpacity
               key={tab.key}
               onPress={() => setActiveTab(tab.key)}
-              className={`flex-1 flex-row items-center justify-center gap-1.5 py-3 ${isActive ? 'border-b-2 border-emerald-600' : ''}`}
+              className={`flex-1 flex-row items-center justify-center gap-1.5 rounded-lg py-2.5 ${isActive ? 'bg-emerald-50' : ''}`}
             >
               <Icon size={16} color={isActive ? '#059669' : colors.gray[400]} />
               <Text

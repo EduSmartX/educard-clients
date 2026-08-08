@@ -35,7 +35,10 @@ function StatCard({
   readonly icon: typeof CheckCircle;
 }) {
   return (
-    <View className="flex-1 rounded-xl border border-gray-100 bg-white p-4">
+    <View
+      style={styles.statCard}
+      className="rounded-xl border border-gray-200 bg-white p-4"
+    >
       <View className="flex-row items-center gap-2">
         <Icon size={16} color={color} />
         <Text className="text-xs text-gray-500">{label}</Text>
@@ -77,12 +80,12 @@ export default function ParentAttendanceScreen() {
     ];
     const growthLabel = `${summary.growth_rate > 0 ? '+' : ''}${summary.growth_rate.toFixed(0)}%`;
     return (
-      <View className="px-4 pb-6 pt-4">
-        <Text className="mb-3 text-sm font-semibold text-gray-600">
+      <View className="px-4 pb-6 pt-5">
+        <Text className="mb-3 text-base font-bold text-gray-800">
           This Month
         </Text>
         {/* This-month donut */}
-        <View className="items-center rounded-2xl border border-gray-100 bg-white p-5">
+        <View className="items-center rounded-2xl border border-gray-200 bg-white p-5">
           <DonutChart
             data={segments}
             size={168}
@@ -94,7 +97,7 @@ export default function ParentAttendanceScreen() {
         </View>
 
         {/* Stats Row */}
-        <View className="mt-4 flex-row gap-3">
+        <View className="mt-4 flex-row flex-wrap gap-3">
           <StatCard
             label="Present"
             value={cm.present_days}
@@ -116,10 +119,10 @@ export default function ParentAttendanceScreen() {
         </View>
 
         {/* Overview */}
-        <Text className="mb-3 mt-6 text-sm font-semibold text-gray-600">
-          📊 Overview
+        <Text className="mb-3 mt-8 text-base font-bold text-gray-800">
+          Overview
         </Text>
-        <View className="flex-row gap-3">
+        <View className="flex-row flex-wrap gap-3">
           <StatCard
             label="Academic Year"
             value={`${summary.academic_year_percentage.toFixed(0)}%`}
@@ -148,8 +151,12 @@ export default function ParentAttendanceScreen() {
   };
 
   return (
-    <Screen safeArea={false} statusBarStyle="light">
-      <ScreenHeader title="Attendance" showBack={false} />
+    <Screen safeArea={false} statusBarStyle="light" backgroundColor="#f8fafc">
+      <ScreenHeader
+        title="Attendance"
+        subtitle="Monthly attendance and trends"
+        showBack={false}
+      />
       <ScrollView
         className="flex-1"
         contentContainerStyle={styles.scrollContent}
@@ -170,4 +177,5 @@ export default function ParentAttendanceScreen() {
 const styles = StyleSheet.create({
   legend: { marginTop: 16, alignSelf: 'stretch' },
   scrollContent: { paddingBottom: 24 },
+  statCard: { width: '48%' },
 });

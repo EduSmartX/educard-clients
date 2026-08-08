@@ -84,8 +84,12 @@ export default function ParentSettingsScreen() {
   };
 
   return (
-    <Screen safeArea={false} statusBarStyle="light">
-      <ScreenHeader title="Settings" showBack={false} />
+    <Screen safeArea={false} statusBarStyle="light" backgroundColor="#f8fafc">
+      <ScreenHeader
+        title="Settings"
+        subtitle="Profile, security and support"
+        showBack={false}
+      />
 
       <ScrollView
         className="flex-1"
@@ -93,7 +97,7 @@ export default function ParentSettingsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View className="px-4 pt-4">
-          <Card>
+          <Card variant="outlined">
             <TouchableOpacity
               className="flex-row items-center py-2"
               onPress={() => navigation.navigate('Profile')}
@@ -124,11 +128,11 @@ export default function ParentSettingsScreen() {
           </Card>
         </View>
 
-        <View className="px-4 pt-6">
-          <Text className="mb-3 px-1 text-sm font-medium text-gray-500">
-            GENERAL
+        <View className="px-4 pt-8">
+          <Text className="mb-3 px-1 text-base font-bold text-gray-800">
+            Account & Support
           </Text>
-          <Card>
+          <Card variant="outlined">
             {settingsOptions.map((option, index) => {
               const OptionIcon = option.icon;
               return (
@@ -141,12 +145,8 @@ export default function ParentSettingsScreen() {
                   }`}
                   onPress={() => handleItemPress(option.screen)}
                 >
-                  <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-gray-100">
-                    <OptionIcon
-                      size={20}
-                      color={colors.gray[600]}
-                      strokeWidth={1.5}
-                    />
+                  <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-emerald-50">
+                    <OptionIcon size={20} color="#059669" strokeWidth={1.5} />
                   </View>
                   <Text className="flex-1 text-gray-900">{option.title}</Text>
                   <ChevronRight size={20} color={colors.gray[400]} />
@@ -157,21 +157,17 @@ export default function ParentSettingsScreen() {
         </View>
 
         {isStudent && (
-          <View className="px-4 pt-6">
-            <Text className="mb-3 px-1 text-sm font-medium text-gray-500">
-              PROFILES
+          <View className="px-4 pt-8">
+            <Text className="mb-3 px-1 text-base font-bold text-gray-800">
+              Profiles
             </Text>
-            <Card>
+            <Card variant="outlined">
               <TouchableOpacity
                 className="flex-row items-center border-b border-gray-100 py-4"
                 onPress={() => navigation.navigate('SwitchProfile')}
               >
-                <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-gray-100">
-                  <Repeat
-                    size={20}
-                    color={colors.gray[600]}
-                    strokeWidth={1.5}
-                  />
+                <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-emerald-50">
+                  <Repeat size={20} color="#059669" strokeWidth={1.5} />
                 </View>
                 <Text className="flex-1 text-gray-900">Switch Profile</Text>
                 <ChevronRight size={20} color={colors.gray[400]} />
@@ -180,8 +176,8 @@ export default function ParentSettingsScreen() {
                 className="flex-row items-center py-4"
                 onPress={() => navigation.navigate('SyncProfiles')}
               >
-                <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-gray-100">
-                  <Users size={20} color={colors.gray[600]} strokeWidth={1.5} />
+                <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-emerald-50">
+                  <Users size={20} color="#059669" strokeWidth={1.5} />
                 </View>
                 <Text className="flex-1 text-gray-900">Sync Profiles</Text>
                 <ChevronRight size={20} color={colors.gray[400]} />
@@ -190,8 +186,8 @@ export default function ParentSettingsScreen() {
           </View>
         )}
 
-        <View className="px-4 pb-8 pt-6">
-          <Card>
+        <View className="px-4 pb-8 pt-8">
+          <Card variant="outlined">
             <TouchableOpacity
               className="flex-row items-center py-4"
               onPress={handleLogout}

@@ -97,8 +97,12 @@ export default function ParentFeesScreen() {
   );
 
   return (
-    <Screen safeArea={false} statusBarStyle="light">
-      <ScreenHeader title="Fees" showBack={false} />
+    <Screen safeArea={false} statusBarStyle="light" backgroundColor="#f8fafc">
+      <ScreenHeader
+        title="Fees"
+        subtitle="Fee details, components and payments"
+        showBack={false}
+      />
       <ScrollView
         className="flex-1"
         contentContainerClassName="pb-6"
@@ -116,31 +120,41 @@ export default function ParentFeesScreen() {
             {/* Summary Cards */}
             {summary && (
               <>
-                <View className="flex-row gap-3">
-                  <View className="flex-1 rounded-xl border-l-4 border-l-blue-400 bg-white p-4">
-                    <Text className="text-[10px] text-gray-500">Total Fee</Text>
+                <Text className="mb-3 text-base font-bold text-gray-800">
+                  Fee Overview
+                </Text>
+                <View className="gap-3">
+                  <View className="rounded-xl border border-gray-200 bg-white p-4">
+                    <Text className="text-xs font-medium text-gray-500">
+                      Total Fee
+                    </Text>
                     <Text className="mt-1 text-xl font-bold text-gray-800">
                       {formatCurrency(Number(summary.total_amount))}
                     </Text>
                   </View>
-                  <View className="flex-1 rounded-xl border-l-4 border-l-emerald-400 bg-white p-4">
-                    <Text className="text-[10px] text-gray-500">Paid</Text>
-                    <Text className="mt-1 text-xl font-bold text-emerald-600">
-                      {formatCurrency(Number(summary.amount_paid))}
-                    </Text>
-                  </View>
-                  <View className="flex-1 rounded-xl border-l-4 border-l-amber-400 bg-white p-4">
-                    <Text className="text-[10px] text-gray-500">Due</Text>
-                    <Text className="mt-1 text-xl font-bold text-amber-600">
-                      {formatCurrency(Number(summary.balance_due))}
-                    </Text>
+                  <View className="flex-row gap-3">
+                    <View className="flex-1 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                      <Text className="text-xs font-medium text-emerald-700">
+                        Paid
+                      </Text>
+                      <Text className="mt-1 text-xl font-bold text-emerald-700">
+                        {formatCurrency(Number(summary.amount_paid))}
+                      </Text>
+                    </View>
+                    <View className="flex-1 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                      <Text className="text-xs font-medium text-amber-700">
+                        Due
+                      </Text>
+                      <Text className="mt-1 text-xl font-bold text-amber-700">
+                        {formatCurrency(Number(summary.balance_due))}
+                      </Text>
+                    </View>
                   </View>
                 </View>
 
-                {/* Fees pie chart — same as dashboard */}
-                <View className="mt-4 rounded-2xl bg-white p-4">
-                  <Text className="mb-2 text-center text-[13px] font-bold text-gray-700">
-                    Fees
+                <View className="mt-5 rounded-2xl border border-gray-200 bg-white p-5">
+                  <Text className="mb-3 text-center text-sm font-bold text-gray-700">
+                    Payment Progress
                   </Text>
                   {Number(summary.total_amount) > 0 ? (
                     <>
@@ -180,7 +194,7 @@ export default function ParentFeesScreen() {
             )}
 
             {/* Fee Components */}
-            <Text className="mb-3 mt-6 text-sm font-semibold text-gray-600">
+            <Text className="mb-3 mt-8 text-base font-bold text-gray-800">
               Fee Components
             </Text>
             {components && components.length > 0 ? (
@@ -188,7 +202,7 @@ export default function ParentFeesScreen() {
                 {/* Mandatory */}
                 {mandatoryComponents.length > 0 && (
                   <>
-                    <Text className="mb-2 text-xs font-medium uppercase tracking-wide text-blue-600">
+                    <Text className="mb-2 text-xs font-medium uppercase tracking-wide text-emerald-700">
                       Mandatory
                     </Text>
                     {mandatoryComponents.map((c: FeeComponent) => (
@@ -291,16 +305,21 @@ export default function ParentFeesScreen() {
                           </View>
                         </View>
                         {activeId === c.public_id && (
-                          <View className="mt-3 border-t border-gray-100 pt-3">
+                          <View className="mt-3 rounded-xl bg-gray-50 p-3">
+                            <Text className="mb-2 text-xs font-semibold text-gray-700">
+                              Request reason
+                            </Text>
                             <TextInput
                               placeholder="Reason for request..."
+                              placeholderTextColor="#94a3b8"
                               value={note}
                               onChangeText={setNote}
-                              className="rounded-md border border-gray-200 px-3 py-2 text-sm"
+                              multiline
+                              className="min-h-[72px] rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm text-gray-800"
                             />
                             <View className="mt-2 flex-row gap-2">
                               <TouchableOpacity
-                                className="flex-1 items-center rounded-md bg-primary-500 py-2"
+                                className="flex-1 items-center rounded-lg bg-emerald-600 py-2.5"
                                 disabled={
                                   !note.trim() ||
                                   optIn.isPending ||
@@ -335,7 +354,7 @@ export default function ParentFeesScreen() {
                                 </Text>
                               </TouchableOpacity>
                               <TouchableOpacity
-                                className="flex-1 items-center rounded-md border border-gray-200 py-2"
+                                className="flex-1 items-center rounded-lg border border-gray-300 bg-white py-2.5"
                                 onPress={() => {
                                   setActiveId(null);
                                   setNote('');
@@ -360,7 +379,7 @@ export default function ParentFeesScreen() {
             )}
 
             {/* Payment History */}
-            <Text className="mb-3 mt-6 text-sm font-semibold text-gray-600">
+            <Text className="mb-3 mt-8 text-base font-bold text-gray-800">
               Payment History
             </Text>
             {payments && payments.length > 0 ? (

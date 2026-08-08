@@ -10,7 +10,6 @@ import {
   CalendarClock,
   ClipboardCheck,
   Clock,
-  CreditCard,
   Megaphone,
 } from 'lucide-react-native';
 import { useCallback, useMemo, useState } from 'react';
@@ -38,9 +37,7 @@ import {
   GradientHeader,
   FloatingCard,
   SectionHeader,
-  QuickActionsGrid,
   PressableScale,
-  type QuickAction,
 } from '@/components/ui';
 import { colors } from '@/constants/colors';
 import { useAnnouncements } from '@/features/announcements';
@@ -139,7 +136,6 @@ export default function ParentDashboardScreen() {
 
   const goToNotifications = () => navigation.navigate('Notifications');
   const goToSettings = () => navigation.navigate('Settings');
-  const goToFees = () => navigation.navigate('Fees');
   const goToAcademics = () => navigation.navigate('Academics');
   const goToAttendance = () => navigation.navigate('Attendance');
   const goToAnnouncements = () => navigation.navigate('Announcements');
@@ -202,30 +198,6 @@ export default function ParentDashboardScreen() {
     .filter(entry => !entry.is_cancelled && entry.subject_name)
     .sort((a, b) => a.start_time.localeCompare(b.start_time))
     .slice(0, 5);
-
-  const quickActions: QuickAction[] = [
-    {
-      id: 'attendance',
-      title: 'Attendance',
-      icon: ClipboardCheck,
-      gradient: ['#059669', '#34d399'],
-      onPress: goToAttendance,
-    },
-    {
-      id: 'academics',
-      title: 'Academics',
-      icon: BookOpen,
-      gradient: ['#3b82f6', '#60a5fa'],
-      onPress: goToAcademics,
-    },
-    {
-      id: 'fees',
-      title: 'Pay Fees',
-      icon: CreditCard,
-      gradient: ['#f59e0b', '#fbbf24'],
-      onPress: goToFees,
-    },
-  ];
 
   return (
     <View style={styles.container}>
@@ -299,7 +271,7 @@ export default function ParentDashboardScreen() {
           )}
 
           {/* Attendance — focused */}
-          <View className="mb-6">
+          <View className="mb-10">
             <SectionHeader
               title="Attendance"
               subtitle="This Month"
@@ -332,7 +304,7 @@ export default function ParentDashboardScreen() {
           </View>
 
           {/* Announcements */}
-          <View className="mb-6">
+          <View className="mb-10">
             <SectionHeader
               title="Announcements"
               icon={Megaphone}
@@ -449,7 +421,7 @@ export default function ParentDashboardScreen() {
           )}
 
           {/* Today's Schedule */}
-          <View className="mb-6">
+          <View className="mb-10">
             <SectionHeader
               title="Today's Schedule"
               icon={CalendarClock}
@@ -486,12 +458,6 @@ export default function ParentDashboardScreen() {
                 <Text style={styles.emptyText}>No classes scheduled today</Text>
               )}
             </FloatingCard>
-          </View>
-
-          {/* Quick Actions */}
-          <View className="mb-8">
-            <SectionHeader title="Quick Actions" />
-            <QuickActionsGrid actions={quickActions} columns={3} />
           </View>
         </View>
       </ScrollView>
