@@ -74,7 +74,12 @@ function TimetableSection() {
     weekOffset * 7,
   );
   const dateStr = format(addDays(monday, selectedDay), 'yyyy-MM-dd');
-  const { data: periods, isLoading, refetch } = useTimetable(dateStr);
+  const {
+    data: periods,
+    isLoading,
+    isRefetching,
+    refetch,
+  } = useTimetable(dateStr);
 
   const renderPeriodsList = () => {
     if (isLoading) {
@@ -132,10 +137,13 @@ function TimetableSection() {
   return (
     <ScrollView
       className="flex-1"
-      contentContainerClassName="pb-[100px]"
+      contentContainerClassName="pb-6"
       showsVerticalScrollIndicator={false}
       refreshControl={
-        <RefreshControl refreshing={false} onRefresh={() => void refetch()} />
+        <RefreshControl
+          refreshing={isRefetching}
+          onRefresh={() => void refetch()}
+        />
       }
     >
       {/* Week Nav */}
@@ -222,7 +230,12 @@ function HomeworkSection() {
   const navigation = useNavigation<SharedStackNavigation>();
   const [selectedDate, setSelectedDate] = useState(getDefaultHomeworkDate);
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
-  const { data: homework, isLoading, refetch } = useStudentHomework(dateStr);
+  const {
+    data: homework,
+    isLoading,
+    isRefetching,
+    refetch,
+  } = useStudentHomework(dateStr);
 
   const goDay = (offset: number) =>
     setSelectedDate(prev => addDays(prev, offset));
@@ -324,10 +337,13 @@ function HomeworkSection() {
   return (
     <ScrollView
       className="flex-1"
-      contentContainerClassName="pb-[100px]"
+      contentContainerClassName="pb-6"
       showsVerticalScrollIndicator={false}
       refreshControl={
-        <RefreshControl refreshing={false} onRefresh={() => void refetch()} />
+        <RefreshControl
+          refreshing={isRefetching}
+          onRefresh={() => void refetch()}
+        />
       }
     >
       <View className="mx-4 mt-4 flex-row items-center justify-between rounded-xl bg-orange-50 px-3 py-2.5">
@@ -356,7 +372,12 @@ function HomeworkSection() {
 
 function ExamsSection() {
   const navigation = useNavigation<SharedStackNavigation>();
-  const { data: sessions, isLoading, refetch } = useExamSessions();
+  const {
+    data: sessions,
+    isLoading,
+    isRefetching,
+    refetch,
+  } = useExamSessions();
   const completed =
     sessions?.filter((s: ExamSession) => new Date(s.end_date) < new Date()) ??
     [];
@@ -367,10 +388,13 @@ function ExamsSection() {
   return (
     <ScrollView
       className="flex-1"
-      contentContainerClassName="pb-[100px]"
+      contentContainerClassName="pb-6"
       showsVerticalScrollIndicator={false}
       refreshControl={
-        <RefreshControl refreshing={false} onRefresh={() => void refetch()} />
+        <RefreshControl
+          refreshing={isRefetching}
+          onRefresh={() => void refetch()}
+        />
       }
     >
       <View className="px-4 pb-6 pt-4">

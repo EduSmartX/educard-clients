@@ -8,7 +8,6 @@ import {
   Award,
   BookOpen,
   CalendarClock,
-  ChevronRight,
   ClipboardCheck,
   Clock,
   CreditCard,
@@ -44,6 +43,7 @@ import {
   type QuickAction,
 } from '@/components/ui';
 import { colors } from '@/constants/colors';
+import { useAnnouncements } from '@/features/announcements';
 import {
   useAttendanceSummary,
   useExamSessionDetail,
@@ -67,6 +67,14 @@ function formatGreeting() {
   if (hour < 12) return 'Good Morning';
   if (hour < 17) return 'Good Afternoon';
   return 'Good Evening';
+}
+
+function formatAnnouncementDate(value: string | null): string {
+  if (!value) return '';
+  const d = new Date(value);
+  return Number.isNaN(d.getTime())
+    ? ''
+    : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
 }
 
 // API may return numeric fields as strings or omit them; coerce safely.
@@ -97,6 +105,11 @@ export default function ParentDashboardScreen() {
     useAttendanceSummary();
   const { data: sessions, refetch: refetchSessions } = useExamSessions();
   const { data: timetable, refetch: refetchTimetable } = useTimetable(today);
+  const {
+    data: announcements,
+    isLoading: annLoading,
+    refetch: refetchAnnouncements,
+  } = useAnnouncements();
 
   const latestSessionId = useMemo(() => {
     if (!sessions?.length) return null;
@@ -113,9 +126,16 @@ export default function ParentDashboardScreen() {
       refetchAttendance(),
       refetchSessions(),
       refetchTimetable(),
+      refetchAnnouncements(),
     ]);
     setRefreshing(false);
-  }, [refetchDashboard, refetchAttendance, refetchSessions, refetchTimetable]);
+  }, [
+    refetchDashboard,
+    refetchAttendance,
+    refetchSessions,
+    refetchTimetable,
+    refetchAnnouncements,
+  ]);
 
   const goToNotifications = () => navigation.navigate('Notifications');
   const goToSettings = () => navigation.navigate('Settings');
@@ -123,6 +143,19 @@ export default function ParentDashboardScreen() {
   const goToAcademics = () => navigation.navigate('Academics');
   const goToAttendance = () => navigation.navigate('Attendance');
   const goToAnnouncements = () => navigation.navigate('Announcements');
+  const goToAnnouncementDetail = (publicId: string) =>
+    navigation.navigate('AnnouncementDetail', { publicId });
+
+  const latestAnnouncements = useMemo(
+    () =>
+      (announcements ?? [])
+        .filter(a => a.status === 'sent')
+        .sort((a, b) =>
+          (b.sent_at ?? b.created_at).localeCompare(a.sent_at ?? a.created_at),
+        )
+        .slice(0, 3),
+    [announcements],
+  );
 
   const studentName = dashboard?.student_name ?? user?.full_name ?? 'Student';
   const className = dashboard?.class_name ?? '';
@@ -265,11 +298,16 @@ export default function ParentDashboardScreen() {
             </View>
           )}
 
-          {/* Attendance overview */}
-          <View style={styles.chartsRow}>
-            <FloatingCard style={styles.chartCard}>
-              <Text style={styles.chartTitle}>Attendance</Text>
-              <Text style={styles.chartSubtitle}>This Month</Text>
+          {/* Attendance — focused */}
+          <View className="mb-6">
+            <SectionHeader
+              title="Attendance"
+              subtitle="This Month"
+              icon={ClipboardCheck}
+              actionLabel="Details"
+              onAction={goToAttendance}
+            />
+            <FloatingCard>
               {attendanceStats && attendanceStats.working_days > 0 ? (
                 <>
                   <View className="items-center">
@@ -295,25 +333,55 @@ export default function ParentDashboardScreen() {
 
           {/* Announcements */}
           <View className="mb-6">
-            <PressableScale
-              onPress={goToAnnouncements}
-              style={styles.rounded16}
-            >
-              <View className="flex-row items-center rounded-2xl border border-primary-200 bg-primary-50 p-4">
-                <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-primary-100">
-                  <Megaphone size={20} color={colors.primary[600]} />
+            <SectionHeader
+              title="Announcements"
+              icon={Megaphone}
+              actionLabel="View All"
+              onAction={goToAnnouncements}
+            />
+            <FloatingCard>
+              {annLoading ? (
+                <View className="items-center py-4">
+                  <ActivityIndicator color="#059669" />
                 </View>
-                <View className="flex-1">
-                  <Text className="font-semibold text-primary-800">
-                    Announcements
-                  </Text>
-                  <Text className="text-sm text-primary-600" numberOfLines={1}>
-                    View the latest school announcements
-                  </Text>
-                </View>
-                <ChevronRight size={20} color={colors.primary[400]} />
-              </View>
-            </PressableScale>
+              ) : latestAnnouncements.length > 0 ? (
+                latestAnnouncements.map((item, index, arr) => (
+                  <PressableScale
+                    key={item.public_id}
+                    onPress={() => goToAnnouncementDetail(item.public_id)}
+                  >
+                    <View
+                      className={`flex-row items-center py-3 ${
+                        index !== arr.length - 1
+                          ? 'border-b border-gray-100'
+                          : ''
+                      }`}
+                    >
+                      <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-emerald-50">
+                        <Megaphone size={18} color="#059669" />
+                      </View>
+                      <View className="flex-1">
+                        <Text
+                          className="font-medium text-gray-900"
+                          numberOfLines={1}
+                        >
+                          {item.subject}
+                        </Text>
+                        <Text
+                          className="text-sm text-gray-500"
+                          numberOfLines={1}
+                        >
+                          {item.event_name ||
+                            formatAnnouncementDate(item.sent_at)}
+                        </Text>
+                      </View>
+                    </View>
+                  </PressableScale>
+                ))
+              ) : (
+                <Text style={styles.emptyText}>No announcements yet</Text>
+              )}
+            </FloatingCard>
           </View>
 
           {/* Performance */}
@@ -434,23 +502,7 @@ export default function ParentDashboardScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f0fdf4' },
   content: { flex: 1 },
-  scrollContent: { paddingBottom: 100 },
-  chartsRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
-  chartCard: { flex: 1 },
-  chartTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#334155',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  chartSubtitle: {
-    fontSize: 11,
-    color: '#94a3b8',
-    textAlign: 'center',
-    marginTop: -4,
-    marginBottom: 8,
-  },
+  scrollContent: { paddingBottom: 24 },
   legend: { marginTop: 12 },
   emptyText: {
     fontSize: 13,
@@ -475,5 +527,4 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.2)',
   },
   profileFallbackText: { color: '#fff', fontSize: 16, fontWeight: '800' },
-  rounded16: { borderRadius: 16 },
 });

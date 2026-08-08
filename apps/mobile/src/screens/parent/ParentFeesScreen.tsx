@@ -5,7 +5,7 @@
 
 import { format } from 'date-fns';
 import { CheckCircle, ToggleLeft, ToggleRight } from 'lucide-react-native';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -63,12 +63,17 @@ export default function ParentFeesScreen() {
   const optOut = useFeeOptOut();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [note, setNote] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
 
-  const refresh = () => {
-    void refetchSummary();
-    void refetchPayments();
-    void refetchComponents();
-  };
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([
+      refetchSummary(),
+      refetchPayments(),
+      refetchComponents(),
+    ]);
+    setRefreshing(false);
+  }, [refetchSummary, refetchPayments, refetchComponents]);
   const isLoading = summaryLoading || paymentsLoading || componentsLoading;
 
   const paidPct =
@@ -96,10 +101,10 @@ export default function ParentFeesScreen() {
       <ScreenHeader title="Fees" showBack={false} />
       <ScrollView
         className="flex-1"
-        contentContainerClassName="pb-[100px]"
+        contentContainerClassName="pb-6"
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={false} onRefresh={refresh} />
+          <RefreshControl refreshing={refreshing} onRefresh={refresh} />
         }
       >
         {isLoading ? (

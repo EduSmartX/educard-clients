@@ -89,7 +89,7 @@ export default function ParentSettingsScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerClassName="pb-[100px]"
+        contentContainerClassName="pb-6"
         showsVerticalScrollIndicator={false}
       >
         <View className="px-4 pt-4">

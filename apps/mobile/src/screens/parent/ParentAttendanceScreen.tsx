@@ -46,7 +46,12 @@ function StatCard({
 }
 
 export default function ParentAttendanceScreen() {
-  const { data: summary, isLoading, refetch } = useAttendanceSummary();
+  const {
+    data: summary,
+    isLoading,
+    isRefetching,
+    refetch,
+  } = useAttendanceSummary();
 
   const renderContent = () => {
     if (isLoading) {
@@ -150,7 +155,10 @@ export default function ParentAttendanceScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={false} onRefresh={() => void refetch()} />
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={() => void refetch()}
+          />
         }
       >
         {renderContent()}
@@ -161,5 +169,5 @@ export default function ParentAttendanceScreen() {
 
 const styles = StyleSheet.create({
   legend: { marginTop: 16, alignSelf: 'stretch' },
-  scrollContent: { paddingBottom: 100 },
+  scrollContent: { paddingBottom: 24 },
 });
