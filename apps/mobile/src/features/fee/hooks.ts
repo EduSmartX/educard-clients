@@ -410,7 +410,7 @@ export function useSendFeeReminder() {
     onMutate: () => {
       beginCriticalOperation({
         title: 'Sending reminder',
-        description: 'Please wait while the reminder is delivered...',
+        description: 'Please wait while the reminder is queued...',
       });
     },
     onSuccess: () => {
@@ -433,7 +433,7 @@ export function useSendBulkFeeReminder() {
     onMutate: () => {
       beginCriticalOperation({
         title: 'Sending reminders',
-        description: 'Delivering reminders to the selected parents...',
+        description: 'Queuing reminders for the selected students...',
       });
     },
     onSuccess: () => {

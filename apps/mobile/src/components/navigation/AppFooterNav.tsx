@@ -15,13 +15,13 @@ import {
   Calendar,
   CreditCard,
 } from 'lucide-react-native';
-import { useNavigationState } from '@react-navigation/native';
+import { CommonActions } from '@react-navigation/native';
 import type {
   NavigationState,
   PartialState,
   Route,
 } from '@react-navigation/native';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -56,12 +56,13 @@ const PARENT_ITEMS: FooterItem[] = [
 ];
 
 type NavState = NavigationState | PartialState<NavigationState> | undefined;
+type RouteWithState = Route<string> & { state?: NavState };
 
-function findTabsRoute(state: NavState): Route<string> | undefined {
+function findTabsRoute(state: NavState): RouteWithState | undefined {
   if (!state?.routes) return undefined;
   for (const route of state.routes) {
-    if (route.name === 'Tabs') return route as Route<string>;
-    const child = (route as { state?: NavState }).state;
+    if (route.name === 'Tabs') return route as RouteWithState;
+    const child = (route as RouteWithState).state;
     if (child) {
       const found = findTabsRoute(child);
       if (found) return found;
@@ -84,14 +85,31 @@ interface AppFooterNavProps {
 
 export function AppFooterNav({ role }: AppFooterNavProps) {
   const insets = useSafeAreaInsets();
-  const activeTab = useNavigationState(selectActiveTab);
+  const [activeTab, setActiveTab] = useState<string | undefined>(() =>
+    navigationRef.isReady()
+      ? selectActiveTab(navigationRef.getRootState())
+      : undefined,
+  );
   const items = role?.toLowerCase() === 'parent' ? PARENT_ITEMS : STAFF_ITEMS;
+
+  // Footer sits outside the tab navigator; sync via the container's global state.
+  useEffect(() => {
+    const sync = () => {
+      if (navigationRef.isReady()) {
+        setActiveTab(selectActiveTab(navigationRef.getRootState()));
+      }
+    };
+    sync();
+    return navigationRef.addListener('state', sync);
+  }, []);
 
   const handlePress = (name: string) => {
     if (!navigationRef.isReady()) return;
-    navigationRef.navigate(
-      'Main' as never,
-      { screen: 'Tabs', params: { screen: name } } as never,
+    navigationRef.dispatch(
+      CommonActions.navigate('Main', {
+        screen: 'Tabs',
+        params: { screen: name },
+      }),
     );
   };
 

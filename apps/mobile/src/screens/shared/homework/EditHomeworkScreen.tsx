@@ -47,6 +47,7 @@ import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AttachmentViewer } from '@/components/attachments';
 import {
   FormDatePicker,
   FormAttachmentPicker,
@@ -502,14 +503,11 @@ export default function EditHomeworkScreen() {
             </Text>
             <View style={styles.existingAttachments}>
               {homework.attachments.map((att, idx) => (
-                <View
-                  key={att.file_name || `att-${idx}`}
-                  style={styles.existingAttachment}
-                >
-                  <Text style={styles.existingAttachmentText} numberOfLines={1}>
-                    {att.file_name || `Attachment ${idx + 1}`}
-                  </Text>
-                </View>
+                <AttachmentViewer
+                  key={att.public_id || att.file_name || `att-${idx}`}
+                  url={att.url}
+                  fileName={att.file_name}
+                />
               ))}
             </View>
           </Animated.View>

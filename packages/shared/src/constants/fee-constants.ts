@@ -159,8 +159,8 @@ export const FeeMessages = {
   STUDENT_FEE_UPDATED: "Student fee record updated successfully.",
   STUDENT_FEE_DELETED: "Student fee record deleted successfully.",
   PAYMENT_RECORDED: "Payment recorded successfully.",
-  REMINDER_SENT: "Due reminder sent successfully.",
-  BULK_REMINDER_SENT: "Due reminders sent successfully.",
+  REMINDER_SENT: "Due reminder queued for delivery.",
+  BULK_REMINDER_SENT: "Due reminders queued for delivery.",
 
   // Error messages
   FEE_STRUCTURE_NOT_FOUND: "Fee structure not found.",

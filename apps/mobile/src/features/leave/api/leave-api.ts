@@ -390,6 +390,11 @@ export interface TeacherManagementContext {
   can_review_requests: boolean;
   can_manage_balances: boolean;
   can_manage_allocations: boolean;
+  class_teacher_for?: {
+    public_id: string;
+    name: string;
+    class_master?: string | null;
+  }[];
 }
 
 export interface CreateLeaveBalancePayload {

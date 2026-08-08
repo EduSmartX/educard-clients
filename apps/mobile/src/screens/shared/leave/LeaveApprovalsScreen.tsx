@@ -29,7 +29,6 @@ import {
   Alert,
   TextInput,
   Modal,
-  Linking,
 } from 'react-native';
 import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
@@ -47,6 +46,7 @@ import { useScreenFilters } from '@/hooks/useScreenFilters';
 import { LinearGradient } from '@/lib/linear-gradient';
 import type { SharedStackNavigation } from '@/navigation/types';
 import { headerStyles, layoutStyles } from '@/styles';
+import { openAttachmentExternally } from '@/utils/attachment-utils';
 
 import { styles } from './leave-approvals-styles';
 
@@ -211,7 +211,7 @@ export default function LeaveApprovalsScreen() {
         Alert.alert('No attachment', 'No attachment is available to view.');
         return;
       }
-      await Linking.openURL(url);
+      await openAttachmentExternally(url, item.attachment_name);
     } catch {
       Alert.alert('Unable to open', 'Could not open the attachment.');
     }

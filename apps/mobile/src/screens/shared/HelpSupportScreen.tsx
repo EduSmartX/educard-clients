@@ -29,6 +29,7 @@ import { USER_ROLES } from '@/constants/config';
 import { useAppInfo } from '@/hooks/use-app-info';
 import { useAuthStore } from '@/lib/auth-store';
 import { LinearGradient } from '@/lib/linear-gradient';
+import { openAttachmentExternally } from '@/utils/attachment-utils';
 import { isAdminRole, isTeacherRole } from '@/utils/role-utils';
 import type { SharedStackNavigation } from '@/navigation/types';
 
@@ -326,6 +327,13 @@ export default function HelpSupportScreen() {
   };
 
   const handleOpenDocs = () => {
+    // The user manual is a document: download and open it natively, not the browser.
+    if (appInfo?.user_manual_url) {
+      void openAttachmentExternally(appInfo.user_manual_url).catch(() => {
+        if (userManualUrl) void Linking.openURL(userManualUrl);
+      });
+      return;
+    }
     if (userManualUrl) {
       void Linking.openURL(userManualUrl);
     }

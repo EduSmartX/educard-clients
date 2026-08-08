@@ -1,4 +1,5 @@
-import { Colors } from '@educard/shared';
+import { Colors, type Student } from '@educard/shared';
+import { useQuery } from '@tanstack/react-query';
 import {
   Plus,
   Pencil,
@@ -7,11 +8,15 @@ import {
   Users,
   Briefcase,
   PieChart,
+  Search,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react-native';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   ScrollView,
   Switch,
@@ -24,6 +29,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DonutChart, ChartLegend } from '@/components/charts';
 import { Screen, Header } from '@/components/layout';
 import { FormDropdown } from '@/components/forms';
+import { useClasses } from '@/features/classes';
+import { getStudents } from '@/features/students/api/students-api';
 import { useManageableUsers } from '@/hooks/use-manageable-users';
 import {
   useTeacherManagementContext,
@@ -39,6 +46,8 @@ import { LeaveBalanceFormModal } from './LeaveBalanceFormModal';
 
 type UserRoleTab = 'staff' | 'student';
 
+const PAGE_SIZE = 8;
+
 export default function ManageLeaveBalancesScreen() {
   const insets = useSafeAreaInsets();
   const role = useAuthStore(s => s.user?.role);
@@ -49,18 +58,35 @@ export default function ManageLeaveBalancesScreen() {
     useTeacherManagementContext(!isAdmin);
   const hasPermission = isAdmin || !!context?.can_manage_balances;
 
-  const [manageOwn, setManageOwn] = useState(true);
+  // Default to managing another person (matches web); toggle on for own balance.
+  const [manageOwn, setManageOwn] = useState(false);
   const [userRoleTab, setUserRoleTab] = useState<UserRoleTab>('staff');
+  const [selectedClass, setSelectedClass] = useState('');
   const [selectedUserId, setSelectedUserId] = useState('');
+  const [search, setSearch] = useState('');
 
   const effectiveUserId = manageOwn ? currentUserId : selectedUserId;
+  const isStaffTab = !manageOwn && userRoleTab === 'staff';
+  const isStudentTab = !manageOwn && userRoleTab === 'student';
 
   const { data: staff = [], isLoading: staffLoading } = useManageableUsers(
     'staff',
-    !manageOwn && userRoleTab === 'staff',
+    isStaffTab,
   );
-  const { data: students = [], isLoading: studentsLoading } =
-    useManageableUsers('student', !manageOwn && userRoleTab === 'student');
+
+  // Students are chosen by class: admins load all classes, teachers use theirs.
+  const { data: classesData, isLoading: classesLoading } = useClasses({
+    page_size: 100,
+  });
+  const { data: classStudentsResp, isLoading: studentsLoading } = useQuery({
+    queryKey: ['leave-balances', 'class-students', selectedClass],
+    queryFn: () => getStudents({ class_id: selectedClass, page_size: 100 }),
+    enabled: isStudentTab && !!selectedClass,
+  });
+  const students = useMemo(
+    () => classStudentsResp?.data ?? [],
+    [classStudentsResp],
+  );
 
   const { data: balancesResp, isLoading: balancesLoading } =
     useUserLeaveBalances(effectiveUserId);
@@ -102,14 +128,55 @@ export default function ManageLeaveBalancesScreen() {
   );
   const chartTotal = totals.available + totals.used + totals.pending;
 
+  const filteredBalances = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return balances;
+    return balances.filter(
+      b =>
+        b.leave_allocation.leave_type_name.toLowerCase().includes(q) ||
+        (b.leave_allocation.display_name ?? '').toLowerCase().includes(q),
+    );
+  }, [balances, search]);
+
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredBalances.length / PAGE_SIZE),
+  );
+  const pagedBalances = useMemo(
+    () => filteredBalances.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [filteredBalances, page],
+  );
+  useEffect(() => {
+    setPage(1);
+  }, [search, effectiveUserId]);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [editBalance, setEditBalance] = useState<LeaveBalance | null>(null);
 
-  const userOptions = (userRoleTab === 'staff' ? staff : students).map(u => ({
-    value: u.public_id,
-    label: u.full_name,
-  }));
+  const classOptions = useMemo(() => {
+    if (isAdmin) {
+      return (classesData?.classes ?? []).map(c => ({
+        value: c.public_id,
+        label: `${c.class_master?.name ?? ''} ${c.name}`.trim(),
+      }));
+    }
+    return (context?.class_teacher_for ?? []).map(c => ({
+      value: c.public_id,
+      label: c.class_master ? `${c.class_master} ${c.name}` : c.name,
+    }));
+  }, [isAdmin, classesData, context]);
+
+  const userOptions = useMemo(() => {
+    if (userRoleTab === 'staff') {
+      return staff.map(u => ({ value: u.public_id, label: u.full_name }));
+    }
+    return students.map((s: Student) => ({
+      value: s.user_info.public_id,
+      label: `${s.full_name} (${s.roll_number})`,
+    }));
+  }, [userRoleTab, staff, students]);
 
   const handleAdd = () => {
     setModalMode('add');
@@ -181,7 +248,6 @@ export default function ManageLeaveBalancesScreen() {
         showBack
       />
       <ScrollView
-        style={styles.scrollView}
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
       >
@@ -198,6 +264,7 @@ export default function ManageLeaveBalancesScreen() {
             onValueChange={v => {
               setManageOwn(v);
               setSelectedUserId('');
+              setSelectedClass('');
             }}
             trackColor={{ false: Colors.gray[300], true: Colors.primary[200] }}
             thumbColor={manageOwn ? Colors.primary[500] : Colors.gray[400]}
@@ -216,6 +283,7 @@ export default function ManageLeaveBalancesScreen() {
                 onPress={() => {
                   setUserRoleTab('staff');
                   setSelectedUserId('');
+                  setSelectedClass('');
                 }}
               >
                 <Briefcase
@@ -243,6 +311,7 @@ export default function ManageLeaveBalancesScreen() {
                 onPress={() => {
                   setUserRoleTab('student');
                   setSelectedUserId('');
+                  setSelectedClass('');
                 }}
               >
                 <Users
@@ -264,17 +333,36 @@ export default function ManageLeaveBalancesScreen() {
               </TouchableOpacity>
             </View>
 
+            {userRoleTab === 'student' && (
+              <FormDropdown
+                label="Select Class"
+                placeholder="First select a class"
+                options={classOptions}
+                value={selectedClass}
+                onChange={value => {
+                  setSelectedClass(value);
+                  setSelectedUserId('');
+                }}
+                loading={classesLoading}
+              />
+            )}
+
             <FormDropdown
               label={
                 userRoleTab === 'staff'
                   ? 'Select Staff Member'
                   : 'Select Student'
               }
-              placeholder="Select a person"
+              placeholder={
+                userRoleTab === 'student' && !selectedClass
+                  ? 'First select a class'
+                  : 'Select a person'
+              }
               options={userOptions}
               value={selectedUserId}
               onChange={setSelectedUserId}
               loading={userRoleTab === 'staff' ? staffLoading : studentsLoading}
+              disabled={userRoleTab === 'student' && !selectedClass}
             />
           </View>
         )}
@@ -324,14 +412,26 @@ export default function ManageLeaveBalancesScreen() {
                   </View>
                 </View>
 
+                {/* Search */}
+                <View style={styles.searchBox}>
+                  <Search size={16} color={Colors.gray[400]} />
+                  <TextInput
+                    style={styles.searchInput}
+                    value={search}
+                    onChangeText={setSearch}
+                    placeholder="Search leave type..."
+                    placeholderTextColor={Colors.gray[400]}
+                  />
+                </View>
+
                 {/* Balance list */}
                 <View style={styles.listHeader}>
                   <Text style={styles.listTitle}>
-                    Leave Balances ({balances.length})
+                    Leave Balances ({filteredBalances.length})
                   </Text>
                 </View>
 
-                {balances.map(b => {
+                {pagedBalances.map(b => {
                   const allocated = Number(b.total_allocated);
                   const carried = Number(b.carried_forward);
                   const used = Number(b.used);
@@ -407,6 +507,46 @@ export default function ManageLeaveBalancesScreen() {
                     </View>
                   );
                 })}
+
+                {totalPages > 1 && (
+                  <View style={styles.pagination}>
+                    <TouchableOpacity
+                      style={[
+                        styles.pageBtn,
+                        page <= 1 && styles.pageBtnDisabled,
+                      ]}
+                      disabled={page <= 1}
+                      onPress={() => setPage(p => Math.max(1, p - 1))}
+                    >
+                      <ChevronLeft
+                        size={18}
+                        color={
+                          page <= 1 ? Colors.gray[400] : Colors.primary[600]
+                        }
+                      />
+                    </TouchableOpacity>
+                    <Text style={styles.pageText}>
+                      Page {page} of {totalPages}
+                    </Text>
+                    <TouchableOpacity
+                      style={[
+                        styles.pageBtn,
+                        page >= totalPages && styles.pageBtnDisabled,
+                      ]}
+                      disabled={page >= totalPages}
+                      onPress={() => setPage(p => Math.min(totalPages, p + 1))}
+                    >
+                      <ChevronRight
+                        size={18}
+                        color={
+                          page >= totalPages
+                            ? Colors.gray[400]
+                            : Colors.primary[600]
+                        }
+                      />
+                    </TouchableOpacity>
+                  </View>
+                )}
               </>
             )}
           </>
@@ -443,16 +583,54 @@ export default function ManageLeaveBalancesScreen() {
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
-  },
   scroll: {
-    flexGrow: 1,
     padding: 16,
     paddingBottom: 120,
   },
-  centerBox: {
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: Colors.gray[200],
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 12,
+  },
+  searchInput: {
     flex: 1,
+    fontSize: 14,
+    color: Colors.gray[800],
+    padding: 0,
+  },
+  pagination: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+    marginTop: 12,
+  },
+  pageBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.gray[200],
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  pageBtnDisabled: {
+    opacity: 0.5,
+  },
+  pageText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.gray[600],
+  },
+  centerBox: {
     paddingVertical: 40,
     paddingHorizontal: 24,
     alignItems: 'center',
