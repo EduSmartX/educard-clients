@@ -27,6 +27,7 @@ import {
 } from './academics/academics-constants';
 import { ExamsSection } from './academics/ExamsSection';
 import { HomeworkSection } from './academics/HomeworkSection';
+import { MarksSection } from './academics/MarksSection';
 import { TimetableSection } from './academics/TimetableSection';
 
 export default function ParentAcademicsScreen() {
@@ -109,6 +110,7 @@ export function ParentAcademicsTaskScreen({
       {task === 'timetable' && <TimetableSection />}
       {task === 'homework' && <HomeworkSection />}
       {task === 'exams' && <ExamsSection />}
+      {task === 'marks' && <MarksSection />}
     </Screen>
   );
 }

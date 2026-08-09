@@ -91,7 +91,7 @@ export type SharedStackParamList = {
   SyncProfiles: undefined;
   StudentLeave: undefined;
   StudentAcademicsTask: {
-    task: 'timetable' | 'homework' | 'exams';
+    task: 'timetable' | 'homework' | 'exams' | 'marks';
   };
   Organization: undefined;
   Preferences: undefined;

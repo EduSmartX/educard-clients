@@ -64,6 +64,10 @@ export default function SettingsScreen() {
   const { profileImageUrl } = useProfileImageUrl();
 
   const isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
+  const isStudentPortal = useMemo(() => {
+    const role = user?.role?.toLowerCase();
+    return role === 'student' || role === 'parent';
+  }, [user?.role]);
 
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
@@ -129,8 +133,10 @@ export default function SettingsScreen() {
     items: [
       {
         id: 'profile',
-        title: 'Edit Profile',
-        subtitle: 'Update your information',
+        title: isStudentPortal ? 'My Profile' : 'Edit Profile',
+        subtitle: isStudentPortal
+          ? 'View your details'
+          : 'Update your information',
         icon: User,
         iconColor: '#2563eb',
         iconBg: '#eff6ff',

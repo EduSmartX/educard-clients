@@ -41,6 +41,8 @@ export interface AttendanceSummary {
 export interface AttendanceCalendarDay {
   date: string;
   status: string;
+  is_working_day?: boolean;
+  holiday_name?: string | null;
 }
 
 export interface TimetableEntry {
@@ -137,6 +139,9 @@ export interface ExamSessionDetail extends ExamSession {
 export interface FeeSummary {
   public_id: string;
   total_amount: number;
+  base_amount: number;
+  discount_percentage: number;
+  discount_amount: number;
   amount_paid: number;
   balance_due: number;
   status: string;

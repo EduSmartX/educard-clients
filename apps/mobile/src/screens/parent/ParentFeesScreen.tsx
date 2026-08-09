@@ -124,9 +124,34 @@ export default function ParentFeesScreen() {
                   Fee Overview
                 </Text>
                 <View className="gap-3">
+                  {Number(summary.discount_amount) > 0 && (
+                    <View className="rounded-xl border border-gray-200 bg-white p-4">
+                      <View className="flex-row items-center justify-between">
+                        <Text className="text-xs font-medium text-gray-500">
+                          Gross Fee
+                        </Text>
+                        <Text className="text-sm font-semibold text-gray-700">
+                          {formatCurrency(Number(summary.base_amount))}
+                        </Text>
+                      </View>
+                      <View className="mt-2 flex-row items-center justify-between">
+                        <Text className="text-xs font-medium text-emerald-700">
+                          Discount
+                          {Number(summary.discount_percentage) > 0
+                            ? ` (${Number(summary.discount_percentage)}%)`
+                            : ''}
+                        </Text>
+                        <Text className="text-sm font-bold text-emerald-700">
+                          -{formatCurrency(Number(summary.discount_amount))}
+                        </Text>
+                      </View>
+                    </View>
+                  )}
                   <View className="rounded-xl border border-gray-200 bg-white p-4">
                     <Text className="text-xs font-medium text-gray-500">
-                      Total Fee
+                      {Number(summary.discount_amount) > 0
+                        ? 'Payable After Discount'
+                        : 'Total Fee'}
                     </Text>
                     <Text className="mt-1 text-xl font-bold text-gray-800">
                       {formatCurrency(Number(summary.total_amount))}

@@ -4,6 +4,9 @@ import { API_ENDPOINTS } from '@/constants';
 export interface FeeSummary {
   public_id: string;
   total_amount: number;
+  base_amount: number;
+  discount_percentage: number;
+  discount_amount: number;
   amount_paid: number;
   balance_due: number;
   status: string;

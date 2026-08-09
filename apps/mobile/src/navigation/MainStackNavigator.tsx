@@ -62,6 +62,7 @@ import SubmissionsScreen from '@/screens/shared/homework/SubmissionsScreen';
 import NotificationsScreen from '@/screens/shared/NotificationsScreen';
 import OrgPreferencesScreen from '@/screens/shared/preferences/PreferencesScreen';
 import ProfileScreen from '@/screens/shared/profile/ProfileScreen';
+import StudentProfileScreen from '@/screens/shared/profile/StudentProfileScreen';
 import SwitchProfileScreen from '@/screens/shared/profile-switch/SwitchProfileScreen';
 import SyncProfilesScreen from '@/screens/shared/profile-switch/SyncProfilesScreen';
 import StudentLeaveScreen from '@/screens/shared/student/StudentLeaveScreen';
@@ -97,6 +98,12 @@ const Stack = createNativeStackNavigator<SharedStackParamList>();
 type MainStackNavigatorProps = {
   role: string | null;
 };
+
+// Student and parent share one account; both get the read-only profile.
+function isStudentPortalRole(role: string | null) {
+  const normalized = role?.toLowerCase();
+  return normalized === 'student' || normalized === 'parent';
+}
 
 function renderScreenBoundary({
   route,
@@ -175,7 +182,15 @@ export function MainStackNavigator({ role }: MainStackNavigatorProps) {
         <Stack.Screen name="ChangeEmail" component={ChangeEmailScreen} />
         <Stack.Screen name="ChangePhone" component={ChangePhoneScreen} />
         <Stack.Screen name="HelpSupport" component={HelpSupportScreen} />
-        <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="Profile">
+          {() =>
+            isStudentPortalRole(role) ? (
+              <StudentProfileScreen />
+            ) : (
+              <ProfileScreen />
+            )
+          }
+        </Stack.Screen>
         <Stack.Screen name="SwitchProfile" component={SwitchProfileScreen} />
         <Stack.Screen name="SyncProfiles" component={SyncProfilesScreen} />
         <Stack.Screen name="StudentLeave" component={StudentLeaveScreen} />

@@ -10,6 +10,7 @@ import {
   CalendarClock,
   ClipboardCheck,
   Clock,
+  GraduationCap,
   Megaphone,
 } from 'lucide-react-native';
 import { useCallback, useMemo, useState } from 'react';
@@ -230,7 +231,14 @@ export default function ParentDashboardScreen() {
             )}
           </TouchableOpacity>
         }
-      />
+      >
+        {!!className && (
+          <View style={styles.classChip}>
+            <GraduationCap size={13} color="#fff" />
+            <Text style={styles.classChipText}>Class {className}</Text>
+          </View>
+        )}
+      </GradientHeader>
 
       <ScrollView
         style={styles.content}
@@ -493,4 +501,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.2)',
   },
   profileFallbackText: { color: '#fff', fontSize: 16, fontWeight: '800' },
+  classChip: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 12,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: 'rgba(255,255,255,0.22)',
+  },
+  classChipText: { color: '#fff', fontSize: 12, fontWeight: '800' },
 });

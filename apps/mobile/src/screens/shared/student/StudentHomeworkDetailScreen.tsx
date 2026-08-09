@@ -3,11 +3,7 @@
  * View details, submit work, see teacher feedback
  */
 
-import {
-  useNavigation,
-  useRoute,
-  type RouteProp,
-} from '@react-navigation/native';
+import { useRoute, type RouteProp } from '@react-navigation/native';
 import { format } from 'date-fns';
 import {
   Clock,
@@ -21,7 +17,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react-native';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -40,16 +36,14 @@ import {
 
 import { Screen } from '@/components/layout';
 import { ScreenHeader } from '@/components/ui';
+import { AttachmentViewer } from '@/components/attachments';
 import { colors } from '@/constants/colors';
 import {
   useHomeworkDetail,
   useStudentHomework,
   useSubmitHomework,
 } from '@/features/student-portal';
-import type {
-  SharedStackNavigation,
-  SharedStackParamList,
-} from '@/navigation/types';
+import type { SharedStackParamList } from '@/navigation/types';
 
 type HomeworkSubmission = NonNullable<
   ReturnType<typeof useHomeworkDetail>['data']
@@ -103,6 +97,23 @@ function SubmissionStatusCard({
         </View>
       ) : null}
 
+      {!!submission.attachments?.length && (
+        <View className="mt-3">
+          <Text className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+            Your Uploaded Files
+          </Text>
+          <View className="gap-2">
+            {submission.attachments.map(file => (
+              <AttachmentViewer
+                key={file.public_id}
+                url={file.file_url}
+                fileName={file.file_name}
+              />
+            ))}
+          </View>
+        </View>
+      )}
+
       {isReviewed && (
         <View className="mt-3 rounded-xl border border-blue-200 bg-blue-50 p-3">
           <View className="flex-row items-center gap-1.5">
@@ -133,12 +144,12 @@ function SubmissionStatusCard({
 }
 
 export default function StudentHomeworkDetailScreen() {
-  const navigation = useNavigation<SharedStackNavigation>();
   const route =
     useRoute<RouteProp<SharedStackParamList, 'StudentHomeworkDetail'>>();
   const { id, date } = route.params;
+  const [activeId, setActiveId] = useState(id);
 
-  const { data: homework, isLoading } = useHomeworkDetail(id || null);
+  const { data: homework, isLoading } = useHomeworkDetail(activeId || null);
   const { data: homeworkList } = useStudentHomework(date);
   const submitMutation = useSubmitHomework();
 
@@ -150,11 +161,21 @@ export default function StudentHomeworkDetailScreen() {
   } | null>(null);
   const [showResubmit, setShowResubmit] = useState(false);
 
+  useEffect(() => {
+    setActiveId(id);
+  }, [id]);
+
+  useEffect(() => {
+    setNotes('');
+    setFile(null);
+    setShowResubmit(false);
+  }, [activeId]);
+
   // Prev/Next
   const { prevId, nextId, idx, total } = useMemo(() => {
-    if (!homeworkList || !id)
+    if (!homeworkList || !activeId)
       return { prevId: null, nextId: null, idx: -1, total: 0 };
-    const i = homeworkList.findIndex(hw => hw.public_id === id);
+    const i = homeworkList.findIndex(hw => hw.public_id === activeId);
     return {
       prevId: i > 0 ? homeworkList[i - 1].public_id : null,
       nextId:
@@ -162,10 +183,10 @@ export default function StudentHomeworkDetailScreen() {
       idx: i,
       total: homeworkList.length,
     };
-  }, [homeworkList, id]);
+  }, [homeworkList, activeId]);
 
   const goTo = (targetId: string) => {
-    navigation.replace('StudentHomeworkDetail', { id: targetId, date });
+    setActiveId(targetId);
   };
 
   const pickFile = async () => {
@@ -191,10 +212,10 @@ export default function StudentHomeworkDetailScreen() {
   };
 
   const handleSubmit = () => {
-    if (!id) return;
+    if (!activeId) return;
     submitMutation.mutate(
       {
-        publicId: id,
+        publicId: activeId,
         data: { notes: notes || undefined, file: file || undefined },
       },
       {
@@ -342,6 +363,24 @@ export default function StudentHomeworkDetailScreen() {
               </Text>
             </View>
           ) : null}
+
+          {!!homework.attachments?.length && (
+            <View className="mt-4">
+              <Text className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+                Homework Attachments
+              </Text>
+              <View className="gap-2">
+                {homework.attachments.map(attachment => (
+                  <AttachmentViewer
+                    key={attachment.public_id}
+                    url={attachment.file_url}
+                    fileName={attachment.file_name}
+                    subtitle={attachment.file_type || undefined}
+                  />
+                ))}
+              </View>
+            </View>
+          )}
         </View>
 
         {/* Submission Status */}

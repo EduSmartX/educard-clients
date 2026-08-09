@@ -23,6 +23,8 @@ import { ScreenHeader } from '@/components/ui';
 import { colors } from '@/constants/colors';
 import { useAttendanceSummary } from '@/features/student-portal';
 
+import { AttendanceCalendar } from './attendance/AttendanceCalendar';
+
 function StatCard({
   label,
   value,
@@ -117,6 +119,11 @@ export default function ParentAttendanceScreen() {
             icon={Clock}
           />
         </View>
+
+        <Text className="mb-3 mt-8 text-base font-bold text-gray-800">
+          Monthly Report
+        </Text>
+        <AttendanceCalendar />
 
         {/* Overview */}
         <Text className="mb-3 mt-8 text-base font-bold text-gray-800">
