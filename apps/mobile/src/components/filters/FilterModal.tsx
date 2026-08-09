@@ -4,7 +4,7 @@
  */
 
 import { X, RotateCcw, SlidersHorizontal } from 'lucide-react-native';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -69,11 +69,15 @@ export function FilterModal({
   title = 'Filters',
 }: FilterModalProps) {
   const [localFilters, setLocalFilters] = useState<Record<string, unknown>>({});
+  const wasVisible = useRef(false);
 
+  // Seed local state only when the sheet opens; callers may pass a new
+  // `currentFilters` reference every render, which must not wipe selections.
   useEffect(() => {
-    if (visible) {
+    if (visible && !wasVisible.current) {
       setLocalFilters({ ...currentFilters });
     }
+    wasVisible.current = visible;
   }, [visible, currentFilters]);
 
   const activeCount = useMemo(() => {

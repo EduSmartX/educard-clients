@@ -248,6 +248,9 @@ export const QueryKeys = {
   // Student Portal (self-service pages under /student/*)
   STUDENT_PORTAL: {
     DASHBOARD: ["student-portal", "dashboard"] as const,
+    ANNOUNCEMENTS_LIST: ["student-portal", "announcements", "list"] as const,
+    ANNOUNCEMENT_DETAIL: (publicId: string) =>
+      ["student-portal", "announcements", "detail", publicId] as const,
     ATTENDANCE_SUMMARY: ["student-portal", "attendance", "summary"] as const,
     ATTENDANCE_CALENDAR: (month?: number, year?: number) =>
       ["student-portal", "attendance", "calendar", month, year] as const,

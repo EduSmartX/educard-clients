@@ -68,6 +68,9 @@ const StudentHomeworkDetailPage = lazy(
 const StudentExamsPage = lazy(() => import('./features/student/exams/student-exams-page'));
 const StudentFeePage = lazy(() => import('./features/student/fee/student-fee-page'));
 const StudentLeavePage = lazy(() => import('./features/student/leave/student-leave-page'));
+const StudentAnnouncementsPage = lazy(
+  () => import('./features/student/announcements/student-announcements-page')
+);
 
 // Student pages
 const StudentsListPage = lazy(() => import('./features/students/pages/students-list-page'));
@@ -333,6 +336,7 @@ function App() {
               <Route path="exams" element={<StudentExamsPage />} />
               <Route path="fee" element={<StudentFeePage />} />
               <Route path="leave" element={<StudentLeavePage />} />
+              <Route path="announcements" element={<StudentAnnouncementsPage />} />
             </Route>
 
             {/* Students */}

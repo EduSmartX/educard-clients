@@ -26,7 +26,13 @@ import {
 const KEYS = {
   dashboard: ['student', 'dashboard'],
   attendance: ['student', 'attendance'],
-  attendanceCalendar: (m: number, y: number) => ['student', 'attendance', 'calendar', m, y],
+  attendanceCalendar: (m: number, y: number) => [
+    'student',
+    'attendance',
+    'calendar',
+    m,
+    y,
+  ],
   timetable: (date: string) => ['student', 'timetable', date],
   homework: (date?: string) => ['student', 'homework', date],
   homeworkDetail: (id: string) => ['student', 'homework', 'detail', id],
@@ -40,7 +46,11 @@ const KEYS = {
 };
 
 export function useStudentDashboard() {
-  return useQuery({ queryKey: KEYS.dashboard, queryFn: fetchDashboard, staleTime: 5 * 60_000 });
+  return useQuery({
+    queryKey: KEYS.dashboard,
+    queryFn: fetchDashboard,
+    staleTime: 5 * 60_000,
+  });
 }
 
 export function useAttendanceSummary() {
@@ -64,6 +74,8 @@ export function useTimetable(date: string) {
     queryKey: KEYS.timetable(date),
     queryFn: () => fetchTimetable(date),
     staleTime: 10 * 60_000,
+    // Dashboard primes this same key; always re-fetch so the screen shows live data.
+    refetchOnMount: 'always',
   });
 }
 
@@ -91,9 +103,13 @@ export function useSubmitHomework() {
       data,
     }: {
       publicId: string;
-      data: { notes?: string; file?: { uri: string; name: string; type: string } };
+      data: {
+        notes?: string;
+        file?: { uri: string; name: string; type: string };
+      };
     }) => submitHomework(publicId, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['student', 'homework'] }),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ['student', 'homework'] }),
   });
 }
 
@@ -114,7 +130,11 @@ export function useExamSessionDetail(publicId: string | null) {
 }
 
 export function useFeeSummary() {
-  return useQuery({ queryKey: KEYS.feeSummary, queryFn: fetchFeeSummary, staleTime: 0 });
+  return useQuery({
+    queryKey: KEYS.feeSummary,
+    queryFn: fetchFeeSummary,
+    staleTime: 0,
+  });
 }
 
 export function useFeePayments() {
@@ -136,8 +156,13 @@ export function useFeeComponents() {
 export function useFeeOptOut() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ publicId, requestNote }: { publicId: string; requestNote: string }) =>
-      requestFeeOptOut(publicId, requestNote),
+    mutationFn: ({
+      publicId,
+      requestNote,
+    }: {
+      publicId: string;
+      requestNote: string;
+    }) => requestFeeOptOut(publicId, requestNote),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['student', 'fee'] }),
   });
 }
@@ -145,8 +170,13 @@ export function useFeeOptOut() {
 export function useFeeOptIn() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ publicId, requestNote }: { publicId: string; requestNote: string }) =>
-      requestFeeOptIn(publicId, requestNote),
+    mutationFn: ({
+      publicId,
+      requestNote,
+    }: {
+      publicId: string;
+      requestNote: string;
+    }) => requestFeeOptIn(publicId, requestNote),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['student', 'fee'] }),
   });
 }
