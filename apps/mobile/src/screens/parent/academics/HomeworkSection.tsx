@@ -6,9 +6,11 @@ import { useNavigation } from '@react-navigation/native';
 import { format, addDays } from 'date-fns';
 import {
   AlertTriangle,
+  BookOpen,
   ChevronLeft,
   ChevronRight,
   Clock,
+  User,
 } from 'lucide-react-native';
 import { useState } from 'react';
 import {
@@ -27,11 +29,56 @@ import {
 } from '@/features/student-portal';
 import type { SharedStackNavigation } from '@/navigation/types';
 
+import { academicsStyles as s } from './academics-styles';
 import { safeFormat } from './academics-utils';
 
 function getDefaultHomeworkDate(): Date {
   const now = new Date();
   return now.getHours() >= 16 ? addDays(now, 1) : addDays(now, -1);
+}
+
+interface StatusTone {
+  label: string;
+  bg: string;
+  text: string;
+  accent: string;
+}
+
+function getStatusTone(hw: HomeworkItem): StatusTone {
+  if (hw.my_submission_status === 'not_submitted')
+    return {
+      label: 'Not Submitted',
+      bg: '#fee2e2',
+      text: '#b91c1c',
+      accent: '#ef4444',
+    };
+  if (hw.is_overdue)
+    return {
+      label: 'Overdue',
+      bg: '#fee2e2',
+      text: '#b91c1c',
+      accent: '#ef4444',
+    };
+  if (hw.my_submission_status === 'reviewed')
+    return {
+      label: 'Reviewed',
+      bg: '#dbeafe',
+      text: '#1d4ed8',
+      accent: '#3b82f6',
+    };
+  if (hw.my_submission_status === 'submitted')
+    return {
+      label: 'Submitted',
+      bg: '#dcfce7',
+      text: '#15803d',
+      accent: '#22c55e',
+    };
+  return {
+    label: 'Pending',
+    bg: '#fef3c7',
+    text: '#b45309',
+    accent: '#f59e0b',
+  };
 }
 
 export function HomeworkSection() {
@@ -51,101 +98,93 @@ export function HomeworkSection() {
   const dateLabel = (() => {
     const t = new Date();
     t.setHours(0, 0, 0, 0);
-    const s = new Date(selectedDate);
-    s.setHours(0, 0, 0, 0);
-    const diff = Math.round((s.getTime() - t.getTime()) / 86400000);
+    const d = new Date(selectedDate);
+    d.setHours(0, 0, 0, 0);
+    const diff = Math.round((d.getTime() - t.getTime()) / 86400000);
     if (diff === 0) return 'Today';
     if (diff === 1) return 'Tomorrow';
     if (diff === -1) return 'Yesterday';
     return format(selectedDate, 'EEE, d MMM');
   })();
 
-  const statusStyle = (hw: HomeworkItem) => {
-    if (hw.my_submission_status === 'not_submitted')
-      return { bg: 'bg-red-100', text: 'text-red-700', label: 'Not Submitted' };
-    if (hw.is_overdue)
-      return { bg: 'bg-red-100', text: 'text-red-700', label: 'Overdue' };
-    if (hw.my_submission_status === 'reviewed')
-      return { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Reviewed' };
-    if (hw.my_submission_status === 'submitted')
-      return { bg: 'bg-green-100', text: 'text-green-700', label: 'Submitted' };
-    return { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Pending' };
-  };
-
   const renderHomeworkList = () => {
     if (isLoading) {
       return (
-        <View className="items-center py-10">
-          <ActivityIndicator color={colors.primary[500]} />
+        <View style={s.stateCard}>
+          <ActivityIndicator size="large" color={colors.primary[500]} />
+          <Text style={s.stateTitle}>Loading homework</Text>
         </View>
       );
     }
-    if (homework && homework.length > 0) {
-      return homework.map((hw: HomeworkItem) => {
-        const st = statusStyle(hw);
-        return (
-          <TouchableOpacity
-            key={hw.public_id}
-            onPress={() =>
-              navigation.navigate('StudentHomeworkDetail', {
-                id: hw.public_id,
-                date: dateStr,
-              })
-            }
-            className="mb-3 rounded-xl border border-gray-100 bg-white p-4"
-            activeOpacity={0.7}
-          >
-            <View className="flex-row items-start justify-between">
-              <View className="flex-1 pr-2">
-                <Text className="text-base font-semibold text-gray-800">
-                  {hw.title}
-                </Text>
-                <Text className="mt-0.5 text-xs text-gray-500">
-                  {hw.subject_name}
-                  {hw.chapter ? ` • ${hw.chapter}` : ''}
-                </Text>
-              </View>
-              <View className={`rounded-lg px-2.5 py-1 ${st.bg}`}>
-                <Text className={`text-[10px] font-semibold ${st.text}`}>
-                  {st.label}
-                </Text>
-              </View>
-            </View>
-            <View className="mt-2 flex-row items-center">
-              <Clock size={12} color={colors.gray[400]} />
-              <Text className="ml-1 text-[11px] text-gray-400">
-                Due: {safeFormat(hw.due_datetime, 'd MMM h:mm a')}
-              </Text>
-              <Text className="ml-3 text-[11px] text-gray-400">
-                By: {hw.assigned_by_name}
-              </Text>
-            </View>
-            {hw.priority === 'high' && (
-              <View className="mt-1.5 flex-row items-center">
-                <AlertTriangle size={12} color={colors.danger[500]} />
-                <Text className="ml-1 text-[10px] font-medium text-red-600">
-                  High Priority
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        );
-      });
+
+    if (!homework || homework.length === 0) {
+      return (
+        <View style={s.stateCard}>
+          <BookOpen size={32} color="#94a3b8" />
+          <Text style={s.stateTitle}>No homework assigned</Text>
+          <Text style={s.stateMessage}>
+            Nothing was assigned for {format(selectedDate, 'EEEE, d MMMM yyyy')}
+            .
+          </Text>
+        </View>
+      );
     }
-    return (
-      <View className="items-center py-10">
-        <Text className="text-3xl">🦋</Text>
-        <Text className="mt-2 text-sm text-gray-500">
-          No homework for {dateLabel.toLowerCase()}
-        </Text>
-      </View>
-    );
+
+    return homework.map((hw: HomeworkItem) => {
+      const tone = getStatusTone(hw);
+      return (
+        <TouchableOpacity
+          key={hw.public_id}
+          onPress={() =>
+            navigation.navigate('StudentHomeworkDetail', {
+              id: hw.public_id,
+              date: dateStr,
+            })
+          }
+          style={[s.card, { borderLeftColor: tone.accent }]}
+          activeOpacity={0.7}
+        >
+          <View style={s.cardTopRow}>
+            <View style={s.cardTitleWrap}>
+              <Text style={s.cardTitle}>{hw.title}</Text>
+              <Text style={s.cardSubtitle}>
+                {hw.subject_name}
+                {hw.chapter ? ` • ${hw.chapter}` : ''}
+              </Text>
+            </View>
+            <View style={[s.badge, { backgroundColor: tone.bg }]}>
+              <Text style={[s.badgeText, { color: tone.text }]}>
+                {tone.label}
+              </Text>
+            </View>
+          </View>
+
+          <View style={s.cardMetaRow}>
+            <Clock size={13} color="#94a3b8" />
+            <Text style={s.cardMetaText}>
+              Due {safeFormat(hw.due_datetime, 'd MMM, h:mm a')}
+            </Text>
+          </View>
+          <View style={s.cardMetaRow}>
+            <User size={13} color="#94a3b8" />
+            <Text style={s.cardMetaText}>{hw.assigned_by_name}</Text>
+          </View>
+
+          {hw.priority === 'high' && (
+            <View style={s.priorityRow}>
+              <AlertTriangle size={13} color="#dc2626" />
+              <Text style={s.priorityText}>High priority</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      );
+    });
   };
 
   return (
     <ScrollView
-      className="flex-1"
-      contentContainerClassName="pb-6"
+      style={s.screen}
+      contentContainerStyle={s.content}
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
@@ -154,24 +193,28 @@ export function HomeworkSection() {
         />
       }
     >
-      <View className="mx-4 mt-4 flex-row items-center justify-between rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2.5">
-        <TouchableOpacity onPress={() => goDay(-1)} className="p-1">
-          <ChevronLeft size={18} color={colors.gray[600]} />
+      <View style={s.dateBar}>
+        <TouchableOpacity
+          onPress={() => goDay(-1)}
+          style={s.dateArrow}
+          accessibilityLabel="Previous day"
+        >
+          <ChevronLeft size={20} color="#475569" />
         </TouchableOpacity>
-        <View className="items-center">
-          <Text className="text-sm font-semibold text-gray-700">
-            {dateLabel}
-          </Text>
-          <Text className="text-[10px] text-gray-400">
-            {format(selectedDate, 'd MMMM yyyy')}
-          </Text>
+        <View style={s.dateCenter}>
+          <Text style={s.dateLabel}>{dateLabel}</Text>
+          <Text style={s.dateValue}>{format(selectedDate, 'd MMMM yyyy')}</Text>
         </View>
-        <TouchableOpacity onPress={() => goDay(1)} className="p-1">
-          <ChevronRight size={18} color={colors.gray[600]} />
+        <TouchableOpacity
+          onPress={() => goDay(1)}
+          style={s.dateArrow}
+          accessibilityLabel="Next day"
+        >
+          <ChevronRight size={20} color="#475569" />
         </TouchableOpacity>
       </View>
 
-      <View className="mt-4 px-4 pb-6">{renderHomeworkList()}</View>
+      {renderHomeworkList()}
     </ScrollView>
   );
 }

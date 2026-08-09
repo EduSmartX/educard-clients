@@ -6,7 +6,7 @@ import DateTimePicker, {
   type DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
 import { extractApiError, getSubjectColor } from '@educard/shared';
-import { format, addDays } from 'date-fns';
+import { format, addDays, startOfWeek } from 'date-fns';
 import {
   AlertTriangle,
   CalendarDays,
@@ -85,6 +85,10 @@ export function TimetableSection() {
     dayInfo?.day_type === 'holiday' || dayInfo?.day_type === 'force_holiday';
 
   const isToday = dateStr === format(new Date(), 'yyyy-MM-dd');
+
+  // Mon-Sat strip; the backend has no Sunday timetable.
+  const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
+  const weekDays = Array.from({ length: 6 }, (_, i) => addDays(weekStart, i));
 
   const handleRefresh = () => {
     void refetch();
@@ -319,6 +323,45 @@ export function TimetableSection() {
             <ChevronRight size={21} color="#0f766e" />
           </TouchableOpacity>
         </View>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={timetableStyles.dayTabs}
+        >
+          {weekDays.map(day => {
+            const dayKey = format(day, 'yyyy-MM-dd');
+            const active = dayKey === dateStr;
+            return (
+              <TouchableOpacity
+                key={dayKey}
+                style={[
+                  timetableStyles.dayTab,
+                  active && timetableStyles.dayTabActive,
+                ]}
+                onPress={() => setSelectedDate(day)}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[
+                    timetableStyles.dayTabShort,
+                    active && timetableStyles.dayTabTextActive,
+                  ]}
+                >
+                  {format(day, 'EEE')}
+                </Text>
+                <Text
+                  style={[
+                    timetableStyles.dayTabFull,
+                    active && timetableStyles.dayTabTextActive,
+                  ]}
+                >
+                  {format(day, 'd MMM')}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
         {!isToday && (
           <TouchableOpacity
             style={timetableStyles.todayButton}
