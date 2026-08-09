@@ -34,14 +34,11 @@ import {
 import Animated, { ZoomIn } from 'react-native-reanimated';
 
 import { colors } from '@/constants/colors';
+import { getSubjectVisual } from '@/constants/subject-visuals';
 import { useWorkingDayInfo } from '@/features/calendar';
-import {
-  useTimetable,
-  useStudentDashboard,
-  type TimetableEntry,
-} from '@/features/student-portal';
+import { useTimetable, type TimetableEntry } from '@/features/student-portal';
+import { useAuthStore } from '@/lib/auth-store';
 
-import { getSubjectVisual } from './subject-visuals';
 import { timetableStyles } from './timetable-styles';
 
 function formatSlotTime(t?: string | null): string {
@@ -80,7 +77,7 @@ export function TimetableSection() {
     isLoading: dayLoading,
     refetch: refetchDayInfo,
   } = useWorkingDayInfo({ date: dateStr });
-  const { data: dashboard } = useStudentDashboard();
+  const className = useAuthStore(state => state.user?.class_name) ?? '';
 
   const isNonWorkingDay = !!dayInfo && !dayInfo.is_working_day;
   const isHoliday =
@@ -298,9 +295,9 @@ export function TimetableSection() {
           Timetable setup not done yet
         </Text>
         <Text style={timetableStyles.stateMessage}>
-          No periods are configured for {dashboard?.class_name || 'your class'}{' '}
-          on {format(selectedDate, 'EEEE, d MMMM yyyy')}. Please contact your
-          class teacher.
+          No periods are configured for {className || 'your class'} on{' '}
+          {format(selectedDate, 'EEEE, d MMMM yyyy')}. Please contact your class
+          teacher.
         </Text>
       </View>
     );
@@ -429,7 +426,7 @@ export function TimetableSection() {
         <View>
           <Text style={timetableStyles.sectionTitle}>Class schedule</Text>
           <Text style={timetableStyles.sectionSubtitle}>
-            {dashboard?.class_name ? `${dashboard.class_name} \u2022 ` : ''}
+            {className ? `${className} \u2022 ` : ''}
             Includes substitutions, cancellations and extra classes
           </Text>
         </View>

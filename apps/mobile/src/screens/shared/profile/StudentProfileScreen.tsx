@@ -24,7 +24,6 @@ import {
   StyleSheet,
 } from 'react-native';
 
-import { useStudentDashboard } from '@/features/student-portal';
 import { useProfileImageUrl, useUserProfile } from '@/hooks';
 import { useAuthStore } from '@/lib/auth-store';
 import { LinearGradient } from '@/lib/linear-gradient';
@@ -83,18 +82,13 @@ export default function StudentProfileScreen() {
   const navigation = useNavigation();
   const { user } = useAuthStore();
   const { data: profile, isLoading } = useUserProfile();
-  const { data: dashboard } = useStudentDashboard();
   const { profileImageUrl } = useProfileImageUrl();
 
   const handleBack = useCallback(() => {
     if (navigation.canGoBack()) navigation.goBack();
   }, [navigation]);
 
-  const fullName =
-    profile?.full_name ||
-    user?.full_name ||
-    dashboard?.student_name ||
-    'Student';
+  const fullName = profile?.full_name || user?.full_name || 'Student';
   const address = profile?.address;
   const addressLine = [
     address?.street_address,
@@ -146,12 +140,10 @@ export default function StudentProfileScreen() {
               </View>
             )}
             <Text style={s.identityName}>{fullName}</Text>
-            {!!dashboard?.class_name && (
+            {!!user?.class_name && (
               <View style={s.classChip}>
                 <GraduationCap size={13} color="#4338ca" />
-                <Text style={s.classChipText}>
-                  Class {dashboard.class_name}
-                </Text>
+                <Text style={s.classChipText}>Class {user.class_name}</Text>
               </View>
             )}
             <Text style={s.readOnlyNote}>
@@ -164,7 +156,7 @@ export default function StudentProfileScreen() {
             icon={GraduationCap}
             tint="#4f46e5"
           >
-            <InfoRow label="Class" value={formatValue(dashboard?.class_name)} />
+            <InfoRow label="Class" value={formatValue(user?.class_name)} />
             <InfoRow
               label="Roll Number"
               value={formatValue(user?.roll_number)}

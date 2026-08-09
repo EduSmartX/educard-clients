@@ -25,6 +25,7 @@ import {
 } from 'react-native';
 
 import { colors } from '@/constants/colors';
+import { getSubjectVisual } from '@/constants/subject-visuals';
 import {
   useStudentHomework,
   type HomeworkItem,
@@ -33,7 +34,6 @@ import type { SharedStackNavigation } from '@/navigation/types';
 
 import { academicsStyles as s } from './academics-styles';
 import { safeFormat } from './academics-utils';
-import { getSubjectVisual } from './subject-visuals';
 
 function getDefaultHomeworkDate(): Date {
   const now = new Date();

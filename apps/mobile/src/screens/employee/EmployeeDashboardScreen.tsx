@@ -32,7 +32,7 @@ import {
   VerificationBanner,
   type StatCardData,
 } from '@/components/dashboard';
-import { GradientHeader, PressableScale } from '@/components/ui';
+import { GradientHeader, GreetingCard, PressableScale } from '@/components/ui';
 import {
   useDashboardAttendanceStats,
   useAttendanceDisplay,
@@ -257,6 +257,15 @@ export default function EmployeeDashboardScreen() {
           />
         }
       >
+        <GreetingCard
+          name={
+            (user?.full_name ?? user?.first_name ?? 'Teacher').split(' ')[0]
+          }
+          subtitle="Here is your schedule and pending work for today."
+          highlight="Have a great teaching day!"
+          colors={['#0d9488', '#0891b2', '#2563eb']}
+        />
+
         {user && (
           <VerificationBanner
             user={user}

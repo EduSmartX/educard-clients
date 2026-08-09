@@ -2,6 +2,8 @@ export { Modal, useModal } from './Modal';
 export type { ModalVariant } from './Modal';
 export { GradientHeader } from './GradientHeader';
 export type { GradientHeaderProps } from './GradientHeader';
+export { GreetingCard, getGreeting } from './GreetingCard';
+export type { GreetingCardProps } from './GreetingCard';
 export { ScreenHeader } from './ScreenHeader';
 export type { ScreenHeaderProps } from './ScreenHeader';
 export { PressableScale } from './PressableScale';

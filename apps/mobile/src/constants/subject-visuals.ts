@@ -40,28 +40,28 @@ export interface SubjectVisual {
 }
 
 const SUBJECT_IMAGES: Partial<Record<SubjectCategory, ImageSourcePropType>> = {
-  math: require('../../../../../assets/images/subjects/MATH.png') as ImageSourcePropType,
+  math: require('../../../assets/images/subjects/MATH.png') as ImageSourcePropType,
   science:
-    require('../../../../../assets/images/subjects/SCI.png') as ImageSourcePropType,
+    require('../../../assets/images/subjects/SCI.png') as ImageSourcePropType,
   physics:
-    require('../../../../../assets/images/subjects/PHY.png') as ImageSourcePropType,
+    require('../../../assets/images/subjects/PHY.png') as ImageSourcePropType,
   chemistry:
-    require('../../../../../assets/images/subjects/CHEM.png') as ImageSourcePropType,
+    require('../../../assets/images/subjects/CHEM.png') as ImageSourcePropType,
   english:
-    require('../../../../../assets/images/subjects/ENG.png') as ImageSourcePropType,
+    require('../../../assets/images/subjects/ENG.png') as ImageSourcePropType,
   hindi:
-    require('../../../../../assets/images/subjects/HIN.png') as ImageSourcePropType,
+    require('../../../assets/images/subjects/HIN.png') as ImageSourcePropType,
   kannada:
-    require('../../../../../assets/images/subjects/KAN.png') as ImageSourcePropType,
+    require('../../../assets/images/subjects/KAN.png') as ImageSourcePropType,
   tamil:
-    require('../../../../../assets/images/subjects/TAM.png') as ImageSourcePropType,
+    require('../../../assets/images/subjects/TAM.png') as ImageSourcePropType,
   telugu:
-    require('../../../../../assets/images/subjects/TEL.png') as ImageSourcePropType,
+    require('../../../assets/images/subjects/TEL.png') as ImageSourcePropType,
   social:
-    require('../../../../../assets/images/subjects/SST.png') as ImageSourcePropType,
-  lab: require('../../../../../assets/images/subjects/LAB.png') as ImageSourcePropType,
+    require('../../../assets/images/subjects/SST.png') as ImageSourcePropType,
+  lab: require('../../../assets/images/subjects/LAB.png') as ImageSourcePropType,
   library:
-    require('../../../../../assets/images/subjects/LIB.png') as ImageSourcePropType,
+    require('../../../assets/images/subjects/LIB.png') as ImageSourcePropType,
 };
 
 const SUBJECT_VISUALS: Record<SubjectCategory, SubjectVisual> = {

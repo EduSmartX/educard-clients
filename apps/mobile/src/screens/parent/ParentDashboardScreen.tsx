@@ -9,7 +9,6 @@ import {
   BookOpen,
   CalendarClock,
   ClipboardCheck,
-  Clock,
   GraduationCap,
   Megaphone,
 } from 'lucide-react-native';
@@ -36,11 +35,13 @@ import {
 import { VerificationBanner } from '@/components/dashboard';
 import {
   GradientHeader,
+  GreetingCard,
   FloatingCard,
   SectionHeader,
   PressableScale,
 } from '@/components/ui';
 import { colors } from '@/constants/colors';
+import { getSubjectVisual } from '@/constants/subject-visuals';
 import { useAnnouncements } from '@/features/announcements';
 import {
   useAttendanceSummary,
@@ -154,8 +155,8 @@ export default function ParentDashboardScreen() {
     [announcements],
   );
 
-  const studentName = dashboard?.student_name ?? user?.full_name ?? 'Student';
-  const className = dashboard?.class_name ?? '';
+  const studentName = user?.full_name ?? 'Student';
+  const className = user?.class_name ?? '';
 
   const attendanceStats = attendance?.current_month;
   const attendanceSegments: ChartSegment[] = attendanceStats
@@ -207,7 +208,6 @@ export default function ParentDashboardScreen() {
       <GradientHeader
         greeting={`${formatGreeting()},`}
         title={studentName}
-        subtitle={className ? `Class ${className}` : undefined}
         onNotificationPress={goToNotifications}
         right={
           <TouchableOpacity
@@ -253,6 +253,16 @@ export default function ParentDashboardScreen() {
       >
         {/* Content */}
         <View className="px-4 pt-4">
+          <GreetingCard
+            name={studentName.split(' ')[0]}
+            subtitle={
+              className
+                ? `Here is what is happening in Class ${className} today.`
+                : 'Here is what is happening at school today.'
+            }
+            highlight="Keep up the great work!"
+          />
+
           {user && (
             <VerificationBanner
               user={user}
@@ -391,39 +401,61 @@ export default function ParentDashboardScreen() {
               />
 
               <FloatingCard>
-                {gradedExams.slice(0, 4).map((mark, index, arr) => (
-                  <View
-                    key={mark.exam_public_id}
-                    className={`flex-row items-center py-3 ${
-                      index !== arr.length - 1 ? 'border-b border-gray-100' : ''
-                    }`}
-                  >
-                    <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-primary-50">
-                      <BookOpen size={18} color={colors.primary[600]} />
-                    </View>
-                    <View className="flex-1">
-                      <Text className="font-medium text-gray-900">
-                        {mark.subject_name}
-                      </Text>
-                      {!!mark.grade && (
-                        <Text className="text-sm text-gray-500">
-                          Grade {mark.grade}
-                        </Text>
-                      )}
-                    </View>
-                    <View className="items-end">
-                      <Text className="text-lg font-bold text-primary-600">
-                        {mark.marks_obtained}/{mark.max_marks}
-                      </Text>
-                      <Text className="text-xs text-gray-400">
-                        {Math.round(
-                          ((mark.marks_obtained ?? 0) / mark.max_marks) * 100,
+                {gradedExams.slice(0, 4).map((mark, index, arr) => {
+                  const visual = getSubjectVisual(mark.subject_name);
+                  const SubjectIcon = visual.icon;
+                  return (
+                    <View
+                      key={mark.exam_public_id}
+                      className={`flex-row items-center py-3 ${
+                        index !== arr.length - 1
+                          ? 'border-b border-gray-100'
+                          : ''
+                      }`}
+                    >
+                      <View
+                        style={[
+                          styles.subjectAvatar,
+                          { backgroundColor: visual.soft },
+                        ]}
+                      >
+                        {visual.image ? (
+                          <Image
+                            source={visual.image}
+                            style={styles.subjectAvatarImage}
+                          />
+                        ) : (
+                          <SubjectIcon size={18} color={visual.text} />
                         )}
-                        %
-                      </Text>
+                      </View>
+                      <View className="flex-1">
+                        <Text
+                          style={[styles.subjectName, { color: visual.text }]}
+                        >
+                          {mark.subject_name}
+                        </Text>
+                        {!!mark.grade && (
+                          <Text className="text-sm text-gray-500">
+                            Grade {mark.grade}
+                          </Text>
+                        )}
+                      </View>
+                      <View className="items-end">
+                        <Text
+                          style={[styles.markValue, { color: visual.accent }]}
+                        >
+                          {mark.marks_obtained}/{mark.max_marks}
+                        </Text>
+                        <Text className="text-xs text-gray-400">
+                          {Math.round(
+                            ((mark.marks_obtained ?? 0) / mark.max_marks) * 100,
+                          )}
+                          %
+                        </Text>
+                      </View>
                     </View>
-                  </View>
-                ))}
+                  );
+                })}
               </FloatingCard>
             </View>
           )}
@@ -439,29 +471,49 @@ export default function ParentDashboardScreen() {
 
             <FloatingCard>
               {todaysClasses.length > 0 ? (
-                todaysClasses.map((cls, index) => (
-                  <View
-                    key={cls.slot_public_id}
-                    className={`flex-row items-center py-3 ${
-                      index !== todaysClasses.length - 1
-                        ? 'border-b border-gray-100'
-                        : ''
-                    }`}
-                  >
-                    <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-primary-50">
-                      <Clock size={18} color={colors.primary[600]} />
+                todaysClasses.map((cls, index) => {
+                  const visual = getSubjectVisual(cls.subject_name);
+                  const SubjectIcon = visual.icon;
+                  return (
+                    <View
+                      key={cls.slot_public_id}
+                      className={`flex-row items-center py-3 ${
+                        index !== todaysClasses.length - 1
+                          ? 'border-b border-gray-100'
+                          : ''
+                      }`}
+                    >
+                      <View
+                        style={[
+                          styles.subjectAvatar,
+                          { backgroundColor: visual.soft },
+                        ]}
+                      >
+                        {visual.image ? (
+                          <Image
+                            source={visual.image}
+                            style={styles.subjectAvatarImage}
+                          />
+                        ) : (
+                          <SubjectIcon size={18} color={visual.text} />
+                        )}
+                      </View>
+                      <View className="flex-1">
+                        <Text
+                          style={[styles.subjectName, { color: visual.text }]}
+                        >
+                          {cls.subject_name}
+                        </Text>
+                        <Text className="text-sm text-gray-500">
+                          {cls.start_time} - {cls.end_time}
+                          {cls.teacher_name
+                            ? ` \u2022 ${cls.teacher_name}`
+                            : ''}
+                        </Text>
+                      </View>
                     </View>
-                    <View className="flex-1">
-                      <Text className="font-medium text-gray-900">
-                        {cls.subject_name}
-                      </Text>
-                      <Text className="text-sm text-gray-500">
-                        {cls.start_time} - {cls.end_time}
-                        {cls.teacher_name ? ` \u2022 ${cls.teacher_name}` : ''}
-                      </Text>
-                    </View>
-                  </View>
-                ))
+                  );
+                })
               ) : (
                 <Text style={styles.emptyText}>No classes scheduled today</Text>
               )}
@@ -513,4 +565,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.22)',
   },
   classChipText: { color: '#fff', fontSize: 12, fontWeight: '800' },
+  subjectAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  subjectAvatarImage: { width: 22, height: 22, borderRadius: 6 },
+  subjectName: { fontSize: 14, fontWeight: '700' },
+  markValue: { fontSize: 17, fontWeight: '800' },
 });

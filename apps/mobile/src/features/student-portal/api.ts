@@ -14,13 +14,15 @@ interface ApiResponse<T> {
 
 // ── Types ────────────────────────────────
 
+// Mirrors /students/student/dashboard/ — it returns no student name or class.
 export interface StudentDashboardData {
-  student_name: string;
-  class_name: string;
-  attendance_percentage: number;
-  total_homework: number;
-  pending_homework: number;
-  upcoming_exams: number;
+  attendance: {
+    current_month_percentage: number;
+    academic_year_percentage: number;
+  };
+  today_timetable: TimetableEntry[];
+  pending_homework_count: number;
+  upcoming_exams_count: number;
 }
 
 export interface AttendancePeriodStats {
