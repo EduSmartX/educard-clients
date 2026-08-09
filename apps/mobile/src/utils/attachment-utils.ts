@@ -57,6 +57,16 @@ export function getAttachmentMimeType(nameOrUrl?: string | null): string {
   return MIME_BY_EXT[getFileExtension(nameOrUrl)] ?? 'application/octet-stream';
 }
 
+export function formatFileSize(bytes?: number | null): string {
+  if (!bytes || bytes <= 0) return '';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(1024)),
+    units.length - 1,
+  );
+  return `${Number.parseFloat((bytes / 1024 ** i).toFixed(1))} ${units[i]}`;
+}
+
 function deriveNameFromUrl(url?: string): string {
   if (!url) return '';
   const clean = url.split('?')[0].split('#')[0];

@@ -211,7 +211,6 @@ export function TimetableSection() {
                 <Text
                   style={[
                     timetableStyles.subjectText,
-                    !isCancelled && !isBreak && { color: subjectVisual.text },
                     isCancelled && timetableStyles.cancelledSubject,
                   ]}
                 >

@@ -146,12 +146,19 @@ export function HomeworkSection() {
               date: dateStr,
             })
           }
-          style={[s.card, { borderLeftColor: visual.accent }]}
+          style={[
+            s.card,
+            {
+              backgroundColor: visual.soft,
+              borderColor: visual.accent,
+              borderLeftColor: visual.accent,
+            },
+          ]}
           activeOpacity={0.7}
         >
           <View style={s.cardTopRow}>
             <View style={h.titleWithSubject}>
-              <View style={[h.subjectBadge, { backgroundColor: visual.soft }]}>
+              <View style={h.subjectBadge}>
                 {visual.image ? (
                   <Image
                     source={visual.image}
@@ -164,7 +171,7 @@ export function HomeworkSection() {
               </View>
               <View style={s.cardTitleWrap}>
                 <Text style={s.cardTitle}>{hw.title}</Text>
-                <Text style={[s.cardSubtitle, { color: visual.text }]}>
+                <Text style={s.cardSubtitle}>
                   {hw.subject_name}
                   {hw.chapter ? ` • ${hw.chapter}` : ''}
                 </Text>
@@ -247,6 +254,7 @@ const h = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 10,
     overflow: 'hidden',
+    backgroundColor: '#fff',
   },
   subjectImage: { width: '100%', height: '100%' },
 });

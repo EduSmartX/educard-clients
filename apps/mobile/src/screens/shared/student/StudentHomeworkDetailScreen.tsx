@@ -44,6 +44,7 @@ import {
   useSubmitHomework,
 } from '@/features/student-portal';
 import type { SharedStackParamList } from '@/navigation/types';
+import { formatFileSize } from '@/utils/attachment-utils';
 
 type HomeworkSubmission = NonNullable<
   ReturnType<typeof useHomeworkDetail>['data']
@@ -106,8 +107,9 @@ function SubmissionStatusCard({
             {submission.attachments.map(file => (
               <AttachmentViewer
                 key={file.public_id}
-                url={file.file_url}
+                url={file.url}
                 fileName={file.file_name}
+                subtitle={formatFileSize(file.file_size)}
               />
             ))}
           </View>
@@ -373,9 +375,9 @@ export default function StudentHomeworkDetailScreen() {
                 {homework.attachments.map(attachment => (
                   <AttachmentViewer
                     key={attachment.public_id}
-                    url={attachment.file_url}
+                    url={attachment.url}
                     fileName={attachment.file_name}
-                    subtitle={attachment.file_type || undefined}
+                    subtitle={formatFileSize(attachment.file_size)}
                   />
                 ))}
               </View>

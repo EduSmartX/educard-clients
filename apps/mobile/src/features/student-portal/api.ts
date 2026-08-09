@@ -83,14 +83,18 @@ export interface HomeworkItem {
   my_submission_status: string | null;
 }
 
+// Matches homework AttachmentSerializer (public_id/file_name/file_type/file_size/url).
+export interface HomeworkAttachment {
+  public_id: string;
+  file_name: string;
+  file_type: string;
+  file_size: number;
+  url: string;
+}
+
 export interface HomeworkDetail extends HomeworkItem {
   instructions: string;
-  attachments: {
-    public_id: string;
-    file_name: string;
-    file_type: string;
-    file_url: string;
-  }[];
+  attachments: HomeworkAttachment[];
   is_accepting_submissions: boolean;
   my_submission: {
     public_id: string;
@@ -99,7 +103,7 @@ export interface HomeworkDetail extends HomeworkItem {
     status: string;
     is_late: boolean;
     feedback: string | null;
-    attachments: { public_id: string; file_name: string; file_url: string }[];
+    attachments: HomeworkAttachment[];
   } | null;
 }
 
