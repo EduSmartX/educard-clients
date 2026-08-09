@@ -22,6 +22,12 @@ export interface StudentTimetableEntry {
   teacher_name: string | null;
   room: string;
   is_cancelled: boolean;
+  override_type:
+    | "substitute"
+    | "cancelled"
+    | "rescheduled"
+    | "extra_class"
+    | null;
 }
 
 /** Attendance percentages shown on the student dashboard. */

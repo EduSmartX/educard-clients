@@ -229,7 +229,7 @@ export function ManagementScreenBase({
                   >
                     <ItemIcon size={26} color="#fff" strokeWidth={2} />
                   </LinearGradient>
-                  <Text style={styles.iconLabel} numberOfLines={1}>
+                  <Text style={styles.iconLabel} numberOfLines={2}>
                     {item.title}
                   </Text>
                   {count !== undefined && (
@@ -318,8 +318,11 @@ const styles = StyleSheet.create({
   },
   gridItem: { padding: 6 },
   iconCard: {
+    minHeight: 142,
     alignItems: 'center',
-    padding: 20,
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 16,
     backgroundColor: '#fff',
     borderRadius: 20,
     width: '100%',
@@ -330,7 +333,8 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   iconCardTablet: {
-    padding: 28,
+    paddingHorizontal: 12,
+    paddingVertical: 20,
   },
   iconCircle: {
     width: 56,
@@ -341,7 +345,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   iconLabel: {
-    fontSize: 14,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: '600',
     color: '#1f2937',
     textAlign: 'center',

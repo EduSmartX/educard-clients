@@ -61,8 +61,7 @@ export function MyWorkScreenBase({
   const { user } = useAuthStore();
   const { data: profilePhoto } = useMyProfilePhoto();
   const [imgError, setImgError] = useState(false);
-  const colWidth =
-    gridColumns === 4 ? '25%' : gridColumns === 3 ? '33.33%' : '50%';
+  const colWidth = gridColumns === 4 ? '25%' : '33.33%';
 
   const handleNavigate = (screen: MenuTarget) => {
     navigateToScreen(navigation, screen);
@@ -145,7 +144,9 @@ export function MyWorkScreenBase({
                   >
                     <ItemIcon size={26} color="#fff" strokeWidth={1.8} />
                   </LinearGradient>
-                  <Text style={styles.cardTitle}>{item.title}</Text>
+                  <Text style={styles.cardTitle} numberOfLines={2}>
+                    {item.title}
+                  </Text>
                 </TouchableOpacity>
               </Animated.View>
             );
@@ -253,10 +254,13 @@ const styles = StyleSheet.create({
     padding: 6,
   },
   card: {
+    minHeight: 140,
     backgroundColor: '#fff',
     borderRadius: 20,
-    padding: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 16,
     alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
@@ -272,7 +276,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   cardTitle: {
-    fontSize: 14,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: '600',
     color: '#1f2937',
     textAlign: 'center',

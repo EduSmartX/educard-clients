@@ -27,11 +27,9 @@ export function useResponsive(): ResponsiveInfo {
     const isLargeTablet = width >= LARGE_TABLET_BREAKPOINT;
     const isLandscape = width > height;
 
-    let gridColumns = 2;
+    let gridColumns = 3;
     if (isLargeTablet) {
       gridColumns = 4;
-    } else if (isTablet) {
-      gridColumns = 3;
     }
 
     const statColumns = isLargeTablet || isTablet ? 4 : 2;

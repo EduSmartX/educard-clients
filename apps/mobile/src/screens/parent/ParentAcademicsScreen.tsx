@@ -4,7 +4,7 @@
  */
 
 import { useNavigation } from '@react-navigation/native';
-import { format, addDays, startOfWeek } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import {
   Calendar,
   BookOpen,
@@ -50,14 +50,22 @@ const TABS: { key: Tab; label: string; icon: typeof Calendar }[] = [
   { key: 'exams', label: 'Exams', icon: FileText },
 ];
 
-const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
 function formatSlotTime(t: string): string {
   const [h, m] = t.split(':');
   const hour = Number.parseInt(h, 10);
   const ampm = hour >= 12 ? 'PM' : 'AM';
   return `${hour % 12 || 12}:${m} ${ampm}`;
 }
+
+const OVERRIDE_LABELS: Record<
+  NonNullable<TimetableEntry['override_type']>,
+  string
+> = {
+  substitute: 'Substitute class',
+  cancelled: 'Cancelled',
+  rescheduled: 'Rescheduled',
+  extra_class: 'Extra class',
+};
 
 function getDefaultHomeworkDate(): Date {
   const now = new Date();
@@ -67,16 +75,8 @@ function getDefaultHomeworkDate(): Date {
 // ── Timetable Section ──
 
 function TimetableSection() {
-  const today = new Date();
-  const [weekOffset, setWeekOffset] = useState(0);
-  const todayIdx = today.getDay() === 0 ? 5 : today.getDay() - 1;
-  const [selectedDay, setSelectedDay] = useState(Math.min(todayIdx, 5));
-
-  const monday = addDays(
-    startOfWeek(today, { weekStartsOn: 1 }),
-    weekOffset * 7,
-  );
-  const dateStr = format(addDays(monday, selectedDay), 'yyyy-MM-dd');
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const dateStr = format(selectedDate, 'yyyy-MM-dd');
   const {
     data: periods,
     isLoading,
@@ -93,41 +93,71 @@ function TimetableSection() {
       );
     }
     if (periods && periods.length > 0) {
-      return periods.map((p: TimetableEntry) => (
-        <View
-          key={p.slot_public_id}
-          className={`flex-row items-center border-b border-gray-100 px-3 py-3 ${p.slot_type !== 'class' ? 'bg-amber-50/50' : ''}`}
-        >
-          <View className="w-10">
-            <View className="h-7 w-7 items-center justify-center rounded-lg bg-green-500">
-              <Text className="text-xs font-bold text-white">
-                {p.slot_number}
-              </Text>
+      return periods.map((period: TimetableEntry, index) => {
+        const isBreak = period.slot_type !== 'class';
+        const isCancelled = period.is_cancelled;
+        const palette = isCancelled
+          ? timetableStyles.cancelled
+          : isBreak
+            ? timetableStyles.break
+            : timetableStyles.period;
+
+        return (
+          <Animated.View
+            key={period.slot_public_id}
+            entering={ZoomIn.delay(index * 45)
+              .springify()
+              .damping(16)}
+            style={[timetableStyles.slotCard, palette]}
+          >
+            <View style={timetableStyles.slotTopRow}>
+              <View style={timetableStyles.timeRow}>
+                <Clock size={13} color="#475569" />
+                <Text style={timetableStyles.timeText}>
+                  {formatSlotTime(period.start_time)} –{' '}
+                  {formatSlotTime(period.end_time)}
+                </Text>
+              </View>
+              <View style={timetableStyles.numberBadge}>
+                <Text style={timetableStyles.numberText}>
+                  {period.slot_number}
+                </Text>
+              </View>
             </View>
-          </View>
-          <View className="flex-1">
-            <Text className="text-sm font-medium text-gray-800">
-              {p.subject_name || p.label}
+
+            <Text style={timetableStyles.subjectText}>
+              {period.subject_name || period.label}
             </Text>
-            {p.is_cancelled && (
-              <Text className="text-[10px] text-red-500">Cancelled</Text>
+            {!!period.teacher_name && (
+              <Text style={timetableStyles.detailText}>
+                {period.teacher_name}
+              </Text>
             )}
-          </View>
-          <View className="w-20">
-            <Text className="text-xs font-medium text-gray-600">
-              {formatSlotTime(p.start_time)}
-            </Text>
-            <Text className="text-[10px] text-gray-400">
-              to {formatSlotTime(p.end_time)}
-            </Text>
-          </View>
-          <View className="w-24">
-            <Text className="text-xs text-gray-600" numberOfLines={1}>
-              {p.teacher_name || '—'}
-            </Text>
-          </View>
-        </View>
-      ));
+            {!!period.room && (
+              <Text style={timetableStyles.detailText}>
+                Room: {period.room}
+              </Text>
+            )}
+            {!!period.override_type && (
+              <View
+                style={[
+                  timetableStyles.overrideBadge,
+                  isCancelled && timetableStyles.cancelledBadge,
+                ]}
+              >
+                <Text
+                  style={[
+                    timetableStyles.overrideText,
+                    isCancelled && timetableStyles.cancelledText,
+                  ]}
+                >
+                  {OVERRIDE_LABELS[period.override_type]}
+                </Text>
+              </View>
+            )}
+          </Animated.View>
+        );
+      });
     }
     return (
       <View className="items-center py-10">
@@ -149,80 +179,31 @@ function TimetableSection() {
         />
       }
     >
-      {/* Week Nav */}
+      {/* Date selector */}
       <View className="mx-4 mt-4 flex-row items-center justify-between rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2.5">
         <TouchableOpacity
-          onPress={() => setWeekOffset(weekOffset - 1)}
+          onPress={() => setSelectedDate(date => addDays(date, -1))}
           className="p-1"
         >
           <ChevronLeft size={18} color={colors.gray[600]} />
         </TouchableOpacity>
-        <Text className="text-sm font-semibold text-gray-700">
-          {format(monday, 'd MMM')} — {format(addDays(monday, 5), 'd MMM')}
-        </Text>
+        <View className="items-center">
+          <Text className="text-sm font-semibold text-gray-800">
+            {format(selectedDate, 'EEEE')}
+          </Text>
+          <Text className="mt-0.5 text-xs text-gray-500">
+            {format(selectedDate, 'd MMMM yyyy')}
+          </Text>
+        </View>
         <TouchableOpacity
-          onPress={() => setWeekOffset(weekOffset + 1)}
+          onPress={() => setSelectedDate(date => addDays(date, 1))}
           className="p-1"
         >
           <ChevronRight size={18} color={colors.gray[600]} />
         </TouchableOpacity>
       </View>
 
-      {/* Day Tabs */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        className="mt-3 px-4"
-      >
-        {WEEKDAYS.map((day, i) => {
-          const d = addDays(monday, i);
-          const isToday =
-            format(d, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
-          const sel = selectedDay === i;
-          let tabBg = 'border border-gray-200 bg-white';
-          if (sel) {
-            tabBg = 'border border-emerald-600 bg-emerald-600';
-          } else if (isToday) {
-            tabBg = 'border border-emerald-200 bg-emerald-50';
-          }
-          let tabText = 'text-gray-600';
-          if (sel) {
-            tabText = 'text-white';
-          } else if (isToday) {
-            tabText = 'text-emerald-700';
-          }
-          return (
-            <TouchableOpacity
-              key={day}
-              onPress={() => setSelectedDay(i)}
-              className={`mr-2 rounded-xl px-4 py-2.5 ${tabBg}`}
-            >
-              <Text className={`text-sm font-medium ${tabText}`}>
-                {day} {d.getDate()}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
-
-      {/* Periods */}
-      <View className="mx-4 mb-6 mt-4 overflow-hidden rounded-xl border border-gray-200 bg-white">
-        <View className="flex-row bg-gray-50 px-3 py-2.5">
-          <Text className="w-10 text-[10px] font-semibold uppercase text-gray-400">
-            #
-          </Text>
-          <Text className="flex-1 text-[10px] font-semibold uppercase text-gray-400">
-            Subject
-          </Text>
-          <Text className="w-20 text-[10px] font-semibold uppercase text-gray-400">
-            Time
-          </Text>
-          <Text className="w-24 text-[10px] font-semibold uppercase text-gray-400">
-            Teacher
-          </Text>
-        </View>
-        {renderPeriodsList()}
-      </View>
+      <View className="mx-4 mb-6 mt-4">{renderPeriodsList()}</View>
     </ScrollView>
   );
 }
@@ -592,12 +573,13 @@ export function ParentAcademicsTaskScreen({
 const menuStyles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 32 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -6 },
-  gridItem: { width: '50%', padding: 6 },
+  gridItem: { width: '33.33%', padding: 5 },
   iconCard: {
-    minHeight: 170,
+    minHeight: 142,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 16,
     backgroundColor: '#fff',
     borderRadius: 20,
     shadowColor: '#000',
@@ -607,19 +589,74 @@ const menuStyles = StyleSheet.create({
     elevation: 3,
   },
   iconCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 18,
+    width: 52,
+    height: 52,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
   },
-  iconLabel: { fontSize: 15, fontWeight: '700', color: '#1f2937' },
+  iconLabel: { fontSize: 13, fontWeight: '700', color: '#1f2937' },
   iconSubtitle: {
     marginTop: 5,
-    fontSize: 11,
-    lineHeight: 16,
+    fontSize: 10,
+    lineHeight: 14,
     color: '#64748b',
     textAlign: 'center',
   },
+});
+
+const timetableStyles = StyleSheet.create({
+  slotCard: {
+    marginBottom: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderLeftWidth: 5,
+    padding: 16,
+  },
+  period: {
+    backgroundColor: '#eff6ff',
+    borderColor: '#93c5fd',
+    borderLeftColor: '#3b82f6',
+  },
+  break: {
+    backgroundColor: '#fffbeb',
+    borderColor: '#fde68a',
+    borderLeftColor: '#f59e0b',
+  },
+  cancelled: {
+    backgroundColor: '#fef2f2',
+    borderColor: '#fecaca',
+    borderLeftColor: '#ef4444',
+  },
+  slotTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  timeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  timeText: { fontSize: 12, fontWeight: '600', color: '#475569' },
+  numberBadge: {
+    minWidth: 28,
+    height: 28,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.75)',
+  },
+  numberText: { fontSize: 12, fontWeight: '800', color: '#334155' },
+  subjectText: { fontSize: 16, fontWeight: '700', color: '#1e293b' },
+  detailText: { marginTop: 5, fontSize: 12, color: '#64748b' },
+  overrideBadge: {
+    alignSelf: 'flex-start',
+    marginTop: 10,
+    borderRadius: 8,
+    backgroundColor: '#ede9fe',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+  },
+  cancelledBadge: { backgroundColor: '#fee2e2' },
+  overrideText: { fontSize: 10, fontWeight: '700', color: '#6d28d9' },
+  cancelledText: { fontSize: 10, fontWeight: '700', color: '#b91c1c' },
 });
