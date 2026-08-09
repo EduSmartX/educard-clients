@@ -40,28 +40,26 @@ export interface SubjectVisual {
 }
 
 const SUBJECT_IMAGES: Partial<Record<SubjectCategory, ImageSourcePropType>> = {
-  math: require('../../../assets/images/subjects/MATH.png') as ImageSourcePropType,
+  math: require('../../assets/images/subjects/MATH.png') as ImageSourcePropType,
   science:
-    require('../../../assets/images/subjects/SCI.png') as ImageSourcePropType,
+    require('../../assets/images/subjects/SCI.png') as ImageSourcePropType,
   physics:
-    require('../../../assets/images/subjects/PHY.png') as ImageSourcePropType,
+    require('../../assets/images/subjects/PHY.png') as ImageSourcePropType,
   chemistry:
-    require('../../../assets/images/subjects/CHEM.png') as ImageSourcePropType,
+    require('../../assets/images/subjects/CHEM.png') as ImageSourcePropType,
   english:
-    require('../../../assets/images/subjects/ENG.png') as ImageSourcePropType,
-  hindi:
-    require('../../../assets/images/subjects/HIN.png') as ImageSourcePropType,
+    require('../../assets/images/subjects/ENG.png') as ImageSourcePropType,
+  hindi: require('../../assets/images/subjects/HIN.png') as ImageSourcePropType,
   kannada:
-    require('../../../assets/images/subjects/KAN.png') as ImageSourcePropType,
-  tamil:
-    require('../../../assets/images/subjects/TAM.png') as ImageSourcePropType,
+    require('../../assets/images/subjects/KAN.png') as ImageSourcePropType,
+  tamil: require('../../assets/images/subjects/TAM.png') as ImageSourcePropType,
   telugu:
-    require('../../../assets/images/subjects/TEL.png') as ImageSourcePropType,
+    require('../../assets/images/subjects/TEL.png') as ImageSourcePropType,
   social:
-    require('../../../assets/images/subjects/SST.png') as ImageSourcePropType,
-  lab: require('../../../assets/images/subjects/LAB.png') as ImageSourcePropType,
+    require('../../assets/images/subjects/SST.png') as ImageSourcePropType,
+  lab: require('../../assets/images/subjects/LAB.png') as ImageSourcePropType,
   library:
-    require('../../../assets/images/subjects/LIB.png') as ImageSourcePropType,
+    require('../../assets/images/subjects/LIB.png') as ImageSourcePropType,
 };
 
 const SUBJECT_VISUALS: Record<SubjectCategory, SubjectVisual> = {
@@ -175,25 +173,32 @@ const SUBJECT_VISUALS: Record<SubjectCategory, SubjectVisual> = {
   },
 };
 
+// Mirrors apps/web/src/lib/subject-image.ts matching order.
 function resolveCategory(subjectName?: string | null): SubjectCategory {
-  const name = (subjectName ?? '').toLowerCase();
+  const name = (subjectName ?? '').toLowerCase().trim();
+  if (name.includes('lab') || name.includes('practical')) return 'lab';
+  if (name.includes('english') || name.includes('grammar')) return 'english';
   if (/math|algebra|geometry|trigonometry/.test(name)) return 'math';
-  if (/physics/.test(name)) return 'physics';
-  if (/chem/.test(name)) return 'chemistry';
-  if (/biology|science|evs/.test(name)) return 'science';
-  if (/english|grammar/.test(name)) return 'english';
-  if (/hindi/.test(name)) return 'hindi';
-  if (/kannada/.test(name)) return 'kannada';
-  if (/tamil/.test(name)) return 'tamil';
-  if (/telugu/.test(name)) return 'telugu';
   if (/social|history|geography|civics|economics|sst/.test(name)) {
     return 'social';
   }
-  if (/sport|pt|physical|game/.test(name)) return 'sports';
+  if (name.includes('physics')) return 'physics';
+  if (name.includes('chem')) return 'chemistry';
+  if (name.includes('hindi')) return 'hindi';
+  if (name.includes('kannada')) return 'kannada';
+  if (name.includes('telugu')) return 'telugu';
+  if (name.includes('tamil')) return 'tamil';
+  if (name.includes('library') || name.includes('reading')) return 'library';
+  if (/sport|physical|game|^pt$|\bpt\b/.test(name)) return 'sports';
   if (/music|dance|art/.test(name)) return 'music';
-  if (/lunch|meal|food/.test(name)) return 'lunch';
-  if (/lab|practical/.test(name)) return 'lab';
-  if (/library|reading/.test(name)) return 'library';
+  if (/lunch|meal|food|break/.test(name)) return 'lunch';
+  if (name.includes('biology') || name.includes('evs')) return 'science';
+  if (name.includes('science')) {
+    if (name.includes('computer') || name.includes('political')) {
+      return 'default';
+    }
+    return 'science';
+  }
   return 'default';
 }
 

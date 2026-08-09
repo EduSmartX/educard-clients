@@ -5,7 +5,7 @@
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
-import { extractApiError, getSubjectColor } from '@educard/shared';
+import { extractApiError } from '@educard/shared';
 import { format, addDays, startOfWeek } from 'date-fns';
 import {
   AlertTriangle,
@@ -137,9 +137,6 @@ export function TimetableSection() {
       return periods.map((period: TimetableEntry, index) => {
         const isBreak = period.slot_type !== 'class';
         const isCancelled = period.is_cancelled;
-        const subjectColor = getSubjectColor(
-          period.subject_name || period.label || 'Class',
-        );
         const subjectVisual = getSubjectVisual(
           period.subject_name || period.label || 'Class',
         );
@@ -149,8 +146,8 @@ export function TimetableSection() {
           : isBreak
             ? { backgroundColor: '#fffbeb', borderLeftColor: '#f59e0b' }
             : {
-                backgroundColor: subjectColor.light,
-                borderLeftColor: subjectColor.hex,
+                backgroundColor: subjectVisual.soft,
+                borderLeftColor: subjectVisual.accent,
               };
         const statusLabel = period.override_type
           ? OVERRIDE_LABELS[period.override_type]
@@ -192,31 +189,22 @@ export function TimetableSection() {
             </View>
 
             <View style={timetableStyles.subjectRow}>
-              <View
-                style={[
-                  timetableStyles.periodNumber,
-                  { backgroundColor: subjectColor.hex },
-                ]}
-              >
-                <Text style={timetableStyles.periodNumberText}>
-                  {period.slot_number || index + 1}
-                </Text>
-              </View>
-              {!isBreak && !isCancelled && (
+              {subjectVisual.image && !isBreak ? (
+                <View style={timetableStyles.subjectAvatar}>
+                  <Image
+                    source={subjectVisual.image}
+                    style={timetableStyles.subjectAvatarImage}
+                    resizeMode="cover"
+                  />
+                </View>
+              ) : (
                 <View
                   style={[
-                    timetableStyles.subjectVisual,
-                    { backgroundColor: subjectVisual.soft },
+                    timetableStyles.subjectAvatar,
+                    { backgroundColor: subjectVisual.accent },
                   ]}
                 >
-                  {subjectVisual.image ? (
-                    <Image
-                      source={subjectVisual.image}
-                      style={timetableStyles.subjectVisualImage}
-                    />
-                  ) : (
-                    <SubjectIcon size={16} color={subjectVisual.text} />
-                  )}
+                  <SubjectIcon size={22} color="#fff" />
                 </View>
               )}
               <View style={timetableStyles.subjectContent}>
@@ -230,6 +218,16 @@ export function TimetableSection() {
                   {period.subject_name || period.label || 'Unassigned period'}
                 </Text>
                 <Text style={timetableStyles.slotLabel}>{period.label}</Text>
+              </View>
+              <View
+                style={[
+                  timetableStyles.periodNumber,
+                  { backgroundColor: subjectVisual.accent },
+                ]}
+              >
+                <Text style={timetableStyles.periodNumberText}>
+                  {period.slot_number || index + 1}
+                </Text>
               </View>
             </View>
             {!!period.teacher_name && (

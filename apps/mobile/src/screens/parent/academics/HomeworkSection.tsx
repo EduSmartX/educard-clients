@@ -153,9 +153,13 @@ export function HomeworkSection() {
             <View style={h.titleWithSubject}>
               <View style={[h.subjectBadge, { backgroundColor: visual.soft }]}>
                 {visual.image ? (
-                  <Image source={visual.image} style={h.subjectImage} />
+                  <Image
+                    source={visual.image}
+                    style={h.subjectImage}
+                    resizeMode="cover"
+                  />
                 ) : (
-                  <SubjectIcon size={16} color={visual.text} />
+                  <SubjectIcon size={20} color={visual.text} />
                 )}
               </View>
               <View style={s.cardTitleWrap}>
@@ -236,12 +240,13 @@ export function HomeworkSection() {
 const h = StyleSheet.create({
   titleWithSubject: { flex: 1, flexDirection: 'row', alignItems: 'flex-start' },
   subjectBadge: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
+    overflow: 'hidden',
   },
-  subjectImage: { width: 20, height: 20, borderRadius: 5 },
+  subjectImage: { width: '100%', height: '100%' },
 });
