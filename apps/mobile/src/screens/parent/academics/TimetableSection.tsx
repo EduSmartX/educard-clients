@@ -29,6 +29,7 @@ import {
   RefreshControl,
   ActivityIndicator,
   Platform,
+  Image,
 } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 
@@ -40,6 +41,7 @@ import {
   type TimetableEntry,
 } from '@/features/student-portal';
 
+import { getSubjectVisual } from './subject-visuals';
 import { timetableStyles } from './timetable-styles';
 
 function formatSlotTime(t?: string | null): string {
@@ -141,6 +143,10 @@ export function TimetableSection() {
         const subjectColor = getSubjectColor(
           period.subject_name || period.label || 'Class',
         );
+        const subjectVisual = getSubjectVisual(
+          period.subject_name || period.label || 'Class',
+        );
+        const SubjectIcon = subjectVisual.icon;
         const cardColor = isCancelled
           ? { backgroundColor: '#fef2f2', borderLeftColor: '#ef4444' }
           : isBreak
@@ -199,10 +205,28 @@ export function TimetableSection() {
                   {period.slot_number || index + 1}
                 </Text>
               </View>
+              {!isBreak && !isCancelled && (
+                <View
+                  style={[
+                    timetableStyles.subjectVisual,
+                    { backgroundColor: subjectVisual.soft },
+                  ]}
+                >
+                  {subjectVisual.image ? (
+                    <Image
+                      source={subjectVisual.image}
+                      style={timetableStyles.subjectVisualImage}
+                    />
+                  ) : (
+                    <SubjectIcon size={16} color={subjectVisual.text} />
+                  )}
+                </View>
+              )}
               <View style={timetableStyles.subjectContent}>
                 <Text
                   style={[
                     timetableStyles.subjectText,
+                    !isCancelled && !isBreak && { color: subjectVisual.text },
                     isCancelled && timetableStyles.cancelledSubject,
                   ]}
                 >

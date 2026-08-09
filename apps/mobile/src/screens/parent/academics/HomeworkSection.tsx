@@ -20,6 +20,8 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
+  Image,
+  StyleSheet,
 } from 'react-native';
 
 import { colors } from '@/constants/colors';
@@ -31,6 +33,7 @@ import type { SharedStackNavigation } from '@/navigation/types';
 
 import { academicsStyles as s } from './academics-styles';
 import { safeFormat } from './academics-utils';
+import { getSubjectVisual } from './subject-visuals';
 
 function getDefaultHomeworkDate(): Date {
   const now = new Date();
@@ -132,6 +135,8 @@ export function HomeworkSection() {
 
     return homework.map((hw: HomeworkItem) => {
       const tone = getStatusTone(hw);
+      const visual = getSubjectVisual(hw.subject_name);
+      const SubjectIcon = visual.icon;
       return (
         <TouchableOpacity
           key={hw.public_id}
@@ -141,16 +146,25 @@ export function HomeworkSection() {
               date: dateStr,
             })
           }
-          style={[s.card, { borderLeftColor: tone.accent }]}
+          style={[s.card, { borderLeftColor: visual.accent }]}
           activeOpacity={0.7}
         >
           <View style={s.cardTopRow}>
-            <View style={s.cardTitleWrap}>
-              <Text style={s.cardTitle}>{hw.title}</Text>
-              <Text style={s.cardSubtitle}>
-                {hw.subject_name}
-                {hw.chapter ? ` • ${hw.chapter}` : ''}
-              </Text>
+            <View style={h.titleWithSubject}>
+              <View style={[h.subjectBadge, { backgroundColor: visual.soft }]}>
+                {visual.image ? (
+                  <Image source={visual.image} style={h.subjectImage} />
+                ) : (
+                  <SubjectIcon size={16} color={visual.text} />
+                )}
+              </View>
+              <View style={s.cardTitleWrap}>
+                <Text style={s.cardTitle}>{hw.title}</Text>
+                <Text style={[s.cardSubtitle, { color: visual.text }]}>
+                  {hw.subject_name}
+                  {hw.chapter ? ` • ${hw.chapter}` : ''}
+                </Text>
+              </View>
             </View>
             <View style={[s.badge, { backgroundColor: tone.bg }]}>
               <Text style={[s.badgeText, { color: tone.text }]}>
@@ -218,3 +232,16 @@ export function HomeworkSection() {
     </ScrollView>
   );
 }
+
+const h = StyleSheet.create({
+  titleWithSubject: { flex: 1, flexDirection: 'row', alignItems: 'flex-start' },
+  subjectBadge: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  subjectImage: { width: 20, height: 20, borderRadius: 5 },
+});
