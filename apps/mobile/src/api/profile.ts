@@ -48,11 +48,6 @@ export interface UserProfile {
   role: string;
   profile_image?: string;
   address?: Address;
-  organization?: {
-    id: string;
-    name: string;
-    code: string;
-  };
   organization_role?: {
     id: number;
     code: string;

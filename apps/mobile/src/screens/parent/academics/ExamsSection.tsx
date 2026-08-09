@@ -3,7 +3,12 @@
  */
 
 import { useNavigation } from '@react-navigation/native';
-import { CalendarRange, ChevronRight, FileText } from 'lucide-react-native';
+import {
+  Award,
+  CalendarRange,
+  ChevronRight,
+  FileText,
+} from 'lucide-react-native';
 import {
   View,
   Text,
@@ -11,6 +16,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
+  StyleSheet,
 } from 'react-native';
 
 import { colors } from '@/constants/colors';
@@ -47,9 +53,12 @@ export function ExamsSection() {
     session: ExamSession,
     mode: 'schedule' | 'results',
   ) => {
-    const accent = mode === 'schedule' ? '#6366f1' : '#10b981';
-    const pillBg = mode === 'schedule' ? '#e0e7ff' : '#d1fae5';
-    const pillText = mode === 'schedule' ? '#4338ca' : '#047857';
+    const isSchedule = mode === 'schedule';
+    const accent = isSchedule ? '#6366f1' : '#10b981';
+    const soft = isSchedule ? '#eef2ff' : '#ecfdf5';
+    const pillBg = isSchedule ? '#e0e7ff' : '#d1fae5';
+    const pillText = isSchedule ? '#4338ca' : '#047857';
+    const ModeIcon = isSchedule ? CalendarRange : Award;
 
     return (
       <TouchableOpacity
@@ -60,13 +69,25 @@ export function ExamsSection() {
             mode,
           })
         }
-        style={[s.card, { borderLeftColor: accent }]}
+        style={[
+          s.card,
+          {
+            backgroundColor: soft,
+            borderColor: accent,
+            borderLeftColor: accent,
+          },
+        ]}
         activeOpacity={0.7}
       >
         <View style={s.cardTopRow}>
-          <View style={s.cardTitleWrap}>
-            <Text style={s.cardTitle}>{session.name}</Text>
-            <Text style={s.cardSubtitle}>{session.academic_year_name}</Text>
+          <View style={e.titleRow}>
+            <View style={[e.iconBadge, { backgroundColor: accent }]}>
+              <ModeIcon size={18} color="#fff" />
+            </View>
+            <View style={s.cardTitleWrap}>
+              <Text style={s.cardTitle}>{session.name}</Text>
+              <Text style={s.cardSubtitle}>{session.academic_year_name}</Text>
+            </View>
           </View>
           <ChevronRight size={18} color="#94a3b8" />
         </View>
@@ -81,7 +102,7 @@ export function ExamsSection() {
 
         <View style={[s.pill, { backgroundColor: pillBg }]}>
           <Text style={[s.pillText, { color: pillText }]}>
-            {mode === 'schedule' ? 'View schedule' : 'View results'}
+            {isSchedule ? 'View schedule' : 'View results'}
           </Text>
         </View>
       </TouchableOpacity>
@@ -141,3 +162,15 @@ export function ExamsSection() {
     </ScrollView>
   );
 }
+
+const e = StyleSheet.create({
+  titleRow: { flex: 1, flexDirection: 'row', alignItems: 'center' },
+  iconBadge: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+});

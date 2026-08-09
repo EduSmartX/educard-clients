@@ -13,9 +13,11 @@ import {
   RefreshControl,
   ActivityIndicator,
   StyleSheet,
+  Image,
 } from 'react-native';
 
 import { colors } from '@/constants/colors';
+import { getSubjectVisual } from '@/constants/subject-visuals';
 import {
   useExamSessionDetail,
   useExamSessions,
@@ -121,11 +123,36 @@ export function MarksSection() {
         : failed
           ? '#ef4444'
           : '#10b981';
+      const visual = getSubjectVisual(exam.subject_name);
+      const SubjectIcon = visual.icon;
 
       return (
-        <View key={exam.exam_public_id} style={m.subjectCard}>
+        <View
+          key={exam.exam_public_id}
+          style={[
+            m.subjectCard,
+            { backgroundColor: visual.soft, borderColor: visual.accent },
+          ]}
+        >
           <View style={m.subjectTop}>
-            <Text style={m.subjectName}>{exam.subject_name}</Text>
+            <View style={m.subjectHead}>
+              {visual.image ? (
+                <View style={m.subjectAvatar}>
+                  <Image
+                    source={visual.image}
+                    style={m.subjectAvatarImage}
+                    resizeMode="cover"
+                  />
+                </View>
+              ) : (
+                <View
+                  style={[m.subjectAvatar, { backgroundColor: visual.accent }]}
+                >
+                  <SubjectIcon size={18} color="#fff" />
+                </View>
+              )}
+              <Text style={m.subjectName}>{exam.subject_name}</Text>
+            </View>
             {exam.is_absent ? (
               <View style={[m.markBadge, m.absentBadge]}>
                 <Text style={[m.markBadgeText, m.absentText]}>Absent</Text>
@@ -307,6 +334,18 @@ const m = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  subjectHead: { flex: 1, flexDirection: 'row', alignItems: 'center' },
+  subjectAvatar: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+    overflow: 'hidden',
+    backgroundColor: '#fff',
+  },
+  subjectAvatarImage: { width: '100%', height: '100%' },
   subjectName: {
     flex: 1,
     paddingRight: 10,
@@ -324,7 +363,7 @@ const m = StyleSheet.create({
     height: 7,
     marginTop: 10,
     borderRadius: 4,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: 'rgba(255,255,255,0.75)',
     overflow: 'hidden',
   },
   trackFill: { height: '100%', borderRadius: 4 },

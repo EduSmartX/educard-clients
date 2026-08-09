@@ -2,7 +2,12 @@
  * Student Portal — React Query Hooks
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from '@tanstack/react-query';
 
 import {
   fetchDashboard,
@@ -92,6 +97,8 @@ export function useHomeworkDetail(publicId: string | null) {
     queryKey: KEYS.homeworkDetail(publicId ?? ''),
     queryFn: () => fetchHomeworkDetail(publicId ?? ''),
     enabled: !!publicId,
+    // Switching between homework keeps the current content until the next loads.
+    placeholderData: keepPreviousData,
   });
 }
 

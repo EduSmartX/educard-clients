@@ -13,6 +13,8 @@ import {
 } from 'lucide-react-native';
 import type { ImageSourcePropType } from 'react-native';
 
+import { getSubjectColor } from '@educard/shared';
+
 type SubjectCategory =
   | 'math'
   | 'science'
@@ -37,6 +39,8 @@ export interface SubjectVisual {
   text: string;
   icon: LucideIcon;
   image?: ImageSourcePropType;
+  /** False when the subject fell back to the generic palette. */
+  matched: boolean;
 }
 
 const SUBJECT_IMAGES: Partial<Record<SubjectCategory, ImageSourcePropType>> = {
@@ -62,7 +66,10 @@ const SUBJECT_IMAGES: Partial<Record<SubjectCategory, ImageSourcePropType>> = {
     require('../../assets/images/subjects/LIB.png') as ImageSourcePropType,
 };
 
-const SUBJECT_VISUALS: Record<SubjectCategory, SubjectVisual> = {
+const SUBJECT_VISUALS: Record<
+  SubjectCategory,
+  Omit<SubjectVisual, 'matched'>
+> = {
   math: {
     accent: '#2563eb',
     soft: '#dbeafe',
@@ -203,5 +210,19 @@ function resolveCategory(subjectName?: string | null): SubjectCategory {
 }
 
 export function getSubjectVisual(subjectName?: string | null): SubjectVisual {
-  return SUBJECT_VISUALS[resolveCategory(subjectName)];
+  const category = resolveCategory(subjectName);
+  const visual = SUBJECT_VISUALS[category];
+  if (category !== 'default') {
+    return { ...visual, matched: true };
+  }
+
+  // Keep unmatched subjects visually distinct using the shared palette.
+  const palette = getSubjectColor(subjectName || 'Class');
+  return {
+    ...visual,
+    accent: palette.hex,
+    soft: palette.light,
+    text: palette.hex,
+    matched: false,
+  };
 }

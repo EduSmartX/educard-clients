@@ -163,9 +163,7 @@ export default function StudentProfileScreen() {
             />
             <InfoRow
               label="School"
-              value={formatValue(
-                profile?.organization?.name ?? user?.organization?.name,
-              )}
+              value={formatValue(user?.organization?.name)}
             />
             <InfoRow
               label="Role"

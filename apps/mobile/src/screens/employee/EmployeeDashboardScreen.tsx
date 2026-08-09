@@ -286,7 +286,11 @@ export default function EmployeeDashboardScreen() {
 
         <StatsGrid stats={statsConfig} />
 
-        <TodaySchedule timetableData={timetableData} isLoading={isLoading} />
+        <TodaySchedule
+          timetableData={timetableData}
+          isLoading={isLoading}
+          onViewAll={() => navigateToScreen(navigation, 'Timetable')}
+        />
 
         <Animated.View
           entering={FadeInDown.delay(500).springify().damping(15)}

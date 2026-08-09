@@ -16,6 +16,8 @@ import {
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
+  ExternalLink,
+  Link as LinkIcon,
 } from 'lucide-react-native';
 import { useState, useMemo, useEffect } from 'react';
 import {
@@ -26,6 +28,7 @@ import {
   TextInput,
   ActivityIndicator,
   Alert,
+  Linking,
 } from 'react-native';
 import {
   pick,
@@ -49,6 +52,14 @@ import { formatFileSize } from '@/utils/attachment-utils';
 type HomeworkSubmission = NonNullable<
   ReturnType<typeof useHomeworkDetail>['data']
 >['my_submission'];
+
+function openReferenceLink(url: string | null) {
+  if (!url) return;
+  const target = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+  Linking.openURL(target).catch(() =>
+    Alert.alert('Error', 'Could not open the link.'),
+  );
+}
 
 function SubmissionStatusCard({
   submission,
@@ -272,7 +283,7 @@ export default function StudentHomeworkDetailScreen() {
 
   return (
     <Screen safeArea={false} statusBarStyle="light">
-      <ScreenHeader title="Homework Details" />
+      <ScreenHeader title="Homework" />
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Prev/Next */}
         {total > 1 && (
@@ -365,6 +376,28 @@ export default function StudentHomeworkDetailScreen() {
               </Text>
             </View>
           ) : null}
+
+          {!!homework.reference_link && (
+            <View className="mt-4">
+              <Text className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+                Reference Link
+              </Text>
+              <TouchableOpacity
+                onPress={() => openReferenceLink(homework.reference_link)}
+                className="flex-row items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-3"
+                activeOpacity={0.7}
+              >
+                <LinkIcon size={16} color={colors.primary[600]} />
+                <Text
+                  className="flex-1 text-sm text-blue-700"
+                  numberOfLines={1}
+                >
+                  {homework.reference_link}
+                </Text>
+                <ExternalLink size={14} color={colors.gray[400]} />
+              </TouchableOpacity>
+            </View>
+          )}
 
           {!!homework.attachments?.length && (
             <View className="mt-4">
