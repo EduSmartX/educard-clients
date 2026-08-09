@@ -68,6 +68,17 @@ function formatSlotTime(t?: string | null): string {
   return `${hour % 12 || 12}:${m} ${ampm}`;
 }
 
+// date-fns `format` throws on invalid/missing values; never let API data crash a screen.
+function safeFormat(
+  value: string | number | Date | null | undefined,
+  pattern: string,
+  fallback = '—',
+): string {
+  if (value === null || value === undefined || value === '') return fallback;
+  const parsed = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(parsed.getTime()) ? fallback : format(parsed, pattern);
+}
+
 const OVERRIDE_LABELS: Record<
   NonNullable<TimetableEntry['override_type']>,
   string
@@ -405,7 +416,7 @@ function HomeworkSection() {
             <View className="mt-2 flex-row items-center">
               <Clock size={12} color={colors.gray[400]} />
               <Text className="ml-1 text-[11px] text-gray-400">
-                Due: {format(new Date(hw.due_datetime), 'd MMM h:mm a')}
+                Due: {safeFormat(hw.due_datetime, 'd MMM h:mm a')}
               </Text>
               <Text className="ml-3 text-[11px] text-gray-400">
                 By: {hw.assigned_by_name}
@@ -477,12 +488,18 @@ function ExamsSection() {
     isRefetching,
     refetch,
   } = useExamSessions();
+  const now = Date.now();
+  const endTime = (s: ExamSession) => new Date(s.end_date).getTime();
   const completed =
-    sessions?.filter((s: ExamSession) => new Date(s.end_date) < new Date()) ??
-    [];
+    sessions?.filter((s: ExamSession) => {
+      const t = endTime(s);
+      return !Number.isNaN(t) && t < now;
+    }) ?? [];
   const upcoming =
-    sessions?.filter((s: ExamSession) => new Date(s.end_date) >= new Date()) ??
-    [];
+    sessions?.filter((s: ExamSession) => {
+      const t = endTime(s);
+      return Number.isNaN(t) || t >= now;
+    }) ?? [];
 
   return (
     <ScrollView
@@ -523,8 +540,8 @@ function ExamsSection() {
                     {s.name}
                   </Text>
                   <Text className="mt-0.5 text-xs text-gray-500">
-                    {format(new Date(s.start_date), 'd MMM')} —{' '}
-                    {format(new Date(s.end_date), 'd MMM')}
+                    {safeFormat(s.start_date, 'd MMM')} —{' '}
+                    {safeFormat(s.end_date, 'd MMM')}
                   </Text>
                   <View className="mt-2 self-start rounded-lg bg-emerald-50 px-2.5 py-1">
                     <Text className="text-[10px] font-semibold text-emerald-700">
@@ -561,8 +578,8 @@ function ExamsSection() {
                     {s.name}
                   </Text>
                   <Text className="mt-0.5 text-xs text-gray-500">
-                    {format(new Date(s.start_date), 'd MMM')} —{' '}
-                    {format(new Date(s.end_date), 'd MMM')}
+                    {safeFormat(s.start_date, 'd MMM')} —{' '}
+                    {safeFormat(s.end_date, 'd MMM')}
                   </Text>
                   <View className="mt-2 self-start rounded-lg bg-emerald-100 px-2.5 py-1">
                     <Text className="text-[10px] font-semibold text-emerald-700">
@@ -668,9 +685,9 @@ const ACADEMIC_SUBTITLES: Record<Tab, string> = {
 export function ParentAcademicsTaskScreen({
   route,
 }: {
-  route: { params: { task: Tab } };
+  route: { params?: { task?: Tab } };
 }) {
-  const { task } = route.params;
+  const task: Tab = route?.params?.task ?? 'timetable';
   const title = TABS.find(tab => tab.key === task)?.label ?? 'Academics';
 
   return (
