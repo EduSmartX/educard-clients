@@ -145,9 +145,10 @@ export interface ExamSessionDetail extends ExamSession {
 export interface FeeSummary {
   public_id: string;
   total_amount: number;
-  base_amount: number;
-  discount_percentage: number;
-  discount_amount: number;
+  // Added to the fee summary API; absent on older backend deployments.
+  base_amount?: number;
+  discount_percentage?: number;
+  discount_amount?: number;
   amount_paid: number;
   balance_due: number;
   status: string;

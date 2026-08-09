@@ -9,13 +9,13 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
   StyleSheet,
   Image,
 } from 'react-native';
 
+import { FormDropdown } from '@/components/forms';
 import { colors } from '@/constants/colors';
 import { getSubjectVisual } from '@/constants/subject-visuals';
 import {
@@ -52,6 +52,17 @@ export function MarksSection() {
   const activeId = selectedId ?? orderedSessions[0]?.public_id ?? null;
   const { data: detail, isLoading: detailLoading } =
     useExamSessionDetail(activeId);
+
+  const sessionOptions = useMemo(
+    () =>
+      orderedSessions.map((session: ExamSession) => ({
+        label: session.academic_year_name
+          ? `${session.name} (${session.academic_year_name})`
+          : session.name,
+        value: session.public_id,
+      })),
+    [orderedSessions],
+  );
 
   const graded = (detail?.exams ?? []).filter(
     (exam: ExamResult) => exam.marks_obtained != null && !exam.is_absent,
@@ -200,31 +211,14 @@ export function MarksSection() {
         />
       }
     >
-      <Text style={s.sectionTitle}>Exam session</Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={m.sessionTabs}
-      >
-        {orderedSessions.map((session: ExamSession) => {
-          const active = session.public_id === activeId;
-          return (
-            <TouchableOpacity
-              key={session.public_id}
-              style={[m.sessionTab, active && m.sessionTabActive]}
-              onPress={() => setSelectedId(session.public_id)}
-              activeOpacity={0.7}
-            >
-              <Text
-                style={[m.sessionTabText, active && m.sessionTabTextActive]}
-                numberOfLines={1}
-              >
-                {session.name}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+      <FormDropdown
+        label="Exam session"
+        options={sessionOptions}
+        value={activeId ?? ''}
+        onChange={setSelectedId}
+        placeholder="Select exam session"
+        searchable={orderedSessions.length > 5}
+      />
 
       {!!detail && (
         <View style={m.summaryCard}>
@@ -246,7 +240,9 @@ export function MarksSection() {
                 {detail.rank ? `#${detail.rank}` : '—'}
               </Text>
               <Text style={m.summaryLabel}>
-                {detail.total_students ? `of ${detail.total_students}` : 'Rank'}
+                {detail.rank && detail.total_students
+                  ? `of ${detail.total_students}`
+                  : 'Rank'}
               </Text>
             </View>
           </View>
@@ -273,20 +269,6 @@ export function MarksSection() {
 }
 
 const m = StyleSheet.create({
-  sessionTabs: { gap: 8, paddingBottom: 14 },
-  sessionTab: {
-    maxWidth: 190,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    backgroundColor: '#fff',
-  },
-  sessionTabActive: { backgroundColor: '#e11d48', borderColor: '#e11d48' },
-  sessionTabText: { fontSize: 12, fontWeight: '700', color: '#64748b' },
-  sessionTabTextActive: { color: '#fff' },
-
   summaryCard: {
     marginBottom: 18,
     borderWidth: 1,

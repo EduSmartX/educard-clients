@@ -57,6 +57,7 @@ interface OverrideSlotCardProps {
   };
   readonly teacherOptions: { label: string; value: string }[];
   readonly subjectOptions: { label: string; value: string }[];
+  readonly teacherBySubject: Record<string, string>;
   readonly pending: boolean;
   readonly onSave: (form: OverrideForm) => void;
   readonly onDelete: (overridePublicId: string) => void;
@@ -66,6 +67,7 @@ export function OverrideSlotCard({
   slot,
   teacherOptions,
   subjectOptions,
+  teacherBySubject,
   pending,
   onSave,
   onDelete,
@@ -110,6 +112,21 @@ export function OverrideSlotCard({
 
   const isCancelled = overrideType === 'cancelled';
   const isOtherAssignment = substituteAssignmentType === 'other';
+
+  // A period cannot be substituted with the subject it already runs.
+  const availableSubjectOptions = slot.subject_name
+    ? subjectOptions.filter(
+        option =>
+          option.label.trim().toLowerCase() !==
+          slot.subject_name?.trim().toLowerCase(),
+      )
+    : subjectOptions;
+
+  const handleSubjectChange = (subjectId: string) => {
+    setSubstituteSubjectId(subjectId);
+    const mappedTeacher = teacherBySubject[subjectId];
+    if (mappedTeacher) setSubstituteTeacherId(mappedTeacher);
+  };
 
   if (slot.is_break) {
     return (
@@ -159,26 +176,27 @@ export function OverrideSlotCard({
           placeholder="Select assignment mode"
         />
 
-        <FormDropdown
-          label="Substitute Teacher (optional)"
-          options={teacherOptions}
-          value={substituteTeacherId}
-          onChange={setSubstituteTeacherId}
-          placeholder="Select teacher"
-          searchable
-          disabled={isCancelled}
-        />
-
         {!isOtherAssignment ? (
-          <FormDropdown
-            label="Substitute Subject (optional)"
-            options={subjectOptions}
-            value={substituteSubjectId}
-            onChange={setSubstituteSubjectId}
-            placeholder="Select subject"
-            searchable
-            disabled={isCancelled}
-          />
+          <>
+            <FormDropdown
+              label="Substitute Subject (optional)"
+              options={availableSubjectOptions}
+              value={substituteSubjectId}
+              onChange={handleSubjectChange}
+              placeholder="Select subject"
+              searchable
+              disabled={isCancelled}
+            />
+            <FormDropdown
+              label="Substitute Teacher (optional)"
+              options={teacherOptions}
+              value={substituteTeacherId}
+              onChange={setSubstituteTeacherId}
+              placeholder="Select subject first, or pick a teacher"
+              searchable
+              disabled={isCancelled}
+            />
+          </>
         ) : (
           <>
             <FormDropdown
@@ -187,6 +205,15 @@ export function OverrideSlotCard({
               value={substituteOtherPeriodType}
               onChange={setSubstituteOtherPeriodType}
               placeholder="Select activity type"
+              searchable
+              disabled={isCancelled}
+            />
+            <FormDropdown
+              label="Substitute Teacher (optional)"
+              options={teacherOptions}
+              value={substituteTeacherId}
+              onChange={setSubstituteTeacherId}
+              placeholder="Select teacher"
               searchable
               disabled={isCancelled}
             />

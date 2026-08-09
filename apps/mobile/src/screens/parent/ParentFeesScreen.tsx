@@ -35,6 +35,12 @@ import {
   type FeeComponent,
 } from '@/features/student-portal';
 
+// Amounts arrive as decimal strings and may be absent on older API versions.
+function toAmount(value: number | string | null | undefined): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
@@ -77,15 +83,24 @@ export default function ParentFeesScreen() {
   const isLoading = summaryLoading || paymentsLoading || componentsLoading;
 
   const paidPct =
-    summary && Number(summary.total_amount) > 0
+    summary && toAmount(summary.total_amount) > 0
       ? Math.round(
-          (Number(summary.amount_paid) / Number(summary.total_amount)) * 100,
+          (toAmount(summary.amount_paid) / toAmount(summary.total_amount)) *
+            100,
         )
       : 0;
   const feeSegments: ChartSegment[] = summary
     ? [
-        { label: 'Paid', value: Number(summary.amount_paid), color: '#10b981' },
-        { label: 'Due', value: Number(summary.balance_due), color: '#ef4444' },
+        {
+          label: 'Paid',
+          value: toAmount(summary.amount_paid),
+          color: '#10b981',
+        },
+        {
+          label: 'Due',
+          value: toAmount(summary.balance_due),
+          color: '#ef4444',
+        },
       ]
     : [];
 
@@ -130,19 +145,19 @@ export default function ParentFeesScreen() {
                         Gross Fee
                       </Text>
                       <Text className="text-sm font-semibold text-gray-700">
-                        {formatCurrency(Number(summary.base_amount))}
+                        {formatCurrency(toAmount(summary.base_amount))}
                       </Text>
                     </View>
                     <View className="mt-2 flex-row items-center justify-between">
                       <Text className="text-xs font-medium text-emerald-700">
                         Discount
-                        {Number(summary.discount_percentage) > 0
-                          ? ` (${Number(summary.discount_percentage)}%)`
+                        {toAmount(summary.discount_percentage) > 0
+                          ? ` (${toAmount(summary.discount_percentage)}%)`
                           : ''}
                       </Text>
                       <Text className="text-sm font-bold text-emerald-700">
-                        {Number(summary.discount_amount) > 0 ? '-' : ''}
-                        {formatCurrency(Number(summary.discount_amount))}
+                        {toAmount(summary.discount_amount) > 0 ? '-' : ''}
+                        {formatCurrency(toAmount(summary.discount_amount))}
                       </Text>
                     </View>
                     <View className="mt-3 border-t border-gray-100 pt-3">
@@ -151,7 +166,7 @@ export default function ParentFeesScreen() {
                           Payable After Discount
                         </Text>
                         <Text className="text-sm font-bold text-gray-800">
-                          {formatCurrency(Number(summary.total_amount))}
+                          {formatCurrency(toAmount(summary.total_amount))}
                         </Text>
                       </View>
                     </View>
@@ -161,7 +176,7 @@ export default function ParentFeesScreen() {
                       Total Payable
                     </Text>
                     <Text className="mt-1 text-xl font-bold text-gray-800">
-                      {formatCurrency(Number(summary.total_amount))}
+                      {formatCurrency(toAmount(summary.total_amount))}
                     </Text>
                   </View>
                   <View className="flex-row gap-3">
@@ -170,7 +185,7 @@ export default function ParentFeesScreen() {
                         Paid
                       </Text>
                       <Text className="mt-1 text-xl font-bold text-emerald-700">
-                        {formatCurrency(Number(summary.amount_paid))}
+                        {formatCurrency(toAmount(summary.amount_paid))}
                       </Text>
                     </View>
                     <View className="flex-1 rounded-xl border border-amber-200 bg-amber-50 p-4">
@@ -178,7 +193,7 @@ export default function ParentFeesScreen() {
                         Due
                       </Text>
                       <Text className="mt-1 text-xl font-bold text-amber-700">
-                        {formatCurrency(Number(summary.balance_due))}
+                        {formatCurrency(toAmount(summary.balance_due))}
                       </Text>
                     </View>
                   </View>
@@ -188,7 +203,7 @@ export default function ParentFeesScreen() {
                   <Text className="mb-3 text-center text-sm font-bold text-gray-700">
                     Payment Progress
                   </Text>
-                  {Number(summary.total_amount) > 0 ? (
+                  {toAmount(summary.total_amount) > 0 ? (
                     <>
                       <View className="items-center">
                         <DonutChart
