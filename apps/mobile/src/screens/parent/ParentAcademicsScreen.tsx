@@ -3,15 +3,23 @@
  * Timetable, Homework, and Exams in tab sections
  */
 
+import DateTimePicker, {
+  type DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
+import { extractApiError, getSubjectColor } from '@educard/shared';
 import { useNavigation } from '@react-navigation/native';
 import { format, addDays } from 'date-fns';
 import {
   Calendar,
+  CalendarDays,
   BookOpen,
   FileText,
   ChevronLeft,
   ChevronRight,
   Clock,
+  MapPin,
+  RefreshCw,
+  User,
   AlertTriangle,
   CalendarOff,
 } from 'lucide-react-native';
@@ -23,6 +31,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
+  Platform,
   StyleSheet,
 } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
@@ -50,9 +59,11 @@ const TABS: { key: Tab; label: string; icon: typeof Calendar }[] = [
   { key: 'exams', label: 'Exams', icon: FileText },
 ];
 
-function formatSlotTime(t: string): string {
+function formatSlotTime(t?: string | null): string {
+  if (!t || !t.includes(':')) return '--';
   const [h, m] = t.split(':');
   const hour = Number.parseInt(h, 10);
+  if (!Number.isFinite(hour) || !m) return t;
   const ampm = hour >= 12 ? 'PM' : 'AM';
   return `${hour % 12 || 12}:${m} ${ampm}`;
 }
@@ -76,39 +87,85 @@ function getDefaultHomeworkDate(): Date {
 
 function TimetableSection() {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
   const {
     data: periods,
     isLoading,
     isRefetching,
+    error,
     refetch,
   } = useTimetable(dateStr);
+
+  const isToday = dateStr === format(new Date(), 'yyyy-MM-dd');
+
+  const handleDateChange = (_event: DateTimePickerEvent, date?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (date) setSelectedDate(date);
+  };
 
   const renderPeriodsList = () => {
     if (isLoading) {
       return (
-        <View className="items-center py-10">
-          <ActivityIndicator color={colors.primary[500]} />
+        <View style={timetableStyles.stateCard}>
+          <ActivityIndicator size="large" color={colors.primary[500]} />
+          <Text style={timetableStyles.stateTitle}>Loading timetable</Text>
+          <Text style={timetableStyles.stateMessage}>
+            Getting the class schedule for this date.
+          </Text>
         </View>
       );
     }
-    if (periods && periods.length > 0) {
+
+    if (error) {
+      return (
+        <View style={[timetableStyles.stateCard, timetableStyles.errorCard]}>
+          <AlertTriangle size={30} color="#dc2626" />
+          <Text style={timetableStyles.stateTitle}>
+            Unable to load timetable
+          </Text>
+          <Text style={timetableStyles.stateMessage}>
+            {extractApiError(error)}
+          </Text>
+          <TouchableOpacity
+            style={timetableStyles.retryButton}
+            onPress={() => void refetch()}
+          >
+            <RefreshCw size={16} color="#fff" />
+            <Text style={timetableStyles.retryButtonText}>Try again</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    if (Array.isArray(periods) && periods.length > 0) {
       return periods.map((period: TimetableEntry, index) => {
         const isBreak = period.slot_type !== 'class';
         const isCancelled = period.is_cancelled;
-        const palette = isCancelled
-          ? timetableStyles.cancelled
+        const subjectColor = getSubjectColor(
+          period.subject_name || period.label || 'Class',
+        );
+        const cardColor = isCancelled
+          ? { backgroundColor: '#fef2f2', borderLeftColor: '#ef4444' }
           : isBreak
-            ? timetableStyles.break
-            : timetableStyles.period;
+            ? { backgroundColor: '#fffbeb', borderLeftColor: '#f59e0b' }
+            : {
+                backgroundColor: subjectColor.light,
+                borderLeftColor: subjectColor.hex,
+              };
+        const statusLabel = period.override_type
+          ? OVERRIDE_LABELS[period.override_type]
+          : isBreak
+            ? period.label || 'Break'
+            : 'Scheduled class';
 
         return (
           <Animated.View
-            key={period.slot_public_id}
+            key={period.slot_public_id || `${dateStr}-${index}`}
             entering={ZoomIn.delay(index * 45)
               .springify()
               .damping(16)}
-            style={[timetableStyles.slotCard, palette]}
+            style={[timetableStyles.slotCard, cardColor]}
           >
             <View style={timetableStyles.slotTopRow}>
               <View style={timetableStyles.timeRow}>
@@ -118,40 +175,59 @@ function TimetableSection() {
                   {formatSlotTime(period.end_time)}
                 </Text>
               </View>
-              <View style={timetableStyles.numberBadge}>
-                <Text style={timetableStyles.numberText}>
-                  {period.slot_number}
-                </Text>
-              </View>
-            </View>
-
-            <Text style={timetableStyles.subjectText}>
-              {period.subject_name || period.label}
-            </Text>
-            {!!period.teacher_name && (
-              <Text style={timetableStyles.detailText}>
-                {period.teacher_name}
-              </Text>
-            )}
-            {!!period.room && (
-              <Text style={timetableStyles.detailText}>
-                Room: {period.room}
-              </Text>
-            )}
-            {!!period.override_type && (
               <View
                 style={[
-                  timetableStyles.overrideBadge,
+                  timetableStyles.statusBadge,
                   isCancelled && timetableStyles.cancelledBadge,
                 ]}
               >
                 <Text
                   style={[
-                    timetableStyles.overrideText,
+                    timetableStyles.statusText,
                     isCancelled && timetableStyles.cancelledText,
                   ]}
                 >
-                  {OVERRIDE_LABELS[period.override_type]}
+                  {statusLabel}
+                </Text>
+              </View>
+            </View>
+
+            <View style={timetableStyles.subjectRow}>
+              <View
+                style={[
+                  timetableStyles.periodNumber,
+                  { backgroundColor: subjectColor.hex },
+                ]}
+              >
+                <Text style={timetableStyles.periodNumberText}>
+                  {period.slot_number || index + 1}
+                </Text>
+              </View>
+              <View style={timetableStyles.subjectContent}>
+                <Text
+                  style={[
+                    timetableStyles.subjectText,
+                    isCancelled && timetableStyles.cancelledSubject,
+                  ]}
+                >
+                  {period.subject_name || period.label || 'Unassigned period'}
+                </Text>
+                <Text style={timetableStyles.slotLabel}>{period.label}</Text>
+              </View>
+            </View>
+            {!!period.teacher_name && (
+              <View style={timetableStyles.detailRow}>
+                <User size={15} color="#64748b" />
+                <Text style={timetableStyles.detailText}>
+                  {period.teacher_name}
+                </Text>
+              </View>
+            )}
+            {!!period.room && (
+              <View style={timetableStyles.detailRow}>
+                <MapPin size={15} color="#64748b" />
+                <Text style={timetableStyles.detailText}>
+                  Room {period.room}
                 </Text>
               </View>
             )}
@@ -160,17 +236,21 @@ function TimetableSection() {
       });
     }
     return (
-      <View className="items-center py-10">
-        <Text className="text-3xl">🌴</Text>
-        <Text className="mt-2 text-sm text-gray-500">No classes this day</Text>
+      <View style={timetableStyles.stateCard}>
+        <CalendarOff size={34} color="#94a3b8" />
+        <Text style={timetableStyles.stateTitle}>No classes scheduled</Text>
+        <Text style={timetableStyles.stateMessage}>
+          There are no timetable slots for {format(selectedDate, 'd MMMM yyyy')}
+          .
+        </Text>
       </View>
     );
   };
 
   return (
     <ScrollView
-      className="flex-1"
-      contentContainerClassName="pb-6"
+      style={timetableStyles.screen}
+      contentContainerStyle={timetableStyles.content}
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
@@ -179,31 +259,66 @@ function TimetableSection() {
         />
       }
     >
-      {/* Date selector */}
-      <View className="mx-4 mt-4 flex-row items-center justify-between rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2.5">
-        <TouchableOpacity
-          onPress={() => setSelectedDate(date => addDays(date, -1))}
-          className="p-1"
-        >
-          <ChevronLeft size={18} color={colors.gray[600]} />
-        </TouchableOpacity>
-        <View className="items-center">
-          <Text className="text-sm font-semibold text-gray-800">
-            {format(selectedDate, 'EEEE')}
-          </Text>
-          <Text className="mt-0.5 text-xs text-gray-500">
-            {format(selectedDate, 'd MMMM yyyy')}
-          </Text>
+      <View style={timetableStyles.filterCard}>
+        <Text style={timetableStyles.filterLabel}>Schedule date</Text>
+        <View style={timetableStyles.dateRow}>
+          <TouchableOpacity
+            onPress={() => setSelectedDate(date => addDays(date, -1))}
+            style={timetableStyles.dateArrow}
+            accessibilityLabel="Previous day"
+          >
+            <ChevronLeft size={21} color="#0f766e" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setShowDatePicker(true)}
+            style={timetableStyles.dateInput}
+          >
+            <CalendarDays size={20} color="#0f766e" />
+            <View style={timetableStyles.dateTextGroup}>
+              <Text style={timetableStyles.dateDay}>
+                {format(selectedDate, 'EEEE')}
+              </Text>
+              <Text style={timetableStyles.dateValue}>
+                {format(selectedDate, 'dd MMMM yyyy')}
+              </Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setSelectedDate(date => addDays(date, 1))}
+            style={timetableStyles.dateArrow}
+            accessibilityLabel="Next day"
+          >
+            <ChevronRight size={21} color="#0f766e" />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          onPress={() => setSelectedDate(date => addDays(date, 1))}
-          className="p-1"
-        >
-          <ChevronRight size={18} color={colors.gray[600]} />
-        </TouchableOpacity>
+        {!isToday && (
+          <TouchableOpacity
+            style={timetableStyles.todayButton}
+            onPress={() => setSelectedDate(new Date())}
+          >
+            <Text style={timetableStyles.todayButtonText}>Back to today</Text>
+          </TouchableOpacity>
+        )}
+        {showDatePicker && (
+          <DateTimePicker
+            value={selectedDate}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={handleDateChange}
+          />
+        )}
       </View>
 
-      <View className="mx-4 mb-6 mt-4">{renderPeriodsList()}</View>
+      <View style={timetableStyles.sectionHeader}>
+        <View>
+          <Text style={timetableStyles.sectionTitle}>Class schedule</Text>
+          <Text style={timetableStyles.sectionSubtitle}>
+            Includes substitutions, cancellations and extra classes
+          </Text>
+        </View>
+      </View>
+
+      <View>{renderPeriodsList()}</View>
     </ScrollView>
   );
 }
@@ -561,7 +676,7 @@ export function ParentAcademicsTaskScreen({
   return (
     <Screen safeArea={false} statusBarStyle="light" backgroundColor="#f8fafc">
       <ScreenHeader title={title} subtitle={ACADEMIC_SUBTITLES[task]} />
-      <View className="flex-1">
+      <View style={menuStyles.taskContent}>
         {task === 'timetable' && <TimetableSection />}
         {task === 'homework' && <HomeworkSection />}
         {task === 'exams' && <ExamsSection />}
@@ -571,6 +686,7 @@ export function ParentAcademicsTaskScreen({
 }
 
 const menuStyles = StyleSheet.create({
+  taskContent: { flex: 1 },
   content: { padding: 16, paddingBottom: 32 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -6 },
   gridItem: { width: '33.33%', padding: 5 },
@@ -607,27 +723,66 @@ const menuStyles = StyleSheet.create({
 });
 
 const timetableStyles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: '#f8fafc' },
+  content: { padding: 16, paddingBottom: 32 },
+  filterCard: {
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#ccfbf1',
+    borderRadius: 14,
+    padding: 14,
+    backgroundColor: '#fff',
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  filterLabel: {
+    marginBottom: 8,
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  dateRow: { flexDirection: 'row', alignItems: 'stretch', gap: 8 },
+  dateArrow: {
+    width: 42,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#99f6e4',
+    borderRadius: 10,
+    backgroundColor: '#f0fdfa',
+  },
+  dateInput: {
+    minHeight: 58,
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    backgroundColor: '#fff',
+  },
+  dateTextGroup: { marginLeft: 10, flex: 1 },
+  dateDay: { fontSize: 14, fontWeight: '700', color: '#0f172a' },
+  dateValue: { marginTop: 2, fontSize: 12, color: '#64748b' },
+  todayButton: { alignSelf: 'center', paddingHorizontal: 12, paddingTop: 11 },
+  todayButtonText: { fontSize: 12, fontWeight: '700', color: '#0f766e' },
+  sectionHeader: { marginBottom: 12 },
+  sectionTitle: { fontSize: 17, fontWeight: '800', color: '#0f172a' },
+  sectionSubtitle: { marginTop: 3, fontSize: 12, color: '#64748b' },
   slotCard: {
     marginBottom: 12,
-    borderRadius: 16,
-    borderWidth: 1,
+    borderRadius: 12,
     borderLeftWidth: 5,
     padding: 16,
-  },
-  period: {
-    backgroundColor: '#eff6ff',
-    borderColor: '#93c5fd',
-    borderLeftColor: '#3b82f6',
-  },
-  break: {
-    backgroundColor: '#fffbeb',
-    borderColor: '#fde68a',
-    borderLeftColor: '#f59e0b',
-  },
-  cancelled: {
-    backgroundColor: '#fef2f2',
-    borderColor: '#fecaca',
-    borderLeftColor: '#ef4444',
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   slotTopRow: {
     flexDirection: 'row',
@@ -637,26 +792,71 @@ const timetableStyles = StyleSheet.create({
   },
   timeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   timeText: { fontSize: 12, fontWeight: '600', color: '#475569' },
-  numberBadge: {
-    minWidth: 28,
-    height: 28,
-    borderRadius: 9,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.75)',
-  },
-  numberText: { fontSize: 12, fontWeight: '800', color: '#334155' },
-  subjectText: { fontSize: 16, fontWeight: '700', color: '#1e293b' },
-  detailText: { marginTop: 5, fontSize: 12, color: '#64748b' },
-  overrideBadge: {
-    alignSelf: 'flex-start',
-    marginTop: 10,
-    borderRadius: 8,
-    backgroundColor: '#ede9fe',
-    paddingHorizontal: 9,
+  statusBadge: {
+    maxWidth: '48%',
+    borderRadius: 7,
+    backgroundColor: 'rgba(255,255,255,0.72)',
+    paddingHorizontal: 8,
     paddingVertical: 4,
   },
+  statusText: { fontSize: 10, fontWeight: '800', color: '#475569' },
+  subjectRow: { flexDirection: 'row', alignItems: 'center' },
+  periodNumber: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 11,
+  },
+  periodNumberText: { fontSize: 13, fontWeight: '800', color: '#fff' },
+  subjectContent: { flex: 1 },
+  subjectText: { fontSize: 16, fontWeight: '700', color: '#1e293b' },
+  cancelledSubject: { textDecorationLine: 'line-through', color: '#991b1b' },
+  slotLabel: { marginTop: 2, fontSize: 11, color: '#64748b' },
+  detailRow: {
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
+  detailText: { flex: 1, fontSize: 12, color: '#64748b' },
   cancelledBadge: { backgroundColor: '#fee2e2' },
-  overrideText: { fontSize: 10, fontWeight: '700', color: '#6d28d9' },
   cancelledText: { fontSize: 10, fontWeight: '700', color: '#b91c1c' },
+  stateCard: {
+    minHeight: 210,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 12,
+    padding: 24,
+    backgroundColor: '#fff',
+  },
+  errorCard: { borderColor: '#fecaca', backgroundColor: '#fff7f7' },
+  stateTitle: {
+    marginTop: 12,
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#1e293b',
+    textAlign: 'center',
+  },
+  stateMessage: {
+    marginTop: 6,
+    fontSize: 12,
+    lineHeight: 18,
+    color: '#64748b',
+    textAlign: 'center',
+  },
+  retryButton: {
+    marginTop: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    borderRadius: 9,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#0f766e',
+  },
+  retryButtonText: { fontSize: 12, fontWeight: '800', color: '#fff' },
 });
