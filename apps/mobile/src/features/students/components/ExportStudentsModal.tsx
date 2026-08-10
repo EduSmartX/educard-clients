@@ -12,7 +12,6 @@ import {
   Modal,
   TouchableOpacity,
   StyleSheet,
-  ScrollView,
   TextInput,
   ActivityIndicator,
   Alert,
@@ -28,6 +27,7 @@ import {
   exportStudentsData,
   type ExportStudentsPayload,
 } from '../api/students-api';
+import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 
 interface ExportStudentsModalProps {
   readonly visible: boolean;
@@ -169,7 +169,7 @@ export function ExportStudentsModal({
               </Text>
             </LinearGradient>
 
-            <ScrollView
+            <KeyboardAwareScrollView
               style={styles.body}
               showsVerticalScrollIndicator={false}
             >
@@ -290,7 +290,7 @@ export function ExportStudentsModal({
                   </View>
                 )}
               </View>
-            </ScrollView>
+            </KeyboardAwareScrollView>
 
             {/* Footer Actions */}
             <View style={styles.footer}>

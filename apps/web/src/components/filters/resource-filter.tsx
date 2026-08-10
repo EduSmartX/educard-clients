@@ -5,7 +5,7 @@
  */
 
 import { Filter, RotateCcw, X } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Combobox } from '@/components/ui/combobox';
@@ -14,7 +14,11 @@ import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Badge } from '@/components/ui/badge';
+import { useDebouncedCallback } from '@/hooks/use-debounced-callback';
 import { formatLocalDate, parseLocalDate } from '@/lib/utils/date-utils';
+
+/** Text inputs wait this long after the last keystroke before filtering. */
+const DEFAULT_SEARCH_DEBOUNCE_MS = 3000;
 
 export interface FilterField {
   name: string;
@@ -40,6 +44,8 @@ interface ResourceFilterProps {
   defaultValues?: Record<string, string | string[]>;
   className?: string;
   onFieldChange?: (name: string, value: string, allFilters: Record<string, string>) => void;
+  /** Debounce for text inputs. Blur and Enter still apply immediately. */
+  searchDebounceMs?: number;
 }
 
 export function ResourceFilter({
@@ -49,54 +55,78 @@ export function ResourceFilter({
   defaultValues = {},
   className = '',
   onFieldChange,
+  searchDebounceMs = DEFAULT_SEARCH_DEBOUNCE_MS,
 }: ResourceFilterProps) {
   const [filters, setFilters] = useState<Record<string, string | string[]>>(defaultValues);
 
-  // No need for useEffect sync - the component manages its own state
-  // If you need to reset externally, use the onReset callback
+  // Mirror the applied values so clearing/removing a filter upstream resets the
+  // inputs. Compared by value because the parent passes a fresh object each render.
+  const appliedSignature = JSON.stringify(defaultValues);
+  useEffect(() => {
+    setFilters(JSON.parse(appliedSignature) as Record<string, string | string[]>);
+  }, [appliedSignature]);
 
-  const handleFilterChange = (name: string, value: string | string[]) => {
-    setFilters((prev) => {
-      const newFilters = { ...prev, [name]: value };
-
-      if (onFieldChange) {
-        const stringFilters = Object.entries(newFilters).reduce(
-          (acc, [key, val]) => {
-            if (Array.isArray(val)) {
-              acc[key] = val.join(',');
-            } else {
-              acc[key] = val as string;
+  const emit = useCallback(
+    (source: Record<string, string | string[]>) => {
+      const activeFilters = Object.entries(source).reduce(
+        (acc, [key, value]) => {
+          if (Array.isArray(value)) {
+            if (value.length > 0) {
+              acc[key] = value.join(',');
             }
-            return acc;
-          },
-          {} as Record<string, string>
-        );
-        onFieldChange(name, Array.isArray(value) ? value.join(',') : value, stringFilters);
-      }
-
-      return newFilters;
-    });
-  };
-
-  const handleApplyFilters = () => {
-    const activeFilters = Object.entries(filters).reduce(
-      (acc, [key, value]) => {
-        if (Array.isArray(value)) {
-          // For array values (multiselect), join with comma
-          if (value.length > 0) {
-            acc[key] = value.join(',');
+          } else if (value && value !== 'all') {
+            acc[key] = value;
           }
-        } else if (value && value !== 'all') {
-          acc[key] = value;
-        }
-        return acc;
-      },
-      {} as Record<string, string>
-    );
-    onFilter(activeFilters);
+          return acc;
+        },
+        {} as Record<string, string>
+      );
+      onFilter(activeFilters);
+    },
+    [onFilter]
+  );
+
+  const {
+    schedule: scheduleEmit,
+    flush: flushEmit,
+    cancel: cancelEmit,
+  } = useDebouncedCallback(emit, searchDebounceMs);
+
+  const handleFilterChange = (
+    name: string,
+    value: string | string[],
+    options?: { debounced?: boolean }
+  ) => {
+    const newFilters = { ...filters, [name]: value };
+    setFilters(newFilters);
+
+    if (onFieldChange) {
+      const stringFilters = Object.entries(newFilters).reduce(
+        (acc, [key, val]) => {
+          if (Array.isArray(val)) {
+            acc[key] = val.join(',');
+          } else {
+            acc[key] = val as string;
+          }
+          return acc;
+        },
+        {} as Record<string, string>
+      );
+      onFieldChange(name, Array.isArray(value) ? value.join(',') : value, stringFilters);
+    }
+
+    if (options?.debounced) {
+      scheduleEmit(newFilters);
+      return;
+    }
+
+    // A picker change supersedes any half-typed text still waiting to fire.
+    cancelEmit();
+    emit(newFilters);
   };
 
   const handleReset = () => {
+    cancelEmit();
     setFilters({});
     onReset();
   };
@@ -195,7 +225,16 @@ export function ResourceFilter({
                       id={field.name}
                       placeholder={field.placeholder}
                       value={(filters[field.name] as string) || ''}
-                      onChange={(e) => handleFilterChange(field.name, e.target.value)}
+                      onChange={(e) =>
+                        handleFilterChange(field.name, e.target.value, { debounced: true })
+                      }
+                      onBlur={flushEmit}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          flushEmit();
+                        }
+                      }}
                     />
                   )}
 
@@ -321,18 +360,14 @@ export function ResourceFilter({
             })}
           </div>
 
-          <div className="flex gap-2 pt-2">
-            <Button variant="brand" onClick={handleApplyFilters} size="sm">
-              <Filter className="mr-2 h-4 w-4" />
-              Apply Filters
-            </Button>
-            {hasActiveFilters && (
+          {hasActiveFilters && (
+            <div className="flex gap-2 pt-2">
               <Button onClick={handleReset} variant="outline" size="sm">
                 <RotateCcw className="mr-2 h-4 w-4" />
                 Reset
               </Button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

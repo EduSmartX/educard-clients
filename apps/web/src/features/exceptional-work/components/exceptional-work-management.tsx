@@ -5,20 +5,11 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import {
-  AlertCircle,
-  AlertTriangle,
-  Calendar,
-  Edit,
-  Filter,
-  Loader2,
-  Plus,
-  Trash2,
-  X,
-} from 'lucide-react';
+import { AlertCircle, AlertTriangle, Calendar, Edit, Loader2, Plus, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import { DeleteConfirmationDialog, PageHeader } from '@/components/common';
 import { ResourceFilter, type FilterField } from '@/components/filters/resource-filter';
+import { withClearedKeys } from '@/components/filters/filter-utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -128,7 +119,6 @@ export function ExceptionalWorkManagement() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingException, setEditingException] = useState<CalendarException | undefined>();
   const [deletingException, setDeletingException] = useState<CalendarException | undefined>();
-  const [showFilters, setShowFilters] = useState(false);
 
   // Fetch exceptions
   const { data, isLoading, isError, error } = useQuery({
@@ -181,7 +171,7 @@ export function ExceptionalWorkManagement() {
 
   // Handlers
   const handleFilter = (appliedFilters: Record<string, string>) => {
-    setFilters(appliedFilters);
+    setFilters(withClearedKeys(filters, appliedFilters));
   };
 
   const handleResetFilters = () => {
@@ -337,14 +327,6 @@ export function ExceptionalWorkManagement() {
               <CardTitle>Calendar Exceptions</CardTitle>
               <CardDescription>{exceptionsDescription}</CardDescription>
             </div>
-            <Button
-              variant={showFilters ? 'default' : 'outline'}
-              onClick={() => setShowFilters(!showFilters)}
-              className="gap-2"
-            >
-              <Filter className="h-4 w-4" />
-              {showFilters ? 'Hide Filters' : 'Show Filters'}
-            </Button>
           </div>
 
           {/* Active filters display */}
@@ -382,15 +364,13 @@ export function ExceptionalWorkManagement() {
         </CardHeader>
 
         {/* Filters Section */}
-        {showFilters && (
-          <div className="border-b bg-gray-50/50 px-6 py-4">
-            <ResourceFilter
-              fields={filterFields}
-              onFilter={handleFilter}
-              onReset={handleResetFilters}
-            />
-          </div>
-        )}
+        <div className="border-b bg-gray-50/50 px-6 py-4">
+          <ResourceFilter
+            fields={filterFields}
+            onFilter={handleFilter}
+            onReset={handleResetFilters}
+          />
+        </div>
 
         {/* Table Content */}
         <CardContent className="p-6">

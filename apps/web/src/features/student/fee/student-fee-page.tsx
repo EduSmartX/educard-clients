@@ -301,12 +301,17 @@ export default function StudentFeePage() {
         if (!summary) {
           return null;
         }
+        // Optional on older backends, so treat missing values as no discount.
+        const discountAmount = Number(summary.discount_amount) || 0;
+        const discountPercentage = Number(summary.discount_percentage) || 0;
+        const baseAmount = Number(summary.base_amount) || 0;
+        const hasDiscount = discountAmount > 0;
         return (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="grid gap-4 sm:grid-cols-3"
+            className={`grid gap-4 ${hasDiscount ? 'sm:grid-cols-2 lg:grid-cols-4' : 'sm:grid-cols-3'}`}
           >
             <Card className="border-l-4 border-l-blue-400">
               <CardContent className="p-4">
@@ -314,9 +319,28 @@ export default function StudentFeePage() {
                 <p className="mt-1 text-2xl font-bold text-gray-800">
                   {formatCurrency(Number(summary.total_amount))}
                 </p>
+                {hasDiscount && (
+                  <p className="text-xs text-gray-400 line-through">{formatCurrency(baseAmount)}</p>
+                )}
                 <span className="text-lg">🏫</span>
               </CardContent>
             </Card>
+            {hasDiscount && (
+              <Card className="border-l-4 border-l-violet-400">
+                <CardContent className="p-4">
+                  <p className="text-xs text-gray-500">Discount</p>
+                  <p className="mt-1 text-2xl font-bold text-violet-600">
+                    -{formatCurrency(discountAmount)}
+                  </p>
+                  {discountPercentage > 0 && (
+                    <Badge className="bg-violet-100 text-violet-700">
+                      {discountPercentage}% off
+                    </Badge>
+                  )}
+                  <span className="ml-1 text-lg">🎁</span>
+                </CardContent>
+              </Card>
+            )}
             <Card className="border-l-4 border-l-emerald-400">
               <CardContent className="p-4">
                 <p className="text-xs text-gray-500">Paid</p>

@@ -5,7 +5,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
   ActivityIndicator,
   StyleSheet,
   type DimensionValue,
@@ -23,6 +22,7 @@ import {
   type StudentLeaveRequest,
 } from '@/features/student-leave';
 import { useToast } from '@/lib/toast-context';
+import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 
 const STATUS_STYLES: Record<
   string,
@@ -144,7 +144,7 @@ export default function StudentLeaveScreen() {
   return (
     <Screen safeArea={false} statusBarStyle="light">
       <ScreenHeader title="Leave" />
-      <ScrollView
+      <KeyboardAwareScrollView
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
       >
@@ -349,7 +349,7 @@ export default function StudentLeaveScreen() {
             </View>
           )}
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </Screen>
   );
 }

@@ -7,7 +7,6 @@ import {
   TextInput,
   TouchableOpacity,
   Modal,
-  ScrollView,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
@@ -20,6 +19,7 @@ import {
   type LeaveBalance,
   type LeaveAllocationForUser,
 } from '@/features/leave';
+import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 
 interface LeaveBalanceFormModalProps {
   visible: boolean;
@@ -136,7 +136,7 @@ export function LeaveBalanceFormModal({
             </TouchableOpacity>
           </View>
 
-          <ScrollView
+          <KeyboardAwareScrollView
             contentContainerStyle={styles.body}
             keyboardShouldPersistTaps="handled"
           >
@@ -189,7 +189,7 @@ export function LeaveBalanceFormModal({
                 />
               </>
             )}
-          </ScrollView>
+          </KeyboardAwareScrollView>
 
           <View style={styles.footer}>
             <TouchableOpacity

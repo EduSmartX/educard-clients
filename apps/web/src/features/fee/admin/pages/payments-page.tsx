@@ -12,7 +12,7 @@ import { SearchableSelect } from '@/components/ui/searchable-select';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Download, Filter, X, CreditCard, IndianRupee, Plus, Search } from 'lucide-react';
 import { format } from 'date-fns';
-import { cn, downloadFile } from '@/lib/utils';
+import { downloadFile } from '@/lib/utils';
 import { ROUTES } from '@/constants/app-config';
 import { useFilterParams } from '@/hooks/use-filter-params';
 import { PageHeader } from '@/components/common';
@@ -66,7 +66,6 @@ export function PaymentsPage() {
   const setPaymentModeFilter = (v: string) => setFilter('payment_mode', v);
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
-  const [showFilters, setShowFilters] = useState(true);
 
   // Data for filter dropdowns
   const { data: classesData } = useClasses();
@@ -295,20 +294,13 @@ export function PaymentsPage() {
                   className="pl-10"
                 />
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={cn('gap-2', showFilters && 'bg-accent')}
-                >
-                  <Filter className="h-4 w-4" />
-                  Filters
-                  {activeFilterCount > 0 && (
-                    <span className="bg-primary text-primary-foreground ml-1 rounded-full px-2 py-0.5 text-xs">
-                      {activeFilterCount}
-                    </span>
-                  )}
-                </Button>
+              <div className="flex items-center gap-2">
+                {activeFilterCount > 0 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-800">
+                    <Filter className="h-3.5 w-3.5" />
+                    {activeFilterCount} active
+                  </span>
+                )}
                 {hasActiveFilters && (
                   <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1">
                     <X className="h-4 w-4" />
@@ -318,92 +310,90 @@ export function PaymentsPage() {
               </div>
             </div>
 
-            {showFilters && (
-              <div className="grid gap-4 border-t pt-4 sm:grid-cols-2 lg:grid-cols-3">
-                {/* Class Filter */}
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium">Class</span>
-                  <SearchableSelect
-                    options={[
-                      { value: 'all', label: 'All Classes' },
-                      ...classesArray.map((cls) => {
-                        const label =
-                          cls.display_name ||
-                          (cls.class_master?.name
-                            ? `${cls.class_master.name} - ${cls.name}`
-                            : cls.name);
-                        return { value: cls.public_id, label };
-                      }),
-                    ]}
-                    value={classFilter}
-                    onValueChange={handleClassChange}
-                    placeholder="All Classes"
-                    searchPlaceholder="Search class..."
-                  />
-                </label>
+            <div className="grid gap-4 border-t pt-4 sm:grid-cols-2 lg:grid-cols-3">
+              {/* Class Filter */}
+              <label className="block space-y-2">
+                <span className="text-sm font-medium">Class</span>
+                <SearchableSelect
+                  options={[
+                    { value: 'all', label: 'All Classes' },
+                    ...classesArray.map((cls) => {
+                      const label =
+                        cls.display_name ||
+                        (cls.class_master?.name
+                          ? `${cls.class_master.name} - ${cls.name}`
+                          : cls.name);
+                      return { value: cls.public_id, label };
+                    }),
+                  ]}
+                  value={classFilter}
+                  onValueChange={handleClassChange}
+                  placeholder="All Classes"
+                  searchPlaceholder="Search class..."
+                />
+              </label>
 
-                {/* Student Filter — only populated when class is selected */}
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium">Student</span>
-                  <SearchableSelect
-                    options={[
-                      {
-                        value: 'all',
-                        label: classFilter === 'all' ? 'Select a class first' : 'All Students',
-                      },
-                      ...studentsArray.map((s) => ({
-                        value: s.public_id,
-                        label: s.full_name,
-                      })),
-                    ]}
-                    value={studentFilter}
-                    onValueChange={handleFilterChange(setStudentFilter)}
-                    placeholder={classFilter === 'all' ? 'Select a class first' : 'All Students'}
-                    searchPlaceholder="Search student..."
-                    disabled={classFilter === 'all'}
-                  />
-                </label>
+              {/* Student Filter — only populated when class is selected */}
+              <label className="block space-y-2">
+                <span className="text-sm font-medium">Student</span>
+                <SearchableSelect
+                  options={[
+                    {
+                      value: 'all',
+                      label: classFilter === 'all' ? 'Select a class first' : 'All Students',
+                    },
+                    ...studentsArray.map((s) => ({
+                      value: s.public_id,
+                      label: s.full_name,
+                    })),
+                  ]}
+                  value={studentFilter}
+                  onValueChange={handleFilterChange(setStudentFilter)}
+                  placeholder={classFilter === 'all' ? 'Select a class first' : 'All Students'}
+                  searchPlaceholder="Search student..."
+                  disabled={classFilter === 'all'}
+                />
+              </label>
 
-                {/* Payment Mode Filter */}
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium">Payment Mode</span>
-                  <SearchableSelect
-                    options={[
-                      { value: 'all', label: 'All Modes' },
-                      ...PAYMENT_MODE_OPTIONS.map((option) => ({
-                        value: option.value,
-                        label: option.label,
-                      })),
-                    ]}
-                    value={paymentModeFilter}
-                    onValueChange={handleFilterChange(setPaymentModeFilter)}
-                    placeholder="All Modes"
-                  />
-                </label>
+              {/* Payment Mode Filter */}
+              <label className="block space-y-2">
+                <span className="text-sm font-medium">Payment Mode</span>
+                <SearchableSelect
+                  options={[
+                    { value: 'all', label: 'All Modes' },
+                    ...PAYMENT_MODE_OPTIONS.map((option) => ({
+                      value: option.value,
+                      label: option.label,
+                    })),
+                  ]}
+                  value={paymentModeFilter}
+                  onValueChange={handleFilterChange(setPaymentModeFilter)}
+                  placeholder="All Modes"
+                />
+              </label>
 
-                {/* From Date */}
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium">From Date</span>
-                  <DatePicker
-                    value={startDate ?? null}
-                    onChange={(date) => setStartDate(date ?? undefined)}
-                    maxDate={endDate}
-                    placeholder="Pick a date"
-                  />
-                </label>
+              {/* From Date */}
+              <label className="block space-y-2">
+                <span className="text-sm font-medium">From Date</span>
+                <DatePicker
+                  value={startDate ?? null}
+                  onChange={(date) => setStartDate(date ?? undefined)}
+                  maxDate={endDate}
+                  placeholder="Pick a date"
+                />
+              </label>
 
-                {/* To Date */}
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium">To Date</span>
-                  <DatePicker
-                    value={endDate ?? null}
-                    onChange={(date) => setEndDate(date ?? undefined)}
-                    minDate={startDate}
-                    placeholder="Pick a date"
-                  />
-                </label>
-              </div>
-            )}
+              {/* To Date */}
+              <label className="block space-y-2">
+                <span className="text-sm font-medium">To Date</span>
+                <DatePicker
+                  value={endDate ?? null}
+                  onChange={(date) => setEndDate(date ?? undefined)}
+                  minDate={startDate}
+                  placeholder="Pick a date"
+                />
+              </label>
+            </div>
           </div>
         </CardContent>
       </Card>

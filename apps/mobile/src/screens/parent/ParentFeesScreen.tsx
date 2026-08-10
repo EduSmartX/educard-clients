@@ -9,7 +9,6 @@ import { useState, useCallback } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   RefreshControl,
   ActivityIndicator,
   TextInput,
@@ -34,6 +33,7 @@ import {
   type FeePayment,
   type FeeComponent,
 } from '@/features/student-portal';
+import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 
 // Amounts arrive as decimal strings and may be absent on older API versions.
 function toAmount(value: number | string | null | undefined): number {
@@ -118,7 +118,7 @@ export default function ParentFeesScreen() {
         subtitle="Fee details, components and payments"
         showBack={false}
       />
-      <ScrollView
+      <KeyboardAwareScrollView
         className="flex-1"
         contentContainerClassName="pb-6"
         showsVerticalScrollIndicator={false}
@@ -461,7 +461,7 @@ export default function ParentFeesScreen() {
             )}
           </View>
         )}
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </Screen>
   );
 }

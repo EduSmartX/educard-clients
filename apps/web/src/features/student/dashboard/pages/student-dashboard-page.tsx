@@ -17,6 +17,7 @@ import {
   FileWarning,
   Sparkles,
 } from 'lucide-react';
+import { getSubjectColor, isBreakSlot } from '@educard/shared';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -25,6 +26,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { ROUTES } from '@/constants/app-config';
 import { useStudentDashboard } from '../hooks/use-dashboard-data';
 import { SubjectAvatar, ContactSupportCard } from '@/components/common';
+import { breakRowClasses, subjectRowClasses } from '@/lib/subject-row';
 
 const STAGGER_CHILDREN = {
   hidden: { opacity: 0 },
@@ -306,27 +308,43 @@ export default function StudentDashboardPage() {
           {!isLoading && todayTimetable.length > 0 && (
             <div className="max-h-96 space-y-3 overflow-y-auto pr-1">
               {todayTimetable.map((entry, idx) => {
-                const isBreak = entry.slot_type !== 'class';
-                const normalizedSubject = (entry.subject_name || '').trim();
-                const subjectDisplay = normalizedSubject || `w[${entry.slot_number}]`;
+                const isBreak = isBreakSlot(entry.slot_type);
+                const subjectColor = getSubjectColor(entry.subject_name);
+                const label = isBreak
+                  ? entry.label
+                  : (entry.subject_name || '').trim() || entry.label;
+
+                let rowClass = subjectRowClasses(subjectColor);
+                if (entry.is_cancelled) {
+                  rowClass = subjectRowClasses(subjectColor, true);
+                } else if (isBreak) {
+                  rowClass = breakRowClasses();
+                }
+
                 return (
                   <motion.div
                     key={entry.slot_public_id}
                     initial={{ opacity: 0, x: -12 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.05, duration: 0.3 }}
-                    className={`flex items-center justify-between rounded-xl border p-3 ${
-                      entry.is_cancelled
-                        ? 'border-red-100 bg-red-50/60'
-                        : 'border-gray-100 bg-gray-50/60'
-                    }`}
+                    className={`flex items-center justify-between p-3 ${rowClass}`}
                   >
                     <div className="flex min-w-0 flex-1 items-center gap-3">
-                      <SubjectAvatar name={entry.subject_name} size="lg" />
+                      {isBreak ? (
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-lg">
+                          ☕
+                        </div>
+                      ) : (
+                        <SubjectAvatar name={entry.subject_name} size="lg" />
+                      )}
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <p className="truncate font-medium text-gray-900">
-                            {isBreak ? entry.label : subjectDisplay}
+                          <p
+                            className={`truncate font-medium ${
+                              isBreak ? 'text-emerald-800' : subjectColor.text
+                            }`}
+                          >
+                            {label}
                           </p>
                           {entry.is_cancelled && (
                             <Badge variant="destructive" className="shrink-0">

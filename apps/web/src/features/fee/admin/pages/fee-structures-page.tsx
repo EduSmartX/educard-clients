@@ -4,7 +4,6 @@
  */
 
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +16,6 @@ import { ROUTES } from '@/constants/app-config';
 import { useFilterParams } from '@/hooks/use-filter-params';
 import { PageHeader } from '@/components/common';
 import { useClasses } from '@/features/classes/hooks/use-classes';
-import { cn } from '@/lib/utils';
 
 export function FeeStructuresPage() {
   const navigate = useNavigate();
@@ -31,7 +29,6 @@ export function FeeStructuresPage() {
   const statusFilter = filters.status;
   const setClassFilter = (v: string) => setFilter('class', v);
   const setStatusFilter = (v: string) => setFilter('status', v);
-  const [showFilters, setShowFilters] = useState(true);
 
   let isActiveFilter: boolean | undefined;
   if (statusFilter === 'active') {
@@ -100,20 +97,13 @@ export function FeeStructuresPage() {
                 />
               </div>
 
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={cn('gap-2', showFilters && 'bg-accent')}
-                >
-                  <Filter className="h-4 w-4" />
-                  Filters
-                  {activeFilterCount > 0 && (
-                    <span className="bg-primary text-primary-foreground ml-1 rounded-full px-2 py-0.5 text-xs">
-                      {activeFilterCount}
-                    </span>
-                  )}
-                </Button>
+              <div className="flex items-center gap-2">
+                {activeFilterCount > 0 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-800">
+                    <Filter className="h-3.5 w-3.5" />
+                    {activeFilterCount} active
+                  </span>
+                )}
                 {hasActiveFilters && (
                   <Button variant="ghost" size="icon" onClick={clearFilters}>
                     <X className="h-4 w-4" />
@@ -122,45 +112,43 @@ export function FeeStructuresPage() {
               </div>
             </div>
 
-            {showFilters && (
-              <div className="grid gap-4 border-t pt-4 sm:grid-cols-2">
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium">Class</span>
-                  <SearchableSelect
-                    options={[
-                      { value: 'all', label: 'All Classes' },
-                      ...classesArray.map((cls) => ({
-                        value: cls.public_id,
-                        label:
-                          cls.display_name ||
-                          (cls.class_master?.name
-                            ? `${cls.class_master.name} - ${cls.name}`
-                            : cls.name),
-                      })),
-                    ]}
-                    value={classFilter}
-                    onValueChange={setClassFilter}
-                    placeholder="All Classes"
-                    searchPlaceholder="Search classes..."
-                  />
-                </label>
+            <div className="grid gap-4 border-t pt-4 sm:grid-cols-2">
+              <label className="block space-y-2">
+                <span className="text-sm font-medium">Class</span>
+                <SearchableSelect
+                  options={[
+                    { value: 'all', label: 'All Classes' },
+                    ...classesArray.map((cls) => ({
+                      value: cls.public_id,
+                      label:
+                        cls.display_name ||
+                        (cls.class_master?.name
+                          ? `${cls.class_master.name} - ${cls.name}`
+                          : cls.name),
+                    })),
+                  ]}
+                  value={classFilter}
+                  onValueChange={setClassFilter}
+                  placeholder="All Classes"
+                  searchPlaceholder="Search classes..."
+                />
+              </label>
 
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium">Status</span>
-                  <SearchableSelect
-                    options={[
-                      { value: 'all', label: 'All Status' },
-                      { value: 'active', label: 'Active' },
-                      { value: 'inactive', label: 'Inactive' },
-                    ]}
-                    value={statusFilter}
-                    onValueChange={setStatusFilter}
-                    placeholder="All Status"
-                    searchPlaceholder="Search status..."
-                  />
-                </label>
-              </div>
-            )}
+              <label className="block space-y-2">
+                <span className="text-sm font-medium">Status</span>
+                <SearchableSelect
+                  options={[
+                    { value: 'all', label: 'All Status' },
+                    { value: 'active', label: 'Active' },
+                    { value: 'inactive', label: 'Inactive' },
+                  ]}
+                  value={statusFilter}
+                  onValueChange={setStatusFilter}
+                  placeholder="All Status"
+                  searchPlaceholder="Search status..."
+                />
+              </label>
+            </div>
           </div>
 
           <FeeStructureTable data={filteredStructures} isLoading={isLoading} />

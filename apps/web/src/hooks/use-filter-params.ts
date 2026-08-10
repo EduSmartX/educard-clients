@@ -13,7 +13,7 @@
  *     }, { defaultPageSize: 25 });
  */
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 // ── Types ───────────────────────────────────────────────────────────────────────
@@ -74,15 +74,17 @@ export function useFilterParams<TDefaults extends Record<string, string>>(
   // ── Derive state from URL ───────────────────────────────────────────────────
 
   const filters = useMemo(() => {
-    const result = { ...defaults };
-    for (const key of Object.keys(defaults)) {
-      const urlValue = searchParams.get(key);
-      if (urlValue !== null) {
-        result[key as keyof TDefaults] = urlValue as TDefaults[keyof TDefaults];
+    const result = { ...defaults } as Record<string, string>;
+    // Read every non-reserved param, not just declared defaults, so pages that
+    // pass no defaults still surface their filters.
+    for (const [key, value] of searchParams.entries()) {
+      if (key === SEARCH_KEY || key === pageKey || key === pageSizeKey) {
+        continue;
       }
+      result[key] = value;
     }
-    return result;
-  }, [searchParams, defaults]);
+    return result as TDefaults;
+  }, [searchParams, defaults, pageKey, pageSizeKey]);
 
   const search = searchParams.get(SEARCH_KEY) ?? '';
 
@@ -99,28 +101,25 @@ export function useFilterParams<TDefaults extends Record<string, string>>(
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
   /**
-   * Build new URLSearchParams, omitting keys whose values match defaults.
-   * This keeps the URL clean — only non-default values appear.
+   * Build new URLSearchParams from `current`, omitting keys whose values match
+   * defaults. Takes `current` as an argument rather than closing over
+   * `searchParams` so setters can compose via the functional updater — two
+   * setters called in the same tick must not overwrite each other.
    */
   const buildParams = useCallback(
-    (overrides: Record<string, string | number | undefined>) => {
+    (current: URLSearchParams, overrides: Record<string, string | number | undefined>) => {
       const merged: Record<string, string> = {};
 
-      // Current filters
-      for (const key of Object.keys(defaults)) {
-        const val = searchParams.get(key) ?? defaults[key];
-        merged[key] = val;
+      // Carry over everything already in the URL (filters, search, pagination).
+      for (const [key, value] of current.entries()) {
+        merged[key] = value;
       }
 
-      // Current search & pagination
-      if (search) {
-        merged[SEARCH_KEY] = search;
-      }
-      if (page !== defaultPage) {
-        merged[pageKey] = String(page);
-      }
-      if (pageSize !== defaultPageSize) {
-        merged[pageSizeKey] = String(pageSize);
+      // Seed declared defaults that aren't in the URL yet.
+      for (const key of Object.keys(defaults)) {
+        if (!(key in merged)) {
+          merged[key] = defaults[key];
+        }
       }
 
       // Apply overrides
@@ -146,30 +145,37 @@ export function useFilterParams<TDefaults extends Record<string, string>>(
 
       return params;
     },
-    [
-      searchParams,
-      defaults,
-      search,
-      page,
-      pageSize,
-      pageKey,
-      pageSizeKey,
-      defaultPage,
-      defaultPageSize,
-    ]
+    [defaults, pageKey, pageSizeKey, defaultPage, defaultPageSize]
   );
 
   // ── Setters ─────────────────────────────────────────────────────────────────
 
+  // React Router's functional updater receives the params captured at call
+  // time, not a queued value, so two setters fired in the same tick would
+  // overwrite each other. Accumulate through a ref instead.
+  const paramsRef = useRef(searchParams);
+
+  useEffect(() => {
+    paramsRef.current = searchParams;
+  }, [searchParams]);
+
+  const commit = useCallback(
+    (overrides: Record<string, string | number | undefined>) => {
+      const next = buildParams(paramsRef.current, overrides);
+      paramsRef.current = next;
+      setSearchParams(next, { replace: true });
+    },
+    [buildParams, setSearchParams]
+  );
+
   const setFilter = useCallback(
     <K extends keyof TDefaults>(key: K, value: TDefaults[K]) => {
-      const params = buildParams({
+      commit({
         [key as string]: value,
         [pageKey]: undefined, // Reset page on filter change
       });
-      setSearchParams(params, { replace: true });
     },
-    [buildParams, setSearchParams, pageKey]
+    [commit, pageKey]
   );
 
   const setFilters = useCallback(
@@ -179,43 +185,40 @@ export function useFilterParams<TDefaults extends Record<string, string>>(
         overrides[key] = value as string;
       }
       overrides[pageKey] = undefined; // Reset page
-      const params = buildParams(overrides);
-      setSearchParams(params, { replace: true });
+      commit(overrides);
     },
-    [buildParams, setSearchParams, pageKey]
+    [commit, pageKey]
   );
 
   const setSearch = useCallback(
     (query: string) => {
-      const params = buildParams({
+      commit({
         [SEARCH_KEY]: query || undefined,
         [pageKey]: undefined, // Reset page on search
       });
-      setSearchParams(params, { replace: true });
     },
-    [buildParams, setSearchParams, pageKey]
+    [commit, pageKey]
   );
 
   const setPage = useCallback(
     (newPage: number) => {
-      const params = buildParams({ [pageKey]: newPage });
-      setSearchParams(params, { replace: true });
+      commit({ [pageKey]: newPage });
     },
-    [buildParams, setSearchParams, pageKey]
+    [commit, pageKey]
   );
 
   const setPageSize = useCallback(
     (size: number) => {
-      const params = buildParams({
+      commit({
         [pageSizeKey]: size,
         [pageKey]: undefined, // Reset page on page-size change
       });
-      setSearchParams(params, { replace: true });
     },
-    [buildParams, setSearchParams, pageSizeKey, pageKey]
+    [commit, pageSizeKey, pageKey]
   );
 
   const resetFilters = useCallback(() => {
+    paramsRef.current = new URLSearchParams();
     setSearchParams(new URLSearchParams(), { replace: true });
   }, [setSearchParams]);
 

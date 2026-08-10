@@ -21,7 +21,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
@@ -37,6 +36,7 @@ import {
 } from '@/features/fee';
 import { LinearGradient } from '@/lib/linear-gradient';
 import type { SharedStackNavigation } from '@/navigation/types';
+import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 
 export default function StudentFeeComponentRequestsScreen() {
   const qc = useQueryClient();
@@ -147,7 +147,7 @@ export default function StudentFeeComponentRequestsScreen() {
           </View>
         </View>
       </LinearGradient>
-      <ScrollView
+      <KeyboardAwareScrollView
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
       >
@@ -281,7 +281,7 @@ export default function StudentFeeComponentRequestsScreen() {
             )}
           </View>
         )}
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </View>
   );
 }

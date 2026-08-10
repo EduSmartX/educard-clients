@@ -6,9 +6,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { SCHOOL_WEEKDAYS, SLOT_TYPE_COLORS, formatSlotTime } from '@educard/shared';
-import { getSubjectTheme } from '@/lib/subject-theme';
+import { SCHOOL_WEEKDAYS, formatSlotTime, getSubjectColor, isBreakSlot } from '@educard/shared';
 import { PageHeader, SubjectAvatar } from '@/components/common';
+import { breakRowClasses, subjectRowClasses } from '@/lib/subject-row';
 import { useTimetableForWeek } from './hooks';
 
 export default function StudentTimetablePage() {
@@ -122,18 +122,18 @@ export default function StudentTimetablePage() {
                   <span>Room</span>
                 </div>
                 {/* Rows */}
-                <div className="divide-y">
+                <div className="space-y-2 p-3">
                   {periods.map((period, index) => {
-                    const color = SLOT_TYPE_COLORS[period.slot_type] || SLOT_TYPE_COLORS.class;
-                    const subjectTheme = getSubjectTheme(period.subject_name);
-                    const isBreak = period.slot_type !== 'class';
-                    const normalizedSubject = (period.subject_name || '').trim();
-                    const subjectDisplay = normalizedSubject || `w[${period.slot_number}]`;
-                    let rowStateClass = 'hover:bg-blue-50/40';
+                    const isBreak = isBreakSlot(period.slot_type);
+                    const subjectColor = getSubjectColor(period.subject_name);
+                    const label = isBreak
+                      ? period.label
+                      : (period.subject_name || '').trim() || period.label;
+                    let rowClass = subjectRowClasses(subjectColor);
                     if (period.is_cancelled) {
-                      rowStateClass = 'opacity-50';
+                      rowClass = subjectRowClasses(subjectColor, true);
                     } else if (isBreak) {
-                      rowStateClass = 'bg-amber-50/40';
+                      rowClass = breakRowClasses();
                     }
 
                     return (
@@ -142,22 +142,34 @@ export default function StudentTimetablePage() {
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.03 }}
-                        className={`grid grid-cols-1 gap-2 px-4 py-3 transition-colors sm:grid-cols-[auto_2fr_1fr_1.5fr_1fr] sm:items-center ${rowStateClass}`}
+                        className={`grid grid-cols-1 gap-2 px-4 py-3 sm:grid-cols-[auto_2fr_1fr_1.5fr_1fr] sm:items-center ${rowClass}`}
                       >
                         {/* Slot # */}
                         <div className="flex items-center gap-3 sm:w-12">
                           <div
-                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${color} text-sm font-bold text-white shadow-sm`}
+                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold shadow-sm ${
+                              isBreak
+                                ? 'bg-emerald-100 text-emerald-700'
+                                : `${subjectColor.bg} ${subjectColor.text}`
+                            }`}
                           >
                             {period.slot_number}
                           </div>
                         </div>
                         {/* Subject */}
                         <div className="flex items-center gap-2">
-                          {!isBreak && <SubjectAvatar name={period.subject_name} size="md" />}
+                          {isBreak ? (
+                            <span className="text-lg">☕</span>
+                          ) : (
+                            <SubjectAvatar name={period.subject_name} size="md" />
+                          )}
                           <div className="min-w-0">
-                            <p className="font-medium text-gray-800">
-                              {isBreak ? `${subjectTheme.emoji} ${period.label}` : subjectDisplay}
+                            <p
+                              className={`font-medium ${
+                                isBreak ? 'text-emerald-800' : subjectColor.text
+                              }`}
+                            >
+                              {label}
                             </p>
                             {period.is_cancelled && (
                               <Badge variant="destructive" className="mt-0.5 text-[10px]">

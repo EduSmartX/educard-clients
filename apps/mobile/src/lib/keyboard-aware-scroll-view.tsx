@@ -4,14 +4,35 @@
  * react-native-keyboard-aware-scroll-view (which called removed UIManager methods).
  */
 
-import { forwardRef, useImperativeHandle, useRef } from 'react';
 import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  type Component,
+} from 'react';
+import {
+  findNodeHandle,
+  Keyboard,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  TextInput,
   type ScrollViewProps,
 } from 'react-native';
+
+/** Gap kept between the focused input and the top of the keyboard. */
+const DEFAULT_KEYBOARD_GAP = 24;
+
+/** `scrollResponderScrollNativeHandleToKeyboard` is untyped in RN's public types. */
+type ScrollResponder = {
+  scrollResponderScrollNativeHandleToKeyboard?: (
+    nodeHandle: number,
+    additionalOffset?: number,
+    preventNegativeScrollOffset?: boolean,
+  ) => void;
+};
 
 export interface KeyboardAwareScrollViewHandle {
   scrollToPosition: (x: number, y: number, animated?: boolean) => void;
@@ -49,14 +70,14 @@ export const KeyboardAwareScrollView = forwardRef<
     enableAutomaticScroll: _enableAutomaticScroll,
     enableResetScrollToCoords: _enableResetScrollToCoords,
     resetScrollToCoords: _resetScrollToCoords,
-    extraScrollHeight: _extraScrollHeight,
+    extraScrollHeight,
     extraScrollHeightAndroid: _extraScrollHeightAndroid,
     extraHeight: _extraHeight,
     keyboardOpeningTime: _keyboardOpeningTime,
     viewIsInsideTabBar: _viewIsInsideTabBar,
     innerRef: _innerRef,
-    bottomOffset: _bottomOffset,
-    extraKeyboardSpace: _extraKeyboardSpace,
+    bottomOffset,
+    extraKeyboardSpace,
     style,
     keyboardShouldPersistTaps = 'handled',
     ...scrollViewProps
@@ -64,6 +85,36 @@ export const KeyboardAwareScrollView = forwardRef<
   ref,
 ) {
   const scrollRef = useRef<ScrollView>(null);
+  const keyboardGap =
+    bottomOffset ??
+    extraKeyboardSpace ??
+    extraScrollHeight ??
+    DEFAULT_KEYBOARD_GAP;
+
+  // Android only resizes the window; without this the focused input stays hidden.
+  useEffect(() => {
+    const showEvent =
+      Platform.OS === 'android' ? 'keyboardDidShow' : 'keyboardWillShow';
+    const subscription = Keyboard.addListener(showEvent, () => {
+      const focused = TextInput.State.currentlyFocusedInput();
+      if (!focused) {
+        return;
+      }
+      // New Architecture returns a host element; findNodeHandle still resolves it.
+      const handle = findNodeHandle(focused as unknown as Component);
+      const responder = scrollRef.current?.getScrollResponder() as
+        | ScrollResponder
+        | undefined;
+      if (handle && responder?.scrollResponderScrollNativeHandleToKeyboard) {
+        responder.scrollResponderScrollNativeHandleToKeyboard(
+          handle,
+          keyboardGap,
+          true,
+        );
+      }
+    });
+    return () => subscription.remove();
+  }, [keyboardGap]);
 
   useImperativeHandle(
     ref,

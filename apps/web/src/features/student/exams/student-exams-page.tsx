@@ -4,7 +4,9 @@ import { FileText, Calendar, Trophy, ChevronRight, Award, Target, Clock, User } 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getSubjectColor } from '@educard/shared';
 import { PageHeader, SubjectAvatar } from '@/components/common';
+import { subjectRowClasses } from '@/lib/subject-row';
 import { useStudentExamSessions, useExamSessionDetail } from './hooks';
 import type { ExamSession, ExamResult } from './api';
 
@@ -261,24 +263,27 @@ function ScheduleView({ detail }: Readonly<{ detail: ExamSessionDetailData }>) {
           <span className="text-right">Marks</span>
         </div>
         {/* Rows */}
-        <div className="divide-y">
+        <div className="space-y-2 p-3">
           {detail.exams.map((exam, idx) => {
+            const subjectColor = getSubjectColor(exam.subject_name);
             return (
               <motion.div
                 key={exam.exam_public_id}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.04 }}
-                className="grid grid-cols-1 gap-2 px-4 py-3 transition-colors hover:bg-blue-50/40 sm:grid-cols-[2fr_1fr_1fr_1.5fr_1fr] sm:items-center"
+                className={`grid grid-cols-1 gap-2 px-4 py-3 sm:grid-cols-[2fr_1fr_1fr_1.5fr_1fr] sm:items-center ${subjectRowClasses(subjectColor)}`}
               >
                 {/* Subject */}
                 <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-sm font-bold text-blue-600">
+                  <div
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold ${subjectColor.badge ?? 'bg-white/70'}`}
+                  >
                     {idx + 1}
                   </div>
                   <SubjectAvatar name={exam.subject_name} size="md" />
                   <div className="min-w-0">
-                    <p className="font-medium text-gray-800">{exam.subject_name}</p>
+                    <p className={`font-medium ${subjectColor.text}`}>{exam.subject_name}</p>
                   </div>
                 </div>
                 {/* Date */}
@@ -432,6 +437,7 @@ function ResultsView({ detail }: Readonly<{ detail: ExamSessionDetailData }>) {
 function SubjectResultRow({ exam }: { readonly exam: ExamResult }) {
   const percentage = exam.percentage ?? 0;
   const passed = exam.passed;
+  const subjectColor = getSubjectColor(exam.subject_name);
 
   const barColor = exam.is_absent
     ? 'bg-gray-300'
@@ -440,11 +446,11 @@ function SubjectResultRow({ exam }: { readonly exam: ExamResult }) {
       : 'bg-gradient-to-r from-orange-400 to-red-500';
 
   return (
-    <div className="space-y-2">
+    <div className={`space-y-2 p-3 ${subjectRowClasses(subjectColor, exam.is_absent)}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <SubjectAvatar name={exam.subject_name} size="md" />
-          <span className="text-sm font-medium text-gray-800">{exam.subject_name}</span>
+          <span className={`text-sm font-medium ${subjectColor.text}`}>{exam.subject_name}</span>
         </div>
         <div className="flex items-center gap-2 text-sm">
           {exam.is_absent ? (

@@ -5,13 +5,15 @@
  */
 
 import { useState } from 'react';
-import { Plus, Filter, X, AlertCircle } from 'lucide-react';
+import { Plus, X, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DataTable, type PaginationInfo, type Column } from '@/components/ui/data-table';
 import { ResourceFilter, type FilterField } from '@/components/filters/resource-filter';
+import { describeFilter } from '@/components/filters/filter-labels';
+import { withClearedKeys } from '@/components/filters/filter-utils';
 import { PageHeader } from './page-header';
 import { DeletedViewToggle } from './deleted-view-toggle';
 import {
@@ -104,7 +106,6 @@ export function ResourceListLayout<TData>({
   const isEmployeeView = viewMode === 'employee';
   const [appliedSearchQuery, setAppliedSearchQuery] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
-  const [showFilters, setShowFilters] = useState(false);
 
   const singular = resourceNameSingular || resourceName.toLowerCase().replace(/s$/, '');
   const itemCount = data.length;
@@ -117,7 +118,7 @@ export function ResourceListLayout<TData>({
       onSearch(search || '');
     }
     if (onFilterChange) {
-      onFilterChange(otherFilters);
+      onFilterChange(withClearedKeys(filters, otherFilters));
     }
   };
 
@@ -128,7 +129,7 @@ export function ResourceListLayout<TData>({
       onSearch('');
     }
     if (onFilterChange) {
-      onFilterChange({});
+      onFilterChange(withClearedKeys(filters, {}));
     }
   };
 
@@ -137,19 +138,18 @@ export function ResourceListLayout<TData>({
     delete newFilters[key];
     setFilters(newFilters);
     if (onFilterChange) {
-      onFilterChange(newFilters);
+      onFilterChange({ ...newFilters, [key]: '' });
     }
   };
 
   const handleClearAll = () => {
     setFilters({});
     setAppliedSearchQuery('');
-    setShowFilters(false);
     if (onSearch) {
       onSearch('');
     }
     if (onFilterChange) {
-      onFilterChange({});
+      onFilterChange(withClearedKeys(filters, {}));
     }
   };
 
@@ -211,14 +211,6 @@ export function ResourceListLayout<TData>({
               <div className="text-muted-foreground text-sm">
                 {itemCount} {itemCount === 1 ? singular : resourceName.toLowerCase()} found
               </div>
-              <Button
-                variant={showFilters ? 'default' : 'outline'}
-                onClick={() => setShowFilters(!showFilters)}
-                className="gap-2"
-              >
-                <Filter className="h-4 w-4" />
-                {showFilters ? 'Hide Filters' : 'Show Filters'}
-              </Button>
             </div>
 
             {/* Active filters display */}
@@ -226,14 +218,16 @@ export function ResourceListLayout<TData>({
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-muted-foreground text-sm">Active filters:</span>
                 {Object.entries(filters).map(([key, value]) => (
-                  <Badge key={key} variant="secondary" className="gap-1">
-                    <span className="capitalize">
-                      {key.replaceAll('_', ' ')}: {value}
-                    </span>
+                  <Badge
+                    key={key}
+                    variant="default"
+                    className="gap-1 border border-blue-200 bg-blue-100 text-blue-800 hover:bg-blue-200"
+                  >
+                    <span>{describeFilter(filterFields, key, value)}</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveFilter(key)}
-                      className="hover:bg-muted rounded-full p-0.5"
+                      className="rounded-full p-0.5 hover:bg-blue-300/60"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -248,16 +242,14 @@ export function ResourceListLayout<TData>({
         </CardHeader>
 
         {/* Filter Panel */}
-        {showFilters && (
-          <div className="px-6 pb-6">
-            <ResourceFilter
-              fields={filterFields}
-              onFilter={handleFilterApply}
-              onReset={handleFilterReset}
-              defaultValues={{ search: appliedSearchQuery, ...filters }}
-            />
-          </div>
-        )}
+        <div className="px-6 pb-6">
+          <ResourceFilter
+            fields={filterFields}
+            onFilter={handleFilterApply}
+            onReset={handleFilterReset}
+            defaultValues={{ search: appliedSearchQuery, ...filters }}
+          />
+        </div>
       </Card>
 
       {/* Table Card with Loading and Error States */}

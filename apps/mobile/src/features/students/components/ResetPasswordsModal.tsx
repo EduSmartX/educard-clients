@@ -12,7 +12,6 @@ import {
   Modal,
   TouchableOpacity,
   StyleSheet,
-  ScrollView,
   TextInput,
   ActivityIndicator,
   Alert,
@@ -26,6 +25,7 @@ import {
   resetClassPasswords,
   fetchDefaultStudentPassword,
 } from '../api/students-api';
+import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 
 interface ClassOption {
   value: string;
@@ -169,7 +169,7 @@ export function ResetPasswordsModal({
               </Text>
             </LinearGradient>
 
-            <ScrollView
+            <KeyboardAwareScrollView
               style={styles.body}
               showsVerticalScrollIndicator={false}
             >
@@ -235,7 +235,7 @@ export function ResetPasswordsModal({
                 autoCapitalize="none"
                 autoCorrect={false}
               />
-            </ScrollView>
+            </KeyboardAwareScrollView>
 
             <View style={styles.footer}>
               <TouchableOpacity
