@@ -68,11 +68,11 @@ export function useMyTimetable() {
   });
 }
 
-export function useTeacherTimetable(teacherPublicId: string | undefined) {
+export function useTeacherTimetable(userPublicId: string | undefined) {
   return useQuery({
-    queryKey: ['timetable', 'teacher-timetable', teacherPublicId],
-    queryFn: () => fetchTeacherTimetable(teacherPublicId ?? ''),
-    enabled: !!teacherPublicId,
+    queryKey: ['timetable', 'teacher-timetable', userPublicId],
+    queryFn: () => fetchTeacherTimetable(userPublicId ?? ''),
+    enabled: !!userPublicId,
     staleTime: 5 * 60 * 1000,
   });
 }

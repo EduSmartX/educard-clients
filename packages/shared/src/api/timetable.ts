@@ -290,10 +290,10 @@ export function createTimetableApi(config: TimetableApiConfig) {
     },
 
     async getTeacherTimetable(
-      teacherPublicId: string,
+      userPublicId: string,
     ): Promise<MyTimetableResponse> {
       const res = await client.get<ApiResponse<MyTimetableResponse>>(
-        `${EMPLOYEE_BASE}/teacher/${teacherPublicId}/timetable/`,
+        `${EMPLOYEE_BASE}/teacher/${userPublicId}/timetable/`,
       );
       return res.data.data;
     },

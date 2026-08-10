@@ -28,8 +28,8 @@ export const timetableKeys = {
   classOverrides: (classId: string, date?: string) =>
     [...timetableKeys.all, 'class-overrides', classId, date] as const,
   myTimetable: () => [...timetableKeys.all, 'my-timetable'] as const,
-  teacherTimetable: (teacherId: string) =>
-    [...timetableKeys.all, 'teacher-timetable', teacherId] as const,
+  teacherTimetable: (userId: string) =>
+    [...timetableKeys.all, 'teacher-timetable', userId] as const,
 };
 
 export function useClassGroups() {
@@ -108,11 +108,11 @@ export function useMyTimetable() {
   });
 }
 
-export function useTeacherTimetable(teacherPublicId: string | undefined) {
+export function useTeacherTimetable(userPublicId: string | undefined) {
   return useQuery({
-    queryKey: timetableKeys.teacherTimetable(teacherPublicId ?? ''),
-    queryFn: () => fetchTeacherTimetable(teacherPublicId!),
-    enabled: !!teacherPublicId,
+    queryKey: timetableKeys.teacherTimetable(userPublicId ?? ''),
+    queryFn: () => fetchTeacherTimetable(userPublicId!),
+    enabled: !!userPublicId,
     staleTime: 5 * 60 * 1000,
   });
 }

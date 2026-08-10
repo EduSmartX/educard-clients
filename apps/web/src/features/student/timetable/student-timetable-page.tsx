@@ -127,6 +127,8 @@ export default function StudentTimetablePage() {
                     const color = SLOT_TYPE_COLORS[period.slot_type] || SLOT_TYPE_COLORS.class;
                     const subjectTheme = getSubjectTheme(period.subject_name);
                     const isBreak = period.slot_type !== 'class';
+                    const normalizedSubject = (period.subject_name || '').trim();
+                    const subjectDisplay = normalizedSubject || `w[${period.slot_number}]`;
                     let rowStateClass = 'hover:bg-blue-50/40';
                     if (period.is_cancelled) {
                       rowStateClass = 'opacity-50';
@@ -155,9 +157,7 @@ export default function StudentTimetablePage() {
                           {!isBreak && <SubjectAvatar name={period.subject_name} size="md" />}
                           <div className="min-w-0">
                             <p className="font-medium text-gray-800">
-                              {isBreak
-                                ? `${subjectTheme.emoji} ${period.label}`
-                                : period.subject_name || period.label}
+                              {isBreak ? `${subjectTheme.emoji} ${period.label}` : subjectDisplay}
                             </p>
                             {period.is_cancelled && (
                               <Badge variant="destructive" className="mt-0.5 text-[10px]">

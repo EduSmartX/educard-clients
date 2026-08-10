@@ -46,9 +46,9 @@ export default function TeacherTimetableScreen() {
   const { user } = useAuthStore();
   const { data: profile } = useUserProfile();
   const isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
-  const selfTeacherId = useMemo(
-    () => profile?.teacher_public_id?.trim() ?? '',
-    [profile?.teacher_public_id],
+  const selfUserId = useMemo(
+    () => profile?.public_id?.trim() ?? '',
+    [profile?.public_id],
   );
 
   const [selectedTeacherId, setSelectedTeacherId] = useState<string>('');
@@ -88,10 +88,10 @@ export default function TeacherTimetableScreen() {
   const isViewingSelf = useMemo(() => {
     if (!timetableData?.teacher_name) return false;
     if (selectedTeacherId) {
-      return !!selfTeacherId && selectedTeacherId === selfTeacherId;
+      return !!selfUserId && selectedTeacherId === selfUserId;
     }
     return true;
-  }, [timetableData?.teacher_name, selectedTeacherId, selfTeacherId]);
+  }, [timetableData?.teacher_name, selectedTeacherId, selfUserId]);
 
   // Teacher options from manageable users
   const teacherOptions = useMemo(() => {
@@ -100,12 +100,12 @@ export default function TeacherTimetableScreen() {
       value: u.public_id,
     }));
 
-    if (isAdmin && selfTeacherId) {
+    if (isAdmin && selfUserId) {
       const selfLabel =
         profile?.full_name?.trim() || user?.full_name?.trim() || 'Self';
       options.unshift({
         label: `${selfLabel} (Self)`,
-        value: selfTeacherId,
+        value: selfUserId,
       });
     }
 
@@ -117,7 +117,7 @@ export default function TeacherTimetableScreen() {
   }, [
     manageableUsers,
     isAdmin,
-    selfTeacherId,
+    selfUserId,
     profile?.full_name,
     user?.full_name,
   ]);
@@ -127,13 +127,13 @@ export default function TeacherTimetableScreen() {
   // Auto-select self for admin+teacher users, otherwise first available teacher.
   useEffect(() => {
     if (isAdmin && !selectedTeacherId && teacherOptions.length > 0) {
-      if (selfTeacherId) {
-        setSelectedTeacherId(selfTeacherId);
+      if (selfUserId) {
+        setSelectedTeacherId(selfUserId);
       } else {
         setSelectedTeacherId(teacherOptions[0].value);
       }
     }
-  }, [teacherOptions, selectedTeacherId, isAdmin, selfTeacherId]);
+  }, [teacherOptions, selectedTeacherId, isAdmin, selfUserId]);
 
   // Day entries
   const dayEntries: TimetableEntry[] = useMemo(() => {
