@@ -13,7 +13,6 @@ import { useState } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   TextInput,
   Switch,
@@ -28,6 +27,7 @@ import { useToast } from '@/lib/toast-context';
 import { DatePickerModal } from './DatePickerModal';
 import { createCalendarException } from './exceptional-work-api';
 import { modalStyles } from './exceptional-work-styles';
+import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 
 type ClassOption = { public_id: string; display_name?: string; name?: string };
 
@@ -184,7 +184,7 @@ export function CreateExceptionModal({
             </TouchableOpacity>
           </View>
 
-          <ScrollView
+          <KeyboardAwareScrollView
             style={modalStyles.body}
             showsVerticalScrollIndicator={false}
           >
@@ -325,7 +325,7 @@ export function CreateExceptionModal({
                 onToggle={toggleClassSelection}
               />
             )}
-          </ScrollView>
+          </KeyboardAwareScrollView>
 
           <View style={modalStyles.actions}>
             <TouchableOpacity

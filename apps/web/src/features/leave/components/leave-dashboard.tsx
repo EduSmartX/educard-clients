@@ -45,7 +45,6 @@ export function LeaveDashboard() {
 
   const [cancelRequest, setCancelRequest] = useState<LeaveRequest | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [appliedFilters, setAppliedFilters] = useState<Record<string, string>>({});
 
@@ -239,25 +238,20 @@ export function LeaveDashboard() {
               </div>
               <LeaveRequestsFilterHeader
                 activeFiltersCount={activeFiltersCount}
-                onToggleFilters={() => setShowFilters(!showFilters)}
                 onReset={handleFilterReset}
               />
             </div>
           </CardHeader>
           <CardContent>
-            {showFilters && (
-              <div className="mb-4">
-                <ResourceFilter
-                  fields={filterFields}
-                  onFilter={handleFilterApply}
-                  onReset={handleFilterReset}
-                  defaultValues={filters}
-                  onFieldChange={(name, value) =>
-                    setFilters((prev) => ({ ...prev, [name]: value }))
-                  }
-                />
-              </div>
-            )}
+            <div className="mb-4">
+              <ResourceFilter
+                fields={filterFields}
+                onFilter={handleFilterApply}
+                onReset={handleFilterReset}
+                defaultValues={filters}
+                onFieldChange={(name, value) => setFilters((prev) => ({ ...prev, [name]: value }))}
+              />
+            </div>
             {isLoadingRequests && !requestsData ? (
               <div className="space-y-3">
                 {[

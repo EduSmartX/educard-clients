@@ -25,7 +25,6 @@ import {
 } from '@educard/shared';
 import { useClasses } from '@/features/classes/hooks/use-classes';
 import { PageHeader } from '@/components/common';
-import { cn } from '@/lib/utils';
 
 export function StudentFeesPage() {
   const navigate = useNavigate();
@@ -47,7 +46,6 @@ export function StudentFeesPage() {
   const setStatusFilter = (v: string) => setFilter('status', v);
   const setClassFilter = (v: string) => setFilter('class', v);
   const setStructureFilter = (v: string) => setFilter('structure', v);
-  const [showFilters, setShowFilters] = useState(true);
 
   // Reminder dialog state
   const [selectedStudentFee, setSelectedStudentFee] = useState<StudentFee | null>(null);
@@ -160,20 +158,13 @@ export function StudentFeesPage() {
                 />
               </div>
 
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={cn('gap-2', showFilters && 'bg-accent')}
-                >
-                  <Filter className="h-4 w-4" />
-                  Filters
-                  {activeFilterCount > 0 && (
-                    <span className="bg-primary text-primary-foreground ml-1 rounded-full px-2 py-0.5 text-xs">
-                      {activeFilterCount}
-                    </span>
-                  )}
-                </Button>
+              <div className="flex items-center gap-2">
+                {activeFilterCount > 0 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-800">
+                    <Filter className="h-3.5 w-3.5" />
+                    {activeFilterCount} active
+                  </span>
+                )}
 
                 {hasActiveFilters && (
                   <Button variant="ghost" size="icon" onClick={clearFilters}>
@@ -184,68 +175,66 @@ export function StudentFeesPage() {
             </div>
 
             {/* Filter Panel */}
-            {showFilters && (
-              <div className="grid gap-4 border-t pt-4 sm:grid-cols-3">
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium">Status</span>
-                  <SearchableSelect
-                    options={[
-                      { value: 'all', label: 'All Status' },
-                      ...FEE_STATUS_OPTIONS.map((option) => ({
-                        value: option.value,
-                        label: option.label,
-                      })),
-                    ]}
-                    value={statusFilter}
-                    onValueChange={setStatusFilter}
-                    placeholder="All Status"
-                    searchPlaceholder="Search status..."
-                  />
-                </label>
+            <div className="grid gap-4 border-t pt-4 sm:grid-cols-3">
+              <label className="block space-y-2">
+                <span className="text-sm font-medium">Status</span>
+                <SearchableSelect
+                  options={[
+                    { value: 'all', label: 'All Status' },
+                    ...FEE_STATUS_OPTIONS.map((option) => ({
+                      value: option.value,
+                      label: option.label,
+                    })),
+                  ]}
+                  value={statusFilter}
+                  onValueChange={setStatusFilter}
+                  placeholder="All Status"
+                  searchPlaceholder="Search status..."
+                />
+              </label>
 
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium">Class</span>
-                  <SearchableSelect
-                    options={[
-                      { value: 'all', label: 'All Classes' },
-                      ...classesArray.map((cls) => {
-                        let label = cls.display_name;
-                        if (!label) {
-                          const masterName = cls.class_master?.name;
-                          if (masterName) {
-                            label = `${masterName} - ${cls.name}`;
-                          } else {
-                            label = cls.name;
-                          }
+              <label className="block space-y-2">
+                <span className="text-sm font-medium">Class</span>
+                <SearchableSelect
+                  options={[
+                    { value: 'all', label: 'All Classes' },
+                    ...classesArray.map((cls) => {
+                      let label = cls.display_name;
+                      if (!label) {
+                        const masterName = cls.class_master?.name;
+                        if (masterName) {
+                          label = `${masterName} - ${cls.name}`;
+                        } else {
+                          label = cls.name;
                         }
-                        return { value: cls.public_id, label };
-                      }),
-                    ]}
-                    value={classFilter}
-                    onValueChange={setClassFilter}
-                    placeholder="All Classes"
-                    searchPlaceholder="Search classes..."
-                  />
-                </label>
+                      }
+                      return { value: cls.public_id, label };
+                    }),
+                  ]}
+                  value={classFilter}
+                  onValueChange={setClassFilter}
+                  placeholder="All Classes"
+                  searchPlaceholder="Search classes..."
+                />
+              </label>
 
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium">Fee Structure</span>
-                  <SearchableSelect
-                    options={[
-                      { value: 'all', label: 'All Structures' },
-                      ...structuresArray.map((structure) => ({
-                        value: structure.public_id,
-                        label: structure.name,
-                      })),
-                    ]}
-                    value={structureFilter}
-                    onValueChange={setStructureFilter}
-                    placeholder="All Structures"
-                    searchPlaceholder="Search structures..."
-                  />
-                </label>
-              </div>
-            )}
+              <label className="block space-y-2">
+                <span className="text-sm font-medium">Fee Structure</span>
+                <SearchableSelect
+                  options={[
+                    { value: 'all', label: 'All Structures' },
+                    ...structuresArray.map((structure) => ({
+                      value: structure.public_id,
+                      label: structure.name,
+                    })),
+                  ]}
+                  value={structureFilter}
+                  onValueChange={setStructureFilter}
+                  placeholder="All Structures"
+                  searchPlaceholder="Search structures..."
+                />
+              </label>
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -23,7 +23,6 @@ import { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
@@ -48,6 +47,7 @@ import {
 } from '@/features/student-portal';
 import type { SharedStackParamList } from '@/navigation/types';
 import { formatFileSize } from '@/utils/attachment-utils';
+import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 
 type HomeworkSubmission = NonNullable<
   ReturnType<typeof useHomeworkDetail>['data']
@@ -284,7 +284,10 @@ export default function StudentHomeworkDetailScreen() {
   return (
     <Screen safeArea={false} statusBarStyle="light">
       <ScreenHeader title="Homework" />
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <KeyboardAwareScrollView
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+      >
         {/* Prev/Next */}
         {total > 1 && (
           <View className="mx-4 mt-3 flex-row items-center justify-between">
@@ -534,7 +537,7 @@ export default function StudentHomeworkDetailScreen() {
         )}
 
         <View className="h-8" />
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </Screen>
   );
 }

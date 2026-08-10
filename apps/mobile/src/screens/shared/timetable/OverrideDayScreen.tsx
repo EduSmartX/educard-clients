@@ -20,7 +20,6 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
-  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -49,6 +48,7 @@ import {
 } from './override-day-constants';
 import { OverrideSlotCard } from './OverrideSlotCard';
 import { styles } from './override-day-styles';
+import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -268,7 +268,7 @@ export default function TimetableOverrideDayScreen() {
         </View>
       </LinearGradient>
 
-      <ScrollView
+      <KeyboardAwareScrollView
         style={styles.body}
         contentContainerStyle={styles.bodyContent}
         refreshControl={
@@ -300,7 +300,7 @@ export default function TimetableOverrideDayScreen() {
         </View>
 
         {renderDayContent()}
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </View>
   );
 }

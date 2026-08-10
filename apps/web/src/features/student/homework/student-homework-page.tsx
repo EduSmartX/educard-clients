@@ -14,6 +14,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getSubjectColor } from '@educard/shared';
 import { PageHeader, SubjectAvatar } from '@/components/common';
 import { useStudentHomework } from './hooks';
 
@@ -245,8 +246,10 @@ export default function StudentHomeworkPage() {
                             {config.text}
                           </Badge>
                         </div>
-                        <p className="mt-0.5 text-sm text-gray-500">
-                          {hw.subject_name}
+                        <p className="mt-0.5 text-sm">
+                          <span className={`font-medium ${getSubjectColor(hw.subject_name).text}`}>
+                            {hw.subject_name}
+                          </span>
                           {hw.chapter && <span className="ml-2 text-gray-400">• {hw.chapter}</span>}
                         </p>
                         <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-400">

@@ -216,7 +216,6 @@ export function LeaveRequestReviews() {
   const [selectedClass, setSelectedClass] = useState('');
 
   // Filter state — single source of truth
-  const [showFilters, setShowFilters] = useState(true);
   const [appliedFilters, setAppliedFilters] = useState<Record<string, string>>({
     status: 'pending',
   });
@@ -519,14 +518,6 @@ export function LeaveRequestReviews() {
       >
         <div className="flex gap-2">
           <Button
-            onClick={() => setShowFilters(!showFilters)}
-            variant="outline"
-            className="gap-2 border-indigo-300 text-indigo-700 hover:bg-indigo-50"
-          >
-            <RefreshCw className="h-4 w-4" />
-            {showFilters ? 'Hide Filters' : 'Show Filters'}
-          </Button>
-          <Button
             onClick={() => refetch()}
             variant="outline"
             className="gap-2 border-blue-300 text-blue-700 hover:bg-blue-50"
@@ -645,15 +636,13 @@ export function LeaveRequestReviews() {
           )}
 
           {/* Filters */}
-          {showFilters && (
-            <ResourceFilter
-              fields={filterFields}
-              onFilter={handleFilterApply}
-              onReset={handleResetFilters}
-              defaultValues={appliedFilters}
-              onFieldChange={(_name, _value, allFilters) => setAppliedFilters(allFilters)}
-            />
-          )}
+          <ResourceFilter
+            fields={filterFields}
+            onFilter={handleFilterApply}
+            onReset={handleResetFilters}
+            defaultValues={appliedFilters}
+            onFieldChange={(_name, _value, allFilters) => setAppliedFilters(allFilters)}
+          />
 
           {/* Leave Requests Table */}
           <Card>

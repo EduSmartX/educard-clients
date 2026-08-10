@@ -21,7 +21,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
   Switch,
   ActivityIndicator,
   Alert,
@@ -52,6 +51,7 @@ import type { SharedStackNavigation } from '@/navigation/types';
 import { isAdminRole } from '@/utils/role-utils';
 
 import { LeaveBalanceFormModal } from './LeaveBalanceFormModal';
+import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 
 type UserRoleTab = 'staff' | 'student';
 
@@ -292,7 +292,7 @@ export default function ManageLeaveBalancesScreen() {
   return (
     <View style={styles.container}>
       {renderHeader(true)}
-      <ScrollView
+      <KeyboardAwareScrollView
         contentContainerStyle={[
           styles.scroll,
           { paddingBottom: insets.bottom + 24 },
@@ -630,7 +630,7 @@ export default function ManageLeaveBalancesScreen() {
             )}
           </>
         )}
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       <LeaveBalanceFormModal
         visible={modalOpen}

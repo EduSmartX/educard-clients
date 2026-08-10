@@ -3,8 +3,8 @@
  * Main orchestrator component following teachers-management.tsx pattern
  */
 
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ROUTES } from '@/constants/app-config';
 import { ErrorMessages, SuccessMessages, USER_ROLES } from '@/constants';
@@ -16,34 +16,35 @@ import StudentFormPage from '../pages/student-form-page';
 import type { StudentListItem } from '../types';
 import { DeleteConfirmationDialog, ReactivateConfirmationDialog } from '@/components/common';
 import { useDeletedView } from '@/hooks/use-deleted-view';
+import { useFilterParams } from '@/hooks/use-filter-params';
 import { useAuth } from '@/hooks/use-auth';
 import { getErrorMessage } from '@/lib/utils/error-handler';
 
 type PageMode = 'list' | 'create' | 'edit' | 'view';
 
-function areFiltersEqual(a: Record<string, string>, b: Record<string, string>): boolean {
-  const aKeys = Object.keys(a);
-  const bKeys = Object.keys(b);
-
-  if (aKeys.length !== bKeys.length) {
-    return false;
-  }
-
-  return aKeys.every((key) => a[key] === b[key]);
-}
+const FILTER_DEFAULTS = {
+  class_assigned__public_id: '',
+  user__gender: '',
+  admission_date_from: '',
+  admission_date_to: '',
+};
 
 export function StudentsManagement() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
-  const isApplyingUrlState = useRef(false);
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState<Record<string, string>>({});
+  // Filter/search/pagination state — persisted in URL search params
+  const {
+    filters,
+    search: searchQuery,
+    page: currentPage,
+    pageSize,
+    setFilters,
+    setSearch: setSearchQuery,
+    setPage: setCurrentPage,
+    setPageSize,
+  } = useFilterParams<Record<string, string>>(FILTER_DEFAULTS, { defaultPageSize: 10 });
 
   // Dialog states
   const [studentToDelete, setStudentToDelete] = useState<StudentListItem | null>(null);
@@ -63,67 +64,6 @@ export function StudentsManagement() {
   const isTeacherWithoutManagedClasses =
     user?.role === USER_ROLES.TEACHER && !isManagedClassesLoading && managedClasses.length === 0;
   const canCreateStudents = user?.role === USER_ROLES.ADMIN || isClassTeacher;
-  const searchParamsString = searchParams.toString();
-
-  // Sync filters with URL query params
-  useEffect(() => {
-    const params = Object.fromEntries(new URLSearchParams(searchParamsString).entries());
-    const newFilters: Record<string, string> = {};
-
-    if (params.class_assigned__public_id) {
-      newFilters.class_assigned__public_id = params.class_assigned__public_id;
-    }
-    if (params.user__gender) {
-      newFilters.user__gender = params.user__gender;
-    }
-    if (params.admission_date_from) {
-      newFilters.admission_date_from = params.admission_date_from;
-    }
-    if (params.admission_date_to) {
-      newFilters.admission_date_to = params.admission_date_to;
-    }
-    const nextSearchQuery = params.search || '';
-
-    const shouldUpdateSearch = searchQuery !== nextSearchQuery;
-    const shouldUpdateFilters = !areFiltersEqual(filters, newFilters);
-
-    if (!shouldUpdateSearch && !shouldUpdateFilters) {
-      return;
-    }
-
-    isApplyingUrlState.current = true;
-
-    setSearchQuery((prev: string) => (prev === nextSearchQuery ? prev : nextSearchQuery));
-    setFilters((prev: Record<string, string>) =>
-      areFiltersEqual(prev, newFilters) ? prev : newFilters
-    );
-  }, [searchParamsString, searchQuery, filters]);
-
-  // Update URL when filters change
-  useEffect(() => {
-    if (isApplyingUrlState.current) {
-      isApplyingUrlState.current = false;
-      return;
-    }
-
-    const params = new URLSearchParams();
-
-    if (searchQuery) {
-      params.set('search', searchQuery);
-    }
-
-    for (const key of Object.keys(filters)) {
-      const value = filters[key];
-      if (value) {
-        params.set(key, value);
-      }
-    }
-
-    const newSearch = params.toString();
-    if (newSearch !== searchParamsString) {
-      setSearchParams(params, { replace: true });
-    }
-  }, [searchQuery, filters, setSearchParams, searchParamsString]);
 
   // Determine page mode from URL
   const getPageMode = (): PageMode => {
@@ -233,12 +173,10 @@ export function StudentsManagement() {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    setCurrentPage(1);
   };
 
   const handleFilterChange = (newFilters: Record<string, string>) => {
     setFilters(newFilters);
-    setCurrentPage(1);
   };
 
   // Render form modes (create, edit, view)

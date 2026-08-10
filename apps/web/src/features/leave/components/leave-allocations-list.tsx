@@ -4,13 +4,15 @@
  */
 
 import { useState } from 'react';
-import { Plus, Filter, X, AlertCircle } from 'lucide-react';
+import { Plus, X, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DataTable, type PaginationInfo } from '@/components/ui/data-table';
 import { ResourceFilter, type FilterField } from '@/components/filters/resource-filter';
+import { describeFilter } from '@/components/filters/filter-labels';
+import { withClearedKeys } from '@/components/filters/filter-utils';
 import { PageHeader } from '@/components/common';
 import type { LeaveAllocation } from '@/lib/api/leave-api';
 import { createLeaveAllocationColumns } from './leave-allocation-table-columns';
@@ -64,7 +66,6 @@ export function LeaveAllocationsList({
 }: Readonly<LeaveAllocationsListProps>) {
   const [appliedSearchQuery, setAppliedSearchQuery] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
-  const [showFilters, setShowFilters] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
     allocation: LeaveAllocation | null;
@@ -181,14 +182,6 @@ export function LeaveAllocationsList({
               <div className="text-muted-foreground text-sm">
                 {allocations.length} {allocations.length === 1 ? 'policy' : 'policies'} found
               </div>
-              <Button
-                variant={showFilters ? 'default' : 'outline'}
-                onClick={() => setShowFilters(!showFilters)}
-                className="gap-2"
-              >
-                <Filter className="h-4 w-4" />
-                {showFilters ? 'Hide Filters' : 'Show Filters'}
-              </Button>
             </div>
 
             {/* Active filters display */}
@@ -196,10 +189,12 @@ export function LeaveAllocationsList({
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-muted-foreground text-sm">Active filters:</span>
                 {Object.entries(filters).map(([key, value]) => (
-                  <Badge key={key} variant="secondary" className="gap-1">
-                    <span className="capitalize">
-                      {key.replaceAll('_', ' ')}: {value}
-                    </span>
+                  <Badge
+                    key={key}
+                    variant="default"
+                    className="gap-1 border border-blue-200 bg-blue-100 text-blue-800 hover:bg-blue-200"
+                  >
+                    <span>{describeFilter(filterFields, key, value)}</span>
                     <button
                       type="button"
                       onClick={() => {
@@ -209,7 +204,7 @@ export function LeaveAllocationsList({
 
                         // Update parent state
                         if (onFilterChange) {
-                          onFilterChange(newFilters);
+                          onFilterChange({ ...newFilters, [key]: '' });
                         }
                       }}
                       className="hover:bg-muted rounded-full p-0.5"
@@ -231,7 +226,7 @@ export function LeaveAllocationsList({
                       onSearch('');
                     }
                     if (onFilterChange) {
-                      onFilterChange({});
+                      onFilterChange(withClearedKeys(filters, {}));
                     }
                   }}
                 >
@@ -243,44 +238,42 @@ export function LeaveAllocationsList({
         </CardHeader>
 
         {/* Filter Panel */}
-        {showFilters && (
-          <div className="px-6 pb-6">
-            <ResourceFilter
-              fields={filterFields}
-              onFilter={(appliedFilters: Record<string, string>) => {
-                const { search, ...otherFilters } = appliedFilters;
+        <div className="px-6 pb-6">
+          <ResourceFilter
+            fields={filterFields}
+            onFilter={(appliedFilters: Record<string, string>) => {
+              const { search, ...otherFilters } = appliedFilters;
 
-                // Always update local state for UI display
-                setAppliedSearchQuery(search || '');
-                setFilters(otherFilters);
+              // Always update local state for UI display
+              setAppliedSearchQuery(search || '');
+              setFilters(otherFilters);
 
-                if (onSearch) {
-                  onSearch(search || '');
-                }
-                if (onFilterChange) {
-                  onFilterChange(otherFilters);
-                }
+              if (onSearch) {
+                onSearch(search || '');
+              }
+              if (onFilterChange) {
+                onFilterChange(withClearedKeys(filters, otherFilters));
+              }
 
-                // Keep the filter panel open (removed setShowFilters(false))
-              }}
-              onReset={() => {
-                // Reset local state
-                setAppliedSearchQuery('');
-                setFilters({});
+              // Keep the filter panel open (removed setShowFilters(false))
+            }}
+            onReset={() => {
+              // Reset local state
+              setAppliedSearchQuery('');
+              setFilters({});
 
-                if (onSearch) {
-                  onSearch('');
-                }
-                if (onFilterChange) {
-                  onFilterChange({});
-                }
+              if (onSearch) {
+                onSearch('');
+              }
+              if (onFilterChange) {
+                onFilterChange(withClearedKeys(filters, {}));
+              }
 
-                // Keep the filter panel open (removed setShowFilters(false))
-              }}
-              defaultValues={{ search: appliedSearchQuery, ...filters }}
-            />
-          </div>
-        )}
+              // Keep the filter panel open (removed setShowFilters(false))
+            }}
+            defaultValues={{ search: appliedSearchQuery, ...filters }}
+          />
+        </div>
       </Card>
 
       {/* Table Card with Loading and Error States */}
