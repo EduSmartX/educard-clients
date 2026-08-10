@@ -30,7 +30,6 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import {
   useBulkUpsertMarks,
   useExamMarks,
-  usePublishExamMarks,
   useUnpublishExamMarks,
   useExam,
 } from '@/features/exams';
@@ -103,7 +102,6 @@ export default function EnterMarksScreen() {
   const maxMarks = Number.parseInt(maxMarksStr ?? '100', 10);
   const isViewOnly = viewOnlyParam === 'true';
   const bulkUpsert = useBulkUpsertMarks();
-  const publishMarksMutation = usePublishExamMarks();
   const unpublishMarksMutation = useUnpublishExamMarks();
 
   // Fetch exam detail (for is_marks_published)
@@ -196,7 +194,7 @@ export default function EnterMarksScreen() {
     }));
   }, []);
 
-  const handleSave = async () => {
+  const buildMarksPayload = (): BulkMarkEntry[] | null => {
     const marks: BulkMarkEntry[] = [];
     for (const sm of Object.values(marksMap)) {
       if (sm.marksObtained !== '' || sm.isAbsent) {
@@ -209,21 +207,21 @@ export default function EnterMarksScreen() {
             'Error',
             `Invalid marks for ${sm.studentName}. Must be 0-${maxMarks}.`,
           );
-          return;
+          return null;
         }
         if (sm.isAbsent) {
-          marks.push({
-            student_id: sm.studentId,
-            is_absent: true,
-          });
+          marks.push({ student_id: sm.studentId, is_absent: true });
         } else {
-          marks.push({
-            student_id: sm.studentId,
-            marks_obtained: obtained,
-          });
+          marks.push({ student_id: sm.studentId, marks_obtained: obtained });
         }
       }
     }
+    return marks;
+  };
+
+  const handleSave = async () => {
+    const marks = buildMarksPayload();
+    if (marks === null) return;
 
     if (marks.length === 0) {
       Alert.alert(
@@ -249,6 +247,7 @@ export default function EnterMarksScreen() {
     }
   };
 
+  // Publish = save all marks and publish in one atomic call (mirrors the web).
   const handlePublish = () => {
     if (enteredCount < studentList.length) {
       Alert.alert(
@@ -259,13 +258,33 @@ export default function EnterMarksScreen() {
     }
 
     Alert.alert(
-      'Publish Marks',
-      'Publish marks for this exam? You can unpublish later if needed.',
+      'Save & Publish',
+      'Save and publish marks for this exam? You can unpublish later if needed.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Publish',
-          onPress: () => publishMarksMutation.mutate(examId),
+          onPress: () => {
+            void (async () => {
+              const marks = buildMarksPayload();
+              if (marks === null) return;
+              try {
+                await bulkUpsert.mutateAsync({
+                  session_id: sessionId,
+                  exam_id: examId,
+                  marks,
+                  publish_after_save: true,
+                });
+                handleBack();
+              } catch (err: unknown) {
+                showToast({
+                  type: 'error',
+                  title: 'Error',
+                  message: extractApiError(err),
+                });
+              }
+            })();
+          },
         },
       ],
     );
@@ -420,14 +439,11 @@ export default function EnterMarksScreen() {
               ]}
               onPress={handlePublish}
               disabled={
-                publishMarksMutation.isPending ||
-                enteredCount < studentList.length
+                bulkUpsert.isPending || enteredCount < studentList.length
               }
             >
               <Text style={st.publishBtnText}>
-                {publishMarksMutation.isPending
-                  ? 'Publishing...'
-                  : '✅ Publish Marks'}
+                {bulkUpsert.isPending ? 'Publishing...' : '✅ Save & Publish'}
               </Text>
             </TouchableOpacity>
           )}

@@ -22,6 +22,12 @@ export interface StudentTimetableEntry {
   teacher_name: string | null;
   room: string;
   is_cancelled: boolean;
+  override_type:
+    | "substitute"
+    | "cancelled"
+    | "rescheduled"
+    | "extra_class"
+    | null;
 }
 
 /** Attendance percentages shown on the student dashboard. */
@@ -36,4 +42,20 @@ export interface StudentDashboard {
   today_timetable: StudentTimetableEntry[];
   pending_homework_count: number;
   upcoming_exams_count: number;
+}
+
+/** A sent announcement addressed to the student/parent (list item). */
+export interface StudentAnnouncementListItem {
+  public_id: string;
+  subject: string;
+  event_name: string;
+  event_date: string | null;
+  sent_at: string | null;
+  created_at: string;
+}
+
+/** A sent announcement addressed to the student/parent, with full body. */
+export interface StudentAnnouncementDetail extends StudentAnnouncementListItem {
+  body_html: string;
+  event_note: string;
 }

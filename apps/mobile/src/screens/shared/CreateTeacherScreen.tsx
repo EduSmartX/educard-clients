@@ -17,7 +17,7 @@ import {
 } from '@educard/shared';
 import { useNavigation } from '@react-navigation/native';
 import { useState, useCallback, useMemo, useRef } from 'react';
-import type { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import type { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 
 import { DeletedDuplicateModal } from '@/components/common/DeletedDuplicateModal';
 import { FormPhotoUpload } from '@/components/forms';

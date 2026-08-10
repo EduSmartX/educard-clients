@@ -16,7 +16,6 @@ pnpm -v
 git --version
 gh --version
 vercel --version
-eas --version
 ```
 
 If missing:
@@ -24,7 +23,6 @@ If missing:
 ```bash
 npm install -g pnpm
 npm install -g vercel
-npm install -g eas-cli
 brew install gh
 ```
 
@@ -36,10 +34,6 @@ gh auth login
 
 # Vercel CLI
 vercel login
-
-# Expo / EAS
-eas login
-eas whoami
 ```
 
 ### Sonar token (local shell)
@@ -72,7 +66,7 @@ pnpm dev:web
 ```
 
 ```bash
-# Terminal 2 (Expo)
+# Terminal 2 (Mobile)
 pnpm dev:mobile
 ```
 
@@ -362,7 +356,6 @@ git add . && git commit -m "<msg>" && git push
 
 - `SONAR_TOKEN` (for SonarCloud CI job)
 - `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` (if using CI deploy)
-- `EXPO_TOKEN` (if using CI EAS build)
 
 ### Local environment
 

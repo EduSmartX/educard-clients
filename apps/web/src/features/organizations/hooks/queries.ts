@@ -15,6 +15,8 @@ export function useOrganization(publicId: string | undefined) {
     queryFn: () => getOrganization(publicId!),
     select: (data) => data.data,
     enabled: !!publicId,
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 }
 

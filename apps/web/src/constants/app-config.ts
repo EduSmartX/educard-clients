@@ -403,6 +403,7 @@ export const ROUTES = {
     HOMEWORK: '/student/homework',
     HOMEWORK_DETAIL: '/student/homework/:publicId',
     LEAVE: '/student/leave',
+    ANNOUNCEMENTS: '/student/announcements',
   },
   PROFILE: '/profile',
 } as const;

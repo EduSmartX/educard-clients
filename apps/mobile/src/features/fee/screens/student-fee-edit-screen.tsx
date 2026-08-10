@@ -9,24 +9,23 @@ import {
   useRoute,
   type RouteProp,
 } from '@react-navigation/native';
-import { ChevronLeft, Lock, Save, Settings } from 'lucide-react-native';
+import { Lock, Save, Settings } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
   Switch,
   RefreshControl,
   Alert,
 } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { ErrorState, LoadingState } from '@/components/common/ListStates';
 import { SubmitButton } from '@/components/common/SubmitButton';
 import { FormInput } from '@/components/forms/FormInput';
-import { LinearGradient } from '@/lib/linear-gradient';
+import { ScreenHeader } from '@/components/ui';
 import type {
   SharedStackNavigation,
   SharedStackParamList,
@@ -184,21 +183,13 @@ export default function StudentFeeEditScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#7c3aed', '#a78bfa']} style={styles.header}>
-        <Animated.View entering={FadeIn} style={styles.circle1} />
-        <View style={styles.headerContent}>
-          <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
-            <ChevronLeft size={24} color="#fff" />
-          </TouchableOpacity>
-          <View style={styles.headerTextWrap}>
-            <Text style={styles.headerTitle} numberOfLines={1}>
-              Edit Fee — {fee.student_name}
-            </Text>
-            <Text style={styles.headerSub}>{fee.class_name}</Text>
-          </View>
-          <Settings size={20} color="rgba(255,255,255,0.85)" />
-        </View>
-      </LinearGradient>
+      <ScreenHeader
+        title={`Edit Fee \u2014 ${fee.student_name}`}
+        subtitle={fee.class_name}
+        colors={['#7c3aed', '#a78bfa']}
+        onBack={handleBack}
+        right={<Settings size={20} color="rgba(255,255,255,0.85)" />}
+      />
 
       <KeyboardAwareScrollView
         contentContainerStyle={styles.scroll}

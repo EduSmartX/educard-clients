@@ -40,6 +40,7 @@ import {
   fetchUpcomingHomework,
   fetchCalendarHomework,
   fetchTeacherClasses,
+  sendHomeworkNotification,
 } from './api';
 
 // ============== Query Keys ==============
@@ -169,9 +170,17 @@ export function useUpdateHomework(options?: MutationOptions) {
 
 export function useDeleteHomework(options?: MutationOptions) {
   const queryClient = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
 
   return useMutation({
     mutationFn: deleteHomework,
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Deleting homework',
+        description: 'Removing the homework and its related submissions...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'Homework deleted successfully');
       void queryClient.invalidateQueries({ queryKey: homeworkKeys.lists() });
@@ -182,6 +191,9 @@ export function useDeleteHomework(options?: MutationOptions) {
     },
     onError: (error: unknown) => {
       handleMutationError(error, 'Failed to delete homework', options?.onError);
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 }
@@ -314,5 +326,36 @@ export function useCalendarHomework(params?: CalendarParams) {
   return useQuery({
     queryKey: homeworkKeys.calendar(params),
     queryFn: () => fetchCalendarHomework(params),
+  });
+}
+
+// ============== Notifications ==============
+
+export function useSendHomeworkNotification(options?: MutationOptions) {
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
+  return useMutation({
+    mutationFn: (data: { class_public_id: string; date: string }) =>
+      sendHomeworkNotification(data),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Sending notification',
+        description: 'Notifying the class about the homework...',
+      });
+    },
+    onSuccess: () => {
+      showToast('success', 'Notification sent successfully');
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(
+        error,
+        'Failed to send notification',
+        options?.onError,
+      );
+    },
+    onSettled: () => {
+      endCriticalOperation();
+    },
   });
 }

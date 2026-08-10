@@ -15,6 +15,7 @@ import {
 } from '@/api/auth';
 import { getUserProfile } from '@/api/profile';
 import { STORAGE_KEYS } from '@/constants/config';
+import { clearScreenFilters } from '@/hooks/useScreenFilters';
 import { clearQueryCache } from '@/lib/query-client';
 import * as SecureStore from '@/lib/secure-store';
 import type {
@@ -136,6 +137,7 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
 
       // Drop any cached data from a previous session before the new user loads.
       clearQueryCache();
+      clearScreenFilters();
 
       set({
         user: result.user,
@@ -166,6 +168,7 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
 
       // Drop any cached data from a previous session before the new profile loads.
       clearQueryCache();
+      clearScreenFilters();
 
       set({
         user,
@@ -192,6 +195,7 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
 
     // Reset cached data so the new profile starts clean (mirrors web's full reload).
     clearQueryCache();
+    clearScreenFilters();
 
     set({
       user,
@@ -227,6 +231,7 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
   // Logout
   logout: async () => {
     clearQueryCache();
+    clearScreenFilters();
 
     set({
       user: null,
@@ -260,3 +265,15 @@ export const selectIsAuthenticated = (state: AuthStore) =>
   state.isAuthenticated;
 export const selectIsLoading = (state: AuthStore) => state.isLoading;
 export const selectAuthError = (state: AuthStore) => state.error;
+
+// Single source of truth for per-user cleanup: whenever the authenticated
+// user's identity changes (login, logout, profile switch, signup), drop cached
+// screen filters and queries so nothing leaks across accounts.
+useAuthStore.subscribe((state, prevState) => {
+  const nextUserId = state.user?.public_id ?? null;
+  const prevUserId = prevState.user?.public_id ?? null;
+  if (nextUserId !== prevUserId) {
+    clearScreenFilters();
+    clearQueryCache();
+  }
+});

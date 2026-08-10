@@ -70,6 +70,22 @@ async function persistAuth(user: User, tokens: AuthTokens): Promise<void> {
   await SecureStore.setItemAsync(STORAGE_KEYS.USER_DATA, JSON.stringify(user));
 }
 
+// The backend returns `organization` beside `user`, not nested inside it.
+function withOrganization(
+  user: User,
+  organization?: AuthResponse['organization'],
+): User {
+  if (!organization) return user;
+  return {
+    ...user,
+    organization: {
+      id: organization.public_id,
+      name: organization.name,
+      code: '',
+    },
+  };
+}
+
 /**
  * Login user with email and password.
  *
@@ -95,15 +111,16 @@ export async function login(
     };
   }
 
-  const { user, tokens } = response.data as AuthResponse;
+  const { user, tokens, organization } = response.data as AuthResponse;
 
   if (!tokens?.access || !tokens?.refresh) {
     throw new Error('No refresh token');
   }
 
-  await persistAuth(user, tokens);
+  const fullUser = withOrganization(user, organization);
+  await persistAuth(fullUser, tokens);
 
-  return { requiresProfileSelection: false, user, tokens };
+  return { requiresProfileSelection: false, user: fullUser, tokens };
 }
 
 /**
@@ -118,14 +135,15 @@ export async function selectProfile(data: {
     '/auth/select-profile/',
     data,
   );
-  const { user, tokens } = response.data;
+  const { user, tokens, organization } = response.data;
 
   if (!tokens?.access || !tokens?.refresh) {
     throw new Error('No refresh token');
   }
 
-  await persistAuth(user, tokens);
-  return { user, tokens };
+  const fullUser = withOrganization(user, organization);
+  await persistAuth(fullUser, tokens);
+  return { user: fullUser, tokens };
 }
 
 /**
@@ -139,14 +157,15 @@ export async function switchProfile(data: {
     '/auth/switch-profile/',
     data,
   );
-  const { user, tokens } = response.data;
+  const { user, tokens, organization } = response.data;
 
   if (!tokens?.access || !tokens?.refresh) {
     throw new Error('No refresh token');
   }
 
-  await persistAuth(user, tokens);
-  return { user, tokens };
+  const fullUser = withOrganization(user, organization);
+  await persistAuth(fullUser, tokens);
+  return { user: fullUser, tokens };
 }
 
 /**

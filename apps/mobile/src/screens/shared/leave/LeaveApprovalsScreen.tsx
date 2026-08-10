@@ -15,6 +15,8 @@ import {
   X,
   Search,
   Filter,
+  FileText,
+  Download,
 } from 'lucide-react-native';
 import { useState, useCallback, useMemo } from 'react';
 import {
@@ -28,9 +30,10 @@ import {
   TextInput,
   Modal,
 } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
+import { apiClient } from '@/api/client';
 import { ConfirmDialog } from '@/components/common';
 import { FormDatePicker } from '@/components/forms/FormDatePicker';
 import {
@@ -43,6 +46,7 @@ import { useScreenFilters } from '@/hooks/useScreenFilters';
 import { LinearGradient } from '@/lib/linear-gradient';
 import type { SharedStackNavigation } from '@/navigation/types';
 import { headerStyles, layoutStyles } from '@/styles';
+import { openAttachmentExternally } from '@/utils/attachment-utils';
 
 import { styles } from './leave-approvals-styles';
 
@@ -196,6 +200,23 @@ export default function LeaveApprovalsScreen() {
     );
   };
 
+  const handleOpenAttachment = useCallback(async (item: LeaveRequest) => {
+    try {
+      const res = await apiClient.get<{
+        data?: { url?: string };
+        url?: string;
+      }>(`/leave/employee/reviews/${item.public_id}/attachment/`);
+      const url = res.data?.data?.url ?? res.data?.url;
+      if (!url) {
+        Alert.alert('No attachment', 'No attachment is available to view.');
+        return;
+      }
+      await openAttachmentExternally(url, item.attachment_name);
+    } catch {
+      Alert.alert('Unable to open', 'Could not open the attachment.');
+    }
+  }, []);
+
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '';
     const d = new Date(dateStr + 'T00:00:00');
@@ -264,6 +285,23 @@ export default function LeaveApprovalsScreen() {
             <Text style={styles.reason} numberOfLines={2}>
               {'\uD83D\uDCAC'} {item.reason}
             </Text>
+          ) : null}
+
+          {item.attachment_url ? (
+            <TouchableOpacity
+              style={styles.attachmentRow}
+              onPress={() => void handleOpenAttachment(item)}
+              activeOpacity={0.7}
+            >
+              <FileText size={16} color="#059669" />
+              <Text style={styles.attachmentName} numberOfLines={1}>
+                {item.attachment_name || 'Attached document'}
+              </Text>
+              <View style={styles.attachmentViewBtn}>
+                <Download size={12} color="#047857" />
+                <Text style={styles.attachmentViewText}>View</Text>
+              </View>
+            </TouchableOpacity>
           ) : null}
 
           {item.status !== 'pending' && item.reviewed_by_name && (
@@ -435,6 +473,7 @@ export default function LeaveApprovalsScreen() {
       {isLoading && !refreshing ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary[500]} />
+          <Text style={styles.loadingText}>Loading leave requests...</Text>
         </View>
       ) : (
         <FlatList
@@ -450,6 +489,11 @@ export default function LeaveApprovalsScreen() {
             <View style={styles.emptyContainer}>
               <Clock size={48} color={Colors.gray[300]} />
               <Text style={styles.emptyText}>No leave requests to review</Text>
+              <Text style={styles.emptySubtext}>
+                {hasActiveFilters
+                  ? 'No results match current filters.'
+                  : 'New requests will appear here when submitted.'}
+              </Text>
               {hasActiveFilters && (
                 <TouchableOpacity
                   style={styles.clearFiltersBtn}

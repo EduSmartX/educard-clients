@@ -58,15 +58,12 @@ export default function ProfileScreen() {
   const navigation = useNavigation<SharedStackNavigation>();
   const { showToast } = useToast();
   const { user } = useAuthStore();
-  const {
-    data: profilePhoto,
-    isLoading: photoLoading,
-    dataUpdatedAt,
-  } = useMyProfilePhoto();
+  const { data: profilePhoto, isLoading: photoLoading } = useMyProfilePhoto();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const updateMutation = useUpdateProfile();
   const [addressExpanded, setAddressExpanded] = useState(false);
   const [formLoaded, setFormLoaded] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   const handleBack = useCallback(() => {
     if (navigation.canGoBack()) {
@@ -192,18 +189,17 @@ export default function ProfileScreen() {
   const isLoading = profileLoading || photoLoading;
   const isSaving = updateMutation.isPending;
 
-  // Profile image - add cache busting for server images
+  // Backend serves signed URLs; no cache-bust param (would break the signature).
   const serverPhotoUrl =
     getMediaUrl(profilePhoto?.thumbnail_url) ?? getMediaUrl(profilePhoto?.url);
-  const cacheSeparator = serverPhotoUrl?.includes('?') ? '&' : '?';
-  const cacheVersion = dataUpdatedAt || Date.now();
-  const cacheBustedPhotoUrl = serverPhotoUrl
-    ? `${serverPhotoUrl}${cacheSeparator}v=${cacheVersion}`
-    : undefined;
-  const photoUrl = localPhotoUri ?? cacheBustedPhotoUrl;
+  const photoUrl = localPhotoUri ?? serverPhotoUrl;
   const displayName =
     profile?.full_name || profile?.first_name || user?.full_name || 'U';
   const initials = displayName.charAt(0).toUpperCase();
+
+  useEffect(() => {
+    setImgError(false);
+  }, [photoUrl]);
 
   if (isLoading) {
     return (
@@ -280,11 +276,12 @@ export default function ProfileScreen() {
             onPress={pickAndUpload}
             disabled={isPhotoUploading}
           >
-            {photoUrl ? (
+            {photoUrl && !imgError ? (
               <Image
                 source={{ uri: photoUrl }}
                 style={s.avatarImage}
                 resizeMode="cover"
+                onError={() => setImgError(true)}
               />
             ) : (
               <View style={s.avatarCircle}>

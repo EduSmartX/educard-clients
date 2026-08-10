@@ -8,16 +8,8 @@ import {
   extractApiError,
 } from '@educard/shared';
 import { useNavigation } from '@react-navigation/native';
-import { parseISO, differenceInDays, isAfter } from 'date-fns';
-import {
-  ChevronLeft,
-  Send,
-  Calendar,
-  ChevronDown,
-  X,
-  Check,
-  Info,
-} from 'lucide-react-native';
+import { parseISO, isAfter, format } from 'date-fns';
+import { ChevronLeft, Send, Info } from 'lucide-react-native';
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
@@ -25,24 +17,25 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   TextInput,
-  Modal,
-  FlatList,
 } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { SubmitButton } from '@/components/common';
 import { FormDatePicker } from '@/components/forms/FormDatePicker';
+import { SearchableSelect } from '@/components/ui';
 import {
   useMyLeaveBalances,
   useCreateLeaveRequest,
   useCalculateWorkingDays,
+  type WorkingDaysCalculation,
 } from '@/features/leave';
 import { LinearGradient } from '@/lib/linear-gradient';
 import type { SharedStackNavigation } from '@/navigation/types';
 import { headerStyles, layoutStyles } from '@/styles';
 
 import { styles } from './apply-leave-styles';
+import { LeaveDaysCalendar } from './LeaveDaysCalendar';
 
 // Use teacher/employee theme for consistency
 const employeeTheme = getRoleThemeColors('employee');
@@ -68,100 +61,6 @@ interface LeaveBalance {
   carried_forward: number;
 }
 
-interface LeaveTypeOption {
-  value: string;
-  label: string;
-  name: string;
-  code: string;
-  available: number;
-}
-
-function LeaveTypePickerModal({
-  visible,
-  onClose,
-  options,
-  selectedValue,
-  onSelect,
-  accentColor,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  options: LeaveTypeOption[];
-  selectedValue: string;
-  onSelect: (value: string) => void;
-  accentColor: string;
-}) {
-  return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.pickerModal}>
-          <View style={styles.pickerHeader}>
-            <Text style={styles.pickerTitle}>Select Leave Type</Text>
-            <TouchableOpacity onPress={onClose}>
-              <X size={24} color="#64748b" />
-            </TouchableOpacity>
-          </View>
-
-          {options.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Info size={40} color="#9ca3af" />
-              <Text style={styles.emptyText}>No leave types available</Text>
-              <Text style={styles.emptySubtext}>
-                You either have no leave balance or have used all your days
-              </Text>
-            </View>
-          ) : (
-            <FlatList
-              data={options}
-              keyExtractor={(item, index) => item.value || `option-${index}`}
-              style={styles.optionsList}
-              renderItem={({ item: option }) => {
-                const isSelected = option.value === selectedValue;
-                return (
-                  <TouchableOpacity
-                    style={[
-                      styles.optionItem,
-                      isSelected && { backgroundColor: `${accentColor}10` },
-                    ]}
-                    onPress={() => {
-                      onSelect(option.value);
-                      onClose();
-                    }}
-                  >
-                    <View style={styles.optionContent}>
-                      <Text
-                        style={[
-                          styles.optionLabel,
-                          isSelected && { color: accentColor },
-                        ]}
-                      >
-                        {option.name}
-                      </Text>
-                      <Text style={styles.optionSubtext}>
-                        {option.available} days available
-                      </Text>
-                    </View>
-                    {isSelected && <Check size={20} color={accentColor} />}
-                  </TouchableOpacity>
-                );
-              }}
-            />
-          )}
-
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeButtonText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  );
-}
-
 export default function ApplyLeaveScreen() {
   const navigation = useNavigation<SharedStackNavigation>();
   const { data: balancesData, isLoading: balancesLoading } =
@@ -178,7 +77,10 @@ export default function ApplyLeaveScreen() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [apiError, setApiError] = useState<string | null>(null);
   const [calculatedDays, setCalculatedDays] = useState<number | null>(null);
-  const [showLeaveTypePicker, setShowLeaveTypePicker] = useState(false);
+  const [workingDaysInfo, setWorkingDaysInfo] =
+    useState<WorkingDaysCalculation | null>(null);
+  const [conflictingLeaves, setConflictingLeaves] = useState<string[]>([]);
+  const [calcError, setCalcError] = useState<string | null>(null);
 
   // Theme accent color for consistent styling
   const accentColor = employeeTheme.accent;
@@ -228,7 +130,7 @@ export default function ApplyLeaveScreen() {
     return balances.find(b => b.public_id === form.leave_balance);
   }, [balances, form.leave_balance]);
 
-  // Calculate working days when dates change
+  // Calculate working days when dates change (backend is the source of truth)
   useEffect(() => {
     if (form.start_date && form.end_date) {
       const startDate = parseISO(form.start_date);
@@ -236,6 +138,9 @@ export default function ApplyLeaveScreen() {
 
       if (isAfter(startDate, endDate)) {
         setCalculatedDays(null);
+        setWorkingDaysInfo(null);
+        setConflictingLeaves([]);
+        setCalcError(null);
         return;
       }
 
@@ -243,17 +148,42 @@ export default function ApplyLeaveScreen() {
         { startDate: form.start_date, endDate: form.end_date },
         {
           onSuccess: data => {
-            setCalculatedDays(data?.data?.working_days ?? 1);
+            const calc = data?.data ?? null;
+            setWorkingDaysInfo(calc);
+            setCalculatedDays(calc?.working_days ?? calc?.leave_days ?? 0);
+            setConflictingLeaves([]);
+            setCalcError(null);
           },
-          onError: () => {
-            // Fallback to simple calculation
-            const days = differenceInDays(endDate, startDate) + 1;
-            setCalculatedDays(days > 0 ? days : 1);
+          onError: (err: unknown) => {
+            setWorkingDaysInfo(null);
+            setCalculatedDays(null);
+            const conflicts = (
+              err as {
+                response?: {
+                  data?: { data?: { conflicting_leaves?: string[] } };
+                };
+              }
+            )?.response?.data?.data?.conflicting_leaves;
+            if (conflicts && conflicts.length > 0) {
+              setConflictingLeaves(conflicts);
+              setCalcError(null);
+              return;
+            }
+            setConflictingLeaves([]);
+            setCalcError(
+              extractApiError(
+                err,
+                "Couldn't calculate working days. Please try again.",
+              ),
+            );
           },
         },
       );
     } else {
       setCalculatedDays(null);
+      setWorkingDaysInfo(null);
+      setConflictingLeaves([]);
+      setCalcError(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.start_date, form.end_date]);
@@ -309,9 +239,29 @@ export default function ApplyLeaveScreen() {
       errs.leave_balance = `You only have ${selectedBalance.available} days available`;
     }
 
+    if (conflictingLeaves.length > 0) {
+      errs.end_date =
+        'You already have a leave request that overlaps these dates';
+    }
+
+    if (form.start_date && form.end_date && calculatedDays === 0) {
+      errs.end_date =
+        'Selected dates are all holidays or weekends. Please choose working days to apply leave.';
+    }
+
+    if (
+      form.start_date &&
+      form.end_date &&
+      !errs.end_date &&
+      calculatedDays === null
+    ) {
+      errs.end_date =
+        calcError ?? 'Please wait for the working days to be calculated';
+    }
+
     setErrors(errs);
     return Object.keys(errs).length === 0;
-  }, [form, selectedBalance, calculatedDays]);
+  }, [form, selectedBalance, calculatedDays, conflictingLeaves, calcError]);
 
   const handleSubmit = useCallback(() => {
     if (!validate()) return;
@@ -320,7 +270,7 @@ export default function ApplyLeaveScreen() {
       leave_balance: form.leave_balance,
       start_date: form.start_date,
       end_date: form.end_date,
-      number_of_days: calculatedDays ?? 1,
+      number_of_days: calculatedDays ?? 0,
       reason: form.reason.trim(),
     };
 
@@ -387,27 +337,15 @@ export default function ApplyLeaveScreen() {
             {/* Leave Type Selection */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>LEAVE TYPE</Text>
-              <TouchableOpacity
-                style={[
-                  styles.selectField,
-                  errors.leave_balance && styles.fieldError,
-                ]}
-                onPress={() => setShowLeaveTypePicker(true)}
-                activeOpacity={0.7}
-              >
-                <Calendar size={20} color="#94a3b8" />
-                <Text
-                  style={[
-                    styles.selectText,
-                    !form.leave_balance && styles.placeholderText,
-                  ]}
-                >
-                  {selectedBalance
-                    ? getLeaveTypeName(selectedBalance)
-                    : 'Select Leave Type'}
-                </Text>
-                <ChevronDown size={20} color="#94a3b8" />
-              </TouchableOpacity>
+              <SearchableSelect
+                title="Select Leave Type"
+                value={form.leave_balance}
+                onValueChange={value => updateField('leave_balance', value)}
+                options={leaveTypeOptions}
+                placeholder="Select Leave Type"
+                searchPlaceholder="Search leave types..."
+                emptyText="No leave types available — you may have no balance or have used all your days"
+              />
               {errors.leave_balance && (
                 <Text style={styles.errorText}>{errors.leave_balance}</Text>
               )}
@@ -457,29 +395,133 @@ export default function ApplyLeaveScreen() {
                 </View>
               </View>
 
-              {calculatedDays !== null && (
-                <View
-                  style={[
-                    styles.daysCalculated,
-                    { backgroundColor: employeeTheme.accentLight },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.daysLabel,
-                      { color: employeeTheme.accentDark },
-                    ]}
-                  >
-                    Working Days:
-                  </Text>
-                  <Text
-                    style={[styles.daysValue, { color: employeeTheme.accent }]}
-                  >
-                    {calculatedDays} days
+              {calculateMutation.isPending && (
+                <View style={styles.calcStatusRow}>
+                  <ActivityIndicator size="small" color={accentColor} />
+                  <Text style={styles.calcStatusText}>
+                    Calculating working days…
                   </Text>
                 </View>
               )}
             </View>
+
+            {/* Could not calculate working days */}
+            {calcError && (
+              <View style={styles.errorBanner}>
+                <Text style={styles.errorBannerText}>{calcError}</Text>
+              </View>
+            )}
+
+            {/* Overlapping leave conflict */}
+            {conflictingLeaves.length > 0 && (
+              <View style={styles.conflictBanner}>
+                <Text style={styles.conflictTitle}>
+                  Overlapping leave request
+                </Text>
+                <Text style={styles.conflictText}>
+                  You already have a pending or approved leave overlapping these
+                  dates:
+                </Text>
+                {conflictingLeaves.map(leave => (
+                  <Text key={leave} style={styles.conflictItem}>
+                    • {leave}
+                  </Text>
+                ))}
+              </View>
+            )}
+
+            {/* Leave days breakdown + holidays */}
+            {workingDaysInfo && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>LEAVE DAYS</Text>
+
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Total Days</Text>
+                  <Text style={styles.summaryValue}>
+                    {workingDaysInfo.total_days}
+                  </Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Weekends + Holidays</Text>
+                  <Text style={styles.summaryValue}>
+                    {workingDaysInfo.holidays.length}
+                  </Text>
+                </View>
+                <View style={[styles.summaryRow, styles.summaryTotal]}>
+                  <Text style={styles.summaryTotalLabel}>Leave Days</Text>
+                  <Text
+                    style={[
+                      styles.summaryTotalValue,
+                      calculatedDays === 0 && styles.summaryTotalValueZero,
+                    ]}
+                  >
+                    {workingDaysInfo.working_days}
+                  </Text>
+                </View>
+
+                {form.start_date && form.end_date && (
+                  <View style={styles.calendarWrap}>
+                    <LeaveDaysCalendar
+                      startDate={form.start_date}
+                      endDate={form.end_date}
+                      holidays={workingDaysInfo.holidays}
+                      accentColor={accentColor}
+                    />
+                  </View>
+                )}
+
+                {calculatedDays === 0 && (
+                  <View style={styles.holidayBlock}>
+                    <Info size={16} color="#b91c1c" />
+                    <Text style={styles.holidayBlockText}>
+                      All selected dates are holidays or weekends. You cannot
+                      apply leave for non-working days.
+                    </Text>
+                  </View>
+                )}
+
+                {workingDaysInfo.holidays.length > 0 && (
+                  <View style={styles.holidayList}>
+                    <Text style={styles.holidayListTitle}>
+                      Holidays & Non-Working Days
+                    </Text>
+                    {workingDaysInfo.holidays.map(holiday => {
+                      const isWeekend =
+                        holiday.type?.toUpperCase() === 'WEEKEND';
+                      return (
+                        <View key={holiday.date} style={styles.holidayItem}>
+                          <Text style={styles.holidayDate}>
+                            {format(parseISO(holiday.date), 'dd MMM')}
+                          </Text>
+                          <Text style={styles.holidayDesc} numberOfLines={1}>
+                            {holiday.description || holiday.name || '—'}
+                          </Text>
+                          <View
+                            style={[
+                              styles.holidayTypeBadge,
+                              isWeekend
+                                ? styles.holidayTypeWeekend
+                                : styles.holidayTypeOther,
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.holidayTypeText,
+                                isWeekend
+                                  ? styles.holidayTypeTextWeekend
+                                  : styles.holidayTypeTextOther,
+                              ]}
+                            >
+                              {holiday.type}
+                            </Text>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
+              </View>
+            )}
 
             {/* Reason */}
             <View style={styles.section}>
@@ -510,16 +552,6 @@ export default function ApplyLeaveScreen() {
           </View>
         )}
       </KeyboardAwareScrollView>
-
-      {/* Leave Type Picker Modal */}
-      <LeaveTypePickerModal
-        visible={showLeaveTypePicker}
-        onClose={() => setShowLeaveTypePicker(false)}
-        options={leaveTypeOptions}
-        selectedValue={form.leave_balance}
-        onSelect={value => updateField('leave_balance', value)}
-        accentColor={accentColor}
-      />
     </View>
   );
 }

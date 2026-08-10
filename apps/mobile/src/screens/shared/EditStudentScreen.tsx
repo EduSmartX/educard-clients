@@ -20,7 +20,7 @@ import {
 } from '@react-navigation/native';
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import type { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import type { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { ProfileAvatar } from '@/components/common/ProfileAvatar';
@@ -55,8 +55,6 @@ const INITIAL_FORM: StudentFormState = {
   admission_number: '',
   admission_date: '',
   guardian_name: '',
-  guardian_phone: '',
-  guardian_email: '',
   guardian_relationship: '',
   medical_conditions: '',
   description: '',
@@ -74,11 +72,9 @@ export default function EditStudentScreen() {
   const navigation = useNavigation<SharedStackNavigation>();
   const route = useRoute<RouteProp<SharedStackParamList, 'StudentEdit'>>();
   const { id } = route.params;
-  const {
-    data: student,
-    isLoading: detailLoading,
-    dataUpdatedAt,
-  } = useStudentDetail(id || '');
+  const { data: student, isLoading: detailLoading } = useStudentDetail(
+    id || '',
+  );
   const updateMutation = useUpdateStudent();
   const scrollRef = useRef<KeyboardAwareScrollView>(null);
   const { data: classesData } = useManagedClasses('student');
@@ -134,8 +130,6 @@ export default function EditStudentScreen() {
         admission_number: student.admission_number ?? '',
         admission_date: student.admission_date ?? '',
         guardian_name: student.guardian_name ?? '',
-        guardian_phone: student.guardian_phone ?? '',
-        guardian_email: student.guardian_email ?? '',
         guardian_relationship: student.guardian_relationship ?? '',
         medical_conditions: student.medical_conditions ?? '',
         description: student.description ?? '',
@@ -260,7 +254,6 @@ export default function EditStudentScreen() {
             size={90}
             onPress={pickAndUpload}
             isUploading={isPhotoUploading}
-            cacheVersion={dataUpdatedAt}
           />
           <Text style={styles.avatarName}>
             {form.first_name} {form.last_name}

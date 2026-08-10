@@ -23,7 +23,6 @@ import {
   Users,
   FileText,
   Link,
-  Paperclip,
   CheckCircle,
   AlertCircle,
   ExternalLink,
@@ -39,6 +38,7 @@ import {
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
+import { AttachmentViewer } from '@/components/attachments';
 import { useHomeworkDetail } from '@/features/homework';
 import { useAuthStore } from '@/lib/auth-store';
 import { LinearGradient } from '@/lib/linear-gradient';
@@ -385,24 +385,16 @@ export default function HomeworkDetailScreen() {
             <Text style={styles.sectionTitle}>
               {HOMEWORK_UI.ATTACHMENTS} ({homework.attachments.length})
             </Text>
-            {homework.attachments.map(attachment => (
-              <TouchableOpacity
-                key={attachment.public_id}
-                style={styles.attachmentCard}
-                onPress={() => void handleOpenLink(attachment.url)}
-              >
-                <Paperclip size={16} color={Colors.gray[400]} />
-                <View style={styles.attachmentInfo}>
-                  <Text style={styles.attachmentName} numberOfLines={1}>
-                    {attachment.file_name}
-                  </Text>
-                  <Text style={styles.attachmentSize}>
-                    {formatFileSize(attachment.file_size)}
-                  </Text>
-                </View>
-                <ExternalLink size={14} color={Colors.gray[400]} />
-              </TouchableOpacity>
-            ))}
+            <View style={styles.attachmentList}>
+              {homework.attachments.map(attachment => (
+                <AttachmentViewer
+                  key={attachment.public_id}
+                  url={attachment.url}
+                  fileName={attachment.file_name}
+                  subtitle={formatFileSize(attachment.file_size)}
+                />
+              ))}
+            </View>
           </Animated.View>
         )}
 

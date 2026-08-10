@@ -162,12 +162,13 @@ export interface UpdateOrganizationAddressPayload {
 
 /**
  * Get the current user's organization profile.
- * Endpoint: GET /organizations/profile/
+ * Endpoint: GET /organizations/me/
  */
 export async function getOrganizationProfile(): Promise<OrganizationProfile> {
-  const response = await apiClient.get<OrgApiResponse<OrganizationProfile>>(
-    '/organizations/profile/',
-  );
+  const response =
+    await apiClient.get<OrgApiResponse<OrganizationProfile>>(
+      '/organizations/me/',
+    );
   return response.data.data;
 }
 

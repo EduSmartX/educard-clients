@@ -1,172 +1,249 @@
 /**
  * Parent Dashboard
- * Main dashboard for parents to view their children's information
+ * Real-data overview for a student/parent: attendance, fees, marks and schedule.
  */
 
 import { useNavigation } from '@react-navigation/native';
 import {
-  BookOpen,
-  ClipboardCheck,
-  Calendar,
-  CalendarClock,
-  CreditCard,
-  MessageCircle,
-  Megaphone,
-  ChevronRight,
-  ChevronDown,
-  Star,
   Award,
+  BookOpen,
+  CalendarClock,
+  ClipboardCheck,
+  GraduationCap,
+  Megaphone,
 } from 'lucide-react-native';
-import { useState, useCallback } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   ScrollView,
   TouchableOpacity,
   RefreshControl,
+  ActivityIndicator,
+  StatusBar,
   StyleSheet,
 } from 'react-native';
 
-import { VerificationBanner } from '@/components/dashboard';
-import { Screen } from '@/components/layout';
 import {
-  Avatar,
-  Badge,
+  BarChart,
+  ChartLegend,
+  DonutChart,
+  type BarDatum,
+  type ChartSegment,
+} from '@/components/charts';
+import { VerificationBanner } from '@/components/dashboard';
+import {
   GradientHeader,
+  GreetingCard,
   FloatingCard,
   SectionHeader,
-  QuickActionsGrid,
   PressableScale,
-  type QuickAction,
 } from '@/components/ui';
 import { colors } from '@/constants/colors';
+import { getSubjectVisual } from '@/constants/subject-visuals';
+import { useAnnouncements } from '@/features/announcements';
+import {
+  useAttendanceSummary,
+  useExamSessionDetail,
+  useExamSessions,
+  useStudentDashboard,
+  useTimetable,
+} from '@/features/student-portal';
+import { useProfileImageUrl } from '@/hooks';
 import { useAuthStore } from '@/lib/auth-store';
 import type { ParentTabNavigation } from '@/navigation/types';
 
-const EVENT_TYPE_CONFIG: Record<
-  string,
-  { color: string; variant: 'warning' | 'danger' | 'primary' }
-> = {
-  exam: { color: colors.warning[500], variant: 'warning' },
-  fee: { color: colors.danger[500], variant: 'danger' },
-};
+function toLocalDateStr(d = new Date()) {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
-const getEventConfig = (type: string) =>
-  EVENT_TYPE_CONFIG[type] || {
-    color: colors.primary[500],
-    variant: 'primary' as const,
-  };
+function formatGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good Morning';
+  if (hour < 17) return 'Good Afternoon';
+  return 'Good Evening';
+}
 
-// Mock data
-const mockChildren = [
-  {
-    id: 1,
-    name: 'Arjun Kumar',
-    class: '10A',
-    rollNo: '15',
-    photo: null,
-  },
-  {
-    id: 2,
-    name: 'Priya Kumar',
-    class: '7B',
-    rollNo: '22',
-    photo: null,
-  },
-];
+function formatAnnouncementDate(value: string | null): string {
+  if (!value) return '';
+  const d = new Date(value);
+  return Number.isNaN(d.getTime())
+    ? ''
+    : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+}
 
-const mockSelectedChild = {
-  attendance: 94.5,
-  grade: 'A',
-  rank: 5,
-  pendingFees: 15000,
-};
+// API may return numeric fields as strings or omit them; coerce safely.
+function toPercent(value: number | string | null | undefined) {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.round(n) : 0;
+}
 
-const mockRecentMarks = [
-  { subject: 'Mathematics', marks: 92, total: 100, date: 'Mar 15' },
-  { subject: 'Science', marks: 88, total: 100, date: 'Mar 14' },
-  { subject: 'English', marks: 85, total: 100, date: 'Mar 13' },
-];
-
-const mockAnnouncements = [
-  {
-    id: 1,
-    title: 'Annual Day Celebration',
-    message: 'Annual day celebration on March 25th. All parents are invited.',
-    date: 'Today',
-    type: 'event',
-  },
-  {
-    id: 2,
-    title: 'PTM Meeting',
-    message: 'Parent-Teacher meeting scheduled for March 20th.',
-    date: 'Yesterday',
-    type: 'meeting',
-  },
-];
-
-const mockUpcomingEvents = [
-  { id: 1, title: 'Unit Test 3', date: 'Mar 22', type: 'exam' },
-  { id: 2, title: 'Sports Day', date: 'Mar 28', type: 'event' },
-  { id: 3, title: 'Fee Deadline', date: 'Mar 31', type: 'fee' },
-];
+function shortLabel(name: string) {
+  return name.length > 6 ? `${name.slice(0, 6)}\u2026` : name;
+}
 
 export default function ParentDashboardScreen() {
   const navigation = useNavigation<ParentTabNavigation>();
   const { user } = useAuthStore();
+  const { profileImageUrl } = useProfileImageUrl();
+  const [imgError, setImgError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedChildIndex, setSelectedChildIndex] = useState(0);
-  const [showChildSelector, setShowChildSelector] = useState(false);
 
-  const selectedChild = mockChildren[selectedChildIndex];
+  const today = useMemo(() => toLocalDateStr(), []);
+
+  const {
+    data: dashboard,
+    isLoading: dashLoading,
+    refetch: refetchDashboard,
+  } = useStudentDashboard();
+  const { data: attendance, refetch: refetchAttendance } =
+    useAttendanceSummary();
+  const { data: sessions, refetch: refetchSessions } = useExamSessions();
+  const { data: timetable, refetch: refetchTimetable } = useTimetable(today);
+  const {
+    data: announcements,
+    isLoading: annLoading,
+    refetch: refetchAnnouncements,
+  } = useAnnouncements();
+
+  const latestSessionId = useMemo(() => {
+    if (!sessions?.length) return null;
+    return [...sessions].sort((a, b) =>
+      b.start_date.localeCompare(a.start_date),
+    )[0].public_id;
+  }, [sessions]);
+  const { data: examDetail } = useExamSessionDetail(latestSessionId);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await Promise.all([
+      refetchDashboard(),
+      refetchAttendance(),
+      refetchSessions(),
+      refetchTimetable(),
+      refetchAnnouncements(),
+    ]);
     setRefreshing(false);
-  }, []);
+  }, [
+    refetchDashboard,
+    refetchAttendance,
+    refetchSessions,
+    refetchTimetable,
+    refetchAnnouncements,
+  ]);
 
-  const formatGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good Morning';
-    if (hour < 17) return 'Good Afternoon';
-    return 'Good Evening';
-  };
-
-  // Message-teacher and event-calendar destinations are not part of the app yet.
-  const pendingScreen = () => undefined;
   const goToNotifications = () => navigation.navigate('Notifications');
-  const goToFees = () => navigation.navigate('Fees');
+  const goToSettings = () => navigation.navigate('Settings');
   const goToAcademics = () => navigation.navigate('Academics');
+  const goToAttendance = () => navigation.navigate('Attendance');
+  const goToAnnouncements = () => navigation.navigate('Announcements');
+  const goToAnnouncementDetail = (publicId: string) =>
+    navigation.navigate('AnnouncementDetail', { publicId });
 
-  const quickActions: QuickAction[] = [
-    {
-      id: 'message',
-      title: 'Message Teacher',
-      icon: MessageCircle,
-      gradient: ['#3b82f6', '#60a5fa'],
-      onPress: pendingScreen,
-    },
-    {
-      id: 'fees',
-      title: 'Pay Fees',
-      icon: CreditCard,
-      gradient: ['#059669', '#34d399'],
-      onPress: goToFees,
-    },
-    {
-      id: 'leave',
-      title: 'Apply Leave',
-      icon: Calendar,
-      gradient: ['#f59e0b', '#fbbf24'],
-      onPress: goToAcademics,
-    },
-  ];
+  const latestAnnouncements = useMemo(
+    () =>
+      (announcements ?? [])
+        .filter(a => a.status === 'sent')
+        .sort((a, b) =>
+          (b.sent_at ?? b.created_at).localeCompare(a.sent_at ?? a.created_at),
+        )
+        .slice(0, 3),
+    [announcements],
+  );
+
+  const studentName = user?.full_name ?? 'Student';
+  const className = user?.class_name ?? '';
+
+  const attendanceStats = attendance?.current_month;
+  const attendanceSegments: ChartSegment[] = attendanceStats
+    ? [
+        {
+          label: 'Present',
+          value: Number(attendanceStats.present_days) || 0,
+          color: '#10b981',
+        },
+        {
+          label: 'Absent',
+          value: Number(attendanceStats.absent_days) || 0,
+          color: '#ef4444',
+        },
+        {
+          label: 'Half Day',
+          value: Number(attendanceStats.half_days) || 0,
+          color: '#f59e0b',
+        },
+      ]
+    : [];
+
+  const gradedExams = (examDetail?.exams ?? []).filter(
+    exam =>
+      exam.marks_obtained != null &&
+      Number(exam.max_marks) > 0 &&
+      !exam.is_absent,
+  );
+
+  const marksData: BarDatum[] = gradedExams.slice(0, 6).map(exam => {
+    const max = Number(exam.max_marks) || 1;
+    const pct = Math.round((Number(exam.marks_obtained ?? 0) / max) * 100);
+    return {
+      label: shortLabel(exam.subject_name),
+      value: pct,
+      color: pct >= 40 ? '#7c3aed' : '#ef4444',
+    };
+  });
+
+  const todaysClasses = (timetable ?? [])
+    .filter(entry => !entry.is_cancelled && entry.subject_name)
+    .sort((a, b) => a.start_time.localeCompare(b.start_time))
+    .slice(0, 5);
 
   return (
-    <Screen scrollable={false} edges={[]} statusBarStyle="light">
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" />
+      {/* Fixed hero header — same structure as Admin/Employee dashboards */}
+      <GradientHeader
+        greeting={`${formatGreeting()},`}
+        title={studentName}
+        onNotificationPress={goToNotifications}
+        right={
+          <TouchableOpacity
+            style={styles.profileBtn}
+            onPress={goToSettings}
+            activeOpacity={0.8}
+          >
+            {profileImageUrl && !imgError ? (
+              <Image
+                source={{ uri: profileImageUrl }}
+                style={styles.profileImage}
+                resizeMode="cover"
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <View style={styles.profileFallback}>
+                <Text style={styles.profileFallbackText}>
+                  {(studentName ?? 'S').charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        }
+      >
+        {!!className && (
+          <View style={styles.classChip}>
+            <GraduationCap size={13} color="#fff" />
+            <Text style={styles.classChipText}>Class {className}</Text>
+          </View>
+        )}
+      </GradientHeader>
+
       <ScrollView
+        style={styles.content}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -174,131 +251,22 @@ export default function ParentDashboardScreen() {
           />
         }
       >
-        {/* Header */}
-        <GradientHeader
-          greeting={`${formatGreeting()},`}
-          title={user?.full_name ?? user?.first_name ?? 'Parent'}
-          notificationCount={2}
-          onNotificationPress={goToNotifications}
-          right={
-            <Avatar
-              name={user?.full_name ?? user?.first_name ?? 'P'}
-              size="md"
-            />
-          }
-        >
-          {/* Child Selector */}
-          <TouchableOpacity
-            className="mt-4 flex-row items-center rounded-2xl bg-white/20 p-3"
-            onPress={() => setShowChildSelector(!showChildSelector)}
-          >
-            <Avatar name={selectedChild.name} size="md" />
-            <View className="ml-3 flex-1">
-              <Text className="text-lg font-semibold text-white">
-                {selectedChild.name}
-              </Text>
-              <Text className="text-green-100">
-                Class {selectedChild.class} • Roll No. {selectedChild.rollNo}
-              </Text>
-            </View>
-            <ChevronDown size={20} color="#ffffff" />
-          </TouchableOpacity>
-
-          {/* Child Selector Dropdown */}
-          {showChildSelector && mockChildren.length > 1 && (
-            <View className="mt-2 overflow-hidden rounded-2xl bg-white">
-              {mockChildren.map((child, index) => (
-                <TouchableOpacity
-                  key={child.id}
-                  className={`flex-row items-center p-3 ${
-                    index !== mockChildren.length - 1
-                      ? 'border-b border-gray-100'
-                      : ''
-                  } ${index === selectedChildIndex ? 'bg-primary-50' : ''}`}
-                  onPress={() => {
-                    setSelectedChildIndex(index);
-                    setShowChildSelector(false);
-                  }}
-                >
-                  <Avatar name={child.name} size="sm" />
-                  <View className="ml-3 flex-1">
-                    <Text className="font-medium text-gray-900">
-                      {child.name}
-                    </Text>
-                    <Text className="text-sm text-gray-500">
-                      Class {child.class}
-                    </Text>
-                  </View>
-                  {index === selectedChildIndex && (
-                    <View className="h-6 w-6 items-center justify-center rounded-full bg-primary-500">
-                      <Text className="text-xs text-white">✓</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </GradientHeader>
-
-        {/* Stats Row */}
-        <View className="-mt-4 px-4">
-          <View className="-mx-1.5 flex-row flex-wrap">
-            <View className="mb-3 w-1/2 px-1.5">
-              <FloatingCard delay={80} style={styles.statCard}>
-                <ClipboardCheck
-                  size={24}
-                  color={colors.success[500]}
-                  strokeWidth={1.5}
-                />
-                <Text className="mt-2 text-2xl font-bold text-gray-900">
-                  {mockSelectedChild.attendance}%
-                </Text>
-                <Text className="text-xs text-gray-500">Attendance</Text>
-              </FloatingCard>
-            </View>
-            <View className="mb-3 w-1/2 px-1.5">
-              <FloatingCard delay={140} style={styles.statCard}>
-                <Award
-                  size={24}
-                  color={colors.primary[500]}
-                  strokeWidth={1.5}
-                />
-                <Text className="mt-2 text-2xl font-bold text-gray-900">
-                  {mockSelectedChild.grade}
-                </Text>
-                <Text className="text-xs text-gray-500">Grade</Text>
-              </FloatingCard>
-            </View>
-            <View className="w-1/2 px-1.5">
-              <FloatingCard delay={200} style={styles.statCard}>
-                <Star size={24} color={colors.warning[500]} strokeWidth={1.5} />
-                <Text className="mt-2 text-2xl font-bold text-gray-900">
-                  #{mockSelectedChild.rank}
-                </Text>
-                <Text className="text-xs text-gray-500">Class Rank</Text>
-              </FloatingCard>
-            </View>
-            <View className="w-1/2 px-1.5">
-              <FloatingCard delay={260} style={styles.statCard}>
-                <CreditCard
-                  size={24}
-                  color={colors.danger[500]}
-                  strokeWidth={1.5}
-                />
-                <Text className="mt-2 text-2xl font-bold text-gray-900">
-                  ₹{(mockSelectedChild.pendingFees / 1000).toFixed(0)}K
-                </Text>
-                <Text className="text-xs text-gray-500">Pending Fees</Text>
-              </FloatingCard>
-            </View>
-          </View>
-        </View>
-
         {/* Content */}
         <View className="px-4 pt-4">
+          <GreetingCard
+            name={studentName.split(' ')[0]}
+            subtitle={
+              className
+                ? `Here is what is happening in Class ${className} today.`
+                : 'Here is what is happening at school today.'
+            }
+            highlight="Keep up the great work!"
+          />
+
           {user && (
             <VerificationBanner
               user={user}
+              includeGuardianChecks={false}
               onVerifyEmail={() =>
                 navigation.navigate('ChangeEmail', {
                   mode: 'verify',
@@ -314,139 +282,298 @@ export default function ParentDashboardScreen() {
             />
           )}
 
+          {dashLoading && !dashboard && (
+            <View className="items-center py-8">
+              <ActivityIndicator color={colors.primary[500]} />
+            </View>
+          )}
+
+          {/* Attendance — focused */}
+          <View className="mb-10">
+            <SectionHeader
+              title="Attendance"
+              subtitle="This Month"
+              icon={ClipboardCheck}
+              actionLabel="Details"
+              onAction={goToAttendance}
+            />
+            <FloatingCard>
+              {attendanceStats && attendanceStats.working_days > 0 ? (
+                <>
+                  <View className="items-center">
+                    <DonutChart
+                      data={attendanceSegments}
+                      size={128}
+                      thickness={16}
+                      centerValue={`${toPercent(attendanceStats.percentage)}%`}
+                      centerLabel="Present"
+                    />
+                  </View>
+                  <ChartLegend
+                    data={attendanceSegments}
+                    showValues
+                    style={styles.legend}
+                  />
+                </>
+              ) : (
+                <Text style={styles.emptyText}>No data yet</Text>
+              )}
+            </FloatingCard>
+          </View>
+
           {/* Announcements */}
-          {mockAnnouncements.length > 0 && (
-            <View className="mb-6">
-              <PressableScale
-                onPress={() => navigation.navigate('Announcements')}
-                style={styles.rounded16}
-              >
-                <View className="flex-row items-center rounded-2xl border border-primary-200 bg-primary-50 p-4">
-                  <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-primary-100">
-                    <Megaphone size={20} color={colors.primary[600]} />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="font-semibold text-primary-800">
-                      {mockAnnouncements[0].title}
-                    </Text>
-                    <Text
-                      className="text-sm text-primary-600"
-                      numberOfLines={1}
-                    >
-                      {mockAnnouncements[0].message}
-                    </Text>
-                  </View>
-                  <ChevronRight size={20} color={colors.primary[400]} />
+          <View className="mb-10">
+            <SectionHeader
+              title="Announcements"
+              icon={Megaphone}
+              actionLabel="View All"
+              onAction={goToAnnouncements}
+            />
+            <FloatingCard>
+              {annLoading ? (
+                <View className="items-center py-4">
+                  <ActivityIndicator color="#059669" />
                 </View>
-              </PressableScale>
+              ) : latestAnnouncements.length > 0 ? (
+                latestAnnouncements.map((item, index, arr) => (
+                  <PressableScale
+                    key={item.public_id}
+                    onPress={() => goToAnnouncementDetail(item.public_id)}
+                  >
+                    <View
+                      className={`flex-row items-center py-3 ${
+                        index !== arr.length - 1
+                          ? 'border-b border-gray-100'
+                          : ''
+                      }`}
+                    >
+                      <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-emerald-50">
+                        <Megaphone size={18} color="#059669" />
+                      </View>
+                      <View className="flex-1">
+                        <Text
+                          className="font-medium text-gray-900"
+                          numberOfLines={1}
+                        >
+                          {item.subject}
+                        </Text>
+                        <Text
+                          className="text-sm text-gray-500"
+                          numberOfLines={1}
+                        >
+                          {item.event_name ||
+                            formatAnnouncementDate(item.sent_at)}
+                        </Text>
+                      </View>
+                    </View>
+                  </PressableScale>
+                ))
+              ) : (
+                <Text style={styles.emptyText}>No announcements yet</Text>
+              )}
+            </FloatingCard>
+          </View>
+
+          {/* Performance */}
+          {marksData.length > 0 && (
+            <View className="mb-6">
+              <SectionHeader
+                title="Performance"
+                subtitle={examDetail?.name}
+                icon={Award}
+                actionLabel="Details"
+                onAction={goToAcademics}
+              />
+              <FloatingCard>
+                <BarChart data={marksData} height={130} />
+              </FloatingCard>
             </View>
           )}
 
           {/* Recent Marks */}
-          <View className="mb-6">
+          {gradedExams.length > 0 && (
+            <View className="mb-6">
+              <SectionHeader
+                title="Recent Marks"
+                icon={BookOpen}
+                actionLabel="View All"
+                onAction={goToAcademics}
+              />
+
+              <FloatingCard>
+                {gradedExams.slice(0, 4).map((mark, index, arr) => {
+                  const visual = getSubjectVisual(mark.subject_name);
+                  const SubjectIcon = visual.icon;
+                  return (
+                    <View
+                      key={mark.exam_public_id}
+                      className={`flex-row items-center py-3 ${
+                        index !== arr.length - 1
+                          ? 'border-b border-gray-100'
+                          : ''
+                      }`}
+                    >
+                      <View
+                        style={[
+                          styles.subjectAvatar,
+                          { backgroundColor: visual.soft },
+                        ]}
+                      >
+                        {visual.image ? (
+                          <Image
+                            source={visual.image}
+                            style={styles.subjectAvatarImage}
+                          />
+                        ) : (
+                          <SubjectIcon size={18} color={visual.text} />
+                        )}
+                      </View>
+                      <View className="flex-1">
+                        <Text
+                          style={[styles.subjectName, { color: visual.text }]}
+                        >
+                          {mark.subject_name}
+                        </Text>
+                        {!!mark.grade && (
+                          <Text className="text-sm text-gray-500">
+                            Grade {mark.grade}
+                          </Text>
+                        )}
+                      </View>
+                      <View className="items-end">
+                        <Text
+                          style={[styles.markValue, { color: visual.accent }]}
+                        >
+                          {mark.marks_obtained}/{mark.max_marks}
+                        </Text>
+                        <Text className="text-xs text-gray-400">
+                          {Math.round(
+                            ((mark.marks_obtained ?? 0) / mark.max_marks) * 100,
+                          )}
+                          %
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </FloatingCard>
+            </View>
+          )}
+
+          {/* Today's Schedule */}
+          <View className="mb-10">
             <SectionHeader
-              title="Recent Marks"
-              icon={BookOpen}
-              actionLabel="View All"
+              title="Today's Schedule"
+              icon={CalendarClock}
+              actionLabel="Timetable"
               onAction={goToAcademics}
             />
 
             <FloatingCard>
-              {mockRecentMarks.map((mark, index) => (
-                <View
-                  key={mark.subject}
-                  className={`flex-row items-center py-3 ${
-                    index !== mockRecentMarks.length - 1
-                      ? 'border-b border-gray-100'
-                      : ''
-                  }`}
-                >
-                  <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-primary-50">
-                    <BookOpen size={18} color={colors.primary[600]} />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="font-medium text-gray-900">
-                      {mark.subject}
-                    </Text>
-                    <Text className="text-sm text-gray-500">{mark.date}</Text>
-                  </View>
-                  <View className="items-end">
-                    <Text className="text-lg font-bold text-primary-600">
-                      {mark.marks}/{mark.total}
-                    </Text>
-                    <Text className="text-xs text-gray-400">
-                      {Math.round((mark.marks / mark.total) * 100)}%
-                    </Text>
-                  </View>
-                </View>
-              ))}
-            </FloatingCard>
-          </View>
-
-          {/* Upcoming Events */}
-          <View className="mb-6">
-            <SectionHeader
-              title="Upcoming Events"
-              icon={CalendarClock}
-              actionLabel="View Calendar"
-              onAction={pendingScreen}
-            />
-
-            <FloatingCard>
-              {mockUpcomingEvents.map((event, index) => {
-                const eventColorStyle = {
-                  backgroundColor: getEventConfig(event.type).color,
-                };
-                return (
-                  <View
-                    key={event.id}
-                    className={`flex-row items-center py-3 ${
-                      index !== mockUpcomingEvents.length - 1
-                        ? 'border-b border-gray-100'
-                        : ''
-                    }`}
-                  >
-                    <View className="mr-3 w-12 items-center">
-                      <Text className="text-xs text-gray-400">
-                        {event.date.split(' ')[0]}
-                      </Text>
-                      <Text className="text-lg font-bold text-gray-900">
-                        {event.date.split(' ')[1]}
-                      </Text>
-                    </View>
+              {todaysClasses.length > 0 ? (
+                todaysClasses.map((cls, index) => {
+                  const visual = getSubjectVisual(cls.subject_name);
+                  const SubjectIcon = visual.icon;
+                  return (
                     <View
-                      className="mr-3 h-10 w-1 rounded-full"
-                      style={eventColorStyle}
-                    />
-                    <View className="flex-1">
-                      <Text className="font-medium text-gray-900">
-                        {event.title}
-                      </Text>
-                      <Badge
-                        variant={getEventConfig(event.type).variant}
-                        size="sm"
+                      key={cls.slot_public_id}
+                      className={`flex-row items-center py-3 ${
+                        index !== todaysClasses.length - 1
+                          ? 'border-b border-gray-100'
+                          : ''
+                      }`}
+                    >
+                      <View
+                        style={[
+                          styles.subjectAvatar,
+                          { backgroundColor: visual.soft },
+                        ]}
                       >
-                        {event.type}
-                      </Badge>
+                        {visual.image ? (
+                          <Image
+                            source={visual.image}
+                            style={styles.subjectAvatarImage}
+                          />
+                        ) : (
+                          <SubjectIcon size={18} color={visual.text} />
+                        )}
+                      </View>
+                      <View className="flex-1">
+                        <Text
+                          style={[styles.subjectName, { color: visual.text }]}
+                        >
+                          {cls.subject_name}
+                        </Text>
+                        <Text className="text-sm text-gray-500">
+                          {cls.start_time} - {cls.end_time}
+                          {cls.teacher_name
+                            ? ` \u2022 ${cls.teacher_name}`
+                            : ''}
+                        </Text>
+                      </View>
                     </View>
-                  </View>
-                );
-              })}
+                  );
+                })
+              ) : (
+                <Text style={styles.emptyText}>No classes scheduled today</Text>
+              )}
             </FloatingCard>
-          </View>
-
-          {/* Quick Actions */}
-          <View className="mb-8">
-            <SectionHeader title="Quick Actions" />
-            <QuickActionsGrid actions={quickActions} columns={3} />
           </View>
         </View>
       </ScrollView>
-    </Screen>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  statCard: { alignItems: 'center', paddingVertical: 16 },
-  rounded16: { borderRadius: 16 },
+  container: { flex: 1, backgroundColor: '#f0fdf4' },
+  content: { flex: 1 },
+  scrollContent: { paddingBottom: 24 },
+  legend: { marginTop: 12 },
+  emptyText: {
+    fontSize: 13,
+    color: '#94a3b8',
+    textAlign: 'center',
+    paddingVertical: 16,
+  },
+  profileBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.35)',
+  },
+  profileImage: { width: 42, height: 42, borderRadius: 14 },
+  profileFallback: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  profileFallbackText: { color: '#fff', fontSize: 16, fontWeight: '800' },
+  classChip: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 12,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: 'rgba(255,255,255,0.22)',
+  },
+  classChipText: { color: '#fff', fontSize: 12, fontWeight: '800' },
+  subjectAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  subjectAvatarImage: { width: 22, height: 22, borderRadius: 6 },
+  subjectName: { fontSize: 14, fontWeight: '700' },
+  markValue: { fontSize: 17, fontWeight: '800' },
 });

@@ -23,7 +23,6 @@ import {
 } from 'react-native';
 import {
   pick,
-  types,
   isErrorWithCode,
   errorCodes,
   type DocumentPickerResponse,

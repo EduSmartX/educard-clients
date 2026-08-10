@@ -207,6 +207,8 @@ export function useLeaveReviewDetail(publicId: string) {
 
 export function useApproveLeave(options?: MutationOptions) {
   const qc = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: ({
       publicId,
@@ -215,6 +217,12 @@ export function useApproveLeave(options?: MutationOptions) {
       publicId: string;
       data?: { review_comments?: string };
     }) => approveLeaveRequest(publicId, data),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Approving leave',
+        description: 'Updating leave balances and records...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'Leave request approved successfully');
       void qc.invalidateQueries({ queryKey: leaveKeys.reviews() });
@@ -227,11 +235,16 @@ export function useApproveLeave(options?: MutationOptions) {
         options?.onError,
       );
     },
+    onSettled: () => {
+      endCriticalOperation();
+    },
   });
 }
 
 export function useRejectLeave(options?: MutationOptions) {
   const qc = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: ({
       publicId,
@@ -240,6 +253,12 @@ export function useRejectLeave(options?: MutationOptions) {
       publicId: string;
       data?: { review_comments?: string };
     }) => rejectLeaveRequest(publicId, data),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Rejecting leave',
+        description: 'Updating the leave request status...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'Leave request rejected');
       void qc.invalidateQueries({ queryKey: leaveKeys.reviews() });
@@ -251,6 +270,9 @@ export function useRejectLeave(options?: MutationOptions) {
         'Failed to reject leave request',
         options?.onError,
       );
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 }
@@ -279,8 +301,16 @@ export function useMyLeaveRequests(params?: {
 
 export function useCreateLeaveRequest(options?: MutationOptions) {
   const qc = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: (data: CreateLeaveRequestPayload) => createLeaveRequest(data),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Submitting leave request',
+        description: 'Validating balances and creating your request...',
+      });
+    },
     onSuccess: () => {
       void qc.invalidateQueries({
         queryKey: [...leaveKeys.all, 'my-requests'],
@@ -298,13 +328,24 @@ export function useCreateLeaveRequest(options?: MutationOptions) {
         options?.onError,
       );
     },
+    onSettled: () => {
+      endCriticalOperation();
+    },
   });
 }
 
 export function useCancelLeaveRequest(options?: MutationOptions) {
   const qc = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: (publicId: string) => cancelMyLeaveRequest(publicId),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Cancelling leave request',
+        description: 'Restoring leave balances...',
+      });
+    },
     onSuccess: () => {
       void qc.invalidateQueries({
         queryKey: [...leaveKeys.all, 'my-requests'],
@@ -321,6 +362,9 @@ export function useCancelLeaveRequest(options?: MutationOptions) {
         'Failed to cancel leave request',
         options?.onError,
       );
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 }
@@ -366,8 +410,16 @@ export function useUserLeaveAllocations(userId?: string) {
 
 export function useCreateLeaveBalance(options?: MutationOptions) {
   const qc = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: createLeaveBalance,
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Adding leave balance',
+        description: 'Applying the leave balance for this user...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'Leave balance added successfully');
       void qc.invalidateQueries({
@@ -382,13 +434,24 @@ export function useCreateLeaveBalance(options?: MutationOptions) {
         options?.onError,
       );
     },
+    onSettled: () => {
+      endCriticalOperation();
+    },
   });
 }
 
 export function useUpdateLeaveBalance(options?: MutationOptions) {
   const qc = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: updateLeaveBalance,
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Updating leave balance',
+        description: 'Recalculating leave balances...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'Leave balance updated successfully');
       void qc.invalidateQueries({
@@ -403,13 +466,24 @@ export function useUpdateLeaveBalance(options?: MutationOptions) {
         options?.onError,
       );
     },
+    onSettled: () => {
+      endCriticalOperation();
+    },
   });
 }
 
 export function useDeleteLeaveBalance(options?: MutationOptions) {
   const qc = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: deleteLeaveBalance,
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Deleting leave balance',
+        description: 'Removing the leave balance...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'Leave balance deleted successfully');
       void qc.invalidateQueries({
@@ -423,6 +497,9 @@ export function useDeleteLeaveBalance(options?: MutationOptions) {
         'Failed to delete leave balance',
         options?.onError,
       );
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 }

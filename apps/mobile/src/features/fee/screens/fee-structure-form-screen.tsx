@@ -10,12 +10,7 @@ import {
   useRoute,
   type RouteProp,
 } from '@react-navigation/native';
-import {
-  ChevronLeft,
-  Plus,
-  IndianRupee,
-  AlertTriangle,
-} from 'lucide-react-native';
+import { Plus, IndianRupee, AlertTriangle } from 'lucide-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
@@ -25,8 +20,8 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { SubmitButton } from '@/components/common/SubmitButton';
@@ -35,9 +30,9 @@ import { AcademicYearDropdown } from '@/components/forms/AcademicYearDropdown';
 import { FormDatePicker } from '@/components/forms/FormDatePicker';
 import { FormInput } from '@/components/forms/FormInput';
 import { FormMultiSelect } from '@/components/forms/FormMultiSelect';
+import { ScreenHeader } from '@/components/ui';
 import { useClasses } from '@/features/classes';
 import { useCurrentAcademicYear } from '@/features/core';
-import { LinearGradient } from '@/lib/linear-gradient';
 import type {
   SharedStackNavigation,
   SharedStackParamList,
@@ -109,8 +104,8 @@ export default function FeeStructureFormScreen() {
 
   // Pre-fill academic year from DB (only for new structures)
   useEffect(() => {
-    if (!isEditing && currentAcademicYear?.name) {
-      setAcademicYear(currentAcademicYear.name);
+    if (!isEditing && currentAcademicYear?.public_id) {
+      setAcademicYear(currentAcademicYear.public_id);
     }
   }, [currentAcademicYear, isEditing]);
 
@@ -119,7 +114,7 @@ export default function FeeStructureFormScreen() {
     if (existing) {
       setName(existing.name);
       setDescription(existing.description ?? '');
-      setAcademicYear(existing.academic_year);
+      setAcademicYear(existing.academic_year_public_id ?? '');
       setDueDate(existing.due_date);
       setClassIds(existing.class_public_ids ?? []);
       setIsActive(existing.is_active);
@@ -382,24 +377,14 @@ export default function FeeStructureFormScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#059669', '#10b981']} style={styles.header}>
-        <Animated.View entering={FadeIn.delay(100)} style={styles.circle1} />
-        <View style={styles.headerContent}>
-          <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
-            <ChevronLeft size={24} color="#fff" />
-          </TouchableOpacity>
-          <View style={styles.headerTextWrap}>
-            <Text style={styles.headerTitle}>
-              {isEditing ? 'Edit Fee Structure' : 'New Fee Structure'}
-            </Text>
-            <Text style={styles.headerSub}>
-              {isEditing
-                ? 'Update structure details'
-                : 'Create a new fee structure'}
-            </Text>
-          </View>
-        </View>
-      </LinearGradient>
+      <ScreenHeader
+        title={isEditing ? 'Edit Fee Structure' : 'New Fee Structure'}
+        subtitle={
+          isEditing ? 'Update structure details' : 'Create a new fee structure'
+        }
+        colors={['#059669', '#10b981']}
+        onBack={handleBack}
+      />
 
       <KeyboardAwareScrollView
         contentContainerStyle={styles.scroll}
@@ -433,6 +418,16 @@ export default function FeeStructureFormScreen() {
             onChange={setAcademicYear}
             error={errors.academic_year}
             required
+            extraOptions={
+              existing?.academic_year_public_id
+                ? [
+                    {
+                      label: existing.academic_year,
+                      value: existing.academic_year_public_id,
+                    },
+                  ]
+                : undefined
+            }
           />
           <FormDatePicker
             label="Due Date"

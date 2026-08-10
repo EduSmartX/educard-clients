@@ -131,17 +131,14 @@ export function SubjectsManagement() {
 
   const handlePageSizeChange = (newPageSize: number) => {
     setPageSize(newPageSize);
-    setPage(1);
   };
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    setPage(1);
   };
 
   const handleFilterChange = (newFilters: Record<string, string>) => {
     setFilters(newFilters);
-    setPage(1);
   };
 
   return (

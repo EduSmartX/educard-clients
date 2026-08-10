@@ -9,6 +9,11 @@ export const styles = StyleSheet.create({
   statViewRoles: { backgroundColor: '#ede9fe' },
   statLabelPurple: { color: '#7c3aed', fontWeight: '600' },
   loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  loadingText: {
+    fontSize: 13,
+    color: Colors.gray[500],
+    marginTop: 10,
+  },
   listContent: { padding: 16, paddingBottom: 100 },
 
   // Filter Styles
@@ -132,6 +137,13 @@ export const styles = StyleSheet.create({
   // Empty State
   emptyContainer: { alignItems: 'center', paddingTop: 80 },
   emptyTitle: { fontSize: 16, color: Colors.gray[400], marginTop: 12 },
+  emptySubtitle: {
+    fontSize: 13,
+    color: Colors.gray[500],
+    marginTop: 6,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+  },
   emptyLink: {
     fontSize: 14,
     color: '#7c3aed',

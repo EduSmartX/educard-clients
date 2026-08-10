@@ -12,7 +12,8 @@ import {
 } from 'react-native';
 
 import { getErrorMessage } from '@/api/client';
-import { Screen, Header } from '@/components/layout';
+import { Screen } from '@/components/layout';
+import { ScreenHeader } from '@/components/ui';
 import { FormDropdown, FormDatePicker } from '@/components/forms';
 import { colors } from '@/constants/colors';
 import {
@@ -141,8 +142,8 @@ export default function StudentLeaveScreen() {
   }));
 
   return (
-    <Screen>
-      <Header title="Leave" />
+    <Screen safeArea={false} statusBarStyle="light">
+      <ScreenHeader title="Leave" />
       <ScrollView
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"

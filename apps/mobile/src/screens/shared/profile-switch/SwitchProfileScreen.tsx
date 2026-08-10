@@ -13,7 +13,8 @@ import {
 
 import { getLinkedProfiles, type ProfileSummary } from '@/api/auth';
 import { getErrorMessage } from '@/api/client';
-import { Screen, Header } from '@/components/layout';
+import { Screen } from '@/components/layout';
+import { ScreenHeader } from '@/components/ui';
 import { useAuthStore } from '@/lib/auth-store';
 import { useToast } from '@/lib/toast-context';
 import type { SharedStackNavigation } from '@/navigation/types';
@@ -60,8 +61,8 @@ export default function SwitchProfileScreen() {
   );
 
   return (
-    <Screen>
-      <Header title="Switch Profile" />
+    <Screen safeArea={false} statusBarStyle="light">
+      <ScreenHeader title="Switch Profile" />
 
       <View style={styles.body}>
         <Text style={styles.intro}>

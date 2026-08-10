@@ -19,7 +19,7 @@ import {
   useRoute,
   type RouteProp,
 } from '@react-navigation/native';
-import { ChevronLeft, ChevronDown, Plus } from 'lucide-react-native';
+import { ChevronLeft, Plus, Calendar, Clock } from 'lucide-react-native';
 import { useState, useCallback } from 'react';
 import {
   View,
@@ -28,11 +28,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  ScrollView,
   Modal,
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
+import { SearchableSelect } from '@/components/ui';
 import { useClasses } from '@/features/classes';
 import type { Class } from '@/features/classes/types';
 import {
@@ -57,6 +57,24 @@ import { styles } from './dashboard-styles';
 
 const adminGradient = getRoleGradient('admin');
 
+function formatExamDate(d: string | null): string {
+  if (!d) return 'Date not set';
+  return new Date(d).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+function formatExamTime(t: string | null): string {
+  if (!t) return '';
+  const [h, m] = t.split(':');
+  const hour = Number.parseInt(h, 10);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const h12 = hour % 12 || 12;
+  return `${h12}:${m} ${ampm}`;
+}
+
 interface StudentSummaryItem {
   student_public_id: string;
   student_name: string;
@@ -79,7 +97,6 @@ export default function ExamDashboardScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'exams' | 'students'>('exams');
-  const [showClassPicker, setShowClassPicker] = useState(false);
   const [statusModalExam, setStatusModalExam] = useState<Exam | null>(null);
 
   const handleBack = useCallback(() => {
@@ -92,6 +109,11 @@ export default function ExamDashboardScreen() {
   const selectedClass = classes.find(
     (c: { public_id: string }) => c.public_id === selectedClassId,
   );
+
+  const classOptions = classes.map((c: Class) => ({
+    value: c.public_id,
+    label: c.display_name ?? `${c.class_master?.name ?? ''} - ${c.name}`.trim(),
+  }));
 
   // Get full class name (e.g., "Class 10 - A")
   const getFullClassName = (
@@ -220,6 +242,25 @@ export default function ExamDashboardScreen() {
                 </Text>
               </TouchableOpacity>
             </View>
+            <View style={styles.examMetaRow}>
+              <Calendar size={13} color="#7c3aed" />
+              <Text style={styles.examMetaText}>
+                {formatExamDate(item.date)}
+              </Text>
+              {!!item.start_time && (
+                <>
+                  <Clock
+                    size={13}
+                    color="#7c3aed"
+                    style={styles.examMetaClock}
+                  />
+                  <Text style={styles.examMetaText}>
+                    {formatExamTime(item.start_time)}
+                    {item.end_time ? ` – ${formatExamTime(item.end_time)}` : ''}
+                  </Text>
+                </>
+              )}
+            </View>
             <Text style={styles.examDetails}>
               Max: {item.max_marks} • Pass: {item.passing_marks} • Marks:{' '}
               {item.marks_count}
@@ -317,8 +358,8 @@ export default function ExamDashboardScreen() {
               <ChevronLeft size={24} color="#fff" />
             </TouchableOpacity>
             <View style={headerStyles.titleContainer}>
-              <Text style={headerStyles.title}>Exam Dashboard</Text>
-              <Text style={headerStyles.subtitle}>
+              <Text style={styles.sessionEyebrow}>Exam Dashboard</Text>
+              <Text style={styles.sessionTitle} numberOfLines={2}>
                 {decodeURIComponent(sessionName || '')}
               </Text>
             </View>
@@ -331,38 +372,15 @@ export default function ExamDashboardScreen() {
           </View>
 
           {/* Class Picker */}
-          <TouchableOpacity
-            style={styles.classPicker}
-            onPress={() => setShowClassPicker(!showClassPicker)}
-          >
-            <Text style={styles.classPickerText}>
-              {selectedClass
-                ? (selectedClass.display_name ??
-                  `${selectedClass.class_master?.name ?? ''} - ${selectedClass.name}`.trim())
-                : 'Select Class'}
-            </Text>
-            <ChevronDown size={20} color="#fff" />
-          </TouchableOpacity>
-
-          {showClassPicker && (
-            <ScrollView style={styles.classDropdown}>
-              {classes.map((cls: Class) => (
-                <TouchableOpacity
-                  key={cls.public_id}
-                  style={styles.classOption}
-                  onPress={() => {
-                    setSelectedClassId(cls.public_id);
-                    setShowClassPicker(false);
-                  }}
-                >
-                  <Text style={styles.classOptionText}>
-                    {cls.display_name ??
-                      `${cls.class_master?.name || ''} - ${cls.name}`.trim()}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          )}
+          <SearchableSelect
+            title="Select Class"
+            value={selectedClassId}
+            onValueChange={setSelectedClassId}
+            options={classOptions}
+            placeholder="Select Class"
+            searchPlaceholder="Search classes..."
+            emptyText="No classes found"
+          />
         </View>
       </LinearGradient>
 

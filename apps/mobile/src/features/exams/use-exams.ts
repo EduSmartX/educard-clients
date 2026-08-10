@@ -121,6 +121,7 @@ export function useBulkUpsertMarks(
       showToast('success', 'Marks saved successfully');
       void qc.invalidateQueries({ queryKey: ['marks-overview'] });
       void qc.invalidateQueries({ queryKey: ['exams'] });
+      void qc.invalidateQueries({ queryKey: ['exam'] });
       void qc.invalidateQueries({ queryKey: ['exam-marks'] });
       options?.onSuccess?.();
     },
@@ -210,8 +211,16 @@ export function useUpdateExamSession(options?: MutationOptions) {
 
 export function useDeleteExamSession(options?: MutationOptions) {
   const qc = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: (id: string) => deleteExamSession(id),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Deleting exam session',
+        description: 'Removing the session and its related exams...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'Exam session deleted successfully');
       void qc.invalidateQueries({ queryKey: ['exam-sessions'] });
@@ -223,6 +232,9 @@ export function useDeleteExamSession(options?: MutationOptions) {
         'Failed to delete exam session',
         options?.onError,
       );
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 }
@@ -269,8 +281,16 @@ export function useUpdateExam(
 
 export function useDeleteExam(options?: MutationOptions) {
   const qc = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: (id: string) => deleteExam(id),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Deleting exam',
+        description: 'Removing the exam and its related marks...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'Exam deleted successfully');
       void qc.invalidateQueries({ queryKey: ['exams'] });
@@ -278,6 +298,9 @@ export function useDeleteExam(options?: MutationOptions) {
     },
     onError: (error: unknown) => {
       handleMutationError(error, 'Failed to delete exam', options?.onError);
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 }
@@ -299,6 +322,8 @@ export function usePublishExamMarks(options?: MutationOptions) {
     onSuccess: () => {
       showToast('success', 'Marks published successfully');
       void qc.invalidateQueries({ queryKey: ['exams'] });
+      // single-exam detail drives the publish/unpublish toggle
+      void qc.invalidateQueries({ queryKey: ['exam'] });
       void qc.invalidateQueries({ queryKey: ['marks-overview'] });
       options?.onSuccess?.();
     },
@@ -326,6 +351,8 @@ export function useUnpublishExamMarks(options?: MutationOptions) {
     onSuccess: () => {
       showToast('success', 'Marks unpublished successfully');
       void qc.invalidateQueries({ queryKey: ['exams'] });
+      // single-exam detail drives the publish/unpublish toggle
+      void qc.invalidateQueries({ queryKey: ['exam'] });
       void qc.invalidateQueries({ queryKey: ['marks-overview'] });
       options?.onSuccess?.();
     },
@@ -341,6 +368,8 @@ export function useUnpublishExamMarks(options?: MutationOptions) {
 // ─── Exam Notifications ─────────────────────────────────────────────────────────
 
 export function useSendExamScheduleNotification(options?: MutationOptions) {
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: ({
       sessionId,
@@ -349,6 +378,12 @@ export function useSendExamScheduleNotification(options?: MutationOptions) {
       sessionId: string;
       classId: string;
     }) => sendExamScheduleNotification(sessionId, classId),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Sending notification',
+        description: 'Notifying the class about the exam schedule...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'Schedule notification sent successfully');
       options?.onSuccess?.();
@@ -360,10 +395,15 @@ export function useSendExamScheduleNotification(options?: MutationOptions) {
         options?.onError,
       );
     },
+    onSettled: () => {
+      endCriticalOperation();
+    },
   });
 }
 
 export function useSendExamResultsNotification(options?: MutationOptions) {
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: ({
       sessionId,
@@ -372,6 +412,12 @@ export function useSendExamResultsNotification(options?: MutationOptions) {
       sessionId: string;
       classId: string;
     }) => sendExamResultsNotification(sessionId, classId),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Sending notification',
+        description: 'Notifying parents about the exam results...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'Results notification sent successfully');
       options?.onSuccess?.();
@@ -383,10 +429,15 @@ export function useSendExamResultsNotification(options?: MutationOptions) {
         options?.onError,
       );
     },
+    onSettled: () => {
+      endCriticalOperation();
+    },
   });
 }
 
 export function useSendExamProgressNotification(options?: MutationOptions) {
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: ({
       sessionId,
@@ -395,6 +446,12 @@ export function useSendExamProgressNotification(options?: MutationOptions) {
       sessionId: string;
       classId: string;
     }) => sendExamProgressNotification(sessionId, classId),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Sending notification',
+        description: 'Sending progress reports to parents...',
+      });
+    },
     onSuccess: () => {
       showToast('success', 'Progress report notification sent successfully');
       options?.onSuccess?.();
@@ -405,6 +462,9 @@ export function useSendExamProgressNotification(options?: MutationOptions) {
         'Failed to send progress notification',
         options?.onError,
       );
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 }

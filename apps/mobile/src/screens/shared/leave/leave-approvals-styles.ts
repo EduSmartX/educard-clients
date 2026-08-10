@@ -67,6 +67,11 @@ export const styles = StyleSheet.create({
   },
   clearBtnText: { fontSize: 12, color: '#dc2626', fontWeight: '600' },
   loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  loadingText: {
+    fontSize: 13,
+    color: Colors.gray[500],
+    marginTop: 10,
+  },
   listContent: { padding: 16, paddingBottom: 100 },
   card: {
     backgroundColor: '#fff',
@@ -125,6 +130,41 @@ export const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 8,
   },
+  attachmentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#a7f3d0',
+    backgroundColor: '#ecfdf5',
+  },
+  attachmentWrap: {
+    marginBottom: 10,
+  },
+  attachmentName: {
+    flex: 1,
+    fontSize: 13,
+    color: '#065f46',
+    fontWeight: '500',
+  },
+  attachmentViewBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: '#d1fae5',
+  },
+  attachmentViewText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#047857',
+  },
   reviewerInfo: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -175,6 +215,13 @@ export const styles = StyleSheet.create({
   actionBtnText: { color: '#fff', fontWeight: '600', fontSize: 14 },
   emptyContainer: { alignItems: 'center', paddingTop: 80 },
   emptyText: { fontSize: 16, color: Colors.gray[400], marginTop: 12 },
+  emptySubtext: {
+    fontSize: 13,
+    color: Colors.gray[500],
+    marginTop: 6,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+  },
   clearFiltersBtn: {
     marginTop: 12,
     paddingHorizontal: 16,

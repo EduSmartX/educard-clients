@@ -82,15 +82,21 @@ export function WorkingDayPolicyForm() {
 
   // Set initial values when data loads
   useEffect(() => {
+    const academicYearStart = academicYear?.start_date
+      ? new Date(academicYear.start_date)
+      : undefined;
+    const academicYearEnd = academicYear?.end_date ? new Date(academicYear.end_date) : undefined;
+
     if (policyData) {
       // Existing policy found - populate form with its values
       form.reset({
         sunday_off: policyData.sunday_off,
         saturday_off_pattern: policyData.saturday_off_pattern,
-        effective_from: policyData.effective_from
-          ? new Date(policyData.effective_from)
-          : new Date(),
-        effective_to: policyData.effective_to ? new Date(policyData.effective_to) : null,
+        effective_from:
+          academicYearStart ||
+          (policyData.effective_from ? new Date(policyData.effective_from) : new Date()),
+        effective_to:
+          academicYearEnd || (policyData.effective_to ? new Date(policyData.effective_to) : null),
       });
     } else if (policyData === null && academicYear) {
       // No policy exists - use academic year dates as defaults

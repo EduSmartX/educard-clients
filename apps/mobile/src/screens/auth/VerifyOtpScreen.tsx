@@ -16,7 +16,7 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { requestPasswordResetOtp } from '@/api/auth';

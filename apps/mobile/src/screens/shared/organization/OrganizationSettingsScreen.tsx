@@ -1,6 +1,7 @@
-import { Colors } from '@educard/shared';
+import { Colors, getRoleGradient } from '@educard/shared';
+import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
-import { Building2, MapPin } from 'lucide-react-native';
+import { Building2, ChevronLeft, MapPin } from 'lucide-react-native';
 import { useState } from 'react';
 import {
   View,
@@ -12,14 +13,18 @@ import {
 } from 'react-native';
 
 import { getOrganizationProfile } from '@/api/organization';
-import { Screen, Header } from '@/components/layout';
+import { LinearGradient } from '@/lib/linear-gradient';
+import { cardStyles, headerStyles, layoutStyles } from '@/styles/common';
 
 import { OrganizationInfoForm } from './OrganizationInfoForm';
 import { OrganizationAddressForm } from './OrganizationAddressForm';
 
+const adminGradient = getRoleGradient('admin');
+
 type Tab = 'info' | 'address';
 
 export default function OrganizationSettingsScreen() {
+  const navigation = useNavigation();
   const [tab, setTab] = useState<Tab>('info');
 
   const {
@@ -31,13 +36,35 @@ export default function OrganizationSettingsScreen() {
     queryFn: getOrganizationProfile,
   });
 
+  const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
+  };
+
   return (
-    <Screen>
-      <Header
-        title="Organization"
-        showBack
-        subtitle="Manage organization details"
-      />
+    <View style={layoutStyles.container}>
+      <LinearGradient colors={adminGradient} style={headerStyles.header}>
+        <View style={headerStyles.circle1} pointerEvents="none" />
+        <View style={headerStyles.circle2} pointerEvents="none" />
+        <View style={headerStyles.content}>
+          <View style={headerStyles.topRow}>
+            <TouchableOpacity
+              style={headerStyles.backBtn}
+              onPress={handleBack}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <ChevronLeft size={24} color="#fff" />
+            </TouchableOpacity>
+            <View style={headerStyles.titleContainer}>
+              <Text style={headerStyles.title}>Organization</Text>
+              <Text style={headerStyles.subtitle}>
+                Manage organization details
+              </Text>
+            </View>
+          </View>
+        </View>
+      </LinearGradient>
 
       {isLoading ? (
         <View style={styles.centerBox}>
@@ -53,6 +80,7 @@ export default function OrganizationSettingsScreen() {
         <ScrollView
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
           <View style={styles.tabs}>
             <TouchableOpacity
@@ -90,14 +118,16 @@ export default function OrganizationSettingsScreen() {
             </TouchableOpacity>
           </View>
 
-          {tab === 'info' ? (
-            <OrganizationInfoForm organization={organization} />
-          ) : (
-            <OrganizationAddressForm organization={organization} />
-          )}
+          <View style={cardStyles.cardLarge}>
+            {tab === 'info' ? (
+              <OrganizationInfoForm organization={organization} />
+            ) : (
+              <OrganizationAddressForm organization={organization} />
+            )}
+          </View>
         </ScrollView>
       )}
-    </Screen>
+    </View>
   );
 }
 

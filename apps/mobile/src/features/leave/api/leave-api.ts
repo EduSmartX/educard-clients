@@ -21,6 +21,8 @@ export interface LeaveAllocation {
   applies_to_all_roles: boolean;
   roles: string;
   role_ids?: number[];
+  roles_details?: Array<{ id: number; name: string; code?: string }>;
+  leave_type?: { id: number; name: string; code?: string } | null;
   effective_from: string | null;
   effective_to: string | null;
   created_at: string;
@@ -298,13 +300,28 @@ export async function cancelMyLeaveRequest(
   return response.data;
 }
 
+export interface HolidayInfo {
+  date: string;
+  name?: string;
+  description?: string;
+  type: string;
+}
+
+export interface WorkingDaysCalculation {
+  working_days: number;
+  total_days: number;
+  weekends?: number;
+  holidays: HolidayInfo[];
+  leave_days?: number;
+}
+
 export async function calculateWorkingDays(
   startDate: string,
   endDate: string,
-): Promise<ApiDetailResponse<{ working_days: number; holidays: string[] }>> {
+): Promise<ApiDetailResponse<WorkingDaysCalculation>> {
   const response = await apiClient.post<
-    ApiDetailResponse<{ working_days: number; holidays: string[] }>
-  >('/leave/employee/calculate-working-days/', {
+    ApiDetailResponse<WorkingDaysCalculation>
+  >('/leave/user/requests/calculate-working-days/', {
     start_date: startDate,
     end_date: endDate,
   });
@@ -373,6 +390,11 @@ export interface TeacherManagementContext {
   can_review_requests: boolean;
   can_manage_balances: boolean;
   can_manage_allocations: boolean;
+  class_teacher_for?: {
+    public_id: string;
+    name: string;
+    class_master?: string | null;
+  }[];
 }
 
 export interface CreateLeaveBalancePayload {

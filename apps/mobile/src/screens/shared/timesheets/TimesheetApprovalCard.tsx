@@ -3,7 +3,7 @@
  * Extracted from the approvals screen to keep it under the 500-line limit.
  */
 
-import { CheckCircle, User, X } from 'lucide-react-native';
+import { CheckCircle, Eye, User, X } from 'lucide-react-native';
 import { View, Text, TouchableOpacity } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
@@ -25,10 +25,14 @@ export interface TimesheetSubmission {
   reviewed_by_name: string | null;
   review_comments: string;
   total_working_days: number;
-  total_present: number;
-  total_absent: number;
-  total_holidays: number;
-  total_leaves: number;
+  total_present?: number;
+  total_absent?: number;
+  total_holidays?: number;
+  total_leaves?: number;
+  total_present_days?: number;
+  total_absent_days?: number;
+  total_leave_days?: number;
+  attendance_percentage?: string | number;
 }
 
 export const STATUS_COLORS: Record<
@@ -51,6 +55,7 @@ interface TimesheetApprovalCardProps {
   item: TimesheetSubmission;
   index: number;
   isReviewing: boolean;
+  onView: (item: TimesheetSubmission) => void;
   onApprove: (item: TimesheetSubmission) => void;
   onReturn: (item: TimesheetSubmission) => void;
 }
@@ -59,11 +64,15 @@ export function TimesheetApprovalCard({
   item,
   index,
   isReviewing,
+  onView,
   onApprove,
   onReturn,
 }: TimesheetApprovalCardProps) {
   const statusColor =
     STATUS_COLORS[item.submission_status] || STATUS_COLORS.DRAFT;
+  const totalPresent = item.total_present_days ?? item.total_present ?? 0;
+  const totalAbsent = item.total_absent_days ?? item.total_absent ?? 0;
+  const totalLeaves = item.total_leave_days ?? item.total_leaves ?? 0;
 
   return (
     <Animated.View entering={FadeInDown.delay(index * 50).duration(400)}>
@@ -98,22 +107,33 @@ export function TimesheetApprovalCard({
           </View>
           <View style={styles.stat}>
             <Text style={[styles.statValue, styles.statValueGreen]}>
-              {item.total_present}
+              {totalPresent}
             </Text>
             <Text style={styles.statLabel}>Present</Text>
           </View>
           <View style={styles.stat}>
             <Text style={[styles.statValue, styles.statValueRed]}>
-              {item.total_absent}
+              {totalAbsent}
             </Text>
             <Text style={styles.statLabel}>Absent</Text>
           </View>
           <View style={styles.stat}>
             <Text style={[styles.statValue, styles.statValuePurple]}>
-              {item.total_leaves}
+              {totalLeaves}
             </Text>
             <Text style={styles.statLabel}>Leave</Text>
           </View>
+        </View>
+
+        <View style={styles.viewRow}>
+          <TouchableOpacity
+            style={styles.viewBtn}
+            onPress={() => onView(item)}
+            disabled={isReviewing}
+          >
+            <Eye size={16} color="#2563eb" />
+            <Text style={styles.viewBtnText}>View Details</Text>
+          </TouchableOpacity>
         </View>
 
         {item.submission_status === 'SUBMITTED' && (

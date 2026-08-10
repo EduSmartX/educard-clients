@@ -2,6 +2,7 @@ import {
   Colors,
   ORGANIZATION_TYPES,
   BOARD_AFFILIATIONS,
+  getFieldErrors,
 } from '@educard/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Save } from 'lucide-react-native';
@@ -55,6 +56,7 @@ export function OrganizationInfoForm({
   const { showToast } = useToast();
   const qc = useQueryClient();
   const [form, setForm] = useState<InfoState>(EMPTY);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     setForm({
@@ -69,7 +71,18 @@ export function OrganizationInfoForm({
       tax_id: organization.tax_id ?? '',
       website_url: organization.website_url ?? '',
     });
-  }, [organization]);
+  }, [
+    organization.public_id,
+    organization.name,
+    organization.organization_type,
+    organization.board_affiliation,
+    organization.email,
+    organization.phone,
+    organization.registration_number,
+    organization.corporate_identification_number,
+    organization.tax_id,
+    organization.website_url,
+  ]);
 
   const mutation = useMutation({
     mutationFn: (payload: UpdateOrganizationPayload) =>
@@ -79,6 +92,12 @@ export function OrganizationInfoForm({
       showToast({ type: 'success', title: 'Organization updated' });
     },
     onError: err => {
+      // Prefer inline field errors from the API; only popup for non-field errors.
+      const fieldErrors = getFieldErrors(err);
+      if (Object.keys(fieldErrors).length > 0) {
+        setErrors(fieldErrors);
+        return;
+      }
       showToast({
         type: 'error',
         title: 'Update failed',
@@ -88,16 +107,27 @@ export function OrganizationInfoForm({
   });
 
   const setField = useCallback(
-    (key: keyof InfoState) => (value: string) =>
-      setForm(prev => ({ ...prev, [key]: value })),
+    (key: keyof InfoState) => (value: string) => {
+      setForm(prev => ({ ...prev, [key]: value }));
+      setErrors(prev => {
+        if (!prev[key]) return prev;
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+    },
     [],
   );
 
   const handleSave = () => {
-    if (!form.name.trim() || !form.email.trim()) {
-      showToast({ type: 'error', title: 'Name and email are required' });
+    const nextErrors: Record<string, string> = {};
+    if (!form.name.trim()) nextErrors.name = 'Organization name is required';
+    if (!form.email.trim()) nextErrors.email = 'Email address is required';
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
       return;
     }
+    setErrors({});
     mutation.mutate(form);
   };
 
@@ -108,6 +138,7 @@ export function OrganizationInfoForm({
         value={form.name}
         onChangeText={setField('name')}
         placeholder="e.g. Springfield High School"
+        error={errors.name}
         required
       />
       <FormDropdown
@@ -131,6 +162,7 @@ export function OrganizationInfoForm({
         placeholder="org@example.com"
         keyboardType="email-address"
         autoCapitalize="none"
+        error={errors.email}
         required
       />
       <FormInput
@@ -139,12 +171,14 @@ export function OrganizationInfoForm({
         onChangeText={setField('phone')}
         placeholder="Phone number"
         keyboardType="phone-pad"
+        error={errors.phone}
       />
       <FormInput
         label="Registration Number"
         value={form.registration_number}
         onChangeText={setField('registration_number')}
         placeholder="Registration number"
+        error={errors.registration_number}
       />
       <FormInput
         label="Corporate Identification Number (CIN)"
@@ -152,6 +186,7 @@ export function OrganizationInfoForm({
         onChangeText={setField('corporate_identification_number')}
         placeholder="e.g. L12345MH2000PLC123456"
         autoCapitalize="characters"
+        error={errors.corporate_identification_number}
       />
       <FormInput
         label="Tax ID / GSTIN"
@@ -159,6 +194,7 @@ export function OrganizationInfoForm({
         onChangeText={setField('tax_id')}
         placeholder="e.g. 27AABCU9603R1ZM"
         autoCapitalize="characters"
+        error={errors.tax_id}
       />
       <FormInput
         label="Website"
@@ -167,6 +203,7 @@ export function OrganizationInfoForm({
         placeholder="https://example.com"
         keyboardType="url"
         autoCapitalize="none"
+        error={errors.website_url}
       />
 
       <TouchableOpacity

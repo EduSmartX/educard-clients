@@ -1,4 +1,10 @@
-import { AlertTriangle, Mail, Phone, X, ChevronRight } from 'lucide-react-native';
+import {
+  AlertTriangle,
+  Mail,
+  Phone,
+  X,
+  ChevronRight,
+} from 'lucide-react-native';
 import { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
@@ -9,6 +15,8 @@ interface VerificationBannerProps {
   readonly user: User;
   readonly onVerifyEmail?: () => void;
   readonly onVerifyPhone?: () => void;
+  /** Include guardian email/phone checks for student users (default: true) */
+  readonly includeGuardianChecks?: boolean;
 }
 
 interface PendingVerification {
@@ -24,7 +32,8 @@ function maskValue(value: string, type: 'email' | 'phone'): string {
     if (!domain) {
       return value;
     }
-    const maskedLocal = local.length > 2 ? `${local[0]}***${local.slice(-1)}` : `${local[0]}***`;
+    const maskedLocal =
+      local.length > 2 ? `${local[0]}***${local.slice(-1)}` : `${local[0]}***`;
     return `${maskedLocal}@${domain}`;
   }
   if (value.length > 4) {
@@ -33,24 +42,42 @@ function maskValue(value: string, type: 'email' | 'phone'): string {
   return value;
 }
 
-function getPendingVerifications(user: User): PendingVerification[] {
+function getPendingVerifications(
+  user: User,
+  includeGuardianChecks: boolean,
+): PendingVerification[] {
   const pending: PendingVerification[] = [];
 
   if (!user.email) {
     pending.push({ type: 'email', label: 'Email', value: '', action: 'add' });
   } else if (!user.is_email_verified) {
-    pending.push({ type: 'email', label: 'Email', value: user.email, action: 'verify' });
+    pending.push({
+      type: 'email',
+      label: 'Email',
+      value: user.email,
+      action: 'verify',
+    });
   }
 
   if (!user.phone) {
     pending.push({ type: 'phone', label: 'Phone', value: '', action: 'add' });
   } else if (!user.is_mobile_verified) {
-    pending.push({ type: 'phone', label: 'Phone', value: user.phone, action: 'verify' });
+    pending.push({
+      type: 'phone',
+      label: 'Phone',
+      value: user.phone,
+      action: 'verify',
+    });
   }
 
-  if (user.role === USER_ROLES.STUDENT) {
+  if (includeGuardianChecks && user.role === USER_ROLES.STUDENT) {
     if (!user.guardian_email) {
-      pending.push({ type: 'email', label: 'Guardian Email', value: '', action: 'add' });
+      pending.push({
+        type: 'email',
+        label: 'Guardian Email',
+        value: '',
+        action: 'add',
+      });
     } else if (!user.guardian_email_verified) {
       pending.push({
         type: 'email',
@@ -61,7 +88,12 @@ function getPendingVerifications(user: User): PendingVerification[] {
     }
 
     if (!user.guardian_phone) {
-      pending.push({ type: 'phone', label: 'Guardian Phone', value: '', action: 'add' });
+      pending.push({
+        type: 'phone',
+        label: 'Guardian Phone',
+        value: '',
+        action: 'add',
+      });
     } else if (!user.guardian_phone_verified) {
       pending.push({
         type: 'phone',
@@ -79,9 +111,13 @@ export function VerificationBanner({
   user,
   onVerifyEmail,
   onVerifyPhone,
+  includeGuardianChecks = true,
 }: VerificationBannerProps) {
   const [dismissed, setDismissed] = useState(false);
-  const pendingVerifications = getPendingVerifications(user);
+  const pendingVerifications = getPendingVerifications(
+    user,
+    includeGuardianChecks,
+  );
 
   if (dismissed || pendingVerifications.length === 0) {
     return null;
@@ -89,7 +125,10 @@ export function VerificationBanner({
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.dismissBtn} onPress={() => setDismissed(true)}>
+      <TouchableOpacity
+        style={styles.dismissBtn}
+        onPress={() => setDismissed(true)}
+      >
         <X size={16} color="#b45309" />
       </TouchableOpacity>
 
@@ -99,7 +138,9 @@ export function VerificationBanner({
         </View>
         <View style={styles.headerTextWrap}>
           <Text style={styles.title}>Verification Required</Text>
-          <Text style={styles.subtitle}>Please verify contact details to receive alerts.</Text>
+          <Text style={styles.subtitle}>
+            Please verify contact details to receive alerts.
+          </Text>
         </View>
       </View>
 

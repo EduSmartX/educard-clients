@@ -27,6 +27,7 @@ export type MenuTarget =
   | 'Profile'
   | 'Preferences'
   | 'Timetable'
+  | 'TimetableTeacher'
   | 'HomeworkList'
   | 'ExamSessions'
   | 'AttendanceReport'

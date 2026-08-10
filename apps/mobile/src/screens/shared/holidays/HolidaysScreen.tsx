@@ -458,6 +458,7 @@ export default function HolidayCalendarScreen() {
         canManage={canManage}
         onClose={() => setDetailPopup(p => ({ ...p, visible: false }))}
         onEdit={openEditModal}
+        onDelete={setDeleteTarget}
       />
 
       {/* Add/Edit Form Modal */}

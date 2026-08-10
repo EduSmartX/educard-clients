@@ -308,6 +308,17 @@ export const styles = StyleSheet.create({
     backgroundColor: '#ede9fe',
   },
   popupEditText: { fontSize: 14, fontWeight: '600', color: '#7c3aed' },
+  popupDeleteBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: '#fee2e2',
+  },
+  popupDeleteText: { fontSize: 14, fontWeight: '600', color: '#dc2626' },
   popupCloseBtn: {
     flex: 1,
     alignItems: 'center',
@@ -321,9 +332,8 @@ export const styles = StyleSheet.create({
   formOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
   },
-  formOverlayContent: { flexGrow: 1, justifyContent: 'center' },
+  formOverlayContent: { flexGrow: 1, justifyContent: 'flex-end' },
   formCard: {
     backgroundColor: '#fff',
     borderTopLeftRadius: 24,

@@ -32,6 +32,7 @@ import {
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import { SearchableSelect } from '@/components/ui';
 import {
   useEligibleClasses,
   useValidateDate,
@@ -51,7 +52,6 @@ export default function MarkAttendanceScreen() {
   const [selectedClassId, setSelectedClassId] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showClassPicker, setShowClassPicker] = useState(false);
   const [period, setPeriod] = useState<'morning' | 'afternoon' | 'full_day'>(
     'full_day',
   );
@@ -95,11 +95,14 @@ export default function MarkAttendanceScreen() {
   const bulkMarkMutation = useBulkMarkAttendance();
 
   // Selected class name
-  const selectedClassName = useMemo(() => {
-    if (!selectedClassId || !eligibleClasses) return 'Select Class';
-    const cls = eligibleClasses.find(c => c.public_id === selectedClassId);
-    return cls?.display_name ?? 'Select Class';
-  }, [selectedClassId, eligibleClasses]);
+  const classOptions = useMemo(
+    () =>
+      (eligibleClasses ?? []).map(cls => ({
+        value: cls.public_id,
+        label: cls.display_name,
+      })),
+    [eligibleClasses],
+  );
 
   // Process comprehensive data
   useEffect(() => {
@@ -263,51 +266,16 @@ export default function MarkAttendanceScreen() {
           {/* Class Dropdown */}
           <View style={styles.fieldContainer}>
             <Text style={styles.fieldLabel}>Class</Text>
-            <TouchableOpacity
-              style={styles.dropdown}
-              onPress={() => setShowClassPicker(!showClassPicker)}
-              disabled={loadingClasses}
-            >
-              <Users size={18} color="#64748b" />
-              <Text style={styles.dropdownText} numberOfLines={1}>
-                {loadingClasses ? 'Loading...' : selectedClassName}
-              </Text>
-              <ChevronDown size={18} color="#64748b" />
-            </TouchableOpacity>
-
-            {showClassPicker && eligibleClasses && (
-              <View style={styles.dropdownList}>
-                <ScrollView style={styles.dropdownScroll} nestedScrollEnabled>
-                  {eligibleClasses.map(cls => (
-                    <TouchableOpacity
-                      key={cls.public_id}
-                      style={[
-                        styles.dropdownItem,
-                        selectedClassId === cls.public_id &&
-                          styles.dropdownItemSelected,
-                      ]}
-                      onPress={() => {
-                        setSelectedClassId(cls.public_id);
-                        setShowClassPicker(false);
-                      }}
-                    >
-                      <Text
-                        style={[
-                          styles.dropdownItemText,
-                          selectedClassId === cls.public_id &&
-                            styles.dropdownItemTextSelected,
-                        ]}
-                      >
-                        {cls.display_name}
-                      </Text>
-                      <Text style={styles.dropdownItemInfo}>
-                        {cls.student_count} students
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-            )}
+            <SearchableSelect
+              title="Select Class"
+              value={selectedClassId}
+              onValueChange={setSelectedClassId}
+              options={classOptions}
+              placeholder="Select a class"
+              searchPlaceholder="Search classes..."
+              emptyText="No classes available"
+              loading={loadingClasses}
+            />
           </View>
 
           {/* Date Picker */}

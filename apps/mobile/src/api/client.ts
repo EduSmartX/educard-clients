@@ -39,9 +39,18 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     try {
-      const token = await SecureStore.getItemAsync(STORAGE_KEYS.ACCESS_TOKEN);
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
+      // Only attach our token to backend requests — never to cross-origin URLs
+      // (e.g. R2 presigned URLs reject a request that also carries a Bearer header).
+      const requestUrl = config.url ?? '';
+      const isAbsolute = /^https?:\/\//i.test(requestUrl);
+      const apiOrigin = API_CONFIG.BASE_URL.replace(/\/api\/?$/, '');
+      const targetsBackend = !isAbsolute || requestUrl.startsWith(apiOrigin);
+
+      if (targetsBackend) {
+        const token = await SecureStore.getItemAsync(STORAGE_KEYS.ACCESS_TOKEN);
+        if (token && config.headers) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
       }
     } catch {
       // Token retrieval failed - continue without auth header

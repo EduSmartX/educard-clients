@@ -36,7 +36,7 @@ import {
   VerificationBanner,
   type StatCardData,
 } from '@/components/dashboard';
-import { GradientHeader, PressableScale } from '@/components/ui';
+import { GradientHeader, GreetingCard, PressableScale } from '@/components/ui';
 import { getMediaUrl } from '@/constants/config';
 import {
   useDashboardAttendanceStats,
@@ -274,6 +274,13 @@ export default function AdminDashboardScreen() {
           />
         }
       >
+        <GreetingCard
+          name={(user?.full_name ?? 'Admin').split(' ')[0]}
+          subtitle="Here is an overview of your school today."
+          highlight="Your school is running smoothly!"
+          colors={['#4f46e5', '#7c3aed', '#a21caf']}
+        />
+
         {user && (
           <VerificationBanner
             user={user}
@@ -342,6 +349,7 @@ export default function AdminDashboardScreen() {
           timetableData={timetableData}
           isLoading={loadingTimetable}
           maxDisplay={4}
+          onViewAll={() => navigateToScreen(navigation, 'TimetableTeacher')}
         />
 
         <View style={styles.bottomSpacer} />

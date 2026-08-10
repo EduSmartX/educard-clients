@@ -3,9 +3,23 @@
  * Used for class master, blood group, class teacher, etc.
  */
 
-import { ChevronDown, Search, X, Check, AlertCircle } from 'lucide-react-native';
+import {
+  ChevronDown,
+  Search,
+  X,
+  Check,
+  AlertCircle,
+} from 'lucide-react-native';
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, FlatList, StyleSheet, TextInput } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Modal,
+  FlatList,
+  StyleSheet,
+  TextInput,
+} from 'react-native';
 
 interface Option {
   value: string;
@@ -42,10 +56,12 @@ export function FormDropdown({
   const [visible, setVisible] = useState(false);
   const [search, setSearch] = useState('');
 
-  const selectedLabel = options.find((o) => o.value === value)?.label;
+  const selectedLabel = options.find(o => o.value === value)?.label;
   const filtered =
     searchable && search
-      ? options.filter((o) => o.label.toLowerCase().includes(search.toLowerCase()))
+      ? options.filter(o =>
+          o.label.toLowerCase().includes(search.toLowerCase()),
+        )
       : options;
 
   const handleSelect = (val: string) => {
@@ -61,11 +77,18 @@ export function FormDropdown({
         {required && <Text style={styles.required}> *</Text>}
       </Text>
       <TouchableOpacity
-        style={[styles.trigger, error && styles.triggerError, disabled && styles.triggerDisabled]}
+        style={[
+          styles.trigger,
+          error && styles.triggerError,
+          disabled && styles.triggerDisabled,
+        ]}
         onPress={() => !disabled && setVisible(true)}
         activeOpacity={0.7}
       >
-        <Text style={[styles.triggerText, !selectedLabel && styles.placeholder]}>
+        <Text
+          style={[styles.triggerText, !selectedLabel && styles.placeholder]}
+          numberOfLines={1}
+        >
           {loading ? 'Loading...' : (selectedLabel ?? placeholder)}
         </Text>
         <ChevronDown size={18} color={error ? '#ef4444' : '#94a3b8'} />
@@ -118,7 +141,7 @@ export function FormDropdown({
 
               <FlatList
                 data={filtered}
-                keyExtractor={(item) => item.value}
+                keyExtractor={item => item.value}
                 renderItem={({ item }) => {
                   const selected = item.value === value;
                   return (
@@ -126,14 +149,21 @@ export function FormDropdown({
                       style={[styles.option, selected && styles.optionSelected]}
                       onPress={() => handleSelect(item.value)}
                     >
-                      <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
+                      <Text
+                        style={[
+                          styles.optionText,
+                          selected && styles.optionTextSelected,
+                        ]}
+                      >
                         {item.label}
                       </Text>
                       {selected && <Check size={18} color="#7c3aed" />}
                     </TouchableOpacity>
                   );
                 }}
-                ListEmptyComponent={<Text style={styles.empty}>{emptyMessage}</Text>}
+                ListEmptyComponent={
+                  <Text style={styles.empty}>{emptyMessage}</Text>
+                }
               />
 
               {value ? (
@@ -172,13 +202,27 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     backgroundColor: '#f8fafc',
   },
-  triggerError: { borderColor: '#ef4444', backgroundColor: '#fef2f2', borderWidth: 2 },
+  triggerError: {
+    borderColor: '#ef4444',
+    backgroundColor: '#fef2f2',
+    borderWidth: 2,
+  },
   triggerDisabled: { opacity: 0.5 },
-  triggerText: { fontSize: 15, color: '#1e293b', flex: 1 },
+  triggerText: { fontSize: 15, color: '#1e293b', flex: 1, marginRight: 8 },
   placeholder: { color: '#94a3b8' },
-  errorRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, marginLeft: 4 },
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+    marginLeft: 4,
+  },
   error: { fontSize: 12, color: '#ef4444', flex: 1 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
   modal: {
     backgroundColor: '#fff',
     borderTopLeftRadius: 20,

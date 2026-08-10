@@ -100,6 +100,7 @@ This will:
    - Note the IP address and port (e.g., `192.168.31.100:37573`)
 
 2. **On Mac:**
+
    ```bash
    # Pair first time
    adb pair 192.168.31.100:37573
@@ -326,6 +327,7 @@ adb install -r app/build/outputs/apk/release/app-release.apk
    - Options: Reload, Debug, Show Inspector, etc.
 
 3. **Debug Console**:
+
    ```bash
    # View all logs
    adb logcat *:S ReactNative:V ReactNativeJS:V

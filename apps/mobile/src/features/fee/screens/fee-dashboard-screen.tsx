@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   Users,
   Plus,
+  ChevronLeft,
   ChevronRight,
   List,
   ClipboardCheck,
@@ -29,7 +30,6 @@ import {
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { HeaderProfileButton } from '@/components/common';
 import { LinearGradient } from '@/lib/linear-gradient';
 import type { SharedStackNavigation } from '@/navigation/types';
 
@@ -112,6 +112,12 @@ export default function FeeDashboardScreen() {
     void refetch();
   }, [refetch]);
 
+  const handleBack = useCallback(() => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
+  }, [navigation]);
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -119,11 +125,17 @@ export default function FeeDashboardScreen() {
         <Animated.View entering={FadeIn.delay(100)} style={styles.circle1} />
         <Animated.View entering={FadeIn.delay(200)} style={styles.circle2} />
         <View style={styles.headerContent}>
-          <View>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={handleBack}
+            hitSlop={styles.hitSlop}
+          >
+            <ChevronLeft size={24} color="#fff" />
+          </TouchableOpacity>
+          <View style={styles.headerTitleWrap}>
             <Text style={styles.headerTitle}>Fee Management</Text>
             <Text style={styles.headerSubtitle}>Collection overview</Text>
           </View>
-          <HeaderProfileButton />
         </View>
       </LinearGradient>
 
@@ -373,8 +385,24 @@ const styles = StyleSheet.create({
   },
   headerContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    marginLeft: -8,
+    marginRight: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitleWrap: {
+    flex: 1,
+  },
+  hitSlop: {
+    top: 8,
+    bottom: 8,
+    left: 8,
+    right: 8,
   },
   headerTitle: {
     fontSize: 22,

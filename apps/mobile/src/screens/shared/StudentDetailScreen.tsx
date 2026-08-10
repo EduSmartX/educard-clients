@@ -67,7 +67,6 @@ export default function StudentDetailScreen() {
       <Animated.View entering={FadeInDown.delay(300)}>
         <DetailSection title="Guardian" icon="👨‍👩‍👦">
           <DetailRow label="Name" value={student?.guardian_name} />
-          <DetailRow label="Phone" value={student?.guardian_phone} />
           <DetailRow
             label="Relationship"
             value={student?.guardian_relationship}

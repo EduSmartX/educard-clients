@@ -25,6 +25,9 @@ export interface User {
   guardian_email?: string;
   guardian_email_verified?: boolean;
   guardian_phone_verified?: boolean;
+  // Returned by the auth payload for student accounts
+  roll_number?: string;
+  class_name?: string;
   created_at?: string;
   updated_at?: string;
 }

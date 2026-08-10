@@ -306,6 +306,9 @@ export default function StudentDashboardPage() {
           {!isLoading && todayTimetable.length > 0 && (
             <div className="max-h-96 space-y-3 overflow-y-auto pr-1">
               {todayTimetable.map((entry, idx) => {
+                const isBreak = entry.slot_type !== 'class';
+                const normalizedSubject = (entry.subject_name || '').trim();
+                const subjectDisplay = normalizedSubject || `w[${entry.slot_number}]`;
                 return (
                   <motion.div
                     key={entry.slot_public_id}
@@ -323,7 +326,7 @@ export default function StudentDashboardPage() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <p className="truncate font-medium text-gray-900">
-                            {entry.subject_name || entry.label}
+                            {isBreak ? entry.label : subjectDisplay}
                           </p>
                           {entry.is_cancelled && (
                             <Badge variant="destructive" className="shrink-0">

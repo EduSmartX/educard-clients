@@ -250,7 +250,7 @@ export function TodaySchedule({
         );
       })}
 
-      {todayClasses.length > maxDisplay && (
+      {todayClasses.length > maxDisplay && !!onViewAll && (
         <TouchableOpacity style={styles.viewMoreBtn} onPress={onViewAll}>
           <Text style={styles.viewMoreText}>
             View all {todayClasses.length} classes

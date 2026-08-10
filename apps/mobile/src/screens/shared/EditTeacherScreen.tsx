@@ -19,7 +19,7 @@ import {
 } from '@react-navigation/native';
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import type { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import type { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { ProfileAvatar } from '@/components/common/ProfileAvatar';
@@ -45,11 +45,9 @@ export default function EditTeacherScreen() {
   const navigation = useNavigation<SharedStackNavigation>();
   const route = useRoute<RouteProp<SharedStackParamList, 'TeacherEdit'>>();
   const { id } = route.params;
-  const {
-    data: teacher,
-    isLoading: detailLoading,
-    dataUpdatedAt,
-  } = useTeacherDetail(id || '');
+  const { data: teacher, isLoading: detailLoading } = useTeacherDetail(
+    id || '',
+  );
   const updateMutation = useUpdateTeacher();
   const scrollRef = useRef<KeyboardAwareScrollView>(null);
   const { data: roleTypes, isLoading: rolesLoading } = useRoleTypes();
@@ -270,7 +268,6 @@ export default function EditTeacherScreen() {
             size={90}
             onPress={pickAndUpload}
             isUploading={isPhotoUploading}
-            cacheVersion={dataUpdatedAt}
           />
           <Text style={styles.avatarName}>
             {form.first_name} {form.last_name}

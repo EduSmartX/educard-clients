@@ -100,6 +100,11 @@ export const API_ENDPOINTS = {
   // (there is no single unified `/student/` namespace on the backend).
   STUDENT_PORTAL: {
     DASHBOARD: "/students/student/dashboard/",
+    ANNOUNCEMENTS: {
+      LIST: "/notifications/student/announcements/",
+      DETAIL: (publicId: string) =>
+        `/notifications/student/announcements/${publicId}/`,
+    },
     ATTENDANCE: {
       SUMMARY: "/attendance/student/summary/",
       CALENDAR: "/attendance/student/calendar/",

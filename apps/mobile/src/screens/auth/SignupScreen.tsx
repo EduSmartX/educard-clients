@@ -37,7 +37,7 @@ import {
   FlatList,
   StyleSheet,
 } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 
 import {

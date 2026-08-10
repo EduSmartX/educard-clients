@@ -73,6 +73,28 @@ export const styles = StyleSheet.create({
   examSubject: { fontSize: 16, fontWeight: '700', color: '#1e293b', flex: 1 },
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   statusText: { fontSize: 11, fontWeight: '700' },
+  examMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 5,
+    marginBottom: 8,
+  },
+  examMetaText: { fontSize: 12, color: '#475569', fontWeight: '600' },
+  examMetaClock: { marginLeft: 8 },
+  sessionEyebrow: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.85)',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  sessionTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#fff',
+    marginTop: 1,
+  },
   examDetails: { fontSize: 12, color: '#64748b', marginBottom: 10 },
   enterMarksBtn: {
     backgroundColor: '#7c3aed',

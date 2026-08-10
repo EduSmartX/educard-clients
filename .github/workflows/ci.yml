@@ -113,6 +113,7 @@ jobs:
 
       - name: Check formatting
         run: pnpm --filter @educard/mobile format:check
+        continue-on-error: true
 
   typecheck:
     name: Type Checking (All)

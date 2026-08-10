@@ -5,16 +5,21 @@
 
 import { useRoute, type RouteProp } from '@react-navigation/native';
 import { format } from 'date-fns';
+import { CalendarDays, Clock, User } from 'lucide-react-native';
 import {
   View,
   Text,
   ScrollView,
   ActivityIndicator,
+  Image,
+  StyleSheet,
   type DimensionValue,
 } from 'react-native';
 
-import { Screen, Header } from '@/components/layout';
+import { Screen } from '@/components/layout';
+import { ScreenHeader } from '@/components/ui';
 import { colors } from '@/constants/colors';
+import { getSubjectVisual } from '@/constants/subject-visuals';
 import {
   useExamSessionDetail,
   type ExamResult,
@@ -36,8 +41,8 @@ export default function StudentExamDetailScreen() {
 
   if (isLoading) {
     return (
-      <Screen>
-        <Header title="Exam" showBack />
+      <Screen safeArea={false} statusBarStyle="light">
+        <ScreenHeader title="Exam" />
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator color={colors.primary[500]} />
         </View>
@@ -47,8 +52,8 @@ export default function StudentExamDetailScreen() {
 
   if (!detail) {
     return (
-      <Screen>
-        <Header title="Exam" showBack />
+      <Screen safeArea={false} statusBarStyle="light">
+        <ScreenHeader title="Exam" />
         <View className="flex-1 items-center justify-center">
           <Text className="text-3xl">📭</Text>
           <Text className="mt-2 text-sm text-gray-500">Exam not found</Text>
@@ -64,8 +69,8 @@ export default function StudentExamDetailScreen() {
   const overallPct = totalMax > 0 ? (totalObt / totalMax) * 100 : 0;
 
   return (
-    <Screen>
-      <Header title={detail.name} showBack />
+    <Screen safeArea={false} statusBarStyle="light">
+      <ScreenHeader title={detail.name} />
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Session Info */}
         <View className="mx-4 mt-4 rounded-xl border border-gray-100 bg-white p-4">
@@ -78,78 +83,77 @@ export default function StudentExamDetailScreen() {
 
         {isSchedule ? (
           /* Schedule View */
-          <View className="mx-4 mt-4 overflow-hidden rounded-xl border border-gray-100 bg-white">
-            {/* Header */}
-            <View className="flex-row bg-gray-50 px-3 py-2.5">
-              <Text className="w-8 text-[10px] font-semibold uppercase text-gray-400">
-                #
-              </Text>
-              <Text className="flex-1 text-[10px] font-semibold uppercase text-gray-400">
-                Subject
-              </Text>
-              <Text className="w-20 text-[10px] font-semibold uppercase text-gray-400">
-                Date
-              </Text>
-              <Text className="w-16 text-[10px] font-semibold uppercase text-gray-400">
-                Time
-              </Text>
-              <Text className="w-20 text-[10px] font-semibold uppercase text-gray-400">
-                Teacher
-              </Text>
-            </View>
-            {detail.exams.map((exam: ExamResult, idx: number) => (
-              <View
-                key={exam.exam_public_id}
-                className="flex-row items-center border-t border-gray-50 px-3 py-3"
-              >
-                <View className="w-8">
-                  <View className="h-6 w-6 items-center justify-center rounded-md bg-blue-100">
-                    <Text className="text-[10px] font-bold text-blue-600">
-                      {idx + 1}
+          <View className="mt-4">
+            {detail.exams.map((exam: ExamResult, idx: number) => {
+              const visual = getSubjectVisual(exam.subject_name);
+              const SubjectIcon = visual.icon;
+              return (
+                <View
+                  key={exam.exam_public_id}
+                  style={[
+                    s.subjectCard,
+                    {
+                      backgroundColor: visual.soft,
+                      borderColor: visual.accent,
+                      borderLeftColor: visual.accent,
+                    },
+                  ]}
+                >
+                  <View style={s.rowTop}>
+                    {visual.image ? (
+                      <View style={s.avatar}>
+                        <Image
+                          source={visual.image}
+                          style={s.avatarImage}
+                          resizeMode="cover"
+                        />
+                      </View>
+                    ) : (
+                      <View
+                        style={[s.avatar, { backgroundColor: visual.accent }]}
+                      >
+                        <SubjectIcon size={20} color="#fff" />
+                      </View>
+                    )}
+                    <View className="flex-1">
+                      <Text style={s.subjectName}>{exam.subject_name}</Text>
+                      <Text style={s.subjectMeta}>
+                        Max {exam.max_marks} • Pass {exam.passing_marks}
+                      </Text>
+                    </View>
+                    <View
+                      style={[s.indexChip, { backgroundColor: visual.accent }]}
+                    >
+                      <Text style={s.indexChipText}>{idx + 1}</Text>
+                    </View>
+                  </View>
+
+                  <View style={s.detailRow}>
+                    <CalendarDays size={13} color="#64748b" />
+                    <Text style={s.detailText}>
+                      {exam.date
+                        ? format(new Date(exam.date), 'EEE, d MMM yyyy')
+                        : 'Date to be announced'}
                     </Text>
                   </View>
-                </View>
-                <View className="flex-1">
-                  <Text className="text-sm font-medium text-gray-800">
-                    {exam.subject_name}
-                  </Text>
-                  <Text className="text-[10px] text-gray-400">
-                    Max: {exam.max_marks} | Pass: {exam.passing_marks}
-                  </Text>
-                </View>
-                <View className="w-20">
-                  <Text className="text-xs text-gray-600">
-                    {exam.date ? format(new Date(exam.date), 'd MMM') : 'TBD'}
-                  </Text>
-                  {exam.date && (
-                    <Text className="text-[10px] text-gray-400">
-                      {format(new Date(exam.date), 'EEE')}
-                    </Text>
-                  )}
-                </View>
-                <View className="w-16">
-                  {exam.start_time ? (
-                    <>
-                      <Text className="text-xs text-gray-600">
+                  {!!exam.start_time && (
+                    <View style={s.detailRow}>
+                      <Clock size={13} color="#64748b" />
+                      <Text style={s.detailText}>
                         {formatTime(exam.start_time)}
+                        {exam.end_time ? ` – ${formatTime(exam.end_time)}` : ''}
                       </Text>
-                      {exam.end_time && (
-                        <Text className="text-[10px] text-gray-400">
-                          to {formatTime(exam.end_time)}
-                        </Text>
-                      )}
-                    </>
-                  ) : (
-                    <Text className="text-xs text-gray-400">—</Text>
+                    </View>
+                  )}
+                  {!!exam.teacher_name && (
+                    <View style={s.detailRow}>
+                      <User size={13} color="#64748b" />
+                      <Text style={s.detailText}>{exam.teacher_name}</Text>
+                    </View>
                   )}
                 </View>
-                <View className="w-20">
-                  <Text className="text-xs text-gray-600" numberOfLines={1}>
-                    {exam.teacher_name || '—'}
-                  </Text>
-                </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
         ) : (
           /* Results View */
@@ -182,63 +186,88 @@ export default function StudentExamDetailScreen() {
             </View>
 
             {/* Subject Results */}
-            <View className="mx-4 mt-4 overflow-hidden rounded-xl border border-gray-100 bg-white">
-              <View className="border-b border-gray-100 px-4 py-3">
-                <Text className="text-sm font-semibold text-gray-700">
-                  📊 Subject-wise Results
-                </Text>
-              </View>
-              {detail.exams.map((exam: ExamResult) => {
-                const pct = exam.percentage ?? 0;
-                let barColor: string = colors.danger[500];
-                if (exam.is_absent) {
-                  barColor = colors.gray[300];
-                } else if (exam.passed) {
-                  barColor = colors.success[500];
-                }
-                const barWidth: DimensionValue = `${exam.is_absent ? 0 : pct}%`;
-                return (
-                  <View
-                    key={exam.exam_public_id}
-                    className="border-t border-gray-50 px-4 py-3"
-                  >
-                    <View className="flex-row items-center justify-between">
-                      <Text className="text-sm font-medium text-gray-800">
-                        {exam.subject_name}
-                      </Text>
-                      {exam.is_absent ? (
-                        <View className="rounded-md bg-gray-100 px-2 py-0.5">
-                          <Text className="text-[10px] font-medium text-gray-500">
-                            Absent
-                          </Text>
-                        </View>
-                      ) : (
-                        <View className="flex-row items-center gap-2">
-                          <Text className="text-xs text-gray-600">
-                            {exam.marks_obtained ?? 0}/{exam.max_marks}
-                          </Text>
-                          <View
-                            className={`rounded-md px-2 py-0.5 ${exam.passed ? 'bg-green-100' : 'bg-red-100'}`}
-                          >
-                            <Text
-                              className={`text-[10px] font-medium ${exam.passed ? 'text-green-700' : 'text-red-700'}`}
-                            >
-                              {exam.grade || `${pct.toFixed(0)}%`}
-                            </Text>
-                          </View>
-                        </View>
-                      )}
-                    </View>
-                    <View className="mt-2 h-2 overflow-hidden rounded-full bg-gray-100">
+            <Text style={s.sectionHeading}>Subject-wise Results</Text>
+            {detail.exams.map((exam: ExamResult) => {
+              const pct = exam.percentage ?? 0;
+              let barColor: string = colors.danger[500];
+              if (exam.is_absent) {
+                barColor = colors.gray[300];
+              } else if (exam.passed) {
+                barColor = colors.success[500];
+              }
+              const barWidth: DimensionValue = `${exam.is_absent ? 0 : pct}%`;
+              const visual = getSubjectVisual(exam.subject_name);
+              const SubjectIcon = visual.icon;
+              return (
+                <View
+                  key={exam.exam_public_id}
+                  style={[
+                    s.subjectCard,
+                    {
+                      backgroundColor: visual.soft,
+                      borderColor: visual.accent,
+                      borderLeftColor: visual.accent,
+                    },
+                  ]}
+                >
+                  <View style={s.rowTop}>
+                    {visual.image ? (
+                      <View style={s.avatar}>
+                        <Image
+                          source={visual.image}
+                          style={s.avatarImage}
+                          resizeMode="cover"
+                        />
+                      </View>
+                    ) : (
                       <View
-                        className="h-full rounded-full"
-                        style={{ width: barWidth, backgroundColor: barColor }}
-                      />
+                        style={[s.avatar, { backgroundColor: visual.accent }]}
+                      >
+                        <SubjectIcon size={20} color="#fff" />
+                      </View>
+                    )}
+                    <View className="flex-1">
+                      <Text style={s.subjectName}>{exam.subject_name}</Text>
+                      <Text style={s.subjectMeta}>
+                        {exam.is_absent
+                          ? 'Not appeared'
+                          : `${exam.marks_obtained ?? 0} / ${exam.max_marks}`}
+                      </Text>
                     </View>
+                    {exam.is_absent ? (
+                      <View style={s.absentChip}>
+                        <Text style={s.absentChipText}>Absent</Text>
+                      </View>
+                    ) : (
+                      <View
+                        style={[
+                          s.gradeChip,
+                          exam.passed ? s.gradePassBg : s.gradeFailBg,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            s.gradeChipText,
+                            exam.passed ? s.gradePassText : s.gradeFailText,
+                          ]}
+                        >
+                          {exam.grade || `${pct.toFixed(0)}%`}
+                        </Text>
+                      </View>
+                    )}
                   </View>
-                );
-              })}
-            </View>
+
+                  <View style={s.track}>
+                    <View
+                      style={[
+                        s.trackFill,
+                        { width: barWidth, backgroundColor: barColor },
+                      ]}
+                    />
+                  </View>
+                </View>
+              );
+            })}
           </>
         )}
         <View className="h-8" />
@@ -248,3 +277,73 @@ export default function StudentExamDetailScreen() {
 }
 
 const overallCardStyle = { backgroundColor: colors.primary[600] };
+
+const s = StyleSheet.create({
+  sectionHeading: {
+    marginTop: 20,
+    marginBottom: 10,
+    marginHorizontal: 16,
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#334155',
+  },
+  subjectCard: {
+    marginHorizontal: 16,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderLeftWidth: 4,
+    borderRadius: 14,
+    padding: 14,
+  },
+  rowTop: { flexDirection: 'row', alignItems: 'center' },
+  avatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+    overflow: 'hidden',
+    backgroundColor: '#fff',
+  },
+  avatarImage: { width: '100%', height: '100%' },
+  subjectName: { fontSize: 15, fontWeight: '700', color: '#1e293b' },
+  subjectMeta: { marginTop: 3, fontSize: 11, color: '#64748b' },
+  indexChip: {
+    minWidth: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 7,
+  },
+  indexChipText: { fontSize: 11, fontWeight: '800', color: '#fff' },
+  detailRow: {
+    marginTop: 9,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
+  detailText: { flex: 1, fontSize: 12, color: '#64748b' },
+  gradeChip: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
+  gradeChipText: { fontSize: 11, fontWeight: '800' },
+  gradePassBg: { backgroundColor: '#dcfce7' },
+  gradeFailBg: { backgroundColor: '#fee2e2' },
+  gradePassText: { color: '#15803d' },
+  gradeFailText: { color: '#b91c1c' },
+  absentChip: {
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: '#f1f5f9',
+  },
+  absentChipText: { fontSize: 11, fontWeight: '800', color: '#64748b' },
+  track: {
+    height: 7,
+    marginTop: 12,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.75)',
+    overflow: 'hidden',
+  },
+  trackFill: { height: '100%', borderRadius: 4 },
+});

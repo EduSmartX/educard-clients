@@ -64,3 +64,4 @@ web-build/
 *.temp
 .vercel
 .env*.local
+*.keystore

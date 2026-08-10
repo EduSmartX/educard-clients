@@ -10,6 +10,11 @@ import { useCurrentAcademicYear } from '@/features/core';
 
 import { FormDropdown } from './FormDropdown';
 
+interface AcademicYearOption {
+  readonly label: string;
+  readonly value: string;
+}
+
 interface AcademicYearDropdownProps {
   readonly value: string;
   readonly onChange: (value: string) => void;
@@ -17,6 +22,7 @@ interface AcademicYearDropdownProps {
   readonly placeholder?: string;
   readonly required?: boolean;
   readonly error?: string;
+  readonly extraOptions?: readonly AcademicYearOption[];
 }
 
 export function AcademicYearDropdown({
@@ -26,17 +32,26 @@ export function AcademicYearDropdown({
   placeholder = 'Select academic year',
   required = false,
   error,
+  extraOptions,
 }: AcademicYearDropdownProps) {
   const { data: currentAcademicYear, isLoading } = useCurrentAcademicYear();
 
   const options = useMemo(() => {
-    if (!currentAcademicYear) return [];
-
-    // Build options from current academic year using public_id as value
-    const opts = [{ label: currentAcademicYear.name, value: currentAcademicYear.public_id }];
-
+    const opts: AcademicYearOption[] = [];
+    if (currentAcademicYear) {
+      opts.push({
+        label: currentAcademicYear.name,
+        value: currentAcademicYear.public_id,
+      });
+    }
+    // Include caller-provided years (e.g. the saved year on edit) so the value always has a labelled option.
+    for (const extra of extraOptions ?? []) {
+      if (extra.value && !opts.some(o => o.value === extra.value)) {
+        opts.push(extra);
+      }
+    }
     return opts;
-  }, [currentAcademicYear]);
+  }, [currentAcademicYear, extraOptions]);
 
   return (
     <FormDropdown

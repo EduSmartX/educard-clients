@@ -1,4 +1,4 @@
-import { Calendar, Pencil } from 'lucide-react-native';
+import { Calendar, Pencil, Trash2 } from 'lucide-react-native';
 import React from 'react';
 import { View, Text, TouchableOpacity, Modal } from 'react-native';
 
@@ -16,6 +16,7 @@ interface HolidayDetailPopupProps {
   canManage: boolean;
   onClose: () => void;
   onEdit: (h: Holiday) => void;
+  onDelete: (h: Holiday) => void;
 }
 
 export function HolidayDetailPopup({
@@ -25,6 +26,7 @@ export function HolidayDetailPopup({
   canManage,
   onClose,
   onEdit,
+  onDelete,
 }: HolidayDetailPopupProps) {
   return (
     <Modal
@@ -116,6 +118,18 @@ export function HolidayDetailPopup({
               >
                 <Pencil size={14} color="#7c3aed" />
                 <Text style={styles.popupEditText}>Edit</Text>
+              </TouchableOpacity>
+            )}
+            {canManage && holidays.length === 1 && (
+              <TouchableOpacity
+                style={styles.popupDeleteBtn}
+                onPress={() => {
+                  onClose();
+                  onDelete(holidays[0]);
+                }}
+              >
+                <Trash2 size={14} color="#dc2626" />
+                <Text style={styles.popupDeleteText}>Delete</Text>
               </TouchableOpacity>
             )}
             <TouchableOpacity style={styles.popupCloseBtn} onPress={onClose}>

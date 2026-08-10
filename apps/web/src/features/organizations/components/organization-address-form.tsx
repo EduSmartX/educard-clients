@@ -3,7 +3,7 @@
  * Update organization address information
  */
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -35,37 +35,35 @@ interface OrganizationAddressFormProps {
   isLoading: boolean;
 }
 
+function getOrganizationAddressFormValues(
+  organization: Organization | undefined
+): OrganizationAddressFormData {
+  return {
+    street_address: organization?.address?.street_address || '',
+    address_line_2: organization?.address?.address_line_2 || '',
+    city: organization?.address?.city || '',
+    state: organization?.address?.state || '',
+    zip_code: organization?.address?.zip_code || '',
+    country: organization?.address?.country || 'India',
+  };
+}
+
 export function OrganizationAddressForm({
   organization,
   isLoading,
 }: Readonly<OrganizationAddressFormProps>) {
   const updateMutation = useUpdateOrganizationAddress(organization?.public_id || '');
+  const formValues = useMemo(() => getOrganizationAddressFormValues(organization), [organization]);
 
   const form = useForm<OrganizationAddressFormData>({
     resolver: zodResolver(organizationAddressSchema),
     ...STANDARD_FORM_VALIDATION_CONFIG,
-    defaultValues: {
-      street_address: '',
-      address_line_2: '',
-      city: '',
-      state: '',
-      zip_code: '',
-      country: 'India',
-    },
+    defaultValues: getOrganizationAddressFormValues(undefined),
   });
 
   useEffect(() => {
-    if (organization?.address) {
-      form.reset({
-        street_address: organization.address.street_address || '',
-        address_line_2: organization.address.address_line_2 || '',
-        city: organization.address.city || '',
-        state: organization.address.state || '',
-        zip_code: organization.address.zip_code || '',
-        country: organization.address.country || 'India',
-      });
-    }
-  }, [organization, form]);
+    form.reset(formValues);
+  }, [form, formValues]);
 
   const onSubmit = (values: OrganizationAddressFormData) => {
     updateMutation.mutate(values, {
@@ -112,7 +110,7 @@ export function OrganizationAddressForm({
               <Button
                 type="button"
                 variant="brandOutline"
-                onClick={() => form.reset()}
+                onClick={() => form.reset(formValues)}
                 disabled={updateMutation.isPending || !form.formState.isDirty}
               >
                 Reset

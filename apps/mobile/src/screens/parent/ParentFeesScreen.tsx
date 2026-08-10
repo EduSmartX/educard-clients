@@ -5,7 +5,7 @@
 
 import { format } from 'date-fns';
 import { CheckCircle, ToggleLeft, ToggleRight } from 'lucide-react-native';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -15,10 +15,15 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
-  type DimensionValue,
 } from 'react-native';
 
-import { Screen, Header } from '@/components/layout';
+import {
+  DonutChart,
+  ChartLegend,
+  type ChartSegment,
+} from '@/components/charts';
+import { Screen } from '@/components/layout';
+import { ScreenHeader } from '@/components/ui';
 import { colors } from '@/constants/colors';
 import {
   useFeeSummary,
@@ -29,6 +34,12 @@ import {
   type FeePayment,
   type FeeComponent,
 } from '@/features/student-portal';
+
+// Amounts arrive as decimal strings and may be absent on older API versions.
+function toAmount(value: number | string | null | undefined): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-IN', {
@@ -58,18 +69,40 @@ export default function ParentFeesScreen() {
   const optOut = useFeeOptOut();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [note, setNote] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
 
-  const refresh = () => {
-    void refetchSummary();
-    void refetchPayments();
-    void refetchComponents();
-  };
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([
+      refetchSummary(),
+      refetchPayments(),
+      refetchComponents(),
+    ]);
+    setRefreshing(false);
+  }, [refetchSummary, refetchPayments, refetchComponents]);
   const isLoading = summaryLoading || paymentsLoading || componentsLoading;
 
-  const paidPct = summary ? Number(summary.paid_percentage) : 0;
-  const progressWidth = {
-    width: `${Math.min(paidPct, 100)}%` as DimensionValue,
-  };
+  const paidPct =
+    summary && toAmount(summary.total_amount) > 0
+      ? Math.round(
+          (toAmount(summary.amount_paid) / toAmount(summary.total_amount)) *
+            100,
+        )
+      : 0;
+  const feeSegments: ChartSegment[] = summary
+    ? [
+        {
+          label: 'Paid',
+          value: toAmount(summary.amount_paid),
+          color: '#10b981',
+        },
+        {
+          label: 'Due',
+          value: toAmount(summary.balance_due),
+          color: '#ef4444',
+        },
+      ]
+    : [];
 
   const mandatoryComponents = (components ?? []).filter(
     (c: FeeComponent) => c.component_type === 'mandatory',
@@ -79,13 +112,18 @@ export default function ParentFeesScreen() {
   );
 
   return (
-    <Screen>
-      <Header title="Fees" showBack={false} />
+    <Screen safeArea={false} statusBarStyle="light" backgroundColor="#f8fafc">
+      <ScreenHeader
+        title="Fees"
+        subtitle="Fee details, components and payments"
+        showBack={false}
+      />
       <ScrollView
         className="flex-1"
+        contentContainerClassName="pb-6"
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={false} onRefresh={refresh} />
+          <RefreshControl refreshing={refreshing} onRefresh={refresh} />
         }
       >
         {isLoading ? (
@@ -97,61 +135,113 @@ export default function ParentFeesScreen() {
             {/* Summary Cards */}
             {summary && (
               <>
-                <View className="flex-row gap-3">
-                  <View className="flex-1 rounded-xl border-l-4 border-l-blue-400 bg-white p-4">
-                    <Text className="text-[10px] text-gray-500">Total Fee</Text>
+                <Text className="mb-3 text-base font-bold text-gray-800">
+                  Fee Overview
+                </Text>
+                <View className="gap-3">
+                  <View className="rounded-xl border border-gray-200 bg-white p-4">
+                    <View className="flex-row items-center justify-between">
+                      <Text className="text-xs font-medium text-gray-500">
+                        Gross Fee
+                      </Text>
+                      <Text className="text-sm font-semibold text-gray-700">
+                        {formatCurrency(toAmount(summary.base_amount))}
+                      </Text>
+                    </View>
+                    <View className="mt-2 flex-row items-center justify-between">
+                      <Text className="text-xs font-medium text-emerald-700">
+                        Discount
+                        {toAmount(summary.discount_percentage) > 0
+                          ? ` (${toAmount(summary.discount_percentage)}%)`
+                          : ''}
+                      </Text>
+                      <Text className="text-sm font-bold text-emerald-700">
+                        {toAmount(summary.discount_amount) > 0 ? '-' : ''}
+                        {formatCurrency(toAmount(summary.discount_amount))}
+                      </Text>
+                    </View>
+                    <View className="mt-3 border-t border-gray-100 pt-3">
+                      <View className="flex-row items-center justify-between">
+                        <Text className="text-xs font-semibold text-gray-600">
+                          Payable After Discount
+                        </Text>
+                        <Text className="text-sm font-bold text-gray-800">
+                          {formatCurrency(toAmount(summary.total_amount))}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                  <View className="rounded-xl border border-gray-200 bg-white p-4">
+                    <Text className="text-xs font-medium text-gray-500">
+                      Total Payable
+                    </Text>
                     <Text className="mt-1 text-xl font-bold text-gray-800">
-                      {formatCurrency(Number(summary.total_amount))}
+                      {formatCurrency(toAmount(summary.total_amount))}
                     </Text>
                   </View>
-                  <View className="flex-1 rounded-xl border-l-4 border-l-emerald-400 bg-white p-4">
-                    <Text className="text-[10px] text-gray-500">Paid</Text>
-                    <Text className="mt-1 text-xl font-bold text-emerald-600">
-                      {formatCurrency(Number(summary.amount_paid))}
-                    </Text>
-                  </View>
-                  <View className="flex-1 rounded-xl border-l-4 border-l-amber-400 bg-white p-4">
-                    <Text className="text-[10px] text-gray-500">Due</Text>
-                    <Text className="mt-1 text-xl font-bold text-amber-600">
-                      {formatCurrency(Number(summary.balance_due))}
-                    </Text>
+                  <View className="flex-row gap-3">
+                    <View className="flex-1 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                      <Text className="text-xs font-medium text-emerald-700">
+                        Paid
+                      </Text>
+                      <Text className="mt-1 text-xl font-bold text-emerald-700">
+                        {formatCurrency(toAmount(summary.amount_paid))}
+                      </Text>
+                    </View>
+                    <View className="flex-1 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                      <Text className="text-xs font-medium text-amber-700">
+                        Due
+                      </Text>
+                      <Text className="mt-1 text-xl font-bold text-amber-700">
+                        {formatCurrency(toAmount(summary.balance_due))}
+                      </Text>
+                    </View>
                   </View>
                 </View>
 
-                {/* Progress Bar */}
-                <View className="mt-4 rounded-xl bg-white p-4">
-                  <View className="flex-row items-center justify-between">
-                    <Text className="text-xs text-gray-500">
-                      Payment Progress
+                <View className="mt-5 rounded-2xl border border-gray-200 bg-white p-5">
+                  <Text className="mb-3 text-center text-sm font-bold text-gray-700">
+                    Payment Progress
+                  </Text>
+                  {toAmount(summary.total_amount) > 0 ? (
+                    <>
+                      <View className="items-center">
+                        <DonutChart
+                          data={feeSegments}
+                          size={128}
+                          thickness={16}
+                          centerValue={`${paidPct}%`}
+                          centerLabel="Paid"
+                        />
+                      </View>
+                      <View className="mt-3">
+                        <ChartLegend data={feeSegments} showValues />
+                      </View>
+                      {summary.due_date && (
+                        <Text className="mt-3 text-[10px] text-gray-400">
+                          Due:{' '}
+                          {format(new Date(summary.due_date), 'd MMM yyyy')}
+                        </Text>
+                      )}
+                      {summary.is_overdue && (
+                        <View className="mt-2 self-start rounded-md bg-red-100 px-2 py-0.5">
+                          <Text className="text-[10px] font-medium text-red-600">
+                            Overdue
+                          </Text>
+                        </View>
+                      )}
+                    </>
+                  ) : (
+                    <Text className="py-4 text-center text-[13px] text-gray-400">
+                      No data yet
                     </Text>
-                    <Text className="text-xs font-medium text-emerald-600">
-                      {paidPct}%
-                    </Text>
-                  </View>
-                  <View className="mt-2 h-3 overflow-hidden rounded-full bg-gray-100">
-                    <View
-                      className="h-full rounded-full bg-emerald-500"
-                      style={progressWidth}
-                    />
-                  </View>
-                  {summary.due_date && (
-                    <Text className="mt-2 text-[10px] text-gray-400">
-                      Due: {format(new Date(summary.due_date), 'd MMM yyyy')}
-                    </Text>
-                  )}
-                  {summary.is_overdue && (
-                    <View className="mt-2 self-start rounded-md bg-red-100 px-2 py-0.5">
-                      <Text className="text-[10px] font-medium text-red-600">
-                        Overdue
-                      </Text>
-                    </View>
                   )}
                 </View>
               </>
             )}
 
             {/* Fee Components */}
-            <Text className="mb-3 mt-6 text-sm font-semibold text-gray-600">
+            <Text className="mb-3 mt-8 text-base font-bold text-gray-800">
               Fee Components
             </Text>
             {components && components.length > 0 ? (
@@ -159,7 +249,7 @@ export default function ParentFeesScreen() {
                 {/* Mandatory */}
                 {mandatoryComponents.length > 0 && (
                   <>
-                    <Text className="mb-2 text-xs font-medium uppercase tracking-wide text-blue-600">
+                    <Text className="mb-2 text-xs font-medium uppercase tracking-wide text-emerald-700">
                       Mandatory
                     </Text>
                     {mandatoryComponents.map((c: FeeComponent) => (
@@ -262,16 +352,21 @@ export default function ParentFeesScreen() {
                           </View>
                         </View>
                         {activeId === c.public_id && (
-                          <View className="mt-3 border-t border-gray-100 pt-3">
+                          <View className="mt-3 rounded-xl bg-gray-50 p-3">
+                            <Text className="mb-2 text-xs font-semibold text-gray-700">
+                              Request reason
+                            </Text>
                             <TextInput
                               placeholder="Reason for request..."
+                              placeholderTextColor="#94a3b8"
                               value={note}
                               onChangeText={setNote}
-                              className="rounded-md border border-gray-200 px-3 py-2 text-sm"
+                              multiline
+                              className="min-h-[72px] rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm text-gray-800"
                             />
                             <View className="mt-2 flex-row gap-2">
                               <TouchableOpacity
-                                className="flex-1 items-center rounded-md bg-primary-500 py-2"
+                                className="flex-1 items-center rounded-lg bg-emerald-600 py-2.5"
                                 disabled={
                                   !note.trim() ||
                                   optIn.isPending ||
@@ -306,7 +401,7 @@ export default function ParentFeesScreen() {
                                 </Text>
                               </TouchableOpacity>
                               <TouchableOpacity
-                                className="flex-1 items-center rounded-md border border-gray-200 py-2"
+                                className="flex-1 items-center rounded-lg border border-gray-300 bg-white py-2.5"
                                 onPress={() => {
                                   setActiveId(null);
                                   setNote('');
@@ -331,7 +426,7 @@ export default function ParentFeesScreen() {
             )}
 
             {/* Payment History */}
-            <Text className="mb-3 mt-6 text-sm font-semibold text-gray-600">
+            <Text className="mb-3 mt-8 text-base font-bold text-gray-800">
               Payment History
             </Text>
             {payments && payments.length > 0 ? (

@@ -11,6 +11,7 @@ import {
   FileText,
   IndianRupee,
   CalendarOff,
+  Megaphone,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
 import { ROUTES } from '@/constants/app-config';
@@ -58,6 +59,12 @@ export const studentSidebarConfig: SidebarSection[] = [
   {
     title: 'Others',
     items: [
+      {
+        id: 'announcements',
+        label: 'Announcements',
+        icon: Megaphone,
+        path: ROUTES.STUDENT.ANNOUNCEMENTS,
+      },
       {
         id: 'fee',
         label: 'Fee',

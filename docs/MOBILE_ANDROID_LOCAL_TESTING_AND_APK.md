@@ -11,9 +11,7 @@ ENVFILE=.env.production pnpm android
 
 This guide covers how to run and test the **RN CLI** mobile app (`apps/mobile`) on Android
 locally, and how to produce an installable **APK** — all with the plain React Native CLI /
-Gradle toolchain. There is **no Expo / EAS** in this flow (the old Expo app is kept only for
-reference at `apps/mobile-expo`; see [MOBILE_EAS_APK_SETUP.md](./MOBILE_EAS_APK_SETUP.md) for
-the legacy EAS process).
+Gradle toolchain. There is **no Expo / EAS** in this flow.
 
 | Item           | Value                                                      |
 | -------------- | ---------------------------------------------------------- |

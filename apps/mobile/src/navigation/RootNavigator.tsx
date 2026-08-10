@@ -7,7 +7,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import ForcePasswordChangeScreen from '@/screens/auth/ForcePasswordChangeScreen';
 
 import { AuthNavigator } from './AuthNavigator';
-import MainStackNavigator from './MainStackNavigator';
+import { MainStackNavigator } from './MainStackNavigator';
 import { navigationRef } from './navigation-service';
 import type { RootStackParamList } from './types';
 
@@ -17,10 +17,10 @@ const navTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    background: '#0b1220',
-    card: '#111827',
-    text: '#f8fafc',
-    border: '#1f2937',
+    background: '#f8fafc',
+    card: '#ffffff',
+    text: '#0f172a',
+    border: '#e2e8f0',
   },
 };
 
@@ -72,6 +72,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0b1220',
+    backgroundColor: '#f8fafc',
   },
 });

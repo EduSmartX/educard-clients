@@ -83,11 +83,11 @@ export default function TimeSlotsEditorScreen() {
   }, [navigation]);
 
   // Fetch all slots for this group
-  const { data: allSlots = [], isLoading, refetch } = useSlots(groupId);
+  const { data: allSlots, isLoading, refetch } = useSlots(groupId);
   const saveMutation = useBulkSaveSlots(groupId);
   const clearMutation = useClearDaySlots(groupId);
   // Build day -> slots map
-  const daySlotMap = useMemo(() => buildDaySlotMap(allSlots), [allSlots]);
+  const daySlotMap = useMemo(() => buildDaySlotMap(allSlots ?? []), [allSlots]);
   // Days that have saved slots
   const configuredDays = useMemo(() => {
     const set = new Set<number>();

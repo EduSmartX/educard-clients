@@ -16,9 +16,7 @@ import {
   ChevronRight,
   BookOpen,
   Calendar,
-  CheckCircle,
-  ChevronDown,
-  X,
+  Bell,
 } from 'lucide-react-native';
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
@@ -28,22 +26,23 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Modal,
-  Pressable,
-  ScrollView,
 } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
+import { SearchableSelect } from '@/components/ui';
 import { useNavigateWorkingDay } from '@/features/calendar';
 import {
   useTeacherClasses,
   useHomeworkList,
   useDeleteHomework,
+  useSendHomeworkNotification,
 } from '@/features/homework';
 import { useScreenFilters } from '@/hooks/useScreenFilters';
+import { useAuthStore } from '@/lib/auth-store';
 import { LinearGradient } from '@/lib/linear-gradient';
 import type { SharedStackNavigation } from '@/navigation/types';
 import { headerStyles, layoutStyles } from '@/styles';
+import { isAdminRole } from '@/utils/role-utils';
 
 import { SubjectHomeworkCard } from './SubjectHomeworkCard';
 import { styles } from './homework-list-styles';
@@ -57,6 +56,7 @@ const adminGradient = getRoleGradient('admin');
 
 export default function HomeworkListScreen() {
   const navigation = useNavigation<SharedStackNavigation>();
+  const { user } = useAuthStore();
 
   const [refreshing, setRefreshing] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // Start with today
@@ -71,7 +71,6 @@ export default function HomeworkListScreen() {
     (id: string) => setFilter('classId', id),
     [setFilter],
   );
-  const [showClassPicker, setShowClassPicker] = useState(false);
 
   const handleBack = useCallback(() => {
     if (navigation.canGoBack()) {
@@ -95,6 +94,15 @@ export default function HomeworkListScreen() {
   const selectedClass = useMemo(
     () => teacherClasses.find(c => c.public_id === selectedClassId),
     [teacherClasses, selectedClassId],
+  );
+
+  const classOptions = useMemo(
+    () =>
+      teacherClasses.map(c => ({
+        value: c.public_id,
+        label: c.is_class_teacher ? `${c.name} • Class Teacher` : c.name,
+      })),
+    [teacherClasses],
   );
 
   const queryParams = useMemo(() => {
@@ -133,6 +141,14 @@ export default function HomeworkListScreen() {
     ).length;
     return { total, assigned, published, pending: total - assigned };
   }, [subjectsWithHomework]);
+
+  const hasPublishedHomework = viewStats.published > 0;
+  const canSendNotification = useMemo(() => {
+    if (!selectedClass || !hasPublishedHomework) {
+      return false;
+    }
+    return isAdminRole(user?.role) || !!selectedClass.is_class_teacher;
+  }, [selectedClass, hasPublishedHomework, user?.role]);
 
   // Working day navigation mutation
   const { mutateAsync: navigateWorkingDay, isPending: isNavigating } =
@@ -228,6 +244,22 @@ export default function HomeworkListScreen() {
     [navigation],
   );
 
+  const sendNotificationMutation = useSendHomeworkNotification();
+  const handleSendNotification = useCallback(() => {
+    if (!selectedClass || !canSendNotification) {
+      return;
+    }
+    sendNotificationMutation.mutate({
+      class_public_id: selectedClass.public_id,
+      date: formatDateYYYYMMDD(selectedDate),
+    });
+  }, [
+    selectedClass,
+    canSendNotification,
+    sendNotificationMutation,
+    selectedDate,
+  ]);
+
   const isToday =
     formatDateYYYYMMDD(selectedDate) === formatDateYYYYMMDD(new Date());
   const isYesterday = useMemo(() => {
@@ -311,88 +343,17 @@ export default function HomeworkListScreen() {
           </View>
         )}
         {!classesLoading && !classesError && teacherClasses.length > 0 && (
-          <TouchableOpacity
-            style={styles.classDropdown}
-            onPress={() => setShowClassPicker(true)}
-          >
-            <View style={styles.classDropdownContent}>
-              <Text style={styles.classDropdownLabel}>Class</Text>
-              <View style={styles.classDropdownValue}>
-                <Text style={styles.classDropdownText}>
-                  {selectedClass?.name || 'Select a class'}
-                </Text>
-                {selectedClass?.is_class_teacher && (
-                  <View style={styles.ctBadge}>
-                    <Text style={styles.ctBadgeText}>CT</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-            <ChevronDown size={20} color={Colors.gray[500]} />
-          </TouchableOpacity>
+          <SearchableSelect
+            label="Class"
+            value={selectedClassId}
+            onValueChange={setSelectedClassId}
+            options={classOptions}
+            placeholder="Select a class"
+            searchPlaceholder="Search classes..."
+            emptyText="No classes found"
+          />
         )}
       </View>
-
-      {/* Class Picker Modal */}
-      <Modal
-        visible={showClassPicker}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowClassPicker(false)}
-      >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => setShowClassPicker(false)}
-        >
-          <Pressable
-            style={styles.modalContent}
-            onPress={e => e.stopPropagation()}
-          >
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Class</Text>
-              <TouchableOpacity onPress={() => setShowClassPicker(false)}>
-                <X size={24} color={Colors.gray[500]} />
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.modalList}>
-              {teacherClasses.map(cls => (
-                <TouchableOpacity
-                  key={cls.public_id}
-                  style={[
-                    styles.modalItem,
-                    selectedClassId === cls.public_id &&
-                      styles.modalItemSelected,
-                  ]}
-                  onPress={() => {
-                    setSelectedClassId(cls.public_id);
-                    setShowClassPicker(false);
-                  }}
-                >
-                  <View style={styles.modalItemContent}>
-                    <Text
-                      style={[
-                        styles.modalItemText,
-                        selectedClassId === cls.public_id &&
-                          styles.modalItemTextSelected,
-                      ]}
-                    >
-                      {cls.name}
-                    </Text>
-                    {!!cls.is_class_teacher && (
-                      <View style={[styles.ctBadge, styles.ml8]}>
-                        <Text style={styles.ctBadgeText}>Class Teacher</Text>
-                      </View>
-                    )}
-                  </View>
-                  {selectedClassId === cls.public_id && (
-                    <CheckCircle size={20} color={Colors.primary[500]} />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </Pressable>
-        </Pressable>
-      </Modal>
 
       {/* Date Navigation */}
       <View style={styles.dateNav}>
@@ -472,6 +433,39 @@ export default function HomeworkListScreen() {
             </Text>
             <Text style={styles.statLabel}>Pending</Text>
           </View>
+        </View>
+      )}
+
+      {canSendNotification && (
+        <View style={styles.notificationSection}>
+          <View style={styles.notificationBanner}>
+            <Bell size={16} color="#1d4ed8" />
+            <Text style={styles.notificationBannerText}>
+              Send a consolidated notification to parents and students for all
+              published homework in this class.
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={[
+              styles.sendNotificationBtn,
+              sendNotificationMutation.isPending &&
+                styles.sendNotificationBtnDisabled,
+            ]}
+            onPress={handleSendNotification}
+            disabled={sendNotificationMutation.isPending}
+          >
+            {sendNotificationMutation.isPending ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Bell size={16} color="#fff" />
+            )}
+            <Text style={styles.sendNotificationBtnText}>
+              {sendNotificationMutation.isPending
+                ? 'Sending...'
+                : 'Send Notification'}
+            </Text>
+          </TouchableOpacity>
         </View>
       )}
 

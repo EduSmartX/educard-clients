@@ -27,14 +27,10 @@ export function HeaderProfileButton({
   const navigation =
     useNavigation<BottomTabNavigationProp<AdminTabParamList>>();
 
-  const { data: profilePhoto, dataUpdatedAt } = useMyProfilePhoto();
+  const { data: profilePhoto } = useMyProfilePhoto();
 
-  const serverUrl =
+  const profileImageUrl =
     getMediaUrl(profilePhoto?.thumbnail_url) ?? getMediaUrl(profilePhoto?.url);
-  const separator = serverUrl?.includes('?') ? '&' : '?';
-  const profileImageUrl = serverUrl
-    ? `${serverUrl}${separator}v=${dataUpdatedAt || Date.now()}`
-    : undefined;
 
   const borderRadius = size * 0.34;
 

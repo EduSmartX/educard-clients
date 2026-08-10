@@ -10,7 +10,7 @@ import {
   useRoute,
   type RouteProp,
 } from '@react-navigation/native';
-import { ChevronLeft, Check, Trash2 } from 'lucide-react-native';
+import { ChevronLeft, Check, Trash2, AlertCircle } from 'lucide-react-native';
 import { useState, useMemo, useCallback } from 'react';
 import {
   View,
@@ -63,15 +63,23 @@ export default function AssignEntryScreen() {
   }, [navigation]);
 
   // Fetch subjects assigned to this class
-  const { data: subjectsData } = useSubjectsByClass(classId);
+  const {
+    data: subjectsData,
+    isLoading: subjectsLoading,
+    isError: subjectsError,
+    refetch: refetchSubjects,
+  } = useSubjectsByClass(classId);
 
   const subjectOptions = useMemo(() => {
     const subjects = subjectsData?.data ?? [];
     return subjects.map(s => ({
-      label: s.subject_info?.name ?? 'Unknown',
+      label: s.subject_info?.name ?? s.name ?? 'Unknown',
       value: s.public_id,
     }));
   }, [subjectsData]);
+
+  const hasNoSubjects =
+    !subjectsLoading && !subjectsError && subjectOptions.length === 0;
 
   const handleAssign = async () => {
     if (!selectedSubjectId) {
@@ -79,14 +87,14 @@ export default function AssignEntryScreen() {
       return;
     }
     try {
-      // If there's an existing entry, delete it first
-      if (entryId) {
-        await deleteEntry.mutateAsync(entryId);
-      }
+      // Backend upserts by (slot, day, class), so reassigning a slot must not
+      // delete the existing entry first — that would leave the slot empty if
+      // the create then fails.
       const result = await createEntry.mutateAsync({
         slot_public_id: slotId,
         day_of_week: Number.parseInt(dayOfWeek, 10),
         class_public_id: classId,
+        assignment_type: 'subject',
         subject_public_id: selectedSubjectId,
       });
       if (result.warnings?.length) {
@@ -167,16 +175,43 @@ export default function AssignEntryScreen() {
               onChange={setSelectedSubjectId}
               options={subjectOptions}
               placeholder="Select a subject"
+              loading={subjectsLoading}
+              emptyMessage="No subjects assigned to this class"
               required
             />
+
+            {subjectsError && (
+              <TouchableOpacity
+                style={st.noticeError}
+                onPress={() => void refetchSubjects()}
+              >
+                <AlertCircle size={16} color="#b91c1c" />
+                <Text style={st.noticeErrorText}>
+                  Couldn't load subjects. Tap to retry.
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {hasNoSubjects && (
+              <View style={st.noticeInfo}>
+                <AlertCircle size={16} color="#92400e" />
+                <Text style={st.noticeInfoText}>
+                  No subjects are assigned to this class yet. Add subjects to
+                  this class first, then come back to assign them to slots.
+                </Text>
+              </View>
+            )}
           </View>
         </Animated.View>
 
         <View style={st.actions}>
           <TouchableOpacity
-            style={[st.assignBtn, isPending && st.assignBtnDisabled]}
+            style={[
+              st.assignBtn,
+              (isPending || hasNoSubjects) && st.assignBtnDisabled,
+            ]}
             onPress={() => void handleAssign()}
-            disabled={isPending}
+            disabled={isPending || hasNoSubjects}
           >
             {isPending ? (
               <ActivityIndicator size="small" color="#fff" />
@@ -222,6 +257,36 @@ const st = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
+
+  noticeError: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 12,
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  noticeErrorText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#b91c1c',
+  },
+  noticeInfo: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    marginTop: 12,
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: '#fffbeb',
+    borderWidth: 1,
+    borderColor: '#fde68a',
+  },
+  noticeInfoText: { flex: 1, fontSize: 13, lineHeight: 18, color: '#92400e' },
 
   actions: { gap: 12, marginTop: 8 },
   assignBtn: {

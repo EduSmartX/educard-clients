@@ -30,12 +30,12 @@ import {
 import { FormDropdown } from '@/components/forms';
 import { useClasses } from '@/features/classes';
 import { useSubjectsByClass } from '@/features/subjects';
+import { useTeachers } from '@/features/teachers';
 import {
   useClassTimetableForDate,
   useDeleteOverride,
   useUpsertOverride,
 } from '@/features/timetable';
-import { useManageableUsers } from '@/hooks/use-manageable-users';
 import { LinearGradient } from '@/lib/linear-gradient';
 import type {
   SharedStackNavigation,
@@ -88,7 +88,7 @@ export default function TimetableOverrideDayScreen() {
   );
 
   const { data: subjectsData } = useSubjectsByClass(selectedClassId);
-  const { data: staffUsers } = useManageableUsers('staff', true);
+  const { data: teachersData } = useTeachers({ page_size: 200 });
 
   const upsertOverride = useUpsertOverride(selectedClassId || '');
   const deleteOverride = useDeleteOverride(selectedClassId || '');
@@ -107,12 +107,23 @@ export default function TimetableOverrideDayScreen() {
     }));
   }, [subjectsData]);
 
+  // Subject -> its assigned teacher, so picking a subject fills the teacher.
+  const teacherBySubject = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const s of subjectsData?.data ?? []) {
+      const teacherId = s.teacher_info?.public_id ?? s.teacher?.public_id;
+      if (teacherId) map[s.public_id] = teacherId;
+    }
+    return map;
+  }, [subjectsData]);
+
+  // Teacher profile public_ids — the override API rejects user public_ids.
   const teacherOptions = useMemo(() => {
-    return (staffUsers ?? []).map(u => ({
-      label: u.full_name,
-      value: u.public_id,
+    return (teachersData?.teachers ?? []).map(t => ({
+      label: t.full_name,
+      value: t.public_id,
     }));
-  }, [staffUsers]);
+  }, [teachersData]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -226,6 +237,7 @@ export default function TimetableOverrideDayScreen() {
             slot={slot}
             teacherOptions={teacherOptions}
             subjectOptions={subjectOptions}
+            teacherBySubject={teacherBySubject}
             pending={upsertOverride.isPending || deleteOverride.isPending}
             onSave={form => void handleSaveOverride(slot, form)}
             onDelete={overridePublicId =>

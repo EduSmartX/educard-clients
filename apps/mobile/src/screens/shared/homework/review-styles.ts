@@ -163,6 +163,9 @@ export const styles = StyleSheet.create({
     color: Colors.gray[600],
     lineHeight: 22,
   },
+  attachmentList: {
+    gap: 8,
+  },
   attachmentCard: {
     flexDirection: 'row',
     alignItems: 'center',
