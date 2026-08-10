@@ -809,7 +809,6 @@ export default function TimesheetApprovalsScreen() {
                           {
                             backgroundColor: row.bgColor,
                             borderColor: row.borderColor ?? 'transparent',
-                            borderWidth: row.borderColor ? 1 : 0,
                           },
                         ]}
                       >

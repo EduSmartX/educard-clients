@@ -316,6 +316,7 @@ export const styles = StyleSheet.create({
   dayStatusBadge: {
     minWidth: 78,
     borderRadius: 8,
+    borderWidth: 1,
     paddingVertical: 4,
     paddingHorizontal: 8,
     alignItems: 'center',

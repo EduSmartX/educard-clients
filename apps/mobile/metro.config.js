@@ -27,11 +27,6 @@ config.resolver.extraNodeModules = new Proxy(
 
 config.resolver.unstable_enableSymlinks = true;
 
-// Use blockList directly without exclusionList wrapper
-config.resolver.blockList = [
-	new RegExp(`${path.resolve(workspaceRoot, 'apps/mobile-expo')}/.*`),
-];
-
 config.transformer.babelTransformerPath = require.resolve('react-native-svg-transformer');
 config.resolver.assetExts = config.resolver.assetExts.filter((ext) => ext !== 'svg');
 config.resolver.sourceExts = [...config.resolver.sourceExts, 'svg'];

@@ -10,7 +10,7 @@ Run from repo root: `educard-clients/`
 # Web app (Vite)
 pnpm dev:web
 
-# Mobile app (Expo)
+# Mobile app (React Native CLI)
 pnpm dev:mobile
 ```
 
@@ -105,12 +105,6 @@ pnpm install
 - Keep **2 terminals** open during development:
   - Terminal 1: `pnpm dev:web`
   - Terminal 2: `pnpm dev:mobile`
-- If Expo shows dependency mismatch warnings, run:
-
-```bash
-cd apps/mobile
-npx expo install --fix
-```
 
 ---
 

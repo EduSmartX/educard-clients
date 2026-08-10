@@ -389,7 +389,7 @@ jobs:
 
 ```yaml
 # .github/workflows/eas-build.yml
-name: EAS Build
+name: Android Build (Deprecated Example)
 on:
   push:
     tags: ["v*"]
@@ -399,11 +399,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-      - run: eas build --platform android --profile production --non-interactive
+      - run: echo "This EAS example is deprecated. Use .github/workflows/mobile-apk-build.yml for current RN CLI APK CI."
 ```
 
 ---
