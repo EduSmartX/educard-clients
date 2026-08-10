@@ -30,6 +30,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { FormDropdown } from '@/components/forms';
 import { useMyTimetable, useTeacherTimetable } from '@/features/timetable';
+import { useUserProfile } from '@/hooks';
 import { useManageableUsers } from '@/hooks/use-manageable-users';
 import { useAuthStore } from '@/lib/auth-store';
 import { LinearGradient } from '@/lib/linear-gradient';
@@ -43,7 +44,12 @@ const gradient = getRoleGradient('admin');
 export default function TeacherTimetableScreen() {
   const navigation = useNavigation<SharedStackNavigation>();
   const { user } = useAuthStore();
+  const { data: profile } = useUserProfile();
   const isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
+  const selfTeacherId = useMemo(
+    () => profile?.teacher_public_id?.trim() ?? '',
+    [profile?.teacher_public_id],
+  );
 
   const [selectedTeacherId, setSelectedTeacherId] = useState<string>('');
   const [selectedDay, setSelectedDay] = useState<number>(() => {
@@ -79,23 +85,55 @@ export default function TeacherTimetableScreen() {
 
   const timetableData = selectedTeacherId ? teacherTimetable : myTimetable;
   const isLoading = selectedTeacherId ? ttLoading : myLoading;
+  const isViewingSelf = useMemo(() => {
+    if (!timetableData?.teacher_name) return false;
+    if (selectedTeacherId) {
+      return !!selfTeacherId && selectedTeacherId === selfTeacherId;
+    }
+    return true;
+  }, [timetableData?.teacher_name, selectedTeacherId, selfTeacherId]);
 
   // Teacher options from manageable users
   const teacherOptions = useMemo(() => {
-    return (manageableUsers ?? []).map(u => ({
+    const options = (manageableUsers ?? []).map(u => ({
       label: u.full_name,
       value: u.public_id,
     }));
-  }, [manageableUsers]);
+
+    if (isAdmin && selfTeacherId) {
+      const selfLabel =
+        profile?.full_name?.trim() || user?.full_name?.trim() || 'Self';
+      options.unshift({
+        label: `${selfLabel} (Self)`,
+        value: selfTeacherId,
+      });
+    }
+
+    // Keep first occurrence and drop duplicate IDs.
+    return options.filter(
+      (option, index, array) =>
+        array.findIndex(item => item.value === option.value) === index,
+    );
+  }, [
+    manageableUsers,
+    isAdmin,
+    selfTeacherId,
+    profile?.full_name,
+    user?.full_name,
+  ]);
 
   const dropdownLoading = usersLoading;
 
-  // Auto-select first teacher (only for admins)
+  // Auto-select self for admin+teacher users, otherwise first available teacher.
   useEffect(() => {
     if (isAdmin && !selectedTeacherId && teacherOptions.length > 0) {
-      setSelectedTeacherId(teacherOptions[0].value);
+      if (selfTeacherId) {
+        setSelectedTeacherId(selfTeacherId);
+      } else {
+        setSelectedTeacherId(teacherOptions[0].value);
+      }
     }
-  }, [teacherOptions, selectedTeacherId, isAdmin]);
+  }, [teacherOptions, selectedTeacherId, isAdmin, selfTeacherId]);
 
   // Day entries
   const dayEntries: TimetableEntry[] = useMemo(() => {
@@ -196,7 +234,16 @@ export default function TeacherTimetableScreen() {
                 {timetableData.teacher_name.charAt(0).toUpperCase()}
               </Text>
             </View>
-            <Text style={styles.teacherName}>{timetableData.teacher_name}</Text>
+            <View style={styles.teacherInfo}>
+              <Text style={styles.teacherName}>
+                {timetableData.teacher_name}
+              </Text>
+              {isViewingSelf && (
+                <View style={styles.selfBadge}>
+                  <Text style={styles.selfBadgeText}>Self</Text>
+                </View>
+              )}
+            </View>
           </View>
         )}
 
@@ -399,11 +446,32 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   teacherAvatarText: { color: '#fff', fontWeight: '700', fontSize: 16 },
-  teacherName: {
+  teacherInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
     marginLeft: 10,
+    justifyContent: 'space-between',
+  },
+  teacherName: {
     fontSize: 15,
     fontWeight: '600',
     color: '#4338ca',
+  },
+  selfBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: '#c7d2fe',
+    borderWidth: 1,
+    borderColor: '#a5b4fc',
+  },
+  selfBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#3730a3',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
   daySelector: { marginTop: 16, paddingLeft: 16 },
   dayPill: {

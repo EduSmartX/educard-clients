@@ -289,7 +289,7 @@ export default function EmployeeDashboardScreen() {
         <TodaySchedule
           timetableData={timetableData}
           isLoading={isLoading}
-          onViewAll={() => navigateToScreen(navigation, 'Timetable')}
+          onViewAll={() => navigateToScreen(navigation, 'TimetableTeacher')}
         />
 
         <Animated.View

@@ -349,7 +349,7 @@ export default function AdminDashboardScreen() {
           timetableData={timetableData}
           isLoading={loadingTimetable}
           maxDisplay={4}
-          onViewAll={() => navigateToScreen(navigation, 'Timetable')}
+          onViewAll={() => navigateToScreen(navigation, 'TimetableTeacher')}
         />
 
         <View style={styles.bottomSpacer} />
