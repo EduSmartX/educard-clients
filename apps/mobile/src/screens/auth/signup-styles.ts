@@ -86,15 +86,17 @@ export const styles = StyleSheet.create({
   // Form Card
   formCard: {
     backgroundColor: '#fff',
-    borderRadius: 24,
-    padding: 24,
+    borderRadius: 18,
+    padding: 18,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
-    shadowRadius: 24,
-    elevation: 12,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: Colors.gray[100],
   },
-  stepContent: { gap: 20 },
+  stepContent: { gap: 16 },
 
   // Section Header
   sectionHeader: {
@@ -123,11 +125,10 @@ export const styles = StyleSheet.create({
   inputWrapper: { marginBottom: 0 },
   inputLabel: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '500',
     color: Colors.gray[600],
-    marginBottom: 8,
-    letterSpacing: 0.2,
-    textTransform: 'uppercase',
+    marginBottom: 6,
+    letterSpacing: 0.1,
   },
   stepBadge: {
     backgroundColor: Colors.primary[100],
@@ -143,20 +144,20 @@ export const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    borderWidth: 1.5,
+    backgroundColor: Colors.gray[50],
+    borderRadius: 12,
+    borderWidth: 1,
     borderColor: Colors.gray[200],
-    paddingHorizontal: 16,
-    height: 54,
-    gap: 12,
+    paddingHorizontal: 14,
+    minHeight: 50,
+    gap: 10,
   },
   inputFocused: {
     borderColor: Colors.primary[500],
     backgroundColor: '#fff',
-    borderWidth: 2,
+    borderWidth: 1.5,
   },
-  input: { flex: 1, fontSize: 16, color: Colors.gray[900], fontWeight: '500' },
+  input: { flex: 1, fontSize: 15, color: Colors.gray[900], fontWeight: '400' },
   inputHint: { fontSize: 11, color: Colors.gray[400], marginTop: 6 },
 
   // Toggle

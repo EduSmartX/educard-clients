@@ -18,8 +18,6 @@ import {
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
 
-import { useResponsive } from '@/hooks/useResponsive';
-
 // Address data structure
 export interface AddressData {
   streetAddress: string;
@@ -62,8 +60,6 @@ export function AddressForm({
   disabled = false,
 }: AddressFormProps) {
   const [focusedField, setFocusedField] = useState<string | null>(null);
-  const { width } = useResponsive();
-  const useTwoColumnRows = width >= 400;
 
   // Render individual input field
   const renderField = (
@@ -75,7 +71,6 @@ export function AddressForm({
       optional?: boolean;
       keyboardType?: 'default' | 'numeric' | 'email-address';
       autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
-      halfWidth?: boolean;
     },
   ) => {
     const isFocused = focusedField === field;
@@ -83,9 +78,7 @@ export function AddressForm({
     const isOptional = options?.optional ?? false;
 
     return (
-      <View
-        style={[styles.fieldContainer, options?.halfWidth && styles.halfWidth]}
-      >
+      <View style={styles.fieldContainer}>
         <View style={styles.labelRow}>
           <Text style={styles.label}>
             {label}
@@ -172,66 +165,58 @@ export function AddressForm({
           />,
           { optional: true, autoCapitalize: 'words' },
         )}
-
-        <View style={[styles.row, !useTwoColumnRows && styles.rowStacked]}>
-          {renderField(
-            'city',
-            'City',
-            'City',
-            <MapPinned
-              size={18}
-              color={
-                focusedField === 'city' ? Colors.primary[500] : Colors.gray[400]
-              }
-            />,
-            { halfWidth: true, autoCapitalize: 'words' },
-          )}
-          {renderField(
-            'state',
-            'State',
-            'State',
-            <MapPin
-              size={18}
-              color={
-                focusedField === 'state'
-                  ? Colors.primary[500]
-                  : Colors.gray[400]
-              }
-            />,
-            { halfWidth: true, autoCapitalize: 'words' },
-          )}
-        </View>
-
-        <View style={[styles.row, !useTwoColumnRows && styles.rowStacked]}>
-          {renderField(
-            'zipCode',
-            'PIN Code',
-            '123456',
-            <Hash
-              size={18}
-              color={
-                focusedField === 'zipCode'
-                  ? Colors.primary[500]
-                  : Colors.gray[400]
-              }
-            />,
-            { halfWidth: true, keyboardType: 'numeric' },
-          )}
-          {renderField(
-            'country',
-            'Country',
-            'India',
-            <Globe
-              size={18}
-              color={
-                focusedField === 'country'
-                  ? Colors.primary[500]
-                  : Colors.gray[400]
-              }
-            />,
-            { halfWidth: true, autoCapitalize: 'words' },
-          )}
-        </View>
+        {renderField(
+          'city',
+          'City',
+          'City',
+          <MapPinned
+            size={18}
+            color={
+              focusedField === 'city' ? Colors.primary[500] : Colors.gray[400]
+            }
+          />,
+          { autoCapitalize: 'words' },
+        )}
+        {renderField(
+          'state',
+          'State',
+          'State',
+          <MapPin
+            size={18}
+            color={
+              focusedField === 'state' ? Colors.primary[500] : Colors.gray[400]
+            }
+          />,
+          { autoCapitalize: 'words' },
+        )}
+        {renderField(
+          'zipCode',
+          'PIN Code',
+          '123456',
+          <Hash
+            size={18}
+            color={
+              focusedField === 'zipCode'
+                ? Colors.primary[500]
+                : Colors.gray[400]
+            }
+          />,
+          { keyboardType: 'numeric' },
+        )}
+        {renderField(
+          'country',
+          'Country',
+          'India',
+          <Globe
+            size={18}
+            color={
+              focusedField === 'country'
+                ? Colors.primary[500]
+                : Colors.gray[400]
+            }
+          />,
+          { autoCapitalize: 'words' },
+        )}
       </View>
     </View>
   );
@@ -278,19 +263,8 @@ const styles = StyleSheet.create({
   fieldsContainer: {
     gap: 16,
   },
-  row: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  rowStacked: {
-    flexDirection: 'column',
-    gap: 16,
-  },
   fieldContainer: {
-    flex: 1,
-  },
-  halfWidth: {
-    flex: 1,
+    width: '100%',
   },
   labelRow: {
     flexDirection: 'row',
@@ -300,10 +274,9 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '500',
     color: Colors.gray[700],
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
+    letterSpacing: 0.1,
   },
   required: {
     color: '#ef4444',
@@ -322,18 +295,18 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.gray[50],
-    borderRadius: 14,
-    borderWidth: 1.5,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    borderWidth: 1,
     borderColor: Colors.gray[200],
     paddingHorizontal: 12,
-    height: 52,
+    minHeight: 50,
     gap: 10,
   },
   inputFocused: {
     borderColor: Colors.primary[500],
     backgroundColor: '#fff',
-    borderWidth: 2,
+    borderWidth: 1.5,
   },
   inputError: {
     borderColor: '#ef4444',
@@ -344,8 +317,8 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   iconContainer: {
-    width: 32,
-    height: 32,
+    width: 30,
+    height: 30,
     borderRadius: 8,
     backgroundColor: Colors.gray[100],
     alignItems: 'center',
@@ -356,9 +329,9 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 14,
     color: Colors.gray[900],
-    fontWeight: '500',
+    fontWeight: '400',
   },
   errorText: {
     fontSize: 12,

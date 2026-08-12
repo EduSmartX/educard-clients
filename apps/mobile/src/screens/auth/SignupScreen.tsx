@@ -1042,81 +1042,76 @@ export default function SignupScreen() {
   // Step 4: Admin Details
   const renderStep4 = () => (
     <Animated.View entering={FadeInUp.duration(400)} style={styles.stepContent}>
-      <View style={styles.row}>
-        <View style={[styles.inputWrapper, styles.halfWidth]}>
-          <Text style={styles.inputLabel}>First Name *</Text>
-          <View
-            style={[
-              styles.inputContainer,
-              focusedInput === 'firstName' && styles.inputFocused,
-              errors.firstName && styles.inputError,
-            ]}
-          >
-            <User
-              size={18}
-              color={getIconColor(
-                !!errors.firstName,
-                focusedInput === 'firstName',
-              )}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="John"
-              placeholderTextColor={Colors.gray[400]}
-              value={firstName}
-              onChangeText={v => {
-                setFirstName(v);
-                clearError('firstName');
-              }}
-              autoCapitalize="words"
-              onFocus={() => setFocusedInput('firstName')}
-              onBlur={() => setFocusedInput(null)}
-            />
-          </View>
-          {!!errors.firstName && (
-            <View style={styles.errorRow}>
-              <AlertCircle size={12} color="#ef4444" />
-              <Text style={styles.errorTextSmall}>{errors.firstName}</Text>
-            </View>
-          )}
+      <View style={styles.inputWrapper}>
+        <Text style={styles.inputLabel}>First Name *</Text>
+        <View
+          style={[
+            styles.inputContainer,
+            focusedInput === 'firstName' && styles.inputFocused,
+            errors.firstName && styles.inputError,
+          ]}
+        >
+          <User
+            size={18}
+            color={getIconColor(
+              !!errors.firstName,
+              focusedInput === 'firstName',
+            )}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="John"
+            placeholderTextColor={Colors.gray[400]}
+            value={firstName}
+            onChangeText={v => {
+              setFirstName(v);
+              clearError('firstName');
+            }}
+            autoCapitalize="words"
+            onFocus={() => setFocusedInput('firstName')}
+            onBlur={() => setFocusedInput(null)}
+          />
         </View>
-        <View style={[styles.inputWrapper, styles.halfWidth]}>
-          <Text style={styles.inputLabel}>Last Name *</Text>
-          <View
-            style={[
-              styles.inputContainer,
-              focusedInput === 'lastName' && styles.inputFocused,
-              errors.lastName && styles.inputError,
-            ]}
-          >
-            <User
-              size={18}
-              color={getIconColor(
-                !!errors.lastName,
-                focusedInput === 'lastName',
-              )}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Doe"
-              placeholderTextColor={Colors.gray[400]}
-              value={lastName}
-              onChangeText={v => {
-                setLastName(v);
-                clearError('lastName');
-              }}
-              autoCapitalize="words"
-              onFocus={() => setFocusedInput('lastName')}
-              onBlur={() => setFocusedInput(null)}
-            />
+        {!!errors.firstName && (
+          <View style={styles.errorRow}>
+            <AlertCircle size={12} color="#ef4444" />
+            <Text style={styles.errorTextSmall}>{errors.firstName}</Text>
           </View>
-          {!!errors.lastName && (
-            <View style={styles.errorRow}>
-              <AlertCircle size={12} color="#ef4444" />
-              <Text style={styles.errorTextSmall}>{errors.lastName}</Text>
-            </View>
-          )}
+        )}
+      </View>
+      <View style={styles.inputWrapper}>
+        <Text style={styles.inputLabel}>Last Name *</Text>
+        <View
+          style={[
+            styles.inputContainer,
+            focusedInput === 'lastName' && styles.inputFocused,
+            errors.lastName && styles.inputError,
+          ]}
+        >
+          <User
+            size={18}
+            color={getIconColor(!!errors.lastName, focusedInput === 'lastName')}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Doe"
+            placeholderTextColor={Colors.gray[400]}
+            value={lastName}
+            onChangeText={v => {
+              setLastName(v);
+              clearError('lastName');
+            }}
+            autoCapitalize="words"
+            onFocus={() => setFocusedInput('lastName')}
+            onBlur={() => setFocusedInput(null)}
+          />
         </View>
+        {!!errors.lastName && (
+          <View style={styles.errorRow}>
+            <AlertCircle size={12} color="#ef4444" />
+            <Text style={styles.errorTextSmall}>{errors.lastName}</Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.inputWrapper}>
