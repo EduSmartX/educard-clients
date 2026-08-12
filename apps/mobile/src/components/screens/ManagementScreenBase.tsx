@@ -227,7 +227,7 @@ export function ManagementScreenBase({
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                   >
-                    <ItemIcon size={26} color="#fff" strokeWidth={2} />
+                    <ItemIcon size={24} color="#fff" strokeWidth={2} />
                   </LinearGradient>
                   <Text style={styles.iconLabel} numberOfLines={2}>
                     {item.title}

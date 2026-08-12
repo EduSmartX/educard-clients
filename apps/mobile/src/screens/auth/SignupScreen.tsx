@@ -99,126 +99,56 @@ function validateAdminFields(fields: {
 function TeacherFields({
   employeeId,
   setEmployeeId,
-  gender,
-  setGender,
   errors,
   clearError,
   focusedInput,
   setFocusedInput,
-  showGenderDropdown,
-  setShowGenderDropdown,
 }: Readonly<{
   employeeId: string;
   setEmployeeId: (v: string) => void;
-  gender: string;
-  setGender: (v: string) => void;
   errors: Record<string, string>;
   clearError: (field: string) => void;
   focusedInput: string | null;
   setFocusedInput: (v: string | null) => void;
-  showGenderDropdown: boolean;
-  setShowGenderDropdown: (v: boolean) => void;
 }>) {
   return (
-    <>
-      <View style={styles.inputWrapper}>
-        <Text style={styles.inputLabel}>Employee ID *</Text>
-        <View
-          style={[
-            styles.inputContainer,
-            focusedInput === 'employeeId' && styles.inputFocused,
-            errors.employeeId && styles.inputError,
-          ]}
-        >
-          <Shield
-            size={18}
-            color={getIconColor(
-              !!errors.employeeId,
-              focusedInput === 'employeeId',
-            )}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="EMP-001"
-            placeholderTextColor={Colors.gray[400]}
-            value={employeeId}
-            onChangeText={v => {
-              setEmployeeId(v);
-              clearError('employeeId');
-            }}
-            autoCapitalize="characters"
-            onFocus={() => setFocusedInput('employeeId')}
-            onBlur={() => setFocusedInput(null)}
-          />
+    <View style={styles.inputWrapper}>
+      <Text style={styles.inputLabel}>Employee ID *</Text>
+      <View
+        style={[
+          styles.inputContainer,
+          focusedInput === 'employeeId' && styles.inputFocused,
+          errors.employeeId && styles.inputError,
+        ]}
+      >
+        <Shield
+          size={18}
+          color={getIconColor(
+            !!errors.employeeId,
+            focusedInput === 'employeeId',
+          )}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="EMP-001"
+          placeholderTextColor={Colors.gray[400]}
+          value={employeeId}
+          onChangeText={v => {
+            setEmployeeId(v);
+            clearError('employeeId');
+          }}
+          autoCapitalize="characters"
+          onFocus={() => setFocusedInput('employeeId')}
+          onBlur={() => setFocusedInput(null)}
+        />
+      </View>
+      {!!errors.employeeId && (
+        <View style={styles.errorRow}>
+          <AlertCircle size={12} color="#ef4444" />
+          <Text style={styles.errorTextSmall}>{errors.employeeId}</Text>
         </View>
-        {!!errors.employeeId && (
-          <View style={styles.errorRow}>
-            <AlertCircle size={12} color="#ef4444" />
-            <Text style={styles.errorTextSmall}>{errors.employeeId}</Text>
-          </View>
-        )}
-      </View>
-
-      <View style={styles.inputWrapper}>
-        <Text style={styles.inputLabel}>Gender *</Text>
-        <TouchableOpacity
-          style={[styles.dropdownButton, errors.gender && styles.inputError]}
-          onPress={() => setShowGenderDropdown(true)}
-        >
-          <Text
-            style={gender ? styles.dropdownText : styles.dropdownPlaceholder}
-          >
-            {GENDER_OPTIONS.find(g => g.value === gender)?.label ||
-              'Select gender'}
-          </Text>
-          <ChevronDown size={20} color={Colors.gray[400]} />
-        </TouchableOpacity>
-        {!!errors.gender && (
-          <View style={styles.errorRow}>
-            <AlertCircle size={12} color="#ef4444" />
-            <Text style={styles.errorTextSmall}>{errors.gender}</Text>
-          </View>
-        )}
-      </View>
-
-      <Modal visible={showGenderDropdown} transparent animationType="fade">
-        <TouchableOpacity
-          style={styles.dropdownOverlay}
-          activeOpacity={1}
-          onPress={() => setShowGenderDropdown(false)}
-        >
-          <View style={styles.dropdownModal}>
-            <Text style={styles.dropdownTitle}>Select Gender</Text>
-            <FlatList
-              data={[...GENDER_OPTIONS]}
-              keyExtractor={item => item.value}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[
-                    styles.dropdownItem,
-                    gender === item.value && styles.dropdownItemSelected,
-                  ]}
-                  onPress={() => {
-                    setGender(item.value);
-                    clearError('gender');
-                    setShowGenderDropdown(false);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.dropdownItemText,
-                      gender === item.value && styles.dropdownItemTextSelected,
-                    ]}
-                  >
-                    {item.label}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-        </TouchableOpacity>
-      </Modal>
-    </>
+      )}
+    </View>
   );
 }
 
@@ -1168,6 +1098,68 @@ export default function SignupScreen() {
       </View>
 
       <View style={styles.inputWrapper}>
+        <Text style={styles.inputLabel}>
+          Gender{canTeachSubject ? ' *' : ''}
+        </Text>
+        <TouchableOpacity
+          style={[styles.dropdownButton, errors.gender && styles.inputError]}
+          onPress={() => setShowGenderDropdown(true)}
+        >
+          <Text
+            style={gender ? styles.dropdownText : styles.dropdownPlaceholder}
+          >
+            {GENDER_OPTIONS.find(g => g.value === gender)?.label ||
+              'Select gender'}
+          </Text>
+          <ChevronDown size={20} color={Colors.gray[400]} />
+        </TouchableOpacity>
+        {!!errors.gender && (
+          <View style={styles.errorRow}>
+            <AlertCircle size={12} color="#ef4444" />
+            <Text style={styles.errorTextSmall}>{errors.gender}</Text>
+          </View>
+        )}
+      </View>
+
+      <Modal visible={showGenderDropdown} transparent animationType="fade">
+        <TouchableOpacity
+          style={styles.dropdownOverlay}
+          activeOpacity={1}
+          onPress={() => setShowGenderDropdown(false)}
+        >
+          <View style={styles.dropdownModal}>
+            <Text style={styles.dropdownTitle}>Select Gender</Text>
+            <FlatList
+              data={[...GENDER_OPTIONS]}
+              keyExtractor={item => item.value}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.dropdownItem,
+                    gender === item.value && styles.dropdownItemSelected,
+                  ]}
+                  onPress={() => {
+                    setGender(item.value);
+                    clearError('gender');
+                    setShowGenderDropdown(false);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.dropdownItemText,
+                      gender === item.value && styles.dropdownItemTextSelected,
+                    ]}
+                  >
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      <View style={styles.inputWrapper}>
         <Text style={styles.inputLabel}>Password *</Text>
         <View
           style={[
@@ -1274,14 +1266,10 @@ export default function SignupScreen() {
         <TeacherFields
           employeeId={employeeId}
           setEmployeeId={setEmployeeId}
-          gender={gender}
-          setGender={setGender}
           errors={errors}
           clearError={clearError}
           focusedInput={focusedInput}
           setFocusedInput={setFocusedInput}
-          showGenderDropdown={showGenderDropdown}
-          setShowGenderDropdown={setShowGenderDropdown}
         />
       )}
 

@@ -20,7 +20,6 @@ import {
   StyleSheet,
   TextInput,
   KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 
 interface Option {
@@ -113,10 +112,7 @@ export function FormDropdown({
             setSearch('');
           }}
         >
-          <KeyboardAvoidingView
-            style={styles.modalOverlay}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          >
+          <KeyboardAvoidingView style={styles.modalOverlay} behavior="padding">
             <View style={styles.modal}>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>{label}</Text>

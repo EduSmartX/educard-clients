@@ -15,7 +15,6 @@ import {
   StyleSheet,
   TextInput,
   KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 
 export interface SearchableSelectOption {
@@ -99,10 +98,7 @@ export function SearchableSelect({
         statusBarTranslucent
         onRequestClose={close}
       >
-        <KeyboardAvoidingView
-          style={styles.overlay}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
+        <KeyboardAvoidingView style={styles.overlay} behavior="padding">
           <View style={styles.modal}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>

@@ -135,10 +135,7 @@ export function FormMultiSelect({
         statusBarTranslucent
         onRequestClose={() => setVisible(false)}
       >
-        <KeyboardAvoidingView
-          style={styles.overlay}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
+        <KeyboardAvoidingView style={styles.overlay} behavior="padding">
           <View style={styles.modal}>
             {/* Header */}
             <View style={styles.modalHeader}>
