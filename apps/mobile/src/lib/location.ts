@@ -7,7 +7,6 @@
  * than failing at the point of use.
  */
 
-import Geolocation from '@react-native-community/geolocation';
 import { PermissionsAndroid, Platform } from 'react-native';
 import Config from 'react-native-config';
 
@@ -28,9 +27,44 @@ export const LOCATION_PERMISSION_DENIED = 'LOCATION_PERMISSION_DENIED';
 const GEOCODE_URL = 'https://maps.googleapis.com/maps/api/geocode/json';
 const FIX_TIMEOUT_MS = 15000;
 
+type GeolocationPosition = {
+  coords: { latitude: number; longitude: number };
+};
+
+type GeolocationModule = {
+  getCurrentPosition: (
+    onSuccess: (position: GeolocationPosition) => void,
+    onError: (error: { message: string }) => void,
+    options: {
+      enableHighAccuracy: boolean;
+      timeout: number;
+      maximumAge: number;
+    },
+  ) => void;
+};
+
+/**
+ * The native module throws from `TurboModuleRegistry.getEnforcing` at import
+ * time until the app is rebuilt, so it is resolved defensively instead of
+ * being imported at module scope.
+ */
+function loadGeolocation(): GeolocationModule | null {
+  try {
+    const module = require('@react-native-community/geolocation') as {
+      default?: GeolocationModule;
+    } & GeolocationModule;
+    return module.default ?? module;
+  } catch {
+    return null;
+  }
+}
+
+const geolocation = loadGeolocation();
+
 export const geocodingApiKey = (Config.GOOGLE_GEOCODING_API_KEY ?? '').trim();
 
-export const isLocationLookupEnabled = geocodingApiKey.length > 0;
+export const isLocationLookupEnabled =
+  geocodingApiKey.length > 0 && geolocation !== null;
 
 interface GeocodeComponent {
   long_name: string;
@@ -66,7 +100,11 @@ function getCurrentPosition(): Promise<{
   longitude: number;
 }> {
   return new Promise((resolve, reject) => {
-    Geolocation.getCurrentPosition(
+    if (!geolocation) {
+      reject(new Error('Location is unavailable in this build.'));
+      return;
+    }
+    geolocation.getCurrentPosition(
       position =>
         resolve({
           latitude: position.coords.latitude,
@@ -138,11 +176,11 @@ export async function fetchCurrentAddress(): Promise<ResolvedAddress> {
   }
 
   const data = (await response.json()) as GeocodeResponse;
-  if (data.status !== 'OK' || data.results.length === 0) {
+  if (data.status !== 'OK' || !data.results?.length) {
     throw new Error(
       data.error_message ?? 'No address found for your location.',
     );
   }
 
-  return toAddress(data.results[0].address_components);
+  return toAddress(data.results[0]?.address_components ?? []);
 }

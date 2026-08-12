@@ -233,13 +233,15 @@ export function AddressForm({
       applyResolvedAddress(await fetchCurrentAddress());
       setExpanded(true);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Something went wrong.';
+      // Autofill is a convenience: surface a hint and leave the fields editable.
+      const denied =
+        error instanceof Error && error.message === LOCATION_PERMISSION_DENIED;
       setLocationError(
-        message === LOCATION_PERMISSION_DENIED
-          ? 'Location permission denied. Enable it in Settings to autofill.'
-          : message,
+        denied
+          ? 'Location permission denied. Please enter the address manually.'
+          : 'Could not detect your location. Please enter the address manually.',
       );
+      setExpanded(true);
     } finally {
       setLocating(false);
     }

@@ -15,6 +15,7 @@ export * from "./query-keys";
 // User & Auth
 export * from "./user-constants";
 export * from "./address-type";
+export * from "./india-locations";
 
 // Organization
 export * from "./organization-options";
