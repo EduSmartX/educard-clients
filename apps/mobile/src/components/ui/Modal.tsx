@@ -278,16 +278,11 @@ export function useModal() {
     [showModal],
   );
 
-  return {
-    modalState,
-    showModal,
-    hideModal,
-    success,
-    error,
-    warning,
-    info,
-    confirm,
-    ModalComponent: () => (
+  // A memoised element keeps the Modal's type stable; returning a component
+  // factory here remounts the native modal on every host render, which drops
+  // keyboard focus and can leave a stale overlay swallowing touches.
+  const modalElement = React.useMemo(
+    () => (
       <Modal
         visible={modalState.visible}
         onClose={hideModal}
@@ -297,6 +292,19 @@ export function useModal() {
         actions={modalState.actions}
       />
     ),
+    [modalState, hideModal],
+  );
+
+  return {
+    modalState,
+    showModal,
+    hideModal,
+    success,
+    error,
+    warning,
+    info,
+    confirm,
+    modalElement,
   };
 }
 

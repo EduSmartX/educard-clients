@@ -389,7 +389,6 @@ export default function SignupScreen() {
       if (useSameEmail) {
         setOrgOtpVerified(true);
       }
-      modal.success('Success', 'Email verified!');
     } catch (error) {
       const apiError = parseApiError(error);
       modal.error('Error', apiError.message || 'Invalid verification code');
@@ -418,7 +417,6 @@ export default function SignupScreen() {
       }
 
       setOrgOtpVerified(true);
-      modal.success('Success', 'Organization email verified!');
     } catch (error) {
       const apiError = parseApiError(error);
       modal.error('Error', apiError.message || 'Invalid verification code');
@@ -958,8 +956,8 @@ export default function SignupScreen() {
           values={orgAddress}
           onChange={handleAddressChange}
           required={false}
-          showHeader={true}
-          showLocationButton={true}
+          showHeader={false}
+          collapsible
         />
 
         <Modal visible={showOrgTypeDropdown} transparent animationType="fade">
@@ -1360,7 +1358,7 @@ export default function SignupScreen() {
           {renderStepContent()}
         </Animated.View>
       </KeyboardAwareScrollView>
-      <modal.ModalComponent />
+      {modal.modalElement}
     </View>
   );
 }
