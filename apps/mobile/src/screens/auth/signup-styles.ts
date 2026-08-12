@@ -8,19 +8,6 @@ export const styles = StyleSheet.create({
 
   // Header
   header: { alignItems: 'center', marginBottom: 24 },
-  backButton: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    padding: 8,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
   logoContainer: {
     width: 80,
     height: 80,
@@ -311,6 +298,20 @@ export const styles = StyleSheet.create({
 
   // Buttons
   buttonRow: { flexDirection: 'row', gap: 12, marginTop: 24 },
+  /** Cancels primaryButton's flex so it can stand alone in a column. */
+  stackedButton: { flex: 0, marginTop: 8 },
+  loginPrompt: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  loginPromptText: { fontSize: 14, color: Colors.gray[600] },
+  loginPromptLink: {
+    fontSize: 14,
+    color: Colors.primary[600],
+    fontWeight: '700',
+  },
   secondaryButton: {
     flex: 1,
     flexDirection: 'row',

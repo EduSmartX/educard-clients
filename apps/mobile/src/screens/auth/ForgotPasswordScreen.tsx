@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     padding: 28,
-    flex: 1,
+    flexGrow: 1,
   },
   inputWrapper: { marginBottom: 24 },
   inputLabel: {

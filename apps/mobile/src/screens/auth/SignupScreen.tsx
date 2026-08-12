@@ -4,9 +4,7 @@ import {
   ORGANIZATION_TYPES,
   BOARD_AFFILIATIONS,
   GENDER_OPTIONS,
-  SIGNUP_STEP_TITLES,
 } from '@educard/shared';
-import type { SignupStep } from '@educard/shared';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
@@ -52,10 +50,18 @@ import { useModal } from '@/components/ui';
 import { LinearGradient } from '@/lib/linear-gradient';
 import type { AuthStackParamList } from '@/navigation/types';
 
-import { ProgressSteps, isValidPhone, getIconColor } from './signup-components';
+import {
+  ProgressSteps,
+  isValidPhone,
+  getIconColor,
+  SIGNUP_STEP_HEADINGS,
+} from './signup-components';
 import { styles } from './signup-styles';
 
-function validateStep4Fields(fields: {
+// Email entry and OTP verification share step 1, unlike the web flow.
+type SignupStep = 1 | 2 | 3;
+
+function validateAdminFields(fields: {
   firstName: string;
   lastName: string;
   phoneNumber: string;
@@ -230,8 +236,9 @@ export default function SignupScreen() {
   const [adminEmail, setAdminEmail] = useState('');
   const [orgEmail, setOrgEmail] = useState('');
   const [useSameEmail, setUseSameEmail] = useState(false);
+  const [otpsSent, setOtpsSent] = useState(false);
 
-  // Step 2: OTP Verification
+  // Step 1: OTP Verification
   const [adminOtp, setAdminOtp] = useState('');
   const [orgOtp, setOrgOtp] = useState('');
   const [adminOtpVerified, setAdminOtpVerified] = useState(false);
@@ -292,7 +299,7 @@ export default function SignupScreen() {
   };
 
   // Step 1: Send OTPs
-  const handleStep1Submit = useCallback(async () => {
+  const handleSendOtps = useCallback(async () => {
     if (!adminEmail.trim() || !isValidEmail(adminEmail)) {
       modal.error('Error', 'Please enter a valid administrator email');
       return;
@@ -340,12 +347,12 @@ export default function SignupScreen() {
         setOrgEmail(adminEmail);
       }
 
+      setOtpsSent(true);
       modal.success(
         'Verification Codes Sent',
         useSameEmail
           ? `Code sent to ${adminEmail}`
           : `Codes sent to ${adminEmail} and ${orgEmail}`,
-        () => setCurrentStep(2),
       );
     } catch (error) {
       const apiError = parseApiError(error);
@@ -420,7 +427,7 @@ export default function SignupScreen() {
     }
   }, [orgOtp, orgEmail, modal]);
 
-  const handleStep2Submit = useCallback(() => {
+  const handleVerificationContinue = useCallback(() => {
     const isVerified = useSameEmail
       ? adminOtpVerified
       : adminOtpVerified && orgOtpVerified;
@@ -428,11 +435,11 @@ export default function SignupScreen() {
       modal.error('Error', 'Please verify all email addresses');
       return;
     }
-    setCurrentStep(3);
+    setCurrentStep(2);
   }, [useSameEmail, adminOtpVerified, orgOtpVerified, modal]);
 
-  // Step 3: Organization Details
-  const handleStep3Submit = useCallback(() => {
+  // Step 2: Organization Details
+  const handleOrgDetailsSubmit = useCallback(() => {
     const newErrors: Record<string, string> = {};
 
     if (!orgName.trim()) {
@@ -451,12 +458,12 @@ export default function SignupScreen() {
     }
 
     setErrors({});
-    setCurrentStep(4);
+    setCurrentStep(3);
   }, [orgName, orgType, orgPhone]);
 
-  // Step 4: Final Registration
-  const handleStep4Submit = useCallback(async () => {
-    const newErrors = validateStep4Fields({
+  // Step 3: Final Registration
+  const handleRegistrationSubmit = useCallback(async () => {
+    const newErrors = validateAdminFields({
       firstName,
       lastName,
       phoneNumber,
@@ -579,237 +586,248 @@ export default function SignupScreen() {
         return renderStep2();
       case 3:
         return renderStep3();
-      case 4:
-        return renderStep4();
       default:
         return null;
     }
   };
 
-  // Step 1: Email Entry
-  const renderStep1 = () => (
-    <Animated.View entering={FadeInUp.duration(400)} style={styles.stepContent}>
-      <View style={styles.inputWrapper}>
-        <Text style={styles.inputLabel}>Administrator Email *</Text>
-        <View
-          style={[
-            styles.inputContainer,
-            focusedInput === 'adminEmail' && styles.inputFocused,
-          ]}
-        >
-          <Mail
-            size={20}
-            color={
-              focusedInput === 'adminEmail'
-                ? Colors.primary[500]
-                : Colors.gray[400]
-            }
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="admin@yourschool.edu"
-            placeholderTextColor={Colors.gray[400]}
-            value={adminEmail}
-            onChangeText={setAdminEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            onFocus={() => setFocusedInput('adminEmail')}
-            onBlur={() => setFocusedInput(null)}
-          />
-        </View>
-      </View>
+  // Step 1: Email entry and OTP verification
+  const renderStep1 = () => {
+    const allVerified = useSameEmail
+      ? adminOtpVerified
+      : adminOtpVerified && orgOtpVerified;
 
-      <TouchableOpacity
-        style={styles.toggleContainer}
-        onPress={() => {
-          setUseSameEmail(!useSameEmail);
-          if (!useSameEmail) setOrgEmail(adminEmail);
-        }}
+    return (
+      <Animated.View
+        entering={FadeInUp.duration(400)}
+        style={styles.stepContent}
       >
-        <View style={[styles.checkbox, useSameEmail && styles.checkboxChecked]}>
-          {useSameEmail && <CheckCircle2 size={16} color="#fff" />}
-        </View>
-        <Text style={styles.toggleText}>Use same email for organization</Text>
-      </TouchableOpacity>
-
-      {!useSameEmail && (
         <View style={styles.inputWrapper}>
-          <Text style={styles.inputLabel}>Organization Email *</Text>
+          <Text style={styles.inputLabel}>Administrator Email *</Text>
           <View
             style={[
               styles.inputContainer,
-              focusedInput === 'orgEmail' && styles.inputFocused,
+              focusedInput === 'adminEmail' && styles.inputFocused,
             ]}
           >
-            <Building2
+            <Mail
               size={20}
               color={
-                focusedInput === 'orgEmail'
+                focusedInput === 'adminEmail'
                   ? Colors.primary[500]
                   : Colors.gray[400]
               }
             />
             <TextInput
               style={styles.input}
-              placeholder="contact@yourschool.edu"
+              placeholder="admin@yourschool.edu"
               placeholderTextColor={Colors.gray[400]}
-              value={orgEmail}
-              onChangeText={setOrgEmail}
+              value={adminEmail}
+              onChangeText={setAdminEmail}
               keyboardType="email-address"
               autoCapitalize="none"
-              onFocus={() => setFocusedInput('orgEmail')}
+              editable={!otpsSent}
+              onFocus={() => setFocusedInput('adminEmail')}
               onBlur={() => setFocusedInput(null)}
             />
           </View>
         </View>
-      )}
 
-      <View style={styles.buttonRow}>
         <TouchableOpacity
-          style={styles.secondaryButton}
-          onPress={() => navigation.navigate('Login')}
-        >
-          <ArrowLeft size={20} color={Colors.gray[600]} />
-          <Text style={styles.secondaryButtonText}>Login</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.primaryButton, isLoading && styles.buttonDisabled]}
+          style={styles.toggleContainer}
+          disabled={otpsSent}
           onPress={() => {
-            handleStep1Submit();
+            setUseSameEmail(!useSameEmail);
+            if (!useSameEmail) setOrgEmail(adminEmail);
           }}
-          disabled={isLoading}
         >
-          {isLoading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <>
-              <Text style={styles.primaryButtonText}>Verify</Text>
-              <ArrowRight size={20} color="#fff" />
-            </>
-          )}
+          <View
+            style={[styles.checkbox, useSameEmail && styles.checkboxChecked]}
+          >
+            {useSameEmail && <CheckCircle2 size={16} color="#fff" />}
+          </View>
+          <Text style={styles.toggleText}>Use same email for organization</Text>
         </TouchableOpacity>
-      </View>
-    </Animated.View>
-  );
 
-  // Step 2: OTP Verification
-  const renderStep2 = () => (
-    <Animated.View entering={FadeInUp.duration(400)} style={styles.stepContent}>
-      <View style={styles.sectionHeader}>
-        <View
-          style={[styles.sectionIcon, { backgroundColor: Colors.success[50] }]}
-        >
-          <Shield size={24} color={Colors.success[600]} />
-        </View>
-        <View>
-          <Text style={styles.sectionTitle}>Verify OTP</Text>
-        </View>
-      </View>
+        {!useSameEmail && (
+          <View style={styles.inputWrapper}>
+            <Text style={styles.inputLabel}>Organization Email *</Text>
+            <View
+              style={[
+                styles.inputContainer,
+                focusedInput === 'orgEmail' && styles.inputFocused,
+              ]}
+            >
+              <Building2
+                size={20}
+                color={
+                  focusedInput === 'orgEmail'
+                    ? Colors.primary[500]
+                    : Colors.gray[400]
+                }
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="contact@yourschool.edu"
+                placeholderTextColor={Colors.gray[400]}
+                value={orgEmail}
+                onChangeText={setOrgEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                editable={!otpsSent}
+                onFocus={() => setFocusedInput('orgEmail')}
+                onBlur={() => setFocusedInput(null)}
+              />
+            </View>
+          </View>
+        )}
 
-      <View style={styles.otpCard}>
-        <Text style={styles.otpLabel}>
-          {useSameEmail ? 'Verification Code' : 'Admin Email Code'}
-        </Text>
-        <View style={styles.otpRow}>
-          <TextInput
-            style={[
-              styles.otpInput,
-              adminOtpVerified && styles.otpInputVerified,
-            ]}
-            placeholder="000000"
-            placeholderTextColor={Colors.gray[400]}
-            value={adminOtp}
-            onChangeText={setAdminOtp}
-            keyboardType="number-pad"
-            maxLength={6}
-            editable={!adminOtpVerified}
-          />
+        {!otpsSent && (
           <TouchableOpacity
             style={[
-              styles.verifyButton,
-              adminOtpVerified && styles.verifyButtonSuccess,
+              styles.primaryButton,
+              styles.stackedButton,
+              isLoading && styles.buttonDisabled,
             ]}
             onPress={() => {
-              handleVerifyAdminOtp();
+              handleSendOtps();
             }}
-            disabled={adminOtpVerified || isLoading}
+            disabled={isLoading}
           >
-            {adminOtpVerified ? (
-              <CheckCircle2 size={20} color="#fff" />
+            {isLoading ? (
+              <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.verifyButtonText}>Verify</Text>
+              <>
+                <Text style={styles.primaryButtonText}>
+                  Send Verification Code
+                </Text>
+                <ArrowRight size={20} color="#fff" />
+              </>
             )}
           </TouchableOpacity>
-        </View>
-        <Text style={styles.otpHint}>{adminEmail}</Text>
-      </View>
+        )}
 
-      {!useSameEmail && (
-        <View style={styles.otpCard}>
-          <Text style={styles.otpLabel}>Organization Email Code</Text>
-          <View style={styles.otpRow}>
-            <TextInput
-              style={[
-                styles.otpInput,
-                orgOtpVerified && styles.otpInputVerified,
-              ]}
-              placeholder="000000"
-              placeholderTextColor={Colors.gray[400]}
-              value={orgOtp}
-              onChangeText={setOrgOtp}
-              keyboardType="number-pad"
-              maxLength={6}
-              editable={!orgOtpVerified}
-            />
+        {otpsSent && (
+          <>
+            <View style={styles.sectionHeader}>
+              <View
+                style={[
+                  styles.sectionIcon,
+                  { backgroundColor: Colors.success[50] },
+                ]}
+              >
+                <Shield size={24} color={Colors.success[600]} />
+              </View>
+              <View>
+                <Text style={styles.sectionTitle}>Verify OTP</Text>
+              </View>
+            </View>
+
+            <View style={styles.otpCard}>
+              <Text style={styles.otpLabel}>
+                {useSameEmail ? 'Verification Code' : 'Admin Email Code'}
+              </Text>
+              <View style={styles.otpRow}>
+                <TextInput
+                  style={[
+                    styles.otpInput,
+                    adminOtpVerified && styles.otpInputVerified,
+                  ]}
+                  placeholder="000000"
+                  placeholderTextColor={Colors.gray[400]}
+                  value={adminOtp}
+                  onChangeText={setAdminOtp}
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  editable={!adminOtpVerified}
+                />
+                <TouchableOpacity
+                  style={[
+                    styles.verifyButton,
+                    adminOtpVerified && styles.verifyButtonSuccess,
+                  ]}
+                  onPress={() => {
+                    handleVerifyAdminOtp();
+                  }}
+                  disabled={adminOtpVerified || isLoading}
+                >
+                  {adminOtpVerified ? (
+                    <CheckCircle2 size={20} color="#fff" />
+                  ) : (
+                    <Text style={styles.verifyButtonText}>Verify</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.otpHint}>{adminEmail}</Text>
+            </View>
+
+            {!useSameEmail && (
+              <View style={styles.otpCard}>
+                <Text style={styles.otpLabel}>Organization Email Code</Text>
+                <View style={styles.otpRow}>
+                  <TextInput
+                    style={[
+                      styles.otpInput,
+                      orgOtpVerified && styles.otpInputVerified,
+                    ]}
+                    placeholder="000000"
+                    placeholderTextColor={Colors.gray[400]}
+                    value={orgOtp}
+                    onChangeText={setOrgOtp}
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    editable={!orgOtpVerified}
+                  />
+                  <TouchableOpacity
+                    style={[
+                      styles.verifyButton,
+                      orgOtpVerified && styles.verifyButtonSuccess,
+                    ]}
+                    onPress={() => {
+                      handleVerifyOrgOtp();
+                    }}
+                    disabled={orgOtpVerified || isLoading}
+                  >
+                    {orgOtpVerified ? (
+                      <CheckCircle2 size={20} color="#fff" />
+                    ) : (
+                      <Text style={styles.verifyButtonText}>Verify</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.otpHint}>{orgEmail}</Text>
+              </View>
+            )}
+
             <TouchableOpacity
               style={[
-                styles.verifyButton,
-                orgOtpVerified && styles.verifyButtonSuccess,
+                styles.primaryButton,
+                styles.stackedButton,
+                !allVerified && styles.buttonDisabled,
               ]}
-              onPress={() => {
-                handleVerifyOrgOtp();
-              }}
-              disabled={orgOtpVerified || isLoading}
+              onPress={handleVerificationContinue}
+              disabled={!allVerified}
             >
-              {orgOtpVerified ? (
-                <CheckCircle2 size={20} color="#fff" />
-              ) : (
-                <Text style={styles.verifyButtonText}>Verify</Text>
-              )}
+              <Text style={styles.primaryButtonText}>Continue</Text>
+              <ArrowRight size={20} color="#fff" />
             </TouchableOpacity>
-          </View>
-          <Text style={styles.otpHint}>{orgEmail}</Text>
+          </>
+        )}
+
+        <View style={styles.loginPrompt}>
+          <Text style={styles.loginPromptText}>
+            Do you have an account already?{' '}
+          </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+            <Text style={styles.loginPromptLink}>Login</Text>
+          </TouchableOpacity>
         </View>
-      )}
+      </Animated.View>
+    );
+  };
 
-      <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.secondaryButton} onPress={goBack}>
-          <ArrowLeft size={20} color={Colors.gray[600]} />
-          <Text style={styles.secondaryButtonText}>Back</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.primaryButton,
-            !(useSameEmail
-              ? adminOtpVerified
-              : adminOtpVerified && orgOtpVerified) && styles.buttonDisabled,
-          ]}
-          onPress={handleStep2Submit}
-          disabled={
-            !(useSameEmail
-              ? adminOtpVerified
-              : adminOtpVerified && orgOtpVerified)
-          }
-        >
-          <Text style={styles.primaryButtonText}>Continue</Text>
-          <ArrowRight size={20} color="#fff" />
-        </TouchableOpacity>
-      </View>
-    </Animated.View>
-  );
-
-  // Step 3: Organization Details
-  const renderStep3 = () => {
+  // Step 2: Organization Details
+  const renderStep2 = () => {
     const selectedOrgType = ORGANIZATION_TYPES.find(t => t.value === orgType);
     const selectedBoard = BOARD_AFFILIATIONS.find(
       b => b.value === boardAffiliation,
@@ -1029,7 +1047,7 @@ export default function SignupScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.primaryButton}
-            onPress={handleStep3Submit}
+            onPress={handleOrgDetailsSubmit}
           >
             <Text style={styles.primaryButtonText}>Continue</Text>
             <ArrowRight size={20} color="#fff" />
@@ -1039,8 +1057,8 @@ export default function SignupScreen() {
     );
   };
 
-  // Step 4: Admin Details
-  const renderStep4 = () => (
+  // Step 3: Admin Details
+  const renderStep3 = () => (
     <Animated.View entering={FadeInUp.duration(400)} style={styles.stepContent}>
       <View style={styles.inputWrapper}>
         <Text style={styles.inputLabel}>First Name *</Text>
@@ -1281,7 +1299,7 @@ export default function SignupScreen() {
             isLoading && styles.buttonDisabled,
           ]}
           onPress={() => {
-            handleStep4Submit();
+            handleRegistrationSubmit();
           }}
           disabled={isLoading}
         >
@@ -1317,10 +1335,6 @@ export default function SignupScreen() {
           entering={FadeInDown.delay(100).duration(500)}
           style={styles.header}
         >
-          <TouchableOpacity onPress={goBack} style={styles.backButton}>
-            <ArrowLeft size={24} color={Colors.gray[600]} />
-          </TouchableOpacity>
-
           <View style={styles.logoContainer}>
             <Image
               source={logoImage}
@@ -1329,9 +1343,9 @@ export default function SignupScreen() {
             />
           </View>
 
-          <Text style={styles.title}>Create Your Account</Text>
+          <Text style={styles.title}>Sign up Account</Text>
           <Text style={styles.subtitle}>
-            {SIGNUP_STEP_TITLES[currentStep - 1]}
+            {SIGNUP_STEP_HEADINGS[currentStep - 1]}
           </Text>
         </Animated.View>
 
