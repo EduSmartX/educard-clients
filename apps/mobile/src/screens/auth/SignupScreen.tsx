@@ -1303,7 +1303,7 @@ export default function SignupScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#f0fdfa', '#ecfeff', '#f5f3ff']}
+        colors={['#f8fafc', '#f1f5f9', '#eef2f7']}
         style={StyleSheet.absoluteFill}
       />
 

@@ -230,10 +230,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: Colors.success[50],
+    backgroundColor: Colors.gray[50],
     borderRadius: 16,
-    borderWidth: 2,
-    borderColor: Colors.success[100],
+    borderWidth: 1,
+    borderColor: Colors.gray[200],
     padding: 14,
   },
   headerLeft: {
@@ -246,14 +246,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: Colors.success[100],
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
     fontSize: 14,
-    fontWeight: '700',
-    color: Colors.gray[800],
+    fontWeight: '600',
+    color: Colors.gray[700],
   },
   headerSubtitle: {
     fontSize: 12,
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   },
   optionalTag: {
     fontSize: 10,
-    fontWeight: '500',
+    fontWeight: '400',
     color: Colors.gray[400],
     backgroundColor: Colors.gray[100],
     paddingHorizontal: 8,
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: Colors.gray[50],
     borderRadius: 12,
     borderWidth: 1,
     borderColor: Colors.gray[200],
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
   },
   inputFocused: {
     borderColor: Colors.primary[500],
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
     borderWidth: 1.5,
   },
   inputError: {
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 8,
-    backgroundColor: Colors.gray[100],
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
   },

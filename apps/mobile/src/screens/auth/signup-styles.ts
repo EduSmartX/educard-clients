@@ -85,16 +85,16 @@ export const styles = StyleSheet.create({
 
   // Form Card
   formCard: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.gray[50],
     borderRadius: 18,
     padding: 18,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 1,
     borderWidth: 1,
-    borderColor: Colors.gray[100],
+    borderColor: Colors.gray[200],
   },
   stepContent: { gap: 16 },
 
@@ -144,7 +144,7 @@ export const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.gray[50],
+    backgroundColor: '#ffffff',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: Colors.gray[200],
@@ -184,10 +184,10 @@ export const styles = StyleSheet.create({
 
   // OTP
   otpCard: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.gray[50],
     borderRadius: 16,
     padding: 16,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: Colors.gray[200],
   },
   otpLabel: {
@@ -202,9 +202,9 @@ export const styles = StyleSheet.create({
   otpInput: {
     flex: 1,
     height: 54,
-    backgroundColor: Colors.gray[50],
+    backgroundColor: '#ffffff',
     borderRadius: 12,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: Colors.gray[200],
     fontSize: 22,
     fontWeight: '700',
@@ -254,11 +254,11 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
     borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderWidth: 1.5,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    borderWidth: 1,
     borderColor: Colors.gray[200],
   },
   dropdownText: { fontSize: 15, color: Colors.gray[800] },
