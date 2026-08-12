@@ -14,6 +14,8 @@ import {
   FlatList,
   StyleSheet,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 
 export interface SearchableSelectOption {
@@ -97,7 +99,10 @@ export function SearchableSelect({
         statusBarTranslucent
         onRequestClose={close}
       >
-        <View style={styles.overlay}>
+        <KeyboardAvoidingView
+          style={styles.overlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
           <View style={styles.modal}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
@@ -160,7 +165,7 @@ export function SearchableSelect({
               }
             />
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

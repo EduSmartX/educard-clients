@@ -13,6 +13,7 @@ import {
   FlatList,
   StyleSheet,
   TextInput,
+  KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 
@@ -52,27 +53,29 @@ export function FormMultiSelect({
   const filtered = useMemo(() => {
     if (!search.trim()) return options;
     const q = search.toLowerCase();
-    return options.filter((o) => o.label.toLowerCase().includes(q));
+    return options.filter(o => o.label.toLowerCase().includes(q));
   }, [options, search]);
 
   const selectedLabels = useMemo(() => {
-    return options.filter((o) => value.includes(o.value)).map((o) => o.label);
+    return options.filter(o => value.includes(o.value)).map(o => o.label);
   }, [options, value]);
 
   const toggleItem = (val: string) => {
     if (value.includes(val)) {
-      onChange(value.filter((v) => v !== val));
+      onChange(value.filter(v => v !== val));
     } else {
       onChange([...value, val]);
     }
   };
 
   const removeItem = (val: string) => {
-    onChange(value.filter((v) => v !== val));
+    onChange(value.filter(v => v !== val));
   };
 
   const displayText =
-    selectedLabels.length === 0 ? placeholder : `${selectedLabels.length} selected`;
+    selectedLabels.length === 0
+      ? placeholder
+      : `${selectedLabels.length} selected`;
 
   return (
     <View style={styles.container}>
@@ -82,11 +85,20 @@ export function FormMultiSelect({
       </Text>
 
       <TouchableOpacity
-        style={[styles.inputRow, error && styles.inputError, disabled && styles.inputDisabled]}
+        style={[
+          styles.inputRow,
+          error && styles.inputError,
+          disabled && styles.inputDisabled,
+        ]}
         onPress={() => !disabled && setVisible(true)}
         activeOpacity={0.7}
       >
-        <Text style={[styles.inputText, selectedLabels.length === 0 && styles.placeholder]}>
+        <Text
+          style={[
+            styles.inputText,
+            selectedLabels.length === 0 && styles.placeholder,
+          ]}
+        >
           {displayText}
         </Text>
         <ChevronDown size={18} color={error ? '#ef4444' : '#94a3b8'} />
@@ -95,8 +107,8 @@ export function FormMultiSelect({
       {/* Selected chips */}
       {selectedLabels.length > 0 && (
         <View style={styles.chipsRow}>
-          {selectedLabels.map((lbl) => {
-            const opt = options.find((o) => o.label === lbl);
+          {selectedLabels.map(lbl => {
+            const opt = options.find(o => o.label === lbl);
             return (
               <View key={lbl} style={styles.chip}>
                 <Text style={styles.chipText} numberOfLines={1}>
@@ -123,7 +135,10 @@ export function FormMultiSelect({
         statusBarTranslucent
         onRequestClose={() => setVisible(false)}
       >
-        <View style={styles.overlay}>
+        <KeyboardAvoidingView
+          style={styles.overlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
           <View style={styles.modal}>
             {/* Header */}
             <View style={styles.modalHeader}>
@@ -166,11 +181,14 @@ export function FormMultiSelect({
             <View style={styles.quickActions}>
               <TouchableOpacity
                 style={styles.quickBtn}
-                onPress={() => onChange(options.map((o) => o.value))}
+                onPress={() => onChange(options.map(o => o.value))}
               >
                 <Text style={styles.quickBtnText}>Select All</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.quickBtn} onPress={() => onChange([])}>
+              <TouchableOpacity
+                style={styles.quickBtn}
+                onPress={() => onChange([])}
+              >
                 <Text style={styles.quickBtnText}>Clear All</Text>
               </TouchableOpacity>
             </View>
@@ -178,7 +196,7 @@ export function FormMultiSelect({
             {/* Options list */}
             <FlatList
               data={filtered}
-              keyExtractor={(item) => item.value}
+              keyExtractor={item => item.value}
               style={styles.list}
               renderItem={({ item }) => {
                 const selected = value.includes(item.value);
@@ -188,16 +206,28 @@ export function FormMultiSelect({
                     onPress={() => toggleItem(item.value)}
                     activeOpacity={0.6}
                   >
-                    <View style={[styles.checkbox, selected && styles.checkboxSelected]}>
+                    <View
+                      style={[
+                        styles.checkbox,
+                        selected && styles.checkboxSelected,
+                      ]}
+                    >
                       {selected && <Check size={14} color="#fff" />}
                     </View>
-                    <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
+                    <Text
+                      style={[
+                        styles.optionText,
+                        selected && styles.optionTextSelected,
+                      ]}
+                    >
                       {item.label}
                     </Text>
                   </TouchableOpacity>
                 );
               }}
-              ListEmptyComponent={<Text style={styles.emptyText}>No items found</Text>}
+              ListEmptyComponent={
+                <Text style={styles.emptyText}>No items found</Text>
+              }
             />
 
             {/* Footer */}
@@ -209,11 +239,13 @@ export function FormMultiSelect({
                   setSearch('');
                 }}
               >
-                <Text style={styles.doneBtnText}>Done ({value.length} selected)</Text>
+                <Text style={styles.doneBtnText}>
+                  Done ({value.length} selected)
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -234,7 +266,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     backgroundColor: '#f8fafc',
   },
-  inputError: { borderColor: '#ef4444', backgroundColor: '#fef2f2', borderWidth: 2 },
+  inputError: {
+    borderColor: '#ef4444',
+    backgroundColor: '#fef2f2',
+    borderWidth: 2,
+  },
   inputDisabled: { opacity: 0.5 },
   inputText: { flex: 1, fontSize: 15, color: '#1e293b' },
   placeholder: { color: '#94a3b8' },
@@ -258,7 +294,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#c4b5fd',
   },
-  chipText: { fontSize: 12, fontWeight: '600', color: '#7c3aed', maxWidth: 120 },
+  chipText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#7c3aed',
+    maxWidth: 120,
+  },
 
   // Modal
   overlay: {

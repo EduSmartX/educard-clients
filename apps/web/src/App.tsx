@@ -5,6 +5,7 @@ import { ROUTES } from './constants/app-config';
 import { lazy, Suspense } from 'react';
 import { PageLoader } from './components/ui/loading-spinner';
 import { useAuthInit } from './hooks/use-auth-init';
+import { useKeyboardFieldVisibility } from './hooks/use-keyboard-field-visibility';
 
 // Protected Layout - Renders header once for all authenticated pages
 import { ProtectedLayout } from './components/layout/protected-layout';
@@ -267,6 +268,7 @@ const ComingSoonPage = lazy(() => import('./pages/coming-soon-page'));
 
 function App() {
   const { isReady } = useAuthInit();
+  useKeyboardFieldVisibility();
 
   if (!isReady) {
     return <PageLoader />;

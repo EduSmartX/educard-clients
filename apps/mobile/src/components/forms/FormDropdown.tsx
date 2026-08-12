@@ -19,6 +19,8 @@ import {
   FlatList,
   StyleSheet,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 
 interface Option {
@@ -111,7 +113,10 @@ export function FormDropdown({
             setSearch('');
           }}
         >
-          <View style={styles.modalOverlay}>
+          <KeyboardAvoidingView
+            style={styles.modalOverlay}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          >
             <View style={styles.modal}>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>{label}</Text>
@@ -179,7 +184,7 @@ export function FormDropdown({
                 </TouchableOpacity>
               ) : null}
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </Modal>
       )}
     </View>

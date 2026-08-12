@@ -1311,7 +1311,7 @@ export default function SignupScreen() {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         enableOnAndroid
-        extraScrollHeight={20}
+        extraScrollHeight={32}
       >
         <Animated.View
           entering={FadeInDown.delay(100).duration(500)}

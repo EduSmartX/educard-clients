@@ -14,6 +14,8 @@ import {
   FlatList,
   StyleSheet,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 
 export interface SearchableMultiSelectOption {
@@ -130,7 +132,10 @@ export function SearchableMultiSelect({
         statusBarTranslucent
         onRequestClose={close}
       >
-        <View style={styles.overlay}>
+        <KeyboardAvoidingView
+          style={styles.overlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
           <View style={styles.modal}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{label ?? 'Select'}</Text>
@@ -217,7 +222,7 @@ export function SearchableMultiSelect({
               <Text style={styles.doneBtnText}>Done</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
