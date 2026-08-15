@@ -7,11 +7,13 @@
  */
 
 import { Platform } from 'react-native';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
 
 import { apiClient } from '@/api/client';
 import { getMediaUrl } from '@/constants/config';
+import { ensureLegacyStorageWritePermission } from '@/lib/permissions';
 
 import { arrayBufferToBase64 } from './download-template';
 
@@ -104,24 +106,61 @@ export async function downloadAttachmentToCache(
 }
 
 /**
- * Open an attachment in the device's native handler (PDF viewer, etc.) via the
- * share sheet — never the browser.
+ * Copy a cached file into the public Downloads collection.
+ *
+ * MediaStore is the only route to Downloads for apps targeting Android 10+;
+ * a plain file copy there fails under scoped storage.
+ */
+async function copyToAndroidDownloads(
+  cachePath: string,
+  safeName: string,
+  mimeType: string,
+): Promise<void> {
+  await ReactNativeBlobUtil.MediaCollection.copyToMediaStore(
+    // The native module reads `name`; the shipped typings wrongly say `path`.
+    { name: safeName, parentFolder: '', mimeType } as unknown as Parameters<
+      typeof ReactNativeBlobUtil.MediaCollection.copyToMediaStore
+    >[0],
+    'Download',
+    cachePath,
+  );
+}
+
+/**
+ * Open an attachment in the device's native handler (PDF viewer, etc.).
+ * Android uses a view intent so the file opens directly; the share sheet is
+ * only a fallback when no app can handle the type.
  */
 export async function openAttachmentExternally(
   rawUrl: string,
   fileName?: string,
 ): Promise<void> {
   const path = await downloadAttachmentToCache(rawUrl, fileName);
+  const mimeType = getAttachmentMimeType(fileName || rawUrl);
+
+  if (Platform.OS === 'android') {
+    try {
+      await ReactNativeBlobUtil.android.actionViewIntent(path, mimeType);
+      return;
+    } catch {
+      // No viewer for this type — offer the share sheet instead.
+    }
+  }
+
   await Share.open({
     url: `file://${path}`,
-    type: getAttachmentMimeType(fileName || rawUrl),
+    type: mimeType,
     failOnCancel: false,
   });
 }
 
 /**
- * Save an attachment to the device: Downloads folder on Android, share-to-save
- * on iOS (and as an Android fallback when the Downloads copy is blocked).
+ * Save an attachment to the device.
+ *
+ * Android: public Downloads first, then the app's own external folder. Both are
+ * real local files — the share sheet (Drive, Gmail, ...) is never used here, so
+ * saving works without a cloud account.
+ * iOS: the share sheet is the only way to reach the Files app.
  */
 export async function saveAttachmentToDevice(
   rawUrl: string,
@@ -131,16 +170,35 @@ export async function saveAttachmentToDevice(
   const safeName = sanitizeFileName(fileName, rawUrl);
 
   if (Platform.OS === 'android') {
+    const mimeType = getAttachmentMimeType(fileName || rawUrl);
     try {
-      const dest = `${RNFS.DownloadDirectoryPath}/${safeName}`;
-      await RNFS.copyFile(cachePath, dest);
+      await ensureLegacyStorageWritePermission();
+      await copyToAndroidDownloads(cachePath, safeName, mimeType);
       return {
         success: true,
         message: `Saved to Downloads: ${safeName}`,
+        filePath: `${RNFS.DownloadDirectoryPath}/${safeName}`,
+      };
+    } catch {
+      // Fall through to the app's own folder so the file still lands locally.
+    }
+
+    try {
+      const appDir = `${RNFS.ExternalDirectoryPath}/Downloads`;
+      await RNFS.mkdir(appDir);
+      const dest = `${appDir}/${safeName}`;
+      await RNFS.copyFile(cachePath, dest);
+      return {
+        success: true,
+        message: `Saved to app storage: ${safeName}`,
         filePath: dest,
       };
     } catch {
-      // Scoped storage may block the copy — fall back to the share sheet.
+      return {
+        success: false,
+        message: 'Could not save the file to this device.',
+        filePath: cachePath,
+      };
     }
   }
 

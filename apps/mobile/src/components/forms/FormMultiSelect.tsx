@@ -14,8 +14,8 @@ import {
   StyleSheet,
   TextInput,
   KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface Option {
   value: string;
@@ -49,6 +49,7 @@ export function FormMultiSelect({
 }: FormMultiSelectProps) {
   const [visible, setVisible] = useState(false);
   const [search, setSearch] = useState('');
+  const insets = useSafeAreaInsets();
 
   const filtered = useMemo(() => {
     if (!search.trim()) return options;
@@ -136,7 +137,7 @@ export function FormMultiSelect({
         onRequestClose={() => setVisible(false)}
       >
         <KeyboardAvoidingView style={styles.overlay} behavior="padding">
-          <View style={styles.modal}>
+          <View style={[styles.modal, { paddingBottom: insets.bottom + 16 }]}>
             {/* Header */}
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{label}</Text>
@@ -309,7 +310,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '75%',
-    paddingBottom: Platform.OS === 'ios' ? 34 : 28,
   },
   modalHeader: {
     flexDirection: 'row',

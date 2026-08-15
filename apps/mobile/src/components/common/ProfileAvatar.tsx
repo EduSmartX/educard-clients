@@ -6,6 +6,7 @@
 
 import { Colors } from '@educard/shared';
 import { Camera } from 'lucide-react-native';
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -15,6 +16,7 @@ import {
   Image,
 } from 'react-native';
 
+import { ImageViewerModal } from '@/components/common/ImageViewerModal';
 import { getMediaUrl } from '@/constants/config';
 
 interface ProfileAvatarProps {
@@ -22,6 +24,8 @@ interface ProfileAvatarProps {
   name?: string;
   /** Direct image URI (profile_photo_thumbnail) */
   imageUri?: string | null;
+  /** Full-size original opened when tapped in read-only mode */
+  fullImageUri?: string | null;
   /** Size in pixels (default 90) */
   size?: number;
   /** Background color for initials fallback */
@@ -44,17 +48,20 @@ function getInitials(name?: string): string {
 export function ProfileAvatar({
   name,
   imageUri,
+  fullImageUri,
   size = 90,
   bgColor = Colors.primary[100],
   onPress,
   isUploading,
 }: ProfileAvatarProps) {
+  const [viewerOpen, setViewerOpen] = useState(false);
   const fontSize = size * 0.36;
   const borderRadius = size / 2;
   const badgeSize = size * 0.32;
 
   // Backend serves signed URLs; no cache-bust param (would break the signature).
   const resolvedUri = getMediaUrl(imageUri);
+  const resolvedFullUri = getMediaUrl(fullImageUri) ?? resolvedUri;
 
   const sizeStyle = { width: size, height: size, borderRadius };
   const badgeStyle = {
@@ -109,6 +116,26 @@ export function ProfileAvatar({
           {badge}
         </View>
       </TouchableOpacity>
+    );
+  }
+
+  // Read-only: tapping enlarges the photo instead of doing nothing.
+  if (resolvedUri) {
+    return (
+      <>
+        <TouchableOpacity
+          onPress={() => setViewerOpen(true)}
+          activeOpacity={0.8}
+        >
+          <View style={sizeStyle}>{content}</View>
+        </TouchableOpacity>
+        <ImageViewerModal
+          visible={viewerOpen}
+          uri={resolvedFullUri}
+          title={name}
+          onClose={() => setViewerOpen(false)}
+        />
+      </>
     );
   }
 

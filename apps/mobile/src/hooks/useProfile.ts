@@ -97,8 +97,14 @@ export function useProfileImageUrl() {
     );
   }, [profilePhoto?.thumbnail_url, profilePhoto?.url]);
 
+  // Full-size original, for enlarged views where the thumbnail looks soft.
+  const fullImageUrl = useMemo(() => {
+    return getMediaUrl(profilePhoto?.url) ?? profileImageUrl;
+  }, [profilePhoto?.url, profileImageUrl]);
+
   return {
     profileImageUrl,
+    fullImageUrl,
     serverUrl: profileImageUrl,
     isLoading,
     dataUpdatedAt,

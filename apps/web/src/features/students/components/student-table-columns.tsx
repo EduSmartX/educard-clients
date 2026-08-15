@@ -31,6 +31,7 @@ export function getStudentColumns({
       accessor: (row) => (
         <UserAvatar
           thumbnailUrl={row.profile_photo_thumbnail}
+          fullUrl={row.profile_photo_url}
           gender={row.gender}
           name={row.full_name}
           className="h-9 w-9"

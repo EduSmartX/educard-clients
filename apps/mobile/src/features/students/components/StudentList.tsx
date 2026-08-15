@@ -45,6 +45,7 @@ import {
   ConfirmDialog,
 } from '@/components/common';
 import { EntityActions } from '@/components/common/EntityActions';
+import { ImageViewerModal } from '@/components/common/ImageViewerModal';
 import {
   LoadingState,
   ErrorState,
@@ -130,6 +131,10 @@ export function StudentList({ onBack }: StudentListProps) {
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [showResetPasswords, setShowResetPasswords] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<{
+    uri: string;
+    name: string;
+  } | null>(null);
 
   const isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
   const isTeacher = useMemo(() => isTeacherRole(user?.role), [user?.role]);
@@ -276,10 +281,26 @@ export function StudentList({ onBack }: StudentListProps) {
             <View style={styles.topRow}>
               <View style={avatarStyles.container}>
                 {item.profile_photo_thumbnail ? (
-                  <Image
-                    source={{ uri: getMediaUrl(item.profile_photo_thumbnail) }}
-                    style={[avatarStyles.medium, styles.avatarGrad]}
-                  />
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={e => {
+                      e.stopPropagation?.();
+                      setPhotoPreview({
+                        uri:
+                          getMediaUrl(item.profile_photo_url) ??
+                          getMediaUrl(item.profile_photo_thumbnail) ??
+                          '',
+                        name: fullName || 'Student',
+                      });
+                    }}
+                  >
+                    <Image
+                      source={{
+                        uri: getMediaUrl(item.profile_photo_thumbnail),
+                      }}
+                      style={[avatarStyles.medium, styles.avatarGrad]}
+                    />
+                  </TouchableOpacity>
                 ) : (
                   <View style={[avatarStyles.medium, styles.avatarGrad]}>
                     <Text style={styles.avatarText}>{initials}</Text>
@@ -485,6 +506,13 @@ export function StudentList({ onBack }: StudentListProps) {
 
       <ConfirmDialog {...deleteDialogProps} />
       <ConfirmDialog {...reactivateDialogProps} />
+
+      <ImageViewerModal
+        visible={!!photoPreview}
+        uri={photoPreview?.uri}
+        title={photoPreview?.name}
+        onClose={() => setPhotoPreview(null)}
+      />
     </View>
   );
 }

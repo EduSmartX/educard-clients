@@ -20,6 +20,7 @@ import {
 } from 'react-native';
 import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SubmitButton } from '@/components/common';
 import {
@@ -90,6 +91,7 @@ export function LeaveAllocationFormBase({
   leaveTypeDisabled = false,
 }: LeaveAllocationFormBaseProps) {
   const navigation = useNavigation<SharedStackNavigation>();
+  const insets = useSafeAreaInsets();
 
   const handleBack = () => {
     if (navigation.canGoBack()) {
@@ -308,7 +310,7 @@ export function LeaveAllocationFormBase({
           onPress={() => setRolesModalVisible(false)}
         >
           <Pressable
-            style={styles.modalSheet}
+            style={[styles.modalSheet, { paddingBottom: insets.bottom + 16 }]}
             onPress={e => e.stopPropagation()}
           >
             <View style={styles.modalHandle} />
@@ -416,7 +418,6 @@ export const leaveAllocationStyles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '70%',
-    paddingBottom: 34,
   },
   modalHandle: {
     width: 40,

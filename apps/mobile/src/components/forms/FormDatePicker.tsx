@@ -18,9 +18,9 @@ import {
   Modal,
   StyleSheet,
   FlatList,
-  Platform,
   useWindowDimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const MONTHS = [
   'January',
@@ -92,6 +92,7 @@ export function FormDatePicker({
   maxDate,
 }: FormDatePickerProps) {
   const { width: viewportWidth } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const currentYear = new Date().getFullYear();
   const effectiveMaxYear = maxYear ?? currentYear + 5;
   const calendarPadding = viewportWidth < 360 ? 12 : 20;
@@ -431,7 +432,9 @@ export function FormDatePicker({
             )}
 
             {/* Footer buttons */}
-            <View style={styles.footer}>
+            <View
+              style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}
+            >
               <TouchableOpacity onPress={clearDate} style={styles.clearBtn}>
                 <Text style={styles.clearBtnText}>Clear</Text>
               </TouchableOpacity>
@@ -483,7 +486,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 24,
     maxHeight: '75%',
     // Shadow for iOS
     shadowColor: '#000',
@@ -601,7 +603,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingTop: 14,
-    paddingBottom: Platform.OS === 'ios' ? 20 : 28,
     gap: 12,
     borderTopWidth: 1,
     borderTopColor: '#e2e8f0',

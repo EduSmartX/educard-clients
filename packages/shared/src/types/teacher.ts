@@ -53,6 +53,7 @@ export interface Teacher extends AuditFields {
   gender?: string;
   organization_role?: OrganizationRole | null;
   profile_photo_thumbnail?: string | null;
+  profile_photo_url?: string | null;
   designation: string;
   specialization: string;
   highest_qualification?: string;

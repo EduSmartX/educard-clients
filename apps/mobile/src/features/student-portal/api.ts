@@ -115,6 +115,9 @@ export interface ExamSession {
   start_date: string;
   end_date: string;
   description: string;
+  exam_count?: number;
+  published_exam_count?: number;
+  is_fully_published?: boolean;
 }
 
 export interface ExamResult {

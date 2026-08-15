@@ -327,6 +327,8 @@ function App() {
 
             <Route path="/parent" element={<ParentRoute />}>
               <Route path="dashboard" element={<ParentDashboardPage />} />
+              <Route path="holidays" element={<HolidayCalendarPage />} />
+              <Route path="exceptional-work" element={<ExceptionalWorkPage />} />
             </Route>
 
             <Route path="/student" element={<StudentRoute />}>
@@ -339,6 +341,8 @@ function App() {
               <Route path="fee" element={<StudentFeePage />} />
               <Route path="leave" element={<StudentLeavePage />} />
               <Route path="announcements" element={<StudentAnnouncementsPage />} />
+              <Route path="holidays" element={<HolidayCalendarPage />} />
+              <Route path="exceptional-work" element={<ExceptionalWorkPage />} />
             </Route>
 
             {/* Students */}

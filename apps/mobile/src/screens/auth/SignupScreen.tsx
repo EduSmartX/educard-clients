@@ -41,6 +41,8 @@ import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import {
   sendOtps,
   verifyOtp,
+  sendPhoneOtp,
+  verifyPhoneOtp,
   parseApiError,
   registerOrganization,
 } from '@/api';
@@ -199,6 +201,9 @@ export default function SignupScreen() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneOtp, setPhoneOtp] = useState('');
+  const [phoneOtpSent, setPhoneOtpSent] = useState(false);
+  const [phoneOtpVerified, setPhoneOtpVerified] = useState(false);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -366,6 +371,55 @@ export default function SignupScreen() {
     setCurrentStep(2);
   }, [useSameEmail, adminOtpVerified, orgOtpVerified, modal]);
 
+  // Step 3: Admin phone verification
+  const handleSendPhoneOtp = useCallback(async () => {
+    if (!isValidPhone(phoneNumber)) {
+      setErrors(prev => ({
+        ...prev,
+        phoneNumber: 'Phone must be a valid 10-digit mobile number',
+      }));
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await sendPhoneOtp(phoneNumber);
+      if (!response.success) {
+        modal.error('Error', response.message || 'Failed to send OTP');
+        return;
+      }
+      setPhoneOtpSent(true);
+      modal.success('OTP sent', `Verification code sent to ${phoneNumber}`);
+    } catch (error) {
+      const apiError = parseApiError(error);
+      modal.error('Error', apiError.message || 'Failed to send OTP');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [phoneNumber, modal]);
+
+  const handleVerifyPhoneOtp = useCallback(async () => {
+    if (phoneOtp.length !== 6) {
+      modal.error('Error', 'Please enter a 6-digit code');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await verifyPhoneOtp(phoneNumber, phoneOtp);
+      if (!response.success) {
+        modal.error('Error', response.message || 'Invalid verification code');
+        return;
+      }
+      setPhoneOtpVerified(true);
+    } catch (error) {
+      const apiError = parseApiError(error);
+      modal.error('Error', apiError.message || 'Invalid verification code');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [phoneNumber, phoneOtp, modal]);
+
   // Step 2: Organization Details
   const handleOrgDetailsSubmit = useCallback(() => {
     const newErrors: Record<string, string> = {};
@@ -404,6 +458,11 @@ export default function SignupScreen() {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      return;
+    }
+
+    if (phoneNumber && !phoneOtpVerified) {
+      modal.error('Error', 'Please verify your phone number');
       return;
     }
 
@@ -494,6 +553,7 @@ export default function SignupScreen() {
     adminEmail,
     useSameEmail,
     phoneNumber,
+    phoneOtpVerified,
     navigation,
     modal,
   ]);
@@ -1082,17 +1142,57 @@ export default function SignupScreen() {
               const digits = v.replace(/\D/g, '').slice(0, 10);
               setPhoneNumber(digits);
               clearError('phoneNumber');
+              setPhoneOtpSent(false);
+              setPhoneOtpVerified(false);
+              setPhoneOtp('');
             }}
             keyboardType="phone-pad"
             maxLength={10}
+            editable={!phoneOtpVerified}
             onFocus={() => setFocusedInput('phone')}
             onBlur={() => setFocusedInput(null)}
           />
+          {!!phoneNumber && !phoneOtpVerified && (
+            <TouchableOpacity
+              onPress={() => void handleSendPhoneOtp()}
+              disabled={isLoading}
+            >
+              <Text style={styles.inlineActionText}>
+                {phoneOtpSent ? 'Resend' : 'Send OTP'}
+              </Text>
+            </TouchableOpacity>
+          )}
+          {phoneOtpVerified && (
+            <CheckCircle2 size={20} color={Colors.success[500]} />
+          )}
         </View>
         {!!errors.phoneNumber && (
           <View style={styles.errorRow}>
             <AlertCircle size={14} color="#ef4444" />
             <Text style={styles.errorText}>{errors.phoneNumber}</Text>
+          </View>
+        )}
+
+        {phoneOtpSent && !phoneOtpVerified && (
+          <View style={styles.otpCard}>
+            <View style={styles.otpRow}>
+              <TextInput
+                style={styles.otpInput}
+                placeholder="000000"
+                placeholderTextColor={Colors.gray[400]}
+                value={phoneOtp}
+                onChangeText={setPhoneOtp}
+                keyboardType="number-pad"
+                maxLength={6}
+              />
+              <TouchableOpacity
+                style={styles.verifyButton}
+                onPress={() => void handleVerifyPhoneOtp()}
+                disabled={isLoading}
+              >
+                <Text style={styles.verifyButtonText}>Verify</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
       </View>

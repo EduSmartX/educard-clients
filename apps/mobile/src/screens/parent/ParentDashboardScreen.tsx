@@ -89,7 +89,7 @@ function shortLabel(name: string) {
 export default function ParentDashboardScreen() {
   const navigation = useNavigation<ParentTabNavigation>();
   const { user } = useAuthStore();
-  const { profileImageUrl } = useProfileImageUrl();
+  const { profileImageUrl, fullImageUrl } = useProfileImageUrl();
   const [imgError, setImgError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -261,6 +261,8 @@ export default function ParentDashboardScreen() {
                 : 'Here is what is happening at school today.'
             }
             highlight="Keep up the great work!"
+            imageUri={profileImageUrl}
+            fullImageUri={fullImageUrl}
           />
 
           {user && (

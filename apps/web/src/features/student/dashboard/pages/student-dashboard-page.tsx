@@ -25,7 +25,7 @@ import { VerificationBanner } from '@/components/dashboard';
 import { useAuth } from '@/hooks/use-auth';
 import { ROUTES } from '@/constants/app-config';
 import { useStudentDashboard } from '../hooks/use-dashboard-data';
-import { SubjectAvatar, ContactSupportCard } from '@/components/common';
+import { SubjectAvatar, ContactSupportCard, GreetingAvatar } from '@/components/common';
 import { breakRowClasses, subjectRowClasses } from '@/lib/subject-row';
 
 const STAGGER_CHILDREN = {
@@ -162,6 +162,11 @@ export default function StudentDashboardPage() {
           className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-white/10 blur-2xl"
           animate={{ scale: [1.2, 1, 1.2], opacity: [0.15, 0.05, 0.15] }}
           transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+        />
+
+        <GreetingAvatar
+          name={firstName}
+          className="absolute top-5 right-5 z-20 sm:top-7 sm:right-7"
         />
 
         <div className="relative z-10">

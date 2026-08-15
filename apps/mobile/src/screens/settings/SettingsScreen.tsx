@@ -18,6 +18,7 @@ import {
   Mail,
   Phone,
   Building2,
+  AlertTriangle,
   type LucideIcon,
 } from 'lucide-react-native';
 import { useMemo } from 'react';
@@ -181,9 +182,36 @@ export default function SettingsScreen() {
     ],
   };
 
-  const sections: SettingSection[] = isAdmin
-    ? [organizationSection, appSection]
-    : [appSection];
+  const schoolCalendarSection: SettingSection = {
+    title: 'SCHOOL CALENDAR',
+    items: [
+      {
+        id: 'holidays',
+        title: 'Holiday Calendar',
+        subtitle: 'View holidays & events',
+        icon: Calendar,
+        iconColor: '#dc2626',
+        iconBg: '#fee2e2',
+        screen: 'Holidays',
+      },
+      {
+        id: 'exceptional-work',
+        title: 'Exceptional Work Policy',
+        subtitle: 'View working day exceptions',
+        icon: AlertTriangle,
+        iconColor: '#ea580c',
+        iconBg: '#ffedd5',
+        screen: 'ExceptionalWork',
+      },
+    ],
+  };
+
+  let sections: SettingSection[] = [appSection];
+  if (isAdmin) {
+    sections = [organizationSection, appSection];
+  } else if (isStudentPortal) {
+    sections = [schoolCalendarSection, appSection];
+  }
 
   const initials = (user?.full_name ?? user?.first_name ?? user?.role ?? 'U')
     .charAt(0)

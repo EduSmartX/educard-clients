@@ -330,8 +330,8 @@ export function ExamSessionFormPage() {
               />
             )}
 
-            {/* View mode: Edit button */}
-            {isView && (
+            {/* View mode: Edit button (admin only — editing sessions is an admin task) */}
+            {isView && isAdmin && (
               <FormActions
                 primaryAction={{
                   label: 'Edit Session',
@@ -342,6 +342,17 @@ export function ExamSessionFormPage() {
                 secondaryAction={{
                   label: 'Back',
                   onClick: () => navigate(ROUTES.EXAMS),
+                  icon: 'back',
+                }}
+              />
+            )}
+
+            {isView && !isAdmin && (
+              <FormActions
+                primaryAction={{
+                  label: 'Back',
+                  onClick: () => navigate(ROUTES.EXAMS),
+                  type: 'button',
                   icon: 'back',
                 }}
               />

@@ -5,7 +5,15 @@
 
 import { Clock, X, Check } from 'lucide-react-native';
 import { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, Modal, StyleSheet, FlatList, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Modal,
+  StyleSheet,
+  FlatList,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface FormTimePickerProps {
   readonly label: string;
@@ -38,7 +46,11 @@ function to24h(hour12: number, minute: number, period: 'AM' | 'PM'): string {
 }
 
 /** Parse 24h HH:MM to 12h components */
-function parse24h(time: string): { hour12: number; minute: number; period: 'AM' | 'PM' } {
+function parse24h(time: string): {
+  hour12: number;
+  minute: number;
+  period: 'AM' | 'PM';
+} {
   if (!time) return { hour12: 9, minute: 0, period: 'AM' };
   const [h, m] = time.split(':').map(Number);
   const period: 'AM' | 'PM' = h >= 12 ? 'PM' : 'AM';
@@ -56,11 +68,14 @@ export function FormTimePicker({
   disabled = false,
 }: FormTimePickerProps) {
   const [visible, setVisible] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const parsed = useMemo(() => parse24h(value), [value]);
   const [selectedHour, setSelectedHour] = useState(parsed.hour12);
   const [selectedMinute, setSelectedMinute] = useState(parsed.minute);
-  const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM'>(parsed.period);
+  const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM'>(
+    parsed.period,
+  );
 
   const openPicker = () => {
     if (disabled) return;
@@ -92,7 +107,11 @@ export function FormTimePicker({
       )}
 
       <TouchableOpacity
-        style={[styles.trigger, error && styles.triggerError, disabled && styles.triggerDisabled]}
+        style={[
+          styles.trigger,
+          error && styles.triggerError,
+          disabled && styles.triggerDisabled,
+        ]}
         onPress={openPicker}
         activeOpacity={0.7}
       >
@@ -112,7 +131,7 @@ export function FormTimePicker({
         onRequestClose={() => setVisible(false)}
       >
         <View style={styles.overlay}>
-          <View style={styles.modal}>
+          <View style={[styles.modal, { paddingBottom: insets.bottom + 20 }]}>
             {/* Header */}
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{label}</Text>
@@ -124,20 +143,29 @@ export function FormTimePicker({
             {/* Preview */}
             <View style={styles.preview}>
               <Text style={styles.previewText}>
-                {selectedHour}:{String(selectedMinute).padStart(2, '0')} {selectedPeriod}
+                {selectedHour}:{String(selectedMinute).padStart(2, '0')}{' '}
+                {selectedPeriod}
               </Text>
             </View>
 
             {/* Hour Selection */}
             <Text style={styles.sectionLabel}>Hour</Text>
             <View style={styles.grid}>
-              {HOURS_12.map((h) => (
+              {HOURS_12.map(h => (
                 <TouchableOpacity
                   key={h}
-                  style={[styles.gridItem, selectedHour === h && styles.gridItemSelected]}
+                  style={[
+                    styles.gridItem,
+                    selectedHour === h && styles.gridItemSelected,
+                  ]}
                   onPress={() => setSelectedHour(h)}
                 >
-                  <Text style={[styles.gridText, selectedHour === h && styles.gridTextSelected]}>
+                  <Text
+                    style={[
+                      styles.gridText,
+                      selectedHour === h && styles.gridTextSelected,
+                    ]}
+                  >
                     {h}
                   </Text>
                 </TouchableOpacity>
@@ -150,15 +178,21 @@ export function FormTimePicker({
               data={MINUTES}
               horizontal
               showsHorizontalScrollIndicator={false}
-              keyExtractor={(item) => item.toString()}
+              keyExtractor={item => item.toString()}
               contentContainerStyle={styles.minuteList}
               renderItem={({ item: m }) => (
                 <TouchableOpacity
-                  style={[styles.minuteItem, selectedMinute === m && styles.minuteItemSelected]}
+                  style={[
+                    styles.minuteItem,
+                    selectedMinute === m && styles.minuteItemSelected,
+                  ]}
                   onPress={() => setSelectedMinute(m)}
                 >
                   <Text
-                    style={[styles.minuteText, selectedMinute === m && styles.minuteTextSelected]}
+                    style={[
+                      styles.minuteText,
+                      selectedMinute === m && styles.minuteTextSelected,
+                    ]}
                   >
                     :{String(m).padStart(2, '0')}
                   </Text>
@@ -169,21 +203,33 @@ export function FormTimePicker({
             {/* AM/PM Toggle */}
             <View style={styles.periodRow}>
               <TouchableOpacity
-                style={[styles.periodBtn, selectedPeriod === 'AM' && styles.periodBtnActive]}
+                style={[
+                  styles.periodBtn,
+                  selectedPeriod === 'AM' && styles.periodBtnActive,
+                ]}
                 onPress={() => setSelectedPeriod('AM')}
               >
                 <Text
-                  style={[styles.periodText, selectedPeriod === 'AM' && styles.periodTextActive]}
+                  style={[
+                    styles.periodText,
+                    selectedPeriod === 'AM' && styles.periodTextActive,
+                  ]}
                 >
                   AM
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.periodBtn, selectedPeriod === 'PM' && styles.periodBtnActive]}
+                style={[
+                  styles.periodBtn,
+                  selectedPeriod === 'PM' && styles.periodBtnActive,
+                ]}
                 onPress={() => setSelectedPeriod('PM')}
               >
                 <Text
-                  style={[styles.periodText, selectedPeriod === 'PM' && styles.periodTextActive]}
+                  style={[
+                    styles.periodText,
+                    selectedPeriod === 'PM' && styles.periodTextActive,
+                  ]}
                 >
                   PM
                 </Text>
@@ -199,7 +245,10 @@ export function FormTimePicker({
               ) : (
                 <View />
               )}
-              <TouchableOpacity style={styles.confirmBtn} onPress={handleConfirm}>
+              <TouchableOpacity
+                style={styles.confirmBtn}
+                onPress={handleConfirm}
+              >
                 <Check size={18} color="#fff" />
                 <Text style={styles.confirmText}>Confirm</Text>
               </TouchableOpacity>
@@ -241,7 +290,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
-    paddingBottom: Platform.OS === 'ios' ? 36 : 20,
     maxHeight: '70%',
   },
   modalHeader: {
@@ -259,7 +307,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   previewText: { fontSize: 28, fontWeight: '700', color: '#7c3aed' },
-  sectionLabel: { fontSize: 13, fontWeight: '600', color: '#64748b', marginBottom: 8 },
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#64748b',
+    marginBottom: 8,
+  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

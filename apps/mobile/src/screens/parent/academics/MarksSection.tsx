@@ -49,18 +49,43 @@ export function MarksSection() {
     );
   }, [sessions]);
 
-  const activeId = selectedId ?? orderedSessions[0]?.public_id ?? null;
+  const defaultSessionId = useMemo(() => {
+    const fullyPublished = orderedSessions.find(
+      (session: ExamSession) => session.is_fully_published,
+    );
+    const partiallyPublished = orderedSessions.find(
+      (session: ExamSession) => (session.published_exam_count ?? 0) > 0,
+    );
+    return (
+      fullyPublished?.public_id ??
+      partiallyPublished?.public_id ??
+      orderedSessions[0]?.public_id ??
+      null
+    );
+  }, [orderedSessions]);
+
+  const activeId = selectedId ?? defaultSessionId;
   const { data: detail, isLoading: detailLoading } =
     useExamSessionDetail(activeId);
 
   const sessionOptions = useMemo(
     () =>
-      orderedSessions.map((session: ExamSession) => ({
-        label: session.academic_year_name
+      orderedSessions.map((session: ExamSession) => {
+        const base = session.academic_year_name
           ? `${session.name} (${session.academic_year_name})`
-          : session.name,
-        value: session.public_id,
-      })),
+          : session.name;
+        const published = session.published_exam_count ?? 0;
+        if (session.is_fully_published) {
+          return { label: `${base} — Results out`, value: session.public_id };
+        }
+        if (published > 0) {
+          return {
+            label: `${base} — ${published}/${session.exam_count ?? published} published`,
+            value: session.public_id,
+          };
+        }
+        return { label: base, value: session.public_id };
+      }),
     [orderedSessions],
   );
 

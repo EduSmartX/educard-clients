@@ -21,6 +21,7 @@ import {
   TextInput,
   KeyboardAvoidingView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface Option {
   value: string;
@@ -56,6 +57,7 @@ export function FormDropdown({
 }: FormDropdownProps) {
   const [visible, setVisible] = useState(false);
   const [search, setSearch] = useState('');
+  const insets = useSafeAreaInsets();
 
   const selectedLabel = options.find(o => o.value === value)?.label;
   const filtered =
@@ -113,7 +115,7 @@ export function FormDropdown({
           }}
         >
           <KeyboardAvoidingView style={styles.modalOverlay} behavior="padding">
-            <View style={styles.modal}>
+            <View style={[styles.modal, { paddingBottom: insets.bottom + 20 }]}>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>{label}</Text>
                 <TouchableOpacity
@@ -229,7 +231,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '70%',
-    paddingBottom: 20,
   },
   modalHeader: {
     flexDirection: 'row',

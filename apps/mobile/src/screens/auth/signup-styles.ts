@@ -169,34 +169,34 @@ export const styles = StyleSheet.create({
   },
   toggleText: { fontSize: 14, color: Colors.gray[700], fontWeight: '500' },
 
+  inlineActionText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.primary[500],
+  },
+
   // OTP
   otpCard: {
-    backgroundColor: Colors.gray[50],
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: Colors.gray[200],
+    marginTop: 4,
   },
   otpLabel: {
     fontSize: 13,
     fontWeight: '600',
     color: Colors.gray[600],
-    marginBottom: 12,
-    letterSpacing: 0.2,
-    textTransform: 'uppercase',
+    marginBottom: 8,
   },
-  otpRow: { flexDirection: 'row', gap: 12 },
+  otpRow: { flexDirection: 'row', gap: 10 },
   otpInput: {
     flex: 1,
-    height: 54,
+    height: 48,
     backgroundColor: '#ffffff',
-    borderRadius: 12,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: Colors.gray[200],
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '700',
     textAlign: 'center',
-    letterSpacing: 6,
+    letterSpacing: 4,
     color: Colors.gray[900],
   },
   otpInputVerified: {
@@ -204,16 +204,16 @@ export const styles = StyleSheet.create({
     backgroundColor: Colors.success[50],
   },
   verifyButton: {
-    paddingHorizontal: 24,
-    height: 54,
+    paddingHorizontal: 18,
+    height: 48,
     backgroundColor: Colors.primary[500],
-    borderRadius: 12,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
   verifyButtonSuccess: { backgroundColor: Colors.success[500] },
   verifyButtonText: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  otpHint: { fontSize: 12, color: Colors.gray[400], marginTop: 10 },
+  otpHint: { fontSize: 12, color: Colors.gray[400], marginTop: 6 },
 
   // Picker
   pickerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },

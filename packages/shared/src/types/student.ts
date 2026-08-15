@@ -90,6 +90,7 @@ export interface Student extends AuditFields {
   emergency_contact_name?: string;
   emergency_contact_phone?: string;
   profile_photo_thumbnail?: string | null;
+  profile_photo_url?: string | null;
 }
 
 export interface StudentListItem {
@@ -107,6 +108,7 @@ export interface StudentListItem {
   is_active: boolean;
   can_manage?: boolean;
   profile_photo_thumbnail?: string | null;
+  profile_photo_url?: string | null;
 }
 
 // Request Payloads
