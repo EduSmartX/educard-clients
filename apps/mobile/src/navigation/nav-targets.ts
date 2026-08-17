@@ -24,6 +24,7 @@ export type MenuTarget =
   | 'ChangeEmail'
   | 'ChangePhone'
   | 'HelpSupport'
+  | 'Feedback'
   | 'Profile'
   | 'Preferences'
   | 'Timetable'

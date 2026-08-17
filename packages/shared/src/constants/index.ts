@@ -26,6 +26,7 @@ export * from "./signup-constants";
 export * from "./attendance";
 export * from "./error-messages";
 export * from "./fee-constants";
+export * from "./feedback-constants";
 export * from "./homework-constants";
 export * from "./leave-colors";
 export * from "./status-constants";

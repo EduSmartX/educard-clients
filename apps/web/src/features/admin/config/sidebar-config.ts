@@ -33,6 +33,7 @@ import {
   CalendarRange,
   ClipboardEdit,
   Megaphone,
+  MessageSquare,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
 import { ROUTES } from '@/constants/app-config';
@@ -317,6 +318,12 @@ export const adminSidebarConfig: SidebarSection[] = [
         label: 'Organization',
         icon: Building2,
         path: ROUTES.ORGANIZATION,
+      },
+      {
+        id: 'feedback',
+        label: 'Feedback',
+        icon: MessageSquare,
+        path: ROUTES.FEEDBACK,
       },
       {
         id: 'settings',

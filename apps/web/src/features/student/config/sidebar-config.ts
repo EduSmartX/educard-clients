@@ -12,6 +12,7 @@ import {
   IndianRupee,
   CalendarOff,
   Megaphone,
+  MessageSquare,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
 import { ROUTES } from '@/constants/app-config';
@@ -76,6 +77,12 @@ export const studentSidebarConfig: SidebarSection[] = [
         label: 'Leave',
         icon: CalendarOff,
         path: ROUTES.STUDENT.LEAVE,
+      },
+      {
+        id: 'feedback',
+        label: 'Feedback',
+        icon: MessageSquare,
+        path: ROUTES.FEEDBACK,
       },
     ],
   },

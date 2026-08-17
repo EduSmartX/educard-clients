@@ -412,6 +412,18 @@ export const API_ENDPOINTS = {
       PAYMENTS: (id: string) => `/fee/parent/fees/${id}/payments/`,
     },
   },
+
+  FEEDBACK: {
+    LIST: "/feedback/entries/",
+    CREATE: "/feedback/entries/",
+    DETAIL: (id: string) => `/feedback/entries/${id}/`,
+
+    REVIEWS: {
+      LIST: "/feedback/reviews/",
+      CREATE: "/feedback/reviews/",
+      ME: "/feedback/reviews/me/",
+    },
+  },
 } as const;
 
 /**

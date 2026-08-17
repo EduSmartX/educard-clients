@@ -262,6 +262,9 @@ const RecordPaymentPage = lazy(() =>
 // Profile
 const ProfilePage = lazy(() => import('./features/profile/pages/profile-page'));
 
+// Feedback
+const FeedbackPage = lazy(() => import('./features/feedback/pages/feedback-page'));
+
 // Coming Soon
 const ComingSoonPage = lazy(() => import('./pages/coming-soon-page'));
 
@@ -425,6 +428,9 @@ function App() {
 
             {/* Profile */}
             <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
+
+            {/* Feedback - available to every authenticated role */}
+            <Route path={ROUTES.FEEDBACK} element={<FeedbackPage />} />
 
             {/* Calendar - Coming Soon */}
             <Route

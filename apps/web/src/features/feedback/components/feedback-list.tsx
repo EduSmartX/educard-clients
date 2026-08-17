@@ -1,0 +1,122 @@
+import { motion } from 'framer-motion';
+import { FileText, Inbox, Paperclip } from 'lucide-react';
+import { getFeedbackTypeOption, type Feedback } from '@educard/shared';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { formatFileSize } from '@/lib/utils';
+import { useFeedbackList } from '../hooks/use-feedback';
+import { FEEDBACK_TYPE_ICONS } from './feedback-type-icons';
+
+function formatDate(value: string) {
+  return new Date(value).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+function FeedbackCard({ feedback }: Readonly<{ feedback: Feedback }>) {
+  const option = getFeedbackTypeOption(feedback.feedback_type);
+  const Icon = FEEDBACK_TYPE_ICONS[option.icon];
+
+  return (
+    <Card>
+      <CardContent className="space-y-3 pt-6">
+        <div className="flex items-start gap-3">
+          <span
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
+            style={{ backgroundColor: option.bgColor }}
+          >
+            <Icon className="h-5 w-5" style={{ color: option.color }} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="truncate text-sm font-semibold text-slate-900">{feedback.subject}</h3>
+              <Badge
+                variant="outline"
+                style={{ color: option.color, borderColor: option.borderColor }}
+              >
+                {feedback.feedback_type_display}
+              </Badge>
+              {feedback.module_display && (
+                <Badge variant="secondary">{feedback.module_display}</Badge>
+              )}
+            </div>
+            <p className="mt-1 text-xs text-slate-400">
+              {feedback.user_name} · {formatDate(feedback.created_at)}
+            </p>
+          </div>
+        </div>
+
+        <p className="text-sm whitespace-pre-wrap text-slate-600">{feedback.description}</p>
+
+        {feedback.attachments.length > 0 && (
+          <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-3">
+            {feedback.attachments.map((attachment) => (
+              <a
+                key={attachment.public_id}
+                href={attachment.file_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-slate-600 transition-colors hover:bg-slate-50"
+              >
+                <Paperclip className="h-3.5 w-3.5" />
+                <span className="max-w-[12rem] truncate">{attachment.file_name}</span>
+                <span className="text-slate-400">{formatFileSize(attachment.file_size)}</span>
+              </a>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+export function FeedbackList() {
+  const { data, isLoading } = useFeedbackList();
+  const entries = data?.data ?? [];
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <Skeleton key={index} className="h-32 rounded-xl" />
+        ))}
+      </div>
+    );
+  }
+
+  if (entries.length === 0) {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="flex flex-col items-center gap-2 py-12 text-center">
+          <Inbox className="h-8 w-8 text-slate-300" />
+          <p className="text-sm font-medium text-slate-600">No feedback yet</p>
+          <p className="text-xs text-slate-400">
+            Anything you submit will show up here so you can track it.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <p className="flex items-center gap-1.5 text-xs text-slate-500">
+        <FileText className="h-3.5 w-3.5" />
+        {entries.length} submission{entries.length > 1 ? 's' : ''}
+      </p>
+      {entries.map((feedback, index) => (
+        <motion.div
+          key={feedback.public_id}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: Math.min(index * 0.04, 0.2) }}
+        >
+          <FeedbackCard feedback={feedback} />
+        </motion.div>
+      ))}
+    </div>
+  );
+}

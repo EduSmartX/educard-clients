@@ -86,6 +86,7 @@ export type SharedStackParamList = {
   ChangePhone: { mode?: string; from?: string } | undefined;
   ChangePassword: undefined;
   HelpSupport: undefined;
+  Feedback: undefined;
   Profile: undefined;
   SwitchProfile: undefined;
   SyncProfiles: undefined;
