@@ -17,8 +17,11 @@ export interface FeedbackAttachment {
   public_id: string;
   file_name: string;
   file_url: string;
+  /** Coarse category derived from the mime type (pdf, image, doc, ...). */
+  file_type: string;
   mime_type: string;
   file_size: number;
+  file_size_display: string;
 }
 
 export interface Feedback extends AuditFields {
