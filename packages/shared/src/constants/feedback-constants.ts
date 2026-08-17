@@ -34,6 +34,26 @@ export const FEEDBACK_MODULE = {
 export type FeedbackModule =
   (typeof FEEDBACK_MODULE)[keyof typeof FEEDBACK_MODULE];
 
+export const FEEDBACK_STATUS = {
+  OPEN: "open",
+  IN_PROGRESS: "in_progress",
+  RESOLVED: "resolved",
+  CLOSED: "closed",
+} as const;
+
+export type FeedbackStatus =
+  (typeof FEEDBACK_STATUS)[keyof typeof FEEDBACK_STATUS];
+
+export const FEEDBACK_STATUS_COLORS: Record<
+  FeedbackStatus,
+  { color: string; bgColor: string }
+> = {
+  [FEEDBACK_STATUS.OPEN]: { color: "#dc2626", bgColor: "#fef2f2" },
+  [FEEDBACK_STATUS.IN_PROGRESS]: { color: "#d97706", bgColor: "#fffbeb" },
+  [FEEDBACK_STATUS.RESOLVED]: { color: "#059669", bgColor: "#ecfdf5" },
+  [FEEDBACK_STATUS.CLOSED]: { color: "#64748b", bgColor: "#f1f5f9" },
+};
+
 export type FeedbackTypeIconName =
   | "Lightbulb"
   | "TrendingUp"

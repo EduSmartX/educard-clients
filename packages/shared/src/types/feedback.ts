@@ -7,7 +7,11 @@
  */
 
 import type { AuditFields } from "./common";
-import type { FeedbackModule, FeedbackType } from "../constants";
+import type {
+  FeedbackModule,
+  FeedbackStatus,
+  FeedbackType,
+} from "../constants";
 
 export interface FeedbackAttachment {
   public_id: string;
@@ -19,6 +23,7 @@ export interface FeedbackAttachment {
 
 export interface Feedback extends AuditFields {
   public_id: string;
+  ticket_number: string;
   organization_public_id: string;
   user_public_id: string;
   user_name: string;
@@ -30,6 +35,8 @@ export interface Feedback extends AuditFields {
   module_display: string;
   subject: string;
   description: string;
+  status: FeedbackStatus;
+  status_display: string;
   attachments: FeedbackAttachment[];
 }
 
@@ -38,6 +45,7 @@ export interface FeedbackQueryParams {
   page_size?: number;
   feedback_type?: FeedbackType;
   module?: FeedbackModule;
+  status?: FeedbackStatus;
   search?: string;
   ordering?: string;
 }

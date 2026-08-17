@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { FileText, Inbox, Paperclip } from 'lucide-react';
-import { getFeedbackTypeOption, type Feedback } from '@educard/shared';
+import { FEEDBACK_STATUS_COLORS, getFeedbackTypeOption, type Feedback } from '@educard/shared';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -19,6 +19,7 @@ function formatDate(value: string) {
 function FeedbackCard({ feedback }: Readonly<{ feedback: Feedback }>) {
   const option = getFeedbackTypeOption(feedback.feedback_type);
   const Icon = FEEDBACK_TYPE_ICONS[option.icon];
+  const statusStyle = FEEDBACK_STATUS_COLORS[feedback.status];
 
   return (
     <Card>
@@ -42,9 +43,20 @@ function FeedbackCard({ feedback }: Readonly<{ feedback: Feedback }>) {
               {feedback.module_display && (
                 <Badge variant="secondary">{feedback.module_display}</Badge>
               )}
+              <Badge
+                variant="outline"
+                style={{
+                  color: statusStyle?.color,
+                  borderColor: statusStyle?.color,
+                  backgroundColor: statusStyle?.bgColor,
+                }}
+              >
+                {feedback.status_display}
+              </Badge>
             </div>
             <p className="mt-1 text-xs text-slate-400">
-              {feedback.user_name} · {formatDate(feedback.created_at)}
+              <span className="font-mono font-medium text-slate-500">{feedback.ticket_number}</span>{' '}
+              · {feedback.user_name} · {formatDate(feedback.created_at)}
             </p>
           </div>
         </div>

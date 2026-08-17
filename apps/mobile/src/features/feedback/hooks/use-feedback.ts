@@ -45,10 +45,10 @@ export function useCreateFeedback(options?: MutationOptions) {
     mutationFn: (payload: CreateFeedbackPayload) => createFeedback(payload),
     onSuccess: response => {
       queryClient.invalidateQueries({ queryKey: feedbackKeys.all });
-      showToast(
-        'success',
-        response.message || 'Thank you! Your feedback has been submitted.',
-      );
+      const base =
+        response.message || 'Thank you! Your feedback has been submitted.';
+      const ticket = response.data?.ticket_number;
+      showToast('success', ticket ? `${base} (Ticket ${ticket})` : base);
       options?.onSuccess?.();
     },
     onError: (error: unknown) => {

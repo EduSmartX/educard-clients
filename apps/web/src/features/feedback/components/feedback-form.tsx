@@ -75,7 +75,9 @@ export function FeedbackForm() {
       },
       {
         onSuccess: (response) => {
-          toast.success(response.message || 'Thank you! Your feedback has been submitted.');
+          toast.success(response.message || 'Thank you! Your feedback has been submitted.', {
+            description: `Ticket ${response.data.ticket_number}`,
+          });
           reset();
           setAttachments([]);
         },
