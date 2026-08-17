@@ -133,6 +133,13 @@ export default function ParentFeesScreen() {
         ) : (
           <View className="px-4 pb-6 pt-4">
             {/* Summary Cards */}
+            {!summary && (
+              <View className="items-center rounded-xl border border-gray-200 bg-white py-8">
+                <Text className="text-sm text-gray-400">
+                  No Fee information available
+                </Text>
+              </View>
+            )}
             {summary && (
               <>
                 <Text className="mb-3 text-base font-bold text-gray-800">

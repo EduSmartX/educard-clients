@@ -293,8 +293,8 @@ export async function fetchExamSessionDetail(
   return res.data.data;
 }
 
-export async function fetchFeeSummary(): Promise<FeeSummary> {
-  const res = await apiClient.get<ApiResponse<FeeSummary>>(
+export async function fetchFeeSummary(): Promise<FeeSummary | null> {
+  const res = await apiClient.get<ApiResponse<FeeSummary | null>>(
     API_ENDPOINTS.STUDENT_PORTAL.FEE.SUMMARY,
   );
   return res.data.data;
