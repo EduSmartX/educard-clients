@@ -15,6 +15,7 @@ import {
   Loader2,
   AlertCircle,
   Bell,
+  Eye,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -168,6 +169,18 @@ export function HolidayCalendar() {
           </div>
         )}
       </PageHeader>
+
+      {/* View Only Banner for non-admin users */}
+      {!isAdmin && (
+        <Alert className="border-emerald-200 bg-emerald-50">
+          <Eye className="h-4 w-4 text-emerald-600" />
+          <AlertTitle className="text-emerald-900">View Only Mode</AlertTitle>
+          <AlertDescription className="text-emerald-700">
+            You can view the holiday calendar, but cannot create or modify holidays. Contact your
+            administrator to make changes.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Main Card */}
       <Card className="border-0 shadow-lg">

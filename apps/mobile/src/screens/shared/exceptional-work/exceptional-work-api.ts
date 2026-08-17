@@ -9,6 +9,7 @@ export interface CalendarException {
   is_applicable_to_all_teachers: boolean;
   classes?: { public_id: string; display_name: string }[];
   created_at: string;
+  created_by_public_id?: string | null;
 }
 
 export interface CalendarExceptionCreate {

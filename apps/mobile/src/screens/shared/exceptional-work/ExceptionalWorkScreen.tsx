@@ -33,7 +33,8 @@ import { LinearGradient } from '@/lib/linear-gradient';
 import { useAuthStore } from '@/lib/auth-store';
 import { useToast } from '@/lib/toast-context';
 import type { SharedStackNavigation } from '@/navigation/types';
-import { isAdminRole } from '@/utils/role-utils';
+import { isAdminRole, isTeacherRole } from '@/utils/role-utils';
+import { useTeacherManagementContext } from '@/features/leave';
 
 import { CreateExceptionModal } from './CreateExceptionModal';
 import {
@@ -137,7 +138,20 @@ export default function ExceptionalWorkScreen() {
   );
 
   const { user } = useAuthStore();
-  const canManage = useMemo(() => isAdminRole(user?.role), [user?.role]);
+  const isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
+  const isTeacher = useMemo(() => isTeacherRole(user?.role), [user?.role]);
+  const { data: teacherContext } = useTeacherManagementContext(isTeacher);
+
+  // Teachers can only manage exceptions for classes they are the class teacher of
+  const isClassTeacher =
+    isTeacher && (teacherContext?.class_teacher_for?.length ?? 0) > 0;
+  const canManage = isAdmin || isClassTeacher;
+  const canManageException = useCallback(
+    (exception: CalendarException) =>
+      isAdmin ||
+      (isClassTeacher && exception.created_by_public_id === user?.public_id),
+    [isAdmin, isClassTeacher, user?.public_id],
+  );
 
   const handleBack = useCallback(() => {
     if (navigation.canGoBack()) navigation.goBack();
@@ -269,7 +283,7 @@ export default function ExceptionalWorkScreen() {
                     key={exception.public_id}
                     exception={exception}
                     onDelete={() => setDeleteTarget(exception)}
-                    canManage={canManage}
+                    canManage={canManageException(exception)}
                   />
                 ))
               )}
@@ -297,7 +311,7 @@ export default function ExceptionalWorkScreen() {
                     key={exception.public_id}
                     exception={exception}
                     onDelete={() => setDeleteTarget(exception)}
-                    canManage={canManage}
+                    canManage={canManageException(exception)}
                   />
                 ))
               )}
@@ -317,6 +331,7 @@ export default function ExceptionalWorkScreen() {
       <CreateExceptionModal
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
+        classScopedOnly={!isAdmin}
         onSuccess={() =>
           void queryClient.invalidateQueries({
             queryKey: ['calendar-exceptions'],
