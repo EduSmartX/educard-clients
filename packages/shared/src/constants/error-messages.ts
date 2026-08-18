@@ -51,6 +51,8 @@ export const ErrorMessages = {
     BULK_UPLOAD_FAILED: "Failed to upload students. Please try again.",
     DOWNLOAD_TEMPLATE_FAILED: "Failed to download student template.",
     NOT_FOUND: "Student not found.",
+    SET_TEMP_PASSWORD_FAILED:
+      "Failed to set the temporary password. Please try again.",
   },
 
   TEACHER: {
@@ -62,6 +64,8 @@ export const ErrorMessages = {
     BULK_UPLOAD_FAILED: "Failed to upload teachers. Please try again.",
     DOWNLOAD_TEMPLATE_FAILED: "Failed to download teacher template.",
     NOT_FOUND: "Teacher not found.",
+    RESEND_VERIFICATION_FAILED:
+      "Failed to resend the verification link. Please try again.",
   },
 
   CLASS: {
@@ -340,6 +344,8 @@ export const SuccessMessages = {
     DELETE_SUCCESS: "Student deleted successfully.",
     BULK_UPLOAD_SUCCESS: "Students uploaded successfully.",
     REACTIVATE_SUCCESS: "Student reactivated successfully.",
+    TEMP_PASSWORD_SET:
+      "Temporary password set. The student must change it at next login.",
   },
 
   TEACHER: {
@@ -348,6 +354,7 @@ export const SuccessMessages = {
     DELETE_SUCCESS: "Teacher deleted successfully.",
     BULK_UPLOAD_SUCCESS: "Teachers uploaded successfully.",
     REACTIVATE_SUCCESS: "Teacher reactivated successfully.",
+    VERIFICATION_LINK_SENT: "Verification link sent successfully.",
   },
 
   CLASS: {

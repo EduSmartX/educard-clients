@@ -7,6 +7,7 @@ import { useCallback, useRef, useState } from 'react';
 import { Camera, Loader2, Trash2, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { UserAvatar } from '@/components/common/user-avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -143,21 +144,30 @@ export function ProfilePhotoUpload() {
         <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
           {/* Avatar Preview */}
           <div className="relative">
-            <Avatar className="border-muted h-28 w-28 border-2">
-              {isLoading && (
-                <AvatarFallback>
-                  <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
-                </AvatarFallback>
-              )}
-              {!isLoading && displayUrl && (
-                <AvatarImage src={displayUrl} alt="Profile photo" className="object-cover" />
-              )}
-              {!isLoading && !displayUrl && (
-                <AvatarFallback className="bg-brand/10 text-brand text-2xl font-semibold">
-                  {initials}
-                </AvatarFallback>
-              )}
-            </Avatar>
+            {!isLoading && !preview && hasPhoto ? (
+              <UserAvatar
+                thumbnailUrl={photo?.thumbnail_url}
+                fullUrl={photo?.url}
+                name={initials}
+                className="border-muted h-28 w-28 border-2"
+              />
+            ) : (
+              <Avatar className="border-muted h-28 w-28 border-2">
+                {isLoading && (
+                  <AvatarFallback>
+                    <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+                  </AvatarFallback>
+                )}
+                {!isLoading && displayUrl && (
+                  <AvatarImage src={displayUrl} alt="Profile photo" className="object-cover" />
+                )}
+                {!isLoading && !displayUrl && (
+                  <AvatarFallback className="bg-brand/10 text-brand text-2xl font-semibold">
+                    {initials}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+            )}
 
             {/* Camera overlay button */}
             <button

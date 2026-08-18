@@ -5,12 +5,9 @@
  */
 
 import { Clock, Sparkles } from 'lucide-react-native';
-import { useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { ImageViewerModal } from '@/components/common/ImageViewerModal';
-import { getMediaUrl } from '@/constants/config';
 import { LinearGradient } from '@/lib/linear-gradient';
 
 export function getGreeting(): { text: string; emoji: string } {
@@ -20,24 +17,11 @@ export function getGreeting(): { text: string; emoji: string } {
   return { text: 'Good Evening', emoji: '🌙' };
 }
 
-function getInitials(name?: string): string {
-  if (!name) return '?';
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) {
-    return (parts[0][0] + (parts.at(-1) ?? parts[0])[0]).toUpperCase();
-  }
-  return parts[0].substring(0, 2).toUpperCase();
-}
-
 export interface GreetingCardProps {
   name: string;
   subtitle?: string;
   highlight?: string;
   colors?: readonly [string, string, ...string[]];
-  /** Profile photo shown as a rounded avatar; tap opens a full-size view. */
-  imageUri?: string | null;
-  /** Full-size original used by the popup so the enlarged photo stays sharp. */
-  fullImageUri?: string | null;
 }
 
 const DEFAULT_GRADIENT = ['#7c3aed', '#9333ea', '#c026d3'] as const;
@@ -47,13 +31,8 @@ export function GreetingCard({
   subtitle,
   highlight,
   colors = DEFAULT_GRADIENT,
-  imageUri,
-  fullImageUri,
 }: GreetingCardProps) {
-  const [viewerOpen, setViewerOpen] = useState(false);
   const greeting = getGreeting();
-  const resolvedUri = getMediaUrl(imageUri);
-  const resolvedFullUri = getMediaUrl(fullImageUri) ?? resolvedUri;
   const formattedDate = new Date().toLocaleDateString('en-IN', {
     weekday: 'long',
     year: 'numeric',
@@ -83,25 +62,6 @@ export function GreetingCard({
               {greeting.text}, {name}! {greeting.emoji}
             </Text>
           </View>
-
-          <TouchableOpacity
-            activeOpacity={resolvedUri ? 0.8 : 1}
-            disabled={!resolvedUri}
-            onPress={() => setViewerOpen(true)}
-            style={styles.avatarRing}
-          >
-            {resolvedUri ? (
-              <Image
-                source={{ uri: resolvedUri }}
-                style={styles.avatarImage}
-                resizeMode="cover"
-              />
-            ) : (
-              <View style={[styles.avatarImage, styles.avatarFallback]}>
-                <Text style={styles.avatarInitials}>{getInitials(name)}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
         </View>
 
         {!!subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
@@ -113,13 +73,6 @@ export function GreetingCard({
           </View>
         )}
       </LinearGradient>
-
-      <ImageViewerModal
-        visible={viewerOpen}
-        uri={resolvedFullUri}
-        title={name}
-        onClose={() => setViewerOpen(false)}
-      />
     </Animated.View>
   );
 }
@@ -162,22 +115,6 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   textCol: { flex: 1 },
-  avatarRing: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    borderWidth: 2.5,
-    borderColor: 'rgba(255,255,255,0.85)',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 5,
-  },
-  avatarImage: { width: '100%', height: '100%', borderRadius: 32 },
-  avatarFallback: { alignItems: 'center', justifyContent: 'center' },
-  avatarInitials: { fontSize: 22, fontWeight: '800', color: '#fff' },
   dateText: {
     fontSize: 12,
     fontWeight: '600',

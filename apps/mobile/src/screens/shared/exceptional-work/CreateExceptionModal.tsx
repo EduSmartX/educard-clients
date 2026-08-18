@@ -82,7 +82,6 @@ interface CreateExceptionModalProps {
   visible: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  /** Class teachers can only scope exceptions to their own classes, never org-wide or to teachers */
   classScopedOnly?: boolean;
 }
 
@@ -200,6 +199,7 @@ export function CreateExceptionModal({
 
           <KeyboardAwareScrollView
             style={modalStyles.body}
+            containerStyle={modalStyles.bodyContainer}
             showsVerticalScrollIndicator={false}
           >
             <View style={modalStyles.field}>

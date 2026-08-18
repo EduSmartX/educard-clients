@@ -202,6 +202,7 @@ export async function exportStudentsData(
 
 export interface ResetClassPasswordsPayload {
   new_password: string;
+  confirm_password: string;
 }
 
 export async function resetClassPasswords(

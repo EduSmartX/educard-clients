@@ -10,6 +10,7 @@ import {
   useEffect,
   useImperativeHandle,
   useRef,
+  useState,
 } from 'react';
 import {
   Keyboard,
@@ -21,7 +22,9 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   type ScrollViewProps,
+  type StyleProp,
   type TargetedEvent,
+  type ViewStyle,
 } from 'react-native';
 
 /** Gap kept between the focused input and the top of the keyboard. */
@@ -65,6 +68,7 @@ export type KeyboardAwareScrollViewProps = ScrollViewProps &
     /** Gap kept between the keyboard and the focused input. */
     bottomOffset?: number;
     extraKeyboardSpace?: number;
+    containerStyle?: StyleProp<ViewStyle>;
   };
 
 export const KeyboardAwareScrollView = forwardRef<
@@ -84,7 +88,9 @@ export const KeyboardAwareScrollView = forwardRef<
     innerRef: _innerRef,
     bottomOffset,
     extraKeyboardSpace,
+    containerStyle,
     style,
+    contentContainerStyle,
     keyboardShouldPersistTaps = 'handled',
     scrollEventThrottle = 16,
     onScroll,
@@ -95,6 +101,7 @@ export const KeyboardAwareScrollView = forwardRef<
 ) {
   const scrollRef = useRef<ScrollView>(null);
   const scrollOffsetY = useRef(0);
+  const [keyboardInset, setKeyboardInset] = useState(0);
   /** Window Y of the keyboard's top edge; null while the keyboard is closed. */
   const keyboardTop = useRef<number | null>(null);
   const keyboardGap = Math.max(
@@ -116,12 +123,16 @@ export const KeyboardAwareScrollView = forwardRef<
     }
     input.measureInWindow((_x, y, _width, height) => {
       const hiddenBy = y + height + keyboardGap - keyboardY;
-      if (hiddenBy > 0) {
-        scrollView.scrollTo({
-          y: scrollOffsetY.current + hiddenBy,
-          animated: true,
-        });
+      if (hiddenBy <= 0) {
+        return;
       }
+      // A short form has no scroll range, so grow the content before scrolling.
+      setKeyboardInset(previous => Math.max(previous, hiddenBy));
+      const targetY = scrollOffsetY.current + hiddenBy;
+      setTimeout(
+        () => scrollRef.current?.scrollTo({ y: targetY, animated: true }),
+        MEASURE_DELAY_MS,
+      );
     });
   }, [keyboardGap]);
 
@@ -138,6 +149,7 @@ export const KeyboardAwareScrollView = forwardRef<
       }),
       Keyboard.addListener(hideEvent, () => {
         keyboardTop.current = null;
+        setKeyboardInset(0);
       }),
     ];
 
@@ -175,12 +187,16 @@ export const KeyboardAwareScrollView = forwardRef<
 
   return (
     <KeyboardAvoidingView
-      style={styles.flex}
+      style={containerStyle ?? styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
         ref={scrollRef}
         style={style}
+        contentContainerStyle={[
+          contentContainerStyle,
+          keyboardInset > 0 && { paddingBottom: keyboardInset },
+        ]}
         keyboardShouldPersistTaps={keyboardShouldPersistTaps}
         scrollEventThrottle={scrollEventThrottle}
         onScroll={handleScroll}

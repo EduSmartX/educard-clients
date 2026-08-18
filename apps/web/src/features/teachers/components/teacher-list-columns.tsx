@@ -5,7 +5,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, RotateCcw } from 'lucide-react';
+import { Eye, RotateCcw, MailWarning, Loader2 } from 'lucide-react';
 import type { Column } from '@/components/ui/data-table';
 import { formatPhoneNumber } from '@/lib/phone-utils';
 import type { Teacher } from '../types';
@@ -29,6 +29,8 @@ interface CreateColumnsParams {
   onView: (teacher: Teacher) => void;
   onEdit: (teacher: Teacher) => void;
   onDelete?: (teacher: Teacher) => void;
+  onResendVerification?: (teacher: Teacher) => void;
+  resendingPublicId?: string | null;
   isDeletedView?: boolean;
   viewMode?: 'admin' | 'employee'; // Admin = show all, Employee = hide phone & actions
 }
@@ -37,10 +39,58 @@ export function createTeacherListColumns({
   onView,
   onEdit,
   onDelete,
+  onResendVerification,
+  resendingPublicId = null,
   isDeletedView = false,
   viewMode = 'admin',
 }: CreateColumnsParams): Column<Teacher>[] {
   const isEmployeeView = viewMode === 'employee';
+
+  const getVerificationColumns = (): Column<Teacher>[] => {
+    if (isEmployeeView || isDeletedView || !onResendVerification) {
+      return [];
+    }
+    return [
+      {
+        header: 'Verification',
+        accessor: (teacher: Teacher) => {
+          if (teacher.is_email_verified) {
+            return (
+              <Badge variant="secondary" className="bg-green-100 text-green-800">
+                Verified
+              </Badge>
+            );
+          }
+          const isResending = resendingPublicId === teacher.public_id;
+          return (
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="bg-amber-100 text-amber-800">
+                Pending
+              </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={isResending}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onResendVerification(teacher);
+                }}
+                className="h-8 gap-1 px-2 text-amber-700 hover:bg-amber-50 hover:text-amber-800"
+                title="Resend verification link"
+              >
+                {isResending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <MailWarning className="h-4 w-4" />
+                )}
+                Resend
+              </Button>
+            </div>
+          );
+        },
+      } as Column<Teacher>,
+    ];
+  };
 
   const getActionColumns = (): Column<Teacher>[] => {
     if (isEmployeeView) {
@@ -221,6 +271,7 @@ export function createTeacherListColumns({
       ),
       width: 200,
     },
+    ...getVerificationColumns(),
     // Common columns: Created, Updated, Actions
     ...getActionColumns(),
   ];

@@ -37,6 +37,8 @@ import {
 import { format } from 'date-fns';
 import * as XLSX from 'xlsx';
 import { downloadFile } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
+import { printClassWiseSchedule } from '../components/class-wise-schedule-export';
 
 // How It Works content for Exam Sessions
 const examSessionsHowItWorks = {
@@ -97,6 +99,7 @@ const examSessionsHowItWorks = {
 export function ExamSessionsPage() {
   const navigate = useNavigate();
   const { isAdmin } = useRole();
+  const { organization } = useAuth();
 
   // ── State ────────────────────────────────
   const [page, setPage] = useState(1);
@@ -185,9 +188,12 @@ export function ExamSessionsPage() {
               }
             }
           : undefined,
+        onPrintClassWise: showDeleted
+          ? undefined
+          : (s) => void printClassWiseSchedule(s, organization?.name),
         isDeletedView: showDeleted,
       }),
-    [navigate, showDeleted, isAdmin]
+    [navigate, showDeleted, isAdmin, organization?.name]
   );
 
   return (

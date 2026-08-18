@@ -22,6 +22,7 @@ import type { SharedStackNavigation } from '@/navigation/types';
 import {
   ACADEMIC_GRADIENTS,
   ACADEMIC_SUBTITLES,
+  STUDENT_EXTRA_TABS,
   TABS,
   type Tab,
 } from './academics/academics-constants';
@@ -33,6 +34,7 @@ import { TimetableSection } from './academics/TimetableSection';
 export default function ParentAcademicsScreen() {
   const navigation = useNavigation<SharedStackNavigation>();
   const isStudent = useAuthStore(s => s.user?.role) === 'student';
+  const tabs = isStudent ? [...TABS, ...STUDENT_EXTRA_TABS] : TABS;
 
   return (
     <Screen safeArea={false} statusBarStyle="light" backgroundColor="#f0fdf4">
@@ -57,7 +59,7 @@ export default function ParentAcademicsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={menuStyles.grid}>
-          {TABS.map((tab, index) => {
+          {tabs.map((tab, index) => {
             const Icon = tab.icon;
             return (
               <Animated.View
@@ -69,11 +71,19 @@ export default function ParentAcademicsScreen() {
               >
                 <TouchableOpacity
                   style={menuStyles.iconCard}
-                  onPress={() =>
+                  onPress={() => {
+                    if (tab.key === 'holidays') {
+                      navigation.navigate('Holidays');
+                      return;
+                    }
+                    if (tab.key === 'exceptional-work') {
+                      navigation.navigate('ExceptionalWork');
+                      return;
+                    }
                     navigation.navigate('StudentAcademicsTask', {
                       task: tab.key,
-                    })
-                  }
+                    });
+                  }}
                   activeOpacity={0.8}
                 >
                   <LinearGradient

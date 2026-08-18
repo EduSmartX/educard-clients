@@ -8,7 +8,7 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Users, BarChart3, CalendarDays, Bell, Clock, Sparkles } from 'lucide-react';
-import { ContactSupportCard, GreetingAvatar } from '@/components/common';
+import { ContactSupportCard } from '@/components/common';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { VerificationBanner } from '@/components/dashboard';
 import { useAuth } from '@/hooks/use-auth';
@@ -125,11 +125,6 @@ export default function ParentDashboardPage() {
           className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-white/10 blur-2xl"
           animate={{ scale: [1.2, 1, 1.2], opacity: [0.15, 0.05, 0.15] }}
           transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-        />
-
-        <GreetingAvatar
-          name={firstName}
-          className="absolute top-5 right-5 z-20 sm:top-7 sm:right-7"
         />
 
         <div className="relative z-10">

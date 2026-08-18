@@ -5,17 +5,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import {
-  AlertCircle,
-  AlertTriangle,
-  Calendar,
-  Edit,
-  Eye,
-  Loader2,
-  Plus,
-  Trash2,
-  X,
-} from 'lucide-react';
+import { AlertCircle, AlertTriangle, Calendar, Edit, Loader2, Plus, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import { DeleteConfirmationDialog, PageHeader } from '@/components/common';
 import { ResourceFilter, type FilterField } from '@/components/filters/resource-filter';
@@ -304,18 +294,6 @@ export function ExceptionalWorkManagement() {
           </Button>
         )}
       </PageHeader>
-
-      {/* View Only Banner for users without manage permission */}
-      {!canCreate && (
-        <Alert className="border-purple-200 bg-purple-50">
-          <Eye className="h-4 w-4 text-purple-600" />
-          <AlertTitle className="text-purple-900">View Only Mode</AlertTitle>
-          <AlertDescription className="text-purple-700">
-            You can view working day exceptions, but cannot create or modify them. Contact your
-            administrator to make changes.
-          </AlertDescription>
-        </Alert>
-      )}
 
       {/* Info Card - Redesigned */}
       <Card className="border-l-4 border-l-purple-500 bg-gradient-to-br from-purple-50 via-white to-violet-50 shadow-sm">

@@ -279,8 +279,6 @@ export default function AdminDashboardScreen() {
           subtitle="Here is an overview of your school today."
           highlight="Your school is running smoothly!"
           colors={['#4f46e5', '#7c3aed', '#a21caf']}
-          imageUri={profilePhoto?.thumbnail_url}
-          fullImageUri={profilePhoto?.url}
         />
 
         {user && (

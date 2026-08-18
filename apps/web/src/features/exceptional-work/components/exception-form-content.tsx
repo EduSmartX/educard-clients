@@ -22,7 +22,6 @@ interface ExceptionFormContentProps {
   setIsAllClasses: (v: boolean) => void;
   isAllTeachers: boolean;
   setIsAllTeachers: (v: boolean) => void;
-  /** Admins choose org-wide/teacher scope; class teachers are always class-scoped */
   showScopeOptions: boolean;
   setSelectedClasses: (v: string[]) => void;
   errors: Record<string, string>;

@@ -111,7 +111,7 @@ export default function EmployeeDashboardScreen() {
   const navigation = useNavigation<EmployeeTabNavigation>();
   const { width: viewportWidth } = useWindowDimensions();
   const { user } = useAuthStore();
-  const { profileImageUrl, fullImageUrl } = useProfileImageUrl();
+  const { profileImageUrl } = useProfileImageUrl();
   const [refreshing, setRefreshing] = useState(false);
   const [imgError, setImgError] = useState(false);
   const isMountedRef = useRef(true);
@@ -264,8 +264,6 @@ export default function EmployeeDashboardScreen() {
           subtitle="Here is your schedule and pending work for today."
           highlight="Have a great teaching day!"
           colors={['#0d9488', '#0891b2', '#2563eb']}
-          imageUri={profileImageUrl}
-          fullImageUri={fullImageUrl}
         />
 
         {user && (

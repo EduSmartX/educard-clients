@@ -1,4 +1,4 @@
-import { Colors } from '@educard/shared';
+import { Colors, extractApiError } from '@educard/shared';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Mail, ArrowLeft, Send, KeyRound } from 'lucide-react-native';
@@ -43,10 +43,7 @@ export default function ForgotPasswordScreen() {
         },
       ]);
     } catch (error) {
-      Alert.alert(
-        'Error',
-        error instanceof Error ? error.message : 'Failed to send OTP',
-      );
+      Alert.alert('Error', extractApiError(error, 'Failed to send OTP'));
     } finally {
       setIsLoading(false);
     }

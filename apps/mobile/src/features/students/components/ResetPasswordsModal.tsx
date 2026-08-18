@@ -93,8 +93,8 @@ export function ResetPasswordsModal({
       );
       return;
     }
-    if (newPassword.length < 6) {
-      Alert.alert('Weak password', 'Password must be at least 6 characters.');
+    if (newPassword.length < 8) {
+      Alert.alert('Weak password', 'Password must be at least 8 characters.');
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -109,6 +109,7 @@ export function ResetPasswordsModal({
     try {
       const result = await resetClassPasswords(classId, {
         new_password: newPassword,
+        confirm_password: confirmPassword,
       });
       if (result.success) {
         Alert.alert(
@@ -171,6 +172,7 @@ export function ResetPasswordsModal({
 
             <KeyboardAwareScrollView
               style={styles.body}
+              containerStyle={styles.bodyContainer}
               showsVerticalScrollIndicator={false}
             >
               <Text style={styles.label}>Class</Text>
@@ -296,7 +298,9 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   closeBtn: { padding: 4 },
-  body: { paddingHorizontal: 20, paddingTop: 16 },
+  // Bounded height: an unconstrained ScrollView here collapses and hides the fields.
+  body: { paddingHorizontal: 20, paddingTop: 16, maxHeight: 420 },
+  bodyContainer: { maxHeight: 420 },
   label: {
     fontSize: 14,
     fontWeight: '600',

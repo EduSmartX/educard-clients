@@ -152,6 +152,7 @@ export const modalStyles = StyleSheet.create({
   },
   title: { fontSize: 18, fontWeight: '700', color: '#1f2937' },
   body: { padding: 20, maxHeight: 400 },
+  bodyContainer: { maxHeight: 400 },
   field: { marginBottom: 20 },
   fieldLabel: {
     fontSize: 14,

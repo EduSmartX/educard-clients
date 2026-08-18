@@ -1,6 +1,5 @@
 export { Logo } from './logo';
 export { UserAvatar } from './user-avatar';
-export { GreetingAvatar } from './greeting-avatar';
 export { StudentAvatar } from './student-avatar';
 export { SubjectAvatar } from './subject-avatar';
 export type { SubjectAvatarSize } from './subject-avatar';

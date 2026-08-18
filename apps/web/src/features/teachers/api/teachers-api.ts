@@ -147,6 +147,16 @@ export async function reactivateTeacher(publicId: string): Promise<ApiResponse<T
 }
 
 /**
+ * Reissue the email verification / password setup link for an unverified teacher
+ */
+export async function resendTeacherVerification(publicId: string): Promise<ApiResponse<null>> {
+  const response = await api.post<ApiResponse<null>>(
+    `${ADMIN_BASE_URL}${publicId}/resend-verification/`
+  );
+  return response.data;
+}
+
+/**
  * Validate email verification token and get user details
  */
 export async function validateVerificationToken(token: string): Promise<{
