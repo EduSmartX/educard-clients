@@ -1,7 +1,7 @@
 import { getRoleGradient } from '@educard/shared';
 import { useNavigation } from '@react-navigation/native';
 import { ChevronLeft, Send } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -37,7 +37,7 @@ const deliveryOptions: Array<{
   { value: ANNOUNCEMENT_DELIVERY_METHODS.EMAIL, label: 'Email' },
   { value: ANNOUNCEMENT_DELIVERY_METHODS.SMS, label: 'SMS' },
 ];
-const recipientOptions: Array<{
+const BASE_RECIPIENT_OPTIONS: Array<{
   value: CreateAnnouncementPayload['recipient_type'];
   label: string;
 }> = [
@@ -45,6 +45,11 @@ const recipientOptions: Array<{
   { value: ANNOUNCEMENT_RECIPIENT_TYPES.ALL_STUDENTS, label: 'All students' },
   { value: ANNOUNCEMENT_RECIPIENT_TYPES.ALL_TEACHERS, label: 'All teachers' },
   { value: ANNOUNCEMENT_RECIPIENT_TYPES.ALL_PARENTS, label: 'All parents' },
+];
+
+// A manual email list resolves to zero phone recipients, so it is email-only.
+const EMAIL_ONLY_RECIPIENT_OPTIONS = [
+  ...BASE_RECIPIENT_OPTIONS,
   { value: ANNOUNCEMENT_RECIPIENT_TYPES.MANUAL_EMAILS, label: 'Email list' },
 ];
 
@@ -67,9 +72,31 @@ export default function AnnouncementCreateScreen() {
   const [eventNote, setEventNote] = useState('');
   const [manualEmails, setManualEmails] = useState('');
 
+  const isSms = delivery === ANNOUNCEMENT_DELIVERY_METHODS.SMS;
+  const recipientOptions = isSms
+    ? BASE_RECIPIENT_OPTIONS
+    : EMAIL_ONLY_RECIPIENT_OPTIONS;
+
+  // Switching to SMS must drop an email-only recipient, or delivery reaches nobody.
+  useEffect(() => {
+    if (isSms && recipient === ANNOUNCEMENT_RECIPIENT_TYPES.MANUAL_EMAILS) {
+      setRecipient(ANNOUNCEMENT_RECIPIENT_TYPES.ALL_USERS);
+    }
+  }, [isSms, recipient]);
+
   const submit = () => {
     if (!isAdmin) return;
-    if (!subject.trim() || !message.trim()) {
+
+    if (isSms) {
+      if (!eventName.trim()) {
+        showToast({
+          type: 'error',
+          title: 'Required field',
+          message: 'Event name is required for SMS announcements.',
+        });
+        return;
+      }
+    } else if (!subject.trim() || !message.trim()) {
       showToast({
         type: 'error',
         title: 'Required fields',
@@ -77,15 +104,9 @@ export default function AnnouncementCreateScreen() {
       });
       return;
     }
-    if (delivery === ANNOUNCEMENT_DELIVERY_METHODS.SMS && !eventName.trim()) {
-      showToast({
-        type: 'error',
-        title: 'Required field',
-        message: 'Event name is required for SMS announcements.',
-      });
-      return;
-    }
+
     if (
+      !isSms &&
       recipient === ANNOUNCEMENT_RECIPIENT_TYPES.MANUAL_EMAILS &&
       !manualEmails.trim()
     ) {
@@ -99,14 +120,15 @@ export default function AnnouncementCreateScreen() {
 
     mutation.mutate(
       {
-        subject: subject.trim(),
-        body_html: message.trim(),
+        subject: isSms ? eventName.trim() : subject.trim(),
+        body_html: isSms ? '' : message.trim(),
         delivery_methods: delivery,
         recipient_type: recipient,
-        event_name: eventName.trim(),
-        event_date: eventDate.trim(),
-        event_note: eventNote.trim(),
-        manual_emails: manualEmails.trim(),
+        event_name: isSms ? eventName.trim() : '',
+        // DRF rejects '' for a date field, so omit it when blank.
+        event_date: isSms && eventDate.trim() ? eventDate.trim() : undefined,
+        event_note: isSms ? eventNote.trim() : '',
+        manual_emails: isSms ? '' : manualEmails.trim(),
       },
       {
         onSuccess: () => {
@@ -193,72 +215,78 @@ export default function AnnouncementCreateScreen() {
             </View>
           </Field>
 
-          {recipient === ANNOUNCEMENT_RECIPIENT_TYPES.MANUAL_EMAILS && (
-            <Field label="Email addresses">
-              <TextInput
-                style={s.input}
-                value={manualEmails}
-                onChangeText={setManualEmails}
-                placeholder="person@example.com, another@example.com"
-                placeholderTextColor="#94a3b8"
-                multiline
-                autoCapitalize="none"
-              />
-            </Field>
+          {!isSms &&
+            recipient === ANNOUNCEMENT_RECIPIENT_TYPES.MANUAL_EMAILS && (
+              <Field label="Email addresses">
+                <TextInput
+                  style={s.input}
+                  value={manualEmails}
+                  onChangeText={setManualEmails}
+                  placeholder="person@example.com, another@example.com"
+                  placeholderTextColor="#94a3b8"
+                  multiline
+                  autoCapitalize="none"
+                />
+              </Field>
+            )}
+
+          {!isSms && (
+            <>
+              <Field label="Subject">
+                <TextInput
+                  style={s.input}
+                  value={subject}
+                  onChangeText={setSubject}
+                  placeholder="Announcement subject"
+                  placeholderTextColor="#94a3b8"
+                />
+              </Field>
+              <Field label="Message">
+                <TextInput
+                  style={[s.input, s.message]}
+                  value={message}
+                  onChangeText={setMessage}
+                  placeholder="Write your announcement"
+                  placeholderTextColor="#94a3b8"
+                  multiline
+                  textAlignVertical="top"
+                />
+              </Field>
+            </>
           )}
 
-          <Field label="Subject">
-            <TextInput
-              style={s.input}
-              value={subject}
-              onChangeText={setSubject}
-              placeholder="Announcement subject"
-              placeholderTextColor="#94a3b8"
-            />
-          </Field>
-          <Field label="Message">
-            <TextInput
-              style={[s.input, s.message]}
-              value={message}
-              onChangeText={setMessage}
-              placeholder="Write your announcement"
-              placeholderTextColor="#94a3b8"
-              multiline
-              textAlignVertical="top"
-            />
-          </Field>
-
-          {delivery === ANNOUNCEMENT_DELIVERY_METHODS.SMS && (
-            <Field label="Event name">
-              <TextInput
-                style={s.input}
-                value={eventName}
-                onChangeText={setEventName}
-                placeholder="Event name"
-                placeholderTextColor="#94a3b8"
-              />
-            </Field>
+          {isSms && (
+            <>
+              <Field label="Event name">
+                <TextInput
+                  style={s.input}
+                  value={eventName}
+                  onChangeText={setEventName}
+                  placeholder="Event name"
+                  placeholderTextColor="#94a3b8"
+                />
+              </Field>
+              <Field label="Event date (optional)">
+                <TextInput
+                  style={s.input}
+                  value={eventDate}
+                  onChangeText={setEventDate}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor="#94a3b8"
+                />
+              </Field>
+              <Field label="Note (optional)">
+                <TextInput
+                  style={[s.input, s.note]}
+                  value={eventNote}
+                  onChangeText={setEventNote}
+                  placeholder="Additional details"
+                  placeholderTextColor="#94a3b8"
+                  multiline
+                />
+              </Field>
+            </>
           )}
-
-          <Field label="Event date (optional)">
-            <TextInput
-              style={s.input}
-              value={eventDate}
-              onChangeText={setEventDate}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor="#94a3b8"
-            />
-          </Field>
-          <Field label="Note (optional)">
-            <TextInput
-              style={[s.input, s.note]}
-              value={eventNote}
-              onChangeText={setEventNote}
-              placeholder="Additional details"
-              placeholderTextColor="#94a3b8"
-              multiline
-            />
-          </Field>
 
           <TouchableOpacity
             style={s.submit}

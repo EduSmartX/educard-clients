@@ -204,7 +204,9 @@ export function ExceptionDialog({
   const [isAllTeachers, setIsAllTeachers] = useState(
     isClassScopedOnly ? false : (exception?.is_applicable_to_all_teachers ?? true)
   );
-  const [selectedClasses, setSelectedClasses] = useState<string[]>(exception?.classes || []);
+  const [selectedClasses, setSelectedClasses] = useState<string[]>(() =>
+    (exception?.classes ?? []).map((cls) => cls.public_id)
+  );
 
   // Validation state
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -244,7 +246,7 @@ export function ExceptionDialog({
     setIsAllTeachers(
       isClassScopedOnly ? false : (exception?.is_applicable_to_all_teachers ?? true)
     );
-    setSelectedClasses(exception?.classes || []);
+    setSelectedClasses((exception?.classes ?? []).map((cls) => cls.public_id));
     setErrors({});
   }, [open, exception, isClassScopedOnly]);
 

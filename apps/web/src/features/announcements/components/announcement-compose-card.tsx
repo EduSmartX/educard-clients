@@ -78,6 +78,13 @@ export function AnnouncementComposeCard({
   const includesEmail = fixedMethod === ANNOUNCEMENT_DELIVERY_METHODS.EMAIL;
   const includesSms = fixedMethod === ANNOUNCEMENT_DELIVERY_METHODS.SMS;
 
+  // A manual email list resolves to zero phone recipients, so it is email-only.
+  const recipientOptions = includesSms
+    ? RECIPIENT_TYPE_OPTIONS.filter(
+        (opt) => opt.value !== ANNOUNCEMENT_RECIPIENT_TYPES.MANUAL_EMAILS
+      )
+    : RECIPIENT_TYPE_OPTIONS;
+
   const { data: classesData, isLoading: isLoadingClasses } = useClasses({
     page: 1,
     page_size: 200,
@@ -204,7 +211,7 @@ export function AnnouncementComposeCard({
                     <SelectValue placeholder="Select recipients" />
                   </SelectTrigger>
                   <SelectContent>
-                    {RECIPIENT_TYPE_OPTIONS.map((opt) => (
+                    {recipientOptions.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}
                       </SelectItem>

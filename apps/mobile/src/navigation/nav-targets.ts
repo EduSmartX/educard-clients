@@ -25,6 +25,8 @@ export type MenuTarget =
   | 'ChangePhone'
   | 'HelpSupport'
   | 'Profile'
+  | 'SwitchProfile'
+  | 'SyncProfiles'
   | 'Preferences'
   | 'Timetable'
   | 'TimetableTeacher'

@@ -76,16 +76,21 @@ export const employeeSidebarConfig: SidebarSection[] = [
         path: ROUTES.STUDENTS,
       },
       {
-        id: 'announcements',
-        label: 'Announcements',
-        icon: Megaphone,
-        path: ROUTES.EMPLOYEE.ANNOUNCEMENTS,
-      },
-      {
         id: 'subjects',
         label: 'Subjects',
         icon: BookOpen,
         path: ROUTES.SUBJECTS,
+      },
+    ],
+  },
+  {
+    title: 'COMMUNICATION',
+    items: [
+      {
+        id: 'announcements',
+        label: 'Announcements',
+        icon: Megaphone,
+        path: ROUTES.EMPLOYEE.ANNOUNCEMENTS,
       },
     ],
   },

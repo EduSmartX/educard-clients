@@ -461,11 +461,6 @@ export default function SignupScreen() {
       return;
     }
 
-    if (phoneNumber && !phoneOtpVerified) {
-      modal.error('Error', 'Please verify your phone number');
-      return;
-    }
-
     setErrors({});
 
     setIsLoading(true);
@@ -486,7 +481,7 @@ export default function SignupScreen() {
           password2: confirmPassword,
           notification_opt_in: true,
           can_teach_subject: canTeachSubject,
-          phone: phoneNumber.trim() || undefined,
+          phone_number: phoneNumber.trim() || undefined,
           gender: gender || undefined,
         },
       };
@@ -553,7 +548,6 @@ export default function SignupScreen() {
     adminEmail,
     useSameEmail,
     phoneNumber,
-    phoneOtpVerified,
     navigation,
     modal,
   ]);
@@ -1121,7 +1115,7 @@ export default function SignupScreen() {
       </View>
 
       <View style={styles.inputWrapper}>
-        <Text style={styles.inputLabel}>Phone Number</Text>
+        <Text style={styles.inputLabel}>Phone Number (Optional)</Text>
         <View
           style={[
             styles.inputContainer,

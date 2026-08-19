@@ -18,6 +18,8 @@ import {
   Mail,
   Phone,
   Building2,
+  Repeat,
+  Users,
   type LucideIcon,
 } from 'lucide-react-native';
 import { useMemo } from 'react';
@@ -58,12 +60,37 @@ interface SettingSection {
   items: SettingItem[];
 }
 
+// One login can be linked to sibling student accounts.
+const switchProfileItem: SettingItem = {
+  id: 'switch-profile',
+  title: 'Switch Profile',
+  subtitle: 'Move to a linked account',
+  icon: Repeat,
+  iconColor: '#0891b2',
+  iconBg: '#cffafe',
+  screen: 'SwitchProfile',
+};
+
+const syncProfilesItem: SettingItem = {
+  id: 'sync-profiles',
+  title: 'Sync Profiles',
+  subtitle: 'Link a sibling account to this login',
+  icon: Users,
+  iconColor: '#4f46e5',
+  iconBg: '#e0e7ff',
+  screen: 'SyncProfiles',
+};
+
 export default function SettingsScreen() {
   const navigation = useNavigation<AdminTabNavigation>();
   const { user, logout } = useAuthStore();
   const { profileImageUrl } = useProfileImageUrl();
 
   const isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
+  const isStudent = useMemo(
+    () => user?.role?.toLowerCase() === 'student',
+    [user?.role],
+  );
   const isStudentPortal = useMemo(() => {
     const role = user?.role?.toLowerCase();
     return role === 'student' || role === 'parent';
@@ -169,6 +196,7 @@ export default function SettingsScreen() {
         iconBg: '#ede9fe',
         screen: 'ChangePhone',
       },
+      ...(isStudent ? [switchProfileItem, syncProfilesItem] : []),
       {
         id: 'help',
         title: 'Help & Support',

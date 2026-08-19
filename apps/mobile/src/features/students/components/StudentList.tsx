@@ -177,9 +177,9 @@ export function StudentList({ onBack }: StudentListProps) {
     hasNextPage,
     isFetchingNextPage,
   } = useStudents({
-    search: debouncedSearch || undefined,
-    class_id: (filters.class_id as string) ?? class_id ?? undefined,
     ...(filters as Record<string, string | boolean | undefined>),
+    search: debouncedSearch || undefined,
+    class_id: (filters.class_id as string) || class_id || undefined,
   });
 
   const deleteMutation = useDeleteStudent();

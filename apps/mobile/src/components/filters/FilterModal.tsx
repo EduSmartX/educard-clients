@@ -20,6 +20,7 @@ import {
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { SearchableSelect } from '@/components/ui';
+import { FormDatePicker } from '@/components/forms/FormDatePicker';
 import { LinearGradient } from '@/lib/linear-gradient';
 
 // ── Color palette for chips ──────────────────────────────────────
@@ -46,9 +47,10 @@ export interface FilterOption {
 export interface FilterField {
   name: string;
   label: string;
-  type: 'select' | 'toggle';
+  type: 'select' | 'toggle' | 'date';
   options?: FilterOption[];
   icon?: string; // emoji for section header
+  placeholder?: string;
 }
 
 interface FilterModalProps {
@@ -180,11 +182,29 @@ export function FilterModal({
               );
             }
 
+            if (field.type === 'date') {
+              return (
+                <Animated.View
+                  key={field.name}
+                  entering={FadeInDown.delay(sectionIdx * 80)}
+                  style={styles.section}
+                >
+                  <FormDatePicker
+                    label={`${field.icon ? `${field.icon}  ` : ''}${field.label}`}
+                    value={(localFilters[field.name] as string) ?? ''}
+                    onChange={v =>
+                      setLocalFilters(prev => ({ ...prev, [field.name]: v }))
+                    }
+                    placeholder={field.placeholder}
+                  />
+                </Animated.View>
+              );
+            }
+
             // select type — chips for short lists, searchable dropdown when long
             const selectOptions = (field.options ?? []).filter(
               o => o.value !== '',
             );
-
             return (
               <Animated.View
                 key={field.name}
