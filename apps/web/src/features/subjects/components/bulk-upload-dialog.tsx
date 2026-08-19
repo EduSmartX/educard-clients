@@ -53,7 +53,7 @@ export function BulkUploadSubjectsDialog({
       uploadFile={uploadSubjectsFile}
       invalidateQueryKeys={['subjects']}
       templateFileName="subjects_template.xlsx"
-      acceptedFileTypes=".xlsx,.xls"
+      acceptedFileTypes=".xlsx,.xls,.numbers"
       customInfoMessage={isTeacher ? InfoMessages.CLASS_TEACHER.BULK_UPLOAD_SUBJECTS : undefined}
     />
   );

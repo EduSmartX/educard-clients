@@ -21,7 +21,7 @@ export function BulkUploadDialog({ onUploadSuccess }: Readonly<HolidayBulkUpload
       uploadFile={bulkUploadHolidays}
       invalidateQueryKeys={['holiday-calendar']}
       templateFileName="organization_holiday_template.xlsx"
-      acceptedFileTypes=".xlsx,.xls"
+      acceptedFileTypes=".xlsx,.xls,.numbers"
       onUploadSuccess={onUploadSuccess}
     />
   );

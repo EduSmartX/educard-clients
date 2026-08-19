@@ -93,9 +93,6 @@ export default function ParentAcademicsScreen() {
                     <Icon size={28} color="#fff" strokeWidth={2} />
                   </LinearGradient>
                   <Text style={menuStyles.iconLabel}>{tab.label}</Text>
-                  <Text style={menuStyles.iconSubtitle}>
-                    {ACADEMIC_SUBTITLES[tab.key]}
-                  </Text>
                 </TouchableOpacity>
               </Animated.View>
             );
@@ -152,11 +149,4 @@ const menuStyles = StyleSheet.create({
     marginBottom: 12,
   },
   iconLabel: { fontSize: 13, fontWeight: '700', color: '#1f2937' },
-  iconSubtitle: {
-    marginTop: 5,
-    fontSize: 10,
-    lineHeight: 14,
-    color: '#64748b',
-    textAlign: 'center',
-  },
 });

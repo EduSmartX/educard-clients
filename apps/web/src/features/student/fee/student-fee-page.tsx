@@ -233,7 +233,6 @@ function PaymentHistoryList({
   if (!payments || payments.length === 0) {
     return (
       <div className="flex flex-col items-center gap-3 py-12 text-center">
-        <span className="text-4xl">🌼</span>
         <p className="text-sm text-gray-500">No payments recorded yet</p>
       </div>
     );

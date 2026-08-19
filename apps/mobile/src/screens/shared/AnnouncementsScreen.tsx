@@ -7,6 +7,8 @@ import { extractApiError, getRoleGradient } from '@educard/shared';
 import { useNavigation } from '@react-navigation/native';
 import { format } from 'date-fns';
 import {
+  ANNOUNCEMENT_DELIVERY_METHODS,
+  ANNOUNCEMENT_RECIPIENT_TYPES,
   ChevronDown,
   ChevronLeft,
   ChevronUp,
@@ -45,6 +47,7 @@ import {
 } from '@/features/announcements';
 import { LinearGradient } from '@/lib/linear-gradient';
 import { useToast } from '@/lib/toast-context';
+import { useAuthStore } from '@/lib/auth-store';
 import type { SharedStackNavigation } from '@/navigation/types';
 import {
   cardStyles,
@@ -52,6 +55,7 @@ import {
   headerStyles,
   layoutStyles,
 } from '@/styles';
+import { isAdminRole } from '@/utils/role-utils';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -63,9 +67,9 @@ const ANNOUNCEMENT_FILTER_FIELDS: FilterField[] = [
     icon: '📤',
     options: [
       { value: '', label: 'All' },
-      { value: 'email', label: '✉️ Email' },
-      { value: 'sms', label: '💬 SMS' },
-      { value: 'both', label: '📨 Email & SMS' },
+      { value: ANNOUNCEMENT_DELIVERY_METHODS.EMAIL, label: '✉️ Email' },
+      { value: ANNOUNCEMENT_DELIVERY_METHODS.SMS, label: '💬 SMS' },
+      { value: ANNOUNCEMENT_DELIVERY_METHODS.BOTH, label: '📨 Email & SMS' },
     ],
   },
   {
@@ -75,12 +79,24 @@ const ANNOUNCEMENT_FILTER_FIELDS: FilterField[] = [
     icon: '👥',
     options: [
       { value: '', label: 'All' },
-      { value: 'all_users', label: 'All Users' },
-      { value: 'all_students', label: 'All Students' },
-      { value: 'all_teachers', label: 'All Teachers' },
-      { value: 'all_parents', label: 'All Parents' },
-      { value: 'specific_classes', label: 'Specific Classes' },
-      { value: 'manual_emails', label: 'Manual Emails' },
+      { value: ANNOUNCEMENT_RECIPIENT_TYPES.ALL_USERS, label: 'All Users' },
+      {
+        value: ANNOUNCEMENT_RECIPIENT_TYPES.ALL_STUDENTS,
+        label: 'All Students',
+      },
+      {
+        value: ANNOUNCEMENT_RECIPIENT_TYPES.ALL_TEACHERS,
+        label: 'All Teachers',
+      },
+      { value: ANNOUNCEMENT_RECIPIENT_TYPES.ALL_PARENTS, label: 'All Parents' },
+      {
+        value: ANNOUNCEMENT_RECIPIENT_TYPES.SPECIFIC_CLASSES,
+        label: 'Specific Classes',
+      },
+      {
+        value: ANNOUNCEMENT_RECIPIENT_TYPES.MANUAL_EMAILS,
+        label: 'Manual Emails',
+      },
     ],
   },
   {
@@ -120,6 +136,8 @@ function statusStyles(status: AnnouncementListItem['status']) {
 
 export default function AnnouncementsScreen() {
   const navigation = useNavigation<SharedStackNavigation>();
+  const role = useAuthStore(state => state.user?.role);
+  const isAdmin = isAdminRole(role);
   const { showToast } = useToast();
   const { data = [], isLoading, refetch, isRefetching } = useAnnouncements();
   const retryMutation = useRetryAnnouncement();
@@ -249,6 +267,15 @@ export default function AnnouncementsScreen() {
                 </View>
               )}
             </TouchableOpacity>
+            {isAdmin && (
+              <TouchableOpacity
+                style={s.addBtn}
+                onPress={() => navigation.navigate('AnnouncementCreate')}
+                accessibilityLabel="Add announcement"
+              >
+                <Text style={s.addBtnText}>+</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </LinearGradient>
@@ -333,6 +360,35 @@ export default function AnnouncementsScreen() {
               </View>
             }
             renderItem={({ item, index }) => {
+              if (!isAdmin) {
+                return (
+                  <Animated.View
+                    entering={FadeInDown.delay(40 * (index + 1)).springify()}
+                  >
+                    <TouchableOpacity
+                      style={cardStyles.cardLarge}
+                      onPress={() =>
+                        navigation.navigate('AnnouncementDetail', {
+                          publicId: item.public_id,
+                        })
+                      }
+                    >
+                      <View style={s.rowTop}>
+                        <View style={s.titleWrap}>
+                          <Text style={s.subject}>{item.subject}</Text>
+                          {!!item.event_name && (
+                            <Text style={s.deliveryTag}>{item.event_name}</Text>
+                          )}
+                          <Text style={s.metaLine}>
+                            {formatDateTime(item.sent_at ?? item.created_at)}
+                          </Text>
+                        </View>
+                        <Eye size={18} color="#2563eb" />
+                      </View>
+                    </TouchableOpacity>
+                  </Animated.View>
+                );
+              }
               const status = statusStyles(item.status);
               const retrying =
                 retryMutation.isPending && retryingId === item.public_id;
@@ -486,6 +542,21 @@ const s = StyleSheet.create({
     justifyContent: 'center',
   },
   filterBadgeText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  addBtn: {
+    width: 40,
+    height: 40,
+    marginLeft: 8,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  addBtnText: {
+    color: '#4f46e5',
+    fontSize: 26,
+    lineHeight: 28,
+    fontWeight: '500',
+  },
   filterBar: { marginBottom: 4 },
   searchWrap: {
     flexDirection: 'row',

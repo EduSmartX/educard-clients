@@ -26,6 +26,7 @@ import {
   Eye,
   ClipboardEdit,
   RotateCcw,
+  Megaphone,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
 import { ROUTES } from '@/constants/app-config';
@@ -73,6 +74,12 @@ export const employeeSidebarConfig: SidebarSection[] = [
         label: 'Students',
         icon: GraduationCap,
         path: ROUTES.STUDENTS,
+      },
+      {
+        id: 'announcements',
+        label: 'Announcements',
+        icon: Megaphone,
+        path: ROUTES.EMPLOYEE.ANNOUNCEMENTS,
       },
       {
         id: 'subjects',

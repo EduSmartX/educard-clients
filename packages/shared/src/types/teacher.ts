@@ -29,6 +29,7 @@ export interface TeacherSubject {
 
 export interface TeacherUser {
   public_id: string;
+  username?: string | null;
   email: string;
   first_name: string;
   last_name: string;

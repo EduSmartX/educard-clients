@@ -3,10 +3,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCriticalOperation } from '@/providers/critical-operation-context';
 
 import {
+  createAnnouncement,
   getAnnouncementDetail,
   getAnnouncements,
   retryAnnouncement,
 } from '../api/announcements-api';
+import type { CreateAnnouncementPayload } from '../api/announcements-api';
 
 export const announcementKeys = {
   all: ['announcements'] as const,
@@ -48,6 +50,17 @@ export function useRetryAnnouncement() {
     },
     onSettled: () => {
       endCriticalOperation();
+    },
+  });
+}
+
+export function useCreateAnnouncement() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CreateAnnouncementPayload) =>
+      createAnnouncement(payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: announcementKeys.list() });
     },
   });
 }

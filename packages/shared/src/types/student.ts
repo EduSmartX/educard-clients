@@ -41,7 +41,7 @@ export interface StudentClassInfo {
 
 export interface StudentUserInfo {
   public_id: string;
-  username: string;
+  username: string | null;
   first_name: string;
   last_name: string;
   full_name: string;

@@ -292,6 +292,8 @@ export const ROUTES = {
   HOMEWORK_EDIT: '/homework/:id/edit',
   // Announcements
   ANNOUNCEMENTS: '/announcements',
+  ANNOUNCEMENTS_EMAIL: '/announcements/email',
+  ANNOUNCEMENTS_SMS: '/announcements/sms',
   // Fee Management
   FEES: {
     DASHBOARD: '/fees',
@@ -342,6 +344,7 @@ export const ROUTES = {
   },
   EMPLOYEE: {
     DASHBOARD: '/employee/dashboard',
+    ANNOUNCEMENTS: '/employee/announcements',
     MY_CLASSES: '/employee/classes',
     MY_STUDENTS: '/employee/students',
     HOLIDAYS: '/employee/holidays',

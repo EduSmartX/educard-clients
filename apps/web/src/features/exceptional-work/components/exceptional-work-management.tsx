@@ -276,11 +276,7 @@ export function ExceptionalWorkManagement() {
       {/* Page Header */}
       <PageHeader
         title="Exceptional Work Policy"
-        description={
-          canCreate
-            ? 'Manage working day exceptions for specific dates and classes'
-            : 'View working day exceptions for specific dates and classes'
-        }
+        description="Working day exceptions for specific dates and classes"
       >
         {/* Add Exception button - Admins and class teachers only */}
         {canCreate && (

@@ -14,6 +14,34 @@ interface ApiResponse<T> {
   data: T;
 }
 
+export interface RecipientAnnouncement {
+  public_id: string;
+  subject: string;
+  event_name: string | null;
+  event_date: string | null;
+  sent_at: string | null;
+  created_at: string;
+}
+
+export interface RecipientAnnouncementDetail extends RecipientAnnouncement {
+  body_html: string;
+  event_note: string | null;
+}
+
+export async function fetchRecipientAnnouncements(): Promise<RecipientAnnouncement[]> {
+  const response = await api.get<ApiResponse<RecipientAnnouncement[]>>(`${BASE_URL}/`);
+  return response.data.data;
+}
+
+export async function fetchRecipientAnnouncementDetail(
+  publicId: string
+): Promise<RecipientAnnouncementDetail> {
+  const response = await api.get<ApiResponse<RecipientAnnouncementDetail>>(
+    `${BASE_URL}/${publicId}/`
+  );
+  return response.data.data;
+}
+
 export async function fetchAnnouncements(): Promise<AnnouncementListItem[]> {
   const response = await api.get<ApiResponse<AnnouncementListItem[]>>(`${BASE_URL}/`);
   return response.data.data;

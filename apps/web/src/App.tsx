@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { ROUTES } from './constants/app-config';
 
 // Lazy load pages for better performance
@@ -206,7 +206,15 @@ const HomeworkSubmissionsPage = lazy(
 const SubmissionReviewPage = lazy(() => import('./features/homework/pages/submission-review-page'));
 
 // Announcements
-const AnnouncementsPage = lazy(() => import('./features/announcements/pages/announcements-page'));
+const AnnouncementsEmailPage = lazy(
+  () => import('./features/announcements/pages/announcements-email-page')
+);
+const AnnouncementsSmsPage = lazy(
+  () => import('./features/announcements/pages/announcements-sms-page')
+);
+const RecipientAnnouncementsPage = lazy(
+  () => import('./features/announcements/pages/recipient-announcements-page')
+);
 
 // Fee Management
 const FeeDashboardPage = lazy(() =>
@@ -303,6 +311,7 @@ function App() {
 
             <Route path="/employee" element={<EmployeeRoute />}>
               <Route path="dashboard" element={<EmployeeDashboardPage />} />
+              <Route path="announcements" element={<RecipientAnnouncementsPage />} />
               <Route path="holidays" element={<HolidayCalendarPage />} />
               <Route path="exceptional-work" element={<ExceptionalWorkPage />} />
               <Route path="teachers" element={<EmployeeTeachersPage />} />
@@ -411,7 +420,12 @@ function App() {
             <Route path={ROUTES.HOMEWORK_EDIT} element={<HomeworkFormPage />} />
 
             {/* Announcements */}
-            <Route path={ROUTES.ANNOUNCEMENTS} element={<AnnouncementsPage />} />
+            <Route
+              path={ROUTES.ANNOUNCEMENTS}
+              element={<Navigate to={ROUTES.ANNOUNCEMENTS_EMAIL} replace />}
+            />
+            <Route path={ROUTES.ANNOUNCEMENTS_EMAIL} element={<AnnouncementsEmailPage />} />
+            <Route path={ROUTES.ANNOUNCEMENTS_SMS} element={<AnnouncementsSmsPage />} />
 
             {/* Fee Management */}
             <Route path={ROUTES.FEES.DASHBOARD} element={<FeeDashboardPage />} />
