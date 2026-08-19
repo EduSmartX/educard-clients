@@ -18,7 +18,7 @@ import {
   SlidersHorizontal,
   X,
 } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -140,7 +140,6 @@ export default function AnnouncementsScreen() {
   const role = useAuthStore(state => state.user?.role);
   const isAdmin = isAdminRole(role);
   const { showToast } = useToast();
-  const { data = [], isLoading, refetch, isRefetching } = useAnnouncements();
   const retryMutation = useRetryAnnouncement();
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -149,6 +148,40 @@ export default function AnnouncementsScreen() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 350);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const queryFilters = useMemo(
+    () => ({
+      search: debouncedSearch || undefined,
+      delivery_methods: (filters.delivery_methods as string) || undefined,
+      recipient_type: (filters.recipient_type as string) || undefined,
+      status: (filters.status as string) || undefined,
+      from_date: fromDate || undefined,
+      to_date: toDate || undefined,
+    }),
+    [debouncedSearch, filters, fromDate, toDate],
+  );
+
+  const {
+    data: pages,
+    isLoading,
+    refetch,
+    isRefetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useAnnouncements(queryFilters);
+
+  const filteredData = useMemo(
+    () => pages?.pages.flatMap(page => page.items) ?? [],
+    [pages],
+  );
+  const totalCount = pages?.pages[0]?.pagination.count ?? 0;
 
   const activeFilterCount =
     (filters.delivery_methods ? 1 : 0) +
@@ -157,36 +190,6 @@ export default function AnnouncementsScreen() {
     (fromDate ? 1 : 0) +
     (toDate ? 1 : 0) +
     (searchQuery.trim() ? 1 : 0);
-
-  const filteredData = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    return data.filter(item => {
-      if (
-        q &&
-        !item.subject.toLowerCase().includes(q) &&
-        !item.event_name.toLowerCase().includes(q)
-      ) {
-        return false;
-      }
-      if (
-        filters.delivery_methods &&
-        item.delivery_methods !== filters.delivery_methods
-      ) {
-        return false;
-      }
-      if (
-        filters.recipient_type &&
-        item.recipient_type !== filters.recipient_type
-      ) {
-        return false;
-      }
-      if (filters.status && item.status !== filters.status) return false;
-      const when = (item.sent_at ?? item.created_at)?.slice(0, 10);
-      if (fromDate && when && when < fromDate) return false;
-      if (toDate && when && when > toDate) return false;
-      return true;
-    });
-  }, [data, filters, fromDate, toDate, searchQuery]);
 
   const toggleExpand = (id: string) => {
     setExpandedIds(prev => {
@@ -292,6 +295,19 @@ export default function AnnouncementsScreen() {
             data={filteredData}
             keyExtractor={item => item.public_id}
             contentContainerStyle={s.listContent}
+            onEndReachedThreshold={0.5}
+            onEndReached={() => {
+              if (hasNextPage && !isFetchingNextPage) {
+                void fetchNextPage();
+              }
+            }}
+            ListFooterComponent={
+              isFetchingNextPage ? (
+                <View style={s.footerLoader}>
+                  <ActivityIndicator size="small" color="#2563eb" />
+                </View>
+              ) : null
+            }
             refreshControl={
               <RefreshControl
                 refreshing={isRefetching}
@@ -362,10 +378,10 @@ export default function AnnouncementsScreen() {
               <View style={s.emptyState}>
                 <Megaphone size={20} color="#94a3b8" />
                 <Text style={s.emptyTitle}>
-                  {data.length === 0 ? 'No announcements yet' : 'No matches'}
+                  {totalCount === 0 ? 'No announcements yet' : 'No matches'}
                 </Text>
                 <Text style={s.emptyText}>
-                  {data.length === 0
+                  {totalCount === 0
                     ? 'Create an announcement from web to start delivery.'
                     : 'Try adjusting or clearing your filters.'}
                 </Text>
@@ -682,6 +698,10 @@ const s = StyleSheet.create({
   loadingText: {
     color: '#64748b',
     fontSize: 13,
+  },
+  footerLoader: {
+    paddingVertical: 16,
+    alignItems: 'center',
   },
   emptyState: {
     borderWidth: 1,

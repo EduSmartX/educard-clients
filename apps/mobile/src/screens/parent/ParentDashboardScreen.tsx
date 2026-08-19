@@ -144,14 +144,9 @@ export default function ParentDashboardScreen() {
   const goToAnnouncementDetail = (publicId: string) =>
     navigation.navigate('AnnouncementDetail', { publicId });
 
+  // The recipient feed is already sent-only and newest-first from the server.
   const latestAnnouncements = useMemo(
-    () =>
-      (announcements ?? [])
-        .filter(a => a.status === 'sent')
-        .sort((a, b) =>
-          (b.sent_at ?? b.created_at).localeCompare(a.sent_at ?? a.created_at),
-        )
-        .slice(0, 3),
+    () => (announcements?.pages.flatMap(page => page.items) ?? []).slice(0, 3),
     [announcements],
   );
 

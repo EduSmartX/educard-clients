@@ -1,30 +1,45 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { CalendarDays, ChevronRight, Megaphone } from 'lucide-react';
+import { Megaphone } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PageHeader } from '@/components/common';
+import { ResourceFilter } from '@/components/filters/resource-filter';
 import {
-  fetchRecipientAnnouncementDetail,
-  fetchRecipientAnnouncements,
-} from '../api/announcements-api';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { PageHeader } from '@/components/common';
+import { fetchRecipientAnnouncementDetail } from '../api/announcements-api';
+import { AnnouncementsPagination } from '../components/announcements-pagination';
+import { RECIPIENT_FILTER_FIELDS } from '../constants/filter-fields';
+import { useRecipientAnnouncements } from '../hooks';
+import { useAnnouncementFilters } from '../hooks/use-announcement-filters';
+import { DELIVERY_METHOD_LABELS } from '../types';
 
 function formatDate(value: string | null): string {
   if (!value) {
-    return '';
+    return '—';
   }
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? '' : format(date, 'd MMM yyyy');
+  return Number.isNaN(date.getTime()) ? '—' : format(date, 'd MMM yyyy');
 }
 
 export default function RecipientAnnouncementsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const { data: announcements = [], isLoading } = useQuery({
-    queryKey: ['recipient-announcements'],
-    queryFn: fetchRecipientAnnouncements,
-  });
+  const { filters, applyFilters, resetFilters, hasActiveFilters, queryFilters, setPage } =
+    useAnnouncementFilters();
+
+  const { data, isLoading } = useRecipientAnnouncements(queryFilters);
+  const announcements = data?.items ?? [];
+  const pagination = data?.pagination;
+
   const { data: detail, isLoading: detailLoading } = useQuery({
     queryKey: ['recipient-announcement', selectedId],
     queryFn: () => fetchRecipientAnnouncementDetail(selectedId as string),
@@ -35,47 +50,86 @@ export default function RecipientAnnouncementsPage() {
     <div className="space-y-6">
       <PageHeader title="Announcements" description="Updates from your school" icon={Megaphone} />
 
-      {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((item) => (
-            <Skeleton key={item} className="h-20 w-full rounded-xl" />
-          ))}
-        </div>
-      ) : announcements.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center gap-3 py-14 text-center">
-            <Megaphone className="h-7 w-7 text-slate-400" />
-            <p className="text-sm text-slate-500">No announcements yet.</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {announcements.map((item) => (
-            <button
-              key={item.public_id}
-              type="button"
-              onClick={() => setSelectedId(item.public_id)}
-              className="w-full text-left"
-            >
-              <Card className="transition-shadow hover:shadow-md">
-                <CardContent className="flex items-center gap-4 p-4">
-                  <div className="shrink-0 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 p-3">
-                    <Megaphone className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold text-slate-800">{item.subject}</p>
-                    <div className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">
-                      <CalendarDays className="h-3 w-3" />
-                      {formatDate(item.sent_at ?? item.created_at)}
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
-                </CardContent>
-              </Card>
-            </button>
-          ))}
-        </div>
-      )}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="mb-4">
+            <ResourceFilter
+              fields={RECIPIENT_FILTER_FIELDS}
+              defaultValues={filters}
+              onFilter={applyFilters}
+              onReset={resetFilters}
+              searchDebounceMs={500}
+            />
+          </div>
+
+          {(() => {
+            if (isLoading) {
+              return (
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              );
+            }
+            if (announcements.length === 0) {
+              return (
+                <p className="py-8 text-center text-sm text-slate-500">
+                  {hasActiveFilters
+                    ? 'No announcements match your filters.'
+                    : 'No announcements yet.'}
+                </p>
+              );
+            }
+            return (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Subject</TableHead>
+                      <TableHead>Delivery Type</TableHead>
+                      <TableHead>Dates</TableHead>
+                      <TableHead className="text-right">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {announcements.map((item) => (
+                      <TableRow key={item.public_id}>
+                        <TableCell className="font-medium text-slate-800">
+                          {item.subject}
+                          {item.event_name ? (
+                            <span className="block text-xs text-slate-500">{item.event_name}</span>
+                          ) : null}
+                        </TableCell>
+                        <TableCell>
+                          {DELIVERY_METHOD_LABELS[item.delivery_methods] ?? '—'}
+                        </TableCell>
+                        <TableCell className="text-slate-600">
+                          {formatDate(item.sent_at ?? item.created_at)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedId(item.public_id)}
+                          >
+                            View
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            );
+          })()}
+
+          {pagination ? (
+            <AnnouncementsPagination pagination={pagination} onPageChange={setPage} />
+          ) : null}
+        </CardContent>
+      </Card>
 
       <Dialog open={Boolean(selectedId)} onOpenChange={(open) => !open && setSelectedId(null)}>
         <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">

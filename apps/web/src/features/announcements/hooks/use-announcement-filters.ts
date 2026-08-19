@@ -1,67 +1,50 @@
 /**
- * Shared search/filter state for an announcements list.
- * Filter values are sent to the API; results are never filtered client-side.
+ * Filter state for an announcements list, driven by the shared ResourceFilter.
+ * Every value is sent to the API; results are never filtered client-side.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { AnnouncementFilterParams } from '../api/announcements-api';
-import type { AnnouncementStatus, DeliveryMethod, RecipientType } from '../types';
+import type { DeliveryMethod } from '../types';
 
-const SEARCH_DEBOUNCE_MS = 350;
+export function useAnnouncementFilters(deliveryMethod?: DeliveryMethod) {
+  const [filters, setFilters] = useState<Record<string, string>>({});
+  const [page, setPage] = useState(1);
 
-export function useAnnouncementFilters(deliveryMethod: DeliveryMethod) {
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [recipientFilter, setRecipientFilter] = useState<RecipientType | 'all'>('all');
-  const [statusFilter, setStatusFilter] = useState<AnnouncementStatus | 'all'>('all');
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
+  // A filter change must restart paging, otherwise page 3 of the old result set is requested.
+  const applyFilters = (next: Record<string, string>) => {
+    setFilters(next);
+    setPage(1);
+  };
 
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(search.trim()), SEARCH_DEBOUNCE_MS);
-    return () => clearTimeout(timer);
-  }, [search]);
+  const resetFilters = () => {
+    setFilters({});
+    setPage(1);
+  };
 
-  const hasActiveFilters =
-    search.trim() !== '' ||
-    recipientFilter !== 'all' ||
-    statusFilter !== 'all' ||
-    fromDate !== '' ||
-    toDate !== '';
+  const hasActiveFilters = Object.values(filters).some((value) => (value ?? '').trim() !== '');
 
   const queryFilters = useMemo<AnnouncementFilterParams>(
     () => ({
-      search: debouncedSearch || undefined,
+      search: filters.search || undefined,
       delivery_methods: deliveryMethod,
-      recipient_type: recipientFilter === 'all' ? undefined : recipientFilter,
-      status: statusFilter === 'all' ? undefined : statusFilter,
-      from_date: fromDate || undefined,
-      to_date: toDate || undefined,
+      recipient_type:
+        (filters.recipient_type as AnnouncementFilterParams['recipient_type']) || undefined,
+      status: (filters.status as AnnouncementFilterParams['status']) || undefined,
+      from_date: filters.from_date || undefined,
+      to_date: filters.to_date || undefined,
+      page,
     }),
-    [debouncedSearch, deliveryMethod, recipientFilter, statusFilter, fromDate, toDate]
+    [filters, deliveryMethod, page]
   );
 
-  const clearFilters = () => {
-    setSearch('');
-    setRecipientFilter('all');
-    setStatusFilter('all');
-    setFromDate('');
-    setToDate('');
-  };
-
   return {
-    search,
-    setSearch,
-    recipientFilter,
-    setRecipientFilter,
-    statusFilter,
-    setStatusFilter,
-    fromDate,
-    setFromDate,
-    toDate,
-    setToDate,
+    filters,
+    applyFilters,
+    resetFilters,
     hasActiveFilters,
     queryFilters,
-    clearFilters,
+    page,
+    setPage,
   };
 }

@@ -34,11 +34,54 @@ export interface CreateAnnouncementPayload {
   manual_emails?: string;
 }
 
-export async function getAnnouncements(): Promise<AnnouncementListItem[]> {
-  const response = await apiClient.get<ApiResponse<AnnouncementListItem[]>>(
-    `${BASE_URL}/`,
+export interface PaginationMeta {
+  current_page: number;
+  total_pages: number;
+  count: number;
+  page_size: number;
+  has_next: boolean;
+  has_previous: boolean;
+}
+
+export interface AnnouncementFilterParams {
+  search?: string;
+  delivery_methods?: string;
+  recipient_type?: string;
+  status?: string;
+  from_date?: string;
+  to_date?: string;
+  page?: number;
+}
+
+export interface PaginatedAnnouncements {
+  items: AnnouncementListItem[];
+  pagination: PaginationMeta;
+}
+
+const EMPTY_PAGINATION: PaginationMeta = {
+  current_page: 1,
+  total_pages: 1,
+  count: 0,
+  page_size: 25,
+  has_next: false,
+  has_previous: false,
+};
+
+export async function getAnnouncements(
+  filters: AnnouncementFilterParams = {},
+): Promise<PaginatedAnnouncements> {
+  const params = Object.fromEntries(
+    Object.entries(filters).filter(
+      ([, value]) => (value ?? '').toString().trim() !== '',
+    ),
   );
-  return response.data.data;
+  const response = await apiClient.get<
+    ApiResponse<AnnouncementListItem[]> & { pagination?: PaginationMeta }
+  >(`${BASE_URL}/`, { params });
+  return {
+    items: response.data.data ?? [],
+    pagination: response.data.pagination ?? EMPTY_PAGINATION,
+  };
 }
 
 export async function createAnnouncement(

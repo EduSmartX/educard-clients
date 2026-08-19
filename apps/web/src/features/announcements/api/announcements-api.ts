@@ -21,6 +21,33 @@ interface ApiResponse<T> {
   data: T;
 }
 
+export interface PaginationMeta {
+  current_page: number;
+  total_pages: number;
+  count: number;
+  page_size: number;
+  has_next: boolean;
+  has_previous: boolean;
+}
+
+interface PaginatedResponse<T> extends ApiResponse<T[]> {
+  pagination?: PaginationMeta;
+}
+
+export interface Paginated<T> {
+  items: T[];
+  pagination: PaginationMeta;
+}
+
+const EMPTY_PAGINATION: PaginationMeta = {
+  current_page: 1,
+  total_pages: 1,
+  count: 0,
+  page_size: 25,
+  has_next: false,
+  has_previous: false,
+};
+
 export interface RecipientAnnouncement {
   public_id: string;
   subject: string;
@@ -44,6 +71,8 @@ export interface AnnouncementFilterParams {
   status?: AnnouncementStatus;
   from_date?: string;
   to_date?: string;
+  page?: number;
+  page_size?: number;
 }
 
 function toQueryParams(filters: AnnouncementFilterParams = {}): Record<string, string> {
@@ -54,11 +83,14 @@ function toQueryParams(filters: AnnouncementFilterParams = {}): Record<string, s
 
 export async function fetchRecipientAnnouncements(
   filters: AnnouncementFilterParams = {}
-): Promise<RecipientAnnouncement[]> {
-  const response = await api.get<ApiResponse<RecipientAnnouncement[]>>(`${BASE_URL}/`, {
+): Promise<Paginated<RecipientAnnouncement>> {
+  const response = await api.get<PaginatedResponse<RecipientAnnouncement>>(`${BASE_URL}/`, {
     params: toQueryParams(filters),
   });
-  return response.data.data;
+  return {
+    items: response.data.data ?? [],
+    pagination: response.data.pagination ?? EMPTY_PAGINATION,
+  };
 }
 
 export async function fetchRecipientAnnouncementDetail(
@@ -72,11 +104,14 @@ export async function fetchRecipientAnnouncementDetail(
 
 export async function fetchAnnouncements(
   filters: AnnouncementFilterParams = {}
-): Promise<AnnouncementListItem[]> {
-  const response = await api.get<ApiResponse<AnnouncementListItem[]>>(`${BASE_URL}/`, {
+): Promise<Paginated<AnnouncementListItem>> {
+  const response = await api.get<PaginatedResponse<AnnouncementListItem>>(`${BASE_URL}/`, {
     params: toQueryParams(filters),
   });
-  return response.data.data;
+  return {
+    items: response.data.data ?? [],
+    pagination: response.data.pagination ?? EMPTY_PAGINATION,
+  };
 }
 
 export async function fetchAnnouncementDetail(publicId: string): Promise<AnnouncementDetail> {

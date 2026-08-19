@@ -1,24 +1,16 @@
 /**
  * Announcements List Card
- * Reusable search/filter + trimmed table (Subject, Delivery Type, Dates, Action)
- * used by the Email / SMS / Both announcement pages.
+ * Reusable filter + trimmed table (Subject, Delivery Type, Dates, Action)
+ * used by the Email / SMS announcement pages.
  */
 
-import { Eye, Loader2, RotateCcw, Search, X } from 'lucide-react';
+import { Eye, Loader2, RotateCcw } from 'lucide-react';
 import { format } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '@/components/ui/select';
+import { ResourceFilter } from '@/components/filters/resource-filter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -31,12 +23,9 @@ import {
 
 import { useAnnouncementFilters } from '../hooks/use-announcement-filters';
 import { useAnnouncements } from '../hooks';
-import {
-  ANNOUNCEMENT_STATUS_META,
-  DELIVERY_METHOD_LABELS,
-  RECIPIENT_TYPE_OPTIONS,
-  type DeliveryMethod,
-} from '../types';
+import { AnnouncementsPagination } from './announcements-pagination';
+import { ADMIN_FILTER_FIELDS } from '../constants/filter-fields';
+import { ANNOUNCEMENT_STATUS_META, DELIVERY_METHOD_LABELS, type DeliveryMethod } from '../types';
 
 function formatDateTime(value: string | null): string {
   if (!value) {
@@ -68,23 +57,12 @@ export function AnnouncementsListCard({
   isRetrying,
   retryingId,
 }: Readonly<AnnouncementsListCardProps>) {
-  const {
-    search,
-    setSearch,
-    recipientFilter,
-    setRecipientFilter,
-    statusFilter,
-    setStatusFilter,
-    fromDate,
-    setFromDate,
-    toDate,
-    setToDate,
-    hasActiveFilters,
-    queryFilters,
-    clearFilters,
-  } = useAnnouncementFilters(deliveryMethod);
+  const { hasActiveFilters, queryFilters, filters, applyFilters, resetFilters, setPage } =
+    useAnnouncementFilters(deliveryMethod);
 
-  const { data: items = [], isLoading } = useAnnouncements(queryFilters);
+  const { data, isLoading } = useAnnouncements(queryFilters);
+  const items = data?.items ?? [];
+  const pagination = data?.pagination;
 
   return (
     <Card>
@@ -93,76 +71,14 @@ export function AnnouncementsListCard({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="mb-4 flex flex-wrap items-end gap-3">
-          <div className="relative min-w-[200px] flex-1">
-            <Search className="pointer-events-none absolute top-2.5 left-2.5 h-4 w-4 text-slate-400" />
-            <Input
-              className="pl-8"
-              placeholder="Search by subject or event..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <Select
-            value={recipientFilter}
-            onValueChange={(v) => setRecipientFilter(v as typeof recipientFilter)}
-          >
-            <SelectTrigger className="w-[170px]">
-              <SelectValue placeholder="Recipients" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All recipients</SelectItem>
-              {RECIPIENT_TYPE_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
-            value={statusFilter}
-            onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}
-          >
-            <SelectTrigger className="w-[130px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All status</SelectItem>
-              <SelectItem value="sent">Sent</SelectItem>
-              <SelectItem value="failed">Failed</SelectItem>
-              <SelectItem value="draft">Draft</SelectItem>
-            </SelectContent>
-          </Select>
-          <div className="flex flex-col gap-1">
-            <Label className="text-xs text-slate-500">From</Label>
-            <Input
-              type="date"
-              className="w-[150px]"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <Label className="text-xs text-slate-500">To</Label>
-            <Input
-              type="date"
-              className="w-[150px]"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-            />
-          </div>
-          {hasActiveFilters ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={clearFilters}
-              className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-            >
-              <X className="mr-1 h-4 w-4" />
-              Clear
-            </Button>
-          ) : null}
+        <div className="mb-4">
+          <ResourceFilter
+            fields={ADMIN_FILTER_FIELDS}
+            defaultValues={filters}
+            onFilter={applyFilters}
+            onReset={resetFilters}
+            searchDebounceMs={500}
+          />
         </div>
 
         {(() => {
@@ -250,6 +166,10 @@ export function AnnouncementsListCard({
             </div>
           );
         })()}
+
+        {pagination ? (
+          <AnnouncementsPagination pagination={pagination} onPageChange={setPage} />
+        ) : null}
       </CardContent>
     </Card>
   );

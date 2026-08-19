@@ -80,6 +80,10 @@ export default function ParentAcademicsScreen() {
                       navigation.navigate('ExceptionalWork');
                       return;
                     }
+                    if (tab.key === 'announcements') {
+                      navigation.navigate('Announcements');
+                      return;
+                    }
                     navigation.navigate('StudentAcademicsTask', {
                       task: tab.key,
                     });
