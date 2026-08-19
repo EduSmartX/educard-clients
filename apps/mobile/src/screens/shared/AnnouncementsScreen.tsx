@@ -7,8 +7,6 @@ import { extractApiError, getRoleGradient } from '@educard/shared';
 import { useNavigation } from '@react-navigation/native';
 import { format } from 'date-fns';
 import {
-  ANNOUNCEMENT_DELIVERY_METHODS,
-  ANNOUNCEMENT_RECIPIENT_TYPES,
   ChevronDown,
   ChevronLeft,
   ChevronUp,
@@ -45,6 +43,10 @@ import {
   useRetryAnnouncement,
   type AnnouncementListItem,
 } from '@/features/announcements';
+import {
+  ANNOUNCEMENT_DELIVERY_METHODS,
+  ANNOUNCEMENT_RECIPIENT_TYPES,
+} from '@/features/announcements/types';
 import { LinearGradient } from '@/lib/linear-gradient';
 import { useToast } from '@/lib/toast-context';
 import { useAuthStore } from '@/lib/auth-store';
@@ -69,7 +71,6 @@ const ANNOUNCEMENT_FILTER_FIELDS: FilterField[] = [
       { value: '', label: 'All' },
       { value: ANNOUNCEMENT_DELIVERY_METHODS.EMAIL, label: '✉️ Email' },
       { value: ANNOUNCEMENT_DELIVERY_METHODS.SMS, label: '💬 SMS' },
-      { value: ANNOUNCEMENT_DELIVERY_METHODS.BOTH, label: '📨 Email & SMS' },
     ],
   },
   {

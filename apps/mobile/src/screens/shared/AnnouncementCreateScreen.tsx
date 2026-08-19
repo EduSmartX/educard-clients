@@ -15,11 +15,13 @@ import {
 } from 'react-native';
 
 import {
-  ANNOUNCEMENT_DELIVERY_METHODS,
-  ANNOUNCEMENT_RECIPIENT_TYPES,
   useCreateAnnouncement,
   type CreateAnnouncementPayload,
 } from '@/features/announcements';
+import {
+  ANNOUNCEMENT_DELIVERY_METHODS,
+  ANNOUNCEMENT_RECIPIENT_TYPES,
+} from '@/features/announcements/types';
 import { useAuthStore } from '@/lib/auth-store';
 import { LinearGradient } from '@/lib/linear-gradient';
 import type { SharedStackNavigation } from '@/navigation/types';
