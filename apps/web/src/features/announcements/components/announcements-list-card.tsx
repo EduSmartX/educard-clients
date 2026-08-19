@@ -30,11 +30,12 @@ import {
 } from '@/components/ui/table';
 
 import { useAnnouncementFilters } from '../hooks/use-announcement-filters';
+import { useAnnouncements } from '../hooks';
 import {
   ANNOUNCEMENT_STATUS_META,
   DELIVERY_METHOD_LABELS,
   RECIPIENT_TYPE_OPTIONS,
-  type AnnouncementListItem,
+  type DeliveryMethod,
 } from '../types';
 
 function formatDateTime(value: string | null): string {
@@ -51,8 +52,7 @@ function formatDateTime(value: string | null): string {
 interface AnnouncementsListCardProps {
   title: string;
   description: string;
-  items: AnnouncementListItem[];
-  isLoading: boolean;
+  deliveryMethod: DeliveryMethod;
   onView: (publicId: string) => void;
   onRetry: (publicId: string) => void;
   isRetrying: boolean;
@@ -62,8 +62,7 @@ interface AnnouncementsListCardProps {
 export function AnnouncementsListCard({
   title,
   description,
-  items,
-  isLoading,
+  deliveryMethod,
   onView,
   onRetry,
   isRetrying,
@@ -81,9 +80,11 @@ export function AnnouncementsListCard({
     toDate,
     setToDate,
     hasActiveFilters,
-    filteredItems,
+    queryFilters,
     clearFilters,
-  } = useAnnouncementFilters(items);
+  } = useAnnouncementFilters(deliveryMethod);
+
+  const { data: items = [], isLoading } = useAnnouncements(queryFilters);
 
   return (
     <Card>
@@ -174,12 +175,12 @@ export function AnnouncementsListCard({
               </div>
             );
           }
-          if (filteredItems.length === 0) {
+          if (items.length === 0) {
             return (
               <p className="py-8 text-center text-sm text-slate-500">
-                {items.length === 0
-                  ? 'No announcements sent yet.'
-                  : 'No announcements match your filters.'}
+                {hasActiveFilters
+                  ? 'No announcements match your filters.'
+                  : 'No announcements sent yet.'}
               </p>
             );
           }
@@ -195,7 +196,7 @@ export function AnnouncementsListCard({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredItems.map((item) => {
+                  {items.map((item) => {
                     const statusMeta = ANNOUNCEMENT_STATUS_META[item.status] ?? {
                       label: item.status,
                       variant: 'secondary' as const,

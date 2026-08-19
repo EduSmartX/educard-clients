@@ -3,30 +3,23 @@
  * Compose and review email-only announcements.
  */
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Mail } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { PageHeader } from '@/components/common';
 import { getErrorMessage } from '@/lib/utils/error-handler';
 
-import { useAnnouncements, useRetryAnnouncement } from '../hooks';
+import { useRetryAnnouncement } from '../hooks';
 import { AnnouncementComposeCard } from '../components/announcement-compose-card';
 import { AnnouncementsListCard } from '../components/announcements-list-card';
 import { AnnouncementDetailDialog } from '../components/announcement-detail-dialog';
 import { ANNOUNCEMENT_DELIVERY_METHODS } from '../types';
 
 export default function AnnouncementsEmailPage() {
-  const { data: announcements = [], isLoading } = useAnnouncements();
   const retryMutation = useRetryAnnouncement();
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
-
-  const emailAnnouncements = useMemo(
-    () =>
-      announcements.filter((item) => item.delivery_methods === ANNOUNCEMENT_DELIVERY_METHODS.EMAIL),
-    [announcements]
-  );
 
   const handleRetry = (publicId: string) => {
     setRetryingId(publicId);
@@ -56,8 +49,7 @@ export default function AnnouncementsEmailPage() {
       <AnnouncementsListCard
         title="Sent email announcements"
         description="The most recent email announcements for your school."
-        items={emailAnnouncements}
-        isLoading={isLoading}
+        deliveryMethod={ANNOUNCEMENT_DELIVERY_METHODS.EMAIL}
         onView={setDetailId}
         onRetry={handleRetry}
         isRetrying={retryMutation.isPending}

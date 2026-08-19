@@ -299,52 +299,63 @@ export default function AnnouncementsScreen() {
               />
             }
             ListHeaderComponent={
-              <View style={s.filterBar}>
-                <View style={s.searchWrap}>
-                  <Search size={16} color="#94a3b8" />
-                  <TextInput
-                    style={s.searchInput}
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                    placeholder="Search by subject or event..."
-                    placeholderTextColor="#94a3b8"
-                    returnKeyType="search"
-                  />
-                  {searchQuery.length > 0 && (
-                    <TouchableOpacity
-                      onPress={() => setSearchQuery('')}
-                      hitSlop={8}
-                    >
-                      <X size={16} color="#94a3b8" />
+              <View>
+                {!isAdmin && (
+                  <View style={s.tableHeader}>
+                    <Text style={[s.tableHeaderCell, s.subjectCell]}>
+                      Subject
+                    </Text>
+                    <Text style={s.tableHeaderCell}>Delivery Type</Text>
+                    <Text style={[s.tableHeaderCell, s.dateCell]}>Dates</Text>
+                  </View>
+                )}
+                <View style={s.filterBar}>
+                  <View style={s.searchWrap}>
+                    <Search size={16} color="#94a3b8" />
+                    <TextInput
+                      style={s.searchInput}
+                      value={searchQuery}
+                      onChangeText={setSearchQuery}
+                      placeholder="Search by subject or event..."
+                      placeholderTextColor="#94a3b8"
+                      returnKeyType="search"
+                    />
+                    {searchQuery.length > 0 && (
+                      <TouchableOpacity
+                        onPress={() => setSearchQuery('')}
+                        hitSlop={8}
+                      >
+                        <X size={16} color="#94a3b8" />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                  <View style={s.dateRow}>
+                    <View style={s.dateCol}>
+                      <FormDatePicker
+                        label="From"
+                        value={fromDate}
+                        onChange={setFromDate}
+                        placeholder="Start date"
+                      />
+                    </View>
+                    <View style={s.dateCol}>
+                      <FormDatePicker
+                        label="To"
+                        value={toDate}
+                        onChange={setToDate}
+                        placeholder="End date"
+                      />
+                    </View>
+                  </View>
+                  {activeFilterCount > 0 && (
+                    <TouchableOpacity style={s.clearBtn} onPress={clearFilters}>
+                      <X size={14} color="#dc2626" />
+                      <Text style={s.clearBtnText}>
+                        Clear filters ({activeFilterCount})
+                      </Text>
                     </TouchableOpacity>
                   )}
                 </View>
-                <View style={s.dateRow}>
-                  <View style={s.dateCol}>
-                    <FormDatePicker
-                      label="From"
-                      value={fromDate}
-                      onChange={setFromDate}
-                      placeholder="Start date"
-                    />
-                  </View>
-                  <View style={s.dateCol}>
-                    <FormDatePicker
-                      label="To"
-                      value={toDate}
-                      onChange={setToDate}
-                      placeholder="End date"
-                    />
-                  </View>
-                </View>
-                {activeFilterCount > 0 && (
-                  <TouchableOpacity style={s.clearBtn} onPress={clearFilters}>
-                    <X size={14} color="#dc2626" />
-                    <Text style={s.clearBtnText}>
-                      Clear filters ({activeFilterCount})
-                    </Text>
-                  </TouchableOpacity>
-                )}
               </View>
             }
             ListEmptyComponent={
@@ -367,25 +378,28 @@ export default function AnnouncementsScreen() {
                     entering={FadeInDown.delay(40 * (index + 1)).springify()}
                   >
                     <TouchableOpacity
-                      style={cardStyles.cardLarge}
+                      style={s.recipientRow}
                       onPress={() =>
                         navigation.navigate('AnnouncementDetail', {
                           publicId: item.public_id,
                         })
                       }
                     >
-                      <View style={s.rowTop}>
-                        <View style={s.titleWrap}>
-                          <Text style={s.subject}>{item.subject}</Text>
-                          {!!item.event_name && (
-                            <Text style={s.deliveryTag}>{item.event_name}</Text>
-                          )}
-                          <Text style={s.metaLine}>
-                            {formatDateTime(item.sent_at ?? item.created_at)}
-                          </Text>
-                        </View>
-                        <Eye size={18} color="#2563eb" />
-                      </View>
+                      <Text
+                        style={[s.recipientCell, s.subjectCell]}
+                        numberOfLines={2}
+                      >
+                        {item.subject}
+                      </Text>
+                      <Text style={s.recipientCell} numberOfLines={1}>
+                        {DELIVERY_METHOD_LABELS[item.delivery_methods]}
+                      </Text>
+                      <Text
+                        style={[s.recipientCell, s.dateCell]}
+                        numberOfLines={1}
+                      >
+                        {formatDateTime(item.sent_at ?? item.created_at)}
+                      </Text>
                     </TouchableOpacity>
                   </Animated.View>
                 );
@@ -559,6 +573,48 @@ const s = StyleSheet.create({
     fontWeight: '500',
   },
   filterBar: { marginBottom: 4 },
+  tableHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  tableHeaderCell: {
+    flex: 1,
+    color: '#64748b',
+    fontSize: 11,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+  },
+  recipientRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 64,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 12,
+    backgroundColor: '#fff',
+  },
+  recipientCell: {
+    flex: 1,
+    color: '#475569',
+    fontSize: 12,
+  },
+  subjectCell: {
+    flex: 1.4,
+    color: '#0f172a',
+    fontWeight: '700',
+  },
+  dateCell: {
+    textAlign: 'right',
+    color: '#64748b',
+  },
   searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',

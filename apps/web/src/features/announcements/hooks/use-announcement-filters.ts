@@ -1,17 +1,26 @@
 /**
- * Shared search/filter state for an announcements list (used by the
- * Email / SMS / Both announcement pages).
+ * Shared search/filter state for an announcements list.
+ * Filter values are sent to the API; results are never filtered client-side.
  */
 
-import { useMemo, useState } from 'react';
-import type { AnnouncementListItem, AnnouncementStatus, RecipientType } from '../types';
+import { useEffect, useMemo, useState } from 'react';
+import type { AnnouncementFilterParams } from '../api/announcements-api';
+import type { AnnouncementStatus, DeliveryMethod, RecipientType } from '../types';
 
-export function useAnnouncementFilters(items: AnnouncementListItem[]) {
+const SEARCH_DEBOUNCE_MS = 350;
+
+export function useAnnouncementFilters(deliveryMethod: DeliveryMethod) {
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [recipientFilter, setRecipientFilter] = useState<RecipientType | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<AnnouncementStatus | 'all'>('all');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search.trim()), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const hasActiveFilters =
     search.trim() !== '' ||
@@ -20,32 +29,17 @@ export function useAnnouncementFilters(items: AnnouncementListItem[]) {
     fromDate !== '' ||
     toDate !== '';
 
-  const filteredItems = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return items.filter((item) => {
-      if (
-        q &&
-        !item.subject.toLowerCase().includes(q) &&
-        !item.event_name.toLowerCase().includes(q)
-      ) {
-        return false;
-      }
-      if (recipientFilter !== 'all' && item.recipient_type !== recipientFilter) {
-        return false;
-      }
-      if (statusFilter !== 'all' && item.status !== statusFilter) {
-        return false;
-      }
-      const when = (item.sent_at ?? item.created_at)?.slice(0, 10);
-      if (fromDate && when && when < fromDate) {
-        return false;
-      }
-      if (toDate && when && when > toDate) {
-        return false;
-      }
-      return true;
-    });
-  }, [items, search, recipientFilter, statusFilter, fromDate, toDate]);
+  const queryFilters = useMemo<AnnouncementFilterParams>(
+    () => ({
+      search: debouncedSearch || undefined,
+      delivery_methods: deliveryMethod,
+      recipient_type: recipientFilter === 'all' ? undefined : recipientFilter,
+      status: statusFilter === 'all' ? undefined : statusFilter,
+      from_date: fromDate || undefined,
+      to_date: toDate || undefined,
+    }),
+    [debouncedSearch, deliveryMethod, recipientFilter, statusFilter, fromDate, toDate]
+  );
 
   const clearFilters = () => {
     setSearch('');
@@ -67,7 +61,7 @@ export function useAnnouncementFilters(items: AnnouncementListItem[]) {
     toDate,
     setToDate,
     hasActiveFilters,
-    filteredItems,
+    queryFilters,
     clearFilters,
   };
 }

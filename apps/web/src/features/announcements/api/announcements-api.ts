@@ -4,7 +4,14 @@
  */
 
 import api from '@/lib/api';
-import type { AnnouncementDetail, AnnouncementListItem, CreateAnnouncementPayload } from '../types';
+import type {
+  AnnouncementDetail,
+  AnnouncementListItem,
+  AnnouncementStatus,
+  CreateAnnouncementPayload,
+  DeliveryMethod,
+  RecipientType,
+} from '../types';
 
 const BASE_URL = '/notifications/announcements';
 
@@ -19,6 +26,7 @@ export interface RecipientAnnouncement {
   subject: string;
   event_name: string | null;
   event_date: string | null;
+  delivery_methods: DeliveryMethod;
   sent_at: string | null;
   created_at: string;
 }
@@ -28,8 +36,28 @@ export interface RecipientAnnouncementDetail extends RecipientAnnouncement {
   event_note: string | null;
 }
 
-export async function fetchRecipientAnnouncements(): Promise<RecipientAnnouncement[]> {
-  const response = await api.get<ApiResponse<RecipientAnnouncement[]>>(`${BASE_URL}/`);
+/** Server-side filters; empty values are omitted from the request. */
+export interface AnnouncementFilterParams {
+  search?: string;
+  delivery_methods?: DeliveryMethod;
+  recipient_type?: RecipientType;
+  status?: AnnouncementStatus;
+  from_date?: string;
+  to_date?: string;
+}
+
+function toQueryParams(filters: AnnouncementFilterParams = {}): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(filters).filter(([, value]) => (value ?? '').toString().trim() !== '')
+  ) as Record<string, string>;
+}
+
+export async function fetchRecipientAnnouncements(
+  filters: AnnouncementFilterParams = {}
+): Promise<RecipientAnnouncement[]> {
+  const response = await api.get<ApiResponse<RecipientAnnouncement[]>>(`${BASE_URL}/`, {
+    params: toQueryParams(filters),
+  });
   return response.data.data;
 }
 
@@ -42,8 +70,12 @@ export async function fetchRecipientAnnouncementDetail(
   return response.data.data;
 }
 
-export async function fetchAnnouncements(): Promise<AnnouncementListItem[]> {
-  const response = await api.get<ApiResponse<AnnouncementListItem[]>>(`${BASE_URL}/`);
+export async function fetchAnnouncements(
+  filters: AnnouncementFilterParams = {}
+): Promise<AnnouncementListItem[]> {
+  const response = await api.get<ApiResponse<AnnouncementListItem[]>>(`${BASE_URL}/`, {
+    params: toQueryParams(filters),
+  });
   return response.data.data;
 }
 
