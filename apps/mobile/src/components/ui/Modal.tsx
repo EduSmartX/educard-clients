@@ -186,6 +186,7 @@ export function useModal() {
     message?: string;
     variant: ModalVariant;
     actions: ModalAction[];
+    onDismiss?: () => void;
   }>({
     visible: false,
     title: '',
@@ -223,6 +224,8 @@ export function useModal() {
       message: options.message,
       variant: options.variant ?? 'info',
       actions,
+      // A single-action alert has nothing to cancel, so backdrop/X means "OK".
+      onDismiss: options.cancelText ? options.onCancel : options.onConfirm,
     });
   }, []);
 
@@ -285,7 +288,10 @@ export function useModal() {
     () => (
       <Modal
         visible={modalState.visible}
-        onClose={hideModal}
+        onClose={() => {
+          hideModal();
+          modalState.onDismiss?.();
+        }}
         title={modalState.title}
         message={modalState.message}
         variant={modalState.variant}

@@ -4,6 +4,8 @@ import {
   ORGANIZATION_TYPES,
   BOARD_AFFILIATIONS,
   GENDER_OPTIONS,
+  REGISTRATION_SUBMITTED_TITLE,
+  buildRegistrationSubmittedMessage,
 } from '@educard/shared';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -512,8 +514,8 @@ export default function SignupScreen() {
 
       if (response.success) {
         modal.success(
-          'Registration Submitted!',
-          `Thank you for registering "${orgName}"!\n\n${APP_INFO.NAME} team will verify your organization details and approve your account.\n\nYou will receive an email notification once approved. After approval, you'll have full access to all features.`,
+          REGISTRATION_SUBMITTED_TITLE,
+          buildRegistrationSubmittedMessage(orgName, APP_INFO.NAME),
           () => navigation.reset({ index: 0, routes: [{ name: 'Login' }] }),
         );
       } else {

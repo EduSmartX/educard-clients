@@ -316,15 +316,6 @@ export default function AnnouncementsScreen() {
             }
             ListHeaderComponent={
               <View>
-                {!isAdmin && (
-                  <View style={s.tableHeader}>
-                    <Text style={[s.tableHeaderCell, s.subjectCell]}>
-                      Subject
-                    </Text>
-                    <Text style={s.tableHeaderCell}>Delivery Type</Text>
-                    <Text style={[s.tableHeaderCell, s.dateCell]}>Dates</Text>
-                  </View>
-                )}
                 <View style={s.filterBar}>
                   <View style={s.searchWrap}>
                     <Search size={16} color="#94a3b8" />
@@ -372,6 +363,15 @@ export default function AnnouncementsScreen() {
                     </TouchableOpacity>
                   )}
                 </View>
+                {!isAdmin && (
+                  <View style={s.tableHeader}>
+                    <Text style={[s.tableHeaderCell, s.subjectCell]}>
+                      Subject
+                    </Text>
+                    <Text style={s.tableHeaderCell}>Delivery Type</Text>
+                    <Text style={[s.tableHeaderCell, s.dateCell]}>Dates</Text>
+                  </View>
+                )}
               </View>
             }
             ListEmptyComponent={

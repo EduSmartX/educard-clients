@@ -104,6 +104,7 @@ export function FilterModal({
 
   const handleReset = () => {
     setLocalFilters({});
+    onApply({});
   };
 
   const handleApply = () => {

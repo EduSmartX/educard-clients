@@ -87,7 +87,8 @@ export function useAddClassToGroup(options?: MutationOptions) {
     }) => addClassToGroup(groupPublicId, classPublicId),
     onSuccess: () => {
       toast.success(SuccessMessages.TIMETABLE.CLASS_ADDED);
-      qc.invalidateQueries({ queryKey: timetableKeys.classGroups() });
+      // Membership decides which slots apply, so every timetable view is stale.
+      qc.invalidateQueries({ queryKey: timetableKeys.all });
       options?.onSuccess?.();
     },
     onError: (error: Error) => {
@@ -108,7 +109,7 @@ export function useRemoveClassFromGroup(options?: MutationOptions) {
     }) => removeClassFromGroup(groupPublicId, classPublicId),
     onSuccess: () => {
       toast.success(SuccessMessages.TIMETABLE.CLASS_REMOVED);
-      qc.invalidateQueries({ queryKey: timetableKeys.classGroups() });
+      qc.invalidateQueries({ queryKey: timetableKeys.all });
       options?.onSuccess?.();
     },
     onError: (error: Error) => {
