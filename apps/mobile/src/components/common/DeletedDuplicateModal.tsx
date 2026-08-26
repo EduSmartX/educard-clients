@@ -7,7 +7,6 @@
 import { AlertTriangle, RefreshCw, Plus, X } from 'lucide-react-native';
 import React from 'react';
 import { View, Text, TouchableOpacity, Modal, StyleSheet } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 
 export interface DeletedDuplicateModalProps {
   visible: boolean;
@@ -44,16 +43,21 @@ export function DeletedDuplicateModal({
             </Text>
           ) : (
             <Text key={`${i}-${part}`}>{part}</Text>
-          )
+          ),
         )}
       </Text>
     );
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onCancel}
+    >
       <View style={styles.overlay}>
-        <Animated.View entering={FadeInDown.duration(300)} style={styles.sheet}>
+        <View style={styles.sheet}>
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.iconCircle}>
@@ -98,7 +102,7 @@ export function DeletedDuplicateModal({
               <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
           </View>
-        </Animated.View>
+        </View>
       </View>
     </Modal>
   );

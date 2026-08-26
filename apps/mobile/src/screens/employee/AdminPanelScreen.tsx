@@ -9,6 +9,7 @@ import {
   FileText,
   CalendarCheck,
   Scale,
+  AlertTriangle,
 } from 'lucide-react-native';
 
 import {
@@ -51,6 +52,13 @@ const adminItems: AdminPanelItem[] = [
     icon: CalendarCheck,
     gradient: ['#dc2626', '#f87171'],
     screen: 'Holidays',
+  },
+  {
+    id: 'exceptions',
+    title: 'Work Exceptions',
+    icon: AlertTriangle,
+    gradient: ['#0891b2', '#22d3ee'],
+    screen: 'ExceptionalWork',
   },
 ];
 

@@ -158,6 +158,15 @@ export async function resetClassPasswords(
   };
 }
 
+// Set a temporary password for one student who has no verified email/phone for OTP reset
+export async function setStudentTemporaryPassword(
+  classId: string,
+  publicId: string,
+  payload: ResetClassPasswordsPayload
+): Promise<void> {
+  await api.post(`${CLASS_STUDENTS_BASE(classId)}${publicId}/set-temporary-password/`, payload);
+}
+
 // Bulk operations
 export async function downloadStudentTemplate(minimalFields = false): Promise<Blob> {
   const params = minimalFields ? { minimal_fields: 'true' } : {};

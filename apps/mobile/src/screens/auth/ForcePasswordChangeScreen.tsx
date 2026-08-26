@@ -4,7 +4,7 @@
  * Cannot be dismissed - after success the user is logged out and must log back in.
  */
 
-import { Colors } from '@educard/shared';
+import { Colors, extractApiError } from '@educard/shared';
 import {
   Lock,
   Eye,
@@ -79,9 +79,7 @@ export default function ForcePasswordChangeScreen() {
         [{ text: 'OK', onPress: () => void logout() }],
       );
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to change password';
-      Alert.alert('Error', errorMessage);
+      Alert.alert('Error', extractApiError(error, 'Failed to change password'));
     } finally {
       setIsLoading(false);
     }
@@ -310,7 +308,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     padding: 28,
-    flex: 1,
+    flexGrow: 1,
   },
   noticeBox: {
     flexDirection: 'row',

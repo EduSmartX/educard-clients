@@ -14,7 +14,9 @@ import {
   FlatList,
   StyleSheet,
   TextInput,
+  KeyboardAvoidingView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export interface SearchableSelectOption {
   value: string;
@@ -53,6 +55,7 @@ export function SearchableSelect({
 }: SearchableSelectProps) {
   const [visible, setVisible] = useState(false);
   const [search, setSearch] = useState('');
+  const insets = useSafeAreaInsets();
 
   const selectedOption = options.find(o => o.value === value);
   const showSearch = options.length > showSearchThreshold;
@@ -97,8 +100,8 @@ export function SearchableSelect({
         statusBarTranslucent
         onRequestClose={close}
       >
-        <View style={styles.overlay}>
-          <View style={styles.modal}>
+        <KeyboardAvoidingView style={styles.overlay} behavior="padding">
+          <View style={[styles.modal, { paddingBottom: insets.bottom + 20 }]}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
                 {title ?? label ?? 'Select'}
@@ -160,7 +163,7 @@ export function SearchableSelect({
               }
             />
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -198,7 +201,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '70%',
-    paddingBottom: 20,
   },
   modalHeader: {
     flexDirection: 'row',

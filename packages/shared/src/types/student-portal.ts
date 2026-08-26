@@ -50,6 +50,7 @@ export interface StudentAnnouncementListItem {
   subject: string;
   event_name: string;
   event_date: string | null;
+  delivery_methods: "email" | "sms";
   sent_at: string | null;
   created_at: string;
 }

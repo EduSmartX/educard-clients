@@ -15,15 +15,6 @@ export const styles = StyleSheet.create({
   backButton: { padding: 4 },
   headerTitle: { color: 'white', fontSize: 20, fontWeight: '700' },
   headerSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 13 },
-  readOnlyBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ede9fe',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    gap: 8,
-  },
-  readOnlyText: { fontSize: 13, fontWeight: '600', color: '#7c3aed' },
   content: { flex: 1 },
   scrollContent: { padding: 16, paddingBottom: 100 },
   infoCard: {
@@ -37,7 +28,13 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#6ee7b7',
   },
-  infoText: { flex: 1, fontSize: 13, color: '#065f46', lineHeight: 18 },
+  infoText: { flex: 1 },
+  infoBullet: {
+    fontSize: 13,
+    color: '#065f46',
+    lineHeight: 18,
+    marginBottom: 4,
+  },
   loadingContainer: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -152,6 +149,7 @@ export const modalStyles = StyleSheet.create({
   },
   title: { fontSize: 18, fontWeight: '700', color: '#1f2937' },
   body: { padding: 20, maxHeight: 400 },
+  bodyContainer: { maxHeight: 400 },
   field: { marginBottom: 20 },
   fieldLabel: {
     fontSize: 14,

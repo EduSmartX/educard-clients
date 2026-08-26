@@ -13,7 +13,7 @@ import {
   ShieldCheck,
   User,
 } from 'lucide-react-native';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -25,6 +25,7 @@ import {
 } from 'react-native';
 
 import { useProfileImageUrl, useUserProfile } from '@/hooks';
+import { ImageViewerModal } from '@/components/common/ImageViewerModal';
 import { useAuthStore } from '@/lib/auth-store';
 import { LinearGradient } from '@/lib/linear-gradient';
 import { headerStyles, layoutStyles } from '@/styles';
@@ -82,7 +83,8 @@ export default function StudentProfileScreen() {
   const navigation = useNavigation();
   const { user } = useAuthStore();
   const { data: profile, isLoading } = useUserProfile();
-  const { profileImageUrl } = useProfileImageUrl();
+  const { profileImageUrl, fullImageUrl } = useProfileImageUrl();
+  const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
 
   const handleBack = useCallback(() => {
     if (navigation.canGoBack()) navigation.goBack();
@@ -131,7 +133,12 @@ export default function StudentProfileScreen() {
         >
           <View style={s.identityCard}>
             {profileImageUrl ? (
-              <Image source={{ uri: profileImageUrl }} style={s.avatar} />
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => setPhotoViewerOpen(true)}
+              >
+                <Image source={{ uri: profileImageUrl }} style={s.avatar} />
+              </TouchableOpacity>
             ) : (
               <View style={[s.avatar, s.avatarFallback]}>
                 <Text style={s.avatarText}>
@@ -214,6 +221,13 @@ export default function StudentProfileScreen() {
           </Section>
         </ScrollView>
       )}
+
+      <ImageViewerModal
+        visible={photoViewerOpen}
+        uri={fullImageUrl}
+        title={fullName}
+        onClose={() => setPhotoViewerOpen(false)}
+      />
     </View>
   );
 }

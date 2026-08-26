@@ -1,13 +1,27 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { format } from 'date-fns';
-import { Megaphone, CalendarDays, ChevronRight } from 'lucide-react';
+import { Megaphone, CalendarDays } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ResourceFilter } from '@/components/filters/resource-filter';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { PageHeader } from '@/components/common';
 import type { StudentAnnouncementListItem } from '@educard/shared';
+import { AnnouncementsPagination } from '@/features/announcements/components/announcements-pagination';
+import { RECIPIENT_FILTER_FIELDS } from '@/features/announcements/constants/filter-fields';
+import { useAnnouncementFilters } from '@/features/announcements/hooks/use-announcement-filters';
 import { useStudentAnnouncements, useStudentAnnouncementDetail } from './hooks';
+
+const DELIVERY_LABELS: Record<string, string> = { email: 'Email', sms: 'SMS' };
 
 function formatDate(value: string | null): string {
   if (!value) {
@@ -101,8 +115,13 @@ function AnnouncementDetailDialog({
 }
 
 export default function StudentAnnouncementsPage() {
-  const { data: announcements = [], isLoading } = useStudentAnnouncements();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const { filters, applyFilters, resetFilters, hasActiveFilters, queryFilters, setPage } =
+    useAnnouncementFilters();
+
+  const { data, isLoading } = useStudentAnnouncements(queryFilters);
+  const announcements = data?.items ?? [];
+  const pagination = data?.pagination;
 
   return (
     <div className="space-y-6">
@@ -112,65 +131,86 @@ export default function StudentAnnouncementsPage() {
         icon={Megaphone}
       />
 
-      {(() => {
-        if (isLoading) {
-          return (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-20 w-full rounded-xl" />
-              ))}
-            </div>
-          );
-        }
-
-        if (announcements.length === 0) {
-          return (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center gap-3 py-14 text-center">
-                <div className="rounded-full bg-slate-100 p-4">
-                  <Megaphone className="h-7 w-7 text-slate-400" />
-                </div>
-                <p className="text-sm text-slate-500">No announcements yet.</p>
-              </CardContent>
-            </Card>
-          );
-        }
-
-        return (
-          <div className="space-y-3">
-            {announcements.map((item: StudentAnnouncementListItem, index: number) => (
-              <motion.button
-                key={item.public_id}
-                type="button"
-                onClick={() => setSelectedId(item.public_id)}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.04, duration: 0.3 }}
-                className="w-full text-left"
-              >
-                <Card className="transition-shadow hover:shadow-md">
-                  <CardContent className="flex items-center gap-4 p-4">
-                    <div className="shrink-0 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 p-3">
-                      <Megaphone className="h-5 w-5 text-white" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold text-slate-800">{item.subject}</p>
-                      <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-slate-500">
-                        {item.event_name && <span className="truncate">{item.event_name}</span>}
-                        <span className="inline-flex items-center gap-1">
-                          <CalendarDays className="h-3 w-3" />
-                          {formatDate(item.sent_at ?? item.created_at)}
-                        </span>
-                      </div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
-                  </CardContent>
-                </Card>
-              </motion.button>
-            ))}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="mb-4">
+            <ResourceFilter
+              fields={RECIPIENT_FILTER_FIELDS}
+              defaultValues={filters}
+              onFilter={applyFilters}
+              onReset={resetFilters}
+              searchDebounceMs={500}
+            />
           </div>
-        );
-      })()}
+
+          {(() => {
+            if (isLoading) {
+              return (
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              );
+            }
+
+            if (announcements.length === 0) {
+              return (
+                <p className="py-8 text-center text-sm text-slate-500">
+                  {hasActiveFilters
+                    ? 'No announcements match your filters.'
+                    : 'No announcements yet.'}
+                </p>
+              );
+            }
+
+            return (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Subject</TableHead>
+                      <TableHead>Delivery Type</TableHead>
+                      <TableHead>Dates</TableHead>
+                      <TableHead className="text-right">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {announcements.map((item: StudentAnnouncementListItem) => (
+                      <TableRow key={item.public_id}>
+                        <TableCell className="font-medium text-slate-800">
+                          {item.subject}
+                          {item.event_name ? (
+                            <span className="block text-xs text-slate-500">{item.event_name}</span>
+                          ) : null}
+                        </TableCell>
+                        <TableCell>{DELIVERY_LABELS[item.delivery_methods] ?? '—'}</TableCell>
+                        <TableCell className="text-slate-600">
+                          {formatDate(item.sent_at ?? item.created_at)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedId(item.public_id)}
+                          >
+                            View
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            );
+          })()}
+
+          {pagination ? (
+            <AnnouncementsPagination pagination={pagination} onPageChange={setPage} />
+          ) : null}
+        </CardContent>
+      </Card>
 
       <AnnouncementDetailDialog publicId={selectedId} onClose={() => setSelectedId(null)} />
     </div>

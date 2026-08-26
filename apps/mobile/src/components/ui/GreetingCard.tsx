@@ -51,14 +51,18 @@ export function GreetingCard({
         <View style={styles.blobTop} pointerEvents="none" />
         <View style={styles.blobBottom} pointerEvents="none" />
 
-        <View style={styles.dateRow}>
-          <Clock size={14} color="rgba(255,255,255,0.7)" />
-          <Text style={styles.dateText}>{formattedDate}</Text>
-        </View>
+        <View style={styles.topRow}>
+          <View style={styles.textCol}>
+            <View style={styles.dateRow}>
+              <Clock size={14} color="rgba(255,255,255,0.7)" />
+              <Text style={styles.dateText}>{formattedDate}</Text>
+            </View>
 
-        <Text style={styles.title}>
-          {greeting.text}, {name}! {greeting.emoji}
-        </Text>
+            <Text style={styles.title}>
+              {greeting.text}, {name}! {greeting.emoji}
+            </Text>
+          </View>
+        </View>
 
         {!!subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
 
@@ -104,6 +108,13 @@ const styles = StyleSheet.create({
     left: -30,
   },
   dateRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 14,
+  },
+  textCol: { flex: 1 },
   dateText: {
     fontSize: 12,
     fontWeight: '600',

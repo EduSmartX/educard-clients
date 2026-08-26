@@ -531,6 +531,19 @@ function PeriodCell({
   const deleteEntry = useDeleteEntry(classPublicId, { onSuccess: onChanged });
 
   if (!slot.subject_name) {
+    // The subject was deleted after assignment, so flag it instead of showing it as free.
+    if (slot.is_subject_deleted) {
+      return (
+        <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-amber-300 bg-amber-50/70 px-2 py-3 text-center">
+          <AlertTriangle className="h-4 w-4 text-amber-500" />
+          <span className="text-[10px] font-semibold text-amber-700">Deleted Subject</span>
+          {isAdmin && (
+            <AssignmentPopover slot={slot} classPublicId={classPublicId} onAssigned={onChanged} />
+          )}
+        </div>
+      );
+    }
+
     // Non-admin: show empty placeholder instead of assignment popover
     if (!isAdmin) {
       return (

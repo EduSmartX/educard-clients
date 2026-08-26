@@ -115,7 +115,7 @@ export function BulkUploadDialog({
   uploadFile,
   invalidateQueryKeys,
   templateFileName = 'bulk_upload_template.xlsx',
-  acceptedFileTypes = '.xlsx,.xls',
+  acceptedFileTypes = '.xlsx,.xls,.numbers',
   showMinimalFieldsCheckbox = false,
   isMinimalFields = false,
   onMinimalFieldsChange,

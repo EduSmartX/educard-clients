@@ -8,19 +8,6 @@ export const styles = StyleSheet.create({
 
   // Header
   header: { alignItems: 'center', marginBottom: 24 },
-  backButton: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    padding: 8,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
   logoContainer: {
     width: 80,
     height: 80,
@@ -85,16 +72,18 @@ export const styles = StyleSheet.create({
 
   // Form Card
   formCard: {
-    backgroundColor: '#fff',
-    borderRadius: 24,
-    padding: 24,
+    backgroundColor: Colors.gray[50],
+    borderRadius: 18,
+    padding: 18,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
-    shadowRadius: 24,
-    elevation: 12,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 1,
+    borderWidth: 1,
+    borderColor: Colors.gray[200],
   },
-  stepContent: { gap: 20 },
+  stepContent: { gap: 16 },
 
   // Section Header
   sectionHeader: {
@@ -123,11 +112,10 @@ export const styles = StyleSheet.create({
   inputWrapper: { marginBottom: 0 },
   inputLabel: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '500',
     color: Colors.gray[600],
-    marginBottom: 8,
-    letterSpacing: 0.2,
-    textTransform: 'uppercase',
+    marginBottom: 6,
+    letterSpacing: 0.1,
   },
   stepBadge: {
     backgroundColor: Colors.primary[100],
@@ -143,20 +131,20 @@ export const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    borderWidth: 1.5,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    borderWidth: 1,
     borderColor: Colors.gray[200],
-    paddingHorizontal: 16,
-    height: 54,
-    gap: 12,
+    paddingHorizontal: 14,
+    minHeight: 50,
+    gap: 10,
   },
   inputFocused: {
     borderColor: Colors.primary[500],
     backgroundColor: '#fff',
-    borderWidth: 2,
+    borderWidth: 1.5,
   },
-  input: { flex: 1, fontSize: 16, color: Colors.gray[900], fontWeight: '500' },
+  input: { flex: 1, fontSize: 15, color: Colors.gray[900], fontWeight: '400' },
   inputHint: { fontSize: 11, color: Colors.gray[400], marginTop: 6 },
 
   // Toggle
@@ -181,34 +169,34 @@ export const styles = StyleSheet.create({
   },
   toggleText: { fontSize: 14, color: Colors.gray[700], fontWeight: '500' },
 
+  inlineActionText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.primary[500],
+  },
+
   // OTP
   otpCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1.5,
-    borderColor: Colors.gray[200],
+    marginTop: 4,
   },
   otpLabel: {
     fontSize: 13,
     fontWeight: '600',
     color: Colors.gray[600],
-    marginBottom: 12,
-    letterSpacing: 0.2,
-    textTransform: 'uppercase',
+    marginBottom: 8,
   },
-  otpRow: { flexDirection: 'row', gap: 12 },
+  otpRow: { flexDirection: 'row', gap: 10 },
   otpInput: {
     flex: 1,
-    height: 54,
-    backgroundColor: Colors.gray[50],
-    borderRadius: 12,
-    borderWidth: 1.5,
+    height: 48,
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
+    borderWidth: 1,
     borderColor: Colors.gray[200],
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '700',
     textAlign: 'center',
-    letterSpacing: 6,
+    letterSpacing: 4,
     color: Colors.gray[900],
   },
   otpInputVerified: {
@@ -216,16 +204,16 @@ export const styles = StyleSheet.create({
     backgroundColor: Colors.success[50],
   },
   verifyButton: {
-    paddingHorizontal: 24,
-    height: 54,
+    paddingHorizontal: 18,
+    height: 48,
     backgroundColor: Colors.primary[500],
-    borderRadius: 12,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
   verifyButtonSuccess: { backgroundColor: Colors.success[500] },
   verifyButtonText: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  otpHint: { fontSize: 12, color: Colors.gray[400], marginTop: 10 },
+  otpHint: { fontSize: 12, color: Colors.gray[400], marginTop: 6 },
 
   // Picker
   pickerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
@@ -253,11 +241,11 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
     borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderWidth: 1.5,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    borderWidth: 1,
     borderColor: Colors.gray[200],
   },
   dropdownText: { fontSize: 15, color: Colors.gray[800] },
@@ -310,6 +298,20 @@ export const styles = StyleSheet.create({
 
   // Buttons
   buttonRow: { flexDirection: 'row', gap: 12, marginTop: 24 },
+  /** Cancels primaryButton's flex so it can stand alone in a column. */
+  stackedButton: { flex: 0, marginTop: 8 },
+  loginPrompt: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  loginPromptText: { fontSize: 14, color: Colors.gray[600] },
+  loginPromptLink: {
+    fontSize: 14,
+    color: Colors.primary[600],
+    fontWeight: '700',
+  },
   secondaryButton: {
     flex: 1,
     flexDirection: 'row',

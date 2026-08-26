@@ -32,7 +32,8 @@ import {
   Eye,
   CalendarRange,
   ClipboardEdit,
-  Megaphone,
+  Mail,
+  MessageSquare,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
 import { ROUTES } from '@/constants/app-config';
@@ -133,10 +134,16 @@ export const adminSidebarConfig: SidebarSection[] = [
     title: 'COMMUNICATION',
     items: [
       {
-        id: 'announcements',
-        label: 'Announcements',
-        icon: Megaphone,
-        path: ROUTES.ANNOUNCEMENTS,
+        id: 'announcements-email',
+        label: 'Email Announcements',
+        icon: Mail,
+        path: ROUTES.ANNOUNCEMENTS_EMAIL,
+      },
+      {
+        id: 'announcements-sms',
+        label: 'SMS Announcements',
+        icon: MessageSquare,
+        path: ROUTES.ANNOUNCEMENTS_SMS,
       },
     ],
   },

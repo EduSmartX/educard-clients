@@ -115,6 +115,9 @@ export interface ExamSession {
   start_date: string;
   end_date: string;
   description: string;
+  exam_count?: number;
+  published_exam_count?: number;
+  is_fully_published?: boolean;
 }
 
 export interface ExamResult {
@@ -290,8 +293,8 @@ export async function fetchExamSessionDetail(
   return res.data.data;
 }
 
-export async function fetchFeeSummary(): Promise<FeeSummary> {
-  const res = await apiClient.get<ApiResponse<FeeSummary>>(
+export async function fetchFeeSummary(): Promise<FeeSummary | null> {
+  const res = await apiClient.get<ApiResponse<FeeSummary | null>>(
     API_ENDPOINTS.STUDENT_PORTAL.FEE.SUMMARY,
   );
   return res.data.data;

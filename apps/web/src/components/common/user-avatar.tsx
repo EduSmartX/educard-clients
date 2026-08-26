@@ -19,6 +19,8 @@ import { cn } from '@/lib/utils';
 interface UserAvatarProps {
   /** Thumbnail URL from backend (relative or absolute) */
   thumbnailUrl?: string | null;
+  /** Full-size original, used by the enlarged view so it stays sharp */
+  fullUrl?: string | null;
   /** Gender for fallback avatar: "male", "female", or other */
   gender?: string | null;
   /** Full name — first letter used as text fallback */
@@ -43,10 +45,11 @@ function getGenderAvatar(gender?: string | null): string {
 }
 
 /** Expanded size of the zoomed circle in pixels */
-const EXPANDED_SIZE = 200;
+const EXPANDED_SIZE = 320;
 
 export function UserAvatar({
   thumbnailUrl,
+  fullUrl,
   gender,
   name,
   className,
@@ -124,6 +127,8 @@ export function UserAvatar({
 
   // Use cached URL if available, otherwise resolved or fallback
   const displayUrl = cachedUrl || resolvedUrl;
+  // Enlarged view prefers the original; the thumbnail would look soft at this size.
+  const expandedUrl = getMediaUrl(fullUrl) || displayUrl;
 
   return (
     <>
@@ -175,7 +180,7 @@ export function UserAvatar({
               }}
             >
               <img
-                src={displayUrl || ''}
+                src={expandedUrl || ''}
                 alt={name || 'Profile photo'}
                 className="h-full w-full object-cover"
               />

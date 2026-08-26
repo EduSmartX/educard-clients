@@ -1,12 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { QueryKeys } from '@/constants';
+import type { AnnouncementFilterParams } from '@/features/announcements/api/announcements-api';
 import { getStudentAnnouncementDetail, getStudentAnnouncements } from './api';
 
-export function useStudentAnnouncements() {
+export function useStudentAnnouncements(filters: AnnouncementFilterParams = {}) {
   return useQuery({
-    queryKey: QueryKeys.STUDENT_PORTAL.ANNOUNCEMENTS_LIST,
-    queryFn: getStudentAnnouncements,
+    queryKey: [...QueryKeys.STUDENT_PORTAL.ANNOUNCEMENTS_LIST, filters],
+    queryFn: () => getStudentAnnouncements(filters),
     staleTime: 2 * 60 * 1000,
+    placeholderData: (previous) => previous,
   });
 }
 

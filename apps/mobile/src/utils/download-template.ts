@@ -6,8 +6,11 @@
 
 /* eslint-disable no-bitwise */
 import { Platform } from 'react-native';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
+
+import { ensureLegacyStorageWritePermission } from '@/lib/permissions';
 
 interface DownloadResult {
   success: boolean;
@@ -63,11 +66,37 @@ export async function downloadAndSaveTemplate(
 
     if (Platform.OS === 'android') {
       try {
-        const downloadPath = `${RNFS.DownloadDirectoryPath}/${fileName}`;
-        await RNFS.copyFile(cachePath, downloadPath);
+        await ensureLegacyStorageWritePermission();
+        // MediaStore is the only route to Downloads for Android 10+.
+        await ReactNativeBlobUtil.MediaCollection.copyToMediaStore(
+          // The native module reads `name`; the shipped typings wrongly say `path`.
+          {
+            name: fileName,
+            parentFolder: '',
+            mimeType: XLSX_MIME,
+          } as unknown as Parameters<
+            typeof ReactNativeBlobUtil.MediaCollection.copyToMediaStore
+          >[0],
+          'Download',
+          cachePath,
+        );
         return {
           success: true,
           message: `Template saved to Downloads folder: ${fileName}`,
+          filePath: `${RNFS.DownloadDirectoryPath}/${fileName}`,
+        };
+      } catch {
+        // Fall through to the app's own folder so the file still lands locally.
+      }
+
+      try {
+        const appDir = `${RNFS.ExternalDirectoryPath}/Downloads`;
+        await RNFS.mkdir(appDir);
+        const downloadPath = `${appDir}/${fileName}`;
+        await RNFS.copyFile(cachePath, downloadPath);
+        return {
+          success: true,
+          message: `Template saved to app storage: ${fileName}`,
           filePath: downloadPath,
         };
       } catch {

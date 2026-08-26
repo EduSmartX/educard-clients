@@ -29,6 +29,7 @@ export interface TeacherSubject {
 
 export interface TeacherUser {
   public_id: string;
+  username?: string | null;
   email: string;
   first_name: string;
   last_name: string;
@@ -51,8 +52,10 @@ export interface Teacher extends AuditFields {
   email: string;
   phone: string;
   gender?: string;
+  is_email_verified?: boolean;
   organization_role?: OrganizationRole | null;
   profile_photo_thumbnail?: string | null;
+  profile_photo_url?: string | null;
   designation: string;
   specialization: string;
   highest_qualification?: string;

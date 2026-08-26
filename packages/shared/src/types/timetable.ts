@@ -232,6 +232,8 @@ export interface ClassTimetableSlot {
   is_break: boolean;
   assignment_type: "subject" | "other";
   subject_name: string | null;
+  /** Period still references a soft-deleted subject. */
+  is_subject_deleted?: boolean;
   coordinator_public_id: string | null;
   coordinator_name: string | null;
   teacher_name: string | null;
@@ -281,6 +283,8 @@ export interface ClassTimetableDateSlot {
   is_break: boolean;
   entry_public_id: string | null;
   subject_name: string | null;
+  /** Period still references a soft-deleted subject. */
+  is_subject_deleted?: boolean;
   teacher_name: string | null;
   room: string;
   is_cancelled: boolean;

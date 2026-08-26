@@ -5,13 +5,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { AlertTriangle, Loader2, Plus, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { useRole } from '@/hooks/use-role';
 import { cn } from '@/lib/utils';
 import { fetchClasses } from '@/features/classes/api/classes-api';
+import { useTeacherManagementContext } from '@/features/leave/hooks/use-teacher-management-context';
 import { useCreateCalendarException, useUpdateCalendarException } from '../hooks';
 import type { CalendarException, CalendarExceptionCreate, OverrideType } from '../types';
 import { ExceptionFormContent } from './exception-form-content';
@@ -181,6 +183,8 @@ export function ExceptionDialog({
   onSuccess,
 }: ExceptionDialogProps) {
   const isEditMode = !!exception;
+  const { isAdmin } = useRole();
+  const isClassScopedOnly = !isAdmin;
 
   // Form refs for focus management
   const dateContainerRef = useRef<HTMLDivElement>(null);
@@ -194,23 +198,41 @@ export function ExceptionDialog({
     exception?.override_type || 'FORCE_WORKING'
   );
   const [reason, setReason] = useState(exception?.reason || '');
-  const [isAllClasses, setIsAllClasses] = useState(exception?.is_applicable_to_all_classes ?? true);
-  const [isAllTeachers, setIsAllTeachers] = useState(
-    exception?.is_applicable_to_all_teachers ?? true
+  const [isAllClasses, setIsAllClasses] = useState(
+    isClassScopedOnly ? false : (exception?.is_applicable_to_all_classes ?? true)
   );
-  const [selectedClasses, setSelectedClasses] = useState<string[]>(exception?.classes || []);
+  const [isAllTeachers, setIsAllTeachers] = useState(
+    isClassScopedOnly ? false : (exception?.is_applicable_to_all_teachers ?? true)
+  );
+  const [selectedClasses, setSelectedClasses] = useState<string[]>(() =>
+    (exception?.classes ?? []).map((cls) => cls.public_id)
+  );
 
   // Validation state
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Fetch classes - Only fetch when dialog is open
-  const { data: classesData, isLoading: isLoadingClasses } = useQuery({
+  const { data: classesData, isLoading: isLoadingAllClasses } = useQuery({
     queryKey: ['classes', 'all'],
     queryFn: () => fetchClasses({ page_size: 1000 }),
-    enabled: open, // Only fetch when dialog is open
+    enabled: open && !isClassScopedOnly,
   });
 
-  const classes = classesData?.data || [];
+  const { data: teacherContext, isLoading: isLoadingTeacherContext } =
+    useTeacherManagementContext();
+
+  const teacherClasses = useMemo(
+    () =>
+      (teacherContext?.class_teacher_for ?? []).map((cls) => ({
+        public_id: cls.public_id,
+        name: cls.name,
+        class_master: cls.class_master ? { name: cls.class_master } : null,
+      })),
+    [teacherContext]
+  );
+
+  const classes = isClassScopedOnly ? teacherClasses : classesData?.data || [];
+  const isLoadingClasses = isClassScopedOnly ? isLoadingTeacherContext : isLoadingAllClasses;
 
   // Reset form when dialog closes or exception changes
   useEffect(() => {
@@ -220,11 +242,13 @@ export function ExceptionDialog({
     setDate(exception ? new Date(exception.date) : undefined);
     setOverrideType(exception?.override_type || 'FORCE_WORKING');
     setReason(exception?.reason || '');
-    setIsAllClasses(exception?.is_applicable_to_all_classes ?? true);
-    setIsAllTeachers(exception?.is_applicable_to_all_teachers ?? true);
-    setSelectedClasses(exception?.classes || []);
+    setIsAllClasses(isClassScopedOnly ? false : (exception?.is_applicable_to_all_classes ?? true));
+    setIsAllTeachers(
+      isClassScopedOnly ? false : (exception?.is_applicable_to_all_teachers ?? true)
+    );
+    setSelectedClasses((exception?.classes ?? []).map((cls) => cls.public_id));
     setErrors({});
-  }, [open, exception]);
+  }, [open, exception, isClassScopedOnly]);
 
   // Create mutation
   const createMutation = useCreateCalendarException({
@@ -258,7 +282,12 @@ export function ExceptionDialog({
 
   // Validation
   const validate = (): boolean => {
-    const newErrors = validateExceptionForm(date, reason, isAllClasses, selectedClasses);
+    const newErrors = validateExceptionForm(
+      date,
+      reason,
+      !isClassScopedOnly && isAllClasses,
+      selectedClasses
+    );
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
       focusFirstErrorField(newErrors, dateContainerRef, reasonInputRef);
@@ -277,9 +306,9 @@ export function ExceptionDialog({
       date: format(date ?? new Date(), 'yyyy-MM-dd'),
       override_type: overrideType,
       reason: reason.trim(),
-      is_applicable_to_all_classes: isAllClasses,
-      is_applicable_to_all_teachers: isAllTeachers,
-      classes: isAllClasses ? [] : selectedClasses,
+      is_applicable_to_all_classes: isClassScopedOnly ? false : isAllClasses,
+      is_applicable_to_all_teachers: isClassScopedOnly ? false : isAllTeachers,
+      classes: !isClassScopedOnly && isAllClasses ? [] : selectedClasses,
     };
 
     if (isEditMode) {
@@ -340,6 +369,7 @@ export function ExceptionDialog({
           setIsAllClasses={setIsAllClasses}
           isAllTeachers={isAllTeachers}
           setIsAllTeachers={setIsAllTeachers}
+          showScopeOptions={!isClassScopedOnly}
           setSelectedClasses={setSelectedClasses}
           errors={errors}
           setErrors={setErrors}

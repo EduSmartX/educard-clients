@@ -3,11 +3,16 @@
  * Displays the table with filtering, search, and pagination capabilities
  */
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import type { PaginationInfo } from '@/components/ui/data-table';
 import type { FilterField } from '@/components/filters/resource-filter';
 import { ResourceListLayout } from '@/components/common/resource-list-layout';
+import { ErrorMessages, SuccessMessages } from '@/constants';
+import { getErrorMessage } from '@/lib/utils/error-handler';
 import type { Teacher } from '../types';
+import { resendTeacherVerification } from '../api/teachers-api';
 import { createTeacherListColumns } from './teacher-list-columns';
 import { BulkUploadTeachersDialog } from './bulk-upload-dialog';
 
@@ -47,6 +52,16 @@ export function TeachersList({
   viewMode = 'admin',
 }: Readonly<TeachersListProps>) {
   const isEmployeeView = viewMode === 'employee';
+  const [resendingPublicId, setResendingPublicId] = useState<string | null>(null);
+
+  const resendVerification = useMutation({
+    mutationFn: (teacher: Teacher) => resendTeacherVerification(teacher.public_id),
+    onMutate: (teacher: Teacher) => setResendingPublicId(teacher.public_id),
+    onSuccess: () => toast.success(SuccessMessages.TEACHER.VERIFICATION_LINK_SENT),
+    onError: (error) =>
+      toast.error(getErrorMessage(error, ErrorMessages.TEACHER.RESEND_VERIFICATION_FAILED)),
+    onSettled: () => setResendingPublicId(null),
+  });
 
   const filterFields: FilterField[] = useMemo(() => {
     const designations = Array.from(
@@ -89,6 +104,8 @@ export function TeachersList({
     onView,
     onEdit,
     onDelete,
+    onResendVerification: isEmployeeView ? undefined : resendVerification.mutate,
+    resendingPublicId,
     isDeletedView: showDeleted,
     viewMode,
   });

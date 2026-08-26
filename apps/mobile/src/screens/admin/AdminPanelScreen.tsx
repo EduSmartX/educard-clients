@@ -11,6 +11,7 @@ import {
   SlidersHorizontal,
   IndianRupee,
   Scale,
+  Megaphone,
 } from 'lucide-react-native';
 
 import {
@@ -74,6 +75,14 @@ const adminItems: AdminPanelItem[] = [
     icon: IndianRupee,
     gradient: ['#059669', '#10b981'],
     screen: 'FeeDashboard',
+  },
+  {
+    id: 'announcements',
+    title: 'Announcements',
+    subtitle: 'Share updates',
+    icon: Megaphone,
+    gradient: ['#d946ef', '#f0abfc'],
+    screen: 'Announcements',
   },
   {
     id: 'preferences',

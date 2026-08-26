@@ -17,9 +17,9 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { SearchableSelect } from '@/components/ui';
+import { FormDatePicker } from '@/components/forms/FormDatePicker';
 import { LinearGradient } from '@/lib/linear-gradient';
 
 // ── Color palette for chips ──────────────────────────────────────
@@ -46,9 +46,10 @@ export interface FilterOption {
 export interface FilterField {
   name: string;
   label: string;
-  type: 'select' | 'toggle';
+  type: 'select' | 'toggle' | 'date';
   options?: FilterOption[];
   icon?: string; // emoji for section header
+  placeholder?: string;
 }
 
 interface FilterModalProps {
@@ -102,6 +103,7 @@ export function FilterModal({
 
   const handleReset = () => {
     setLocalFilters({});
+    onApply({});
   };
 
   const handleApply = () => {
@@ -159,11 +161,7 @@ export function FilterModal({
 
             if (field.type === 'toggle') {
               return (
-                <Animated.View
-                  key={field.name}
-                  entering={FadeInDown.delay(sectionIdx * 80)}
-                  style={styles.toggleSection}
-                >
+                <View key={field.name} style={styles.toggleSection}>
                   <Text style={styles.toggleLabel}>
                     {field.icon ? `${field.icon}  ` : ''}
                     {field.label}
@@ -176,7 +174,22 @@ export function FilterModal({
                       localFilters[field.name] ? '#7c3aed' : '#94a3b8'
                     }
                   />
-                </Animated.View>
+                </View>
+              );
+            }
+
+            if (field.type === 'date') {
+              return (
+                <View key={field.name} style={styles.section}>
+                  <FormDatePicker
+                    label={`${field.icon ? `${field.icon}  ` : ''}${field.label}`}
+                    value={(localFilters[field.name] as string) ?? ''}
+                    onChange={v =>
+                      setLocalFilters(prev => ({ ...prev, [field.name]: v }))
+                    }
+                    placeholder={field.placeholder}
+                  />
+                </View>
               );
             }
 
@@ -184,13 +197,8 @@ export function FilterModal({
             const selectOptions = (field.options ?? []).filter(
               o => o.value !== '',
             );
-
             return (
-              <Animated.View
-                key={field.name}
-                entering={FadeInDown.delay(sectionIdx * 80)}
-                style={styles.section}
-              >
+              <View key={field.name} style={styles.section}>
                 <Text style={styles.sectionTitle}>
                   {field.icon ? `${field.icon}  ` : ''}
                   {field.label}
@@ -244,7 +252,7 @@ export function FilterModal({
                     })}
                   </View>
                 )}
-              </Animated.View>
+              </View>
             );
           })}
         </ScrollView>

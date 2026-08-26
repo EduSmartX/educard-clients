@@ -4,6 +4,7 @@ import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { useAuthStore } from '@/lib/auth-store';
+import { requestStartupPermissions } from '@/lib/permissions';
 import ForcePasswordChangeScreen from '@/screens/auth/ForcePasswordChangeScreen';
 
 import { AuthNavigator } from './AuthNavigator';
@@ -36,6 +37,10 @@ export function RootNavigator() {
   useEffect(() => {
     initialize();
   }, [initialize]);
+
+  useEffect(() => {
+    void requestStartupPermissions();
+  }, []);
 
   if (!isInitialized) {
     return (

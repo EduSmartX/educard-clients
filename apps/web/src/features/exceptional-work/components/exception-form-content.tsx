@@ -22,6 +22,7 @@ interface ExceptionFormContentProps {
   setIsAllClasses: (v: boolean) => void;
   isAllTeachers: boolean;
   setIsAllTeachers: (v: boolean) => void;
+  showScopeOptions: boolean;
   setSelectedClasses: (v: string[]) => void;
   errors: Record<string, string>;
   setErrors: (fn: (prev: Record<string, string>) => Record<string, string>) => void;
@@ -41,6 +42,7 @@ export function ExceptionFormContent({
   setIsAllClasses,
   isAllTeachers,
   setIsAllTeachers,
+  showScopeOptions,
   setSelectedClasses,
   errors,
   setErrors,
@@ -48,6 +50,10 @@ export function ExceptionFormContent({
   reasonInputRef,
   classSelectorNode,
 }: ExceptionFormContentProps) {
+  const showClassSelector = !showScopeOptions || !isAllClasses;
+  const classStep = showScopeOptions ? 5 : 3;
+  const reasonStep = showClassSelector ? classStep + 1 : classStep;
+
   return (
     <div className="flex-1 space-y-6 overflow-y-auto bg-white p-6 sm:p-8">
       {/* Step 1: Date Picker */}
@@ -79,70 +85,78 @@ export function ExceptionFormContent({
       </div>
 
       {/* Step 3: Apply to All Classes Toggle */}
-      <div className="space-y-3">
-        <StepHeader
-          step={3}
-          title="Applicable To"
-          description="Choose which classes this applies to"
-        />
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <ClassToggleButton
-            label="All Classes"
-            description="Apply to all classes in the organization"
-            isActive={isAllClasses}
-            onClick={() => {
-              setIsAllClasses(true);
-              setSelectedClasses([]);
-              setErrors((prev) => ({ ...prev, classes: '' }));
-            }}
-          />
-          <ClassToggleButton
-            label="Specific Classes"
-            description="Select specific classes"
-            isActive={!isAllClasses}
-            onClick={() => setIsAllClasses(false)}
-          />
-        </div>
-      </div>
-
-      {/* Step 4: Apply to All Teachers Toggle */}
-      <div className="space-y-3 pb-4">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <StepBadge step={4} />
-            <div>
-              <Label className="text-base font-semibold">Apply to All Teachers</Label>
-              <p className="text-muted-foreground text-xs">
-                Include this exception for teacher/employee attendance
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsAllTeachers(!isAllTeachers)}
-            className={cn(
-              'relative inline-flex h-7 w-12 flex-shrink-0 items-center rounded-full transition-colors focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:outline-none',
-              isAllTeachers ? 'bg-purple-600' : 'bg-gray-300'
-            )}
-          >
-            <span
-              className={cn(
-                'inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform',
-                isAllTeachers ? 'translate-x-6' : 'translate-x-1'
-              )}
-            />
-          </button>
-        </div>
-      </div>
-
-      {/* Step 5: Class Selection (only if not all classes) */}
-      {!isAllClasses && (
+      {showScopeOptions && (
         <div className="space-y-3">
           <StepHeader
-            step={5}
+            step={3}
+            title="Applicable To"
+            description="Choose which classes this applies to"
+          />
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <ClassToggleButton
+              label="All Classes"
+              description="Apply to all classes in the organization"
+              isActive={isAllClasses}
+              onClick={() => {
+                setIsAllClasses(true);
+                setSelectedClasses([]);
+                setErrors((prev) => ({ ...prev, classes: '' }));
+              }}
+            />
+            <ClassToggleButton
+              label="Specific Classes"
+              description="Select specific classes"
+              isActive={!isAllClasses}
+              onClick={() => setIsAllClasses(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Step 4: Apply to All Teachers Toggle */}
+      {showScopeOptions && (
+        <div className="space-y-3 pb-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <StepBadge step={4} />
+              <div>
+                <Label className="text-base font-semibold">Apply to All Teachers</Label>
+                <p className="text-muted-foreground text-xs">
+                  Include this exception for teacher/employee attendance
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsAllTeachers(!isAllTeachers)}
+              className={cn(
+                'relative inline-flex h-7 w-12 flex-shrink-0 items-center rounded-full transition-colors focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:outline-none',
+                isAllTeachers ? 'bg-purple-600' : 'bg-gray-300'
+              )}
+            >
+              <span
+                className={cn(
+                  'inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform',
+                  isAllTeachers ? 'translate-x-6' : 'translate-x-1'
+                )}
+              />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Class Selection */}
+      {showClassSelector && (
+        <div className="space-y-3">
+          <StepHeader
+            step={classStep}
             title="Select Classes"
             required
-            description="Choose the classes for this exception"
+            description={
+              showScopeOptions
+                ? 'Choose the classes for this exception'
+                : 'Only classes where you are the class teacher are listed'
+            }
           />
           {classSelectorNode}
         </div>
@@ -151,7 +165,7 @@ export function ExceptionFormContent({
       {/* Step: Reason */}
       <div className="space-y-3">
         <StepHeader
-          step={isAllClasses ? 5 : 6}
+          step={reasonStep}
           title="Reason"
           required
           description="Explain why this exception is needed"

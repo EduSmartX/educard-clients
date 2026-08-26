@@ -15,6 +15,7 @@ import {
   View,
   StyleSheet,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // --- Base Modal Wrapper ---
 
@@ -33,6 +34,7 @@ function BaseSelectionModal({
   children,
   footer,
 }: Readonly<BaseSelectionModalProps>) {
+  const insets = useSafeAreaInsets();
   return (
     <Modal
       visible={visible}
@@ -41,7 +43,10 @@ function BaseSelectionModal({
       onRequestClose={onClose}
     >
       <Pressable style={styles.modalOverlay} onPress={onClose}>
-        <Pressable style={styles.modalSheet} onPress={e => e.stopPropagation()}>
+        <Pressable
+          style={[styles.modalSheet, { paddingBottom: insets.bottom + 16 }]}
+          onPress={e => e.stopPropagation()}
+        >
           <View style={styles.modalHandle} />
           <Text style={styles.modalTitle}>{title}</Text>
           <ScrollView style={styles.modalList}>{children}</ScrollView>

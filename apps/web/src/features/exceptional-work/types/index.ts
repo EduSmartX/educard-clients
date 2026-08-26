@@ -4,6 +4,12 @@
 
 export type OverrideType = 'FORCE_WORKING' | 'FORCE_HOLIDAY';
 
+/** Read responses nest the class; writes still take bare public_ids. */
+export interface CalendarExceptionClass {
+  public_id: string;
+  display_name: string;
+}
+
 export interface CalendarException {
   public_id: string;
   organization?: string;
@@ -12,7 +18,7 @@ export interface CalendarException {
   reason: string;
   is_applicable_to_all_classes: boolean;
   is_applicable_to_all_teachers: boolean;
-  classes: string[]; // Array of class public_ids
+  classes: CalendarExceptionClass[];
   created_at: string;
   updated_at: string;
   created_by?: string;

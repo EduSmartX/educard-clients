@@ -1,14 +1,23 @@
-import { Colors, SIGNUP_STEP_LABELS } from '@educard/shared';
+import { Colors } from '@educard/shared';
 import { CheckCircle2 } from 'lucide-react-native';
 import React from 'react';
 import { View, Text } from 'react-native';
 
 import { styles } from './signup-styles';
 
+// Mobile merges email entry and OTP verification, so it has one step fewer than web.
+const STEP_LABELS = ['Verify', 'Details', 'Finish'] as const;
+
+export const SIGNUP_STEP_HEADINGS = [
+  'Email Verification',
+  'Organization Details',
+  'Administrator Setup',
+] as const;
+
 export function ProgressSteps({ currentStep }: { currentStep: number }) {
   return (
     <View style={styles.progressContainer}>
-      {SIGNUP_STEP_LABELS.map((title, idx) => {
+      {STEP_LABELS.map((title, idx) => {
         const step = idx + 1;
         const isCompleted = step < currentStep;
         const isCurrent = step === currentStep;
@@ -42,7 +51,7 @@ export function ProgressSteps({ currentStep }: { currentStep: number }) {
                 {title}
               </Text>
             </View>
-            {idx < 3 && (
+            {idx < STEP_LABELS.length - 1 && (
               <View
                 style={[
                   styles.stepLine,

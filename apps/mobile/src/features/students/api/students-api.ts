@@ -28,6 +28,10 @@ export interface StudentQueryParams {
   ordering?: string;
   is_active?: boolean;
   embed_images?: boolean;
+  user__gender?: string;
+  admission_date_from?: string;
+  admission_date_to?: string;
+  is_deleted?: boolean;
 }
 
 export async function getStudents(
@@ -202,6 +206,7 @@ export async function exportStudentsData(
 
 export interface ResetClassPasswordsPayload {
   new_password: string;
+  confirm_password: string;
 }
 
 export async function resetClassPasswords(

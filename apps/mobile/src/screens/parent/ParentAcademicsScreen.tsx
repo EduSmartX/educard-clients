@@ -15,6 +15,7 @@ import Animated, { ZoomIn } from 'react-native-reanimated';
 
 import { Screen } from '@/components/layout';
 import { ScreenHeader } from '@/components/ui';
+import { useResponsive } from '@/hooks/useResponsive';
 import { useAuthStore } from '@/lib/auth-store';
 import { LinearGradient } from '@/lib/linear-gradient';
 import type { SharedStackNavigation } from '@/navigation/types';
@@ -22,6 +23,7 @@ import type { SharedStackNavigation } from '@/navigation/types';
 import {
   ACADEMIC_GRADIENTS,
   ACADEMIC_SUBTITLES,
+  STUDENT_EXTRA_TABS,
   TABS,
   type Tab,
 } from './academics/academics-constants';
@@ -33,6 +35,9 @@ import { TimetableSection } from './academics/TimetableSection';
 export default function ParentAcademicsScreen() {
   const navigation = useNavigation<SharedStackNavigation>();
   const isStudent = useAuthStore(s => s.user?.role) === 'student';
+  const tabs = isStudent ? [...TABS, ...STUDENT_EXTRA_TABS] : TABS;
+  const { gridColumns } = useResponsive();
+  const colWidth = gridColumns === 4 ? '25%' : '33.33%';
 
   return (
     <Screen safeArea={false} statusBarStyle="light" backgroundColor="#f0fdf4">
@@ -57,7 +62,7 @@ export default function ParentAcademicsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={menuStyles.grid}>
-          {TABS.map((tab, index) => {
+          {tabs.map((tab, index) => {
             const Icon = tab.icon;
             return (
               <Animated.View
@@ -65,26 +70,37 @@ export default function ParentAcademicsScreen() {
                 entering={ZoomIn.delay(index * 70)
                   .springify()
                   .damping(13)}
-                style={menuStyles.gridItem}
+                style={[menuStyles.gridItem, { width: colWidth }]}
               >
                 <TouchableOpacity
                   style={menuStyles.iconCard}
-                  onPress={() =>
+                  onPress={() => {
+                    if (tab.key === 'announcements') {
+                      navigation.navigate('Announcements');
+                      return;
+                    }
+                    if (tab.key === 'holidays') {
+                      navigation.navigate('Holidays');
+                      return;
+                    }
+                    if (tab.key === 'exceptional-work') {
+                      navigation.navigate('ExceptionalWork');
+                      return;
+                    }
                     navigation.navigate('StudentAcademicsTask', {
                       task: tab.key,
-                    })
-                  }
+                    });
+                  }}
                   activeOpacity={0.8}
                 >
                   <LinearGradient
                     colors={ACADEMIC_GRADIENTS[tab.key]}
                     style={menuStyles.iconCircle}
                   >
-                    <Icon size={28} color="#fff" strokeWidth={2} />
+                    <Icon size={24} color="#fff" strokeWidth={2} />
                   </LinearGradient>
-                  <Text style={menuStyles.iconLabel}>{tab.label}</Text>
-                  <Text style={menuStyles.iconSubtitle}>
-                    {ACADEMIC_SUBTITLES[tab.key]}
+                  <Text style={menuStyles.iconLabel} numberOfLines={2}>
+                    {tab.label}
                   </Text>
                 </TouchableOpacity>
               </Animated.View>
@@ -118,9 +134,9 @@ export function ParentAcademicsTaskScreen({
 const menuStyles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 32 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -6 },
-  gridItem: { width: '33.33%', padding: 5 },
+  gridItem: { padding: 6 },
   iconCard: {
-    minHeight: 142,
+    minHeight: 140,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 8,
@@ -134,19 +150,18 @@ const menuStyles = StyleSheet.create({
     elevation: 3,
   },
   iconCircle: {
-    width: 52,
-    height: 52,
+    width: 56,
+    height: 56,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
   },
-  iconLabel: { fontSize: 13, fontWeight: '700', color: '#1f2937' },
-  iconSubtitle: {
-    marginTop: 5,
-    fontSize: 10,
-    lineHeight: 14,
-    color: '#64748b',
+  iconLabel: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '600',
+    color: '#1f2937',
     textAlign: 'center',
   },
 });

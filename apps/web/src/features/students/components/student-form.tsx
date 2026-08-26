@@ -492,6 +492,17 @@ export function StudentForm({
                       disabled={isViewMode || !isClassSelected}
                       validationType="phone"
                     />
+                    {isViewMode && !!initialData?.user_info?.username && (
+                      <div className="space-y-2">
+                        <Label htmlFor="student-username">Username</Label>
+                        <Input
+                          id="student-username"
+                          value={initialData.user_info.username}
+                          readOnly
+                          disabled
+                        />
+                      </div>
+                    )}
                     <GenderField
                       control={form.control}
                       name="gender"

@@ -1,12 +1,20 @@
 /**
  * AddressForm - Reusable Address Form Component
  *
- * Field-level address form (Street, City, State, ZIP, Country) with optional
- * address line 2. Location auto-fill is deferred to the permissions/location
- * migration track and intentionally omitted here.
+ * Fields cascade from the broadest value to the narrowest (Country -> State ->
+ * City -> Street), so the country decides how State and City are captured: for
+ * India they become searchable pickers backed by the bundled state/district
+ * data, everywhere else they stay free text.
  */
 
-import { Colors } from '@educard/shared';
+import {
+  Colors,
+  COUNTRY_OPTIONS,
+  INDIA_COUNTRY_NAME,
+  INDIA_STATE_NAMES,
+  getIndiaDistricts,
+  isIndia,
+} from '@educard/shared';
 import {
   MapPin,
   Home,
@@ -14,11 +22,27 @@ import {
   MapPinned,
   Hash,
   Globe,
+  ChevronDown,
+  ChevronUp,
+  Crosshair,
 } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  StyleSheet,
+} from 'react-native';
 
-import { useResponsive } from '@/hooks/useResponsive';
+import { SearchableSelect } from '@/components/ui/SearchableSelect';
+import {
+  fetchCurrentAddress,
+  isLocationLookupEnabled,
+  LOCATION_PERMISSION_DENIED,
+  type ResolvedAddress,
+} from '@/lib/location';
 
 // Address data structure
 export interface AddressData {
@@ -46,11 +70,20 @@ interface AddressFormProps {
   errors?: AddressErrors;
   required?: boolean;
   showHeader?: boolean;
-  showLocationButton?: boolean;
   compact?: boolean;
   disabled?: boolean;
-  onLocationFetched?: (address: Partial<AddressData>) => void;
+  /** Renders an "Address (Optional)" row that expands and collapses the fields. */
+  collapsible?: boolean;
+  defaultExpanded?: boolean;
 }
+
+const toOptions = (choices: readonly string[]) =>
+  choices.map(choice => ({ value: choice, label: choice }));
+
+/** Google's spelling only fills a picker if it matches an option exactly. */
+const matchOption = (choices: readonly string[], value: string) =>
+  choices.find(choice => choice.toLowerCase() === value.trim().toLowerCase()) ??
+  '';
 
 export function AddressForm({
   values,
@@ -60,13 +93,31 @@ export function AddressForm({
   showHeader = true,
   compact: _compact = false,
   disabled = false,
+  collapsible = false,
+  defaultExpanded = false,
 }: AddressFormProps) {
   const [focusedField, setFocusedField] = useState<string | null>(null);
-  const { width } = useResponsive();
-  const useTwoColumnRows = width >= 400;
+  const [expanded, setExpanded] = useState(!collapsible || defaultExpanded);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
-  // Render individual input field
-  const renderField = (
+  const countryIsIndia = isIndia(values.country ?? '');
+  const districts = countryIsIndia ? getIndiaDistricts(values.state ?? '') : [];
+
+  const iconColor = (field: keyof AddressData) =>
+    focusedField === field ? Colors.primary[500] : Colors.gray[400];
+
+  const renderLabel = (label: string, optional: boolean) => (
+    <View style={styles.labelRow}>
+      <Text style={styles.label}>
+        {label}
+        {required && !optional && <Text style={styles.required}> *</Text>}
+      </Text>
+      {optional && <Text style={styles.optionalTag}>Optional</Text>}
+    </View>
+  );
+
+  const renderTextField = (
     field: keyof AddressData,
     label: string,
     placeholder: string,
@@ -75,24 +126,15 @@ export function AddressForm({
       optional?: boolean;
       keyboardType?: 'default' | 'numeric' | 'email-address';
       autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
-      halfWidth?: boolean;
+      maxLength?: number;
     },
   ) => {
     const isFocused = focusedField === field;
     const hasError = !!errors[field];
-    const isOptional = options?.optional ?? false;
 
     return (
-      <View
-        style={[styles.fieldContainer, options?.halfWidth && styles.halfWidth]}
-      >
-        <View style={styles.labelRow}>
-          <Text style={styles.label}>
-            {label}
-            {required && !isOptional && <Text style={styles.required}> *</Text>}
-          </Text>
-          {isOptional && <Text style={styles.optionalTag}>Optional</Text>}
-        </View>
+      <View style={styles.fieldContainer}>
+        {renderLabel(label, options?.optional ?? false)}
         <View
           style={[
             styles.inputContainer,
@@ -115,6 +157,7 @@ export function AddressForm({
             editable={!disabled}
             keyboardType={options?.keyboardType ?? 'default'}
             autoCapitalize={options?.autoCapitalize ?? 'words'}
+            maxLength={options?.maxLength}
           />
         </View>
         {hasError && <Text style={styles.errorText}>{errors[field]}</Text>}
@@ -122,13 +165,212 @@ export function AddressForm({
     );
   };
 
+  const renderSelectField = (
+    field: keyof AddressData,
+    label: string,
+    choices: readonly string[],
+    placeholder: string,
+    onSelect: (value: string) => void,
+    isDisabled = false,
+  ) => (
+    <View style={styles.fieldContainer}>
+      {renderLabel(label, false)}
+      <SearchableSelect
+        options={toOptions(choices)}
+        value={values[field] ?? ''}
+        onValueChange={onSelect}
+        title={label}
+        placeholder={placeholder}
+        searchPlaceholder={`Search ${label.toLowerCase()}...`}
+        disabled={disabled || isDisabled}
+      />
+      {!!errors[field] && <Text style={styles.errorText}>{errors[field]}</Text>}
+    </View>
+  );
+
+  // Narrower values stop matching once a broader one changes.
+  const handleCountryChange = (country: string) => {
+    onChange('country', country);
+    onChange('state', '');
+    onChange('city', '');
+  };
+
+  const handleStateChange = (state: string) => {
+    onChange('state', state);
+    onChange('city', '');
+  };
+
+  const applyResolvedAddress = (resolved: ResolvedAddress) => {
+    const country = isIndia(resolved.country)
+      ? INDIA_COUNTRY_NAME
+      : resolved.country;
+    onChange('country', country);
+
+    if (isIndia(country)) {
+      const state = matchOption(INDIA_STATE_NAMES, resolved.state);
+      onChange('state', state);
+      onChange(
+        'city',
+        state ? matchOption(getIndiaDistricts(state), resolved.city) : '',
+      );
+    } else {
+      onChange('state', resolved.state);
+      onChange('city', resolved.city);
+    }
+
+    onChange('streetAddress', resolved.streetAddress);
+    onChange('zipCode', resolved.zipCode);
+    // No backend column for mandal yet, so it lands in the free-text area line.
+    if (resolved.mandal) {
+      onChange('addressLine2', resolved.mandal);
+    }
+  };
+
+  const handleUseLocation = async () => {
+    setLocating(true);
+    setLocationError(null);
+    try {
+      applyResolvedAddress(await fetchCurrentAddress());
+      setExpanded(true);
+    } catch (error) {
+      // Autofill is a convenience: surface a hint and leave the fields editable.
+      const denied =
+        error instanceof Error && error.message === LOCATION_PERMISSION_DENIED;
+      setLocationError(
+        denied
+          ? 'Location permission denied. Please enter the address manually.'
+          : 'Could not detect your location. Please enter the address manually.',
+      );
+      setExpanded(true);
+    } finally {
+      setLocating(false);
+    }
+  };
+
+  const locationButton = isLocationLookupEnabled ? (
+    <View>
+      <TouchableOpacity
+        style={styles.locationButton}
+        onPress={() => {
+          handleUseLocation();
+        }}
+        disabled={disabled || locating}
+        activeOpacity={0.7}
+      >
+        {locating ? (
+          <ActivityIndicator size="small" color={Colors.primary[600]} />
+        ) : (
+          <Crosshair size={16} color={Colors.primary[600]} />
+        )}
+        <Text style={styles.locationButtonText}>
+          {locating ? 'Finding your address...' : 'Use my location'}
+        </Text>
+      </TouchableOpacity>
+      {!!locationError && <Text style={styles.errorText}>{locationError}</Text>}
+    </View>
+  ) : null;
+
+  const fields = (
+    <View style={styles.fieldsContainer}>
+      {locationButton}
+      {renderSelectField(
+        'country',
+        'Country',
+        COUNTRY_OPTIONS,
+        'Select country',
+        handleCountryChange,
+      )}
+
+      {countryIsIndia
+        ? renderSelectField(
+            'state',
+            'State',
+            INDIA_STATE_NAMES,
+            'Select state',
+            handleStateChange,
+          )
+        : renderTextField(
+            'state',
+            'State',
+            'State',
+            <MapPin size={18} color={iconColor('state')} />,
+            { autoCapitalize: 'words' },
+          )}
+
+      {countryIsIndia
+        ? renderSelectField(
+            'city',
+            'City / District',
+            districts,
+            values.state ? 'Select district' : 'Select a state first',
+            value => onChange('city', value),
+            !values.state,
+          )
+        : renderTextField(
+            'city',
+            'City',
+            'City',
+            <MapPinned size={18} color={iconColor('city')} />,
+            { autoCapitalize: 'words' },
+          )}
+
+      {renderTextField(
+        'streetAddress',
+        'Street Address',
+        '123 Main Street',
+        <Home size={18} color={iconColor('streetAddress')} />,
+        { autoCapitalize: 'words' },
+      )}
+
+      {renderTextField(
+        'addressLine2',
+        countryIsIndia ? 'Area / Mandal' : 'Address Line 2',
+        countryIsIndia
+          ? 'Area, Mandal or Landmark'
+          : 'Apartment, Suite, Building',
+        <Building2 size={18} color={iconColor('addressLine2')} />,
+        { optional: true, autoCapitalize: 'words' },
+      )}
+
+      {renderTextField(
+        'zipCode',
+        'PIN Code',
+        '123456',
+        <Hash size={18} color={iconColor('zipCode')} />,
+        { keyboardType: 'numeric', maxLength: countryIsIndia ? 6 : 10 },
+      )}
+    </View>
+  );
+
+  if (collapsible) {
+    return (
+      <View style={styles.container}>
+        <TouchableOpacity
+          style={styles.collapseHeader}
+          onPress={() => setExpanded(prev => !prev)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.collapseTitle}>
+            Address <Text style={styles.collapseOptional}>(Optional)</Text>
+          </Text>
+          {expanded ? (
+            <ChevronUp size={20} color={Colors.gray[500]} />
+          ) : (
+            <ChevronDown size={20} color={Colors.gray[500]} />
+          )}
+        </TouchableOpacity>
+        {expanded && fields}
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       {showHeader && (
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <View style={styles.headerIcon}>
-              <MapPin size={20} color={Colors.success[600]} />
+              <Globe size={20} color={Colors.gray[500]} />
             </View>
             <View>
               <Text style={styles.headerTitle}>Address Information</Text>
@@ -141,98 +383,7 @@ export function AddressForm({
           </View>
         </View>
       )}
-
-      <View style={styles.fieldsContainer}>
-        {renderField(
-          'streetAddress',
-          'Street Address',
-          '123 Main Street',
-          <Home
-            size={18}
-            color={
-              focusedField === 'streetAddress'
-                ? Colors.primary[500]
-                : Colors.gray[400]
-            }
-          />,
-          { autoCapitalize: 'words' },
-        )}
-
-        {renderField(
-          'addressLine2',
-          'Address Line 2',
-          'Apartment, Suite, Building',
-          <Building2
-            size={18}
-            color={
-              focusedField === 'addressLine2'
-                ? Colors.primary[500]
-                : Colors.gray[400]
-            }
-          />,
-          { optional: true, autoCapitalize: 'words' },
-        )}
-
-        <View style={[styles.row, !useTwoColumnRows && styles.rowStacked]}>
-          {renderField(
-            'city',
-            'City',
-            'City',
-            <MapPinned
-              size={18}
-              color={
-                focusedField === 'city' ? Colors.primary[500] : Colors.gray[400]
-              }
-            />,
-            { halfWidth: true, autoCapitalize: 'words' },
-          )}
-          {renderField(
-            'state',
-            'State',
-            'State',
-            <MapPin
-              size={18}
-              color={
-                focusedField === 'state'
-                  ? Colors.primary[500]
-                  : Colors.gray[400]
-              }
-            />,
-            { halfWidth: true, autoCapitalize: 'words' },
-          )}
-        </View>
-
-        <View style={[styles.row, !useTwoColumnRows && styles.rowStacked]}>
-          {renderField(
-            'zipCode',
-            'PIN Code',
-            '123456',
-            <Hash
-              size={18}
-              color={
-                focusedField === 'zipCode'
-                  ? Colors.primary[500]
-                  : Colors.gray[400]
-              }
-            />,
-            { halfWidth: true, keyboardType: 'numeric' },
-          )}
-          {renderField(
-            'country',
-            'Country',
-            'India',
-            <Globe
-              size={18}
-              color={
-                focusedField === 'country'
-                  ? Colors.primary[500]
-                  : Colors.gray[400]
-              }
-            />,
-            { halfWidth: true, autoCapitalize: 'words' },
-          )}
-        </View>
-      </View>
+      {fields}
     </View>
   );
 }
@@ -245,10 +396,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: Colors.success[50],
+    backgroundColor: Colors.gray[50],
     borderRadius: 16,
-    borderWidth: 2,
-    borderColor: Colors.success[100],
+    borderWidth: 1,
+    borderColor: Colors.gray[200],
     padding: 14,
   },
   headerLeft: {
@@ -261,36 +412,57 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: Colors.success[100],
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
     fontSize: 14,
-    fontWeight: '700',
-    color: Colors.gray[800],
+    fontWeight: '600',
+    color: Colors.gray[700],
   },
   headerSubtitle: {
     fontSize: 12,
     color: Colors.gray[500],
     marginTop: 2,
   },
+  collapseHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  collapseTitle: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: Colors.gray[700],
+    letterSpacing: 0.1,
+  },
+  collapseOptional: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: Colors.gray[400],
+  },
   fieldsContainer: {
     gap: 16,
   },
-  row: {
+  locationButton: {
     flexDirection: 'row',
-    gap: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.primary[200],
+    backgroundColor: Colors.primary[50],
   },
-  rowStacked: {
-    flexDirection: 'column',
-    gap: 16,
+  locationButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.primary[600],
   },
   fieldContainer: {
-    flex: 1,
-  },
-  halfWidth: {
-    flex: 1,
+    width: '100%',
   },
   labelRow: {
     flexDirection: 'row',
@@ -300,17 +472,16 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '500',
     color: Colors.gray[700],
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
+    letterSpacing: 0.1,
   },
   required: {
     color: '#ef4444',
   },
   optionalTag: {
     fontSize: 10,
-    fontWeight: '500',
+    fontWeight: '400',
     color: Colors.gray[400],
     backgroundColor: Colors.gray[100],
     paddingHorizontal: 8,
@@ -323,17 +494,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.gray[50],
-    borderRadius: 14,
-    borderWidth: 1.5,
+    borderRadius: 12,
+    borderWidth: 1,
     borderColor: Colors.gray[200],
     paddingHorizontal: 12,
-    height: 52,
+    minHeight: 50,
     gap: 10,
   },
   inputFocused: {
     borderColor: Colors.primary[500],
-    backgroundColor: '#fff',
-    borderWidth: 2,
+    backgroundColor: '#ffffff',
+    borderWidth: 1.5,
   },
   inputError: {
     borderColor: '#ef4444',
@@ -344,10 +515,10 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   iconContainer: {
-    width: 32,
-    height: 32,
+    width: 30,
+    height: 30,
     borderRadius: 8,
-    backgroundColor: Colors.gray[100],
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -356,9 +527,9 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 14,
     color: Colors.gray[900],
-    fontWeight: '500',
+    fontWeight: '400',
   },
   errorText: {
     fontSize: 12,

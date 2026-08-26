@@ -9,6 +9,7 @@ export interface CalendarException {
   is_applicable_to_all_teachers: boolean;
   classes?: { public_id: string; display_name: string }[];
   created_at: string;
+  created_by_public_id?: string | null;
 }
 
 export interface CalendarExceptionCreate {
@@ -21,7 +22,8 @@ export interface CalendarExceptionCreate {
 }
 
 export const getCalendarExceptions = async (): Promise<CalendarException[]> => {
-  const response = await apiClient.get('/attendance/admin/calendar-exception/');
+  // Public endpoint: readable by students/parents; the admin one rejects them.
+  const response = await apiClient.get('/attendance/calendar-exception/');
   return (
     response.data.data?.results ||
     response.data.results ||
