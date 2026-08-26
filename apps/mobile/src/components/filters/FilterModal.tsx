@@ -17,7 +17,6 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { SearchableSelect } from '@/components/ui';
 import { FormDatePicker } from '@/components/forms/FormDatePicker';
@@ -162,11 +161,7 @@ export function FilterModal({
 
             if (field.type === 'toggle') {
               return (
-                <Animated.View
-                  key={field.name}
-                  entering={FadeInDown.delay(sectionIdx * 80)}
-                  style={styles.toggleSection}
-                >
+                <View key={field.name} style={styles.toggleSection}>
                   <Text style={styles.toggleLabel}>
                     {field.icon ? `${field.icon}  ` : ''}
                     {field.label}
@@ -179,17 +174,13 @@ export function FilterModal({
                       localFilters[field.name] ? '#7c3aed' : '#94a3b8'
                     }
                   />
-                </Animated.View>
+                </View>
               );
             }
 
             if (field.type === 'date') {
               return (
-                <Animated.View
-                  key={field.name}
-                  entering={FadeInDown.delay(sectionIdx * 80)}
-                  style={styles.section}
-                >
+                <View key={field.name} style={styles.section}>
                   <FormDatePicker
                     label={`${field.icon ? `${field.icon}  ` : ''}${field.label}`}
                     value={(localFilters[field.name] as string) ?? ''}
@@ -198,7 +189,7 @@ export function FilterModal({
                     }
                     placeholder={field.placeholder}
                   />
-                </Animated.View>
+                </View>
               );
             }
 
@@ -207,11 +198,7 @@ export function FilterModal({
               o => o.value !== '',
             );
             return (
-              <Animated.View
-                key={field.name}
-                entering={FadeInDown.delay(sectionIdx * 80)}
-                style={styles.section}
-              >
+              <View key={field.name} style={styles.section}>
                 <Text style={styles.sectionTitle}>
                   {field.icon ? `${field.icon}  ` : ''}
                   {field.label}
@@ -265,7 +252,7 @@ export function FilterModal({
                     })}
                   </View>
                 )}
-              </Animated.View>
+              </View>
             );
           })}
         </ScrollView>

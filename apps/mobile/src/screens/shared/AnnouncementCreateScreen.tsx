@@ -1,4 +1,4 @@
-import { getRoleGradient } from '@educard/shared';
+import { getRoleGradient, API_CONFIG } from '@educard/shared';
 import { useNavigation } from '@react-navigation/native';
 import { ChevronLeft, Send } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
@@ -22,6 +22,7 @@ import {
   ANNOUNCEMENT_DELIVERY_METHODS,
   ANNOUNCEMENT_RECIPIENT_TYPES,
 } from '@/features/announcements/types';
+import { useClasses } from '@/features/classes/hooks/use-classes';
 import { useAuthStore } from '@/lib/auth-store';
 import { LinearGradient } from '@/lib/linear-gradient';
 import type { SharedStackNavigation } from '@/navigation/types';
@@ -45,6 +46,10 @@ const BASE_RECIPIENT_OPTIONS: Array<{
   { value: ANNOUNCEMENT_RECIPIENT_TYPES.ALL_STUDENTS, label: 'All students' },
   { value: ANNOUNCEMENT_RECIPIENT_TYPES.ALL_TEACHERS, label: 'All teachers' },
   { value: ANNOUNCEMENT_RECIPIENT_TYPES.ALL_PARENTS, label: 'All parents' },
+  {
+    value: ANNOUNCEMENT_RECIPIENT_TYPES.SPECIFIC_CLASSES,
+    label: 'Specific classes',
+  },
 ];
 
 // A manual email list resolves to zero phone recipients, so it is email-only.
@@ -71,6 +76,29 @@ export default function AnnouncementCreateScreen() {
   const [eventDate, setEventDate] = useState('');
   const [eventNote, setEventNote] = useState('');
   const [manualEmails, setManualEmails] = useState('');
+  const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
+
+  const isSpecificClasses =
+    recipient === ANNOUNCEMENT_RECIPIENT_TYPES.SPECIFIC_CLASSES;
+  const { data: classesData, isLoading: isLoadingClasses } = useClasses({
+    page_size: API_CONFIG.DROPDOWN_PAGE_SIZE,
+  });
+  const classOptions = useMemo(
+    () =>
+      (classesData?.classes ?? []).map(cls => ({
+        value: cls.public_id,
+        label: `${cls.class_master?.name ?? ''} - ${cls.name}`.trim(),
+      })),
+    [classesData?.classes],
+  );
+
+  const toggleClass = (classId: string) => {
+    setSelectedClassIds(prev =>
+      prev.includes(classId)
+        ? prev.filter(id => id !== classId)
+        : [...prev, classId],
+    );
+  };
 
   const isSms = delivery === ANNOUNCEMENT_DELIVERY_METHODS.SMS;
   const recipientOptions = isSms
@@ -118,6 +146,15 @@ export default function AnnouncementCreateScreen() {
       return;
     }
 
+    if (isSpecificClasses && selectedClassIds.length === 0) {
+      showToast({
+        type: 'error',
+        title: 'Required field',
+        message: 'Select at least one class.',
+      });
+      return;
+    }
+
     mutation.mutate(
       {
         subject: isSms ? eventName.trim() : subject.trim(),
@@ -128,6 +165,7 @@ export default function AnnouncementCreateScreen() {
         // DRF rejects '' for a date field, so omit it when blank.
         event_date: isSms && eventDate.trim() ? eventDate.trim() : undefined,
         event_note: isSms ? eventNote.trim() : '',
+        class_ids: isSpecificClasses ? selectedClassIds : [],
         manual_emails: isSms ? '' : manualEmails.trim(),
       },
       {
@@ -214,6 +252,28 @@ export default function AnnouncementCreateScreen() {
               ))}
             </View>
           </Field>
+
+          {isSpecificClasses && (
+            <Field label="Classes">
+              {isLoadingClasses ? (
+                <ActivityIndicator color="#4f46e5" />
+              ) : (
+                <View style={s.optionWrap}>
+                  {classOptions.map(option => (
+                    <OptionButton
+                      key={option.value}
+                      label={option.label}
+                      selected={selectedClassIds.includes(option.value)}
+                      onPress={() => toggleClass(option.value)}
+                    />
+                  ))}
+                  {classOptions.length === 0 && (
+                    <Text style={s.emptyText}>No classes available</Text>
+                  )}
+                </View>
+              )}
+            </Field>
+          )}
 
           {!isSms &&
             recipient === ANNOUNCEMENT_RECIPIENT_TYPES.MANUAL_EMAILS && (
@@ -380,6 +440,7 @@ const s = StyleSheet.create({
   optionSelected: { borderColor: '#4f46e5', backgroundColor: '#eef2ff' },
   optionText: { color: '#475569', fontSize: 12, fontWeight: '600' },
   optionTextSelected: { color: '#4338ca' },
+  emptyText: { color: '#94a3b8', fontSize: 13, paddingVertical: 6 },
   submit: {
     minHeight: 50,
     borderRadius: 13,

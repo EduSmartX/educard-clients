@@ -16,7 +16,6 @@ import {
   Pressable,
   useWindowDimensions,
 } from 'react-native';
-import Animated, { ZoomIn, ZoomOut } from 'react-native-reanimated';
 
 export type ModalVariant = 'success' | 'error' | 'warning' | 'info';
 
@@ -96,11 +95,9 @@ export function Modal({
     >
       <View style={[styles.overlay, { paddingHorizontal: overlayPadding }]}>
         <Pressable style={styles.overlayBackground} onPress={onClose} />
-        <Animated.View
-          entering={ZoomIn.duration(200)}
-          exiting={ZoomOut.duration(150)}
-          style={[styles.modalWrapper, { maxWidth: maxModalWidth }]}
-        >
+        {/* Reanimated layout animations never run inside an RN Modal on the new
+            architecture, which left the content stuck at its entering state. */}
+        <View style={[styles.modalWrapper, { maxWidth: maxModalWidth }]}>
           <View
             style={[
               styles.modalContainer,
@@ -163,7 +160,7 @@ export function Modal({
               </View>
             )}
           </View>
-        </Animated.View>
+        </View>
       </View>
     </RNModal>
   );

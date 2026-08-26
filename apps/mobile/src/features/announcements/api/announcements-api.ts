@@ -31,6 +31,7 @@ export interface CreateAnnouncementPayload {
   event_name?: string;
   event_date?: string;
   event_note?: string;
+  class_ids?: string[];
   manual_emails?: string;
 }
 

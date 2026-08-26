@@ -17,7 +17,6 @@ import {
   Alert,
   Pressable,
 } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { LinearGradient } from '@/lib/linear-gradient';
 
@@ -146,10 +145,7 @@ export function ResetPasswordsModal({
     >
       <Pressable style={styles.overlay} onPress={handleClose}>
         <Pressable style={styles.container}>
-          <Animated.View
-            entering={FadeInDown.duration(300)}
-            style={styles.content}
-          >
+          <View style={styles.content}>
             <LinearGradient
               colors={[Colors.accent[600], Colors.accent[500]]}
               style={styles.header}
@@ -262,7 +258,7 @@ export function ResetPasswordsModal({
                 )}
               </TouchableOpacity>
             </View>
-          </Animated.View>
+          </View>
         </Pressable>
       </Pressable>
     </Modal>

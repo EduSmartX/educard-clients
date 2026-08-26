@@ -18,7 +18,6 @@ import {
   Switch,
   Pressable,
 } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { useClasses } from '@/features/classes/hooks/use-classes';
 import { LinearGradient } from '@/lib/linear-gradient';
@@ -146,10 +145,7 @@ export function ExportStudentsModal({
     >
       <Pressable style={styles.overlay} onPress={handleClose}>
         <Pressable style={styles.container}>
-          <Animated.View
-            entering={FadeInDown.duration(300)}
-            style={styles.content}
-          >
+          <View style={styles.content}>
             {/* Header */}
             <LinearGradient
               colors={[Colors.accent[600], Colors.accent[500]]}
@@ -333,7 +329,7 @@ export function ExportStudentsModal({
                 </LinearGradient>
               </TouchableOpacity>
             </View>
-          </Animated.View>
+          </View>
         </Pressable>
       </Pressable>
     </Modal>
