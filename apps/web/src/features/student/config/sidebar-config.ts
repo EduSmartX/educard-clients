@@ -13,6 +13,8 @@ import {
   CalendarOff,
   Megaphone,
   MessageSquare,
+  CalendarDays,
+  AlertTriangle,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
 import { ROUTES } from '@/constants/app-config';
@@ -83,6 +85,23 @@ export const studentSidebarConfig: SidebarSection[] = [
         label: 'Feedback',
         icon: MessageSquare,
         path: ROUTES.FEEDBACK,
+      },
+    ],
+  },
+  {
+    title: 'School Calendar',
+    items: [
+      {
+        id: 'holidays',
+        label: 'Holiday Calendar',
+        icon: CalendarDays,
+        path: ROUTES.STUDENT.HOLIDAYS,
+      },
+      {
+        id: 'exceptional-work',
+        label: 'Exceptional Work Policy',
+        icon: AlertTriangle,
+        path: ROUTES.STUDENT.EXCEPTIONAL_WORK,
       },
     ],
   },

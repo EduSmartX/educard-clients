@@ -506,15 +506,6 @@ export default function TimetableScreen() {
                 })}
               </ScrollView>
 
-              {canManage && !copySource && (
-                <View style={styles.copyHint}>
-                  <Copy size={13} color="#7c3aed" />
-                  <Text style={styles.copyHintText}>
-                    Long-press a subject to copy it to other days & periods.
-                  </Text>
-                </View>
-              )}
-
               {/* Slots */}
               {daySlots.length === 0 ? (
                 <View style={styles.emptyState}>
@@ -560,14 +551,6 @@ const styles = StyleSheet.create({
   },
   copyBannerBtnText: { fontSize: 12, fontWeight: '700', color: '#7c3aed' },
   slotCardCopied: { borderWidth: 1.5, borderColor: '#7c3aed' },
-  copyHint: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 10,
-    paddingHorizontal: 4,
-  },
-  copyHintText: { flex: 1, fontSize: 12, color: '#7c3aed' },
 
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   headerBtn: {

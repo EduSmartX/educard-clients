@@ -47,6 +47,8 @@
     </dict>
     <key>NSCameraUsageDescription</key>
     <string>EduCard uses the camera to scan documents and capture photos.</string>
+    <key>NSContactsUsageDescription</key>
+    <string>EduCard needs access to your contacts so you can pick a phone number instead of typing it.</string>
     <key>NSFaceIDUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your Face ID biometric data.</string>
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

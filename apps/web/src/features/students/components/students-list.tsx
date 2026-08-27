@@ -21,6 +21,7 @@ import { getStudentColumns } from './student-table-columns';
 import { BulkUploadStudentsDialog } from './bulk-upload-students-dialog';
 import { ExportStudentsDialog } from './export-students-dialog';
 import { ResetClassPasswordsDialog } from './reset-class-passwords-dialog';
+import { SetTemporaryPasswordDialog } from './set-temporary-password-dialog';
 import {
   getListTitle,
   getListDescription,
@@ -69,6 +70,7 @@ export function StudentsList({
 }: Readonly<StudentsListProps>) {
   const [appliedSearchQuery, setAppliedSearchQuery] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
+  const [tempPasswordStudent, setTempPasswordStudent] = useState<StudentListItem | null>(null);
 
   // Fetch classes for filter options
   const { data: classesData } = useClasses({ page_size: API_CONFIG.DROPDOWN_PAGE_SIZE });
@@ -119,6 +121,7 @@ export function StudentsList({
     onView,
     onEdit,
     onDelete: onDelete || (() => {}),
+    onSetTemporaryPassword: canCreateStudents ? setTempPasswordStudent : undefined,
     isDeletedView: showDeleted,
     isClassTeacher, // Pass to columns for conditional Edit/Delete
   });
@@ -129,6 +132,10 @@ export function StudentsList({
 
   return (
     <div className="space-y-6">
+      <SetTemporaryPasswordDialog
+        student={tempPasswordStudent}
+        onOpenChange={(next) => !next && setTempPasswordStudent(null)}
+      />
       {/* Header */}
       <PageHeader
         title={getListTitle('Students', showDeleted)}

@@ -39,6 +39,15 @@ export const classKeys = {
   detail: (id: string) => QueryKeys.CLASSES.DETAIL(id),
 };
 
+/** Deleting/restoring a class cascades to its students and subjects. */
+function invalidateClassCascade(
+  queryClient: ReturnType<typeof useQueryClient>,
+) {
+  void queryClient.invalidateQueries({ queryKey: classKeys.all });
+  void queryClient.invalidateQueries({ queryKey: QueryKeys.STUDENTS.ALL });
+  void queryClient.invalidateQueries({ queryKey: QueryKeys.SUBJECTS.ALL });
+}
+
 export function useClasses(params?: Omit<ClassQueryParams, 'page'>) {
   const pageSize = params?.page_size ?? DEFAULT_PAGE_SIZE;
 
@@ -173,7 +182,7 @@ export function useDeleteClass(options?: MutationOptions) {
     },
     onSuccess: () => {
       showToast('success', 'Class deleted successfully');
-      void queryClient.invalidateQueries({ queryKey: classKeys.lists() });
+      invalidateClassCascade(queryClient);
       options?.onSuccess?.();
     },
     onError: (error: unknown) => {
@@ -194,7 +203,7 @@ export function useRestoreClass(options?: MutationOptions) {
         'success',
         response.message || 'Class reactivated successfully',
       );
-      void queryClient.invalidateQueries({ queryKey: classKeys.all });
+      invalidateClassCascade(queryClient);
       options?.onSuccess?.();
     },
     onError: (error: unknown) => {

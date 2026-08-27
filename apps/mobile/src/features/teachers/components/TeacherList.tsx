@@ -39,6 +39,7 @@ import Animated, { FadeIn, FadeInRight } from 'react-native-reanimated';
 import { SearchBar, ConfirmDialog } from '@/components/common';
 import { BulkUploadModal } from '@/components/common/BulkUploadModal';
 import { EntityActions } from '@/components/common/EntityActions';
+import { ImageViewerModal } from '@/components/common/ImageViewerModal';
 import {
   FilterModal,
   ActiveFilters,
@@ -217,6 +218,11 @@ export function TeacherList({ onBack }: TeacherListProps) {
     navigation.navigate('TeacherEdit', { id: teacher.public_id });
   };
 
+  const [photoPreview, setPhotoPreview] = useState<{
+    uri: string;
+    name: string;
+  } | null>(null);
+
   const renderTeacherCard = ({
     item,
     index,
@@ -235,10 +241,24 @@ export function TeacherList({ onBack }: TeacherListProps) {
         <View style={styles.topRow}>
           <View style={styles.avatarSection}>
             {item.profile_photo_thumbnail ? (
-              <Image
-                source={{ uri: getMediaUrl(item.profile_photo_thumbnail) }}
-                style={styles.avatar}
-              />
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={e => {
+                  e.stopPropagation?.();
+                  setPhotoPreview({
+                    uri:
+                      getMediaUrl(item.profile_photo_url) ??
+                      getMediaUrl(item.profile_photo_thumbnail) ??
+                      '',
+                    name: item.full_name ?? '',
+                  });
+                }}
+              >
+                <Image
+                  source={{ uri: getMediaUrl(item.profile_photo_thumbnail) }}
+                  style={styles.avatar}
+                />
+              </TouchableOpacity>
             ) : (
               <LinearGradient
                 colors={['#e0e7ff', '#c7d2fe']}
@@ -460,6 +480,13 @@ export function TeacherList({ onBack }: TeacherListProps) {
 
       <ConfirmDialog {...deleteDialogProps} />
       <ConfirmDialog {...reactivateDialogProps} />
+
+      <ImageViewerModal
+        visible={!!photoPreview}
+        uri={photoPreview?.uri}
+        title={photoPreview?.name}
+        onClose={() => setPhotoPreview(null)}
+      />
     </View>
   );
 }

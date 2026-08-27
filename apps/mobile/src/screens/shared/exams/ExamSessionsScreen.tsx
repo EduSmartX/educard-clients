@@ -14,7 +14,7 @@ import {
   Pencil,
   Trash2,
 } from 'lucide-react-native';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -28,9 +28,11 @@ import {
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { useExamSessions, useDeleteExamSession } from '@/features/exams';
+import { useAuthStore } from '@/lib/auth-store';
 import { LinearGradient } from '@/lib/linear-gradient';
 import type { SharedStackNavigation } from '@/navigation/types';
 import { headerStyles, layoutStyles } from '@/styles';
+import { isAdminRole } from '@/utils/role-utils';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -58,6 +60,10 @@ function formatDate(d: string | null): string {
 export default function ExamSessionsScreen() {
   const navigation = useNavigation<SharedStackNavigation>();
   const [refreshing, setRefreshing] = useState(false);
+
+  // Creating/editing/deleting sessions is an admin-only task.
+  const { user } = useAuthStore();
+  const canManage = useMemo(() => isAdminRole(user?.role), [user?.role]);
 
   const handleBack = useCallback(() => {
     if (navigation.canGoBack()) navigation.goBack();
@@ -146,35 +152,39 @@ export default function ExamSessionsScreen() {
             </View>
 
             <View style={styles.chevron}>
-              <TouchableOpacity
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                onPress={e => {
-                  e.stopPropagation?.();
-                  handleDelete(item);
-                }}
-                style={styles.deleteBtn}
-              >
-                <Trash2 size={14} color="#ef4444" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                onPress={e => {
-                  e.stopPropagation?.();
-                  navigation.navigate('ExamEditSession', {
-                    sessionId: item.public_id,
-                  });
-                }}
-                style={styles.editBtn}
-              >
-                <Pencil size={14} color="#7c3aed" />
-              </TouchableOpacity>
+              {canManage && (
+                <>
+                  <TouchableOpacity
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    onPress={e => {
+                      e.stopPropagation?.();
+                      handleDelete(item);
+                    }}
+                    style={styles.deleteBtn}
+                  >
+                    <Trash2 size={14} color="#ef4444" />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    onPress={e => {
+                      e.stopPropagation?.();
+                      navigation.navigate('ExamEditSession', {
+                        sessionId: item.public_id,
+                      });
+                    }}
+                    style={styles.editBtn}
+                  >
+                    <Pencil size={14} color="#7c3aed" />
+                  </TouchableOpacity>
+                </>
+              )}
               <ChevronRight size={18} color="#cbd5e1" />
             </View>
           </TouchableOpacity>
         </Animated.View>
       );
     },
-    [navigation, handleDelete],
+    [navigation, handleDelete, canManage],
   );
 
   return (
@@ -201,12 +211,14 @@ export default function ExamSessionsScreen() {
                 {sessions.length} sessions
               </Text>
             </View>
-            <TouchableOpacity
-              style={styles.addBtn}
-              onPress={() => navigation.navigate('ExamCreateSession')}
-            >
-              <Plus size={20} color="#fff" />
-            </TouchableOpacity>
+            {canManage && (
+              <TouchableOpacity
+                style={styles.addBtn}
+                onPress={() => navigation.navigate('ExamCreateSession')}
+              >
+                <Plus size={20} color="#fff" />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </LinearGradient>
@@ -222,7 +234,9 @@ export default function ExamSessionsScreen() {
           <Text style={styles.emptyIcon}>📝</Text>
           <Text style={styles.emptyTitle}>No Exam Sessions</Text>
           <Text style={styles.emptySubtitle}>
-            Tap + to create your first exam session
+            {canManage
+              ? 'Tap + to create your first exam session'
+              : 'No exam sessions have been scheduled yet'}
           </Text>
         </View>
       )}

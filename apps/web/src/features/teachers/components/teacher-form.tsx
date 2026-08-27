@@ -10,6 +10,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { TextInputField, DateInputField, GenderField, BloodGroupField } from '@/components/form';
@@ -404,6 +405,18 @@ export function TeacherForm({
                   validationOptions={{ fieldName: 'Last name' }}
                 />
                 <GenderField control={form.control} name="gender" disabled={isViewMode} required />
+                {/* Backend returns username only to admins, the user themselves and their supervisor. */}
+                {isViewMode && !!initialData?.user?.username && (
+                  <div className="space-y-2">
+                    <Label htmlFor="teacher-username">Username</Label>
+                    <Input
+                      id="teacher-username"
+                      value={initialData.user.username}
+                      readOnly
+                      disabled
+                    />
+                  </div>
+                )}
                 <OrganizationRoleField
                   control={form.control}
                   name="organization_role"

@@ -51,7 +51,7 @@ export function BulkUploadTeachersDialog() {
       templateFileName={
         isMinimalFields ? 'teachers_template_minimal.xlsx' : 'teachers_template_full.xlsx'
       }
-      acceptedFileTypes=".xlsx,.xls"
+      acceptedFileTypes=".xlsx,.xls,.numbers"
       showMinimalFieldsCheckbox={true}
       isMinimalFields={isMinimalFields}
       onMinimalFieldsChange={setIsMinimalFields}

@@ -6,31 +6,40 @@
 
 import {
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useRef,
-  type Component,
+  useState,
 } from 'react';
 import {
-  findNodeHandle,
   Keyboard,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
   TextInput,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   type ScrollViewProps,
+  type StyleProp,
+  type TargetedEvent,
+  type ViewStyle,
 } from 'react-native';
 
 /** Gap kept between the focused input and the top of the keyboard. */
 const DEFAULT_KEYBOARD_GAP = 24;
 
-/** `scrollResponderScrollNativeHandleToKeyboard` is untyped in RN's public types. */
-type ScrollResponder = {
-  scrollResponderScrollNativeHandleToKeyboard?: (
-    nodeHandle: number,
-    additionalOffset?: number,
-    preventNegativeScrollOffset?: boolean,
+/** Never sit flush against the keyboard, even if a screen asks for a smaller gap. */
+const MIN_KEYBOARD_GAP = 24;
+
+/** Lets the row finish laying out (error text, expanding sections) before measuring. */
+const MEASURE_DELAY_MS = 50;
+
+/** Only the measure methods are needed off the focused host instance. */
+type MeasurableInput = {
+  measureInWindow?: (
+    callback: (x: number, y: number, width: number, height: number) => void,
   ) => void;
 };
 
@@ -59,6 +68,7 @@ export type KeyboardAwareScrollViewProps = ScrollViewProps &
     /** Gap kept between the keyboard and the focused input. */
     bottomOffset?: number;
     extraKeyboardSpace?: number;
+    containerStyle?: StyleProp<ViewStyle>;
   };
 
 export const KeyboardAwareScrollView = forwardRef<
@@ -78,43 +88,90 @@ export const KeyboardAwareScrollView = forwardRef<
     innerRef: _innerRef,
     bottomOffset,
     extraKeyboardSpace,
+    containerStyle,
     style,
+    contentContainerStyle,
     keyboardShouldPersistTaps = 'handled',
+    scrollEventThrottle = 16,
+    onScroll,
+    onFocus,
     ...scrollViewProps
   },
   ref,
 ) {
   const scrollRef = useRef<ScrollView>(null);
-  const keyboardGap =
+  const scrollOffsetY = useRef(0);
+  const [keyboardInset, setKeyboardInset] = useState(0);
+  /** Window Y of the keyboard's top edge; null while the keyboard is closed. */
+  const keyboardTop = useRef<number | null>(null);
+  const keyboardGap = Math.max(
     bottomOffset ??
-    extraKeyboardSpace ??
-    extraScrollHeight ??
-    DEFAULT_KEYBOARD_GAP;
+      extraKeyboardSpace ??
+      extraScrollHeight ??
+      DEFAULT_KEYBOARD_GAP,
+    MIN_KEYBOARD_GAP,
+  );
 
-  // Android only resizes the window; without this the focused input stays hidden.
+  // Android only resizes the window; without this the focused field stays hidden.
+  const revealFocusedInput = useCallback(() => {
+    const keyboardY = keyboardTop.current;
+    const scrollView = scrollRef.current;
+    const input =
+      TextInput.State.currentlyFocusedInput() as MeasurableInput | null;
+    if (keyboardY === null || !scrollView || !input?.measureInWindow) {
+      return;
+    }
+    input.measureInWindow((_x, y, _width, height) => {
+      const hiddenBy = y + height + keyboardGap - keyboardY;
+      if (hiddenBy <= 0) {
+        return;
+      }
+      // A short form has no scroll range, so grow the content before scrolling.
+      setKeyboardInset(previous => Math.max(previous, hiddenBy));
+      const targetY = scrollOffsetY.current + hiddenBy;
+      setTimeout(
+        () => scrollRef.current?.scrollTo({ y: targetY, animated: true }),
+        MEASURE_DELAY_MS,
+      );
+    });
+  }, [keyboardGap]);
+
   useEffect(() => {
     const showEvent =
       Platform.OS === 'android' ? 'keyboardDidShow' : 'keyboardWillShow';
-    const subscription = Keyboard.addListener(showEvent, () => {
-      const focused = TextInput.State.currentlyFocusedInput();
-      if (!focused) {
-        return;
-      }
-      // New Architecture returns a host element; findNodeHandle still resolves it.
-      const handle = findNodeHandle(focused as unknown as Component);
-      const responder = scrollRef.current?.getScrollResponder() as
-        | ScrollResponder
-        | undefined;
-      if (handle && responder?.scrollResponderScrollNativeHandleToKeyboard) {
-        responder.scrollResponderScrollNativeHandleToKeyboard(
-          handle,
-          keyboardGap,
-          true,
-        );
-      }
-    });
-    return () => subscription.remove();
-  }, [keyboardGap]);
+    const hideEvent =
+      Platform.OS === 'android' ? 'keyboardDidHide' : 'keyboardWillHide';
+
+    const subscriptions = [
+      Keyboard.addListener(showEvent, event => {
+        keyboardTop.current = event.endCoordinates.screenY;
+        revealFocusedInput();
+      }),
+      Keyboard.addListener(hideEvent, () => {
+        keyboardTop.current = null;
+        setKeyboardInset(0);
+      }),
+    ];
+
+    return () => subscriptions.forEach(subscription => subscription.remove());
+  }, [revealFocusedInput]);
+
+  // Bubbled from descendant inputs only, so sibling scroll views never react.
+  const handleFocus = useCallback(
+    (event: NativeSyntheticEvent<TargetedEvent>) => {
+      onFocus?.(event);
+      setTimeout(revealFocusedInput, MEASURE_DELAY_MS);
+    },
+    [onFocus, revealFocusedInput],
+  );
+
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      scrollOffsetY.current = event.nativeEvent.contentOffset.y;
+      onScroll?.(event);
+    },
+    [onScroll],
+  );
 
   useImperativeHandle(
     ref,
@@ -130,13 +187,20 @@ export const KeyboardAwareScrollView = forwardRef<
 
   return (
     <KeyboardAvoidingView
-      style={styles.flex}
+      style={containerStyle ?? styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
         ref={scrollRef}
         style={style}
+        contentContainerStyle={[
+          contentContainerStyle,
+          keyboardInset > 0 && { paddingBottom: keyboardInset },
+        ]}
         keyboardShouldPersistTaps={keyboardShouldPersistTaps}
+        scrollEventThrottle={scrollEventThrottle}
+        onScroll={handleScroll}
+        onFocus={handleFocus}
         {...scrollViewProps}
       />
     </KeyboardAvoidingView>

@@ -17,7 +17,6 @@ import {
   Alert,
   Pressable,
 } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { LinearGradient } from '@/lib/linear-gradient';
 
@@ -93,8 +92,8 @@ export function ResetPasswordsModal({
       );
       return;
     }
-    if (newPassword.length < 6) {
-      Alert.alert('Weak password', 'Password must be at least 6 characters.');
+    if (newPassword.length < 8) {
+      Alert.alert('Weak password', 'Password must be at least 8 characters.');
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -109,6 +108,7 @@ export function ResetPasswordsModal({
     try {
       const result = await resetClassPasswords(classId, {
         new_password: newPassword,
+        confirm_password: confirmPassword,
       });
       if (result.success) {
         Alert.alert(
@@ -145,10 +145,7 @@ export function ResetPasswordsModal({
     >
       <Pressable style={styles.overlay} onPress={handleClose}>
         <Pressable style={styles.container}>
-          <Animated.View
-            entering={FadeInDown.duration(300)}
-            style={styles.content}
-          >
+          <View style={styles.content}>
             <LinearGradient
               colors={[Colors.accent[600], Colors.accent[500]]}
               style={styles.header}
@@ -171,6 +168,7 @@ export function ResetPasswordsModal({
 
             <KeyboardAwareScrollView
               style={styles.body}
+              containerStyle={styles.bodyContainer}
               showsVerticalScrollIndicator={false}
             >
               <Text style={styles.label}>Class</Text>
@@ -260,7 +258,7 @@ export function ResetPasswordsModal({
                 )}
               </TouchableOpacity>
             </View>
-          </Animated.View>
+          </View>
         </Pressable>
       </Pressable>
     </Modal>
@@ -296,7 +294,9 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   closeBtn: { padding: 4 },
-  body: { paddingHorizontal: 20, paddingTop: 16 },
+  // Bounded height: an unconstrained ScrollView here collapses and hides the fields.
+  body: { paddingHorizontal: 20, paddingTop: 16, maxHeight: 420 },
+  bodyContainer: { maxHeight: 420 },
   label: {
     fontSize: 14,
     fontWeight: '600',

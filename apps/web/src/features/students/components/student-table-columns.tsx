@@ -3,7 +3,7 @@
  * Following the pattern from teacher-table-columns.tsx
  */
 
-import { Eye, Pencil, Trash2, RotateCcw } from 'lucide-react';
+import { Eye, Pencil, Trash2, RotateCcw, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Column } from '@/components/ui/data-table';
@@ -15,6 +15,7 @@ interface GetColumnsOptions {
   onView: (student: StudentListItem) => void;
   onEdit: (student: StudentListItem) => void;
   onDelete: (student: StudentListItem) => void;
+  onSetTemporaryPassword?: (student: StudentListItem) => void;
   isDeletedView?: boolean;
   isClassTeacher?: boolean; // NEW: Whether user is class teacher
 }
@@ -23,6 +24,7 @@ export function getStudentColumns({
   onView,
   onEdit,
   onDelete,
+  onSetTemporaryPassword,
   isDeletedView = false,
 }: GetColumnsOptions): Column<StudentListItem>[] {
   return [
@@ -31,6 +33,7 @@ export function getStudentColumns({
       accessor: (row) => (
         <UserAvatar
           thumbnailUrl={row.profile_photo_thumbnail}
+          fullUrl={row.profile_photo_url}
           gender={row.gender}
           name={row.full_name}
           className="h-9 w-9"
@@ -130,6 +133,18 @@ export function getStudentColumns({
               <Button variant="ghost" size="sm" onClick={() => onEdit(row)} className="h-8 w-8 p-0">
                 <Pencil className="h-4 w-4" />
                 <span className="sr-only">Edit</span>
+              </Button>
+            )}
+            {!isDeletedView && canManage && !!onSetTemporaryPassword && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onSetTemporaryPassword(row)}
+                className="h-8 w-8 p-0 text-amber-600 hover:bg-amber-50 hover:text-amber-700"
+                title="Set temporary password"
+              >
+                <KeyRound className="h-4 w-4" />
+                <span className="sr-only">Set temporary password</span>
               </Button>
             )}
             {canManage && (

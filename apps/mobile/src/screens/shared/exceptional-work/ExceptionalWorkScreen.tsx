@@ -12,7 +12,6 @@ import {
   Trash2,
   Briefcase,
   PartyPopper,
-  Eye,
   Plus,
 } from 'lucide-react-native';
 import { useState, useMemo, useCallback } from 'react';
@@ -33,7 +32,8 @@ import { LinearGradient } from '@/lib/linear-gradient';
 import { useAuthStore } from '@/lib/auth-store';
 import { useToast } from '@/lib/toast-context';
 import type { SharedStackNavigation } from '@/navigation/types';
-import { isAdminRole } from '@/utils/role-utils';
+import { isAdminRole, isTeacherRole } from '@/utils/role-utils';
+import { useTeacherManagementContext } from '@/features/leave';
 
 import { CreateExceptionModal } from './CreateExceptionModal';
 import {
@@ -137,7 +137,20 @@ export default function ExceptionalWorkScreen() {
   );
 
   const { user } = useAuthStore();
-  const canManage = useMemo(() => isAdminRole(user?.role), [user?.role]);
+  const isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
+  const isTeacher = useMemo(() => isTeacherRole(user?.role), [user?.role]);
+  const { data: teacherContext } = useTeacherManagementContext(isTeacher);
+
+  // Teachers can only manage exceptions for classes they are the class teacher of
+  const isClassTeacher =
+    isTeacher && (teacherContext?.class_teacher_for?.length ?? 0) > 0;
+  const canManage = isAdmin || isClassTeacher;
+  const canManageException = useCallback(
+    (exception: CalendarException) =>
+      isAdmin ||
+      (isClassTeacher && exception.created_by_public_id === user?.public_id),
+    [isAdmin, isClassTeacher, user?.public_id],
+  );
 
   const handleBack = useCallback(() => {
     if (navigation.canGoBack()) navigation.goBack();
@@ -209,15 +222,6 @@ export default function ExceptionalWorkScreen() {
         </View>
       </LinearGradient>
 
-      {!canManage && (
-        <View style={styles.readOnlyBanner}>
-          <Eye size={16} color="#7c3aed" />
-          <Text style={styles.readOnlyText}>
-            View only — Contact admin to modify exceptions
-          </Text>
-        </View>
-      )}
-
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
@@ -231,11 +235,15 @@ export default function ExceptionalWorkScreen() {
       >
         <View style={styles.infoCard}>
           <AlertTriangle size={20} color={adminTheme.accent} />
-          <Text style={styles.infoText}>
-            Exceptions override the regular working day policy. Use Force
-            Working to make a holiday/weekend a working day, or Force Holiday to
-            make a working day a holiday.
-          </Text>
+          <View style={styles.infoText}>
+            <Text style={styles.infoBullet}>
+              • Force Working: Override a holiday or weekend to make it a
+              working day.
+            </Text>
+            <Text style={styles.infoBullet}>
+              • Force Holiday: Override a working day to make it a holiday.
+            </Text>
+          </View>
         </View>
 
         {isLoading ? (
@@ -269,7 +277,7 @@ export default function ExceptionalWorkScreen() {
                     key={exception.public_id}
                     exception={exception}
                     onDelete={() => setDeleteTarget(exception)}
-                    canManage={canManage}
+                    canManage={canManageException(exception)}
                   />
                 ))
               )}
@@ -297,7 +305,7 @@ export default function ExceptionalWorkScreen() {
                     key={exception.public_id}
                     exception={exception}
                     onDelete={() => setDeleteTarget(exception)}
-                    canManage={canManage}
+                    canManage={canManageException(exception)}
                   />
                 ))
               )}
@@ -317,6 +325,7 @@ export default function ExceptionalWorkScreen() {
       <CreateExceptionModal
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
+        classScopedOnly={!isAdmin}
         onSuccess={() =>
           void queryClient.invalidateQueries({
             queryKey: ['calendar-exceptions'],

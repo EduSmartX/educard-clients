@@ -23,7 +23,7 @@ export interface AdminInfo {
   password2: string; // Confirm password
   notification_opt_in: boolean;
   can_teach_subject: boolean;
-  phone?: string;
+  phone_number?: string;
   gender?: string;
 }
 

@@ -38,6 +38,8 @@
 	<string>EduCard uses your camera to take a profile photo.</string>
 	<key>NSContactsUsageDescription</key>
 	<string>EduCard lets you pick a phone number from your contacts to fill in phone fields.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>EduCard uses your location to fill in your organization's address automatically.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>EduCard needs access to your photos so you can choose a profile picture.</string>
 	<key>UILaunchStoryboardName</key>

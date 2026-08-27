@@ -16,7 +16,6 @@ import {
   Pressable,
   useWindowDimensions,
 } from 'react-native';
-import Animated, { ZoomIn, ZoomOut } from 'react-native-reanimated';
 
 export type ModalVariant = 'success' | 'error' | 'warning' | 'info';
 
@@ -96,11 +95,9 @@ export function Modal({
     >
       <View style={[styles.overlay, { paddingHorizontal: overlayPadding }]}>
         <Pressable style={styles.overlayBackground} onPress={onClose} />
-        <Animated.View
-          entering={ZoomIn.duration(200)}
-          exiting={ZoomOut.duration(150)}
-          style={[styles.modalWrapper, { maxWidth: maxModalWidth }]}
-        >
+        {/* Reanimated layout animations never run inside an RN Modal on the new
+            architecture, which left the content stuck at its entering state. */}
+        <View style={[styles.modalWrapper, { maxWidth: maxModalWidth }]}>
           <View
             style={[
               styles.modalContainer,
@@ -163,7 +160,7 @@ export function Modal({
               </View>
             )}
           </View>
-        </Animated.View>
+        </View>
       </View>
     </RNModal>
   );
@@ -186,6 +183,7 @@ export function useModal() {
     message?: string;
     variant: ModalVariant;
     actions: ModalAction[];
+    onDismiss?: () => void;
   }>({
     visible: false,
     title: '',
@@ -223,6 +221,8 @@ export function useModal() {
       message: options.message,
       variant: options.variant ?? 'info',
       actions,
+      // A single-action alert has nothing to cancel, so backdrop/X means "OK".
+      onDismiss: options.cancelText ? options.onCancel : options.onConfirm,
     });
   }, []);
 
@@ -278,6 +278,26 @@ export function useModal() {
     [showModal],
   );
 
+  // A memoised element keeps the Modal's type stable; returning a component
+  // factory here remounts the native modal on every host render, which drops
+  // keyboard focus and can leave a stale overlay swallowing touches.
+  const modalElement = React.useMemo(
+    () => (
+      <Modal
+        visible={modalState.visible}
+        onClose={() => {
+          hideModal();
+          modalState.onDismiss?.();
+        }}
+        title={modalState.title}
+        message={modalState.message}
+        variant={modalState.variant}
+        actions={modalState.actions}
+      />
+    ),
+    [modalState, hideModal],
+  );
+
   return {
     modalState,
     showModal,
@@ -287,16 +307,7 @@ export function useModal() {
     warning,
     info,
     confirm,
-    ModalComponent: () => (
-      <Modal
-        visible={modalState.visible}
-        onClose={hideModal}
-        title={modalState.title}
-        message={modalState.message}
-        variant={modalState.variant}
-        actions={modalState.actions}
-      />
-    ),
+    modalElement,
   };
 }
 

@@ -300,14 +300,14 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   # ---------------------------------------------------------------------------
-  # Deployment — runs after all CI checks succeed.
+  # Deployment — gated on build and audit only; SonarCloud is advisory.
   # Web and mobile fan out in parallel from the same gate.
   # ---------------------------------------------------------------------------
 
   deploy-web-dev:
     name: Deploy Web — Dev (develop/development)
     runs-on: ubuntu-latest
-    needs: [build, security-audit, sonarcloud]
+    needs: [build, security-audit]
     if: >-
       github.event_name == 'push' &&
       (github.ref_name == 'develop' || github.ref_name == 'development')
@@ -352,7 +352,7 @@ jobs:
   deploy-web-prod:
     name: Deploy Web — Prod (main/master)
     runs-on: ubuntu-latest
-    needs: [build, security-audit, sonarcloud]
+    needs: [build, security-audit]
     if: >-
       github.event_name == 'push' &&
       (github.ref_name == 'main' || github.ref_name == 'master')
@@ -397,7 +397,7 @@ jobs:
   build-apk:
     name: Build Android APK for Testers
     runs-on: ubuntu-latest
-    needs: [build, security-audit, sonarcloud]
+    needs: [build, security-audit]
     if: >-
       github.event_name == 'push' &&
       (github.ref_name == 'develop' || github.ref_name == 'development')

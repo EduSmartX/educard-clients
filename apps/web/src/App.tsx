@@ -1,10 +1,11 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { ROUTES } from './constants/app-config';
 
 // Lazy load pages for better performance
 import { lazy, Suspense } from 'react';
 import { PageLoader } from './components/ui/loading-spinner';
 import { useAuthInit } from './hooks/use-auth-init';
+import { useKeyboardFieldVisibility } from './hooks/use-keyboard-field-visibility';
 
 // Protected Layout - Renders header once for all authenticated pages
 import { ProtectedLayout } from './components/layout/protected-layout';
@@ -205,7 +206,15 @@ const HomeworkSubmissionsPage = lazy(
 const SubmissionReviewPage = lazy(() => import('./features/homework/pages/submission-review-page'));
 
 // Announcements
-const AnnouncementsPage = lazy(() => import('./features/announcements/pages/announcements-page'));
+const AnnouncementsEmailPage = lazy(
+  () => import('./features/announcements/pages/announcements-email-page')
+);
+const AnnouncementsSmsPage = lazy(
+  () => import('./features/announcements/pages/announcements-sms-page')
+);
+const RecipientAnnouncementsPage = lazy(
+  () => import('./features/announcements/pages/recipient-announcements-page')
+);
 
 // Fee Management
 const FeeDashboardPage = lazy(() =>
@@ -270,6 +279,7 @@ const ComingSoonPage = lazy(() => import('./pages/coming-soon-page'));
 
 function App() {
   const { isReady } = useAuthInit();
+  useKeyboardFieldVisibility();
 
   if (!isReady) {
     return <PageLoader />;
@@ -304,6 +314,7 @@ function App() {
 
             <Route path="/employee" element={<EmployeeRoute />}>
               <Route path="dashboard" element={<EmployeeDashboardPage />} />
+              <Route path="announcements" element={<RecipientAnnouncementsPage />} />
               <Route path="holidays" element={<HolidayCalendarPage />} />
               <Route path="exceptional-work" element={<ExceptionalWorkPage />} />
               <Route path="teachers" element={<EmployeeTeachersPage />} />
@@ -328,6 +339,8 @@ function App() {
 
             <Route path="/parent" element={<ParentRoute />}>
               <Route path="dashboard" element={<ParentDashboardPage />} />
+              <Route path="holidays" element={<HolidayCalendarPage />} />
+              <Route path="exceptional-work" element={<ExceptionalWorkPage />} />
             </Route>
 
             <Route path="/student" element={<StudentRoute />}>
@@ -340,6 +353,8 @@ function App() {
               <Route path="fee" element={<StudentFeePage />} />
               <Route path="leave" element={<StudentLeavePage />} />
               <Route path="announcements" element={<StudentAnnouncementsPage />} />
+              <Route path="holidays" element={<HolidayCalendarPage />} />
+              <Route path="exceptional-work" element={<ExceptionalWorkPage />} />
             </Route>
 
             {/* Students */}
@@ -408,7 +423,12 @@ function App() {
             <Route path={ROUTES.HOMEWORK_EDIT} element={<HomeworkFormPage />} />
 
             {/* Announcements */}
-            <Route path={ROUTES.ANNOUNCEMENTS} element={<AnnouncementsPage />} />
+            <Route
+              path={ROUTES.ANNOUNCEMENTS}
+              element={<Navigate to={ROUTES.ANNOUNCEMENTS_EMAIL} replace />}
+            />
+            <Route path={ROUTES.ANNOUNCEMENTS_EMAIL} element={<AnnouncementsEmailPage />} />
+            <Route path={ROUTES.ANNOUNCEMENTS_SMS} element={<AnnouncementsSmsPage />} />
 
             {/* Fee Management */}
             <Route path={ROUTES.FEES.DASHBOARD} element={<FeeDashboardPage />} />

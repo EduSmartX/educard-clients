@@ -218,14 +218,14 @@ export const subjectFormStyles = StyleSheet.create({
   flex1: { flex: 1 },
   spacer: { width: 40 },
   infoBanner: {
-    backgroundColor: '#dbeafe',
+    backgroundColor: '#f8fafc',
     padding: 14,
     borderRadius: 12,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#93c5fd',
+    borderColor: '#e2e8f0',
   },
-  infoBannerText: { fontSize: 13, color: '#1e40af', lineHeight: 18 },
+  infoBannerText: { fontSize: 13, color: '#475569', lineHeight: 18 },
   subBtn: { marginTop: 8 },
   subGrad: {
     flexDirection: 'row',

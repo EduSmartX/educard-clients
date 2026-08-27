@@ -15,8 +15,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
+import { useAuth } from '@/hooks/use-auth';
 import { useRole } from '@/hooks/use-role';
 import { useFilterParams } from '@/hooks/use-filter-params';
+import { useTeacherManagementContext } from '@/features/leave/hooks/use-teacher-management-context';
 import { cn } from '@/lib/utils';
 import { fetchCalendarExceptions } from '../api/calendar-exception-api';
 import { useDeleteCalendarException } from '../hooks';
@@ -87,11 +89,20 @@ function TeacherScopeCell({ row }: Readonly<{ row: CalendarException }>) {
 
 interface ExceptionActionsCellProps {
   row: CalendarException;
+  canModify: boolean;
   onEdit: (row: CalendarException) => void;
   onDelete: (row: CalendarException) => void;
 }
 
-function ExceptionActionsCell({ row, onEdit, onDelete }: Readonly<ExceptionActionsCellProps>) {
+function ExceptionActionsCell({
+  row,
+  canModify,
+  onEdit,
+  onDelete,
+}: Readonly<ExceptionActionsCellProps>) {
+  if (!canModify) {
+    return <span className="text-muted-foreground text-sm">—</span>;
+  }
   return (
     <div className="flex items-center gap-2">
       <Button variant="ghost" size="sm" onClick={() => onEdit(row)} className="h-8 w-8 p-0">
@@ -110,7 +121,15 @@ function ExceptionActionsCell({ row, onEdit, onDelete }: Readonly<ExceptionActio
 }
 
 export function ExceptionalWorkManagement() {
-  const { isAdmin } = useRole();
+  const { isAdmin, isTeacher } = useRole();
+  const { user } = useAuth();
+  const { data: teacherContext } = useTeacherManagementContext();
+
+  // Teachers may only manage exceptions for classes they are the class teacher of
+  const isClassTeacher = isTeacher && (teacherContext?.class_teacher_for?.length ?? 0) > 0;
+  const canCreate = isAdmin || isClassTeacher;
+  const canModifyRow = (row: CalendarException) =>
+    isAdmin || (isClassTeacher && row.created_by_public_id === user?.public_id);
 
   // State
   const { filters, page, pageSize, setFilters, setPage, setPageSize } = useFilterParams<
@@ -216,14 +235,15 @@ export function ExceptionalWorkManagement() {
         <div className="max-w-md truncate text-sm text-gray-600">{row.reason}</div>
       ),
     },
-    // Conditionally add Actions column for admin users only
-    ...(isAdmin
+    // Conditionally add Actions column for users who can manage exceptions
+    ...(canCreate
       ? [
           {
             header: 'Actions',
             accessor: (row: CalendarException) => (
               <ExceptionActionsCell
                 row={row}
+                canModify={canModifyRow(row)}
                 onEdit={(r) => setEditingException(r)}
                 onDelete={(r) => setDeletingException(r)}
               />
@@ -256,14 +276,10 @@ export function ExceptionalWorkManagement() {
       {/* Page Header */}
       <PageHeader
         title="Exceptional Work Policy"
-        description={
-          isAdmin
-            ? 'Manage working day exceptions for specific dates and classes'
-            : 'View working day exceptions for specific dates and classes'
-        }
+        description="Working day exceptions for specific dates and classes"
       >
-        {/* Add Exception button - Admin only */}
-        {isAdmin && (
+        {/* Add Exception button - Admins and class teachers only */}
+        {canCreate && (
           <Button
             onClick={() => setShowAddDialog(true)}
             variant="brand"
@@ -398,11 +414,19 @@ export function ExceptionalWorkManagement() {
               onPageSizeChange={(newSize: number) => {
                 setPageSize(newSize);
               }}
-              emptyMessage="No exceptions configured yet"
-              emptyAction={{
-                label: 'Add Your First Exception',
-                onClick: () => setShowAddDialog(true),
-              }}
+              emptyMessage={
+                isAdmin
+                  ? 'No exceptions configured yet'
+                  : 'No working day exceptions have been set for your school'
+              }
+              emptyAction={
+                isAdmin
+                  ? {
+                      label: 'Add Your First Exception',
+                      onClick: () => setShowAddDialog(true),
+                    }
+                  : undefined
+              }
             />
           )}
         </CardContent>

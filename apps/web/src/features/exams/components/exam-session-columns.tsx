@@ -2,7 +2,7 @@
  * Exam Session Table Columns Configuration
  */
 
-import { Eye, Pencil, Trash2, RotateCcw } from 'lucide-react';
+import { Eye, Pencil, Trash2, RotateCcw, Printer } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Column } from '@/components/ui/data-table';
@@ -13,6 +13,7 @@ interface CreateColumnsParams {
   onView: (session: ExamSession) => void;
   onEdit?: (session: ExamSession) => void;
   onDelete?: (session: ExamSession) => void;
+  onPrintClassWise?: (session: ExamSession) => void;
   isDeletedView?: boolean;
 }
 
@@ -28,6 +29,7 @@ export function createExamSessionColumns({
   onView,
   onEdit,
   onDelete,
+  onPrintClassWise,
   isDeletedView = false,
 }: CreateColumnsParams): Column<ExamSession>[] {
   return [
@@ -132,6 +134,19 @@ export function createExamSessionColumns({
               >
                 <Eye className="h-4 w-4" />
               </Button>
+              {onPrintClassWise && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onPrintClassWise(session);
+                  }}
+                  title="Print class-wise schedule"
+                >
+                  <Printer className="h-4 w-4 text-indigo-600" />
+                </Button>
+              )}
               {onEdit && (
                 <Button
                   variant="ghost"

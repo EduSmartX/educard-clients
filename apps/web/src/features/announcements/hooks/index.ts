@@ -6,17 +6,31 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import * as announcementsApi from '../api/announcements-api';
+import type { AnnouncementFilterParams } from '../api/announcements-api';
 import type { CreateAnnouncementPayload } from '../types';
 
 export const announcementKeys = {
   all: ['announcements'] as const,
   lists: () => [...announcementKeys.all, 'list'] as const,
+  list: (filters: AnnouncementFilterParams) => [...announcementKeys.lists(), filters] as const,
+  recipientLists: () => [...announcementKeys.all, 'recipient-list'] as const,
+  recipientList: (filters: AnnouncementFilterParams) =>
+    [...announcementKeys.recipientLists(), filters] as const,
 };
 
-export function useAnnouncements() {
+export function useAnnouncements(filters: AnnouncementFilterParams = {}) {
   return useQuery({
-    queryKey: announcementKeys.lists(),
-    queryFn: announcementsApi.fetchAnnouncements,
+    queryKey: announcementKeys.list(filters),
+    queryFn: () => announcementsApi.fetchAnnouncements(filters),
+    placeholderData: (previous) => previous,
+  });
+}
+
+export function useRecipientAnnouncements(filters: AnnouncementFilterParams = {}) {
+  return useQuery({
+    queryKey: announcementKeys.recipientList(filters),
+    queryFn: () => announcementsApi.fetchRecipientAnnouncements(filters),
+    placeholderData: (previous) => previous,
   });
 }
 

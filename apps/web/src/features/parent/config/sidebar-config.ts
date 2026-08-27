@@ -13,6 +13,7 @@ import {
   Settings,
   Bell,
   BookOpen,
+  AlertTriangle,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
 import { ROUTES } from '@/constants/app-config';
@@ -105,7 +106,13 @@ export const parentSidebarConfig: SidebarSection[] = [
         id: 'holidays',
         label: 'Holiday Calendar',
         icon: CalendarDays,
-        path: ROUTES.HOLIDAYS,
+        path: ROUTES.PARENT.HOLIDAYS,
+      },
+      {
+        id: 'exceptional-work',
+        label: 'Exceptional Work Policy',
+        icon: AlertTriangle,
+        path: ROUTES.PARENT.EXCEPTIONAL_WORK,
       },
       {
         id: 'feedback',

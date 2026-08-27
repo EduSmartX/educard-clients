@@ -27,6 +27,7 @@ import {
   ClipboardEdit,
   RotateCcw,
   MessageSquare,
+  Megaphone,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
 import { ROUTES } from '@/constants/app-config';
@@ -80,6 +81,17 @@ export const employeeSidebarConfig: SidebarSection[] = [
         label: 'Subjects',
         icon: BookOpen,
         path: ROUTES.SUBJECTS,
+      },
+    ],
+  },
+  {
+    title: 'COMMUNICATION',
+    items: [
+      {
+        id: 'announcements',
+        label: 'Announcements',
+        icon: Megaphone,
+        path: ROUTES.EMPLOYEE.ANNOUNCEMENTS,
       },
     ],
   },

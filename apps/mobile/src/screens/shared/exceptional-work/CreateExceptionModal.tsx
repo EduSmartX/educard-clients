@@ -22,6 +22,7 @@ import {
 } from 'react-native';
 
 import { useClasses } from '@/features/classes';
+import { useTeacherManagementContext } from '@/features/leave';
 import { useToast } from '@/lib/toast-context';
 
 import { DatePickerModal } from './DatePickerModal';
@@ -81,12 +82,14 @@ interface CreateExceptionModalProps {
   visible: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  classScopedOnly?: boolean;
 }
 
 export function CreateExceptionModal({
   visible,
   onClose,
   onSuccess,
+  classScopedOnly = false,
 }: CreateExceptionModalProps) {
   const { showToast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -95,12 +98,21 @@ export function CreateExceptionModal({
     'FORCE_WORKING' | 'FORCE_HOLIDAY'
   >('FORCE_WORKING');
   const [reason, setReason] = useState('');
-  const [isAllClasses, setIsAllClasses] = useState(true);
-  const [isAllTeachers, setIsAllTeachers] = useState(true);
+  const [isAllClasses, setIsAllClasses] = useState(!classScopedOnly);
+  const [isAllTeachers, setIsAllTeachers] = useState(!classScopedOnly);
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
 
   const { data: classesData } = useClasses({ is_active: true });
-  const classes = classesData?.classes || [];
+  const { data: teacherContext } = useTeacherManagementContext(classScopedOnly);
+
+  const classes: ClassOption[] = classScopedOnly
+    ? (teacherContext?.class_teacher_for ?? []).map(cls => ({
+        public_id: cls.public_id,
+        display_name: cls.class_master
+          ? `${cls.class_master}-${cls.name}`
+          : cls.name,
+      }))
+    : classesData?.classes || [];
 
   const createMutation = useMutation({
     mutationFn: createCalendarException,
@@ -127,8 +139,8 @@ export function CreateExceptionModal({
     setSelectedDate(null);
     setOverrideType('FORCE_WORKING');
     setReason('');
-    setIsAllClasses(true);
-    setIsAllTeachers(true);
+    setIsAllClasses(!classScopedOnly);
+    setIsAllTeachers(!classScopedOnly);
     setSelectedClasses([]);
   };
 
@@ -146,7 +158,8 @@ export function CreateExceptionModal({
       Alert.alert('Error', 'Please enter a reason');
       return;
     }
-    if (!isAllClasses && selectedClasses.length === 0) {
+    const applyToAllClasses = !classScopedOnly && isAllClasses;
+    if (!applyToAllClasses && selectedClasses.length === 0) {
       Alert.alert('Error', 'Please select at least one class');
       return;
     }
@@ -154,9 +167,9 @@ export function CreateExceptionModal({
       date: format(selectedDate, 'yyyy-MM-dd'),
       override_type: overrideType,
       reason: reason.trim(),
-      is_applicable_to_all_classes: isAllClasses,
-      is_applicable_to_all_teachers: isAllTeachers,
-      classes: isAllClasses ? [] : selectedClasses,
+      is_applicable_to_all_classes: applyToAllClasses,
+      is_applicable_to_all_teachers: classScopedOnly ? false : isAllTeachers,
+      classes: applyToAllClasses ? [] : selectedClasses,
     });
   };
 
@@ -186,6 +199,7 @@ export function CreateExceptionModal({
 
           <KeyboardAwareScrollView
             style={modalStyles.body}
+            containerStyle={modalStyles.bodyContainer}
             showsVerticalScrollIndicator={false}
           >
             <View style={modalStyles.field}>
@@ -282,43 +296,49 @@ export function CreateExceptionModal({
               />
             </View>
 
-            <View style={modalStyles.field}>
-              <View style={modalStyles.switchRow}>
-                <Text style={modalStyles.fieldLabel}>Apply to All Classes</Text>
-                <Switch
-                  value={isAllClasses}
-                  onValueChange={setIsAllClasses}
-                  trackColor={{ false: '#e5e7eb', true: '#99f6e4' }}
-                  thumbColor={isAllClasses ? '#0d9488' : '#9ca3af'}
-                />
-              </View>
-              <Text style={modalStyles.switchHint}>
-                {isAllClasses
-                  ? 'This exception will apply to all classes in the organization.'
-                  : 'Select specific classes this exception applies to.'}
-              </Text>
-            </View>
+            {!classScopedOnly && (
+              <>
+                <View style={modalStyles.field}>
+                  <View style={modalStyles.switchRow}>
+                    <Text style={modalStyles.fieldLabel}>
+                      Apply to All Classes
+                    </Text>
+                    <Switch
+                      value={isAllClasses}
+                      onValueChange={setIsAllClasses}
+                      trackColor={{ false: '#e5e7eb', true: '#99f6e4' }}
+                      thumbColor={isAllClasses ? '#0d9488' : '#9ca3af'}
+                    />
+                  </View>
+                  <Text style={modalStyles.switchHint}>
+                    {isAllClasses
+                      ? 'This exception will apply to all classes in the organization.'
+                      : 'Select specific classes this exception applies to.'}
+                  </Text>
+                </View>
 
-            <View style={modalStyles.field}>
-              <View style={modalStyles.switchRow}>
-                <Text style={modalStyles.fieldLabel}>
-                  Apply to All Teachers
-                </Text>
-                <Switch
-                  value={isAllTeachers}
-                  onValueChange={setIsAllTeachers}
-                  trackColor={{ false: '#e5e7eb', true: '#99f6e4' }}
-                  thumbColor={isAllTeachers ? '#0d9488' : '#9ca3af'}
-                />
-              </View>
-              <Text style={modalStyles.switchHint}>
-                {isAllTeachers
-                  ? 'This exception will apply to all teachers/staff in the organization.'
-                  : 'This exception will not apply to teachers/staff attendance.'}
-              </Text>
-            </View>
+                <View style={modalStyles.field}>
+                  <View style={modalStyles.switchRow}>
+                    <Text style={modalStyles.fieldLabel}>
+                      Apply to All Teachers
+                    </Text>
+                    <Switch
+                      value={isAllTeachers}
+                      onValueChange={setIsAllTeachers}
+                      trackColor={{ false: '#e5e7eb', true: '#99f6e4' }}
+                      thumbColor={isAllTeachers ? '#0d9488' : '#9ca3af'}
+                    />
+                  </View>
+                  <Text style={modalStyles.switchHint}>
+                    {isAllTeachers
+                      ? 'This exception will apply to all teachers/staff in the organization.'
+                      : 'This exception will not apply to teachers/staff attendance.'}
+                  </Text>
+                </View>
+              </>
+            )}
 
-            {!isAllClasses && (
+            {(classScopedOnly || !isAllClasses) && (
               <ClassSelectionGrid
                 classes={classes}
                 selectedClasses={selectedClasses}

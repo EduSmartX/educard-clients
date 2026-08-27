@@ -29,6 +29,8 @@ import {
 import { LinearGradient } from '@/lib/linear-gradient';
 import type { SharedStackParamList } from '@/navigation/types';
 import { headerStyles, layoutStyles } from '@/styles';
+import { useAuthStore } from '@/lib/auth-store';
+import { isAdminRole } from '@/utils/role-utils';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -111,6 +113,8 @@ export default function AnnouncementDetailScreen() {
   const route =
     useRoute<RouteProp<SharedStackParamList, 'AnnouncementDetail'>>();
   const { publicId } = route.params;
+  const role = useAuthStore(state => state.user?.role);
+  const isAdmin = isAdminRole(role);
   const { data, isLoading, isError } = useAnnouncementDetail(publicId);
 
   const handleBack = () => {
@@ -131,7 +135,9 @@ export default function AnnouncementDetailScreen() {
             </TouchableOpacity>
             <View style={headerStyles.titleContainer}>
               <Text style={headerStyles.title}>Announcement</Text>
-              <Text style={headerStyles.subtitle}>Full delivery details</Text>
+              <Text style={headerStyles.subtitle}>
+                {isAdmin ? 'Full delivery details' : 'Announcement details'}
+              </Text>
             </View>
           </View>
         </View>
@@ -170,14 +176,23 @@ export default function AnnouncementDetailScreen() {
 
           <View style={s.card}>
             <Text style={s.sectionTitle}>Details</Text>
-            <InfoRow
-              label="Delivery"
-              value={DELIVERY_METHOD_LABELS[data.delivery_methods]}
-            />
-            <InfoRow
-              label="Recipients"
-              value={RECIPIENT_TYPE_LABELS[data.recipient_type]}
-            />
+            {isAdmin && (
+              <>
+                <InfoRow
+                  label="Delivery"
+                  value={DELIVERY_METHOD_LABELS[data.delivery_methods]}
+                />
+                <InfoRow
+                  label="Recipients"
+                  value={RECIPIENT_TYPE_LABELS[data.recipient_type]}
+                />
+                {!!data.manual_emails && (
+                  <InfoRow label="Emails" value={data.manual_emails} />
+                )}
+                <InfoRow label="Sent by" value={data.sent_by_name ?? '—'} />
+                <InfoRow label="Sent to" value={String(data.recipient_count)} />
+              </>
+            )}
             {!!data.event_name && (
               <InfoRow label="Event" value={data.event_name} />
             )}
@@ -187,15 +202,10 @@ export default function AnnouncementDetailScreen() {
             {!!data.event_note && (
               <InfoRow label="Note" value={data.event_note} />
             )}
-            {!!data.manual_emails && (
-              <InfoRow label="Emails" value={data.manual_emails} />
-            )}
-            <InfoRow label="Sent by" value={data.sent_by_name ?? '—'} />
             <InfoRow
               label="Sent at"
               value={formatDateTime(data.sent_at ?? data.created_at)}
             />
-            <InfoRow label="Sent to" value={String(data.recipient_count)} />
           </View>
 
           {(channels?.email || channels?.sms) && (

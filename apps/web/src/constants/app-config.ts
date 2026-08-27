@@ -293,6 +293,8 @@ export const ROUTES = {
   HOMEWORK_EDIT: '/homework/:id/edit',
   // Announcements
   ANNOUNCEMENTS: '/announcements',
+  ANNOUNCEMENTS_EMAIL: '/announcements/email',
+  ANNOUNCEMENTS_SMS: '/announcements/sms',
   // Fee Management
   FEES: {
     DASHBOARD: '/fees',
@@ -343,6 +345,7 @@ export const ROUTES = {
   },
   EMPLOYEE: {
     DASHBOARD: '/employee/dashboard',
+    ANNOUNCEMENTS: '/employee/announcements',
     MY_CLASSES: '/employee/classes',
     MY_STUDENTS: '/employee/students',
     HOLIDAYS: '/employee/holidays',
@@ -386,6 +389,8 @@ export const ROUTES = {
     DASHBOARD: '/parent/dashboard',
     MY_CHILDREN: '/parent/children',
     ATTENDANCE: '/parent/attendance',
+    HOLIDAYS: '/parent/holidays',
+    EXCEPTIONAL_WORK: '/parent/exceptional-work',
     LEAVE: {
       APPLY: '/parent/leave/apply',
       HISTORY: '/parent/leave/history',
@@ -405,6 +410,8 @@ export const ROUTES = {
     HOMEWORK_DETAIL: '/student/homework/:publicId',
     LEAVE: '/student/leave',
     ANNOUNCEMENTS: '/student/announcements',
+    HOLIDAYS: '/student/holidays',
+    EXCEPTIONAL_WORK: '/student/exceptional-work',
   },
   PROFILE: '/profile',
 } as const;

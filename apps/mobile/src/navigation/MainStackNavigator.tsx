@@ -25,6 +25,7 @@ import {
 import AnnouncementDetailScreen from '@/screens/shared/AnnouncementDetailScreen';
 import { ParentAcademicsTaskScreen } from '@/screens/parent/ParentAcademicsScreen';
 import AnnouncementsScreen from '@/screens/shared/AnnouncementsScreen';
+import AnnouncementCreateScreen from '@/screens/shared/AnnouncementCreateScreen';
 import AttendanceReportScreen from '@/screens/shared/attendance/AttendanceReportScreen';
 import MarkAttendanceScreen from '@/screens/shared/attendance/MarkAttendanceScreen';
 import ChangeEmailScreen from '@/screens/shared/ChangeEmailScreen';
@@ -128,6 +129,10 @@ export function MainStackNavigator({ role }: MainStackNavigatorProps) {
         </Stack.Screen>
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
         <Stack.Screen name="Announcements" component={AnnouncementsScreen} />
+        <Stack.Screen
+          name="AnnouncementCreate"
+          component={AnnouncementCreateScreen}
+        />
         <Stack.Screen
           name="AnnouncementDetail"
           component={AnnouncementDetailScreen}

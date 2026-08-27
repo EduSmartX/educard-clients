@@ -85,7 +85,7 @@ export default function LoginScreen() {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         enableOnAndroid
-        extraScrollHeight={20}
+        extraScrollHeight={32}
       >
         <Animated.View
           entering={FadeInDown.delay(100).duration(600)}
@@ -322,7 +322,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     padding: 28,
-    flex: 1,
+    // flexGrow (not flex) so tall content can overflow and scroll above the keyboard.
+    flexGrow: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.05,

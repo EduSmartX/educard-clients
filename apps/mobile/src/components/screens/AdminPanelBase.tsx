@@ -131,7 +131,7 @@ export function AdminPanelBase({
                     end={{ x: 1, y: 1 }}
                     style={styles.iconContainer}
                   >
-                    <ItemIcon size={26} color="#fff" strokeWidth={1.8} />
+                    <ItemIcon size={24} color="#fff" strokeWidth={2} />
                   </LinearGradient>
                   <Text style={styles.cardTitle} numberOfLines={2}>
                     {item.title}

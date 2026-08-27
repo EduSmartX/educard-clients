@@ -73,7 +73,7 @@ export function BulkUploadStudentsDialog({
       templateFileName={
         isMinimalFields ? 'students_template_minimal.xlsx' : 'students_template_full.xlsx'
       }
-      acceptedFileTypes=".xlsx,.xls"
+      acceptedFileTypes=".xlsx,.xls,.numbers"
       showMinimalFieldsCheckbox={true}
       isMinimalFields={isMinimalFields}
       onMinimalFieldsChange={setIsMinimalFields}

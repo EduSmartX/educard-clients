@@ -146,7 +146,8 @@ export function useAddClassToGroup() {
       addClassToGroup(groupId, classId),
     onSuccess: () => {
       showToast('success', 'Class added to group');
-      void qc.invalidateQueries({ queryKey: ['timetable', 'class-groups'] });
+      // Membership decides which slots apply, so every timetable view is stale.
+      void qc.invalidateQueries({ queryKey: ['timetable'] });
     },
   });
 }
@@ -158,7 +159,7 @@ export function useRemoveClassFromGroup() {
       removeClassFromGroup(groupId, classId),
     onSuccess: () => {
       showToast('success', 'Class removed from group');
-      void qc.invalidateQueries({ queryKey: ['timetable', 'class-groups'] });
+      void qc.invalidateQueries({ queryKey: ['timetable'] });
     },
   });
 }

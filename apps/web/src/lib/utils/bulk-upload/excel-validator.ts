@@ -133,6 +133,11 @@ export async function validateExcelFile(
   file: File,
   options: ExcelValidationOptions
 ): Promise<ValidationResult> {
+  // SheetJS cannot parse Apple Numbers bundles; the server validates those instead.
+  if (file.name.toLowerCase().endsWith('.numbers')) {
+    return { isValid: true, errors: [], data: [] };
+  }
+
   const xlsx = await loadXLSX();
   const { columns, skipRows = 2, duplicateChecks = [] } = options;
 

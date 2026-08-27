@@ -19,7 +19,9 @@ import {
   FlatList,
   StyleSheet,
   TextInput,
+  KeyboardAvoidingView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface Option {
   value: string;
@@ -55,6 +57,7 @@ export function FormDropdown({
 }: FormDropdownProps) {
   const [visible, setVisible] = useState(false);
   const [search, setSearch] = useState('');
+  const insets = useSafeAreaInsets();
 
   const selectedLabel = options.find(o => o.value === value)?.label;
   const filtered =
@@ -111,8 +114,8 @@ export function FormDropdown({
             setSearch('');
           }}
         >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modal}>
+          <KeyboardAvoidingView style={styles.modalOverlay} behavior="padding">
+            <View style={[styles.modal, { paddingBottom: insets.bottom + 20 }]}>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>{label}</Text>
                 <TouchableOpacity
@@ -179,7 +182,7 @@ export function FormDropdown({
                 </TouchableOpacity>
               ) : null}
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </Modal>
       )}
     </View>
@@ -187,28 +190,28 @@ export function FormDropdown({
 }
 
 const styles = StyleSheet.create({
-  container: { marginBottom: 16 },
-  label: { fontSize: 14, fontWeight: '600', color: '#334155', marginBottom: 6 },
+  container: { marginBottom: 14 },
+  label: { fontSize: 13, fontWeight: '500', color: '#475569', marginBottom: 6 },
   labelError: { color: '#dc2626' },
   required: { color: '#ef4444' },
   trigger: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: '#e2e8f0',
     borderRadius: 12,
     paddingHorizontal: 14,
-    paddingVertical: 13,
-    backgroundColor: '#f8fafc',
+    paddingVertical: 12,
+    backgroundColor: '#ffffff',
   },
   triggerError: {
     borderColor: '#ef4444',
     backgroundColor: '#fef2f2',
-    borderWidth: 2,
+    borderWidth: 1.5,
   },
   triggerDisabled: { opacity: 0.5 },
-  triggerText: { fontSize: 15, color: '#1e293b', flex: 1, marginRight: 8 },
+  triggerText: { fontSize: 14, color: '#1e293b', flex: 1, marginRight: 8 },
   placeholder: { color: '#94a3b8' },
   errorRow: {
     flexDirection: 'row',
@@ -228,7 +231,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '70%',
-    paddingBottom: 20,
   },
   modalHeader: {
     flexDirection: 'row',

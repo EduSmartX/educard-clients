@@ -26,6 +26,8 @@ export type MenuTarget =
   | 'HelpSupport'
   | 'Feedback'
   | 'Profile'
+  | 'SwitchProfile'
+  | 'SyncProfiles'
   | 'Preferences'
   | 'Timetable'
   | 'TimetableTeacher'

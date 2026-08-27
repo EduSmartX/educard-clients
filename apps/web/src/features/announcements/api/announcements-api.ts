@@ -4,7 +4,14 @@
  */
 
 import api from '@/lib/api';
-import type { AnnouncementDetail, AnnouncementListItem, CreateAnnouncementPayload } from '../types';
+import type {
+  AnnouncementDetail,
+  AnnouncementListItem,
+  AnnouncementStatus,
+  CreateAnnouncementPayload,
+  DeliveryMethod,
+  RecipientType,
+} from '../types';
 
 const BASE_URL = '/notifications/announcements';
 
@@ -14,9 +21,97 @@ interface ApiResponse<T> {
   data: T;
 }
 
-export async function fetchAnnouncements(): Promise<AnnouncementListItem[]> {
-  const response = await api.get<ApiResponse<AnnouncementListItem[]>>(`${BASE_URL}/`);
+export interface PaginationMeta {
+  current_page: number;
+  total_pages: number;
+  count: number;
+  page_size: number;
+  has_next: boolean;
+  has_previous: boolean;
+}
+
+interface PaginatedResponse<T> extends ApiResponse<T[]> {
+  pagination?: PaginationMeta;
+}
+
+export interface Paginated<T> {
+  items: T[];
+  pagination: PaginationMeta;
+}
+
+const EMPTY_PAGINATION: PaginationMeta = {
+  current_page: 1,
+  total_pages: 1,
+  count: 0,
+  page_size: 25,
+  has_next: false,
+  has_previous: false,
+};
+
+export interface RecipientAnnouncement {
+  public_id: string;
+  subject: string;
+  event_name: string | null;
+  event_date: string | null;
+  delivery_methods: DeliveryMethod;
+  sent_at: string | null;
+  created_at: string;
+}
+
+export interface RecipientAnnouncementDetail extends RecipientAnnouncement {
+  body_html: string;
+  event_note: string | null;
+}
+
+/** Server-side filters; empty values are omitted from the request. */
+export interface AnnouncementFilterParams {
+  search?: string;
+  delivery_methods?: DeliveryMethod;
+  recipient_type?: RecipientType;
+  status?: AnnouncementStatus;
+  from_date?: string;
+  to_date?: string;
+  page?: number;
+  page_size?: number;
+}
+
+function toQueryParams(filters: AnnouncementFilterParams = {}): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(filters).filter(([, value]) => (value ?? '').toString().trim() !== '')
+  ) as Record<string, string>;
+}
+
+export async function fetchRecipientAnnouncements(
+  filters: AnnouncementFilterParams = {}
+): Promise<Paginated<RecipientAnnouncement>> {
+  const response = await api.get<PaginatedResponse<RecipientAnnouncement>>(`${BASE_URL}/`, {
+    params: toQueryParams(filters),
+  });
+  return {
+    items: response.data.data ?? [],
+    pagination: response.data.pagination ?? EMPTY_PAGINATION,
+  };
+}
+
+export async function fetchRecipientAnnouncementDetail(
+  publicId: string
+): Promise<RecipientAnnouncementDetail> {
+  const response = await api.get<ApiResponse<RecipientAnnouncementDetail>>(
+    `${BASE_URL}/${publicId}/`
+  );
   return response.data.data;
+}
+
+export async function fetchAnnouncements(
+  filters: AnnouncementFilterParams = {}
+): Promise<Paginated<AnnouncementListItem>> {
+  const response = await api.get<PaginatedResponse<AnnouncementListItem>>(`${BASE_URL}/`, {
+    params: toQueryParams(filters),
+  });
+  return {
+    items: response.data.data ?? [],
+    pagination: response.data.pagination ?? EMPTY_PAGINATION,
+  };
 }
 
 export async function fetchAnnouncementDetail(publicId: string): Promise<AnnouncementDetail> {

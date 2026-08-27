@@ -18,7 +18,7 @@ import {
   SlidersHorizontal,
   X,
 } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -43,8 +43,13 @@ import {
   useRetryAnnouncement,
   type AnnouncementListItem,
 } from '@/features/announcements';
+import {
+  ANNOUNCEMENT_DELIVERY_METHODS,
+  ANNOUNCEMENT_RECIPIENT_TYPES,
+} from '@/features/announcements/types';
 import { LinearGradient } from '@/lib/linear-gradient';
 import { useToast } from '@/lib/toast-context';
+import { useAuthStore } from '@/lib/auth-store';
 import type { SharedStackNavigation } from '@/navigation/types';
 import {
   cardStyles,
@@ -52,6 +57,7 @@ import {
   headerStyles,
   layoutStyles,
 } from '@/styles';
+import { isAdminRole } from '@/utils/role-utils';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -63,9 +69,8 @@ const ANNOUNCEMENT_FILTER_FIELDS: FilterField[] = [
     icon: '📤',
     options: [
       { value: '', label: 'All' },
-      { value: 'email', label: '✉️ Email' },
-      { value: 'sms', label: '💬 SMS' },
-      { value: 'both', label: '📨 Email & SMS' },
+      { value: ANNOUNCEMENT_DELIVERY_METHODS.EMAIL, label: '✉️ Email' },
+      { value: ANNOUNCEMENT_DELIVERY_METHODS.SMS, label: '💬 SMS' },
     ],
   },
   {
@@ -75,12 +80,24 @@ const ANNOUNCEMENT_FILTER_FIELDS: FilterField[] = [
     icon: '👥',
     options: [
       { value: '', label: 'All' },
-      { value: 'all_users', label: 'All Users' },
-      { value: 'all_students', label: 'All Students' },
-      { value: 'all_teachers', label: 'All Teachers' },
-      { value: 'all_parents', label: 'All Parents' },
-      { value: 'specific_classes', label: 'Specific Classes' },
-      { value: 'manual_emails', label: 'Manual Emails' },
+      { value: ANNOUNCEMENT_RECIPIENT_TYPES.ALL_USERS, label: 'All Users' },
+      {
+        value: ANNOUNCEMENT_RECIPIENT_TYPES.ALL_STUDENTS,
+        label: 'All Students',
+      },
+      {
+        value: ANNOUNCEMENT_RECIPIENT_TYPES.ALL_TEACHERS,
+        label: 'All Teachers',
+      },
+      { value: ANNOUNCEMENT_RECIPIENT_TYPES.ALL_PARENTS, label: 'All Parents' },
+      {
+        value: ANNOUNCEMENT_RECIPIENT_TYPES.SPECIFIC_CLASSES,
+        label: 'Specific Classes',
+      },
+      {
+        value: ANNOUNCEMENT_RECIPIENT_TYPES.MANUAL_EMAILS,
+        label: 'Manual Emails',
+      },
     ],
   },
   {
@@ -120,8 +137,9 @@ function statusStyles(status: AnnouncementListItem['status']) {
 
 export default function AnnouncementsScreen() {
   const navigation = useNavigation<SharedStackNavigation>();
+  const role = useAuthStore(state => state.user?.role);
+  const isAdmin = isAdminRole(role);
   const { showToast } = useToast();
-  const { data = [], isLoading, refetch, isRefetching } = useAnnouncements();
   const retryMutation = useRetryAnnouncement();
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -130,6 +148,40 @@ export default function AnnouncementsScreen() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 350);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const queryFilters = useMemo(
+    () => ({
+      search: debouncedSearch || undefined,
+      delivery_methods: (filters.delivery_methods as string) || undefined,
+      recipient_type: (filters.recipient_type as string) || undefined,
+      status: (filters.status as string) || undefined,
+      from_date: fromDate || undefined,
+      to_date: toDate || undefined,
+    }),
+    [debouncedSearch, filters, fromDate, toDate],
+  );
+
+  const {
+    data: pages,
+    isLoading,
+    refetch,
+    isRefetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useAnnouncements(queryFilters);
+
+  const filteredData = useMemo(
+    () => pages?.pages.flatMap(page => page.items) ?? [],
+    [pages],
+  );
+  const totalCount = pages?.pages[0]?.pagination.count ?? 0;
 
   const activeFilterCount =
     (filters.delivery_methods ? 1 : 0) +
@@ -138,36 +190,6 @@ export default function AnnouncementsScreen() {
     (fromDate ? 1 : 0) +
     (toDate ? 1 : 0) +
     (searchQuery.trim() ? 1 : 0);
-
-  const filteredData = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    return data.filter(item => {
-      if (
-        q &&
-        !item.subject.toLowerCase().includes(q) &&
-        !item.event_name.toLowerCase().includes(q)
-      ) {
-        return false;
-      }
-      if (
-        filters.delivery_methods &&
-        item.delivery_methods !== filters.delivery_methods
-      ) {
-        return false;
-      }
-      if (
-        filters.recipient_type &&
-        item.recipient_type !== filters.recipient_type
-      ) {
-        return false;
-      }
-      if (filters.status && item.status !== filters.status) return false;
-      const when = (item.sent_at ?? item.created_at)?.slice(0, 10);
-      if (fromDate && when && when < fromDate) return false;
-      if (toDate && when && when > toDate) return false;
-      return true;
-    });
-  }, [data, filters, fromDate, toDate, searchQuery]);
 
   const toggleExpand = (id: string) => {
     setExpandedIds(prev => {
@@ -249,6 +271,15 @@ export default function AnnouncementsScreen() {
                 </View>
               )}
             </TouchableOpacity>
+            {isAdmin && (
+              <TouchableOpacity
+                style={s.addBtn}
+                onPress={() => navigation.navigate('AnnouncementCreate')}
+                accessibilityLabel="Add announcement"
+              >
+                <Text style={s.addBtnText}>+</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </LinearGradient>
@@ -264,6 +295,19 @@ export default function AnnouncementsScreen() {
             data={filteredData}
             keyExtractor={item => item.public_id}
             contentContainerStyle={s.listContent}
+            onEndReachedThreshold={0.5}
+            onEndReached={() => {
+              if (hasNextPage && !isFetchingNextPage) {
+                void fetchNextPage();
+              }
+            }}
+            ListFooterComponent={
+              isFetchingNextPage ? (
+                <View style={s.footerLoader}>
+                  <ActivityIndicator size="small" color="#2563eb" />
+                </View>
+              ) : null
+            }
             refreshControl={
               <RefreshControl
                 refreshing={isRefetching}
@@ -271,51 +315,62 @@ export default function AnnouncementsScreen() {
               />
             }
             ListHeaderComponent={
-              <View style={s.filterBar}>
-                <View style={s.searchWrap}>
-                  <Search size={16} color="#94a3b8" />
-                  <TextInput
-                    style={s.searchInput}
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                    placeholder="Search by subject or event..."
-                    placeholderTextColor="#94a3b8"
-                    returnKeyType="search"
-                  />
-                  {searchQuery.length > 0 && (
-                    <TouchableOpacity
-                      onPress={() => setSearchQuery('')}
-                      hitSlop={8}
-                    >
-                      <X size={16} color="#94a3b8" />
+              <View>
+                <View style={s.filterBar}>
+                  <View style={s.searchWrap}>
+                    <Search size={16} color="#94a3b8" />
+                    <TextInput
+                      style={s.searchInput}
+                      value={searchQuery}
+                      onChangeText={setSearchQuery}
+                      placeholder="Search by subject or event..."
+                      placeholderTextColor="#94a3b8"
+                      returnKeyType="search"
+                    />
+                    {searchQuery.length > 0 && (
+                      <TouchableOpacity
+                        onPress={() => setSearchQuery('')}
+                        hitSlop={8}
+                      >
+                        <X size={16} color="#94a3b8" />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                  <View style={s.dateRow}>
+                    <View style={s.dateCol}>
+                      <FormDatePicker
+                        label="From"
+                        value={fromDate}
+                        onChange={setFromDate}
+                        placeholder="Start date"
+                      />
+                    </View>
+                    <View style={s.dateCol}>
+                      <FormDatePicker
+                        label="To"
+                        value={toDate}
+                        onChange={setToDate}
+                        placeholder="End date"
+                      />
+                    </View>
+                  </View>
+                  {activeFilterCount > 0 && (
+                    <TouchableOpacity style={s.clearBtn} onPress={clearFilters}>
+                      <X size={14} color="#dc2626" />
+                      <Text style={s.clearBtnText}>
+                        Clear filters ({activeFilterCount})
+                      </Text>
                     </TouchableOpacity>
                   )}
                 </View>
-                <View style={s.dateRow}>
-                  <View style={s.dateCol}>
-                    <FormDatePicker
-                      label="From"
-                      value={fromDate}
-                      onChange={setFromDate}
-                      placeholder="Start date"
-                    />
-                  </View>
-                  <View style={s.dateCol}>
-                    <FormDatePicker
-                      label="To"
-                      value={toDate}
-                      onChange={setToDate}
-                      placeholder="End date"
-                    />
-                  </View>
-                </View>
-                {activeFilterCount > 0 && (
-                  <TouchableOpacity style={s.clearBtn} onPress={clearFilters}>
-                    <X size={14} color="#dc2626" />
-                    <Text style={s.clearBtnText}>
-                      Clear filters ({activeFilterCount})
+                {!isAdmin && (
+                  <View style={s.tableHeader}>
+                    <Text style={[s.tableHeaderCell, s.subjectCell]}>
+                      Subject
                     </Text>
-                  </TouchableOpacity>
+                    <Text style={s.tableHeaderCell}>Delivery Type</Text>
+                    <Text style={[s.tableHeaderCell, s.dateCell]}>Dates</Text>
+                  </View>
                 )}
               </View>
             }
@@ -323,16 +378,48 @@ export default function AnnouncementsScreen() {
               <View style={s.emptyState}>
                 <Megaphone size={20} color="#94a3b8" />
                 <Text style={s.emptyTitle}>
-                  {data.length === 0 ? 'No announcements yet' : 'No matches'}
+                  {totalCount === 0 ? 'No announcements yet' : 'No matches'}
                 </Text>
                 <Text style={s.emptyText}>
-                  {data.length === 0
+                  {totalCount === 0
                     ? 'Create an announcement from web to start delivery.'
                     : 'Try adjusting or clearing your filters.'}
                 </Text>
               </View>
             }
             renderItem={({ item, index }) => {
+              if (!isAdmin) {
+                return (
+                  <Animated.View
+                    entering={FadeInDown.delay(40 * (index + 1)).springify()}
+                  >
+                    <TouchableOpacity
+                      style={s.recipientRow}
+                      onPress={() =>
+                        navigation.navigate('AnnouncementDetail', {
+                          publicId: item.public_id,
+                        })
+                      }
+                    >
+                      <Text
+                        style={[s.recipientCell, s.subjectCell]}
+                        numberOfLines={2}
+                      >
+                        {item.subject}
+                      </Text>
+                      <Text style={s.recipientCell} numberOfLines={1}>
+                        {DELIVERY_METHOD_LABELS[item.delivery_methods]}
+                      </Text>
+                      <Text
+                        style={[s.recipientCell, s.dateCell]}
+                        numberOfLines={1}
+                      >
+                        {formatDateTime(item.sent_at ?? item.created_at)}
+                      </Text>
+                    </TouchableOpacity>
+                  </Animated.View>
+                );
+              }
               const status = statusStyles(item.status);
               const retrying =
                 retryMutation.isPending && retryingId === item.public_id;
@@ -486,7 +573,64 @@ const s = StyleSheet.create({
     justifyContent: 'center',
   },
   filterBadgeText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  addBtn: {
+    width: 40,
+    height: 40,
+    marginLeft: 8,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  addBtnText: {
+    color: '#4f46e5',
+    fontSize: 26,
+    lineHeight: 28,
+    fontWeight: '500',
+  },
   filterBar: { marginBottom: 4 },
+  tableHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  tableHeaderCell: {
+    flex: 1,
+    color: '#64748b',
+    fontSize: 11,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+  },
+  recipientRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 64,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 12,
+    backgroundColor: '#fff',
+  },
+  recipientCell: {
+    flex: 1,
+    color: '#475569',
+    fontSize: 12,
+  },
+  subjectCell: {
+    flex: 1.4,
+    color: '#0f172a',
+    fontWeight: '700',
+  },
+  dateCell: {
+    textAlign: 'right',
+    color: '#64748b',
+  },
   searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -554,6 +698,10 @@ const s = StyleSheet.create({
   loadingText: {
     color: '#64748b',
     fontSize: 13,
+  },
+  footerLoader: {
+    paddingVertical: 16,
+    alignItems: 'center',
   },
   emptyState: {
     borderWidth: 1,

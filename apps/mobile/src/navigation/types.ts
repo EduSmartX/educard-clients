@@ -55,6 +55,7 @@ export type SharedStackParamList = {
   Tabs: undefined;
   Notifications: undefined;
   Announcements: undefined;
+  AnnouncementCreate: undefined;
   AnnouncementDetail: { publicId: string };
   Subjects: { class_id?: string; class_name?: string } | undefined;
   SubjectDetail: { id: string; is_deleted?: string };

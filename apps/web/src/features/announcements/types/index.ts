@@ -2,15 +2,25 @@
  * Announcements types and option constants
  */
 
-export type DeliveryMethod = 'email' | 'sms' | 'both';
+export const ANNOUNCEMENT_DELIVERY_METHODS = {
+  EMAIL: 'email',
+  SMS: 'sms',
+} as const;
+
+export type DeliveryMethod =
+  (typeof ANNOUNCEMENT_DELIVERY_METHODS)[keyof typeof ANNOUNCEMENT_DELIVERY_METHODS];
+
+export const ANNOUNCEMENT_RECIPIENT_TYPES = {
+  ALL_USERS: 'all_users',
+  ALL_STUDENTS: 'all_students',
+  ALL_TEACHERS: 'all_teachers',
+  ALL_PARENTS: 'all_parents',
+  SPECIFIC_CLASSES: 'specific_classes',
+  MANUAL_EMAILS: 'manual_emails',
+} as const;
 
 export type RecipientType =
-  | 'all_users'
-  | 'all_students'
-  | 'all_teachers'
-  | 'all_parents'
-  | 'specific_classes'
-  | 'manual_emails';
+  (typeof ANNOUNCEMENT_RECIPIENT_TYPES)[keyof typeof ANNOUNCEMENT_RECIPIENT_TYPES];
 
 export type AnnouncementStatus = 'draft' | 'sent' | 'failed';
 
@@ -34,8 +44,8 @@ export interface AnnouncementRecipientStats {
 export interface AnnouncementDeliveryStats {
   recipients?: AnnouncementRecipientStats;
   channels?: {
-    email?: AnnouncementChannelStat;
-    sms?: AnnouncementChannelStat;
+    [ANNOUNCEMENT_DELIVERY_METHODS.EMAIL]?: AnnouncementChannelStat;
+    [ANNOUNCEMENT_DELIVERY_METHODS.SMS]?: AnnouncementChannelStat;
   };
 }
 
@@ -74,33 +84,31 @@ export interface AnnouncementDetail extends AnnouncementListItem {
 }
 
 export const DELIVERY_METHOD_OPTIONS: { value: DeliveryMethod; label: string }[] = [
-  { value: 'email', label: 'Email' },
-  { value: 'sms', label: 'SMS' },
-  { value: 'both', label: 'Email & SMS' },
+  { value: ANNOUNCEMENT_DELIVERY_METHODS.EMAIL, label: 'Email' },
+  { value: ANNOUNCEMENT_DELIVERY_METHODS.SMS, label: 'SMS' },
 ];
 
 export const RECIPIENT_TYPE_OPTIONS: { value: RecipientType; label: string }[] = [
-  { value: 'all_users', label: 'All Users' },
-  { value: 'all_students', label: 'All Students' },
-  { value: 'all_teachers', label: 'All Teachers' },
-  { value: 'all_parents', label: 'All Parents / Guardians' },
-  { value: 'specific_classes', label: 'Specific Classes' },
-  { value: 'manual_emails', label: 'Manual Email List' },
+  { value: ANNOUNCEMENT_RECIPIENT_TYPES.ALL_USERS, label: 'All Users' },
+  { value: ANNOUNCEMENT_RECIPIENT_TYPES.ALL_STUDENTS, label: 'All Students' },
+  { value: ANNOUNCEMENT_RECIPIENT_TYPES.ALL_TEACHERS, label: 'All Teachers' },
+  { value: ANNOUNCEMENT_RECIPIENT_TYPES.ALL_PARENTS, label: 'All Parents / Guardians' },
+  { value: ANNOUNCEMENT_RECIPIENT_TYPES.SPECIFIC_CLASSES, label: 'Specific Classes' },
+  { value: ANNOUNCEMENT_RECIPIENT_TYPES.MANUAL_EMAILS, label: 'Manual Email List' },
 ];
 
 export const DELIVERY_METHOD_LABELS: Record<DeliveryMethod, string> = {
-  email: 'Email',
-  sms: 'SMS',
-  both: 'Email & SMS',
+  [ANNOUNCEMENT_DELIVERY_METHODS.EMAIL]: 'Email',
+  [ANNOUNCEMENT_DELIVERY_METHODS.SMS]: 'SMS',
 };
 
 export const RECIPIENT_TYPE_LABELS: Record<RecipientType, string> = {
-  all_users: 'All Users',
-  all_students: 'All Students',
-  all_teachers: 'All Teachers',
-  all_parents: 'All Parents / Guardians',
-  specific_classes: 'Specific Classes',
-  manual_emails: 'Manual Email List',
+  [ANNOUNCEMENT_RECIPIENT_TYPES.ALL_USERS]: 'All Users',
+  [ANNOUNCEMENT_RECIPIENT_TYPES.ALL_STUDENTS]: 'All Students',
+  [ANNOUNCEMENT_RECIPIENT_TYPES.ALL_TEACHERS]: 'All Teachers',
+  [ANNOUNCEMENT_RECIPIENT_TYPES.ALL_PARENTS]: 'All Parents / Guardians',
+  [ANNOUNCEMENT_RECIPIENT_TYPES.SPECIFIC_CLASSES]: 'Specific Classes',
+  [ANNOUNCEMENT_RECIPIENT_TYPES.MANUAL_EMAILS]: 'Manual Email List',
 };
 
 export const ANNOUNCEMENT_STATUS_META: Record<
