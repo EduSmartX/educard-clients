@@ -59,6 +59,7 @@ export interface Review extends AuditFields {
   user_public_id: string;
   user_name: string;
   user_role: string;
+  user_profile_image: string | null;
   rating: number;
   review: string;
 }

@@ -3,8 +3,11 @@ import {
   createFeedback,
   fetchFeedbackList,
   fetchMyReview,
+  fetchPublicReviews,
+  fetchReviews,
   submitReview,
   type CreateFeedbackPayload,
+  type ReviewQueryParams,
 } from '../api/feedback-api';
 import type { FeedbackQueryParams } from '@educard/shared';
 
@@ -12,6 +15,8 @@ export const feedbackKeys = {
   all: ['feedback'] as const,
   list: (params?: FeedbackQueryParams) => [...feedbackKeys.all, 'list', params] as const,
   myReview: () => [...feedbackKeys.all, 'my-review'] as const,
+  publicReviews: () => [...feedbackKeys.all, 'public-reviews'] as const,
+  reviews: (params?: ReviewQueryParams) => [...feedbackKeys.all, 'reviews', params] as const,
 };
 
 export function useFeedbackList(params?: FeedbackQueryParams) {
@@ -27,6 +32,24 @@ export function useMyReview() {
     queryKey: feedbackKeys.myReview(),
     queryFn: fetchMyReview,
     refetchOnMount: 'always',
+  });
+}
+
+/** Genuine, written reviews shown publicly on the home page (no auth required). */
+export function usePublicReviews() {
+  return useQuery({
+    queryKey: feedbackKeys.publicReviews(),
+    queryFn: fetchPublicReviews,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/** Reviews for the caller's organization (admin dashboard widget). */
+export function useReviews(params?: ReviewQueryParams) {
+  return useQuery({
+    queryKey: feedbackKeys.reviews(params),
+    queryFn: () => fetchReviews(params),
+    staleTime: 60 * 1000,
   });
 }
 

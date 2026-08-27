@@ -422,6 +422,7 @@ export const API_ENDPOINTS = {
       LIST: "/feedback/reviews/",
       CREATE: "/feedback/reviews/",
       ME: "/feedback/reviews/me/",
+      PUBLIC: "/feedback/reviews/public/",
     },
   },
 } as const;

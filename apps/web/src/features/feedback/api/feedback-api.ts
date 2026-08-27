@@ -12,6 +12,13 @@ import {
   type ReviewPayload,
 } from '@educard/shared';
 
+export interface ReviewQueryParams {
+  page?: number;
+  page_size?: number;
+  rating?: number;
+  ordering?: string;
+}
+
 export interface CreateFeedbackPayload {
   feedback_type: string;
   module?: string;
@@ -68,7 +75,17 @@ export async function fetchMyReview(): Promise<ApiDetailResponse<Review | null>>
   return response.data;
 }
 
+export async function fetchReviews(params?: ReviewQueryParams): Promise<ApiListResponse<Review>> {
+  const response = await apiClient.get(API_ENDPOINTS.FEEDBACK.REVIEWS.LIST, { params });
+  return response.data;
+}
+
 export async function submitReview(payload: ReviewPayload): Promise<ApiDetailResponse<Review>> {
   const response = await apiClient.post(API_ENDPOINTS.FEEDBACK.REVIEWS.CREATE, payload);
+  return response.data;
+}
+
+export async function fetchPublicReviews(): Promise<ApiDetailResponse<Review[]>> {
+  const response = await apiClient.get(API_ENDPOINTS.FEEDBACK.REVIEWS.PUBLIC);
   return response.data;
 }
