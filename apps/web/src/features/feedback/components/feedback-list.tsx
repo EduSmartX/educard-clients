@@ -3,9 +3,17 @@ import { ExternalLink, FileText, Inbox, Paperclip } from 'lucide-react';
 import { FEEDBACK_STATUS_COLORS, getFeedbackTypeOption, type Feedback } from '@educard/shared';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatFileSize } from '@/lib/utils';
 import { useFeedbackList } from '../hooks/use-feedback';
+import { FeedbackStatusProgress } from './feedback-status-progress';
 import { FEEDBACK_TYPE_ICONS } from './feedback-type-icons';
 
 function formatDate(value: string) {
@@ -20,92 +28,134 @@ function FeedbackCard({ feedback }: Readonly<{ feedback: Feedback }>) {
   const option = getFeedbackTypeOption(feedback.feedback_type);
   const Icon = FEEDBACK_TYPE_ICONS[option.icon];
   const statusStyle = FEEDBACK_STATUS_COLORS[feedback.status];
+  // Reviewer comments only make sense once triage has started.
+  const showResolution = feedback.status_step >= 2 && !!feedback.admin_remarks;
 
   return (
-    <Card className="border-l-4" style={{ borderLeftColor: option.borderColor }}>
-      <CardContent className="space-y-3 pt-6">
-        <div className="flex items-start gap-3">
-          <span
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
-            style={{ backgroundColor: option.bgColor }}
-          >
-            <Icon className="h-5 w-5" style={{ color: option.color }} />
-          </span>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="truncate text-sm font-semibold text-slate-900">{feedback.subject}</h3>
-              <Badge
-                variant="outline"
-                style={{ color: option.color, borderColor: option.borderColor }}
+    <Dialog>
+      <DialogTrigger asChild>
+        <Card
+          className="cursor-pointer border-l-4 transition-shadow hover:shadow-md"
+          style={{ borderLeftColor: option.borderColor }}
+        >
+          <CardContent className="space-y-3 pt-6">
+            <div className="flex items-start gap-3">
+              <span
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
+                style={{ backgroundColor: option.bgColor }}
               >
-                {feedback.feedback_type_display}
-              </Badge>
-              {feedback.module_display && (
-                <Badge variant="secondary">{feedback.module_display}</Badge>
-              )}
-              <Badge
-                variant="outline"
-                style={{
-                  color: statusStyle?.color,
-                  borderColor: statusStyle?.color,
-                  backgroundColor: statusStyle?.bgColor,
-                }}
-              >
-                {feedback.status_display}
-              </Badge>
+                <Icon className="h-5 w-5" style={{ color: option.color }} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="truncate text-sm font-semibold text-slate-900">
+                    {feedback.subject}
+                  </h3>
+                  <Badge
+                    variant="outline"
+                    style={{ color: option.color, borderColor: option.borderColor }}
+                  >
+                    {feedback.feedback_type_display}
+                  </Badge>
+                  {feedback.module_display && (
+                    <Badge variant="secondary">{feedback.module_display}</Badge>
+                  )}
+                  <Badge
+                    variant="outline"
+                    style={{
+                      color: statusStyle?.color,
+                      borderColor: statusStyle?.color,
+                      backgroundColor: statusStyle?.bgColor,
+                    }}
+                  >
+                    {feedback.status_display}
+                  </Badge>
+                </div>
+                <p className="mt-1 text-xs text-slate-400">
+                  <span className="font-mono font-medium text-slate-500">
+                    {feedback.ticket_number}
+                  </span>{' '}
+                  · {feedback.user_name} · {formatDate(feedback.created_at)}
+                </p>
+              </div>
             </div>
-            <p className="mt-1 text-xs text-slate-400">
-              <span className="font-mono font-medium text-slate-500">{feedback.ticket_number}</span>{' '}
-              · {feedback.user_name} · {formatDate(feedback.created_at)}
-            </p>
+
+            <p className="line-clamp-2 text-sm text-slate-600">{feedback.description}</p>
+
+            <FeedbackStatusProgress step={feedback.status_step} />
+          </CardContent>
+        </Card>
+      </DialogTrigger>
+
+      <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-base">{feedback.subject}</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge
+              variant="outline"
+              style={{ color: option.color, borderColor: option.borderColor }}
+            >
+              {feedback.feedback_type_display}
+            </Badge>
+            {feedback.module_display && (
+              <Badge variant="secondary">{feedback.module_display}</Badge>
+            )}
+            <span className="font-mono text-xs text-slate-500">{feedback.ticket_number}</span>
           </div>
+
+          <FeedbackStatusProgress step={feedback.status_step} className="py-2" />
+
+          <p className="text-sm whitespace-pre-wrap text-slate-600">{feedback.description}</p>
+
+          {showResolution && (
+            <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-3">
+              <p className="text-xs font-semibold text-emerald-700">
+                Reviewer comments
+                {feedback.resolved_by_name ? ` · ${feedback.resolved_by_name}` : ''}
+                {feedback.resolved_at ? ` · ${formatDate(feedback.resolved_at)}` : ''}
+              </p>
+              <p className="mt-1 text-sm whitespace-pre-wrap text-emerald-900">
+                {feedback.admin_remarks}
+              </p>
+            </div>
+          )}
+
+          {feedback.github_issue_url && (
+            <a
+              href={feedback.github_issue_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-700"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Track on GitHub
+              {feedback.github_issue_number ? ` #${feedback.github_issue_number}` : ''}
+            </a>
+          )}
+
+          {feedback.attachments.length > 0 && (
+            <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-3">
+              {feedback.attachments.map((attachment) => (
+                <a
+                  key={attachment.public_id}
+                  href={attachment.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-slate-600 transition-colors hover:bg-slate-50"
+                >
+                  <Paperclip className="h-3.5 w-3.5" />
+                  <span className="max-w-[12rem] truncate">{attachment.file_name}</span>
+                  <span className="text-slate-400">{formatFileSize(attachment.file_size)}</span>
+                </a>
+              ))}
+            </div>
+          )}
         </div>
-
-        <p className="text-sm whitespace-pre-wrap text-slate-600">{feedback.description}</p>
-
-        {feedback.admin_remarks && (
-          <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-3">
-            <p className="text-xs font-semibold text-emerald-700">
-              Resolution{feedback.resolved_by_name ? ` · ${feedback.resolved_by_name}` : ''}
-              {feedback.resolved_at ? ` · ${formatDate(feedback.resolved_at)}` : ''}
-            </p>
-            <p className="mt-1 text-sm whitespace-pre-wrap text-emerald-900">
-              {feedback.admin_remarks}
-            </p>
-          </div>
-        )}
-
-        {feedback.github_issue_url && (
-          <a
-            href={feedback.github_issue_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-700"
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-            Track on GitHub{feedback.github_issue_number ? ` #${feedback.github_issue_number}` : ''}
-          </a>
-        )}
-
-        {feedback.attachments.length > 0 && (
-          <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-3">
-            {feedback.attachments.map((attachment) => (
-              <a
-                key={attachment.public_id}
-                href={attachment.file_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-slate-600 transition-colors hover:bg-slate-50"
-              >
-                <Paperclip className="h-3.5 w-3.5" />
-                <span className="max-w-[12rem] truncate">{attachment.file_name}</span>
-                <span className="text-slate-400">{formatFileSize(attachment.file_size)}</span>
-              </a>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      </DialogContent>
+    </Dialog>
   );
 }
 

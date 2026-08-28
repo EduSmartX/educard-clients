@@ -54,6 +54,12 @@ export const FEEDBACK_STATUS_COLORS: Record<
   [FEEDBACK_STATUS.CLOSED]: { color: "#64748b", bgColor: "#f1f5f9" },
 };
 
+export const FEEDBACK_PROGRESS_STEPS = [
+  "Open",
+  "In Progress",
+  "Resolved",
+] as const;
+
 export type FeedbackTypeIconName =
   | "Lightbulb"
   | "TrendingUp"

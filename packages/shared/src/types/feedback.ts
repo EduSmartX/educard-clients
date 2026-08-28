@@ -40,6 +40,9 @@ export interface Feedback extends AuditFields {
   description: string;
   status: FeedbackStatus;
   status_display: string;
+  /** 1-based index of the current stage on the 3-step progress bar (Open/In Progress/Resolved). */
+  status_step: number;
+  status_total_steps: number;
   /** Empty until an admin adds a resolution note. */
   admin_remarks: string;
   resolved_at: string | null;
