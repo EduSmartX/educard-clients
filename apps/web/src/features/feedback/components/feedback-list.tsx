@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { FileText, Inbox, Paperclip } from 'lucide-react';
+import { ExternalLink, FileText, Inbox, Paperclip } from 'lucide-react';
 import { FEEDBACK_STATUS_COLORS, getFeedbackTypeOption, type Feedback } from '@educard/shared';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -62,6 +62,30 @@ function FeedbackCard({ feedback }: Readonly<{ feedback: Feedback }>) {
         </div>
 
         <p className="text-sm whitespace-pre-wrap text-slate-600">{feedback.description}</p>
+
+        {feedback.admin_remarks && (
+          <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-3">
+            <p className="text-xs font-semibold text-emerald-700">
+              Resolution{feedback.resolved_by_name ? ` · ${feedback.resolved_by_name}` : ''}
+              {feedback.resolved_at ? ` · ${formatDate(feedback.resolved_at)}` : ''}
+            </p>
+            <p className="mt-1 text-sm whitespace-pre-wrap text-emerald-900">
+              {feedback.admin_remarks}
+            </p>
+          </div>
+        )}
+
+        {feedback.github_issue_url && (
+          <a
+            href={feedback.github_issue_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-700"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            Track on GitHub{feedback.github_issue_number ? ` #${feedback.github_issue_number}` : ''}
+          </a>
+        )}
 
         {feedback.attachments.length > 0 && (
           <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-3">

@@ -40,7 +40,13 @@ export interface Feedback extends AuditFields {
   description: string;
   status: FeedbackStatus;
   status_display: string;
+  /** Empty until an admin adds a resolution note. */
+  admin_remarks: string;
+  resolved_at: string | null;
+  resolved_by_name: string;
   attachments: FeedbackAttachment[];
+  github_issue_number: number | null;
+  github_issue_url: string;
 }
 
 export interface FeedbackQueryParams {
