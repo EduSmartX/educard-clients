@@ -28,6 +28,7 @@ import {
   Clock,
   CreditCard,
   Star,
+  MessageSquare,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { VerificationBanner } from '@/components/dashboard';
@@ -605,6 +606,13 @@ export default function AdminDashboardPage() {
             description="Configure curriculum subjects"
             path={ROUTES.SUBJECTS}
             iconBg="bg-gradient-to-br from-amber-500 to-orange-600"
+          />
+          <ActionCard
+            icon={MessageSquare}
+            label="Feedback"
+            description="Share feedback, complaints, or rate the app"
+            path={ROUTES.FEEDBACK}
+            iconBg="bg-gradient-to-br from-rose-500 to-pink-600"
           />
         </motion.div>
       </section>

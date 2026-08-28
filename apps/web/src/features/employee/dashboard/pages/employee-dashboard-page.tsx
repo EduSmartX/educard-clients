@@ -27,6 +27,7 @@ import {
   ArrowRight,
   Sparkles,
   BarChart3,
+  MessageSquare,
 } from 'lucide-react';
 import { useMyTimetable } from '@/features/timetable/hooks/queries';
 import { useMyLeaveBalancesSummary } from '@/features/leave/hooks/use-leave-balances';
@@ -612,6 +613,12 @@ export default function EmployeeDashboardPage() {
                   path: '/leave/requests/new',
                   iconBg: 'bg-gradient-to-br from-violet-500 to-purple-600',
                   icon: CalendarDays,
+                },
+                {
+                  label: 'Feedback',
+                  path: ROUTES.FEEDBACK,
+                  iconBg: 'bg-gradient-to-br from-rose-500 to-pink-600',
+                  icon: MessageSquare,
                 },
               ].map((action) => (
                 <motion.div

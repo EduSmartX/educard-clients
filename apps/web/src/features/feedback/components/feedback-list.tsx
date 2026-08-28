@@ -22,7 +22,7 @@ function FeedbackCard({ feedback }: Readonly<{ feedback: Feedback }>) {
   const statusStyle = FEEDBACK_STATUS_COLORS[feedback.status];
 
   return (
-    <Card>
+    <Card className="border-l-4" style={{ borderLeftColor: option.borderColor }}>
       <CardContent className="space-y-3 pt-6">
         <div className="flex items-start gap-3">
           <span
