@@ -300,6 +300,7 @@ export const ROUTES = {
     DASHBOARD: '/fees',
     STRUCTURES: '/fees/structures',
     STRUCTURES_NEW: '/fees/structures/new',
+    STRUCTURES_VIEW: '/fees/structures/:id',
     STRUCTURES_EDIT: '/fees/structures/:id/edit',
     STUDENT_FEES: '/fees/students',
     COMPONENT_REQUESTS: '/fees/students/component-requests',

@@ -439,6 +439,7 @@ function App() {
             <Route path={ROUTES.FEES.DASHBOARD} element={<FeeDashboardPage />} />
             <Route path={ROUTES.FEES.STRUCTURES} element={<FeeStructuresPage />} />
             <Route path={ROUTES.FEES.STRUCTURES_NEW} element={<CreateFeeStructurePage />} />
+            <Route path={ROUTES.FEES.STRUCTURES_VIEW} element={<EditFeeStructurePage />} />
             <Route path={ROUTES.FEES.STRUCTURES_EDIT} element={<EditFeeStructurePage />} />
             <Route path={ROUTES.FEES.STUDENT_FEES} element={<StudentFeesPage />} />
             <Route
