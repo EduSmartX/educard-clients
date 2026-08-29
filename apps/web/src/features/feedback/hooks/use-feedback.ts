@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createFeedback,
+  fetchFeedbackDetail,
   fetchFeedbackList,
   fetchMyReview,
   fetchPublicReviews,
@@ -14,6 +15,7 @@ import type { FeedbackQueryParams } from '@educard/shared';
 export const feedbackKeys = {
   all: ['feedback'] as const,
   list: (params?: FeedbackQueryParams) => [...feedbackKeys.all, 'list', params] as const,
+  detail: (id: string) => [...feedbackKeys.all, 'detail', id] as const,
   myReview: () => [...feedbackKeys.all, 'my-review'] as const,
   publicReviews: () => [...feedbackKeys.all, 'public-reviews'] as const,
   reviews: (params?: ReviewQueryParams) => [...feedbackKeys.all, 'reviews', params] as const,
@@ -24,6 +26,14 @@ export function useFeedbackList(params?: FeedbackQueryParams) {
     queryKey: feedbackKeys.list(params),
     queryFn: () => fetchFeedbackList(params),
     refetchOnMount: 'always',
+  });
+}
+
+export function useFeedbackDetail(id: string) {
+  return useQuery({
+    queryKey: feedbackKeys.detail(id),
+    queryFn: () => fetchFeedbackDetail(id),
+    enabled: Boolean(id),
   });
 }
 

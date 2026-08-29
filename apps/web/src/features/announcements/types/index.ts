@@ -81,6 +81,15 @@ export interface AnnouncementDetail extends AnnouncementListItem {
   body_html: string;
   event_note: string;
   manual_emails: string;
+  attachments: AnnouncementAttachment[];
+}
+
+export interface AnnouncementAttachment {
+  public_id: string;
+  file_name: string;
+  file_url: string;
+  mime_type: string;
+  file_size: number;
 }
 
 export const DELIVERY_METHOD_OPTIONS: { value: DeliveryMethod; label: string }[] = [
