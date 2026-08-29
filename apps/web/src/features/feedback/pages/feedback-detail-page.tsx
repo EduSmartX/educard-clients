@@ -35,7 +35,7 @@ export default function FeedbackDetailPage() {
   if (isError || !feedback) {
     return (
       <div className="space-y-6">
-        <Button variant="outline" onClick={() => navigate('/feedback')}>
+        <Button variant="outline" onClick={() => navigate('/feedback?tab=history')}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to feedback
         </Button>
@@ -56,7 +56,7 @@ export default function FeedbackDetailPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <PageHeader title="Feedback ticket" description={feedback.ticket_number} icon={FileText}>
-        <Button variant="outline" onClick={() => navigate('/feedback')}>
+        <Button variant="outline" onClick={() => navigate('/feedback?tab=history')}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to feedback
         </Button>
