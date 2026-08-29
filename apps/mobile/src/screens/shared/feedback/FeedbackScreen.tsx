@@ -7,9 +7,11 @@ import {
   FEEDBACK_MAX_ATTACHMENTS,
   FEEDBACK_MAX_ATTACHMENT_SIZE,
   FEEDBACK_MODULE_OPTIONS,
+  FEEDBACK_STATUS_COLORS,
   FEEDBACK_SUBJECT_MAX_LENGTH,
   FEEDBACK_TYPE,
   FEEDBACK_TYPE_OPTIONS,
+  getFeedbackTypeOption,
   getRoleGradient,
   type FeedbackTypeIconName,
 } from '@educard/shared';
@@ -38,6 +40,7 @@ import {
 } from '@/components/forms';
 import {
   useCreateFeedback,
+  useFeedbackList,
   useMyReview,
   useSubmitReview,
 } from '@/features/feedback';
@@ -70,7 +73,7 @@ const ATTACHMENT_MIME_TYPES = [
   'application/pdf',
 ];
 
-type Tab = 'feedback' | 'review';
+type Tab = 'feedback' | 'review' | 'history';
 type FieldErrors = Record<string, string>;
 
 export default function FeedbackScreen() {
@@ -96,6 +99,9 @@ export default function FeedbackScreen() {
 
   const { data: myReview, isLoading: reviewLoading } = useMyReview();
   const existingReview = myReview?.data ?? null;
+
+  const { data: feedbackList, isLoading: isLoadingList } = useFeedbackList();
+  const submissions = feedbackList?.data ?? [];
 
   const createFeedback = useCreateFeedback({
     onSuccess: () => {
@@ -308,6 +314,85 @@ export default function FeedbackScreen() {
   };
 
   const isFeedbackTab = tab === 'feedback';
+  const isReviewTab = tab === 'review';
+  const isHistoryTab = tab === 'history';
+
+  const renderHistoryTab = () => {
+    if (isLoadingList) {
+      return (
+        <View style={styles.historyEmpty}>
+          <ActivityIndicator color="#6366f1" />
+        </View>
+      );
+    }
+
+    if (submissions.length === 0) {
+      return (
+        <View style={styles.historyEmpty}>
+          <Text style={styles.historyEmptyTitle}>No feedback yet</Text>
+          <Text style={styles.historyEmptyText}>
+            Anything you submit will show up here so you can track it.
+          </Text>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.section}>
+        {submissions.map(item => {
+          const option = getFeedbackTypeOption(item.feedback_type);
+          const statusStyle = FEEDBACK_STATUS_COLORS[item.status];
+          return (
+            <View
+              key={item.public_id}
+              style={[styles.historyCard, { borderLeftColor: option.color }]}
+            >
+              <View style={styles.historyTopRow}>
+                <Text style={styles.historySubject} numberOfLines={1}>
+                  {item.subject}
+                </Text>
+                <View
+                  style={[
+                    styles.historyStatus,
+                    { backgroundColor: statusStyle?.bgColor },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.historyStatusText,
+                      { color: statusStyle?.color },
+                    ]}
+                  >
+                    {item.status_display}
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={styles.historyMeta}>
+                {item.ticket_number} · {item.feedback_type_display}
+                {item.module_display ? ` · ${item.module_display}` : ''}
+              </Text>
+
+              <Text style={styles.historyDescription} numberOfLines={3}>
+                {item.description}
+              </Text>
+
+              {item.admin_remarks ? (
+                <View style={styles.historyRemarks}>
+                  <Text style={styles.historyRemarksTitle}>
+                    Reviewer comments
+                  </Text>
+                  <Text style={styles.historyRemarksText}>
+                    {item.admin_remarks}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+          );
+        })}
+      </View>
+    );
+  };
 
   return (
     <View style={layoutStyles.container}>
@@ -349,41 +434,58 @@ export default function FeedbackScreen() {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.segment, !isFeedbackTab && styles.segmentActive]}
+            style={[styles.segment, isReviewTab && styles.segmentActive]}
             onPress={() => setTab('review')}
           >
             <Text
               style={[
                 styles.segmentText,
-                !isFeedbackTab && styles.segmentTextActive,
+                isReviewTab && styles.segmentTextActive,
               ]}
             >
               Rate us
             </Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.segment, isHistoryTab && styles.segmentActive]}
+            onPress={() => setTab('history')}
+          >
+            <Text
+              style={[
+                styles.segmentText,
+                isHistoryTab && styles.segmentTextActive,
+              ]}
+            >
+              My submissions
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        {isFeedbackTab ? renderFeedbackTab() : renderReviewTab()}
+        {isFeedbackTab && renderFeedbackTab()}
+        {isReviewTab && renderReviewTab()}
+        {isHistoryTab && renderHistoryTab()}
       </KeyboardAwareScrollView>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
-        {isFeedbackTab ? (
-          <SubmitButton
-            label="Submit feedback"
-            icon={Send}
-            isLoading={createFeedback.isPending}
-            onPress={handleSubmitFeedback}
-          />
-        ) : (
-          <SubmitButton
-            label={existingReview ? 'Update review' : 'Submit review'}
-            icon={Star}
-            variant="warning"
-            isLoading={submitReviewMutation.isPending}
-            onPress={handleSubmitReview}
-          />
-        )}
-      </View>
+      {!isHistoryTab && (
+        <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
+          {isFeedbackTab ? (
+            <SubmitButton
+              label="Submit feedback"
+              icon={Send}
+              isLoading={createFeedback.isPending}
+              onPress={handleSubmitFeedback}
+            />
+          ) : (
+            <SubmitButton
+              label={existingReview ? 'Update review' : 'Submit review'}
+              icon={Star}
+              variant="warning"
+              isLoading={submitReviewMutation.isPending}
+              onPress={handleSubmitReview}
+            />
+          )}
+        </View>
+      )}
     </View>
   );
 }
