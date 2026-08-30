@@ -23,6 +23,10 @@ export {
 } from './SubjectFilters';
 export { CLASS_FILTER_FIELDS, getClassFilterLabels } from './ClassFilters';
 export {
+  FEEDBACK_FILTER_FIELDS,
+  getFeedbackFilterLabels,
+} from './FeedbackFilters';
+export {
   TEACHER_FILTER_FIELDS,
   getTeacherFilterLabels,
 } from './TeacherFilters';

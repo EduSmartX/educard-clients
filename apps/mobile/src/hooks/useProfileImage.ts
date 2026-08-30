@@ -5,7 +5,7 @@
 import { API_ENDPOINTS, getErrorMessage } from '@educard/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState, useCallback } from 'react';
-import { Alert, Platform } from 'react-native';
+import { Alert, PermissionsAndroid, Platform } from 'react-native';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 
 import { apiClient } from '@/api/client';
@@ -74,6 +74,19 @@ export function useProfileImage({
 
     async function launchPicker(source: 'camera' | 'gallery') {
       try {
+        if (source === 'camera' && Platform.OS === 'android') {
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.CAMERA,
+          );
+          if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+            Alert.alert(
+              'Permission Required',
+              'Camera permission is required to take a photo.',
+            );
+            return;
+          }
+        }
+
         const result =
           source === 'camera'
             ? await launchCamera({

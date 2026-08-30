@@ -26,6 +26,7 @@ import {
   Eye,
   ClipboardEdit,
   RotateCcw,
+  MessageSquare,
   Megaphone,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
@@ -254,6 +255,12 @@ export const employeeSidebarConfig: SidebarSection[] = [
     title: 'SETTINGS',
     defaultCollapsed: true,
     items: [
+      {
+        id: 'feedback',
+        label: 'Feedback',
+        icon: MessageSquare,
+        path: ROUTES.FEEDBACK,
+      },
       {
         id: 'profile',
         label: 'My Profile',

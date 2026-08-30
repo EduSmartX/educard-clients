@@ -7,7 +7,16 @@
 
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Users, BarChart3, CalendarDays, Bell, Clock, Sparkles } from 'lucide-react';
+import {
+  Users,
+  BarChart3,
+  CalendarDays,
+  Bell,
+  Clock,
+  Sparkles,
+  MessageSquare,
+  ArrowRight,
+} from 'lucide-react';
 import { ContactSupportCard } from '@/components/common';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { VerificationBanner } from '@/components/dashboard';
@@ -239,6 +248,28 @@ export default function ParentDashboardPage() {
                 behalf, and stay updated with school activities and notifications.
               </p>
             </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5, duration: 0.5 }}
+        whileHover={{ y: -3 }}
+        onClick={() => navigate(ROUTES.FEEDBACK)}
+        className="group cursor-pointer"
+      >
+        <Card className="border border-gray-100 shadow-sm transition-shadow hover:shadow-lg">
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="shrink-0 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 p-3 transition-transform duration-300 group-hover:scale-110">
+              <MessageSquare className="h-6 w-6 text-white" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-gray-900">Feedback</p>
+              <p className="text-xs text-gray-500">Share feedback, complaints, or rate the app</p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-gray-300 transition-all group-hover:translate-x-1 group-hover:text-rose-500" />
           </CardContent>
         </Card>
       </motion.div>

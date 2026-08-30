@@ -115,6 +115,12 @@ export const parentSidebarConfig: SidebarSection[] = [
         path: ROUTES.PARENT.EXCEPTIONAL_WORK,
       },
       {
+        id: 'feedback',
+        label: 'Feedback',
+        icon: MessageSquare,
+        path: ROUTES.FEEDBACK,
+      },
+      {
         id: 'profile',
         label: 'My Profile',
         icon: Settings,

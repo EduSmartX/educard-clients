@@ -326,6 +326,12 @@ export const adminSidebarConfig: SidebarSection[] = [
         path: ROUTES.ORGANIZATION,
       },
       {
+        id: 'feedback',
+        label: 'Feedback',
+        icon: MessageSquare,
+        path: ROUTES.FEEDBACK,
+      },
+      {
         id: 'settings',
         label: 'Settings',
         icon: Settings,

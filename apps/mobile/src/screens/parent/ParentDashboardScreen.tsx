@@ -11,6 +11,7 @@ import {
   ClipboardCheck,
   GraduationCap,
   Megaphone,
+  MessageSquare,
 } from 'lucide-react-native';
 import { useCallback, useMemo, useState } from 'react';
 import {
@@ -139,8 +140,11 @@ export default function ParentDashboardScreen() {
   const goToNotifications = () => navigation.navigate('Notifications');
   const goToSettings = () => navigation.navigate('Settings');
   const goToAcademics = () => navigation.navigate('Academics');
+  const goToMarks = () =>
+    navigation.navigate('StudentAcademicsTask', { task: 'marks' });
   const goToAttendance = () => navigation.navigate('Attendance');
   const goToAnnouncements = () => navigation.navigate('Announcements');
+  const goToFeedback = () => navigation.navigate('Feedback');
   const goToAnnouncementDetail = (publicId: string) =>
     navigation.navigate('AnnouncementDetail', { publicId });
 
@@ -377,7 +381,7 @@ export default function ParentDashboardScreen() {
                 subtitle={examDetail?.name}
                 icon={Award}
                 actionLabel="Details"
-                onAction={goToAcademics}
+                onAction={goToMarks}
               />
               <FloatingCard>
                 <BarChart data={marksData} height={130} />
@@ -392,7 +396,7 @@ export default function ParentDashboardScreen() {
                 title="Recent Marks"
                 icon={BookOpen}
                 actionLabel="View All"
-                onAction={goToAcademics}
+                onAction={goToMarks}
               />
 
               <FloatingCard>
@@ -514,6 +518,24 @@ export default function ParentDashboardScreen() {
               )}
             </FloatingCard>
           </View>
+
+          <View className="mb-10">
+            <TouchableOpacity
+              style={styles.feedbackCard}
+              onPress={goToFeedback}
+              activeOpacity={0.85}
+            >
+              <View style={styles.feedbackIcon}>
+                <MessageSquare size={20} color="#e11d48" />
+              </View>
+              <View className="flex-1">
+                <Text style={styles.feedbackTitle}>Feedback</Text>
+                <Text style={styles.feedbackSubtitle}>
+                  Share feedback or rate the app
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -525,6 +547,26 @@ const styles = StyleSheet.create({
   content: { flex: 1 },
   scrollContent: { paddingBottom: 24 },
   legend: { marginTop: 12 },
+  feedbackCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#fee2e2',
+  },
+  feedbackIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#ffe4e6',
+  },
+  feedbackTitle: { fontSize: 15, fontWeight: '700', color: '#0f172a' },
+  feedbackSubtitle: { fontSize: 12, color: '#64748b', marginTop: 2 },
   emptyText: {
     fontSize: 13,
     color: '#94a3b8',

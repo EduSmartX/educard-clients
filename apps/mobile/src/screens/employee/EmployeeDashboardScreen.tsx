@@ -7,6 +7,7 @@ import {
   BookOpen,
   ClipboardCheck,
   Clock,
+  MessageSquare,
   GraduationCap,
   CalendarDays,
   Star,
@@ -104,6 +105,13 @@ const quickActions: QuickAction[] = [
     icon: Clock,
     gradient: ['#f59e0b', '#fcd34d'],
     screen: 'TimesheetMySubmissions',
+  },
+  {
+    id: 'feedback',
+    title: 'Feedback',
+    icon: MessageSquare,
+    gradient: ['#f43f5e', '#fb7185'],
+    screen: 'Feedback',
   },
 ];
 

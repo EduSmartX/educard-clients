@@ -212,6 +212,9 @@ const AnnouncementsEmailPage = lazy(
 const AnnouncementsSmsPage = lazy(
   () => import('./features/announcements/pages/announcements-sms-page')
 );
+const AnnouncementDetailPage = lazy(
+  () => import('./features/announcements/pages/announcement-detail-page')
+);
 const RecipientAnnouncementsPage = lazy(
   () => import('./features/announcements/pages/recipient-announcements-page')
 );
@@ -262,6 +265,11 @@ const FeePaymentsPage = lazy(() =>
     default: m.PaymentsPage,
   }))
 );
+const FeeStructureDetailPage = lazy(() =>
+  import('./features/fee/admin/pages/fee-structure-detail-page').then((m) => ({
+    default: m.FeeStructureDetailPage,
+  }))
+);
 const RecordPaymentPage = lazy(() =>
   import('./features/fee/admin/pages/record-payment-page').then((m) => ({
     default: m.RecordPaymentPage,
@@ -270,6 +278,10 @@ const RecordPaymentPage = lazy(() =>
 
 // Profile
 const ProfilePage = lazy(() => import('./features/profile/pages/profile-page'));
+
+// Feedback
+const FeedbackPage = lazy(() => import('./features/feedback/pages/feedback-page'));
+const FeedbackDetailPage = lazy(() => import('./features/feedback/pages/feedback-detail-page'));
 
 // Coming Soon
 const ComingSoonPage = lazy(() => import('./pages/coming-soon-page'));
@@ -426,11 +438,13 @@ function App() {
             />
             <Route path={ROUTES.ANNOUNCEMENTS_EMAIL} element={<AnnouncementsEmailPage />} />
             <Route path={ROUTES.ANNOUNCEMENTS_SMS} element={<AnnouncementsSmsPage />} />
+            <Route path="/announcements/:id" element={<AnnouncementDetailPage />} />
 
             {/* Fee Management */}
             <Route path={ROUTES.FEES.DASHBOARD} element={<FeeDashboardPage />} />
             <Route path={ROUTES.FEES.STRUCTURES} element={<FeeStructuresPage />} />
             <Route path={ROUTES.FEES.STRUCTURES_NEW} element={<CreateFeeStructurePage />} />
+            <Route path={ROUTES.FEES.STRUCTURES_VIEW} element={<FeeStructureDetailPage />} />
             <Route path={ROUTES.FEES.STRUCTURES_EDIT} element={<EditFeeStructurePage />} />
             <Route path={ROUTES.FEES.STUDENT_FEES} element={<StudentFeesPage />} />
             <Route
@@ -445,6 +459,10 @@ function App() {
 
             {/* Profile */}
             <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
+
+            {/* Feedback - available to every authenticated role */}
+            <Route path={ROUTES.FEEDBACK} element={<FeedbackPage />} />
+            <Route path="/feedback/:id" element={<FeedbackDetailPage />} />
 
             {/* Calendar - Coming Soon */}
             <Route

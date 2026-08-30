@@ -14,6 +14,7 @@ import {
   SlidersHorizontal,
   Calendar,
   Megaphone,
+  MessageSquare,
   Info,
   Mail,
   Phone,
@@ -197,6 +198,15 @@ export default function SettingsScreen() {
         screen: 'ChangePhone',
       },
       ...(isStudent ? [switchProfileItem, syncProfilesItem] : []),
+      {
+        id: 'feedback',
+        title: 'Feedback & Rating',
+        subtitle: 'Share ideas, report issues, rate us',
+        icon: MessageSquare,
+        iconColor: '#7c3aed',
+        iconBg: '#f5f3ff',
+        screen: 'Feedback',
+      },
       {
         id: 'help',
         title: 'Help & Support',

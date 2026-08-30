@@ -27,6 +27,8 @@ import {
   TrendingUp,
   Clock,
   CreditCard,
+  Star,
+  MessageSquare,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { VerificationBanner } from '@/components/dashboard';
@@ -37,6 +39,8 @@ import { useTeachers } from '@/features/teachers/hooks/use-teachers';
 import { useStudents } from '@/features/students/hooks/use-students';
 import { useClasses } from '@/features/classes/hooks/use-classes';
 import { getDashboardAttendanceStats } from '@/features/attendance/api/attendance-api';
+import { ReviewsSection } from '@/features/feedback/components/reviews-section';
+import { usePublicReviews } from '@/features/feedback/hooks/use-feedback';
 
 const STAGGER_CHILDREN = {
   hidden: { opacity: 0 },
@@ -406,6 +410,9 @@ export default function AdminDashboardPage() {
     retry: 1,
   });
 
+  const { data: reviewsData, isLoading: loadingReviews } = usePublicReviews();
+  const reviews = reviewsData?.data ?? [];
+
   const totalTeachers = teachersData?.pagination?.count ?? teachersData?.data?.length;
   const totalStudents = studentsData?.pagination?.count ?? studentsData?.data?.length;
   const totalClasses = classesData?.pagination?.count ?? classesData?.data?.length;
@@ -600,6 +607,13 @@ export default function AdminDashboardPage() {
             path={ROUTES.SUBJECTS}
             iconBg="bg-gradient-to-br from-amber-500 to-orange-600"
           />
+          <ActionCard
+            icon={MessageSquare}
+            label="Feedback"
+            description="Share feedback, complaints, or rate the app"
+            path={ROUTES.FEEDBACK}
+            iconBg="bg-gradient-to-br from-rose-500 to-pink-600"
+          />
         </motion.div>
       </section>
 
@@ -656,6 +670,16 @@ export default function AdminDashboardPage() {
             delay={0.95}
           />
         </div>
+      </section>
+
+      <section>
+        <SectionHeader icon={Star} title="Reviews & Feedback" delay={0.8} />
+        <ReviewsSection
+          reviews={reviews}
+          isLoading={loadingReviews}
+          emptyTitle="No reviews yet"
+          emptyDescription="Be the first reviewer for us!"
+        />
       </section>
 
       <ContactSupportCard className="mt-6" />

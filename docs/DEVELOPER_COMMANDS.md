@@ -18,7 +18,34 @@ If you want Android directly:
 
 ```bash
 cd apps/mobile
-pnpm start --android
+pnpm start --
+
+
+
+cd /Users/sivakkumar/Projects/Educard/educard-clients/apps/mobile && which adb
+
+cd /Users/sivakkumar/Projects/Educard/educard-clients/apps/mobile && adb devices
+
+1. First, open Android Studio and start an emulator
+open -a "Android Studio" /Users/sivakkumar/Projects/Educard/educard-clients/apps/mobile/android
+
+2. List available emulators
+cd /Users/sivakkumar/Projects/Educard/educard-clients/apps/mobile && $ANDROID_HOME/emulator/emulator -list-avds
+
+3. Start the Android Emulator
+$ANDROID_HOME/emulator/emulator -avd Pixel_7_Pro &
+
+4. Start Metro Bundler
+cd /Users/sivakkumar/Projects/Educard/educard-clients/apps/mobile && pnpm start
+
+If 8081 is already in use:
+lsof -ti:8081 | xargs kill -9 2>/dev/null || echo "No process found on port 8081"
+
+sleep 10 && adb devices
+
+5. Build and run :
+cd /Users/sivakkumar/Projects/Educard/educard-clients/apps/mobile && npx react-native run-android
+
 ```
 
 If you want iOS directly (macOS):

@@ -11,6 +11,7 @@ import {
   Clock,
   Calendar,
   CalendarCheck,
+  MessageSquare,
   Settings,
   FileText,
   ClipboardList,
@@ -116,6 +117,13 @@ const adminLinks: AdminLinkItem[] = [
     icon: ClipboardList,
     gradient: ['#f59e0b', '#fbbf24'],
     screen: 'TimesheetApprovals',
+  },
+  {
+    id: 'feedback',
+    title: 'Feedback',
+    icon: MessageSquare,
+    gradient: ['#f43f5e', '#fb7185'],
+    screen: 'Feedback',
   },
   {
     id: 'settings',

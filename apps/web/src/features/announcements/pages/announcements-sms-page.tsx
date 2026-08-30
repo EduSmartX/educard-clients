@@ -3,8 +3,9 @@
  * Compose and review SMS-only announcements.
  */
 
-import { useState } from 'react';
 import { MessageSquare } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { PageHeader } from '@/components/common';
@@ -13,13 +14,12 @@ import { getErrorMessage } from '@/lib/utils/error-handler';
 import { useRetryAnnouncement } from '../hooks';
 import { AnnouncementComposeCard } from '../components/announcement-compose-card';
 import { AnnouncementsListCard } from '../components/announcements-list-card';
-import { AnnouncementDetailDialog } from '../components/announcement-detail-dialog';
 import { ANNOUNCEMENT_DELIVERY_METHODS } from '../types';
 
 export default function AnnouncementsSmsPage() {
+  const navigate = useNavigate();
   const retryMutation = useRetryAnnouncement();
   const [retryingId, setRetryingId] = useState<string | null>(null);
-  const [detailId, setDetailId] = useState<string | null>(null);
 
   const handleRetry = (publicId: string) => {
     setRetryingId(publicId);
@@ -50,16 +50,10 @@ export default function AnnouncementsSmsPage() {
         title="Sent SMS announcements"
         description="The most recent SMS announcements for your school."
         deliveryMethod={ANNOUNCEMENT_DELIVERY_METHODS.SMS}
-        onView={setDetailId}
+        onView={(publicId) => navigate(`/announcements/${publicId}`)}
         onRetry={handleRetry}
         isRetrying={retryMutation.isPending}
         retryingId={retryingId}
-      />
-
-      <AnnouncementDetailDialog
-        publicId={detailId}
-        variant={ANNOUNCEMENT_DELIVERY_METHODS.SMS}
-        onClose={() => setDetailId(null)}
       />
     </div>
   );

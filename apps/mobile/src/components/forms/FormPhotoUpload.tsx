@@ -12,6 +12,7 @@ import {
   Alert,
   ActionSheetIOS,
   Platform,
+  PermissionsAndroid,
 } from 'react-native';
 import {
   launchCamera,
@@ -37,6 +38,19 @@ export function FormPhotoUpload({
   gender: _gender,
 }: FormPhotoUploadProps) {
   const pickFromCamera = async () => {
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.CAMERA,
+      );
+      if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+        Alert.alert(
+          'Camera Unavailable',
+          'Camera permission is required to take a photo.',
+        );
+        return;
+      }
+    }
+
     const result = await launchCamera({
       mediaType: 'photo',
       quality: 0.8,

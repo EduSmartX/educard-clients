@@ -8,26 +8,18 @@ import {
   Shield,
   BarChart3,
   Bell,
-  Quote,
-  Star,
   ArrowRight,
   ChevronDown,
   CheckCircle2,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel';
 import { COMPANY_NAME, ROUTES } from '@/constants/app-config';
 import { BRANDING } from '@/constants/branding';
+import { ReviewsSection } from '@/features/feedback/components/reviews-section';
+import { usePublicReviews } from '@/features/feedback/hooks/use-feedback';
 
 const heroImage = '/assets/images/hero-illustration.png';
 
@@ -121,6 +113,8 @@ export default function HomePage() {
   });
   const heroImageY = useTransform(scrollYProgress, [0, 1], ['0%', '20%']);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const { data: reviewsResponse, isLoading: isLoadingReviews } = usePublicReviews();
+  const reviews = reviewsResponse?.data ?? [];
 
   const features = [
     {
@@ -175,63 +169,6 @@ export default function HomePage() {
       title: 'Smart Notifications',
       description: 'Automated alerts and notifications keep everyone informed and connected.',
       color: 'from-emerald-600 to-green-500',
-    },
-  ];
-
-  const testimonials = [
-    {
-      name: 'Dr. Sarah Johnson',
-      role: 'Principal',
-      school: 'Springfield High School',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
-      rating: 5,
-      review:
-        'EduCard Technologies has revolutionized how we manage our school. The attendance tracking and parent communication features have saved us countless hours.',
-    },
-    {
-      name: 'Michael Chen',
-      role: 'IT Administrator',
-      school: 'Riverside Academy',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Michael',
-      rating: 5,
-      review:
-        'The implementation was seamless, and the support team was exceptional. Our teachers adapted to the platform within days.',
-    },
-    {
-      name: 'Emily Rodriguez',
-      role: 'Vice Principal',
-      school: 'Oakwood Elementary',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emily',
-      rating: 5,
-      review:
-        "We've seen a 40% reduction in administrative overhead since adopting EduCard Technologies. The leave management system alone has paid for itself.",
-    },
-    {
-      name: 'James Williams',
-      role: 'School Director',
-      school: 'Greenfield International',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=James',
-      rating: 5,
-      review:
-        'Outstanding platform! The mobile app keeps parents engaged and informed. Student attendance has improved significantly.',
-    },
-    {
-      name: 'Dr. Priya Patel',
-      role: 'Academic Coordinator',
-      school: 'Hillside Academy',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Priya',
-      rating: 5,
-      review:
-        "EduCard Technologies' class scheduling feature has eliminated conflicts and confusion. Teachers love the intuitive interface.",
-    },
-    {
-      name: 'Robert Anderson',
-      role: 'Superintendent',
-      school: 'Metro School District',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Robert',
-      rating: 5,
-      review:
-        'We rolled out EduCard Technologies across 12 schools in our district. The centralized management and reporting capabilities are transformative.',
     },
   ];
 
@@ -539,12 +476,12 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* ─── TESTIMONIALS — Carousel with scroll reveal ─── */}
+      {/* ─── REVIEWS — Genuine reviews from real users ─── */}
       <div className="bg-muted/30 w-full px-6 py-24 lg:px-16">
         <div className="mx-auto max-w-7xl">
           <AnimatedSection className="mb-16 text-center">
             <p className="text-primary mb-2 text-sm font-semibold tracking-wide uppercase">
-              Testimonials
+              Reviews
             </p>
             <h2 className="text-foreground mb-4 font-serif text-3xl font-bold lg:text-5xl">
               Loved by Schools Worldwide
@@ -555,64 +492,12 @@ export default function HomePage() {
           </AnimatedSection>
 
           <AnimatedSection delay={0.2}>
-            <Carousel opts={{ align: 'start', loop: true }} className="w-full">
-              <CarouselContent>
-                {testimonials.map((testimonial) => (
-                  <CarouselItem key={testimonial.name} className="md:basis-1/2 lg:basis-1/3">
-                    <motion.div
-                      className="p-2"
-                      whileHover={{ y: -4, scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <Card className="h-full border-2 transition-all duration-300 hover:shadow-xl">
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-center gap-3">
-                              <Avatar className="border-primary/20 h-12 w-12 border-2">
-                                <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
-                                <AvatarFallback>
-                                  {testimonial.name
-                                    .split(' ')
-                                    .map((n) => n[0])
-                                    .join('')}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <h4 className="text-foreground text-sm font-semibold">
-                                  {testimonial.name}
-                                </h4>
-                                <p className="text-muted-foreground text-xs">{testimonial.role}</p>
-                                <p className="text-primary text-[10px] font-medium">
-                                  {testimonial.school}
-                                </p>
-                              </div>
-                            </div>
-                            <Quote className="text-primary/20 h-6 w-6" />
-                          </div>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <div className="flex gap-0.5">
-                            {Array.from({ length: testimonial.rating }, (_, i) => i + 1).map(
-                              (starNum) => (
-                                <Star
-                                  key={`star-${starNum}`}
-                                  className="h-3 w-3 fill-yellow-400 text-yellow-400"
-                                />
-                              )
-                            )}
-                          </div>
-                          <p className="text-muted-foreground text-sm leading-relaxed">
-                            &ldquo;{testimonial.review}&rdquo;
-                          </p>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="hidden md:flex" />
-              <CarouselNext className="hidden md:flex" />
-            </Carousel>
+            <ReviewsSection
+              reviews={reviews}
+              isLoading={isLoadingReviews}
+              emptyTitle="No reviews yet"
+              emptyDescription="Be the first reviewer for us!"
+            />
           </AnimatedSection>
         </div>
       </div>
