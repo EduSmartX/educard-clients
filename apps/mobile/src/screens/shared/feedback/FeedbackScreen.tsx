@@ -23,6 +23,7 @@ import {
   Lightbulb,
   MessageCircle,
   Send,
+  SlidersHorizontal,
   Star,
   TrendingUp,
   type LucideIcon,
@@ -32,6 +33,12 @@ import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SubmitButton } from '@/components/common';
+import {
+  ActiveFilters,
+  FilterModal,
+  FEEDBACK_FILTER_FIELDS,
+  getFeedbackFilterLabels,
+} from '@/components/filters';
 import {
   FormAttachmentPicker,
   FormDropdown,
@@ -100,7 +107,18 @@ export default function FeedbackScreen() {
   const { data: myReview, isLoading: reviewLoading } = useMyReview();
   const existingReview = myReview?.data ?? null;
 
-  const { data: feedbackList, isLoading: isLoadingList } = useFeedbackList();
+  const [listFilters, setListFilters] = useState<Record<string, unknown>>({});
+  const [showFilters, setShowFilters] = useState(false);
+  const isAdmin = user?.role?.toLowerCase() === 'admin';
+  const [orgScope, setOrgScope] = useState(false);
+
+  const listParams = {
+    ...(listFilters as Record<string, string>),
+    ...(isAdmin && orgScope ? { scope: 'organization' as const } : {}),
+  };
+
+  const { data: feedbackList, isLoading: isLoadingList } =
+    useFeedbackList(listParams);
   const submissions = feedbackList?.data ?? [];
 
   const createFeedback = useCreateFeedback({
@@ -318,78 +336,128 @@ export default function FeedbackScreen() {
   const isHistoryTab = tab === 'history';
 
   const renderHistoryTab = () => {
-    if (isLoadingList) {
-      return (
-        <View style={styles.historyEmpty}>
-          <ActivityIndicator color="#6366f1" />
-        </View>
-      );
-    }
+    const filterLabels = getFeedbackFilterLabels(listFilters);
 
-    if (submissions.length === 0) {
-      return (
-        <View style={styles.historyEmpty}>
-          <Text style={styles.historyEmptyTitle}>No feedback yet</Text>
-          <Text style={styles.historyEmptyText}>
-            Anything you submit will show up here so you can track it.
-          </Text>
-        </View>
-      );
-    }
+    const renderRows = () => {
+      if (isLoadingList) {
+        return (
+          <View style={styles.historyEmpty}>
+            <ActivityIndicator color="#6366f1" />
+          </View>
+        );
+      }
+
+      if (submissions.length === 0) {
+        return (
+          <View style={styles.historyEmpty}>
+            <Text style={styles.historyEmptyTitle}>No feedback found</Text>
+            <Text style={styles.historyEmptyText}>
+              Anything you submit will show up here so you can track it.
+            </Text>
+          </View>
+        );
+      }
+
+      return submissions.map(item => {
+        const option = getFeedbackTypeOption(item.feedback_type);
+        const statusStyle = FEEDBACK_STATUS_COLORS[item.status];
+        return (
+          <TouchableOpacity
+            key={item.public_id}
+            style={[styles.historyCard, { borderLeftColor: option.color }]}
+            onPress={() =>
+              navigation.navigate('FeedbackDetail', { id: item.public_id })
+            }
+          >
+            <View style={styles.historyTopRow}>
+              <Text style={styles.historySubject} numberOfLines={1}>
+                {item.subject}
+              </Text>
+              <View
+                style={[
+                  styles.historyStatus,
+                  { backgroundColor: statusStyle?.bgColor },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.historyStatusText,
+                    { color: statusStyle?.color },
+                  ]}
+                >
+                  {item.status_display}
+                </Text>
+              </View>
+            </View>
+
+            <Text style={styles.historyMeta}>
+              {item.ticket_number} · {item.feedback_type_display}
+              {orgScope ? ` · ${item.user_name}` : ''}
+              {item.module_display ? ` · ${item.module_display}` : ''}
+            </Text>
+
+            <Text style={styles.historyDescription} numberOfLines={2}>
+              {item.description}
+            </Text>
+          </TouchableOpacity>
+        );
+      });
+    };
 
     return (
       <View style={styles.section}>
-        {submissions.map(item => {
-          const option = getFeedbackTypeOption(item.feedback_type);
-          const statusStyle = FEEDBACK_STATUS_COLORS[item.status];
-          return (
-            <View
-              key={item.public_id}
-              style={[styles.historyCard, { borderLeftColor: option.color }]}
+        {isAdmin && (
+          <View style={styles.scopeRow}>
+            <TouchableOpacity
+              style={[styles.scopeChip, !orgScope && styles.scopeChipActive]}
+              onPress={() => setOrgScope(false)}
             >
-              <View style={styles.historyTopRow}>
-                <Text style={styles.historySubject} numberOfLines={1}>
-                  {item.subject}
-                </Text>
-                <View
-                  style={[
-                    styles.historyStatus,
-                    { backgroundColor: statusStyle?.bgColor },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.historyStatusText,
-                      { color: statusStyle?.color },
-                    ]}
-                  >
-                    {item.status_display}
-                  </Text>
-                </View>
-              </View>
-
-              <Text style={styles.historyMeta}>
-                {item.ticket_number} · {item.feedback_type_display}
-                {item.module_display ? ` · ${item.module_display}` : ''}
+              <Text
+                style={[
+                  styles.scopeChipText,
+                  !orgScope && styles.scopeChipTextActive,
+                ]}
+              >
+                Mine
               </Text>
-
-              <Text style={styles.historyDescription} numberOfLines={3}>
-                {item.description}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.scopeChip, orgScope && styles.scopeChipActive]}
+              onPress={() => setOrgScope(true)}
+            >
+              <Text
+                style={[
+                  styles.scopeChipText,
+                  orgScope && styles.scopeChipTextActive,
+                ]}
+              >
+                Organization
               </Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
-              {item.admin_remarks ? (
-                <View style={styles.historyRemarks}>
-                  <Text style={styles.historyRemarksTitle}>
-                    Reviewer comments
-                  </Text>
-                  <Text style={styles.historyRemarksText}>
-                    {item.admin_remarks}
-                  </Text>
-                </View>
-              ) : null}
-            </View>
-          );
-        })}
+        <TouchableOpacity
+          style={styles.filterButton}
+          onPress={() => setShowFilters(true)}
+        >
+          <SlidersHorizontal size={16} color="#475569" />
+          <Text style={styles.filterButtonText}>Filters</Text>
+        </TouchableOpacity>
+
+        {filterLabels.length > 0 && (
+          <ActiveFilters
+            filters={filterLabels}
+            onRemove={key => {
+              const next = { ...listFilters };
+              delete next[key];
+              setListFilters(next);
+            }}
+            onClearAll={() => setListFilters({})}
+          />
+        )}
+
+        {renderRows()}
       </View>
     );
   };
@@ -468,6 +536,7 @@ export default function FeedbackScreen() {
 
       {!isHistoryTab && (
         <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
+          {' '}
           {isFeedbackTab ? (
             <SubmitButton
               label="Submit feedback"
@@ -486,6 +555,18 @@ export default function FeedbackScreen() {
           )}
         </View>
       )}
+
+      <FilterModal
+        visible={showFilters}
+        onClose={() => setShowFilters(false)}
+        onApply={applied => {
+          setListFilters(applied);
+          setShowFilters(false);
+        }}
+        fields={FEEDBACK_FILTER_FIELDS}
+        currentFilters={listFilters}
+        title="Filter feedback"
+      />
     </View>
   );
 }

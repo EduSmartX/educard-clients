@@ -59,6 +59,9 @@ export interface FeedbackQueryParams {
   module?: FeedbackModule;
   status?: FeedbackStatus;
   search?: string;
+  scope?: "organization";
+  from_date?: string;
+  to_date?: string;
   ordering?: string;
 }
 

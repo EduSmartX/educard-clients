@@ -9,6 +9,7 @@ import { showToast } from '@/utils/toast';
 
 import {
   createFeedback,
+  getFeedbackDetail,
   getFeedbackList,
   getMyReview,
   submitReview,
@@ -19,6 +20,7 @@ export const feedbackKeys = {
   all: ['feedback'] as const,
   list: (params?: FeedbackQueryParams) =>
     [...feedbackKeys.all, 'list', params] as const,
+  detail: (id: string) => [...feedbackKeys.all, 'detail', id] as const,
   myReview: () => [...feedbackKeys.all, 'my-review'] as const,
 };
 
@@ -27,6 +29,14 @@ export function useFeedbackList(params?: FeedbackQueryParams) {
     queryKey: feedbackKeys.list(params),
     queryFn: () => getFeedbackList(params),
     staleTime: 30_000,
+  });
+}
+
+export function useFeedbackDetail(id: string) {
+  return useQuery({
+    queryKey: feedbackKeys.detail(id),
+    queryFn: () => getFeedbackDetail(id),
+    enabled: Boolean(id),
   });
 }
 

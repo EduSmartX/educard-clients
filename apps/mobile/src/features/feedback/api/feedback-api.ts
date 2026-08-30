@@ -78,6 +78,15 @@ export async function getFeedbackList(
   return response.data;
 }
 
+export async function getFeedbackDetail(
+  id: string,
+): Promise<ApiDetailResponse<Feedback>> {
+  const response = await apiClient.get<ApiDetailResponse<Feedback>>(
+    API_ENDPOINTS.FEEDBACK.DETAIL(id),
+  );
+  return response.data;
+}
+
 export async function getMyReview(): Promise<ApiDetailResponse<Review | null>> {
   const response = await apiClient.get<ApiDetailResponse<Review | null>>(
     API_ENDPOINTS.FEEDBACK.REVIEWS.ME,

@@ -44,6 +44,7 @@ import EditStudentScreen from '@/screens/shared/EditStudentScreen';
 import EditSubjectScreen from '@/screens/shared/EditSubjectScreen';
 import EditTeacherScreen from '@/screens/shared/EditTeacherScreen';
 import FeedbackScreen from '@/screens/shared/feedback/FeedbackScreen';
+import FeedbackDetailScreen from '@/screens/shared/feedback/FeedbackDetailScreen';
 import HelpSupportScreen from '@/screens/shared/HelpSupportScreen';
 import HolidaysScreen from '@/screens/shared/holidays/HolidaysScreen';
 import HomeworkDetailScreen from '@/screens/shared/homework/HomeworkDetailScreen';
@@ -189,6 +190,7 @@ export function MainStackNavigator({ role }: MainStackNavigatorProps) {
         <Stack.Screen name="ChangePhone" component={ChangePhoneScreen} />
         <Stack.Screen name="HelpSupport" component={HelpSupportScreen} />
         <Stack.Screen name="Feedback" component={FeedbackScreen} />
+        <Stack.Screen name="FeedbackDetail" component={FeedbackDetailScreen} />
         <Stack.Screen name="Profile">
           {() =>
             isStudentPortalRole(role) ? (
