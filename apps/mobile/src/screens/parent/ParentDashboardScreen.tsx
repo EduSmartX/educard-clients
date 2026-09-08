@@ -44,6 +44,7 @@ import {
 import { colors } from '@/constants/colors';
 import { getSubjectVisual } from '@/constants/subject-visuals';
 import { useAnnouncements } from '@/features/announcements';
+import { useUnreadNotificationCount } from '@/features/notifications/hooks/use-notifications';
 import {
   useAttendanceSummary,
   useExamSessionDetail,
@@ -90,6 +91,7 @@ function shortLabel(name: string) {
 export default function ParentDashboardScreen() {
   const navigation = useNavigation<ParentTabNavigation>();
   const { user } = useAuthStore();
+  const { data: unreadCount } = useUnreadNotificationCount();
   const { profileImageUrl } = useProfileImageUrl();
   const [imgError, setImgError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -137,7 +139,7 @@ export default function ParentDashboardScreen() {
     refetchAnnouncements,
   ]);
 
-  const goToNotifications = () => navigation.navigate('Notifications');
+  const goToNotifications = () => navigation.navigate('NotificationInbox');
   const goToSettings = () => navigation.navigate('Settings');
   const goToAcademics = () => navigation.navigate('Academics');
   const goToMarks = () =>
@@ -208,6 +210,7 @@ export default function ParentDashboardScreen() {
         greeting={`${formatGreeting()},`}
         title={studentName}
         onNotificationPress={goToNotifications}
+        notificationCount={unreadCount?.unread_count}
         right={
           <TouchableOpacity
             style={styles.profileBtn}

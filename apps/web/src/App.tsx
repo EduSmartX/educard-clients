@@ -219,6 +219,14 @@ const RecipientAnnouncementsPage = lazy(
   () => import('./features/announcements/pages/recipient-announcements-page')
 );
 
+// Notifications
+const NotificationsInboxPage = lazy(
+  () => import('./features/notifications/pages/notifications-inbox-page')
+);
+const NotificationPreferencesPage = lazy(
+  () => import('./features/notifications/pages/notification-preferences-page')
+);
+
 // Fee Management
 const FeeDashboardPage = lazy(() =>
   import('./features/fee/admin/pages/fee-dashboard-page').then((m) => ({
@@ -439,6 +447,13 @@ function App() {
             <Route path={ROUTES.ANNOUNCEMENTS_EMAIL} element={<AnnouncementsEmailPage />} />
             <Route path={ROUTES.ANNOUNCEMENTS_SMS} element={<AnnouncementsSmsPage />} />
             <Route path="/announcements/:id" element={<AnnouncementDetailPage />} />
+
+            {/* Notifications */}
+            <Route path={ROUTES.NOTIFICATIONS} element={<NotificationsInboxPage />} />
+            <Route
+              path={ROUTES.NOTIFICATION_PREFERENCES}
+              element={<NotificationPreferencesPage />}
+            />
 
             {/* Fee Management */}
             <Route path={ROUTES.FEES.DASHBOARD} element={<FeeDashboardPage />} />

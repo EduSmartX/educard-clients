@@ -39,6 +39,7 @@ import {
   useAttendanceDisplay,
 } from '@/features/attendance/hooks';
 import { useClasses } from '@/features/classes';
+import { useUnreadNotificationCount } from '@/features/notifications/hooks/use-notifications';
 import { useStudents } from '@/features/students';
 import { useMyTimetable } from '@/features/timetable';
 import type { TimetableEntry } from '@/features/timetable';
@@ -119,6 +120,7 @@ export default function EmployeeDashboardScreen() {
   const navigation = useNavigation<EmployeeTabNavigation>();
   const { width: viewportWidth } = useWindowDimensions();
   const { user } = useAuthStore();
+  const { data: unreadCount } = useUnreadNotificationCount();
   const { profileImageUrl } = useProfileImageUrl();
   const [refreshing, setRefreshing] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -214,7 +216,7 @@ export default function EmployeeDashboardScreen() {
   }, [refetchTimetable, refetchStudents, refetchClasses, refetchAttendance]);
 
   const goToSettings = () => navigation.navigate('Settings');
-  const goToNotifications = () => navigation.navigate('Notifications');
+  const goToNotifications = () => navigation.navigate('NotificationInbox');
 
   const handleQuickAction = (screen: MenuTarget) => {
     navigateToScreen(navigation, screen);
@@ -227,6 +229,7 @@ export default function EmployeeDashboardScreen() {
         title={user?.full_name ?? user?.first_name ?? 'Teacher'}
         subtitle={user?.role ?? 'Teacher'}
         onNotificationPress={goToNotifications}
+        notificationCount={unreadCount?.unread_count}
         right={
           <TouchableOpacity
             style={styles.profileBtn}

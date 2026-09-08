@@ -95,6 +95,19 @@ export const API_ENDPOINTS = {
     ASSIGN_PARENT: (id: string) => `/students/${id}/assign-parent/`,
   },
 
+  // In-app notification inbox, per-user preferences, and push device registration.
+  // Every endpoint is scoped to the authenticated caller on the server.
+  NOTIFICATIONS: {
+    INBOX: "/notifications/inbox/",
+    UNREAD_COUNT: "/notifications/inbox/unread-count/",
+    MARK_READ: (publicId: string) => `/notifications/inbox/${publicId}/read/`,
+    MARK_ALL_READ: "/notifications/inbox/read-all/",
+    ARCHIVE: (publicId: string) => `/notifications/inbox/${publicId}/archive/`,
+    PREFERENCES: "/notifications/preferences/",
+    DEVICES: "/notifications/devices/",
+    DEVICE_DETAIL: (publicId: string) => `/notifications/devices/${publicId}/`,
+  },
+
   // Student Portal - self-service endpoints for the authenticated student user
   // Each module mounts its own `student/...` sub-path under its own app prefix
   // (there is no single unified `/student/` namespace on the backend).

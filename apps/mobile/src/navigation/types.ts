@@ -54,6 +54,7 @@ export type ParentTabParamList = {
 export type SharedStackParamList = {
   Tabs: undefined;
   Notifications: undefined;
+  NotificationInbox: undefined;
   Announcements: undefined;
   AnnouncementCreate: undefined;
   AnnouncementDetail: { publicId: string };

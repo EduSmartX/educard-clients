@@ -5,6 +5,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { useAuthStore } from '@/lib/auth-store';
 import { requestStartupPermissions } from '@/lib/permissions';
+import { flushPendingPushNavigation } from '@/lib/push';
+import { usePushRegistration } from '@/features/notifications/hooks/use-push-registration';
 import ForcePasswordChangeScreen from '@/screens/auth/ForcePasswordChangeScreen';
 
 import { AuthNavigator } from './AuthNavigator';
@@ -34,6 +36,8 @@ export function RootNavigator() {
   );
   const initialize = useAuthStore(state => state.initialize);
 
+  usePushRegistration();
+
   useEffect(() => {
     initialize();
   }, [initialize]);
@@ -51,7 +55,11 @@ export function RootNavigator() {
   }
 
   return (
-    <NavigationContainer ref={navigationRef} theme={navTheme}>
+    <NavigationContainer
+      ref={navigationRef}
+      theme={navTheme}
+      onReady={flushPendingPushNavigation}
+    >
       <Stack.Navigator
         screenOptions={{ headerShown: false, animation: 'fade' }}
       >

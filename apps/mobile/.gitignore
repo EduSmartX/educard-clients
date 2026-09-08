@@ -72,6 +72,10 @@ yarn-error.log
 .env.production
 .env*.local
 
+# Firebase app configuration (contains project API keys; provision per environment)
+android/app/google-services.json
+ios/**/GoogleService-Info.plist
+
 # Yarn
 .yarn/*
 !.yarn/patches

@@ -24,3 +24,4 @@ export * from "./homework.types";
 export * from "./calendar";
 export * from "./student-portal";
 export * from "./feedback";
+export * from "./notification";

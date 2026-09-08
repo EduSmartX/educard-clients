@@ -63,6 +63,7 @@ import EditHomeworkScreen from '@/screens/shared/homework/EditHomeworkScreen';
 import ReviewScreen from '@/screens/shared/homework/ReviewScreen';
 import SubmissionsScreen from '@/screens/shared/homework/SubmissionsScreen';
 import NotificationsScreen from '@/screens/shared/NotificationsScreen';
+import NotificationInboxScreen from '@/screens/shared/NotificationInboxScreen';
 import OrgPreferencesScreen from '@/screens/shared/preferences/PreferencesScreen';
 import ProfileScreen from '@/screens/shared/profile/ProfileScreen';
 import StudentProfileScreen from '@/screens/shared/profile/StudentProfileScreen';
@@ -129,6 +130,10 @@ export function MainStackNavigator({ role }: MainStackNavigatorProps) {
           {() => <MainTabsNavigator role={role} />}
         </Stack.Screen>
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
+        <Stack.Screen
+          name="NotificationInbox"
+          component={NotificationInboxScreen}
+        />
         <Stack.Screen name="Announcements" component={AnnouncementsScreen} />
         <Stack.Screen
           name="AnnouncementCreate"

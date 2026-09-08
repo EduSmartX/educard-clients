@@ -230,6 +230,15 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
 
   // Logout
   logout: async () => {
+    // Deferred import: the push module reaches back into the API client, which
+    // imports this store. Runs first so the access token is still valid.
+    try {
+      const { teardownPush } = await import('@/lib/push');
+      await teardownPush();
+    } catch {
+      // Push teardown is best-effort; the server retires stale tokens on send.
+    }
+
     clearQueryCache();
     clearScreenFilters();
 

@@ -275,6 +275,19 @@ export const QueryKeys = {
     LEAVE_BALANCE: ["student-portal", "leave", "balance"] as const,
     LEAVE_REQUESTS: ["student-portal", "leave", "requests"] as const,
   },
+
+  // In-app notification inbox and preferences
+  NOTIFICATIONS: {
+    ALL: ["notifications"] as const,
+    INBOX: () => ["notifications", "inbox"] as const,
+    INBOX_LIST: (params?: object) =>
+      ["notifications", "inbox", "list", params] as const,
+    INBOX_INFINITE: (params?: object) =>
+      ["notifications", "inbox", "infinite", params] as const,
+    UNREAD_COUNT: ["notifications", "unread-count"] as const,
+    PREFERENCES: ["notifications", "preferences"] as const,
+    DEVICES: ["notifications", "devices"] as const,
+  },
 } as const;
 
 /**

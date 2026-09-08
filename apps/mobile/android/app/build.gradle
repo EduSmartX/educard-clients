@@ -2,6 +2,11 @@ apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
+// Firebase is optional locally: the plugin only runs once google-services.json is provisioned.
+if (file("google-services.json").exists()) {
+    apply plugin: "com.google.gms.google-services"
+}
+
 // react-native-config: env per build type (debug=.env.local, release=.env.production). Override with ENVFILE=...
 project.ext.envConfigFiles = [
     debug: ".env.local",

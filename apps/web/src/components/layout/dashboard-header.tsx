@@ -1,6 +1,5 @@
-import { Search, Bell, Building2, Settings, LogOut, ChevronDown, Repeat } from 'lucide-react';
+import { Search, Building2, Settings, LogOut, ChevronDown, Repeat } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { LogoWithText } from '@/components/branding';
 import {
   DropdownMenu,
@@ -15,6 +14,7 @@ import { ROUTES } from '@/constants';
 import { authApi } from '@/lib/api/auth-api';
 import { cn } from '@/lib/utils';
 import { getThemeConfig } from '@/lib/utils/theme-utils';
+import { NotificationBell } from '@/features/notifications/components/notification-bell';
 import { SwitchProfileDialog } from './switch-profile-dialog';
 
 interface DashboardHeaderProps {
@@ -24,7 +24,6 @@ interface DashboardHeaderProps {
   username?: string;
   userAvatar?: string;
   userRole?: string;
-  notificationCount?: number;
   showSwitchProfile?: boolean;
 }
 
@@ -35,7 +34,6 @@ export function DashboardHeader({
   username,
   userAvatar,
   userRole = 'Administrator',
-  notificationCount = 0,
   showSwitchProfile = false,
 }: DashboardHeaderProps) {
   const navigate = useNavigate();
@@ -108,23 +106,7 @@ export function DashboardHeader({
           </div>
 
           {/* Notifications */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative h-11 w-11 rounded-xl text-white/90 transition-colors hover:bg-white/15 hover:text-white"
-          >
-            <Bell className="h-5 w-5" strokeWidth={2} />
-            {notificationCount > 0 && (
-              <span
-                className={cn(
-                  'absolute -top-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-rose-500 to-pink-500 text-[10px] font-bold text-white shadow-lg ring-2',
-                  theme.notificationRing
-                )}
-              >
-                {notificationCount > 9 ? '9+' : notificationCount}
-              </span>
-            )}
-          </Button>
+          <NotificationBell userRole={userRole} badgeRingClassName={theme.notificationRing} />
 
           {/* User Profile */}
           <DropdownMenu>

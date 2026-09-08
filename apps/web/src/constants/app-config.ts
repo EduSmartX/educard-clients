@@ -295,6 +295,9 @@ export const ROUTES = {
   ANNOUNCEMENTS: '/announcements',
   ANNOUNCEMENTS_EMAIL: '/announcements/email',
   ANNOUNCEMENTS_SMS: '/announcements/sms',
+  // Notifications
+  NOTIFICATIONS: '/notifications',
+  NOTIFICATION_PREFERENCES: '/notifications/preferences',
   // Fee Management
   FEES: {
     DASHBOARD: '/fees',

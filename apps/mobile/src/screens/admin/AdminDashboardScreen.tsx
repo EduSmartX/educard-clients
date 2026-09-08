@@ -44,6 +44,7 @@ import {
   useAttendanceDisplay,
 } from '@/features/attendance/hooks';
 import { useClasses } from '@/features/classes';
+import { useUnreadNotificationCount } from '@/features/notifications/hooks/use-notifications';
 import { useStudents } from '@/features/students';
 import { useTeachers } from '@/features/teachers';
 import { useMyTimetable } from '@/features/timetable';
@@ -138,6 +139,7 @@ export default function AdminDashboardScreen() {
   const navigation = useNavigation<AdminTabNavigation>();
   const { width: viewportWidth } = useWindowDimensions();
   const { user } = useAuthStore();
+  const { data: unreadCount } = useUnreadNotificationCount();
   const { data: profilePhoto } = useMyProfilePhoto();
   const [refreshing, setRefreshing] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -233,7 +235,7 @@ export default function AdminDashboardScreen() {
     getMediaUrl(profilePhoto?.thumbnail_url) ?? getMediaUrl(profilePhoto?.url);
 
   const goToSettings = () => navigation.navigate('Settings');
-  const goToNotifications = () => navigation.navigate('Notifications');
+  const goToNotifications = () => navigation.navigate('NotificationInbox');
 
   const handleLinkPress = (screen?: MenuTarget) => {
     if (screen) navigateToScreen(navigation, screen);
@@ -246,6 +248,7 @@ export default function AdminDashboardScreen() {
         title={user?.full_name ?? 'Principal Admin'}
         subtitle="Administrator"
         onNotificationPress={goToNotifications}
+        notificationCount={unreadCount?.unread_count}
         right={
           <TouchableOpacity
             style={styles.profileBtn}
