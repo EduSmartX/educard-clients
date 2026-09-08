@@ -5,6 +5,10 @@
 This document is the client companion to the backend
 [`push_notifications_implementation.md`](../../educard-backend-api/docs/push_notifications_implementation.md).
 
+Firebase project setup, the `VITE_FIREBASE_*` variables, `google-services.json` placement, and the
+per-environment configuration matrix live in
+[`FIREBASE_FCM_ENVIRONMENTS.md`](../../educard-backend-api/docs/deployment/FIREBASE_FCM_ENVIRONMENTS.md).
+
 Delivers the authenticated in-app inbox and server-backed preferences in both clients, plus
 Firebase Cloud Messaging to `apps/mobile` (native) and `apps/web` (Web Push via service worker).
 
