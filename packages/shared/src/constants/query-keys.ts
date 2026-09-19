@@ -275,6 +275,15 @@ export const QueryKeys = {
     LEAVE_BALANCE: ["student-portal", "leave", "balance"] as const,
     LEAVE_REQUESTS: ["student-portal", "leave", "requests"] as const,
   },
+
+  // Store (catalog, cart, orders)
+  STORE: {
+    ALL: ["store"] as const,
+    CATALOG: (params?: object) => ["store", "catalog", params] as const,
+    CART: ["store", "cart"] as const,
+    ORDERS: (params?: object) => ["store", "orders", params] as const,
+    ORDER_DETAIL: (id: string) => ["store", "orders", "detail", id] as const,
+  },
 } as const;
 
 /**
