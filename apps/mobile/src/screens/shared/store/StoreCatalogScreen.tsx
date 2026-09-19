@@ -3,12 +3,13 @@
  */
 
 import {
+  CUSTOM_FEATURES_KEY,
   PRODUCT_ATTRIBUTE_INPUT_TYPE,
   type CartItemConfiguration,
   type CatalogProduct,
 } from '@educard/shared';
 import { useNavigation } from '@react-navigation/native';
-import { ChevronLeft, ShoppingCart } from 'lucide-react-native';
+import { ChevronLeft, Plus, ShoppingCart, X } from 'lucide-react-native';
 import { useState } from 'react';
 import {
   FlatList,
@@ -38,6 +39,12 @@ function formatCurrency(amount: string | number): string {
   }).format(Number(amount));
 }
 
+interface CustomFeatureRow {
+  id: number;
+  name: string;
+  value: string;
+}
+
 function parseListValue(raw: string): string[] {
   return raw
     .split(/[\s,;]+/)
@@ -63,6 +70,7 @@ export default function StoreCatalogScreen() {
 
   const [selected, setSelected] = useState<CatalogProduct | null>(null);
   const [configuration, setConfiguration] = useState<CartItemConfiguration>({});
+  const [customFeatures, setCustomFeatures] = useState<CustomFeatureRow[]>([]);
   const [quantity, setQuantity] = useState('1');
 
   const { data, isLoading } = useCatalog();
@@ -75,6 +83,7 @@ export default function StoreCatalogScreen() {
   const closeModal = () => {
     setSelected(null);
     setConfiguration({});
+    setCustomFeatures([]);
     setQuantity('1');
   };
 
@@ -83,11 +92,25 @@ export default function StoreCatalogScreen() {
       return;
     }
 
+    const custom = customFeatures.reduce<Record<string, string>>((acc, row) => {
+      const name = row.name.trim();
+      const value = row.value.trim();
+      if (name && value) {
+        acc[name] = value;
+      }
+      return acc;
+    }, {});
+
+    const payload: CartItemConfiguration = { ...configuration };
+    if (Object.keys(custom).length > 0) {
+      payload[CUSTOM_FEATURES_KEY] = custom;
+    }
+
     addItem.mutate(
       {
         product_public_id: selected.public_id,
         quantity: Math.max(1, Number(quantity) || 1),
-        configuration,
+        configuration: payload,
       },
       {
         onSuccess: () => {
@@ -248,6 +271,74 @@ export default function StoreCatalogScreen() {
               ))}
 
               <View style={styles.field}>
+                <View style={styles.customHeader}>
+                  <Text style={styles.label}>Custom features</Text>
+                  <TouchableOpacity
+                    style={styles.addButton}
+                    onPress={() =>
+                      setCustomFeatures(current => [
+                        ...current,
+                        { id: Date.now(), name: '', value: '' },
+                      ])
+                    }
+                  >
+                    <Plus size={14} color="#2563eb" />
+                    <Text style={styles.addButtonText}>Add</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {customFeatures.length === 0 ? (
+                  <Text style={styles.hint}>
+                    Add anything the catalog does not cover, such as embroidery
+                    text.
+                  </Text>
+                ) : (
+                  customFeatures.map(row => (
+                    <View key={row.id} style={styles.customRow}>
+                      <TextInput
+                        style={[styles.input, styles.customInput]}
+                        placeholder="Feature"
+                        value={row.name}
+                        onChangeText={text =>
+                          setCustomFeatures(current =>
+                            current.map(entry =>
+                              entry.id === row.id
+                                ? { ...entry, name: text }
+                                : entry,
+                            ),
+                          )
+                        }
+                      />
+                      <TextInput
+                        style={[styles.input, styles.customInput]}
+                        placeholder="Value"
+                        value={row.value}
+                        onChangeText={text =>
+                          setCustomFeatures(current =>
+                            current.map(entry =>
+                              entry.id === row.id
+                                ? { ...entry, value: text }
+                                : entry,
+                            ),
+                          )
+                        }
+                      />
+                      <TouchableOpacity
+                        onPress={() =>
+                          setCustomFeatures(current =>
+                            current.filter(entry => entry.id !== row.id),
+                          )
+                        }
+                        accessibilityLabel="Remove feature"
+                      >
+                        <X size={18} color="#ef4444" />
+                      </TouchableOpacity>
+                    </View>
+                  ))
+                )}
+              </View>
+
+              <View style={styles.field}>
                 <Text style={styles.label}>Quantity</Text>
                 <TextInput
                   style={styles.input}
@@ -362,6 +453,22 @@ const styles = StyleSheet.create({
     color: '#111827',
   },
   inputMultiline: { minHeight: 72, textAlignVertical: 'top' },
+  customHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  addButton: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  addButtonText: { fontSize: 13, fontWeight: '600', color: '#2563eb' },
+  hint: { fontSize: 12, color: '#6b7280' },
+  customRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  customInput: { flex: 1 },
   modalActions: { flexDirection: 'row', gap: 12, marginTop: 8 },
   cancelButton: {
     flex: 1,

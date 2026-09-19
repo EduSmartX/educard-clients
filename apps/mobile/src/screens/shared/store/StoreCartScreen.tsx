@@ -2,7 +2,7 @@
  * Store Cart Screen - review lines and place the order
  */
 
-import type { CartItem } from '@educard/shared';
+import { CUSTOM_FEATURES_KEY, type CartItem } from '@educard/shared';
 import { useNavigation } from '@react-navigation/native';
 import { ChevronLeft, ShoppingCart, Trash2 } from 'lucide-react-native';
 import { useState } from 'react';
@@ -38,13 +38,26 @@ function formatCurrency(amount: string | number): string {
 }
 
 function describeConfiguration(item: CartItem): string {
-  return Object.entries(item.configuration ?? {})
-    .map(([code, value]) =>
+  const parts: string[] = [];
+
+  for (const [code, value] of Object.entries(item.configuration ?? {})) {
+    if (code === CUSTOM_FEATURES_KEY) {
+      for (const [name, custom] of Object.entries(
+        value as Record<string, string>,
+      )) {
+        parts.push(`${name}: ${custom}`);
+      }
+      continue;
+    }
+
+    parts.push(
       Array.isArray(value)
         ? `${code}: ${value.length} selected`
-        : `${code}: ${value}`,
-    )
-    .join(' · ');
+        : `${code}: ${String(value)}`,
+    );
+  }
+
+  return parts.join(' · ');
 }
 
 export default function StoreCartScreen() {

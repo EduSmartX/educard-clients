@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import {
+  CUSTOM_FEATURES_KEY,
   PRODUCT_ATTRIBUTE_INPUT_TYPE,
   type CartItemConfiguration,
   type CatalogProduct,
@@ -27,6 +29,12 @@ interface ProductConfigDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+interface CustomFeatureRow {
+  id: number;
+  name: string;
+  value: string;
+}
+
 /** Splits pasted or typed identifiers on commas, spaces and newlines. */
 function parseListValue(raw: string): string[] {
   return raw
@@ -37,6 +45,7 @@ function parseListValue(raw: string): string[] {
 
 export function ProductConfigDialog({ product, open, onOpenChange }: ProductConfigDialogProps) {
   const [configuration, setConfiguration] = useState<CartItemConfiguration>({});
+  const [customFeatures, setCustomFeatures] = useState<CustomFeatureRow[]>([]);
   const [quantity, setQuantity] = useState(1);
   const addItem = useAddCartItem();
 
@@ -50,12 +59,41 @@ export function ProductConfigDialog({ product, open, onOpenChange }: ProductConf
 
   const reset = () => {
     setConfiguration({});
+    setCustomFeatures([]);
     setQuantity(1);
   };
 
+  const addCustomRow = () => {
+    setCustomFeatures((current) => [...current, { id: Date.now(), name: '', value: '' }]);
+  };
+
+  const updateCustomRow = (id: number, patch: Partial<CustomFeatureRow>) => {
+    setCustomFeatures((current) =>
+      current.map((row) => (row.id === id ? { ...row, ...patch } : row))
+    );
+  };
+
+  const removeCustomRow = (id: number) => {
+    setCustomFeatures((current) => current.filter((row) => row.id !== id));
+  };
+
   const handleSubmit = () => {
+    const custom = customFeatures.reduce<Record<string, string>>((acc, row) => {
+      const name = row.name.trim();
+      const value = row.value.trim();
+      if (name && value) {
+        acc[name] = value;
+      }
+      return acc;
+    }, {});
+
+    const payload: CartItemConfiguration = { ...configuration };
+    if (Object.keys(custom).length > 0) {
+      payload[CUSTOM_FEATURES_KEY] = custom;
+    }
+
     addItem.mutate(
-      { product_public_id: product.public_id, quantity, configuration },
+      { product_public_id: product.public_id, quantity, configuration: payload },
       {
         onSuccess: () => {
           toast.success(`${product.name} added to cart`);
@@ -73,6 +111,9 @@ export function ProductConfigDialog({ product, open, onOpenChange }: ProductConf
   };
 
   const complete = isConfigurationComplete(product.attributes, configuration);
+  const incompleteCustomRow = customFeatures.some(
+    (row) => Boolean(row.name.trim()) !== Boolean(row.value.trim())
+  );
   const lineTotal = Number(product.price) * quantity;
 
   return (
@@ -158,6 +199,47 @@ export function ProductConfigDialog({ product, open, onOpenChange }: ProductConf
             </div>
           ))}
 
+          <div className="space-y-2 border-t pt-4">
+            <div className="flex items-center justify-between">
+              <Label>Custom features</Label>
+              <Button type="button" size="sm" variant="outline" onClick={addCustomRow}>
+                <Plus className="mr-1 h-3 w-3" />
+                Add
+              </Button>
+            </div>
+
+            {customFeatures.length === 0 ? (
+              <p className="text-muted-foreground text-xs">
+                Add anything the catalog does not cover, such as embroidery text or a packaging
+                note.
+              </p>
+            ) : (
+              customFeatures.map((row) => (
+                <div key={row.id} className="flex items-center gap-2">
+                  <Input
+                    placeholder="Feature"
+                    value={row.name}
+                    onChange={(event) => updateCustomRow(row.id, { name: event.target.value })}
+                  />
+                  <Input
+                    placeholder="Value"
+                    value={row.value}
+                    onChange={(event) => updateCustomRow(row.id, { value: event.target.value })}
+                  />
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => removeCustomRow(row.id)}
+                    aria-label="Remove feature"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))
+            )}
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="store-quantity">Quantity</Label>
             <Input
@@ -172,7 +254,10 @@ export function ProductConfigDialog({ product, open, onOpenChange }: ProductConf
 
         <DialogFooter className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <span className="text-sm font-medium">Total {formatCurrency(lineTotal)}</span>
-          <Button onClick={handleSubmit} disabled={!complete || addItem.isPending}>
+          <Button
+            onClick={handleSubmit}
+            disabled={!complete || incompleteCustomRow || addItem.isPending}
+          >
             {addItem.isPending ? 'Adding…' : 'Add to cart'}
           </Button>
         </DialogFooter>

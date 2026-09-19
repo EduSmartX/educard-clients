@@ -59,8 +59,17 @@ export interface CatalogQueryParams {
   page_size?: number;
 }
 
-/** Selected attribute values for one cart line, keyed by attribute code. */
-export type CartItemConfiguration = Record<string, string | string[]>;
+/** Buyer-defined features the catalog does not declare, keyed by feature name. */
+export type CustomFeatures = Record<string, string>;
+
+/**
+ * Selected values for one cart line, keyed by attribute code.
+ * The reserved `custom` key holds buyer-defined features.
+ */
+export type CartItemConfiguration = Record<
+  string,
+  string | string[] | CustomFeatures
+>;
 
 export interface CartItem {
   public_id: string;
