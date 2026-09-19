@@ -283,6 +283,11 @@ const ProfilePage = lazy(() => import('./features/profile/pages/profile-page'));
 const FeedbackPage = lazy(() => import('./features/feedback/pages/feedback-page'));
 const FeedbackDetailPage = lazy(() => import('./features/feedback/pages/feedback-detail-page'));
 
+// Store
+const StoreCatalogPage = lazy(() => import('./features/store/pages/store-catalog-page'));
+const StoreCartPage = lazy(() => import('./features/store/pages/store-cart-page'));
+const StoreOrdersPage = lazy(() => import('./features/store/pages/store-orders-page'));
+
 // Coming Soon
 const ComingSoonPage = lazy(() => import('./pages/coming-soon-page'));
 
@@ -463,6 +468,11 @@ function App() {
             {/* Feedback - available to every authenticated role */}
             <Route path={ROUTES.FEEDBACK} element={<FeedbackPage />} />
             <Route path="/feedback/:id" element={<FeedbackDetailPage />} />
+
+            {/* Store - admin only, enforced by the API */}
+            <Route path={ROUTES.STORE.CATALOG} element={<StoreCatalogPage />} />
+            <Route path={ROUTES.STORE.CART} element={<StoreCartPage />} />
+            <Route path={ROUTES.STORE.ORDERS} element={<StoreOrdersPage />} />
 
             {/* Calendar - Coming Soon */}
             <Route

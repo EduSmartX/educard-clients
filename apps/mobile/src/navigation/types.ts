@@ -89,6 +89,9 @@ export type SharedStackParamList = {
   HelpSupport: undefined;
   Feedback: undefined;
   FeedbackDetail: { id: string };
+  StoreCatalog: undefined;
+  StoreCart: undefined;
+  StoreOrders: undefined;
   Profile: undefined;
   SwitchProfile: undefined;
   SyncProfiles: undefined;

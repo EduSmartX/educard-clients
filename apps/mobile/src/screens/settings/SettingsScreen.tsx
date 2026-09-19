@@ -21,6 +21,8 @@ import {
   Building2,
   Repeat,
   Users,
+  ShoppingBag,
+  Package,
   type LucideIcon,
 } from 'lucide-react-native';
 import { useMemo } from 'react';
@@ -143,6 +145,24 @@ export default function SettingsScreen() {
         iconColor: '#7c3aed',
         iconBg: '#f3e8ff',
         screen: 'Announcements',
+      },
+      {
+        id: 'store-catalog',
+        title: 'Store',
+        subtitle: 'Order ID cards, uniforms and supplies',
+        icon: ShoppingBag,
+        iconColor: '#ea580c',
+        iconBg: '#ffedd5',
+        screen: 'StoreCatalog',
+      },
+      {
+        id: 'store-orders',
+        title: 'Store Orders',
+        subtitle: 'Track placed orders through to delivery',
+        icon: Package,
+        iconColor: '#0891b2',
+        iconBg: '#cffafe',
+        screen: 'StoreOrders',
       },
       {
         id: 'holidays',

@@ -425,6 +425,16 @@ export const API_ENDPOINTS = {
       PUBLIC: "/feedback/reviews/public/",
     },
   },
+
+  STORE: {
+    CATALOG: "/store/catalog/",
+    CATALOG_IMAGE: (publicId: string) => `/store/catalog/${publicId}/image/`,
+    CART: "/store/cart/",
+    CART_ITEMS: "/store/cart/items/",
+    CART_ITEM_DETAIL: (publicId: string) => `/store/cart/items/${publicId}/`,
+    ORDERS: "/store/orders/",
+    ORDER_DETAIL: (publicId: string) => `/store/orders/${publicId}/`,
+  },
 } as const;
 
 /**

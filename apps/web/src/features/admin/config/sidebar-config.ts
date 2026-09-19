@@ -34,6 +34,9 @@ import {
   ClipboardEdit,
   Mail,
   MessageSquare,
+  ShoppingBag,
+  ShoppingCart,
+  Package,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
 import { ROUTES } from '@/constants/app-config';
@@ -312,6 +315,30 @@ export const adminSidebarConfig: SidebarSection[] = [
         label: 'Organization Preferences',
         icon: Sliders,
         path: ROUTES.PREFERENCES,
+      },
+    ],
+  },
+  {
+    title: 'STORE',
+    defaultCollapsed: true,
+    items: [
+      {
+        id: 'store-catalog',
+        label: 'Browse Store',
+        icon: ShoppingBag,
+        path: ROUTES.STORE.CATALOG,
+      },
+      {
+        id: 'store-cart',
+        label: 'Cart',
+        icon: ShoppingCart,
+        path: ROUTES.STORE.CART,
+      },
+      {
+        id: 'store-orders',
+        label: 'Orders',
+        icon: Package,
+        path: ROUTES.STORE.ORDERS,
       },
     ],
   },

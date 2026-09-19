@@ -279,6 +279,11 @@ export const ROUTES = {
   HOLIDAYS: '/holidays',
   PREFERENCES: '/preferences',
   FEEDBACK: '/feedback',
+  STORE: {
+    CATALOG: '/store',
+    CART: '/store/cart',
+    ORDERS: '/store/orders',
+  },
   EXCEPTIONAL_WORK: '/exceptional-work',
   TIMETABLE: '/timetable',
   TIMETABLE_SETUP: '/timetable/setup',
