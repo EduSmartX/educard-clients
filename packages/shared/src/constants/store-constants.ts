@@ -38,5 +38,8 @@ export const PRODUCT_ATTRIBUTE_INPUT_TYPE = {
 
 export const STORE_CURRENCY = "INR";
 
+/** Reserved configuration key for buyer-defined features; mirrors the server. */
+export const CUSTOM_FEATURES_KEY = "custom";
+
 /** Cart badge stops counting past this. */
 export const CART_BADGE_MAX = 99;

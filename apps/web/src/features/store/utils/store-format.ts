@@ -1,4 +1,8 @@
-import type { CartItemConfiguration, ProductAttribute } from '@educard/shared';
+import {
+  CUSTOM_FEATURES_KEY,
+  type CartItemConfiguration,
+  type ProductAttribute,
+} from '@educard/shared';
 
 export function formatCurrency(amount: string | number): string {
   return new Intl.NumberFormat('en-IN', {
@@ -8,7 +12,7 @@ export function formatCurrency(amount: string | number): string {
   }).format(Number(amount));
 }
 
-/** Turn a stored configuration into "Size: M · Students: 40 selected" for display. */
+/** Turn a stored configuration into "Size: M · Embroidery: Crest" for display. */
 export function describeConfiguration(
   configuration: CartItemConfiguration,
   attributes?: ProductAttribute[]
@@ -18,19 +22,29 @@ export function describeConfiguration(
     return '';
   }
 
-  return entries
-    .map(([code, value]) => {
-      const attribute = attributes?.find((item) => item.code === code);
-      const label = attribute?.display_name ?? code;
+  const parts: string[] = [];
 
-      if (Array.isArray(value)) {
-        return `${label}: ${value.length} selected`;
+  for (const [code, value] of entries) {
+    if (code === CUSTOM_FEATURES_KEY) {
+      for (const [name, custom] of Object.entries(value as Record<string, string>)) {
+        parts.push(`${name}: ${custom}`);
       }
+      continue;
+    }
 
-      const option = attribute?.options.find((item) => item.value === value);
-      return `${label}: ${option?.display_label ?? value}`;
-    })
-    .join(' · ');
+    const attribute = attributes?.find((item) => item.code === code);
+    const label = attribute?.display_name ?? code;
+
+    if (Array.isArray(value)) {
+      parts.push(`${label}: ${value.length} selected`);
+      continue;
+    }
+
+    const option = attribute?.options.find((item) => item.value === value);
+    parts.push(`${label}: ${option?.display_label ?? String(value)}`);
+  }
+
+  return parts.join(' · ');
 }
 
 export function isConfigurationComplete(
