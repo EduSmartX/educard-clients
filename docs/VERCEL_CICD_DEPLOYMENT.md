@@ -1,125 +1,162 @@
-# Vercel CI/CD Deployment Setup
+# Vercel CI/CD Deployment Setup (Web)
 
-This document explains how frontend deployments are handled through GitHub Actions and Vercel, with branch-based routing for development and production.
+This document explains **exactly** how the web app (`apps/web`) is deployed to Vercel via GitHub Actions, for both Development and Production, and clears up a common point of confusion around GitHub "Environments."
+
+> ⚠️ Superseded doc: an earlier version of this file referenced a separate
+> `.github/workflows/vercel-deploy.yml` file. That file no longer exists —
+> all deploy logic now lives in `.github/workflows/ci.yml` (jobs
+> `deploy-web-dev` and `deploy-web-prod`). This doc reflects the current
+> workflow.
 
 ## Goal
 
-- Deploy Development from development branches.
-- Deploy Production from main branches.
-- Do not block deployment if tests, lint, or type checks are incomplete or failing.
+- Deploy **Development** builds when `develop` or `development` is pushed.
+- Deploy **Production** builds when `main` or `master` is pushed.
+- Gate deploys on `build` + `security-audit` jobs succeeding (lint/typecheck/format run earlier and must pass for `build` to run).
 
-## Workflow Added
+## Workflow File
 
-GitHub Actions workflow file:
+Single workflow: `.github/workflows/ci.yml`
 
-- .github/workflows/vercel-deploy.yml
+Relevant jobs:
 
-## Branch to Environment Mapping
+| Job               | Trigger condition                                       | Purpose                                              |
+| ----------------- | ------------------------------------------------------- | ---------------------------------------------------- |
+| `build`           | any push/PR (needed by both deploy jobs)                | Builds the web app once, uploads artifact            |
+| `security-audit`  | any push/PR                                             | Dependency audit (non-blocking, `continue-on-error`) |
+| `deploy-web-dev`  | `push` **and** `ref_name` is `develop` or `development` | Pull → build → deploy to the **Dev** Vercel project  |
+| `deploy-web-prod` | `push` **and** `ref_name` is `main` or `master`         | Pull → build → deploy to the **Prod** Vercel project |
+| `build-apk`       | `push` on `develop`/`development`                       | Builds Android APK using the **dev** backend URL     |
 
-- develop or development branch -> Vercel Development project
-- main or master branch -> Vercel Production project
+## Branch → Vercel Project Mapping
 
-## Non-Blocking Deployment Behavior
+- `develop` / `development` → Vercel **Dev** project (`VERCEL_PROJECT_ID_DEV`)
+- `main` / `master` → Vercel **Prod** project (`VERCEL_PROJECT_ID_PROD`)
 
-The workflow has an Optional Prechecks job that runs lint and type checks with non-blocking behavior.
+Both jobs run the same 3-step Vercel CLI pattern:
 
-- Prechecks job is marked continue-on-error.
-- Deploy jobs use always() in their condition.
-- Result: deployment continues even if prechecks fail.
+```bash
+vercel pull   --environment=preview|production --token=$VERCEL_TOKEN
+vercel build  [--prod]                          --token=$VERCEL_TOKEN
+vercel deploy --prebuilt [--prod]                --token=$VERCEL_TOKEN
+```
 
-## Required GitHub Secrets
+- Dev uses `--environment=preview` (no `--prod` flags).
+- Prod uses `--environment=production` and passes `--prod` to both `build` and `deploy`.
 
-Add these repository secrets in GitHub:
+## ⚠️ Important: These Secrets Are Repository Secrets, NOT GitHub Environment Secrets
 
-1. VERCEL_TOKEN
-2. VERCEL_ORG_ID
-3. VERCEL_PROJECT_ID_DEV
-4. VERCEL_PROJECT_ID_PROD
+Neither `deploy-web-dev` nor `deploy-web-prod` declares a job-level
+`environment:` key. That means every `${{ secrets.X }}` reference in these
+jobs resolves against **plain repository secrets**
+(Settings → Secrets and variables → Actions → _Repository secrets_).
 
-## How to Get Secret Values
+This is why a deploy can succeed even if the GitHub **Environments** page
+(Settings → Environments) has no entry named `development`. Those
+Environments entries you may see (e.g. `Preview – educard-clients`,
+`Production – educard-clients-web-production`) are created automatically by
+**Vercel's own GitHub App integration** for deployment-status tracking — they
+are a completely separate mechanism from GitHub Actions secrets and are not
+read by this workflow at all.
+
+If you ever want to scope secrets per environment (e.g. require manual
+approval before a prod deploy), you would need to explicitly add
+`environment: production` to the `deploy-web-prod` job and move the prod
+secrets into a matching GitHub Environment named `production`. **This repo
+does not currently do that** — all secrets are repository-wide.
+
+## Required GitHub Repository Secrets
+
+Add these under **Settings → Secrets and variables → Actions → Repository secrets**:
+
+| Secret                                                                                                 | Used by              | Notes                                                                        |
+| ------------------------------------------------------------------------------------------------------ | -------------------- | ---------------------------------------------------------------------------- |
+| `VERCEL_TOKEN`                                                                                         | dev + prod           | Shared. From Vercel → Account Settings → Tokens                              |
+| `VERCEL_ORG_ID`                                                                                        | dev + prod           | Shared. From `.vercel/project.json` after `vercel link`, or Project Settings |
+| `VERCEL_PROJECT_ID_DEV`                                                                                | dev only             | Vercel Dev project ID                                                        |
+| `VERCEL_PROJECT_ID_PROD`                                                                               | prod only            | Vercel Prod project ID                                                       |
+| `VITE_API_BASE_URL_DEV`                                                                                | dev only             | Backend URL baked into dev build                                             |
+| `VITE_API_BASE_URL_PROD`                                                                               | prod only            | Backend URL baked into prod build                                            |
+| `MOBILE_API_URL_DEV`                                                                                   | `build-apk` job only | Backend URL baked into dev APK                                               |
+| `SONAR_TOKEN`                                                                                          | `sonarcloud` job     | Not deploy-related but lives in same workflow                                |
+| `ANDROID_KEYSTORE_BASE64` / `ANDROID_KEYSTORE_PASSWORD` / `ANDROID_KEY_ALIAS` / `ANDROID_KEY_PASSWORD` | `build-apk` job      | Optional — falls back to debug keystore if unset                             |
+
+## How to Get Vercel Values
 
 ### VERCEL_TOKEN
 
-- Open Vercel Account Settings.
-- Go to Tokens.
-- Create a token and copy it.
-- Save it as VERCEL_TOKEN in GitHub secrets.
+1. Vercel → Account Settings → Tokens → Create.
+2. Save as `VERCEL_TOKEN`.
 
-### VERCEL_ORG_ID and VERCEL_PROJECT_ID
+### VERCEL*ORG_ID and VERCEL_PROJECT_ID*\*
 
-Option A: From Vercel project settings
+Option A — from Project Settings in the Vercel dashboard (General tab shows both IDs).
 
-- Open the project in Vercel.
-- Go to Settings.
-- Copy Organization ID and Project ID.
+Option B — from CLI:
 
-Option B: From local linked project
+```bash
+vercel link   # run inside apps/web, select the correct project
+cat .vercel/project.json   # shows orgId and projectId
+```
 
-- Run Vercel link for each project context.
-- Read values from .vercel/project.json.
+Repeat for both the Dev project and the Prod project; `orgId` should be the
+same for both (same team), `projectId` differs.
 
-Use the Development project ID for VERCEL_PROJECT_ID_DEV and the Production project ID for VERCEL_PROJECT_ID_PROD.
+## Vercel Project Structure (recommended)
 
-## Vercel Project Structure Recommendation
+Two separate Vercel projects, both connected to this same GitHub repo:
 
-Use two separate Vercel projects:
+- `educard-web-dev` — previews / development builds
+- `educard-web-prod` — Production Branch = `main`
 
-- edu-card-web-dev (for develop/development)
-- edu-card-web-prod (for main/master)
+Keeping them separate isolates environment variables, domains, and deploy
+history between dev and prod.
 
-This keeps environments isolated and allows different environment variables if needed.
+## Native Vercel Git Integration Should Be Disabled
 
-## CI/CD Trigger Rules
+Because GitHub Actions controls deploys explicitly (`vercel deploy --prebuilt`),
+`vercel.json` disables Vercel's automatic Git-push deploys to avoid duplicate
+builds:
 
-The workflow runs on:
+```json
+{
+  "git": { "deploymentEnabled": false }
+}
+```
 
-- push to develop
-- push to development
-- push to main
-- push to master
-- manual workflow_dispatch
+Confirm this is `false` for both projects if Vercel ever starts deploying on
+its own in addition to the Actions-triggered deploy.
 
 ## Deployment Flow Summary
 
-1. Prechecks run (non-blocking).
-2. If branch is develop/development, deploy to Development project.
-3. If branch is main/master, deploy to Production project.
+**Development:**
 
-## Important Configuration
+1. Push to `develop` or `development`.
+2. `build` + `security-audit` run.
+3. `deploy-web-dev` pulls Dev project config, builds with `VITE_API_BASE_URL_DEV`, deploys (preview mode) to the Dev Vercel project.
+4. (Same push also triggers `build-apk` to produce a signed/debug APK using `MOBILE_API_URL_DEV`.)
 
-The repository vercel.json has git deployment disabled:
+**Production:**
 
-- git.deploymentEnabled is false
-
-This ensures deployments are controlled by GitHub Actions CI/CD only and avoids duplicate Vercel auto-deploys.
-
-## Environment Variables
-
-Set app environment variables inside each Vercel project:
-
-- Development values in the Dev Vercel project
-- Production values in the Prod Vercel project
-
-Because the workflow uses vercel pull and vercel build for each project, those environment values are applied at build/deploy time.
+1. Push to `main` or `master` (e.g. after merging a release PR).
+2. `build` + `security-audit` run.
+3. `deploy-web-prod` pulls Prod project config, builds with `VITE_API_BASE_URL_PROD` and `--prod`, deploys with `--prod` to the Prod Vercel project.
 
 ## Validation Checklist
 
-After setup, verify:
-
-1. GitHub secrets are added correctly.
-2. Push to develop triggers Dev deployment.
-3. Push to main triggers Prod deployment.
-4. A failing precheck still allows deployment to continue.
-5. Vercel shows deployments in the expected project.
+- [ ] All 6 core secrets above exist as **repository** secrets (not environment secrets).
+- [ ] Push to `develop`/`development` → `deploy-web-dev` job runs and succeeds → site updates on Dev Vercel project.
+- [ ] Push to `main`/`master` → `deploy-web-prod` job runs and succeeds → site updates on Prod Vercel project + production domain.
+- [ ] `vercel.json` has `git.deploymentEnabled: false` on both projects (no duplicate auto-deploys).
+- [ ] Vercel dashboard Environment Variables (Project → Settings → Environment Variables) match the values injected by CI, in case anyone triggers a manual `vercel deploy` locally.
 
 ## Rollback
 
-To rollback quickly:
+- Vercel dashboard → Deployments → select a previous healthy deployment → "Promote to Production".
+- Or re-run the `deploy-web-prod` / `deploy-web-dev` job from a previous good commit via `workflow_dispatch` / re-run.
 
-- Use Vercel dashboard and promote a previous healthy deployment.
-- Or re-run workflow from a known good commit.
+## Related Docs
 
-## Notes
-
-- Existing CI workflow can continue to run for quality visibility.
-- This deployment workflow is intentionally tolerant to precheck failures, based on release policy.
+- `docs/VERCEL_PRODUCTION.md` — manual Vercel project setup steps (domains, production branch config).
+- `apps/web/.env.production` — example Vite production env vars for local reference.
+- `apps/mobile/.env.production` — example mobile production env vars.

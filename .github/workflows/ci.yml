@@ -441,7 +441,18 @@ jobs:
           SENTRY_DSN=
           POSTHOG_KEY=
           POSTHOG_HOST=
+          GOOGLE_GEOCODING_API_KEY=${{ secrets.MOBILE_GOOGLE_GEOCODING_API_KEY }}
           EOF
+
+      - name: Verify Google Geocoding API key is present
+        run: |
+          if [ -z "${{ secrets.MOBILE_GOOGLE_GEOCODING_API_KEY }}" ]; then
+            echo "::warning::MOBILE_GOOGLE_GEOCODING_API_KEY secret is empty or not set — 'Use my location' will be disabled in this build."
+          else
+            echo "MOBILE_GOOGLE_GEOCODING_API_KEY is set (length: ${#MOBILE_GOOGLE_GEOCODING_API_KEY})."
+          fi
+        env:
+          MOBILE_GOOGLE_GEOCODING_API_KEY: ${{ secrets.MOBILE_GOOGLE_GEOCODING_API_KEY }}
 
       - name: Prepare Android keystore
         if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' }}

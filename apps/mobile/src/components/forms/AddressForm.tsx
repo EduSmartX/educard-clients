@@ -40,7 +40,10 @@ import { SearchableSelect } from '@/components/ui/SearchableSelect';
 import {
   fetchCurrentAddress,
   isLocationLookupEnabled,
+  locationLookupUnavailableReason,
   LOCATION_PERMISSION_DENIED,
+  LOCATION_SERVICES_DISABLED,
+  LOCATION_TIMEOUT,
   type ResolvedAddress,
 } from '@/lib/location';
 
@@ -234,12 +237,15 @@ export function AddressForm({
       setExpanded(true);
     } catch (error) {
       // Autofill is a convenience: surface a hint and leave the fields editable.
-      const denied =
-        error instanceof Error && error.message === LOCATION_PERMISSION_DENIED;
+      const message = error instanceof Error ? error.message : '';
       setLocationError(
-        denied
+        message === LOCATION_PERMISSION_DENIED
           ? 'Location permission denied. Please enter the address manually.'
-          : 'Could not detect your location. Please enter the address manually.',
+          : message === LOCATION_SERVICES_DISABLED
+            ? 'Turn on Location/GPS in your device settings, then try again.'
+            : message === LOCATION_TIMEOUT
+              ? 'Could not get a location fix (weak GPS signal). Try again outdoors.'
+              : 'Could not detect your location. Please enter the address manually.',
       );
       setExpanded(true);
     } finally {
@@ -268,6 +274,14 @@ export function AddressForm({
       </TouchableOpacity>
       {!!locationError && <Text style={styles.errorText}>{locationError}</Text>}
     </View>
+  ) : __DEV__ ? (
+    // Dev-only hint: in production the button just stays hidden (see
+    // `logGeocodingConfigStatus` in `@/lib/location` for the Metro/Logcat log).
+    <Text style={styles.devHintText}>
+      {locationLookupUnavailableReason === 'missing-api-key'
+        ? '[dev] "Use my location" hidden: GOOGLE_GEOCODING_API_KEY is not set for this build.'
+        : '[dev] "Use my location" hidden: geolocation native module is not linked. Rebuild the app.'}
+    </Text>
   ) : null;
 
   const fields = (
@@ -536,6 +550,13 @@ const styles = StyleSheet.create({
     color: '#ef4444',
     marginTop: 6,
     marginLeft: 4,
+  },
+  devHintText: {
+    fontSize: 11,
+    color: '#b45309',
+    marginTop: 6,
+    marginLeft: 4,
+    fontStyle: 'italic',
   },
 });
 
