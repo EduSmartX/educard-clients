@@ -1,0 +1,59 @@
+Normal code change:
+--------------------
+Start:
+pnpm dev:web
+
+        ↓
+
+Make code changes
+        ↓
+Vite hot reloads
+        ↓
+
+Before commit:
+pnpm typecheck
+pnpm lint
+
+        ↓
+
+git add .
+git commit -m "..."
+git push
+
+
+Package/dependency change
+-------------------------
+Update package
+        ↓
+pnpm install
+        ↓
+pnpm typecheck
+pnpm lint
+pnpm build:web
+        ↓
+git add .
+git commit -m "Update dependencies"
+git push
+
+
+Production/release check:
+------------------------
+pnpm install
+pnpm typecheck
+pnpm lint
+pnpm build:web
+
+
+
+The important distinction is:
+
+Situation       	                         Commands
+----------                                  --------------------
+Start web development	                    pnpm dev:web
+Change React/TS/CSS code	                No reinstall; Vite hot reload
+Add package	                                pnpm add <package>
+Update packages	                            pnpm update / pnpm install as appropriate
+Pulled package changes from Git	            pnpm install
+Validate code	                            pnpm typecheck + pnpm lint
+Production build check	                    pnpm build:web
+Broken/stale dependencies	                pnpm clean && pnpm install
