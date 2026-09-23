@@ -1,0 +1,76 @@
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { DashboardHeader } from './dashboard-header';
+import { DashboardLayout } from './dashboard-layout';
+import { useAuth } from '../../hooks/use-auth';
+import { useStorageListener } from '@/hooks/use-storage-listener';
+import { getSidebarConfig } from '@/lib/utils/sidebar-utils';
+import { formatRole } from '@/lib/utils/auth-utils';
+import { ROUTES, USER_ROLES } from '@/constants';
+import { useMyProfilePhoto } from '@/features/profile/hooks/queries';
+import { getMediaUrl } from '@/lib/utils/media-utils';
+import { getThemeConfig } from '@/lib/utils/theme-utils';
+import { cn } from '@/lib/utils';
+import { useTeacherManagementContext } from '@/features/leave/hooks/use-teacher-management-context';
+import { tokenManager } from '@/lib/token-manager';
+import { CriticalOperationProvider } from '@/providers/critical-operation-provider';
+
+/**
+ * Protected Layout - Wraps all authenticated pages with header and sidebar.
+ * Redirects unauthenticated users and listens for cross-tab logout events.
+ */
+export function ProtectedLayout() {
+  const { user, organization } = useAuth();
+  const { data: profilePhoto } = useMyProfilePhoto();
+  const { data: managementContext } = useTeacherManagementContext();
+  const location = useLocation();
+
+  useStorageListener();
+
+  if (!tokenManager.isAuthenticated() || !user) {
+    return <Navigate to={ROUTES.AUTH.LOGIN} replace />;
+  }
+
+  if (user.force_password_reset && location.pathname !== ROUTES.SET_NEW_PASSWORD) {
+    return <Navigate to={ROUTES.SET_NEW_PASSWORD} replace />;
+  }
+
+  // Get role-based theme
+  const userRoleFormatted = formatRole(user?.role);
+  const theme = getThemeConfig(userRoleFormatted);
+
+  // Profile photo from attachments API takes priority over user.profile_image from login
+  const avatarUrl = getMediaUrl(profilePhoto?.thumbnail_url) || user?.profile_image;
+
+  const isAdmin = user?.role === USER_ROLES.ADMIN;
+  const isSupervisor = isAdmin || managementContext?.can_review_requests || false;
+  const isStudent = user?.role === USER_ROLES.STUDENT;
+
+  // Show class name alongside role for students
+  const displayRole =
+    isStudent && user?.class_name ? `${userRoleFormatted} • ${user.class_name}` : userRoleFormatted;
+
+  return (
+    <CriticalOperationProvider>
+      <div className={cn('min-h-screen', theme.mainBgGradient)}>
+        <DashboardHeader
+          organizationName={organization?.name}
+          organizationLogo={organization?.logo}
+          userName={user?.full_name || user?.username}
+          username={user?.username}
+          userRole={displayRole}
+          userAvatar={avatarUrl}
+          notificationCount={3}
+          showSwitchProfile={isStudent}
+        />
+
+        <DashboardLayout
+          sidebarSections={getSidebarConfig()}
+          userRole={userRoleFormatted}
+          isSupervisor={isSupervisor}
+        >
+          <Outlet />
+        </DashboardLayout>
+      </div>
+    </CriticalOperationProvider>
+  );
+}

@@ -6,10 +6,7 @@
 
 import { AlertTriangle, RefreshCw, Plus, X } from 'lucide-react-native';
 import React from 'react';
-import { View, Text, TouchableOpacity, Modal, StyleSheet, Dimensions } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+import { View, Text, TouchableOpacity, Modal, StyleSheet } from 'react-native';
 
 export interface DeletedDuplicateModalProps {
   visible: boolean;
@@ -41,21 +38,26 @@ export function DeletedDuplicateModal({
       <Text style={styles.message}>
         {parts.map((part, i) =>
           part.startsWith("'") && part.endsWith("'") ? (
-            <Text key={i} style={styles.messageBold}>
+            <Text key={`${i}-${part}`} style={styles.messageBold}>
               {part}
             </Text>
           ) : (
-            <Text key={i}>{part}</Text>
-          )
+            <Text key={`${i}-${part}`}>{part}</Text>
+          ),
         )}
       </Text>
     );
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onCancel}
+    >
       <View style={styles.overlay}>
-        <Animated.View entering={FadeInDown.duration(300)} style={styles.sheet}>
+        <View style={styles.sheet}>
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.iconCircle}>
@@ -100,7 +102,7 @@ export function DeletedDuplicateModal({
               <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
           </View>
-        </Animated.View>
+        </View>
       </View>
     </Modal>
   );
@@ -117,7 +119,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingBottom: 34,
-    maxWidth: SCREEN_WIDTH,
+    width: '100%',
   },
   header: {
     flexDirection: 'row',

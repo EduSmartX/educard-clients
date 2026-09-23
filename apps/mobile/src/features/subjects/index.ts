@@ -1,5 +1,5 @@
 /**
- * Subjects Feature — Barrel Exports
+ * Subjects Feature — Barrel Exports (data layer + list component)
  */
 
 export {
@@ -24,3 +24,6 @@ export {
   useDeleteSubject,
   useRestoreSubject,
 } from './hooks/use-subjects';
+
+export { SubjectList } from './components';
+export type { SubjectListProps } from './components';

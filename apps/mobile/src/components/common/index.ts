@@ -1,19 +1,20 @@
 /**
- * Common Components Index
+ * Common Components Index (slice)
+ * More common components are added here as screens are migrated.
  */
 
+export { HeaderProfileButton } from './HeaderProfileButton';
 export { SearchBar } from './SearchBar';
-export { EmptyState } from './EmptyState';
 export { ListHeader } from './ListHeader';
-export { ActionButtons } from './ActionButtons';
-export { LoadingState, ErrorState, ListFooter } from './ListStates';
-export { EmptyState as ListEmptyState } from './ListStates';
 export { EntityActions } from './EntityActions';
-export { DeletedDuplicateModal } from './DeletedDuplicateModal';
-export { ProfileAvatar } from './ProfileAvatar';
-
-// New Reusable UI Components
-export { FAB } from './FAB';
-export { BottomSheetModal } from './BottomSheetModal';
 export { ConfirmDialog } from './ConfirmDialog';
+export type { ConfirmDialogProps } from './ConfirmDialog';
+export { LoadingState, ErrorState, EmptyState, ListFooter } from './ListStates';
+export { BulkUploadModal } from './BulkUploadModal';
+export type {
+  BulkUploadError,
+  BulkUploadResult,
+  BulkUploadResponse,
+} from './BulkUploadModal';
 export { SubmitButton, CancelButton, ButtonRow } from './SubmitButton';
+export { FAB } from './FAB';

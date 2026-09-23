@@ -51,6 +51,8 @@ export const ErrorMessages = {
     BULK_UPLOAD_FAILED: "Failed to upload students. Please try again.",
     DOWNLOAD_TEMPLATE_FAILED: "Failed to download student template.",
     NOT_FOUND: "Student not found.",
+    SET_TEMP_PASSWORD_FAILED:
+      "Failed to set the temporary password. Please try again.",
   },
 
   TEACHER: {
@@ -62,6 +64,8 @@ export const ErrorMessages = {
     BULK_UPLOAD_FAILED: "Failed to upload teachers. Please try again.",
     DOWNLOAD_TEMPLATE_FAILED: "Failed to download teacher template.",
     NOT_FOUND: "Teacher not found.",
+    RESEND_VERIFICATION_FAILED:
+      "Failed to resend the verification link. Please try again.",
   },
 
   CLASS: {
@@ -141,6 +145,13 @@ export const ErrorMessages = {
     DOWNLOAD_TEMPLATE_FAILED: "Failed to download holiday template.",
   },
 
+  EXCEPTIONAL_WORK: {
+    CREATE_FAILED: "Failed to create exception. Please try again.",
+    UPDATE_FAILED: "Failed to update exception. Please try again.",
+    DELETE_FAILED: "Failed to delete exception. Please try again.",
+    FETCH_FAILED: "Failed to load exceptions. Please try again.",
+  },
+
   ORGANIZATION: {
     CREATE_FAILED: "Failed to create organization. Please try again.",
     UPDATE_FAILED: "Failed to update organization. Please try again.",
@@ -177,14 +188,64 @@ export const ErrorMessages = {
     FETCH_FAILED: "Failed to load timetable data. Please try again.",
   },
 
+  FEE: {
+    // Fee Structure
+    STRUCTURE_CREATE_FAILED:
+      "Failed to create fee structure. Please try again.",
+    STRUCTURE_UPDATE_FAILED:
+      "Failed to update fee structure. Please try again.",
+    STRUCTURE_DELETE_FAILED:
+      "Failed to delete fee structure. Please try again.",
+    STRUCTURE_FETCH_FAILED: "Failed to load fee structures. Please try again.",
+    STRUCTURE_NOT_FOUND: "Fee structure not found.",
+    // Student Fee
+    STUDENT_FEE_CREATE_FAILED:
+      "Failed to assign fee to student. Please try again.",
+    STUDENT_FEE_UPDATE_FAILED:
+      "Failed to update student fee. Please try again.",
+    STUDENT_FEE_DELETE_FAILED:
+      "Failed to delete student fee. Please try again.",
+    STUDENT_FEE_FETCH_FAILED: "Failed to load student fees. Please try again.",
+    STUDENT_FEE_NOT_FOUND: "Student fee record not found.",
+    DUPLICATE_STUDENT_FEE:
+      "A fee record already exists for this student and fee structure.",
+    // Payment
+    PAYMENT_CREATE_FAILED: "Failed to record payment. Please try again.",
+    PAYMENT_FETCH_FAILED: "Failed to load payments. Please try again.",
+    PAYMENT_NOT_FOUND: "Payment record not found.",
+    INVALID_PAYMENT_AMOUNT: "Payment amount cannot exceed balance due.",
+    ALREADY_FULLY_PAID: "This fee is already fully paid.",
+    // Reminder
+    REMINDER_SEND_FAILED: "Failed to send reminder. Please try again.",
+    BULK_REMINDER_FAILED: "Failed to send bulk reminders. Please try again.",
+    // Dashboard
+    DASHBOARD_FETCH_FAILED: "Failed to load fee dashboard. Please try again.",
+    DEFAULTERS_FETCH_FAILED:
+      "Failed to load defaulters list. Please try again.",
+    // Validation
+    INVALID_COMPONENTS:
+      "Invalid fee components. Each component must have a valid name and amount.",
+    INVALID_DISCOUNT: "Discount percentage must be between 0 and 100.",
+    CHEQUE_DETAILS_REQUIRED:
+      "Cheque number and bank name are required for cheque payments.",
+  },
+
   AUTH: {
     PENDING_APPROVAL: "Organization pending approval.",
     ORGANIZATION_REJECTED: "Organization has been rejected.",
     SEND_OTP_FAILED: "Failed to send OTP. Please try again.",
+    SEND_VERIFICATION_CODES_FAILED:
+      "Failed to send verification codes. Please try again.",
+    OTP_ALREADY_SENT_RECENTLY:
+      "Verification codes were already sent recently. Check your inbox, or wait to resend.",
     INVALID_OTP: "Please enter a valid 6-digit OTP.",
     VERIFY_OTP_FAILED: "Failed to verify OTP. Please try again.",
+    ADMIN_PHONE_REQUIRED: "Enter administrator mobile number first.",
+    ADMIN_PHONE_OTP_REQUIRED:
+      "Please verify administrator mobile number OTP before registration.",
     PASSWORD_RESET_FAILED:
       "Invalid OTP or failed to reset password. Please try again.",
+    REGISTRATION_FAILED: "Failed to register. Please try again.",
   },
 
   PROFILE: {
@@ -196,6 +257,10 @@ export const ErrorMessages = {
     PHOTO_UPLOAD_FAILED: "Failed to upload profile photo. Please try again.",
     PHOTO_DELETE_FAILED: "Failed to delete profile photo. Please try again.",
     PHOTO_FETCH_FAILED: "Failed to load profile photo.",
+    REQUEST_SYNC_OTP_FAILED:
+      "Failed to send verification code. Please try again.",
+    SYNC_PROFILES_FAILED:
+      "Failed to sync profiles. Please check the code and try again.",
   },
 
   LOCATION_UNAVAILABLE: "Unable to get location.",
@@ -265,6 +330,7 @@ export const CommonUiText = {
 export const SuccessMessages = {
   // Generic success
   SUCCESS: "Operation completed successfully.",
+  LOGIN_SUCCESS: "Logged in successfully.",
 
   // CRUD operation success
   CREATE_SUCCESS: "Created successfully.",
@@ -278,6 +344,8 @@ export const SuccessMessages = {
     DELETE_SUCCESS: "Student deleted successfully.",
     BULK_UPLOAD_SUCCESS: "Students uploaded successfully.",
     REACTIVATE_SUCCESS: "Student reactivated successfully.",
+    TEMP_PASSWORD_SET:
+      "Temporary password set. The student must change it at next login.",
   },
 
   TEACHER: {
@@ -286,6 +354,7 @@ export const SuccessMessages = {
     DELETE_SUCCESS: "Teacher deleted successfully.",
     BULK_UPLOAD_SUCCESS: "Teachers uploaded successfully.",
     REACTIVATE_SUCCESS: "Teacher reactivated successfully.",
+    VERIFICATION_LINK_SENT: "Verification link sent successfully.",
   },
 
   CLASS: {
@@ -343,6 +412,12 @@ export const SuccessMessages = {
     BULK_UPLOAD_SUCCESS: "Holidays uploaded successfully.",
   },
 
+  EXCEPTIONAL_WORK: {
+    CREATED: "Exception created successfully.",
+    UPDATED: "Exception updated successfully.",
+    DELETED: "Exception deleted successfully.",
+  },
+
   ORGANIZATION: {
     CREATE_SUCCESS: "Organization created successfully.",
     UPDATE_SUCCESS: "Organization updated successfully.",
@@ -389,13 +464,31 @@ export const SuccessMessages = {
     OTP_SENT: "OTP sent successfully.",
     PHOTO_UPLOADED: "Profile photo uploaded successfully.",
     PHOTO_DELETED: "Profile photo removed successfully.",
+    SYNC_OTP_SENT: "Verification code sent to your email.",
+    PROFILES_SYNCED: "Profiles synced successfully.",
   },
 
   AUTH: {
     OTP_SENT: "OTP sent successfully.",
+    OTP_RESENT: "New verification code sent successfully.",
     PASSWORD_RESET_SUCCESS: "Password reset successful.",
     LOGIN_SUCCESS: "Logged in successfully.",
     LOGOUT_SUCCESS: "Logged out successfully.",
+    ADMIN_EMAIL_VERIFIED: "Admin email verified successfully.",
+    ADMIN_PHONE_OTP_SENT: "OTP sent to administrator mobile number.",
+    ADMIN_PHONE_VERIFIED: "Administrator mobile number verified successfully.",
+    ORG_EMAIL_VERIFIED: "Organization email verified successfully.",
+    EMAIL_VERIFICATION_COMPLETE: "Email verification complete.",
+  },
+
+  FILES: {
+    TEMPLATE_DOWNLOADED: "Template downloaded successfully.",
+    UPLOAD_SUCCESS: "File uploaded successfully.",
+    DOWNLOAD_SUCCESS: "File downloaded successfully.",
+  },
+
+  LOCATION: {
+    AUTO_FILLED: "Location details auto-filled from pincode.",
   },
 } as const;
 
@@ -464,6 +557,22 @@ export const ValidationMessages = {
   MARKS_EXCEED_MAXIMUM: "Marks obtained cannot exceed maximum marks.",
   INVALID_MARKS: "Please enter valid marks.",
 
+  // Exam validations
+  EXAM: {
+    SELECT_SESSION: "Please select an exam session.",
+    SELECT_SUBJECT: "Please select a subject.",
+    SELECT_STATUS: "Please select a status.",
+    SELECT_CLASS: "Please select a class.",
+    SELECT_AT_LEAST_ONE_SUBJECT: "Please select at least one subject.",
+    DATE_IS_HOLIDAY:
+      "The selected date falls on a holiday. Please select a working day.",
+    DATE_OUTSIDE_SESSION:
+      "The exam date must be within the session date range.",
+    MARKS_LESS_THAN_ZERO: "Marks cannot be less than 0.",
+    MARKS_EXCEED_MAX: "Marks cannot exceed the maximum marks.",
+    MARKS_INVALID_RANGE: "Marks must be between 0 and maximum marks.",
+  },
+
   // Exam Session validations
   EXAM_SESSION: {
     ENTER_NAME: "Please enter exam session name.",
@@ -507,10 +616,20 @@ export const FormPlaceholders = {
 
   // Student fields
   ROLL_NUMBER: "Enter roll number",
+  ENTER_ROLL_NUMBER: "Enter roll number",
   ADMISSION_NUMBER: "Enter admission number",
+  ENTER_ADMISSION_NUMBER: "Enter admission number",
   GUARDIAN_NAME: "Enter guardian name",
+  ENTER_GUARDIAN_NAME: "Enter guardian name",
   GUARDIAN_PHONE: "Enter guardian phone",
+  ENTER_GUARDIAN_PHONE: "Enter guardian phone",
   GUARDIAN_EMAIL: "Enter guardian email",
+  ENTER_GUARDIAN_EMAIL: "Enter guardian email",
+  MEDICAL_CONDITIONS: "Enter medical conditions (if any)",
+  ENTER_ADDITIONAL_NOTES: "Enter additional notes",
+  ENTER_PREVIOUS_SCHOOL_NAME: "Enter previous school name",
+  ENTER_PREVIOUS_CLASS: "Enter previous class",
+  ENTER_PREVIOUS_SCHOOL_ADDRESS: "Enter previous school address",
 
   // Teacher fields
   EMPLOYEE_ID: "Enter employee ID",
@@ -544,6 +663,7 @@ export const FormPlaceholders = {
   SELECT_CLASS: "Select class",
   SELECT_SUBJECT: "Select subject",
   SELECT_TEACHER: "Select teacher",
+  SELECT_USER: "Select user",
   SELECT_CLASS_TEACHER: "Select class teacher",
 
   // Leave fields
@@ -551,14 +671,50 @@ export const FormPlaceholders = {
   COMMENTS: "Enter comments",
   REMARKS: "Enter remarks (optional)",
   SELECT_LEAVE_TYPE: "Select leave type",
+  SEARCH_LEAVE_TYPES: "Search leave types...",
+  SELECT_LEAVE_ALLOCATION_POLICY: "Select leave allocation policy",
   ENTER_LEAVE_REASON: "Enter reason for leave...",
+  ENTER_ALLOCATED_DAYS: "Enter total days allocated",
+  ENTER_CARRY_FORWARD_DAYS: "Enter maximum carry forward days",
 
   // Organization fields
   ORGANIZATION_NAME: "Enter organization name",
   ORGANIZATION_CODE: "Enter organization code",
+  ORG_NAME_EXAMPLE: "e.g., Springfield Academy",
+  ORG_EMAIL_EXAMPLE: "e.g., info@school.com",
+  PHONE_EXAMPLE: "e.g., 9876543210",
+  REGISTRATION_NUMBER_EXAMPLE: "e.g., REG-2024-001",
+  CIN_EXAMPLE: "e.g., U80302RJ2024PTC123456",
+  GSTIN_EXAMPLE: "e.g., 08AABCU9603R1ZM",
+  WEBSITE_EXAMPLE: "e.g., https://www.school.com",
 
   // OTP
   OTP: "Enter 6-digit OTP",
+  ENTER_OTP_6_DIGIT: "Enter 6-digit OTP",
+  OTP_MASK: "------",
+
+  // Email
+  EMAIL_EXAMPLE: "example@email.com",
+  ADMIN_EMAIL_EXAMPLE: "admin@school.com",
+  SCHOOL_EMAIL_EXAMPLE: "info@school.com",
+
+  // Names
+  FIRST_NAME_EXAMPLE: "e.g., John",
+  LAST_NAME_EXAMPLE: "e.g., Smith",
+
+  // Organization/School
+  ENTER_SCHOOL_NAME: "Enter school name",
+  WEBSITE_GENERIC_EXAMPLE: "e.g., https://www.school.com",
+
+  // Password
+  CREATE_STRONG_PASSWORD: "Create a strong password",
+  REENTER_NEW_PASSWORD: "Re-enter new password",
+
+  // Search
+  SEARCH_CLASSES: "Search classes...",
+  SEARCH_STUDENTS: "Search students...",
+  SEARCH_TEACHERS: "Search teachers...",
+  SEARCH_USERS: "Search users...",
 
   // Date
   SELECT_DATE: "Select date",
@@ -609,6 +765,7 @@ export const AttendanceUiText = {
   ATTENDANCE_SUBMITTED: "Attendance submitted successfully",
   ATTENDANCE_UPDATED: "Attendance updated successfully",
   ALREADY_MARKED: "Attendance already marked for this date",
+  EDIT_ATTENDANCE: "Edit Attendance",
 
   // Summary labels
   TOTAL_STUDENTS: "Total Students",
@@ -625,6 +782,13 @@ export const AttendanceUiText = {
   PERIOD_AFTERNOON: "Afternoon",
   PERIOD_FULL_DAY: "Full Day",
 
+  // Table headers
+  ROLL_NO: "Roll No",
+  STUDENT_NAME: "Name",
+  REMARKS: "Remarks",
+  LEAVE_PENDING: "Leave Pending",
+  ADD_REMARKS: "Add remarks...",
+
   // Date validation
   NOT_WORKING_DAY: "This is not a working day",
 
@@ -635,6 +799,24 @@ export const AttendanceUiText = {
   TIMESHEET_PENDING: "Pending Review",
   TIMESHEET_APPROVED: "Approved",
   TIMESHEET_REJECTED: "Rejected",
+
+  // Fee Management
+  FEE_AMOUNT: "Enter fee amount",
+  FEE_COMPONENT_NAME: "Enter component name",
+  DISCOUNT_PERCENTAGE: "Enter discount percentage (0-100)",
+  PAYMENT_AMOUNT: "Enter payment amount",
+  UTR_NUMBER: "Enter UTR/Transaction reference",
+  CHEQUE_NUMBER: "Enter cheque number",
+  BANK_NAME: "Enter bank name",
+  REFERRAL_CODE: "Enter referral code (optional)",
+  REFERRAL_NAME: "Enter referral name (optional)",
+  DISCOUNT_REASON: "Enter reason for discount",
+  PAYMENT_REMARKS: "Add payment notes (optional)",
+
+  // Feature status
+  COMING_SOON: "Coming Soon",
+  FEATURE_IN_PROGRESS:
+    "This feature is currently under development and will be available soon.",
 } as const;
 
 /**
@@ -649,6 +831,14 @@ export const InfoMessages = {
   },
   ADMIN: {
     BULK_UPLOAD_INFO: "Upload data for any class in your organization.",
+  },
+  FEE: {
+    DISCOUNT_INFO: "Discount will be applied to the base amount.",
+    PAYMENT_CONFIRMATION:
+      "Payment confirmation will be sent to parent via email.",
+    REMINDER_INFO: "Reminder will be sent via the selected channel.",
+    OVERDUE_WARNING:
+      "This fee is overdue. Please clear the dues at the earliest.",
   },
 } as const;
 

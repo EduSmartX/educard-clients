@@ -41,7 +41,7 @@ export interface StudentClassInfo {
 
 export interface StudentUserInfo {
   public_id: string;
-  username: string;
+  username: string | null;
   first_name: string;
   last_name: string;
   full_name: string;
@@ -89,6 +89,8 @@ export interface Student extends AuditFields {
   previous_school_class?: string;
   emergency_contact_name?: string;
   emergency_contact_phone?: string;
+  profile_photo_thumbnail?: string | null;
+  profile_photo_url?: string | null;
 }
 
 export interface StudentListItem {
@@ -106,6 +108,7 @@ export interface StudentListItem {
   is_active: boolean;
   can_manage?: boolean;
   profile_photo_thumbnail?: string | null;
+  profile_photo_url?: string | null;
 }
 
 // Request Payloads
@@ -166,7 +169,12 @@ export interface StudentQueryParams extends BaseQueryParams {
   class_master_id?: string;
   class_assigned__public_id?: string;
   user__public_id?: string;
+  user__gender?: string;
   for_attendance?: boolean;
+  embed_images?: boolean;
+  admission_date_from?: string;
+  admission_date_to?: string;
+  is_deleted?: boolean;
 }
 
 // Bulk Operations
@@ -180,11 +188,20 @@ export type StudentBulkUploadResult = BulkUploadResult;
 
 export interface ExportStudentsPayload {
   class_id?: string;
-  email_addresses?: string[];
+  class_ids?: string[];
+  gender?: string;
+  search?: string;
+  send_email?: boolean;
+  emails?: string[];
 }
 
 export interface ExportStudentsResult {
   success: boolean;
   message: string;
   file_url?: string;
+}
+
+export interface ResetClassPasswordsPayload {
+  new_password: string;
+  confirm_password: string;
 }

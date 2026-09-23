@@ -40,15 +40,18 @@ const optionalDate = () =>
     .string()
     .refine(
       (v) => !v || v === "" || /^\d{4}-\d{2}-\d{2}$/.test(v),
-      "Date must be in YYYY-MM-DD format"
+      "Date must be in YYYY-MM-DD format",
     )
     .optional()
     .or(z.literal(""));
 
-const genderField = () =>
+const _genderField = () =>
   z.enum(["M", "F", "O"], {
     errorMap: () => ({ message: "Please select a gender" }),
   });
+
+// Export for potential future use to avoid unused variable + void operator
+export { _genderField };
 
 const requiredGender = () =>
   z
@@ -58,86 +61,105 @@ const requiredGender = () =>
 
 // TEACHER Form Schemas
 
-/** Quick-add teacher: only required fields */
-export const teacherQuickSchema = z.object({
+const nameRefinement = {
+  check: (data: { first_name: string; last_name: string }) =>
+    data.first_name.length > 1 || data.last_name.length > 1,
+  message: "Both names cannot be a single character",
+  path: ["last_name"] as [string],
+};
+
+/** Base teacher object (without refinement) */
+const teacherQuickBase = z.object({
   employee_id: requiredString("Employee ID"),
   email: emailField("Email"),
-  first_name: requiredString("First name").min(
-    2,
-    "First name must be at least 2 characters",
-  ),
+  first_name: requiredString("First name"),
   last_name: requiredString("Last name"),
   gender: requiredGender(),
 });
 
+/** Quick-add teacher: only required fields */
+export const teacherQuickSchema = teacherQuickBase.refine(
+  nameRefinement.check,
+  { message: nameRefinement.message, path: nameRefinement.path },
+);
+
 /** Full teacher form: all fields */
-export const teacherFullSchema = teacherQuickSchema.extend({
-  organization_role: optionalString(),
-  phone: phoneField("Phone"),
-  blood_group: optionalString(),
-  date_of_birth: optionalDate(),
-  designation: optionalString(),
-  highest_qualification: optionalString(),
-  specialization: optionalString(),
-  experience_years: z
-    .string()
-    .refine((v) => {
-      if (!v || v === "") return true;
-      const n = Number(v);
-      return !isNaN(n) && n >= 0 && n <= 70;
-    }, "Experience must be between 0 and 70")
-    .optional()
-    .or(z.literal("")),
-  supervisor_email: optionalEmail(),
-  joining_date: optionalDate(),
-  emergency_contact_name: optionalString(),
-  emergency_contact_number: phoneField("Emergency contact"),
-  street_address: optionalString(),
-  city: optionalString(),
-  state: optionalString(),
-  postal_code: optionalString(),
-  country: optionalString(),
-});
+export const teacherFullSchema = teacherQuickBase
+  .extend({
+    organization_role: optionalString(),
+    phone: phoneField("Phone"),
+    blood_group: optionalString(),
+    date_of_birth: optionalDate(),
+    designation: optionalString(),
+    highest_qualification: optionalString(),
+    specialization: optionalString(),
+    experience_years: z
+      .string()
+      .refine((v) => {
+        if (!v || v === "") {
+          return true;
+        }
+        const n = Number(v);
+        return !Number.isNaN(n) && n >= 0 && n <= 70;
+      }, "Experience must be between 0 and 70")
+      .optional()
+      .or(z.literal("")),
+    supervisor_email: optionalEmail(),
+    joining_date: optionalDate(),
+    street_address: optionalString(),
+    city: optionalString(),
+    state: optionalString(),
+    postal_code: optionalString(),
+    country: optionalString(),
+  })
+  .refine(nameRefinement.check, {
+    message: nameRefinement.message,
+    path: nameRefinement.path,
+  });
 
 // STUDENT Form Schemas
 
-/** Quick-add student: only required fields */
-export const studentQuickSchema = z.object({
+/** Base student object (without refinement) */
+const studentQuickBase = z.object({
   class_id: requiredString("Class"),
-  first_name: requiredString("First name").min(
-    2,
-    "First name must be at least 2 characters",
-  ),
+  first_name: requiredString("First name"),
   last_name: requiredString("Last name"),
   roll_number: requiredString("Roll number"),
 });
 
+/** Quick-add student: only required fields */
+export const studentQuickSchema = studentQuickBase.refine(
+  nameRefinement.check,
+  { message: nameRefinement.message, path: nameRefinement.path },
+);
+
 /** Full student form: all fields */
-export const studentFullSchema = studentQuickSchema.extend({
-  email: optionalEmail(),
-  phone: phoneField("Phone"),
-  gender: optionalString(),
-  blood_group: optionalString(),
-  date_of_birth: optionalDate(),
-  admission_number: optionalString(),
-  admission_date: optionalDate(),
-  guardian_name: optionalString(),
-  guardian_phone: phoneField("Guardian phone"),
-  guardian_email: optionalEmail(),
-  guardian_relationship: optionalString(),
-  medical_conditions: optionalString(),
-  description: optionalString(),
-  emergency_contact_name: optionalString(),
-  emergency_contact_phone: phoneField("Emergency contact"),
-  previous_school_name: optionalString(),
-  previous_school_class: optionalString(),
-  previous_school_address: optionalString(),
-  street_address: optionalString(),
-  city: optionalString(),
-  state: optionalString(),
-  postal_code: optionalString(),
-  country: optionalString(),
-});
+export const studentFullSchema = studentQuickBase
+  .extend({
+    email: optionalEmail(),
+    phone: phoneField("Phone"),
+    gender: optionalString(),
+    blood_group: optionalString(),
+    date_of_birth: optionalDate(),
+    admission_number: optionalString(),
+    admission_date: optionalDate(),
+    guardian_name: optionalString(),
+    guardian_relationship: optionalString(),
+    medical_conditions: optionalString(),
+    description: optionalString(),
+    previous_school_name: optionalString(),
+    previous_school_class: optionalString(),
+    previous_school_address: optionalString(),
+    street_address: optionalString(),
+    city: optionalString(),
+    state: optionalString(),
+    postal_code: optionalString(),
+    country: optionalString(),
+  })
+  .refine(nameRefinement.check, {
+    message: nameRefinement.message,
+    path: nameRefinement.path,
+  });
 
 // CLASS Form Schema
 
@@ -147,9 +169,11 @@ export const classFormSchema = z.object({
   capacity: z
     .string()
     .refine((v) => {
-      if (!v || v === "") return true;
+      if (!v || v === "") {
+        return true;
+      }
       const n = Number(v);
-      return !isNaN(n) && n >= 1 && n <= 500;
+      return !Number.isNaN(n) && n >= 1 && n <= 500;
     }, "Capacity must be between 1 and 500")
     .optional()
     .or(z.literal("")),
@@ -163,8 +187,13 @@ export const classFormSchema = z.object({
 export const subjectFormSchema = z.object({
   class_id: requiredString("Class"),
   subject_id: requiredString("Subject"),
+  subject_type: z
+    .enum(["core", "elective", "language"])
+    .optional()
+    .default("core"),
   teacher_id: optionalString(),
   description: optionalString(),
+  display_order: optionalString(),
 });
 
 // Validation Helper — Validate a single field against a Zod schema
@@ -173,16 +202,26 @@ export const subjectFormSchema = z.object({
  * Validate a single field from a Zod object schema.
  * Returns the error message or undefined.
  */
-export function validateField<T extends z.ZodObject<any>>(
-  schema: T,
+export function validateField(
+  schema: z.ZodTypeAny,
   field: string,
   value: string,
-  allValues?: Record<string, any>,
+  _allValues?: Record<string, unknown>,
 ): string | undefined {
-  // Get the field schema from the shape
-  const shape = schema.shape as Record<string, z.ZodTypeAny>;
+  // Unwrap ZodEffects to get the underlying ZodObject shape
+  let inner: z.ZodTypeAny = schema;
+  while (inner instanceof z.ZodEffects) {
+    inner = inner._def.schema;
+  }
+  if (!(inner instanceof z.ZodObject)) {
+    return undefined;
+  }
+
+  const shape = inner.shape as Record<string, z.ZodTypeAny>;
   const fieldSchema = shape[field];
-  if (!fieldSchema) return undefined;
+  if (!fieldSchema) {
+    return undefined;
+  }
 
   const result = fieldSchema.safeParse(value);
   if (!result.success) {
@@ -195,12 +234,14 @@ export function validateField<T extends z.ZodObject<any>>(
  * Validate all fields of a form object against a Zod schema.
  * Returns a Record<string, string> of field → error message.
  */
-export function validateAllFields<T extends z.ZodObject<any>>(
-  schema: T,
-  values: Record<string, any>,
+export function validateAllFields(
+  schema: z.ZodTypeAny,
+  values: Record<string, unknown>,
 ): Record<string, string> {
   const result = schema.safeParse(values);
-  if (result.success) return {};
+  if (result.success) {
+    return {};
+  }
 
   const errors: Record<string, string> = {};
   for (const issue of result.error.issues) {

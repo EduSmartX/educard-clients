@@ -71,6 +71,8 @@ export interface ClassDetail extends Class {
   teachers: ClassTeacher[];
   students: ClassStudent[];
   subjects?: ClassSubject[];
+  is_full?: boolean;
+  available_seats?: number;
 }
 
 export interface ClassSummary {
@@ -118,4 +120,5 @@ export interface ClassQueryParams extends BaseQueryParams {
   grade?: string;
   academic_year?: string;
   is_active?: boolean;
+  my_classes_only?: boolean;
 }

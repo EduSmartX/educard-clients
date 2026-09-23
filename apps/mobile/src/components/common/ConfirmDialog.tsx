@@ -1,27 +1,29 @@
 /**
  * ConfirmDialog Component
  * Reusable confirmation dialog for delete, cancel, and other actions
- *
- * Usage:
- *   <ConfirmDialog
- *     visible={showConfirm}
- *     title="Delete Item"
- *     message="Are you sure you want to delete this item?"
- *     confirmText="Delete"
- *     confirmVariant="danger"
- *     onConfirm={handleDelete}
- *     onCancel={() => setShowConfirm(false)}
- *   />
  */
 
-import { Colors } from '@educard/shared';
-import { AlertTriangle, Info, CheckCircle, XCircle, LucideIcon } from 'lucide-react-native';
+import {
+  AlertTriangle,
+  Info,
+  CheckCircle,
+  XCircle,
+  LucideIcon,
+} from 'lucide-react-native';
 import React from 'react';
-import { View, Text, Modal, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  Modal,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  useWindowDimensions,
+} from 'react-native';
 
 type ConfirmVariant = 'danger' | 'warning' | 'info' | 'success';
 
-interface ConfirmDialogProps {
+export interface ConfirmDialogProps {
   visible: boolean;
   title: string;
   message: string;
@@ -34,13 +36,15 @@ interface ConfirmDialogProps {
   icon?: LucideIcon;
 }
 
-const VARIANT_CONFIG: Record<ConfirmVariant, { color: string; icon: LucideIcon; bgColor: string }> =
-  {
-    danger: { color: '#dc2626', icon: XCircle, bgColor: '#fef2f2' },
-    warning: { color: '#f59e0b', icon: AlertTriangle, bgColor: '#fffbeb' },
-    info: { color: '#3b82f6', icon: Info, bgColor: '#eff6ff' },
-    success: { color: '#10b981', icon: CheckCircle, bgColor: '#f0fdf4' },
-  };
+const VARIANT_CONFIG: Record<
+  ConfirmVariant,
+  { color: string; icon: LucideIcon; bgColor: string }
+> = {
+  danger: { color: '#dc2626', icon: XCircle, bgColor: '#fef2f2' },
+  warning: { color: '#f59e0b', icon: AlertTriangle, bgColor: '#fffbeb' },
+  info: { color: '#3b82f6', icon: Info, bgColor: '#eff6ff' },
+  success: { color: '#10b981', icon: CheckCircle, bgColor: '#f0fdf4' },
+};
 
 export function ConfirmDialog({
   visible,
@@ -55,7 +59,21 @@ export function ConfirmDialog({
   icon,
 }: ConfirmDialogProps) {
   const config = VARIANT_CONFIG[confirmVariant];
-  const IconComponent = icon || config.icon;
+  const IconComponent = icon ?? config.icon;
+  const { width } = useWindowDimensions();
+  let maxDialogWidth = width - 32;
+  if (width >= 900) {
+    maxDialogWidth = 520;
+  } else if (width >= 600) {
+    maxDialogWidth = 420;
+  }
+  const overlayPadding = width < 360 ? 12 : 24;
+  const contentPadding = width < 360 ? 18 : 24;
+
+  const overlayStyle = { padding: overlayPadding };
+  const containerStyle = { maxWidth: maxDialogWidth, padding: contentPadding };
+  const iconWrapStyle = { backgroundColor: config.bgColor };
+  const confirmBgStyle = { backgroundColor: config.color };
 
   return (
     <Modal
@@ -65,10 +83,10 @@ export function ConfirmDialog({
       onRequestClose={onCancel}
       statusBarTranslucent
     >
-      <View style={styles.overlay}>
-        <View style={styles.container}>
+      <View style={[styles.overlay, overlayStyle]}>
+        <View style={[styles.container, containerStyle]}>
           {/* Icon */}
-          <View style={[styles.iconContainer, { backgroundColor: config.bgColor }]}>
+          <View style={[styles.iconContainer, iconWrapStyle]}>
             <IconComponent size={28} color={config.color} />
           </View>
 
@@ -78,14 +96,18 @@ export function ConfirmDialog({
 
           {/* Actions */}
           <View style={styles.actions}>
-            <TouchableOpacity style={styles.cancelButton} onPress={onCancel} disabled={isLoading}>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={onCancel}
+              disabled={isLoading}
+            >
               <Text style={styles.cancelButtonText}>{cancelText}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[
                 styles.confirmButton,
-                { backgroundColor: config.color },
+                confirmBgStyle,
                 isLoading && styles.buttonDisabled,
               ]}
               onPress={onConfirm}
@@ -119,12 +141,10 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 340,
     alignItems: 'center',
-    // Shadow for iOS
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
-    // Elevation for Android
     elevation: 8,
   },
   iconContainer: {

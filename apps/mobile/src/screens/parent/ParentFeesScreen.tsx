@@ -1,0 +1,474 @@
+/**
+ * Student Fees Screen
+ * Fee summary + components (opt-in/opt-out) + payment history
+ */
+
+import { format } from 'date-fns';
+import { CheckCircle, ToggleLeft, ToggleRight } from 'lucide-react-native';
+import { useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  RefreshControl,
+  ActivityIndicator,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
+
+import {
+  DonutChart,
+  ChartLegend,
+  type ChartSegment,
+} from '@/components/charts';
+import { Screen } from '@/components/layout';
+import { ScreenHeader } from '@/components/ui';
+import { colors } from '@/constants/colors';
+import {
+  useFeeSummary,
+  useFeePayments,
+  useFeeComponents,
+  useFeeOptIn,
+  useFeeOptOut,
+  type FeePayment,
+  type FeeComponent,
+} from '@/features/student-portal';
+import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
+
+// Amounts arrive as decimal strings and may be absent on older API versions.
+function toAmount(value: number | string | null | undefined): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+export default function ParentFeesScreen() {
+  const {
+    data: summary,
+    isLoading: summaryLoading,
+    refetch: refetchSummary,
+  } = useFeeSummary();
+  const {
+    data: payments,
+    isLoading: paymentsLoading,
+    refetch: refetchPayments,
+  } = useFeePayments();
+  const {
+    data: components,
+    isLoading: componentsLoading,
+    refetch: refetchComponents,
+  } = useFeeComponents();
+  const optIn = useFeeOptIn();
+  const optOut = useFeeOptOut();
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [note, setNote] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([
+      refetchSummary(),
+      refetchPayments(),
+      refetchComponents(),
+    ]);
+    setRefreshing(false);
+  }, [refetchSummary, refetchPayments, refetchComponents]);
+  const isLoading = summaryLoading || paymentsLoading || componentsLoading;
+
+  const paidPct =
+    summary && toAmount(summary.total_amount) > 0
+      ? Math.round(
+          (toAmount(summary.amount_paid) / toAmount(summary.total_amount)) *
+            100,
+        )
+      : 0;
+  const feeSegments: ChartSegment[] = summary
+    ? [
+        {
+          label: 'Paid',
+          value: toAmount(summary.amount_paid),
+          color: '#10b981',
+        },
+        {
+          label: 'Due',
+          value: toAmount(summary.balance_due),
+          color: '#ef4444',
+        },
+      ]
+    : [];
+
+  const mandatoryComponents = (components ?? []).filter(
+    (c: FeeComponent) => c.component_type === 'mandatory',
+  );
+  const optionalComponents = (components ?? []).filter(
+    (c: FeeComponent) => c.component_type === 'optional',
+  );
+
+  return (
+    <Screen safeArea={false} statusBarStyle="light" backgroundColor="#f8fafc">
+      <ScreenHeader
+        title="Fees"
+        subtitle="Fee details, components and payments"
+        showBack={false}
+      />
+      <KeyboardAwareScrollView
+        className="flex-1"
+        contentContainerClassName="pb-6"
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={refresh} />
+        }
+      >
+        {isLoading ? (
+          <View className="items-center py-20">
+            <ActivityIndicator color={colors.primary[500]} />
+          </View>
+        ) : (
+          <View className="px-4 pb-6 pt-4">
+            {/* Summary Cards */}
+            {!summary && (
+              <View className="items-center rounded-xl border border-gray-200 bg-white py-8">
+                <Text className="text-sm text-gray-400">
+                  No Fee information available
+                </Text>
+              </View>
+            )}
+            {summary && (
+              <>
+                <Text className="mb-3 text-base font-bold text-gray-800">
+                  Fee Overview
+                </Text>
+                <View className="gap-3">
+                  <View className="rounded-xl border border-gray-200 bg-white p-4">
+                    <View className="flex-row items-center justify-between">
+                      <Text className="text-xs font-medium text-gray-500">
+                        Gross Fee
+                      </Text>
+                      <Text className="text-sm font-semibold text-gray-700">
+                        {formatCurrency(toAmount(summary.base_amount))}
+                      </Text>
+                    </View>
+                    <View className="mt-2 flex-row items-center justify-between">
+                      <Text className="text-xs font-medium text-emerald-700">
+                        Discount
+                        {toAmount(summary.discount_percentage) > 0
+                          ? ` (${toAmount(summary.discount_percentage)}%)`
+                          : ''}
+                      </Text>
+                      <Text className="text-sm font-bold text-emerald-700">
+                        {toAmount(summary.discount_amount) > 0 ? '-' : ''}
+                        {formatCurrency(toAmount(summary.discount_amount))}
+                      </Text>
+                    </View>
+                    <View className="mt-3 border-t border-gray-100 pt-3">
+                      <View className="flex-row items-center justify-between">
+                        <Text className="text-xs font-semibold text-gray-600">
+                          Payable After Discount
+                        </Text>
+                        <Text className="text-sm font-bold text-gray-800">
+                          {formatCurrency(toAmount(summary.total_amount))}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                  <View className="rounded-xl border border-gray-200 bg-white p-4">
+                    <Text className="text-xs font-medium text-gray-500">
+                      Total Payable
+                    </Text>
+                    <Text className="mt-1 text-xl font-bold text-gray-800">
+                      {formatCurrency(toAmount(summary.total_amount))}
+                    </Text>
+                  </View>
+                  <View className="flex-row gap-3">
+                    <View className="flex-1 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                      <Text className="text-xs font-medium text-emerald-700">
+                        Paid
+                      </Text>
+                      <Text className="mt-1 text-xl font-bold text-emerald-700">
+                        {formatCurrency(toAmount(summary.amount_paid))}
+                      </Text>
+                    </View>
+                    <View className="flex-1 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                      <Text className="text-xs font-medium text-amber-700">
+                        Due
+                      </Text>
+                      <Text className="mt-1 text-xl font-bold text-amber-700">
+                        {formatCurrency(toAmount(summary.balance_due))}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                <View className="mt-5 rounded-2xl border border-gray-200 bg-white p-5">
+                  <Text className="mb-3 text-center text-sm font-bold text-gray-700">
+                    Payment Progress
+                  </Text>
+                  {toAmount(summary.total_amount) > 0 ? (
+                    <>
+                      <View className="items-center">
+                        <DonutChart
+                          data={feeSegments}
+                          size={128}
+                          thickness={16}
+                          centerValue={`${paidPct}%`}
+                          centerLabel="Paid"
+                        />
+                      </View>
+                      <View className="mt-3">
+                        <ChartLegend data={feeSegments} showValues />
+                      </View>
+                      {summary.due_date && (
+                        <Text className="mt-3 text-[10px] text-gray-400">
+                          Due:{' '}
+                          {format(new Date(summary.due_date), 'd MMM yyyy')}
+                        </Text>
+                      )}
+                      {summary.is_overdue && (
+                        <View className="mt-2 self-start rounded-md bg-red-100 px-2 py-0.5">
+                          <Text className="text-[10px] font-medium text-red-600">
+                            Overdue
+                          </Text>
+                        </View>
+                      )}
+                    </>
+                  ) : (
+                    <Text className="py-4 text-center text-[13px] text-gray-400">
+                      No data yet
+                    </Text>
+                  )}
+                </View>
+              </>
+            )}
+
+            {/* Fee Components */}
+            <Text className="mb-3 mt-8 text-base font-bold text-gray-800">
+              Fee Components
+            </Text>
+            {components && components.length > 0 ? (
+              <>
+                {/* Mandatory */}
+                {mandatoryComponents.length > 0 && (
+                  <>
+                    <Text className="mb-2 text-xs font-medium uppercase tracking-wide text-emerald-700">
+                      Mandatory
+                    </Text>
+                    {mandatoryComponents.map((c: FeeComponent) => (
+                      <View
+                        key={c.public_id}
+                        className="mb-2 flex-row items-center rounded-xl border border-gray-100 bg-white p-4"
+                      >
+                        <View className="flex-1">
+                          <Text className="text-sm font-medium text-gray-800">
+                            {c.name}
+                          </Text>
+                        </View>
+                        <Text className="text-sm font-semibold text-gray-700">
+                          {formatCurrency(Number(c.amount))}
+                        </Text>
+                      </View>
+                    ))}
+                  </>
+                )}
+
+                {/* Optional */}
+                {optionalComponents.length > 0 && (
+                  <>
+                    <Text className="mb-2 mt-3 text-xs font-medium uppercase tracking-wide text-purple-600">
+                      Optional
+                    </Text>
+                    {optionalComponents.map((c: FeeComponent) => (
+                      <View
+                        key={c.public_id}
+                        className="mb-2 rounded-xl border border-gray-100 bg-white p-4"
+                      >
+                        <View className="flex-row items-center justify-between">
+                          <View className="flex-1">
+                            <Text className="text-sm font-medium text-gray-800">
+                              {c.name}
+                            </Text>
+                            <View className="mt-1 flex-row items-center gap-2">
+                              <View
+                                className={`h-2 w-2 rounded-full ${c.is_selected ? 'bg-emerald-500' : 'bg-gray-300'}`}
+                              />
+                              <Text
+                                className={`text-[10px] ${c.is_selected ? 'text-emerald-600' : 'text-gray-400'}`}
+                              >
+                                {c.is_selected ? 'Included' : 'Not included'}
+                              </Text>
+                              {c.approval_status === 'pending' && (
+                                <View className="rounded-md bg-amber-100 px-1.5 py-0.5">
+                                  <Text className="text-[9px] font-medium text-amber-700">
+                                    Pending
+                                  </Text>
+                                </View>
+                              )}
+                              {c.approval_status === 'approved' && (
+                                <View className="rounded-md bg-emerald-100 px-1.5 py-0.5">
+                                  <Text className="text-[9px] font-medium text-emerald-700">
+                                    Approved
+                                  </Text>
+                                </View>
+                              )}
+                              {c.approval_status === 'rejected' && (
+                                <View className="rounded-md bg-red-100 px-1.5 py-0.5">
+                                  <Text className="text-[9px] font-medium text-red-700">
+                                    Rejected
+                                  </Text>
+                                </View>
+                              )}
+                            </View>
+                            {c.admin_note ? (
+                              <Text className="mt-1 text-[10px] italic text-gray-400">
+                                Admin: {c.admin_note}
+                              </Text>
+                            ) : null}
+                          </View>
+                          <View className="items-end">
+                            <Text className="text-sm font-semibold text-gray-700">
+                              {formatCurrency(Number(c.amount))}
+                            </Text>
+                            {c.can_request_change &&
+                              activeId !== c.public_id && (
+                                <TouchableOpacity
+                                  className="mt-1 flex-row items-center gap-1 rounded-md border border-gray-200 px-2 py-1"
+                                  onPress={() => setActiveId(c.public_id)}
+                                >
+                                  {c.is_selected ? (
+                                    <ToggleLeft
+                                      size={12}
+                                      color={colors.gray[500]}
+                                    />
+                                  ) : (
+                                    <ToggleRight
+                                      size={12}
+                                      color={colors.primary[500]}
+                                    />
+                                  )}
+                                  <Text className="text-[10px] text-gray-600">
+                                    {c.is_selected ? 'Opt Out' : 'Opt In'}
+                                  </Text>
+                                </TouchableOpacity>
+                              )}
+                          </View>
+                        </View>
+                        {activeId === c.public_id && (
+                          <View className="mt-3 rounded-xl bg-gray-50 p-3">
+                            <Text className="mb-2 text-xs font-semibold text-gray-700">
+                              Request reason
+                            </Text>
+                            <TextInput
+                              placeholder="Reason for request..."
+                              placeholderTextColor="#94a3b8"
+                              value={note}
+                              onChangeText={setNote}
+                              multiline
+                              className="min-h-[72px] rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm text-gray-800"
+                            />
+                            <View className="mt-2 flex-row gap-2">
+                              <TouchableOpacity
+                                className="flex-1 items-center rounded-lg bg-emerald-600 py-2.5"
+                                disabled={
+                                  !note.trim() ||
+                                  optIn.isPending ||
+                                  optOut.isPending
+                                }
+                                onPress={() => {
+                                  const action = c.is_selected ? optOut : optIn;
+                                  action.mutate(
+                                    {
+                                      publicId: c.public_id,
+                                      requestNote: note.trim(),
+                                    },
+                                    {
+                                      onSuccess: () => {
+                                        Alert.alert(
+                                          'Success',
+                                          c.is_selected
+                                            ? 'Opt-out request submitted'
+                                            : 'Opt-in request submitted',
+                                        );
+                                        setActiveId(null);
+                                        setNote('');
+                                      },
+                                      onError: () =>
+                                        Alert.alert('Error', 'Request failed'),
+                                    },
+                                  );
+                                }}
+                              >
+                                <Text className="text-xs font-medium text-white">
+                                  Submit
+                                </Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity
+                                className="flex-1 items-center rounded-lg border border-gray-300 bg-white py-2.5"
+                                onPress={() => {
+                                  setActiveId(null);
+                                  setNote('');
+                                }}
+                              >
+                                <Text className="text-xs text-gray-600">
+                                  Cancel
+                                </Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        )}
+                      </View>
+                    ))}
+                  </>
+                )}
+              </>
+            ) : (
+              <View className="items-center rounded-xl bg-gray-50 py-6">
+                <Text className="text-sm text-gray-400">No fee components</Text>
+              </View>
+            )}
+
+            {/* Payment History */}
+            <Text className="mb-3 mt-8 text-base font-bold text-gray-800">
+              Payment History
+            </Text>
+            {payments && payments.length > 0 ? (
+              payments.map((p: FeePayment) => (
+                <View
+                  key={p.public_id}
+                  className="mb-2 flex-row items-center rounded-xl border border-gray-100 bg-white p-4"
+                >
+                  <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
+                    <CheckCircle size={20} color={colors.success[500]} />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-sm font-medium text-gray-800">
+                      {formatCurrency(Number(p.amount))}
+                    </Text>
+                    <Text className="mt-0.5 text-xs text-gray-400">
+                      {format(new Date(p.payment_date), 'd MMM yyyy')}
+                      {p.payment_mode ? ` • ${p.payment_mode}` : ''}
+                    </Text>
+                  </View>
+                  {p.receipt_number && (
+                    <Text className="text-[10px] text-gray-400">
+                      #{p.receipt_number}
+                    </Text>
+                  )}
+                </View>
+              ))
+            ) : (
+              <View className="items-center rounded-xl bg-gray-50 py-8">
+                <Text className="text-sm text-gray-400">No payments yet</Text>
+              </View>
+            )}
+          </View>
+        )}
+      </KeyboardAwareScrollView>
+    </Screen>
+  );
+}

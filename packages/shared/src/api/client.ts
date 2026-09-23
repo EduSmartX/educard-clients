@@ -4,9 +4,9 @@
  */
 
 import axios, {
-  AxiosInstance,
-  AxiosError,
-  InternalAxiosRequestConfig,
+  type AxiosInstance,
+  type AxiosError,
+  type InternalAxiosRequestConfig,
 } from "axios";
 
 // Re-export parseApiError from utils for convenience
@@ -58,6 +58,7 @@ export function createApiClient(config: ApiClientConfig): AxiosInstance {
     (response) => response,
     async (error: AxiosError) => {
       const originalRequest = error.config as InternalAxiosRequestConfig & {
+        // NOSONAR
         _retry?: boolean;
       };
 
@@ -86,11 +87,11 @@ export function createApiClient(config: ApiClientConfig): AxiosInstance {
         } catch (refreshError) {
           await config.clearTokens();
           config.onAuthError?.();
-          return Promise.reject(refreshError);
+          throw refreshError;
         }
       }
 
-      return Promise.reject(error);
+      throw error;
     },
   );
 

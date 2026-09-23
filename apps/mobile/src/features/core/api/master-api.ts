@@ -66,6 +66,25 @@ export async function getLeaveTypes(): Promise<LeaveType[]> {
   return extractData(res.data);
 }
 
+export interface AcademicYear {
+  public_id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  is_current: boolean;
+}
+
+export async function getCurrentAcademicYear(): Promise<AcademicYear | null> {
+  try {
+    const res = await apiClient.get<{ success: boolean; data: AcademicYear }>(
+      '/organization-preferences/current-academic-year/'
+    );
+    return res.data?.data ?? null;
+  } catch {
+    return null;
+  }
+}
+
 interface FormDataFile {
   uri: string;
   name: string;

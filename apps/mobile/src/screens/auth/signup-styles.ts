@@ -1,0 +1,356 @@
+import { Colors } from '@educard/shared';
+import { StyleSheet } from 'react-native';
+
+export const styles = StyleSheet.create({
+  container: { flex: 1 },
+  flex: { flex: 1 },
+  scrollContent: { flexGrow: 1, padding: 20 },
+
+  // Header
+  header: { alignItems: 'center', marginBottom: 24 },
+  logoContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    marginBottom: 16,
+  },
+  logo: { width: 60, height: 60, borderRadius: 30 },
+  title: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: Colors.gray[900],
+    marginBottom: 4,
+    letterSpacing: -0.5,
+  },
+  subtitle: { fontSize: 15, color: Colors.gray[500], fontWeight: '400' },
+
+  // Progress Steps
+  progressContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    marginBottom: 24,
+  },
+  stepWrapper: { flexDirection: 'row', alignItems: 'flex-start' },
+  stepItem: { alignItems: 'center' },
+  stepCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.gray[200],
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  stepCompleted: { backgroundColor: Colors.primary[500] },
+  stepCurrent: {
+    backgroundColor: Colors.primary[500],
+    borderWidth: 3,
+    borderColor: Colors.primary[100],
+    transform: [{ scale: 1.1 }],
+  },
+  stepNumber: { fontSize: 14, fontWeight: '700', color: Colors.gray[500] },
+  stepNumberActive: { color: '#fff' },
+  stepLabel: { fontSize: 11, color: Colors.gray[500], fontWeight: '500' },
+  stepLabelActive: { color: Colors.primary[600], fontWeight: '700' },
+  stepLine: {
+    width: 24,
+    height: 3,
+    backgroundColor: Colors.gray[200],
+    marginHorizontal: 4,
+    marginTop: 16,
+  },
+  stepLineCompleted: { backgroundColor: Colors.primary[500] },
+
+  // Form Card
+  formCard: {
+    backgroundColor: Colors.gray[50],
+    borderRadius: 18,
+    padding: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 1,
+    borderWidth: 1,
+    borderColor: Colors.gray[200],
+  },
+  stepContent: { gap: 16 },
+
+  // Section Header
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 8,
+  },
+  sectionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: Colors.primary[50],
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: Colors.gray[900],
+    letterSpacing: -0.3,
+  },
+  sectionSubtitle: { fontSize: 13, color: Colors.gray[500] },
+
+  // Inputs
+  inputWrapper: { marginBottom: 0 },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: Colors.gray[600],
+    marginBottom: 6,
+    letterSpacing: 0.1,
+  },
+  stepBadge: {
+    backgroundColor: Colors.primary[100],
+    color: Colors.primary[700],
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    fontSize: 12,
+    fontWeight: '700',
+    overflow: 'hidden',
+    marginRight: 6,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.gray[200],
+    paddingHorizontal: 14,
+    minHeight: 50,
+    gap: 10,
+  },
+  inputFocused: {
+    borderColor: Colors.primary[500],
+    backgroundColor: '#fff',
+    borderWidth: 1.5,
+  },
+  input: { flex: 1, fontSize: 15, color: Colors.gray[900], fontWeight: '400' },
+  inputHint: { fontSize: 11, color: Colors.gray[400], marginTop: 6 },
+
+  // Toggle
+  toggleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 4,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: Colors.gray[300],
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: Colors.primary[500],
+    borderColor: Colors.primary[500],
+  },
+  toggleText: { fontSize: 14, color: Colors.gray[700], fontWeight: '500' },
+
+  inlineActionText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.primary[500],
+  },
+
+  // OTP
+  otpCard: {
+    marginTop: 4,
+  },
+  otpLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.gray[600],
+    marginBottom: 8,
+  },
+  otpRow: { flexDirection: 'row', gap: 10 },
+  otpInput: {
+    flex: 1,
+    height: 48,
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.gray[200],
+    fontSize: 18,
+    fontWeight: '700',
+    textAlign: 'center',
+    letterSpacing: 4,
+    color: Colors.gray[900],
+  },
+  otpInputVerified: {
+    borderColor: Colors.success[400],
+    backgroundColor: Colors.success[50],
+  },
+  verifyButton: {
+    paddingHorizontal: 18,
+    height: 48,
+    backgroundColor: Colors.primary[500],
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  verifyButtonSuccess: { backgroundColor: Colors.success[500] },
+  verifyButtonText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  otpHint: { fontSize: 12, color: Colors.gray[400], marginTop: 6 },
+
+  // Picker
+  pickerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  pickerOption: {
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    backgroundColor: Colors.gray[50],
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: Colors.gray[200],
+  },
+  pickerOptionSelected: {
+    backgroundColor: Colors.primary[50],
+    borderColor: Colors.primary[500],
+  },
+  pickerOptionText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: Colors.gray[600],
+  },
+  pickerOptionTextSelected: { color: Colors.primary[700], fontWeight: '600' },
+
+  // Dropdown styles
+  dropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: Colors.gray[200],
+  },
+  dropdownText: { fontSize: 15, color: Colors.gray[800] },
+  dropdownPlaceholder: { fontSize: 15, color: Colors.gray[400] },
+  dropdownOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  dropdownModal: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    width: '100%',
+    maxHeight: 400,
+  },
+  dropdownTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.gray[800],
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  dropdownItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    marginBottom: 4,
+  },
+  dropdownItemSelected: { backgroundColor: Colors.primary[50] },
+  dropdownItemText: { fontSize: 15, color: Colors.gray[700] },
+  dropdownItemTextSelected: { color: Colors.primary[600], fontWeight: '600' },
+
+  // Error styles
+  inputError: { borderColor: '#ef4444' },
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 6,
+  },
+  errorText: { fontSize: 12, color: '#ef4444' },
+  errorTextSmall: { fontSize: 11, color: '#ef4444' },
+
+  // Rows
+  row: { flexDirection: 'row', gap: 12 },
+  halfWidth: { flex: 1 },
+
+  // Buttons
+  buttonRow: { flexDirection: 'row', gap: 12, marginTop: 24 },
+  /** Cancels primaryButton's flex so it can stand alone in a column. */
+  stackedButton: { flex: 0, marginTop: 8 },
+  loginPrompt: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  loginPromptText: { fontSize: 14, color: Colors.gray[600] },
+  loginPromptLink: {
+    fontSize: 14,
+    color: Colors.primary[600],
+    fontWeight: '700',
+  },
+  secondaryButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+    backgroundColor: Colors.gray[100],
+    borderRadius: 14,
+  },
+  secondaryButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.gray[700],
+  },
+  primaryButton: {
+    flex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+    backgroundColor: Colors.primary[500],
+    borderRadius: 14,
+    shadowColor: Colors.primary[600],
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  successButton: {
+    backgroundColor: Colors.success[500],
+    shadowColor: Colors.success[600],
+  },
+  primaryButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#fff',
+    letterSpacing: 0.3,
+  },
+  buttonDisabled: { opacity: 0.5 },
+});

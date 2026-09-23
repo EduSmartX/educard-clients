@@ -1,0 +1,221 @@
+import { StyleSheet } from 'react-native';
+
+import { CELL_SIZE } from './timesheet-utils';
+
+export const styles = StyleSheet.create({
+  // ── Day cell + icons ──
+  dayCell: { width: CELL_SIZE, height: CELL_SIZE + 4, padding: 1 },
+  dayCellInner: {
+    flex: 1,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 2,
+  },
+  dayNum: { fontSize: 11, fontWeight: '600' },
+  dayIconWrap: { minHeight: 20, justifyContent: 'center' },
+  leaveIcon: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  presentIcon: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#22c55e',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  absentIcon: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#ef4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  holidayIcon: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#a855f7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  holidayIconText: { fontSize: 9, fontWeight: 'bold', color: 'white' },
+
+  // ── Screen shell ──
+  root: { flex: 1, backgroundColor: '#f9fafb' },
+  header: {
+    backgroundColor: '#0d9488',
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    paddingTop: 48,
+  },
+  headerTop: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  backBtn: { marginRight: 12, padding: 4 },
+  headerTitle: { color: 'white', fontSize: 20, fontWeight: 'bold', flex: 1 },
+  monthNav: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 10,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+  },
+  navBtn: { padding: 8 },
+  monthLabelBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+  },
+  monthIcon: { marginRight: 6 },
+  monthText: { color: 'white', fontSize: 16, fontWeight: '600' },
+  tabSwitcher: {
+    flexDirection: 'row',
+    marginTop: 12,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 8,
+    padding: 3,
+  },
+  tabBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  tabText: { fontSize: 13, fontWeight: '600' },
+
+  // ── Scroll + states ──
+  scroll: { flex: 1 },
+  scrollContent: { padding: 12, paddingBottom: 40 },
+  centerPad: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 80,
+  },
+  loadingText: { color: '#6b7280', marginTop: 12 },
+  errorText: {
+    color: '#dc2626',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  retryBtn: {
+    backgroundColor: '#0d9488',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryText: { color: 'white', fontWeight: '600' },
+
+  // ── Summary card ──
+  summaryCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  sectionLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  summaryPct: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 8,
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: '#e5e7eb',
+    borderRadius: 4,
+    overflow: 'hidden',
+    flexDirection: 'row',
+  },
+  segGreen: { backgroundColor: '#22c55e' },
+  segRed: { backgroundColor: '#ef4444' },
+  segOrange: { backgroundColor: '#f97316' },
+  segPurple: { backgroundColor: '#a855f7' },
+  legendRow: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 10, gap: 12 },
+  legendItem: { flexDirection: 'row', alignItems: 'center' },
+  legendDot: { width: 12, height: 12, borderRadius: 2, marginRight: 4 },
+  dotGreen: { backgroundColor: '#22c55e' },
+  dotRed: { backgroundColor: '#ef4444' },
+  dotOrange: { backgroundColor: '#f97316' },
+  dotPurple: { backgroundColor: '#a855f7' },
+  legendText: { fontSize: 11, color: '#6b7280' },
+
+  // ── Tips ──
+  tipGreen: {
+    backgroundColor: '#f0fdf4',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#22c55e',
+  },
+  tipTextGreen: { fontSize: 12, color: '#166534', fontWeight: '500' },
+  tipBlue: {
+    backgroundColor: '#eff6ff',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#3b82f6',
+  },
+  tipTextBlue: { fontSize: 12, color: '#1e40af', fontWeight: '500' },
+
+  // ── Calendar grid ──
+  calendarCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 8,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  weekdayRow: { flexDirection: 'row', marginBottom: 4 },
+  weekdayCell: { width: CELL_SIZE, alignItems: 'center' },
+  weekdayText: { fontSize: 10, fontWeight: '600' },
+  calendarGrid: { flexDirection: 'row', flexWrap: 'wrap' },
+  emptyDay: { width: CELL_SIZE, height: CELL_SIZE + 4 },
+
+  // ── Weekly view ──
+  weeksHeading: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 12,
+  },
+  loadingWeeks: { alignItems: 'center', paddingVertical: 20 },
+
+  // ── Monthly details ──
+  detailsCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  detailsGrid: { flexDirection: 'row', flexWrap: 'wrap', margin: -4 },
+  detailItem: { width: '33.33%', padding: 4 },
+  detailBox: { borderRadius: 8, padding: 10, alignItems: 'center' },
+  detailLabel: { fontSize: 9, color: '#6b7280', marginBottom: 2 },
+  detailValue: { fontSize: 18, fontWeight: 'bold' },
+});

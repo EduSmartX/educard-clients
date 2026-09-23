@@ -1,0 +1,247 @@
+/**
+ * Organization Info Form
+ * Update organization basic information
+ */
+
+import { useEffect, useMemo } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { toast } from 'sonner';
+import { Loader2, Save } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form } from '@/components/ui/form';
+import { TextInputField, SelectField } from '@/components/form/form-fields';
+import { useUpdateOrganization } from '../hooks/mutations';
+import type { Organization } from '../api/organization-api';
+import {
+  ORGANIZATION_TYPES,
+  BOARD_AFFILIATIONS,
+  CIN_REGEX,
+  GSTIN_REGEX,
+  REGISTRATION_NUMBER_REGEX,
+} from '@educard/shared';
+import { CommonUiText, FormPlaceholders, ErrorMessages } from '@/constants';
+import { STANDARD_FORM_VALIDATION_CONFIG } from '@/lib/utils/form-validation';
+import { applyFieldErrors } from '@/lib/utils/error-handler';
+
+const organizationInfoSchema = z.object({
+  name: z.string().min(1, 'Organization name is required'),
+  organization_type: z.string().optional(),
+  email: z.string().email('Invalid email address'),
+  phone: z.string().min(10, 'Phone number must be at least 10 digits').optional(),
+  registration_number: z
+    .string()
+    .optional()
+    .refine((val) => !val || REGISTRATION_NUMBER_REGEX.test(val), {
+      message: 'Enter a valid registration number (alphanumeric, 3-50 characters)',
+    }),
+  corporate_identification_number: z
+    .string()
+    .optional()
+    .refine((val) => !val || CIN_REGEX.test(val.toUpperCase()), {
+      message: 'Enter a valid 21-character CIN (e.g. L12345MH2000PLC123456)',
+    }),
+  tax_id: z
+    .string()
+    .optional()
+    .refine((val) => !val || GSTIN_REGEX.test(val.toUpperCase()), {
+      message: 'Enter a valid 15-character GSTIN (e.g. 27AABCU9603R1ZM)',
+    }),
+  website_url: z
+    .string()
+    .optional()
+    .or(z.literal(''))
+    .refine(
+      (val) => {
+        if (!val) {
+          return true;
+        }
+        try {
+          const parsed = new URL(val);
+          return (
+            (parsed.protocol === 'http:' || parsed.protocol === 'https:') &&
+            parsed.hostname.includes('.')
+          );
+        } catch {
+          return false;
+        }
+      },
+      { message: 'Enter a valid website URL (e.g. https://example.com)' }
+    ),
+  board_affiliation: z.string().optional(),
+});
+
+type OrganizationInfoFormData = z.infer<typeof organizationInfoSchema>;
+
+interface OrganizationInfoFormProps {
+  organization: Organization | undefined;
+  isLoading: boolean;
+}
+
+function getOrganizationInfoFormValues(
+  organization: Organization | undefined
+): OrganizationInfoFormData {
+  return {
+    name: organization?.name || '',
+    organization_type: organization?.organization_type || '',
+    email: organization?.email || '',
+    phone: organization?.phone || '',
+    registration_number: organization?.registration_number || '',
+    corporate_identification_number: organization?.corporate_identification_number || '',
+    tax_id: organization?.tax_id || '',
+    website_url: organization?.website_url || '',
+    board_affiliation: organization?.board_affiliation || '',
+  };
+}
+
+export function OrganizationInfoForm({
+  organization,
+  isLoading,
+}: Readonly<OrganizationInfoFormProps>) {
+  const updateMutation = useUpdateOrganization(organization?.public_id || '');
+  const formValues = useMemo(() => getOrganizationInfoFormValues(organization), [organization]);
+
+  const form = useForm<OrganizationInfoFormData>({
+    resolver: zodResolver(organizationInfoSchema),
+    ...STANDARD_FORM_VALIDATION_CONFIG,
+    defaultValues: getOrganizationInfoFormValues(undefined),
+  });
+
+  useEffect(() => {
+    form.reset(formValues);
+  }, [form, formValues]);
+
+  const onSubmit = (values: OrganizationInfoFormData) => {
+    updateMutation.mutate(values, {
+      onError: (error) => {
+        const result = applyFieldErrors(error, form.setError);
+        toast.error(result.toastMessage || ErrorMessages.ORGANIZATION.UPDATE_FAILED);
+      },
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <CardContent className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+      </CardContent>
+    );
+  }
+
+  return (
+    <>
+      <CardHeader>
+        <CardTitle className="text-base font-medium">Organization Information</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <TextInputField
+                  control={form.control}
+                  name="name"
+                  label="Organization Name"
+                  placeholder={FormPlaceholders.ORG_NAME_EXAMPLE}
+                  required
+                />
+              </div>
+
+              <SelectField
+                control={form.control}
+                name="organization_type"
+                label="Organization Type"
+                placeholder={FormPlaceholders.SELECT_OPTION}
+                options={[...ORGANIZATION_TYPES]}
+              />
+
+              <SelectField
+                control={form.control}
+                name="board_affiliation"
+                label="Board Affiliation"
+                placeholder={FormPlaceholders.SELECT_OPTION}
+                options={[...BOARD_AFFILIATIONS]}
+              />
+
+              <TextInputField
+                control={form.control}
+                name="email"
+                label="Email Address"
+                placeholder={FormPlaceholders.ORG_EMAIL_EXAMPLE}
+                type="email"
+                required
+              />
+
+              <TextInputField
+                control={form.control}
+                name="phone"
+                label="Phone Number"
+                placeholder={FormPlaceholders.PHONE_EXAMPLE}
+                type="tel"
+              />
+
+              <TextInputField
+                control={form.control}
+                name="registration_number"
+                label="Registration Number"
+                placeholder={FormPlaceholders.REGISTRATION_NUMBER_EXAMPLE}
+              />
+
+              <TextInputField
+                control={form.control}
+                name="corporate_identification_number"
+                label="Corporate Identification Number (CIN)"
+                placeholder={FormPlaceholders.CIN_EXAMPLE}
+              />
+
+              <TextInputField
+                control={form.control}
+                name="tax_id"
+                label="Tax ID / GSTIN"
+                placeholder={FormPlaceholders.GSTIN_EXAMPLE}
+              />
+
+              <TextInputField
+                control={form.control}
+                name="website_url"
+                label="Website"
+                placeholder={FormPlaceholders.WEBSITE_EXAMPLE}
+              />
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <Button
+                type="button"
+                variant="brandOutline"
+                onClick={() => form.reset(formValues)}
+                disabled={updateMutation.isPending || !form.formState.isDirty}
+              >
+                {CommonUiText.RESET}
+              </Button>
+              <Button
+                type="submit"
+                variant="brand"
+                disabled={updateMutation.isPending || !form.formState.isDirty}
+                className="shadow-lg disabled:shadow-none"
+              >
+                {updateMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {CommonUiText.SAVING}
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    {CommonUiText.SAVE_CHANGES}
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    </>
+  );
+}

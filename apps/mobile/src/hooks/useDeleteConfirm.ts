@@ -1,11 +1,13 @@
 /**
  * useDeleteConfirm — Shared delete-with-confirmation pattern
- * Wraps Alert.alert + mutation so every list screen doesn't rewrite it.
+ * Uses reusable ConfirmDialog + mutation so list screens don't rewrite delete UX.
  */
 
 import { getErrorMessage } from '@educard/shared';
-import { useCallback } from 'react';
-import { Alert } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+
+import type { ConfirmDialogProps } from '@/components/common/ConfirmDialog';
+import { showToast } from '@/utils/toast';
 
 interface UseDeleteConfirmOptions<T = string> {
   /** e.g. "Teacher", "Student" */
@@ -23,32 +25,53 @@ export function useDeleteConfirm<T = string>({
   deleteMutation,
   onSuccess,
 }: UseDeleteConfirmOptions<T>) {
-  const confirmDelete = useCallback(
-    (data: T, displayName: string) => {
-      Alert.alert(`Delete ${entityName}`, `Are you sure you want to delete ${displayName}?`, [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            void (async () => {
-              try {
-                await deleteMutation.mutateAsync(data);
-                onSuccess?.();
-                Alert.alert('Success', `${entityName} deleted successfully`);
-              } catch (error) {
-                Alert.alert(
-                  'Error',
-                  getErrorMessage(error, `Failed to delete ${entityName.toLowerCase()}`)
-                );
-              }
-            })();
-          },
-        },
-      ]);
-    },
-    [entityName, deleteMutation, onSuccess]
+  const [target, setTarget] = useState<{ data: T; displayName: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const confirmDelete = useCallback((data: T, displayName: string) => {
+    setTarget({ data, displayName });
+  }, []);
+
+  const handleCancel = useCallback(() => {
+    if (!isDeleting) setTarget(null);
+  }, [isDeleting]);
+
+  const handleConfirm = useCallback(() => {
+    if (!target || isDeleting) return;
+
+    setIsDeleting(true);
+    void (async () => {
+      try {
+        await deleteMutation.mutateAsync(target.data);
+        onSuccess?.();
+        setTarget(null);
+      } catch (error) {
+        const message = getErrorMessage(error, `Failed to delete ${entityName.toLowerCase()}`);
+        showToast('error', message);
+      } finally {
+        setIsDeleting(false);
+      }
+    })();
+  }, [deleteMutation, entityName, isDeleting, onSuccess, target]);
+
+  const dialogProps: ConfirmDialogProps = useMemo(
+    () => ({
+      visible: !!target,
+      title: `Delete ${entityName}`,
+      message: target
+        ? `Are you sure you want to delete ${target.displayName}?`
+        : `Are you sure you want to delete this ${entityName.toLowerCase()}?`,
+      confirmText: 'Delete',
+      confirmVariant: 'danger',
+      onConfirm: handleConfirm,
+      onCancel: handleCancel,
+      isLoading: isDeleting,
+    }),
+    [entityName, handleCancel, handleConfirm, isDeleting, target]
   );
 
-  return confirmDelete;
+  return {
+    confirmDelete,
+    dialogProps,
+  };
 }

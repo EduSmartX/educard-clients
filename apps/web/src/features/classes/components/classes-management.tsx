@@ -1,0 +1,185 @@
+/**
+ * Classes Management Page
+ * Main page for managing classes with table, filters, and CRUD operations
+ */
+
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { DeleteConfirmationDialog, ReactivateConfirmationDialog } from '@/components/common';
+import { ErrorMessages } from '@/constants';
+import { getErrorMessage } from '@/lib/utils/error-handler';
+import { useClasses } from '../hooks/use-classes';
+import { useDeleteClass, useReactivateClass } from '../hooks/mutations';
+import { ClassesList } from './classes-list';
+import { ROUTES } from '@/constants/app-config';
+import { useDeletedView } from '@/hooks/use-deleted-view';
+import { useFilterParams } from '@/hooks/use-filter-params';
+import type { Class } from '../types';
+
+interface ClassesManagementProps {
+  viewMode?: 'admin' | 'employee'; // Admin = full CRUD, Employee = read-only
+}
+
+export function ClassesManagement({ viewMode = 'admin' }: Readonly<ClassesManagementProps>) {
+  const isEmployeeView = viewMode === 'employee';
+  const navigate = useNavigate();
+
+  // Filter/search/pagination state — persisted in URL search params
+  const {
+    filters,
+    search: searchQuery,
+    page,
+    pageSize,
+    setFilter: _setFilter,
+    setFilters,
+    setSearch: setSearchQuery,
+    setPage,
+    setPageSize,
+  } = useFilterParams({ academic_year: '' }, { defaultPageSize: 10 });
+
+  // Dialog states
+  const [classToDelete, setClassToDelete] = useState<Class | undefined>();
+  const [classToReactivate, setClassToReactivate] = useState<Class | undefined>();
+
+  // Deleted view management
+  const { showDeleted, toggleDeletedView } = useDeletedView({
+    onPageChange: setPage,
+  });
+
+  // Fetch classes
+  const { data, isLoading, error } = useClasses({
+    page,
+    page_size: pageSize,
+    search: searchQuery,
+    academic_year: filters.academic_year,
+    is_deleted: showDeleted,
+  });
+
+  const classes = data?.data || [];
+  const pagination = data?.pagination;
+
+  // Delete mutation
+  const deleteMutation = useDeleteClass({
+    onSuccess: () => {
+      setClassToDelete(undefined);
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error, ErrorMessages.CLASS.DELETE_FAILED));
+    },
+  });
+
+  // Reactivate mutation
+  const reactivateMutation = useReactivateClass({
+    onSuccess: () => {
+      setClassToReactivate(undefined);
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error, ErrorMessages.CLASS.REACTIVATE_FAILED));
+    },
+  });
+
+  // Navigation handlers
+  const handleView = (classItem: Class) => {
+    const path = ROUTES.CLASSES_VIEW.replace(':id', classItem.public_id);
+    // Add query param if viewing deleted class
+    navigate(showDeleted ? `${path}?deleted=true` : path);
+  };
+
+  const handleEdit = (classItem: Class) => {
+    navigate(ROUTES.CLASSES_EDIT.replace(':id', classItem.public_id));
+  };
+
+  const handleDelete = (classItem: Class) => {
+    if (showDeleted) {
+      setClassToReactivate(classItem);
+    } else {
+      setClassToDelete(classItem);
+    }
+  };
+
+  const handleConfirmDelete = () => {
+    if (classToDelete) {
+      deleteMutation.mutate(classToDelete.public_id);
+    }
+  };
+
+  const handleConfirmReactivate = () => {
+    if (classToReactivate) {
+      reactivateMutation.mutate(classToReactivate.public_id);
+    }
+  };
+
+  const handleCreateNew = () => {
+    navigate(ROUTES.CLASSES_NEW);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  const handleFilterChange = (newFilters: Record<string, string>) => {
+    setFilters(newFilters);
+  };
+
+  return (
+    <>
+      <ClassesList
+        classes={classes}
+        isLoading={isLoading}
+        error={error || undefined}
+        pagination={pagination}
+        showDeleted={showDeleted}
+        onToggleDeleted={isEmployeeView ? undefined : toggleDeletedView} // No deleted toggle for employees
+        onCreateNew={handleCreateNew}
+        onView={handleView}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+        onSearch={handleSearch}
+        onFilterChange={handleFilterChange}
+        viewMode={viewMode} // Pass viewMode to list
+      />
+
+      {!showDeleted && !isEmployeeView && (
+        <DeleteConfirmationDialog
+          open={!!classToDelete}
+          onOpenChange={(open) => !open && setClassToDelete(undefined)}
+          onConfirm={handleConfirmDelete}
+          title="Delete Class"
+          itemName={
+            classToDelete
+              ? `${classToDelete.class_master?.name || 'Class'} - ${classToDelete.name}`
+              : undefined
+          }
+          isSoftDelete={true}
+          isDeleting={deleteMutation.isPending}
+        />
+      )}
+
+      {showDeleted && !isEmployeeView && (
+        <ReactivateConfirmationDialog
+          open={!!classToReactivate}
+          onOpenChange={(open) => !open && setClassToReactivate(undefined)}
+          onConfirm={handleConfirmReactivate}
+          title="Reactivate Class"
+          itemName={
+            classToReactivate
+              ? `${classToReactivate.class_master?.name || 'Class'} - ${classToReactivate.name}`
+              : undefined
+          }
+          isReactivating={reactivateMutation.isPending}
+        />
+      )}
+    </>
+  );
+}

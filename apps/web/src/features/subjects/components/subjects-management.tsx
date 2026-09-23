@@ -1,0 +1,200 @@
+/**
+ * Subjects Management Page
+ * Main page for managing subjects with table, filters, and CRUD operations
+ */
+
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { DeleteConfirmationDialog, ReactivateConfirmationDialog } from '@/components/common';
+import { ErrorMessages, USER_ROLES } from '@/constants';
+import { useSubjects } from '../hooks/use-subjects';
+import { useDeleteSubject, useReactivateSubject } from '../hooks/mutations';
+import { useManagedClassesForSubjects } from '../hooks/use-managed-classes';
+import { SubjectsList } from './index';
+import { ROUTES } from '@/constants/app-config';
+import { useDeletedView } from '@/hooks/use-deleted-view';
+import { useAuth } from '@/hooks/use-auth';
+import { useFilterParams } from '@/hooks/use-filter-params';
+import type { Subject } from '../types';
+
+export function SubjectsManagement() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Filter/search/pagination state — persisted in URL search params
+  const {
+    filters,
+    search: searchQuery,
+    page,
+    pageSize,
+    setFilters,
+    setSearch: setSearchQuery,
+    setPage,
+    setPageSize,
+  } = useFilterParams<Record<string, string>>(
+    { class_assigned: '', subject_master: '', teacher: '' },
+    { defaultPageSize: 10 }
+  );
+
+  // Dialog states
+  const [subjectToDelete, setSubjectToDelete] = useState<Subject | undefined>();
+  const [subjectToReactivate, setSubjectToReactivate] = useState<Subject | undefined>();
+
+  // Deleted view management
+  const { showDeleted, toggleDeletedView } = useDeletedView({
+    onPageChange: setPage,
+  });
+
+  const { data: managedClasses = [], isLoading: isManagedClassesLoading } =
+    useManagedClassesForSubjects();
+  const isAdmin = user?.role === USER_ROLES.ADMIN;
+  const isSubjectClassTeacher = user?.role === USER_ROLES.TEACHER && managedClasses.length > 0;
+  const isTeacherWithoutManagedClasses =
+    user?.role === USER_ROLES.TEACHER && !isManagedClassesLoading && managedClasses.length === 0;
+  const canCreateSubjects = user?.role === USER_ROLES.ADMIN || isSubjectClassTeacher;
+
+  // Fetch subjects
+  const { data, isLoading, error } = useSubjects({
+    page,
+    page_size: pageSize,
+    search: searchQuery,
+    class_assigned: filters.class_assigned,
+    subject_master: filters.subject_master ? Number(filters.subject_master) : undefined,
+    teacher: filters.teacher,
+    is_deleted: showDeleted,
+  });
+
+  const subjects = data?.data || [];
+  const pagination = data?.pagination;
+
+  // Delete mutation
+  const deleteMutation = useDeleteSubject({
+    onSuccess: () => {
+      setSubjectToDelete(undefined);
+    },
+    onError: () => {
+      toast.error(ErrorMessages.SUBJECT.DELETE_FAILED);
+    },
+  });
+
+  // Reactivate mutation
+  const reactivateMutation = useReactivateSubject({
+    onSuccess: () => {
+      setSubjectToReactivate(undefined);
+    },
+    onError: () => {
+      toast.error(ErrorMessages.SUBJECT.REACTIVATE_FAILED);
+    },
+  });
+
+  // Handlers
+  const handleCreateNew = () => {
+    navigate(ROUTES.SUBJECTS_NEW);
+  };
+
+  const handleView = (subject: Subject) => {
+    const route = showDeleted
+      ? `${ROUTES.SUBJECTS_VIEW.replace(':id', subject.public_id)}?deleted=true`
+      : ROUTES.SUBJECTS_VIEW.replace(':id', subject.public_id);
+    navigate(route);
+  };
+
+  const handleEdit = (subject: Subject) => {
+    navigate(ROUTES.SUBJECTS_EDIT.replace(':id', subject.public_id));
+  };
+
+  const handleDelete = (subject: Subject) => {
+    if (showDeleted) {
+      // In deleted view, clicking "delete" means reactivate
+      setSubjectToReactivate(subject);
+    } else {
+      setSubjectToDelete(subject);
+    }
+  };
+
+  const handleDeleteConfirm = () => {
+    if (subjectToDelete) {
+      deleteMutation.mutate(subjectToDelete.public_id);
+    }
+  };
+
+  const handleReactivateConfirm = () => {
+    if (subjectToReactivate) {
+      reactivateMutation.mutate(subjectToReactivate.public_id);
+    }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  const handleFilterChange = (newFilters: Record<string, string>) => {
+    setFilters(newFilters);
+  };
+
+  return (
+    <>
+      <SubjectsList
+        subjects={subjects}
+        isLoading={isLoading}
+        error={error}
+        pagination={pagination}
+        showDeleted={showDeleted}
+        onToggleDeleted={toggleDeletedView}
+        onCreateNew={handleCreateNew}
+        onView={handleView}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+        onSearch={handleSearch}
+        onFilterChange={handleFilterChange}
+        canCreateSubjects={canCreateSubjects}
+        isTeacherWithoutManagedClasses={isTeacherWithoutManagedClasses}
+        isAdmin={isAdmin}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      {!showDeleted && (
+        <DeleteConfirmationDialog
+          open={!!subjectToDelete}
+          onOpenChange={(open) => !open && setSubjectToDelete(undefined)}
+          onConfirm={handleDeleteConfirm}
+          title="Delete Subject"
+          itemName={
+            subjectToDelete
+              ? `${subjectToDelete.subject_info.name} for ${subjectToDelete.class_info.class_master_name}-${subjectToDelete.class_info.name}`
+              : undefined
+          }
+          isSoftDelete={true}
+          isDeleting={deleteMutation.isPending}
+        />
+      )}
+
+      {/* Reactivate Confirmation Dialog */}
+      {showDeleted && (
+        <ReactivateConfirmationDialog
+          open={!!subjectToReactivate}
+          onOpenChange={(open) => !open && setSubjectToReactivate(undefined)}
+          onConfirm={handleReactivateConfirm}
+          title="Restore Subject"
+          itemName={
+            subjectToReactivate
+              ? `${subjectToReactivate.subject_info.name} for ${subjectToReactivate.class_info.class_master_name}-${subjectToReactivate.class_info.name}`
+              : undefined
+          }
+          isReactivating={reactivateMutation.isPending}
+        />
+      )}
+    </>
+  );
+}

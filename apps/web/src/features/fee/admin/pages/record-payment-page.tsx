@@ -1,0 +1,666 @@
+/**
+ * Record Payment Page
+ * Dedicated full-page form for recording fee payments (Credit) or refunds (Debit).
+ * Can be opened standalone (/fees/payments/new) or pre-loaded from a student fee
+ * (/fees/students/:id/payment/new).
+ */
+
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { ROUTES } from '@/constants/app-config';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { PageHeader } from '@/components/common';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { SearchableSelect } from '@/components/ui/searchable-select';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Skeleton } from '@/components/ui/skeleton';
+import { TrendingUp, TrendingDown, IndianRupee } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { FeeStatusBadge } from '../../components/fee-status-badge';
+import { FeeAmount } from '../../components/fee-amount';
+import { useStudentFee, useStudentFees } from '../../hooks/use-fee-queries';
+import { useCreatePayment } from '../../hooks/use-fee-mutations';
+import { useClasses } from '@/features/classes/hooks/use-classes';
+import {
+  PaymentMode,
+  PAYMENT_MODE_OPTIONS,
+  TransactionType,
+  TRANSACTION_TYPE_OPTIONS,
+  FeeStatus,
+  type PaymentCreatePayload,
+} from '@educard/shared';
+
+// ─── Form Schema ─────────────────────────────────────────────────────────────
+
+const paymentFormSchema = z.object({
+  student_fee_public_id: z.string().min(1, 'Please select a student fee'),
+  transaction_type: z.nativeEnum(TransactionType),
+  amount: z.coerce.number().min(0.01, 'Amount must be greater than 0'),
+  payment_date: z.string().min(1, 'Payment date is required'),
+  payment_mode: z.nativeEnum(PaymentMode),
+  transaction_id: z.string().optional(),
+  utr_number: z.string().optional(),
+  remarks: z.string().optional(),
+  bank_name: z.string().optional(),
+  cheque_number: z.string().optional(),
+  cheque_date: z.string().optional(),
+  card_last_four: z.string().max(4).optional(),
+  upi_id: z.string().optional(),
+});
+
+type PaymentFormValues = z.infer<typeof paymentFormSchema>;
+
+/** Calculate suggested amount based on transaction type and fee data */
+function getSuggestedAmount(
+  txType: string,
+  fee: { amount_paid: number; final_amount: number; balance_due: number }
+): number {
+  if (txType === TransactionType.DEBIT) {
+    // Refund: if overpaid, suggest excess; otherwise suggest full paid amount
+    const excess = fee.amount_paid - fee.final_amount;
+    return excess > 0 ? excess : fee.amount_paid;
+  }
+  return fee.balance_due;
+}
+
+function getMaxPaymentAmount(
+  selectedFee: { amount_paid: number; balance_due: number } | undefined,
+  isRefund: boolean
+): number | undefined {
+  if (!selectedFee) {
+    return undefined;
+  }
+  return isRefund ? selectedFee.amount_paid : selectedFee.balance_due;
+}
+
+// ─── Component ───────────────────────────────────────────────────────────────
+
+export function RecordPaymentPage() {
+  const { id } = useParams<{ id?: string }>(); // present on /students/:id/payment/new
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  // If `id` param → pre-load that student fee. Otherwise show a selector.
+  const preloadId = id ?? searchParams.get('student_fee') ?? undefined;
+  const isRefundMode = searchParams.get('mode') === 'refund';
+
+  const [classFilter, setClassFilter] = useState<string>();
+
+  const { data: preloadedFee, isLoading: feeLoading } = useStudentFee(preloadId);
+  const { data: classesData } = useClasses();
+  const shouldLoadStudentFees = !preloadId && !!classFilter;
+  const { data: allFeesData } = useStudentFees(
+    shouldLoadStudentFees
+      ? {
+          class_public_id: classFilter,
+          page_size: 200,
+        }
+      : undefined,
+    shouldLoadStudentFees
+  );
+
+  const createPayment = useCreatePayment();
+
+  const form = useForm<PaymentFormValues>({
+    resolver: zodResolver(paymentFormSchema),
+    defaultValues: {
+      student_fee_public_id: preloadId ?? '',
+      transaction_type: isRefundMode ? TransactionType.DEBIT : TransactionType.CREDIT,
+      amount: 0,
+      payment_date: new Date().toISOString().split('T')[0],
+      payment_mode: PaymentMode.CASH,
+      transaction_id: '',
+      utr_number: '',
+      remarks: '',
+      bank_name: '',
+      cheque_number: '',
+      cheque_date: '',
+      card_last_four: '',
+      upi_id: '',
+    },
+  });
+
+  // Pre-fill amount when student fee loads
+  useEffect(() => {
+    if (!preloadedFee) {
+      return;
+    }
+    const txType = form.getValues('transaction_type');
+    const defaultAmount = getSuggestedAmount(txType, preloadedFee);
+    form.setValue('student_fee_public_id', preloadedFee.public_id);
+    form.setValue('amount', Math.max(0, defaultAmount));
+  }, [preloadedFee, form]);
+
+  // When transaction type changes, update the suggested amount
+  const watchedTxType = form.watch('transaction_type');
+  const watchedStudentFeeId = form.watch('student_fee_public_id');
+  const watchedMode = form.watch('payment_mode');
+
+  // Resolve the currently-selected fee (either preloaded or chosen from selector)
+  const selectedFee =
+    preloadedFee ?? (allFeesData?.data ?? []).find((f) => f.public_id === watchedStudentFeeId);
+
+  useEffect(() => {
+    if (!selectedFee) {
+      return;
+    }
+    const suggested = getSuggestedAmount(watchedTxType, selectedFee);
+    form.setValue('amount', Math.max(0, suggested));
+  }, [watchedTxType, selectedFee, form]);
+
+  const isRefund = watchedTxType === TransactionType.DEBIT;
+  const requiresTransactionRef =
+    watchedMode !== PaymentMode.CASH && watchedMode !== PaymentMode.CHEQUE;
+  const isCheque = watchedMode === PaymentMode.CHEQUE;
+  const isUpi = watchedMode === PaymentMode.UPI;
+  const isCard = watchedMode === PaymentMode.CARD;
+
+  const maxAmount = getMaxPaymentAmount(selectedFee, isRefund);
+
+  const handleSubmit = (values: PaymentFormValues) => {
+    // Client-side max amount validation
+    if (maxAmount !== undefined && values.amount > maxAmount) {
+      const label = isRefund ? 'Refund cannot exceed' : 'Payment cannot exceed balance';
+      form.setError('amount', { message: `${label} ₹${maxAmount.toLocaleString('en-IN')}` });
+      return;
+    }
+
+    const payload: PaymentCreatePayload = {
+      student_fee_public_id: values.student_fee_public_id,
+      amount: values.amount,
+      transaction_type: values.transaction_type,
+      payment_date: values.payment_date,
+      payment_mode: values.payment_mode,
+      transaction_id: values.transaction_id || undefined,
+      utr_number: values.utr_number || undefined,
+      remarks: values.remarks || undefined,
+      bank_name: values.bank_name || undefined,
+      cheque_number: values.cheque_number || undefined,
+      cheque_date: values.cheque_date || undefined,
+      card_last_four: values.card_last_four || undefined,
+      upi_id: values.upi_id || undefined,
+    };
+
+    createPayment.mutate(payload, {
+      onSuccess: () => {
+        navigate(
+          preloadId ? ROUTES.FEES.STUDENT_FEES_VIEW.replace(':id', preloadId) : ROUTES.FEES.PAYMENTS
+        );
+      },
+      onError: (error) => {
+        import('@/lib/utils/error-handler').then(({ applyFieldErrors }) => {
+          applyFieldErrors(error, form.setError);
+        });
+      },
+    });
+  };
+
+  const backRoute = preloadId
+    ? ROUTES.FEES.STUDENT_FEES_VIEW.replace(':id', preloadId)
+    : ROUTES.FEES.PAYMENTS;
+
+  const handleBack = () => navigate(backRoute);
+
+  if (preloadId && feeLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* ── Header ── */}
+      <PageHeader
+        title={isRefund ? 'Issue Refund' : 'Record Payment'}
+        description={
+          selectedFee
+            ? `${selectedFee.student_name} · ${selectedFee.class_name} · ${selectedFee.fee_structure_name}`
+            : undefined
+        }
+        actions={[
+          {
+            label: 'Cancel',
+            onClick: handleBack,
+            variant: 'outline' as const,
+          },
+        ]}
+      />
+
+      {/* ── Fee Summary Card ── */}
+      {selectedFee && (
+        <Card className="border-l-primary border-l-4">
+          <CardContent className="pt-4">
+            <div className="flex flex-wrap items-center gap-6">
+              <div>
+                <p className="text-muted-foreground text-xs tracking-wide uppercase">Total</p>
+                <FeeAmount amount={selectedFee.final_amount} size="lg" />
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs tracking-wide uppercase">Paid</p>
+                <FeeAmount amount={selectedFee.amount_paid} size="lg" className="text-green-600" />
+              </div>
+              <div>
+                {(() => {
+                  if (
+                    selectedFee.status === FeeStatus.REFUNDING ||
+                    selectedFee.status === FeeStatus.REFUNDED
+                  ) {
+                    return (
+                      <>
+                        <p className="text-xs tracking-wide text-orange-600 uppercase">
+                          {selectedFee.status === FeeStatus.REFUNDED ? 'Refunded' : 'Refundable'}
+                        </p>
+                        <FeeAmount
+                          amount={selectedFee.amount_paid}
+                          size="lg"
+                          className="text-orange-600"
+                        />
+                      </>
+                    );
+                  }
+                  if (selectedFee.balance_due < 0) {
+                    return (
+                      <>
+                        <p className="text-xs tracking-wide text-orange-600 uppercase">Overpaid</p>
+                        <FeeAmount
+                          amount={Math.abs(selectedFee.balance_due)}
+                          size="lg"
+                          className="text-orange-600"
+                        />
+                      </>
+                    );
+                  }
+                  return (
+                    <>
+                      <p className="text-muted-foreground text-xs tracking-wide uppercase">
+                        Balance
+                      </p>
+                      <FeeAmount
+                        amount={selectedFee.balance_due}
+                        size="lg"
+                        className={selectedFee.balance_due > 0 ? 'text-red-600' : 'text-green-600'}
+                      />
+                    </>
+                  );
+                })()}
+              </div>
+              <div className="ml-auto">
+                <FeeStatusBadge status={selectedFee.status} />
+                {!!selectedFee.is_overdue && (
+                  <Badge variant="destructive" className="ml-2">
+                    Overdue
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Form ── */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            {isRefund ? (
+              <>
+                <TrendingDown className="h-5 w-5 text-red-500" />
+                Refund Details
+              </>
+            ) : (
+              <>
+                <TrendingUp className="h-5 w-5 text-green-500" />
+                Payment Details
+              </>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+              {/* Class + Student Fee Selectors (only when not pre-loaded) */}
+              {!preloadId && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Class</Label>
+                    <SearchableSelect
+                      options={(classesData?.data ?? []).map((cls) => {
+                        let label = cls.display_name;
+                        if (!label) {
+                          const masterName = cls.class_master?.name;
+                          label = masterName ? `${masterName} - ${cls.name}` : cls.name;
+                        }
+                        return { value: cls.public_id, label };
+                      })}
+                      value={classFilter}
+                      onValueChange={(val) => {
+                        setClassFilter(val || undefined);
+                        form.setValue('student_fee_public_id', '');
+                      }}
+                      placeholder="Select class..."
+                      searchPlaceholder="Search class..."
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="student_fee_public_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Student</FormLabel>
+                        <FormControl>
+                          <SearchableSelect
+                            options={(allFeesData?.data ?? []).map((f) => ({
+                              value: f.public_id,
+                              label: `${f.student_name} — ${f.fee_structure_name}`,
+                            }))}
+                            value={field.value || undefined}
+                            onValueChange={field.onChange}
+                            placeholder={
+                              !classFilter ? 'Select a class first...' : 'Search for a student...'
+                            }
+                            searchPlaceholder="Type student name..."
+                            disabled={!classFilter}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
+
+              {/* Transaction Type Toggle */}
+              <FormField
+                control={form.control}
+                name="transaction_type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Transaction Type</FormLabel>
+                    <FormControl>
+                      <div className="flex gap-3">
+                        {TRANSACTION_TYPE_OPTIONS.map((opt) => {
+                          const isActive = field.value === opt.value;
+                          const isDebit = opt.value === TransactionType.DEBIT;
+                          return (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => field.onChange(opt.value)}
+                              className={cn(
+                                'flex flex-1 items-center justify-center gap-2 rounded-lg border-2 py-3 text-sm font-medium transition-all',
+                                isActive &&
+                                  !isDebit &&
+                                  'border-green-500 bg-green-50 text-green-700',
+                                isActive && isDebit && 'border-red-500 bg-red-50 text-red-700',
+                                !isActive &&
+                                  'border-border text-muted-foreground hover:border-muted-foreground'
+                              )}
+                            >
+                              {isDebit ? (
+                                <TrendingDown className="h-4 w-4" />
+                              ) : (
+                                <TrendingUp className="h-4 w-4" />
+                              )}
+                              {opt.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Refund warning removed */}
+
+              <Separator />
+
+              {/* Amount + Date */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1">
+                        <IndianRupee className="h-3.5 w-3.5" />
+                        Amount
+                      </FormLabel>
+                      <FormControl>
+                        <Input type="number" min={0.01} max={maxAmount} step={0.01} {...field} />
+                      </FormControl>
+                      {maxAmount !== undefined && (
+                        <FormDescription>Max: ₹{maxAmount.toLocaleString('en-IN')}</FormDescription>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="payment_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{isRefund ? 'Refund Date' : 'Payment Date'}</FormLabel>
+                      <FormControl>
+                        <DatePicker
+                          value={field.value ? new Date(field.value) : null}
+                          onChange={(date) =>
+                            field.onChange(date ? date.toISOString().split('T')[0] : '')
+                          }
+                          maxDate={new Date()}
+                          placeholder={isRefund ? 'Select refund date' : 'Select payment date'}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Payment Mode */}
+              <FormField
+                control={form.control}
+                name="payment_mode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Payment Mode</FormLabel>
+                    <FormControl>
+                      <SearchableSelect
+                        options={PAYMENT_MODE_OPTIONS}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder="Select mode"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Conditional fields by mode */}
+              {(requiresTransactionRef || isUpi) && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="transaction_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Transaction ID</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. TXN123456789" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="utr_number"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>UTR Number</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. SBIN0001234567" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+
+              {isUpi && (
+                <FormField
+                  control={form.control}
+                  name="upi_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>UPI ID</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. name@upi" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              {isCheque && (
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <FormField
+                    control={form.control}
+                    name="cheque_number"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Cheque Number <span className="text-destructive">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input placeholder="123456" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="bank_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Bank Name <span className="text-destructive">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. SBI" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="cheque_date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cheque Date</FormLabel>
+                        <FormControl>
+                          <DatePicker
+                            value={field.value ? new Date(field.value) : null}
+                            onChange={(date) =>
+                              field.onChange(date ? date.toISOString().split('T')[0] : '')
+                            }
+                            placeholder="Select cheque date"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+
+              {isCard && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="card_last_four"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Card Last 4 Digits</FormLabel>
+                        <FormControl>
+                          <Input maxLength={4} placeholder="1234" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+
+              {/* Remarks */}
+              <FormField
+                control={form.control}
+                name="remarks"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Remarks</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder={
+                          isRefund ? 'Reason for refund...' : 'Optional notes about this payment...'
+                        }
+                        className="resize-none"
+                        rows={2}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Actions */}
+              <div className="flex justify-end gap-3 pt-2">
+                <Button type="button" variant="outline" onClick={handleBack}>
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createPayment.isPending}
+                  variant={isRefund ? 'destructive' : 'success'}
+                >
+                  {createPayment.isPending && 'Saving...'}
+                  {!createPayment.isPending && isRefund && 'Issue Refund'}
+                  {!createPayment.isPending && !isRefund && 'Record Payment'}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

@@ -10,7 +10,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 interface ActiveFilter {
   key: string;
   label: string;
-  value: any;
+  value: unknown;
 }
 
 interface ActiveFiltersProps {

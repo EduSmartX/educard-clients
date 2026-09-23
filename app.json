@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "b579d213-3985-46b6-8993-f2630e5775b5"
+      }
+    },
+    "android": {
+      "package": "com.vinodreddem.educardclients"
+    }
+  }
+}

@@ -19,7 +19,7 @@ export interface CreateClassData {
   capacity?: number;
 }
 
-export interface UpdateClassData extends Partial<CreateClassData> {}
+export type UpdateClassData = Partial<CreateClassData>;
 
 export interface CreateSectionData {
   name: string;

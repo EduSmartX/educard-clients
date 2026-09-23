@@ -1,0 +1,27 @@
+# Dependencies
+node_modules
+
+# Build outputs
+dist
+build
+.next
+out
+
+# Configuration files
+*.config.js
+*.config.ts
+vite.config.ts
+tailwind.config.ts
+
+# Environment files
+.env*
+
+# IDE
+.vscode
+.idea
+
+# Coverage
+coverage
+
+# Generated files
+*.min.js

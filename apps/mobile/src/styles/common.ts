@@ -12,10 +12,18 @@ const adminTheme = getRoleThemeColors('admin');
 
 // Common Layout Styles
 export const layoutStyles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: Theme.colors.background.primary },
   container: { flex: 1, backgroundColor: Theme.colors.background.primary },
   centered: { alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row', alignItems: 'center' },
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+});
+
+// Body/Scroll Content Styles
+export const bodyStyles = StyleSheet.create({
+  scroll: { flex: 1 },
+  content: { padding: Theme.spacing.md, paddingBottom: 100 },
+  contentLarge: { padding: Theme.spacing.lg, paddingBottom: 120 },
 });
 
 // Card Styles
@@ -27,6 +35,25 @@ export const cardStyles = StyleSheet.create({
     marginBottom: Theme.spacing.sm,
     ...Theme.shadows.md,
   },
+  cardLarge: {
+    backgroundColor: Theme.colors.surface.card,
+    borderRadius: Theme.borderRadius.card,
+    padding: Theme.spacing.lg,
+    marginBottom: Theme.spacing.md,
+    ...Theme.shadows.md,
+  },
+});
+
+// Divider Styles
+export const dividerStyles = StyleSheet.create({
+  basic: { height: 1, backgroundColor: Colors.gray[200] },
+  spaced: { height: 1, backgroundColor: Colors.gray[200], marginVertical: Theme.spacing.md },
+});
+
+// Note/Info Box Styles
+export const noteStyles = StyleSheet.create({
+  muted: { marginTop: Theme.spacing.md, padding: Theme.spacing.md },
+  mutedText: { fontSize: 12, color: Colors.gray[500], lineHeight: 18, textAlign: 'center' },
 });
 
 // Avatar Styles
@@ -57,6 +84,7 @@ export const avatarStyles = StyleSheet.create({
 // Header Styles (Gradient Headers)
 export const headerStyles = StyleSheet.create({
   header: { paddingTop: 44, paddingBottom: 16, paddingHorizontal: 16, overflow: 'hidden' },
+  gradient: { paddingTop: 44, paddingBottom: 16, paddingHorizontal: 16, overflow: 'hidden' },
   circle1: {
     position: 'absolute',
     top: -40,
@@ -77,6 +105,7 @@ export const headerStyles = StyleSheet.create({
   },
   content: { zIndex: 1 },
   topRow: { flexDirection: 'row', alignItems: 'center' },
+  titleRow: { flexDirection: 'row', alignItems: 'center' },
   backBtn: {
     width: 36,
     height: 36,
@@ -163,6 +192,20 @@ export const stateStyles = StyleSheet.create({
     borderRadius: 8,
   },
   retryText: { fontSize: 14, fontWeight: '600', color: '#fff' },
+});
+
+// Empty State Styles (for loading/empty screens)
+export const emptyStyles = StyleSheet.create({
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 100 },
+  icon: { marginBottom: 16 },
+  title: { fontSize: 18, fontWeight: '700', color: Colors.gray[700], marginTop: 12 },
+  subtitle: {
+    fontSize: 14,
+    color: Colors.gray[500],
+    marginTop: 6,
+    textAlign: 'center',
+    paddingHorizontal: 32,
+  },
 });
 
 // List Styles

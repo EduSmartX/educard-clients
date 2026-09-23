@@ -2,10 +2,9 @@
  * Avatar Component
  */
 
-import { Image } from 'expo-image';
 import { User } from 'lucide-react-native';
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, Image } from 'react-native';
 
 import { Colors } from '@/constants/colors';
 
@@ -19,7 +18,10 @@ interface AvatarProps {
   badgeColor?: string;
 }
 
-const sizeConfig: Record<AvatarSize, { container: number; text: string; icon: number }> = {
+const sizeConfig: Record<
+  AvatarSize,
+  { container: number; text: string; icon: number }
+> = {
   xs: { container: 24, text: 'text-xs', icon: 12 },
   sm: { container: 32, text: 'text-sm', icon: 16 },
   md: { container: 40, text: 'text-base', icon: 20 },
@@ -31,7 +33,9 @@ function getInitials(name: string): string {
   const parts = name.trim().split(' ').filter(Boolean);
   if (parts.length === 0) return '';
   if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  return (
+    parts[0].charAt(0) + (parts.at(-1) ?? parts[0]).charAt(0)
+  ).toUpperCase();
 }
 
 function getColorFromName(name: string): string {
@@ -48,7 +52,8 @@ function getColorFromName(name: string): string {
 
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    // eslint-disable-next-line no-bitwise
+    hash = (name.codePointAt(i) ?? 0) + ((hash << 5) - hash);
   }
 
   return colors[Math.abs(hash) % colors.length];
@@ -67,7 +72,7 @@ export function Avatar({
 
   return (
     <View className="relative">
-      {source ? (
+      {source && (
         <Image
           source={{ uri: source }}
           style={{
@@ -75,10 +80,10 @@ export function Avatar({
             height: config.container,
             borderRadius: config.container / 2,
           }}
-          contentFit="cover"
-          transition={200}
+          resizeMode="cover"
         />
-      ) : initials ? (
+      )}
+      {!source && Boolean(initials) && (
         <View
           className="items-center justify-center"
           style={{
@@ -88,9 +93,12 @@ export function Avatar({
             backgroundColor: bgColor,
           }}
         >
-          <Text className={`font-semibold text-white ${config.text}`}>{initials}</Text>
+          <Text className={`font-semibold text-white ${config.text}`}>
+            {initials}
+          </Text>
         </View>
-      ) : (
+      )}
+      {!source && !initials && (
         <View
           className="items-center justify-center bg-secondary-200"
           style={{

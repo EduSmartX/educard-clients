@@ -3,7 +3,13 @@
  * Supports backdated years (1950+) for DOB fields
  */
 
-import { Calendar, X, ChevronLeft, ChevronRight, Check } from 'lucide-react-native';
+import {
+  Calendar,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Check,
+} from 'lucide-react-native';
 import { useState, useRef, useMemo } from 'react';
 import {
   View,
@@ -12,9 +18,9 @@ import {
   Modal,
   StyleSheet,
   FlatList,
-  Dimensions,
-  Platform,
+  useWindowDimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const MONTHS = [
   'January',
@@ -56,6 +62,8 @@ interface FormDatePickerProps {
   disabled?: boolean;
   minYear?: number;
   maxYear?: number;
+  minDate?: string;
+  maxDate?: string;
 }
 
 function getDaysInMonth(year: number, month: number) {
@@ -80,9 +88,19 @@ export function FormDatePicker({
   disabled,
   minYear = 1950,
   maxYear,
+  minDate,
+  maxDate,
 }: FormDatePickerProps) {
+  const { width: viewportWidth } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const currentYear = new Date().getFullYear();
   const effectiveMaxYear = maxYear ?? currentYear + 5;
+  const calendarPadding = viewportWidth < 360 ? 12 : 20;
+  const daySize = Math.max(
+    34,
+    Math.min(54, Math.floor((viewportWidth - calendarPadding * 2) / 7)),
+  );
+  const monthCellWidth = (viewportWidth - calendarPadding * 2 - 20) / 3;
 
   const [visible, setVisible] = useState(false);
   const [mode, setMode] = useState<'calendar' | 'year' | 'month'>('calendar');
@@ -94,7 +112,11 @@ export function FormDatePicker({
       if (y && m && d) return { year: y, month: m - 1, day: d };
     }
     const now = new Date();
-    return { year: now.getFullYear(), month: now.getMonth(), day: now.getDate() };
+    return {
+      year: now.getFullYear(),
+      month: now.getMonth(),
+      day: now.getDate(),
+    };
   }, [value]);
 
   const [viewYear, setViewYear] = useState(parsed.year);
@@ -154,6 +176,13 @@ export function FormDatePicker({
     setSelectedDay(day);
   };
 
+  const isDayDisabled = (day: number): boolean => {
+    const dateStr = `${viewYear}-${pad(viewMonth + 1)}-${pad(day)}`;
+    if (minDate && dateStr < minDate) return true;
+    if (maxDate && dateStr > maxDate) return true;
+    return false;
+  };
+
   const selectYear = (year: number) => {
     setViewYear(year);
     setSelectedYear(year);
@@ -174,17 +203,23 @@ export function FormDatePicker({
   }, [minYear, effectiveMaxYear]);
 
   const isSelected = (day: number) =>
-    day === selectedDay && viewMonth === selectedMonth && viewYear === selectedYear;
+    day === selectedDay &&
+    viewMonth === selectedMonth &&
+    viewYear === selectedYear;
 
   const isToday = (day: number) => {
     const now = new Date();
-    return day === now.getDate() && viewMonth === now.getMonth() && viewYear === now.getFullYear();
+    return (
+      day === now.getDate() &&
+      viewMonth === now.getMonth() &&
+      viewYear === now.getFullYear()
+    );
   };
 
   const yearListRef = useRef<FlatList>(null);
 
   const displayValue = value
-    ? `${pad(parseInt(value.split('-')[2]))} ${SHORT_MONTHS[parseInt(value.split('-')[1]) - 1]} ${value.split('-')[0]}`
+    ? `${pad(Number.parseInt(value.split('-')[2], 10))} ${SHORT_MONTHS[Number.parseInt(value.split('-')[1], 10) - 1]} ${value.split('-')[0]}`
     : '';
 
   return (
@@ -195,7 +230,11 @@ export function FormDatePicker({
       </Text>
 
       <TouchableOpacity
-        style={[styles.inputRow, error && styles.inputError, disabled && styles.inputDisabled]}
+        style={[
+          styles.inputRow,
+          error && styles.inputError,
+          disabled && styles.inputDisabled,
+        ]}
         onPress={openPicker}
         activeOpacity={0.7}
       >
@@ -211,7 +250,13 @@ export function FormDatePicker({
         <Text style={styles.hint}>Format: YYYY-MM-DD</Text>
       )}
 
-      <Modal visible={visible} animationType="slide" transparent statusBarTranslucent>
+      <Modal
+        visible={visible}
+        animationType="slide"
+        transparent
+        statusBarTranslucent
+        onRequestClose={() => setVisible(false)}
+      >
         <View style={styles.overlay}>
           <View style={styles.modal}>
             {/* Header */}
@@ -233,28 +278,40 @@ export function FormDatePicker({
               <>
                 {/* Month/Year nav */}
                 <View style={styles.navRow}>
-                  <TouchableOpacity onPress={goToPrevMonth} style={styles.navBtn}>
+                  <TouchableOpacity
+                    onPress={goToPrevMonth}
+                    style={styles.navBtn}
+                  >
                     <ChevronLeft size={20} color="#334155" />
                   </TouchableOpacity>
 
                   <View style={styles.navCenter}>
-                    <TouchableOpacity onPress={() => setMode('month')} style={styles.navLabelBtn}>
+                    <TouchableOpacity
+                      onPress={() => setMode('month')}
+                      style={styles.navLabelBtn}
+                    >
                       <Text style={styles.navLabel}>{MONTHS[viewMonth]}</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setMode('year')} style={styles.navLabelBtn}>
+                    <TouchableOpacity
+                      onPress={() => setMode('year')}
+                      style={styles.navLabelBtn}
+                    >
                       <Text style={styles.navLabel}>{viewYear}</Text>
                     </TouchableOpacity>
                   </View>
 
-                  <TouchableOpacity onPress={goToNextMonth} style={styles.navBtn}>
+                  <TouchableOpacity
+                    onPress={goToNextMonth}
+                    style={styles.navBtn}
+                  >
                     <ChevronRight size={20} color="#334155" />
                   </TouchableOpacity>
                 </View>
 
                 {/* Weekday headers */}
                 <View style={styles.weekRow}>
-                  {WEEKDAYS.map((d, i) => (
-                    <Text key={`weekday-${i}`} style={styles.weekDay}>
+                  {WEEKDAYS.map(d => (
+                    <Text key={d} style={[styles.weekDay, { width: daySize }]}>
                       {d}
                     </Text>
                   ))}
@@ -268,44 +325,79 @@ export function FormDatePicker({
                         key={`day-${viewYear}-${viewMonth}-${day}`}
                         style={[
                           styles.dayCell,
+                          {
+                            width: daySize,
+                            height: daySize,
+                            borderRadius: daySize / 2,
+                          },
                           isSelected(day) ? styles.dayCellSelected : undefined,
-                          isToday(day) && !isSelected(day) ? styles.dayCellToday : undefined,
+                          isToday(day) && !isSelected(day)
+                            ? styles.dayCellToday
+                            : undefined,
+                          isDayDisabled(day)
+                            ? styles.dayCellDisabled
+                            : undefined,
                         ]}
-                        onPress={() => selectDay(day)}
-                        activeOpacity={0.6}
+                        onPress={() => !isDayDisabled(day) && selectDay(day)}
+                        activeOpacity={isDayDisabled(day) ? 1 : 0.6}
                       >
                         <Text
                           style={[
                             styles.dayText,
                             isSelected(day) && styles.dayTextSelected,
-                            isToday(day) && !isSelected(day) && styles.dayTextToday,
+                            isToday(day) &&
+                              !isSelected(day) &&
+                              styles.dayTextToday,
+                            isDayDisabled(day) && styles.dayTextDisabled,
                           ]}
                         >
                           {day}
                         </Text>
                       </TouchableOpacity>
                     ) : (
-                      <View key={`empty-${viewYear}-${viewMonth}-${idx}`} style={styles.dayCell} />
-                    )
+                      <View
+                        key={`empty-${viewYear}-${viewMonth}-${idx}`}
+                        style={[
+                          styles.dayCell,
+                          {
+                            width: daySize,
+                            height: daySize,
+                            borderRadius: daySize / 2,
+                          },
+                        ]}
+                      />
+                    ),
                   )}
                 </View>
               </>
             )}
 
             {mode === 'year' && (
-              <FlatList
+              <FlatList<number>
                 ref={yearListRef}
                 data={years}
-                keyExtractor={(item) => String(item)}
+                keyExtractor={String}
                 style={styles.yearList}
                 initialScrollIndex={Math.max(0, years.indexOf(viewYear) - 2)}
-                getItemLayout={(_, index: number) => ({ length: 48, offset: 48 * index, index })}
+                getItemLayout={(_data, index: number) => ({
+                  length: 48,
+                  offset: 48 * index,
+                  index,
+                })}
                 renderItem={({ item }) => (
                   <TouchableOpacity
-                    style={[styles.yearItem, item === viewYear && styles.yearItemActive]}
+                    style={[
+                      styles.yearItem,
+                      item === viewYear && styles.yearItemActive,
+                    ]}
                     onPress={() => selectYear(item)}
                   >
-                    <Text style={[styles.yearText, item === viewYear && styles.yearTextActive]}>
+                    <Text
+                      style={[
+                        styles.yearText,
+                        item === viewYear && styles.yearTextActive,
+                      ]}
+                    >
                       {item}
                     </Text>
                     {item === viewYear && <Check size={18} color="#0d9488" />}
@@ -319,10 +411,19 @@ export function FormDatePicker({
                 {MONTHS.map((m, idx) => (
                   <TouchableOpacity
                     key={m}
-                    style={[styles.monthItem, idx === viewMonth && styles.monthItemActive]}
+                    style={[
+                      styles.monthItem,
+                      { width: monthCellWidth },
+                      idx === viewMonth && styles.monthItemActive,
+                    ]}
                     onPress={() => selectMonth(idx)}
                   >
-                    <Text style={[styles.monthText, idx === viewMonth && styles.monthTextActive]}>
+                    <Text
+                      style={[
+                        styles.monthText,
+                        idx === viewMonth && styles.monthTextActive,
+                      ]}
+                    >
                       {SHORT_MONTHS[idx]}
                     </Text>
                   </TouchableOpacity>
@@ -331,7 +432,9 @@ export function FormDatePicker({
             )}
 
             {/* Footer buttons */}
-            <View style={styles.footer}>
+            <View
+              style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}
+            >
               <TouchableOpacity onPress={clearDate} style={styles.clearBtn}>
                 <Text style={styles.clearBtnText}>Clear</Text>
               </TouchableOpacity>
@@ -345,9 +448,6 @@ export function FormDatePicker({
     </View>
   );
 }
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const DAY_SIZE = Math.floor((SCREEN_WIDTH - 40) / 7);
 
 const styles = StyleSheet.create({
   container: { marginBottom: 16 },
@@ -364,7 +464,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
     gap: 10,
   },
-  inputError: { borderColor: '#ef4444', backgroundColor: '#fef2f2', borderWidth: 2 },
+  inputError: {
+    borderColor: '#ef4444',
+    backgroundColor: '#fef2f2',
+    borderWidth: 2,
+  },
   inputDisabled: { opacity: 0.5 },
   inputText: { flex: 1, fontSize: 15, color: '#1e293b' },
   placeholder: { color: '#94a3b8' },
@@ -382,7 +486,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 24,
     maxHeight: '75%',
     // Shadow for iOS
     shadowColor: '#000',
@@ -437,7 +540,6 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   weekDay: {
-    width: DAY_SIZE,
     textAlign: 'center',
     fontSize: 12,
     fontWeight: '600',
@@ -451,17 +553,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   dayCell: {
-    width: DAY_SIZE,
-    height: DAY_SIZE,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: DAY_SIZE / 2,
   },
   dayCellSelected: { backgroundColor: '#0d9488' },
   dayCellToday: { borderWidth: 1.5, borderColor: '#0d9488' },
+  dayCellDisabled: { opacity: 0.3 },
   dayText: { fontSize: 14, color: '#334155' },
   dayTextSelected: { color: '#fff', fontWeight: '700' },
   dayTextToday: { color: '#0d9488', fontWeight: '600' },
+  dayTextDisabled: { color: '#cbd5e1' },
 
   // Year list
   yearList: { maxHeight: 300, paddingHorizontal: 20 },
@@ -487,7 +588,6 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   monthItem: {
-    width: (SCREEN_WIDTH - 60) / 3,
     paddingVertical: 14,
     alignItems: 'center',
     borderRadius: 10,
@@ -503,7 +603,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingTop: 14,
-    paddingBottom: Platform.OS === 'ios' ? 20 : 28,
     gap: 12,
     borderTopWidth: 1,
     borderTopColor: '#e2e8f0',

@@ -1,5 +1,11 @@
 import { Colors } from '@educard/shared';
-import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react-native';
+import {
+  X,
+  CheckCircle,
+  AlertCircle,
+  Info,
+  AlertTriangle,
+} from 'lucide-react-native';
 import React from 'react';
 import {
   View,
@@ -8,8 +14,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Pressable,
+  useWindowDimensions,
 } from 'react-native';
-import Animated, { ZoomIn, ZoomOut } from 'react-native-reanimated';
 
 export type ModalVariant = 'success' | 'error' | 'warning' | 'info';
 
@@ -69,6 +75,15 @@ export function Modal({
 }: ModalProps) {
   const config = variantConfig[variant];
   const IconComponent = config.icon;
+  const { width } = useWindowDimensions();
+  let maxModalWidth = width - 32;
+  if (width >= 900) {
+    maxModalWidth = 520;
+  } else if (width >= 600) {
+    maxModalWidth = 460;
+  }
+  const modalPadding = width < 360 ? 18 : 24;
+  const overlayPadding = width < 360 ? 12 : 24;
 
   return (
     <RNModal
@@ -78,46 +93,50 @@ export function Modal({
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { paddingHorizontal: overlayPadding }]}>
         <Pressable style={styles.overlayBackground} onPress={onClose} />
-        <Animated.View
-          entering={ZoomIn.duration(200)}
-          exiting={ZoomOut.duration(150)}
-          style={styles.modalWrapper}
-        >
-          <View style={styles.modalContainer}>
-            {/* Close Button */}
+        {/* Reanimated layout animations never run inside an RN Modal on the new
+            architecture, which left the content stuck at its entering state. */}
+        <View style={[styles.modalWrapper, { maxWidth: maxModalWidth }]}>
+          <View
+            style={[
+              styles.modalContainer,
+              { padding: modalPadding, paddingTop: modalPadding + 8 },
+            ]}
+          >
             {showCloseButton && (
-              <TouchableOpacity style={styles.closeButton} onPress={onClose} hitSlop={10}>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={onClose}
+                hitSlop={10}
+              >
                 <X size={22} color={Colors.gray[500]} />
               </TouchableOpacity>
             )}
 
-            {/* Icon */}
             <View
               style={[
                 styles.iconContainer,
-                { backgroundColor: config.bgColor, borderColor: config.borderColor },
+                {
+                  backgroundColor: config.bgColor,
+                  borderColor: config.borderColor,
+                },
               ]}
             >
               <IconComponent size={32} color={config.iconColor} />
             </View>
 
-            {/* Title */}
             <Text style={styles.title}>{title}</Text>
 
-            {/* Message */}
             {message && <Text style={styles.message}>{message}</Text>}
 
-            {/* Custom Content */}
             {children}
 
-            {/* Actions */}
             {actions && actions.length > 0 && (
               <View style={styles.actionsContainer}>
-                {actions.map((action, index) => (
+                {actions.map(action => (
                   <TouchableOpacity
-                    key={index}
+                    key={action.label}
                     style={[
                       styles.actionButton,
                       action.variant === 'primary' && styles.primaryButton,
@@ -130,7 +149,8 @@ export function Modal({
                     <Text
                       style={[
                         styles.actionButtonText,
-                        action.variant === 'secondary' && styles.secondaryButtonText,
+                        action.variant === 'secondary' &&
+                          styles.secondaryButtonText,
                       ]}
                     >
                       {action.label}
@@ -140,13 +160,12 @@ export function Modal({
               </View>
             )}
           </View>
-        </Animated.View>
+        </View>
       </View>
     </RNModal>
   );
 }
 
-// Quick alert functions for convenience
 interface AlertOptions {
   title: string;
   message?: string;
@@ -157,7 +176,6 @@ interface AlertOptions {
   onCancel?: () => void;
 }
 
-// Hook for using modal
 export function useModal() {
   const [modalState, setModalState] = React.useState<{
     visible: boolean;
@@ -165,6 +183,7 @@ export function useModal() {
     message?: string;
     variant: ModalVariant;
     actions: ModalAction[];
+    onDismiss?: () => void;
   }>({
     visible: false,
     title: '',
@@ -181,7 +200,7 @@ export function useModal() {
         label: options.cancelText,
         variant: 'secondary',
         onPress: () => {
-          setModalState((prev) => ({ ...prev, visible: false }));
+          setModalState(prev => ({ ...prev, visible: false }));
           options.onCancel?.();
         },
       });
@@ -191,7 +210,7 @@ export function useModal() {
       label: options.confirmText ?? 'OK',
       variant: 'primary',
       onPress: () => {
-        setModalState((prev) => ({ ...prev, visible: false }));
+        setModalState(prev => ({ ...prev, visible: false }));
         options.onConfirm?.();
       },
     });
@@ -202,43 +221,50 @@ export function useModal() {
       message: options.message,
       variant: options.variant ?? 'info',
       actions,
+      // A single-action alert has nothing to cancel, so backdrop/X means "OK".
+      onDismiss: options.cancelText ? options.onCancel : options.onConfirm,
     });
   }, []);
 
   const hideModal = React.useCallback(() => {
-    setModalState((prev) => ({ ...prev, visible: false }));
+    setModalState(prev => ({ ...prev, visible: false }));
   }, []);
 
   const success = React.useCallback(
     (title: string, message?: string, onConfirm?: () => void) => {
       showModal({ title, message, variant: 'success', onConfirm });
     },
-    [showModal]
+    [showModal],
   );
 
   const error = React.useCallback(
     (title: string, message?: string, onConfirm?: () => void) => {
       showModal({ title, message, variant: 'error', onConfirm });
     },
-    [showModal]
+    [showModal],
   );
 
   const warning = React.useCallback(
     (title: string, message?: string, onConfirm?: () => void) => {
       showModal({ title, message, variant: 'warning', onConfirm });
     },
-    [showModal]
+    [showModal],
   );
 
   const info = React.useCallback(
     (title: string, message?: string, onConfirm?: () => void) => {
       showModal({ title, message, variant: 'info', onConfirm });
     },
-    [showModal]
+    [showModal],
   );
 
   const confirm = React.useCallback(
-    (title: string, message?: string, onConfirm?: () => void, onCancel?: () => void) => {
+    (
+      title: string,
+      message?: string,
+      onConfirm?: () => void,
+      onCancel?: () => void,
+    ) => {
       showModal({
         title,
         message,
@@ -249,7 +275,27 @@ export function useModal() {
         onCancel,
       });
     },
-    [showModal]
+    [showModal],
+  );
+
+  // A memoised element keeps the Modal's type stable; returning a component
+  // factory here remounts the native modal on every host render, which drops
+  // keyboard focus and can leave a stale overlay swallowing touches.
+  const modalElement = React.useMemo(
+    () => (
+      <Modal
+        visible={modalState.visible}
+        onClose={() => {
+          hideModal();
+          modalState.onDismiss?.();
+        }}
+        title={modalState.title}
+        message={modalState.message}
+        variant={modalState.variant}
+        actions={modalState.actions}
+      />
+    ),
+    [modalState, hideModal],
   );
 
   return {
@@ -261,16 +307,7 @@ export function useModal() {
     warning,
     info,
     confirm,
-    ModalComponent: () => (
-      <Modal
-        visible={modalState.visible}
-        onClose={hideModal}
-        title={modalState.title}
-        message={modalState.message}
-        variant={modalState.variant}
-        actions={modalState.actions}
-      />
-    ),
+    modalElement,
   };
 }
 

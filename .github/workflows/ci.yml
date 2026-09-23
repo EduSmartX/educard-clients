@@ -1,0 +1,487 @@
+name: CI/CD Pipeline
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+  push:
+    branches:
+      - main
+      - master
+      - develop
+      - development
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Only supersede PR runs; a follow-up push must not kill an in-flight deploy or APK build.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  install:
+    name: Install Dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4 # v4
+        with:
+          version: 9.15.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache node_modules
+        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: modules-${{ hashFiles('pnpm-lock.yaml') }}
+
+  lint-web:
+    name: Lint & Format (Web)
+    runs-on: ubuntu-latest
+    needs: [install]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4 # v4
+        with:
+          version: 9.15.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+
+      - name: Restore node_modules
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: modules-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Run ESLint (zero warnings allowed)
+        run: pnpm --filter @educard/web run check:lint
+
+      - name: Check formatting
+        run: pnpm --filter @educard/web format:check
+
+  lint-mobile:
+    name: Lint & Format (Mobile)
+    runs-on: ubuntu-latest
+    needs: [install]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4 # v4
+        with:
+          version: 9.15.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+
+      - name: Restore node_modules
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: modules-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Run ESLint
+        run: pnpm --filter @educard/mobile lint
+
+      - name: Check formatting
+        run: pnpm --filter @educard/mobile format:check
+        continue-on-error: true
+
+  typecheck:
+    name: Type Checking (All)
+    runs-on: ubuntu-latest
+    needs: [install]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4 # v4
+        with:
+          version: 9.15.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+
+      - name: Restore node_modules
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: modules-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Type check shared packages
+        run: pnpm --filter @educard/shared typecheck
+
+      - name: Type check web app
+        run: pnpm --filter @educard/web type-check
+
+      - name: Type check mobile app
+        run: pnpm --filter @educard/mobile typecheck
+
+  build:
+    name: Build Web App
+    runs-on: ubuntu-latest
+    needs: [lint-web, lint-mobile, typecheck]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4 # v4
+        with:
+          version: 9.15.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+
+      - name: Restore node_modules
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: modules-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Build web application
+        run: pnpm build:web
+        env:
+          VITE_API_URL: https://educard-backend-api-272236662775.asia-south1.run.app/api
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: web-build
+          path: apps/web/dist
+          retention-days: 7
+
+  security-audit:
+    name: Security & Dependency Audit
+    runs-on: ubuntu-latest
+    needs: [install]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4 # v4
+        with:
+          version: 9.15.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+
+      - name: Restore node_modules
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: modules-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Audit dependencies for vulnerabilities
+        run: pnpm audit --prod --audit-level=high
+        continue-on-error: true
+
+      - name: Check for outdated packages
+        run: pnpm outdated --recursive || true
+
+  bundle-analysis:
+    name: Bundle Size Analysis
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4 # v4
+        with:
+          version: 9.15.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+
+      - name: Restore node_modules
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: modules-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Download build artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: web-build
+          path: apps/web/dist
+
+      - name: Report bundle size
+        run: |
+          echo "## 📦 Bundle Size Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| File | Size | Gzipped |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|---------|" >> $GITHUB_STEP_SUMMARY
+          find apps/web/dist/assets -name "*.js" -exec sh -c '
+            for f; do
+              size=$(wc -c < "$f" | xargs)
+              gzip_size=$(gzip -c "$f" | wc -c | xargs)
+              size_kb=$(echo "scale=1; $size/1024" | bc)
+              gzip_kb=$(echo "scale=1; $gzip_size/1024" | bc)
+              echo "| $(basename $f) | ${size_kb}KB | ${gzip_kb}KB |"
+            done
+          ' _ {} + >> $GITHUB_STEP_SUMMARY
+
+  sonarcloud:
+    name: SonarCloud Analysis
+    runs-on: ubuntu-latest
+    needs: [lint-web, lint-mobile, typecheck]
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          fetch-depth: 0
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@aa494459d7c39c106cc77b166de8b4250a32bb97 # v4
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # ---------------------------------------------------------------------------
+  # Deployment — gated on build and audit only; SonarCloud is advisory.
+  # Web and mobile fan out in parallel from the same gate.
+  # ---------------------------------------------------------------------------
+
+  deploy-web-dev:
+    name: Deploy Web — Dev (develop/development)
+    runs-on: ubuntu-latest
+    needs: [build, security-audit]
+    if: >-
+      github.event_name == 'push' &&
+      (github.ref_name == 'develop' || github.ref_name == 'development')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4 # v4
+        with:
+          version: 9.15.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Pull Vercel project settings (Dev)
+        run: pnpm dlx vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_DEV }}
+
+      - name: Build Vercel artifact (Dev)
+        run: pnpm dlx vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_DEV }}
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL_DEV }}
+
+      - name: Deploy to Vercel Dev project
+        run: pnpm dlx vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_DEV }}
+
+  deploy-web-prod:
+    name: Deploy Web — Prod (main/master)
+    runs-on: ubuntu-latest
+    needs: [build, security-audit]
+    if: >-
+      github.event_name == 'push' &&
+      (github.ref_name == 'main' || github.ref_name == 'master')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4 # v4
+        with:
+          version: 9.15.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Pull Vercel project settings (Prod)
+        run: pnpm dlx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_PROD }}
+
+      - name: Build Vercel artifact (Prod)
+        run: pnpm dlx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_PROD }}
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL_PROD }}
+
+      - name: Deploy to Vercel Prod project
+        run: pnpm dlx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_PROD }}
+
+  build-apk:
+    name: Build Android APK for Testers
+    runs-on: ubuntu-latest
+    needs: [build, security-audit]
+    if: >-
+      github.event_name == 'push' &&
+      (github.ref_name == 'develop' || github.ref_name == 'development')
+
+    # Secrets are not allowed in step-level `if:`, so expose them as job env.
+    env:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4 # v4
+        with:
+          version: 9.15.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Setup Java (JDK 17)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate release env file (dev backend)
+        run: |
+          cat > apps/mobile/.env.production <<'EOF'
+          API_URL=${{ secrets.MOBILE_API_URL_DEV }}
+          APP_ENV=development
+          SENTRY_DSN=
+          POSTHOG_KEY=
+          POSTHOG_HOST=
+          GOOGLE_GEOCODING_API_KEY=${{ secrets.MOBILE_GOOGLE_GEOCODING_API_KEY }}
+          EOF
+
+      - name: Verify Google Geocoding API key is present
+        run: |
+          if [ -z "${{ secrets.MOBILE_GOOGLE_GEOCODING_API_KEY }}" ]; then
+            echo "::warning::MOBILE_GOOGLE_GEOCODING_API_KEY secret is empty or not set — 'Use my location' will be disabled in this build."
+          else
+            echo "MOBILE_GOOGLE_GEOCODING_API_KEY is set (length: ${#MOBILE_GOOGLE_GEOCODING_API_KEY})."
+          fi
+        env:
+          MOBILE_GOOGLE_GEOCODING_API_KEY: ${{ secrets.MOBILE_GOOGLE_GEOCODING_API_KEY }}
+
+      - name: Prepare Android keystore
+        if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' }}
+        run: |
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > apps/mobile/android/app/release.keystore
+          echo "ANDROID_KEYSTORE_PATH=release.keystore" >> "$GITHUB_ENV"
+          echo "SIGNING_MODE=release keystore" >> "$GITHUB_ENV"
+
+      - name: Build Android release APK (Gradle)
+        run: |
+          cd apps/mobile/android
+          ./gradlew clean assembleRelease
+
+      - name: Copy APK to workspace root
+        run: |
+          cp apps/mobile/android/app/build/outputs/apk/release/app-release.apk educard-mobile-dev-release.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: educard-mobile-dev-release-apk
+          path: educard-mobile-dev-release.apk
+          retention-days: 14
+
+      - name: Build summary
+        run: |
+          echo "## Android APK Ready" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Branch: ${{ github.ref_name }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Build system: React Native CLI + Gradle" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Signing: ${SIGNING_MODE:-debug keystore fallback (internal installs only)}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Download the APK from workflow artifacts: educard-mobile-dev-release-apk" >> "$GITHUB_STEP_SUMMARY"

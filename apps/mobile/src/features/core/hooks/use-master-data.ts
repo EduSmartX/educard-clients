@@ -13,6 +13,7 @@ import {
   getDepartments,
   getSupervisors,
   getLeaveTypes,
+  getCurrentAcademicYear,
 } from '../api/master-api';
 
 /** Long staleTime for reference data that rarely changes */
@@ -71,4 +72,25 @@ export function useLeaveTypes() {
     staleTime: MASTER_STALE,
     gcTime: MASTER_GC,
   });
+}
+
+export function useCurrentAcademicYear() {
+  return useQuery({
+    queryKey: ['current-academic-year'],
+    queryFn: getCurrentAcademicYear,
+    staleTime: MASTER_STALE,
+    gcTime: MASTER_GC,
+  });
+}
+
+/**
+ * Returns the academic year start/end dates as strings (YYYY-MM-DD).
+ * Useful for constraining date pickers to the academic year range.
+ */
+export function useAcademicYearBounds() {
+  const { data } = useCurrentAcademicYear();
+  return {
+    minDate: data?.start_date ?? undefined,
+    maxDate: data?.end_date ?? undefined,
+  };
 }

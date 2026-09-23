@@ -8,7 +8,7 @@
  * Validate email format
  */
 export function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailRegex = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
   return emailRegex.test(email);
 }
 
@@ -79,7 +79,7 @@ export function isLengthInRange(
  * Validate PIN code (Indian - 6 digits)
  */
 export function isValidPinCode(pin: string): boolean {
-  const pinRegex = /^[1-9][0-9]{5}$/;
+  const pinRegex = /^[1-9]\d{5}$/;
   return pinRegex.test(pin);
 }
 
@@ -95,7 +95,7 @@ export function isValidAadhaar(aadhaar: string): boolean {
  * Validate PAN number (Indian)
  */
 export function isValidPan(pan: string): boolean {
-  const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+  const panRegex = /^[A-Z]{5}\d{4}[A-Z]$/;
   return panRegex.test(pan.toUpperCase());
 }
 
@@ -106,12 +106,14 @@ export function isValidPan(pan: string): boolean {
 export function validateDateRange(
   startDate: string | Date | null | undefined,
   endDate: string | Date | null | undefined,
-  startLabel: string = 'Start date',
-  endLabel: string = 'End date'
+  startLabel: string = "Start date",
+  endLabel: string = "End date",
 ): string | null {
-  if (!startDate || !endDate) return null;
-  const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
-  const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
+  if (!startDate || !endDate) {
+    return null;
+  }
+  const start = typeof startDate === "string" ? new Date(startDate) : startDate;
+  const end = typeof endDate === "string" ? new Date(endDate) : endDate;
   start.setHours(0, 0, 0, 0);
   end.setHours(0, 0, 0, 0);
   if (end < start) {

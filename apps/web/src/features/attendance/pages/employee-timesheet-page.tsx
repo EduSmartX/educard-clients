@@ -1,0 +1,721 @@
+import { LEAVE_STATUS } from '@educard/shared/constants';
+import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import {
+  addMonths,
+  eachDayOfInterval,
+  endOfMonth,
+  format,
+  isBefore,
+  isSameDay,
+  startOfMonth,
+  startOfWeek,
+  endOfWeek,
+  subMonths,
+} from 'date-fns';
+import {
+  CalendarDays,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  PlusCircle,
+  X,
+} from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { toast } from 'sonner';
+
+import { PageHeader } from '@/components/common';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ROUTES } from '@/constants/app-config';
+import { useAuth } from '@/hooks/use-auth';
+import { getEmployeeAttendance } from '@/features/attendance/api/attendance-api';
+import { useEmployeeAttendanceStats } from '@/features/attendance/hooks/queries/use-employee-attendance';
+import { EmployeeInfoCard } from '@/features/attendance/components/employee-info-card';
+import { SingleDayAttendanceDialog } from '@/features/attendance/components/single-day-attendance-dialog';
+import { TimesheetDayCell } from '@/features/attendance/components/timesheet-day-cell';
+
+type AttendanceRecord = {
+  public_id: string;
+  date: string;
+  morning_present: boolean;
+  afternoon_present: boolean;
+  approval_status: string;
+  is_leave?: boolean;
+  leave_public_id?: string | null;
+  leave_type_name?: string | null;
+  leave_status?: string | null;
+  is_exception?: boolean;
+  exception_type?: string | null;
+  exception_reason?: string | null;
+};
+
+type LeaveRecord = {
+  start_date: string;
+  end_date: string;
+  leave_name: string;
+  status: 'approved' | 'pending' | 'rejected' | 'cancelled';
+};
+
+type DayState = 'present' | 'absent' | 'leave-approved' | 'leave-pending' | 'holiday' | 'none';
+
+function toDateKey(date: Date): string {
+  return format(date, 'yyyy-MM-dd');
+}
+
+function getAttendanceState(
+  date: Date,
+  attendanceByDate: Map<string, AttendanceRecord>,
+  key: string
+): DayState {
+  const attendance = attendanceByDate.get(key);
+  if (attendance) {
+    return attendance.morning_present && attendance.afternoon_present ? 'present' : 'absent';
+  }
+  if (isBefore(date, new Date()) && !isSameDay(date, new Date())) {
+    return 'absent';
+  }
+  return 'none';
+}
+
+function isSaturdayOff(date: Date, pattern: string): boolean {
+  if (pattern === 'ALL') {
+    return true;
+  }
+  if (pattern !== 'SECOND_ONLY' && pattern !== 'SECOND_AND_FOURTH') {
+    return false;
+  }
+  const weekOfMonth = Math.ceil(date.getDate() / 7);
+  if (pattern === 'SECOND_ONLY') {
+    return weekOfMonth === 2;
+  }
+  return weekOfMonth === 2 || weekOfMonth === 4;
+}
+
+function isWeekendHoliday(
+  date: Date,
+  workingDayPolicy: { sunday_off: boolean; saturday_off_pattern: string } | null
+): boolean {
+  if (!workingDayPolicy) {
+    return false;
+  }
+  const dayOfWeek = date.getDay();
+  if (dayOfWeek === 0 && workingDayPolicy.sunday_off) {
+    return true;
+  }
+  if (dayOfWeek === 6) {
+    return isSaturdayOff(date, workingDayPolicy.saturday_off_pattern);
+  }
+  return false;
+}
+
+function getDayState(
+  date: Date,
+  attendanceByDate: Map<string, AttendanceRecord>,
+  leaveByDate: Map<string, { status: LeaveRecord['status']; leave_name: string }>,
+  holidaySet: Set<string>,
+  workingDayPolicy: { sunday_off: boolean; saturday_off_pattern: string } | null,
+  exceptions: Map<string, { type: string; reason: string }>
+): DayState {
+  const key = toDateKey(date);
+  const leaveInfo = leaveByDate.get(key);
+  const exception = exceptions.get(key);
+
+  // Check for force working day exception (overrides holiday/weekend)
+  if (exception?.type === 'force_working' || exception?.type === 'FORCE_WORKING') {
+    return getAttendanceState(date, attendanceByDate, key);
+  }
+
+  // Check for force holiday exception
+  if (exception?.type === 'force_holiday' || exception?.type === 'FORCE_HOLIDAY') {
+    return 'holiday';
+  }
+
+  // Check official holidays
+  if (holidaySet.has(key)) {
+    return 'holiday';
+  }
+
+  // Check if it's a weekend based on working day policy
+  if (isWeekendHoliday(date, workingDayPolicy)) {
+    return 'holiday';
+  }
+
+  if (leaveInfo?.status === LEAVE_STATUS.APPROVED) {
+    return 'leave-approved';
+  }
+  if (leaveInfo?.status === 'pending') {
+    return 'leave-pending';
+  }
+
+  return getAttendanceState(date, attendanceByDate, key);
+}
+
+function getMobileStateBgColor(mobileState: DayState): string {
+  switch (mobileState) {
+    case 'present':
+      return 'bg-green-500 text-white';
+    case 'absent':
+      return 'bg-red-500 text-white';
+    case 'leave-approved':
+      return 'bg-orange-500 text-white';
+    case 'leave-pending':
+      return 'bg-yellow-500 text-white';
+    case 'holiday':
+      return 'bg-purple-500 text-white';
+    default:
+      return 'bg-gray-100 text-gray-700';
+  }
+}
+
+function getHolidayLabels(
+  holidayInfo: { type: string; name: string; description?: string } | undefined
+): { shortLabel: string; fullDescription: string } {
+  if (!holidayInfo) {
+    return { shortLabel: 'Holiday', fullDescription: 'Holiday' };
+  }
+  switch (holidayInfo.type) {
+    case 'weekend':
+      return { shortLabel: 'Weekend', fullDescription: holidayInfo.description || 'Weekend' };
+    case 'official_holiday':
+      return {
+        shortLabel:
+          holidayInfo.name.length > 12
+            ? `${holidayInfo.name.substring(0, 10)}..`
+            : holidayInfo.name,
+        fullDescription: holidayInfo.description || holidayInfo.name,
+      };
+    case 'force_holiday':
+      return {
+        shortLabel: 'Special',
+        fullDescription: holidayInfo.description || 'Special Holiday',
+      };
+    default:
+      return { shortLabel: 'Holiday', fullDescription: 'Holiday' };
+  }
+}
+
+function stateStyles(state: DayState) {
+  switch (state) {
+    case 'present':
+      return 'bg-green-50 border-green-200 text-green-800';
+    case 'absent':
+      return 'bg-red-50 border-red-200 text-red-800';
+    case 'leave-approved':
+      return 'bg-orange-50 border-orange-200 text-orange-800';
+    case 'leave-pending':
+      return 'bg-orange-50 border-orange-200 text-orange-800';
+    case 'holiday':
+      return 'bg-purple-50 border-purple-200 text-purple-800';
+    default:
+      return 'bg-white border-gray-200 text-gray-700';
+  }
+}
+
+export function EmployeeTimesheetPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user, organization } = useAuth();
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  // Detect if we're on the employee route to use the correct submit path
+  const isEmployeeRoute = location.pathname.startsWith('/employee');
+  const submitTimesheetRoute = isEmployeeRoute
+    ? ROUTES.EMPLOYEE.ATTENDANCE.SUBMIT
+    : ROUTES.ATTENDANCE.TIMESHEET_SUBMIT;
+
+  const monthStart = useMemo(() => startOfMonth(currentDate), [currentDate]);
+  const monthEnd = useMemo(() => endOfMonth(currentDate), [currentDate]);
+
+  // Calculate date range to include full weeks (Sunday to Saturday)
+  const calendarStart = useMemo(() => startOfWeek(monthStart, { weekStartsOn: 0 }), [monthStart]);
+  const calendarEnd = useMemo(() => endOfWeek(monthEnd, { weekStartsOn: 0 }), [monthEnd]);
+
+  const fromDate = useMemo(() => format(calendarStart, 'yyyy-MM-dd'), [calendarStart]);
+  const toDate = useMemo(() => format(calendarEnd, 'yyyy-MM-dd'), [calendarEnd]);
+
+  const { data: attendanceData, isLoading: loadingAttendance } = useQuery({
+    queryKey: ['timesheet', 'attendance', fromDate, toDate],
+    queryFn: () => getEmployeeAttendance({ from_date: fromDate, to_date: toDate }),
+  });
+
+  // Month-range stats from the same backend stats API the dashboard uses
+  const { data: statsData } = useEmployeeAttendanceStats({
+    from_date: format(monthStart, 'yyyy-MM-dd'),
+    to_date: format(monthEnd, 'yyyy-MM-dd'),
+  });
+
+  const attendanceByDate = useMemo(() => {
+    const map = new Map<string, AttendanceRecord>();
+    (attendanceData?.records || []).forEach((record: AttendanceRecord) => {
+      map.set(record.date, record);
+    });
+    return map;
+  }, [attendanceData]);
+
+  const leaveByDate = useMemo(() => {
+    const map = new Map<
+      string,
+      { status: 'approved' | 'pending' | 'rejected' | 'cancelled'; leave_name: string }
+    >();
+
+    // Use leave data from attendance records
+    (attendanceData?.records || []).forEach((record: AttendanceRecord) => {
+      if (record.is_leave && record.leave_type_name) {
+        const status = (record.leave_status || 'approved') as
+          | 'approved'
+          | 'pending'
+          | 'rejected'
+          | 'cancelled';
+        map.set(record.date, {
+          status,
+          leave_name: record.leave_type_name,
+        });
+      }
+    });
+
+    return map;
+  }, [attendanceData]);
+
+  const holidaySet = useMemo(() => {
+    const set = new Set<string>();
+    const descriptions = attendanceData?.holiday_descriptions || {};
+    Object.entries(descriptions).forEach(([dateKey, info]: [string, { type?: string }]) => {
+      if (
+        info?.type === 'official_holiday' ||
+        info?.type === 'holiday' ||
+        info?.type === 'weekend'
+      ) {
+        set.add(dateKey);
+      }
+    });
+    return set;
+  }, [attendanceData]);
+
+  const exceptionsMap = useMemo(() => {
+    const map = new Map<string, { type: string; reason: string }>();
+    (attendanceData?.calendar_exceptions || []).forEach(
+      (exception: { date: string; type: string; reason: string }) => {
+        map.set(exception.date, { type: exception.type, reason: exception.reason });
+      }
+    );
+    return map;
+  }, [attendanceData]);
+
+  const monthDays = useMemo(
+    () => eachDayOfInterval({ start: monthStart, end: monthEnd }),
+    [monthStart, monthEnd]
+  );
+  const leadingEmptyDays = useMemo(
+    () => Array.from({ length: monthStart.getDay() }, (_, i) => `empty-${i}`),
+    [monthStart]
+  );
+
+  // Use month-range backend stats so numbers match the dashboard
+  const report = useMemo(() => {
+    const stats = statsData?.stats || {};
+    return {
+      submitted: attendanceData?.records?.length || 0,
+      present: stats.total_present || 0,
+      absent: stats.total_absent || 0,
+      halfDays: stats.total_half_days || 0,
+      leave: stats.total_leaves || 0,
+      holiday: stats.total_holidays || 0,
+      totalWorkingDays: stats.total_working_days || 0,
+      attendancePercentage: stats.attendance_percentage || 0,
+    };
+  }, [statsData, attendanceData]);
+
+  const loading = loadingAttendance;
+
+  const handleDateClick = (date: Date, state: DayState) => {
+    const dateKey = toDateKey(date);
+    const attendanceRecord = attendanceByDate.get(dateKey);
+
+    // Check if attendance is already submitted or approved - don't allow editing
+    if (attendanceRecord) {
+      const status = attendanceRecord.approval_status?.toLowerCase();
+
+      if (status === 'approved') {
+        toast.info('Cannot Edit Approved Attendance', {
+          description: 'This date has already been approved and cannot be modified.',
+        });
+        return;
+      }
+
+      if (status === 'submitted' || status === 'pending') {
+        toast.info('Cannot Edit Submitted Attendance', {
+          description:
+            'This date has been submitted for approval. Wait for approval or return to draft.',
+        });
+        return;
+      }
+    }
+
+    // Only allow clicking on past dates and non-holiday dates
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const clickedDate = new Date(date);
+    clickedDate.setHours(0, 0, 0, 0);
+
+    // Don't allow clicking future dates or holidays/weekends
+    if (clickedDate > today || state === 'holiday') {
+      return;
+    }
+
+    setSelectedDate(date);
+    setIsDialogOpen(true);
+  };
+
+  return (
+    <div className="container mx-auto space-y-6 py-6">
+      <PageHeader
+        title="Timesheet"
+        description="Submit your monthly employee attendance with leave and calendar context"
+      />
+
+      <Card className="border border-[#bfd591] shadow-sm" style={{ backgroundColor: '#C5D89D' }}>
+        <CardContent className="grid grid-cols-1 gap-4 pt-6 lg:grid-cols-2">
+          <EmployeeInfoCard
+            user={user || {}}
+            organization={organization || undefined}
+            organizationRole={user?.role}
+            employeeId={attendanceData?.employee_id || undefined}
+            showProfileImage={true}
+          />
+
+          <Card className="border-0 bg-white shadow-sm">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-xl font-bold">
+                  <CalendarDays className="h-6 w-6 text-blue-600" />
+                  Monthly Report
+                </CardTitle>
+                <Badge variant="outline" className="text-sm">
+                  {format(currentDate, 'MMMM yyyy')}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <div className="mb-1 text-sm text-gray-600">Attendance Summary</div>
+                <div className="mb-2 text-base font-semibold">
+                  {`${report.attendancePercentage}% present`}
+                </div>
+                <div className="flex h-2 overflow-hidden rounded-full bg-gray-200">
+                  {report.present > 0 && (
+                    <div
+                      className="bg-green-500"
+                      style={{ width: `${(report.present / report.totalWorkingDays) * 100}%` }}
+                    />
+                  )}
+                  {report.absent > 0 && (
+                    <div
+                      className="bg-red-500"
+                      style={{ width: `${(report.absent / report.totalWorkingDays) * 100}%` }}
+                    />
+                  )}
+                  {report.leave > 0 && (
+                    <div
+                      className="bg-orange-500"
+                      style={{ width: `${(report.leave / report.totalWorkingDays) * 100}%` }}
+                    />
+                  )}
+                  {report.holiday > 0 && (
+                    <div
+                      className="bg-purple-500"
+                      style={{ width: `${(report.holiday / report.totalWorkingDays) * 100}%` }}
+                    />
+                  )}
+                </div>
+                <div className="mt-2 flex items-center gap-4 text-xs text-gray-600">
+                  <span className="flex items-center gap-1">
+                    <span className="h-3 w-3 rounded-sm bg-green-500"></span>
+                    Present {report.present}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="h-3 w-3 rounded-sm bg-red-500"></span>
+                    Absent {report.absent}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="h-3 w-3 rounded-sm bg-orange-500"></span>
+                    Leave {report.leave}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="h-3 w-3 rounded-sm bg-purple-500"></span>
+                    Holiday {report.holiday}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {/* Calendar Section - Takes 2/3 width */}
+        <Card className="lg:col-span-2">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentDate((d) => subMonths(d, 1))}
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </Button>
+                <div className="text-base font-semibold">
+                  <span className="sm:hidden">{format(currentDate, 'MM-yyyy')}</span>
+                  <span className="hidden sm:inline">{format(currentDate, 'MMMM yyyy')}</span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentDate((d) => addMonths(d, 1))}
+                >
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCurrentDate(new Date())}
+                  className="hidden sm:inline-flex"
+                >
+                  Today
+                </Button>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => navigate(submitTimesheetRoute)}
+                className="bg-indigo-600 font-semibold text-white shadow-lg transition-all duration-200 hover:bg-indigo-700 hover:shadow-xl"
+              >
+                <PlusCircle className="mr-1.5 h-4 w-4" />
+                <span className="sm:hidden">Submit</span>
+                <span className="hidden sm:inline">Submit Timesheet</span>
+              </Button>
+            </div>
+          </CardHeader>
+
+          <CardContent className="space-y-2">
+            {loading ? (
+              <div className="flex items-center justify-center py-10 text-gray-500">
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading timesheet...
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-7 gap-1 text-center text-[9px] font-semibold text-gray-500">
+                  <div>S</div>
+                  <div>M</div>
+                  <div>T</div>
+                  <div>W</div>
+                  <div>T</div>
+                  <div>F</div>
+                  <div>S</div>
+                </div>
+
+                <div className="grid grid-cols-7 gap-1">
+                  {leadingEmptyDays.map((id) => (
+                    <div key={id} className="aspect-square rounded border border-transparent" />
+                  ))}
+
+                  {monthDays.map((date) => {
+                    const dateKey = toDateKey(date);
+                    const state = getDayState(
+                      date,
+                      attendanceByDate,
+                      leaveByDate,
+                      holidaySet,
+                      attendanceData?.working_day_policy || null,
+                      exceptionsMap
+                    );
+                    const leaveInfo = leaveByDate.get(dateKey);
+                    const holidayInfo = attendanceData?.holiday_descriptions?.[dateKey];
+                    const attendanceRecord = attendanceByDate.get(dateKey);
+                    const approvalStatus = attendanceRecord?.approval_status?.toLowerCase();
+                    const isSubmittedOrApproved =
+                      approvalStatus === 'approved' ||
+                      approvalStatus === 'submitted' ||
+                      approvalStatus === 'pending';
+
+                    const isClickable = (() => {
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      const checkDate = new Date(date);
+                      checkDate.setHours(0, 0, 0, 0);
+                      return checkDate <= today && state !== 'holiday' && !isSubmittedOrApproved;
+                    })();
+
+                    return (
+                      <TimesheetDayCell
+                        key={dateKey}
+                        date={date}
+                        dateKey={dateKey}
+                        state={state}
+                        record={attendanceRecord}
+                        leaveInfo={leaveInfo}
+                        holidayInfo={holidayInfo}
+                        isClickable={isClickable}
+                        stateClassName={stateStyles(state)}
+                        onDateClick={handleDateClick}
+                        getHolidayLabels={getHolidayLabels}
+                        getMobileStateBgColor={getMobileStateBgColor}
+                      />
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Insights Panel - Takes 1/3 width */}
+        <div className="space-y-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold">Quick Stats</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Attendance Rate</span>
+                  <span className="font-bold text-green-700">
+                    {`${report.attendancePercentage}%`}
+                  </span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+                  <div
+                    className="h-full bg-green-500 transition-all"
+                    style={{ width: `${report.attendancePercentage}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-lg border border-green-200 bg-green-50 p-3">
+                  <div className="mb-1 flex items-center gap-2">
+                    <div className="flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
+                      <Check className="h-2.5 w-2.5 text-white" />
+                    </div>
+                    <span className="text-[10px] font-medium text-green-700">Present</span>
+                  </div>
+                  <div className="text-xl font-bold text-green-900">{report.present}</div>
+                </div>
+
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+                  <div className="mb-1 flex items-center gap-2">
+                    <div className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500">
+                      <X className="h-2.5 w-2.5 text-white" />
+                    </div>
+                    <span className="text-[10px] font-medium text-red-700">Absent</span>
+                  </div>
+                  <div className="text-xl font-bold text-red-900">{report.absent}</div>
+                </div>
+
+                {report.halfDays > 0 && (
+                  <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3">
+                    <div className="mb-1 flex items-center gap-2">
+                      <div className="relative h-4 w-4">
+                        <svg viewBox="0 0 16 16" className="h-full w-full">
+                          {/* Top half - green */}
+                          <path
+                            d="M 0 8 A 8 8 0 0 1 16 8 Z"
+                            fill="#22c55e"
+                            stroke="white"
+                            strokeWidth="0.5"
+                          />
+                          {/* Bottom half - red */}
+                          <path
+                            d="M 0 8 A 8 8 0 0 0 16 8 Z"
+                            fill="#ef4444"
+                            stroke="white"
+                            strokeWidth="0.5"
+                          />
+                        </svg>
+                      </div>
+                      <span className="text-[10px] font-medium text-yellow-700">Half Days</span>
+                    </div>
+                    <div className="text-xl font-bold text-yellow-900">{report.halfDays}</div>
+                  </div>
+                )}
+
+                <div className="rounded-lg border border-orange-200 bg-orange-50 p-3">
+                  <div className="mb-1 flex items-center gap-2">
+                    <div className="flex h-4 w-4 items-center justify-center rounded-full bg-orange-500">
+                      <X className="h-2.5 w-2.5 text-white" />
+                    </div>
+                    <span className="text-[10px] font-medium text-orange-700">Leaves</span>
+                  </div>
+                  <div className="text-xl font-bold text-orange-900">{report.leave}</div>
+                </div>
+
+                <div className="rounded-lg border border-purple-200 bg-purple-50 p-3">
+                  <div className="mb-1 flex items-center gap-2">
+                    <div className="flex h-4 w-4 items-center justify-center rounded-full bg-purple-500">
+                      <X className="h-2.5 w-2.5 text-white" />
+                    </div>
+                    <span className="text-[10px] font-medium text-purple-700">Holidays</span>
+                  </div>
+                  <div className="text-xl font-bold text-purple-900">{report.holiday}</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold">Legend</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex items-center gap-2 text-xs">
+                <div className="flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
+                  <Check className="h-2.5 w-2.5 text-white" />
+                </div>
+                <span className="text-gray-700">Present</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs">
+                <div className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500">
+                  <X className="h-2.5 w-2.5 text-white" />
+                </div>
+                <span className="text-gray-700">Absent</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs">
+                <div className="flex h-4 w-4 items-center justify-center rounded-full bg-orange-500">
+                  <X className="h-2.5 w-2.5 text-white" />
+                </div>
+                <span className="text-gray-700">Leave (Approved)</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs">
+                <div className="flex h-4 w-4 items-center justify-center rounded-full bg-orange-500">
+                  <X className="h-2.5 w-2.5 text-white" />
+                </div>
+                <span className="text-gray-700">Leave (Pending)</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs">
+                <div className="h-4 w-4 rounded border border-purple-300 bg-purple-100"></div>
+                <span className="text-gray-700">Holiday</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Single Day Attendance Dialog */}
+      {selectedDate && (
+        <SingleDayAttendanceDialog
+          open={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+          date={selectedDate}
+          workingDayPolicy={attendanceData?.working_day_policy || null}
+          holidaySet={holidaySet}
+          exceptionsMap={exceptionsMap}
+          attendanceByDate={attendanceByDate}
+        />
+      )}
+    </div>
+  );
+}

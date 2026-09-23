@@ -6,7 +6,13 @@
 import { Colors } from '@educard/shared';
 import { AlertCircle } from 'lucide-react-native';
 import React from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  StyleSheet,
+} from 'react-native';
 
 import { stateStyles } from '@/styles';
 
@@ -16,7 +22,10 @@ interface LoadingStateProps {
   message?: string;
 }
 
-export function LoadingState({ color, message = 'Loading...' }: LoadingStateProps) {
+export function LoadingState({
+  color,
+  message = 'Loading...',
+}: LoadingStateProps) {
   return (
     <View style={stateStyles.loading}>
       <ActivityIndicator size="large" color={color} />
@@ -32,7 +41,11 @@ interface ErrorStateProps {
   onRetry: () => void;
 }
 
-export function ErrorState({ message = 'Failed to load data', detail, onRetry }: ErrorStateProps) {
+export function ErrorState({
+  message = 'Failed to load data',
+  detail,
+  onRetry,
+}: ErrorStateProps) {
   return (
     <View style={stateStyles.error}>
       <AlertCircle size={48} color={Colors.error[400]} />
@@ -52,12 +65,18 @@ interface EmptyStateProps {
   subMessage?: string;
 }
 
-export function EmptyState({ icon, message = 'No results found', subMessage }: EmptyStateProps) {
+export function EmptyState({
+  icon,
+  message = 'No results found',
+  subMessage,
+}: EmptyStateProps) {
   return (
     <View style={stateStyles.empty}>
       {icon}
       <Text style={stateStyles.emptyText}>{message}</Text>
-      {subMessage ? <Text style={stateStyles.emptySubtext}>{subMessage}</Text> : null}
+      {subMessage ? (
+        <Text style={stateStyles.emptySubtext}>{subMessage}</Text>
+      ) : null}
     </View>
   );
 }
@@ -71,8 +90,12 @@ interface ListFooterProps {
 export function ListFooter({ isLoading, color }: ListFooterProps) {
   if (!isLoading) return null;
   return (
-    <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+    <View style={styles.footer}>
       <ActivityIndicator size="small" color={color} />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  footer: { paddingVertical: 16, alignItems: 'center' },
+});

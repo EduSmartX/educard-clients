@@ -24,17 +24,17 @@ export function FormSection({ title, icon, children }: FormSectionProps) {
 }
 
 const styles = StyleSheet.create({
-  section: { marginBottom: 8 },
+  section: { marginBottom: 10 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 12,
-    paddingBottom: 8,
+    marginBottom: 10,
+    paddingBottom: 6,
     borderBottomWidth: 1,
     borderBottomColor: '#f1f5f9',
   },
   icon: { fontSize: 18 },
-  title: { fontSize: 16, fontWeight: '700', color: '#1e293b' },
+  title: { fontSize: 15, fontWeight: '600', color: '#334155' },
   body: {},
 });

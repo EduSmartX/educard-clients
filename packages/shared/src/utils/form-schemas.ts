@@ -11,7 +11,7 @@ import { GENDER_ENUM, BLOOD_GROUP_ENUM } from "../constants/user-constants";
 /**
  * Email validation regex
  */
-export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const EMAIL_REGEX = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
 
 /**
  * Indian phone number regex (10 digits starting with 6-9)
@@ -22,6 +22,17 @@ export const INDIAN_PHONE_REGEX = /^[6-9]\d{9}$/;
  * Password requirements regex (min 8 chars, 1 uppercase, 1 lowercase, 1 number)
  */
 export const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+
+// Indian Government Standard Patterns
+
+/** CIN: L/U + 5-digit industry + 2-letter state + 4-digit year + 3-letter type + 6 digits */
+export const CIN_REGEX = /^[LU]\d{5}[A-Z]{2}\d{4}[A-Z]{3}\d{6}$/;
+
+/** GSTIN: 2-digit state + PAN (5 letters+4 digits+1 letter) + entity + Z + checksum */
+export const GSTIN_REGEX = /^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
+
+/** Registration number: alphanumeric with slashes/hyphens, 3-50 chars */
+export const REGISTRATION_NUMBER_REGEX = /^[A-Za-z0-9/-]{3,50}$/;
 
 // Reusable Field Schemas
 
@@ -68,14 +79,14 @@ export const strongPasswordSchema = z
 export const phoneSchema = z
   .string()
   .min(1, "Phone number is required")
-  .regex(/^[0-9]{10}$/, "Please enter a valid 10-digit phone number");
+  .regex(/^\d{10}$/, "Please enter a valid 10-digit phone number");
 
 /**
  * Optional phone schema
  */
 export const optionalPhoneSchema = z
   .string()
-  .regex(/^[0-9]{10}$/, "Please enter a valid 10-digit phone number")
+  .regex(/^\d{10}$/, "Please enter a valid 10-digit phone number")
   .optional()
   .or(z.literal(""));
 
@@ -85,26 +96,40 @@ export const optionalPhoneSchema = z
 export const nameSchema = z
   .string()
   .min(1, "Name is required")
-  .min(2, "Name must be at least 2 characters")
   .max(100, "Name must be less than 100 characters");
 
 /**
- * First name schema
+ * First name schema (allows single character)
  */
 export const firstNameSchema = z
   .string()
   .min(1, "First name is required")
-  .min(2, "First name must be at least 2 characters")
   .max(50, "First name must be less than 50 characters");
 
 /**
- * Last name schema
+ * Last name schema (allows single character)
  */
 export const lastNameSchema = z
   .string()
   .min(1, "Last name is required")
-  .min(1, "Last name is required")
   .max(50, "Last name must be less than 50 characters");
+
+/**
+ * Cross-field name refinement: at least one of first/last name must be > 1 character.
+ * Use with .superRefine() on schemas containing first_name + last_name.
+ */
+export const refineNames = (
+  data: { first_name: string; last_name: string },
+  ctx: z.RefinementCtx,
+) => {
+  if (data.first_name.length <= 1 && data.last_name.length <= 1) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Both names cannot be a single character",
+      path: ["last_name"],
+    });
+  }
+};
 
 /**
  * Gender schema
@@ -273,6 +298,7 @@ export const adminInfoSchema = z
     password: strongPasswordSchema,
     password2: z.string().min(1, "Please confirm your password"),
     notification_opt_in: z.boolean().default(true),
+    can_teach_subject: z.boolean().default(true),
   })
   .refine((data) => data.password === data.password2, {
     message: "Passwords don't match",

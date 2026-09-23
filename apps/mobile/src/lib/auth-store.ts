@@ -2,12 +2,28 @@
  * Authentication store using Zustand
  */
 
-import * as SecureStore from 'expo-secure-store';
 import { create } from 'zustand';
 
-import { login as apiLogin, logout as apiLogout, signup as apiSignup, checkAuth } from '@/api/auth';
+import {
+  login as apiLogin,
+  logout as apiLogout,
+  signup as apiSignup,
+  selectProfile as apiSelectProfile,
+  switchProfile as apiSwitchProfile,
+  checkAuth,
+  type LoginResult,
+} from '@/api/auth';
+import { getUserProfile } from '@/api/profile';
 import { STORAGE_KEYS } from '@/constants/config';
-import type { User, LoginCredentials, SignupData, AuthTokens } from '@/types/user';
+import { clearScreenFilters } from '@/hooks/useScreenFilters';
+import { clearQueryCache } from '@/lib/query-client';
+import * as SecureStore from '@/lib/secure-store';
+import type {
+  User,
+  LoginCredentials,
+  SignupData,
+  AuthTokens,
+} from '@/types/user';
 
 interface AuthState {
   user: User | null;
@@ -20,7 +36,12 @@ interface AuthState {
 
 interface AuthActions {
   initialize: () => Promise<void>;
-  login: (credentials: LoginCredentials) => Promise<void>;
+  login: (credentials: LoginCredentials) => Promise<LoginResult>;
+  selectProfile: (
+    selectionToken: string,
+    userPublicId: string,
+  ) => Promise<void>;
+  switchProfile: (userPublicId: string) => Promise<void>;
   signup: (data: SignupData) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
@@ -44,8 +65,12 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
       set({ isLoading: true, error: null });
 
       const user = await checkAuth();
-      const accessToken = await SecureStore.getItemAsync(STORAGE_KEYS.ACCESS_TOKEN);
-      const refreshToken = await SecureStore.getItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
+      const accessToken = await SecureStore.getItemAsync(
+        STORAGE_KEYS.ACCESS_TOKEN,
+      );
+      const refreshToken = await SecureStore.getItemAsync(
+        STORAGE_KEYS.REFRESH_TOKEN,
+      );
 
       if (user && accessToken && refreshToken) {
         set({
@@ -55,6 +80,27 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
           isLoading: false,
           isInitialized: true,
         });
+
+        // Best-effort refresh so a stale verification banner self-heals on app load.
+        getUserProfile()
+          .then(profile => {
+            set(state =>
+              state.user
+                ? {
+                    user: {
+                      ...state.user,
+                      email: profile.email,
+                      phone: profile.phone ?? state.user.phone,
+                      is_email_verified: profile.is_email_verified,
+                      is_mobile_verified: profile.is_mobile_verified,
+                    },
+                  }
+                : {},
+            );
+          })
+          .catch(() => {
+            // Keep the cached user if the refresh fails.
+          });
       } else {
         set({
           user: null,
@@ -81,7 +127,48 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const { user, tokens } = await apiLogin(credentials);
+      const result = await apiLogin(credentials);
+
+      if (result.requiresProfileSelection) {
+        // Do not authenticate yet - caller navigates to the profile picker.
+        set({ isLoading: false });
+        return result;
+      }
+
+      // Drop any cached data from a previous session before the new user loads.
+      clearQueryCache();
+      clearScreenFilters();
+
+      set({
+        user: result.user,
+        tokens: result.tokens,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null,
+      });
+      return result;
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Login failed',
+      });
+      throw error;
+    }
+  },
+
+  // Complete a shared-email login by picking a specific student profile
+  selectProfile: async (selectionToken: string, userPublicId: string) => {
+    try {
+      set({ isLoading: true, error: null });
+
+      const { user, tokens } = await apiSelectProfile({
+        selection_token: selectionToken,
+        user_public_id: userPublicId,
+      });
+
+      // Drop any cached data from a previous session before the new profile loads.
+      clearQueryCache();
+      clearScreenFilters();
 
       set({
         user,
@@ -93,10 +180,29 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
     } catch (error) {
       set({
         isLoading: false,
-        error: error instanceof Error ? error.message : 'Login failed',
+        error:
+          error instanceof Error ? error.message : 'Unable to select profile',
       });
       throw error;
     }
+  },
+
+  // Switch an authenticated student session to another linked profile
+  switchProfile: async (userPublicId: string) => {
+    const { user, tokens } = await apiSwitchProfile({
+      user_public_id: userPublicId,
+    });
+
+    // Reset cached data so the new profile starts clean (mirrors web's full reload).
+    clearQueryCache();
+    clearScreenFilters();
+
+    set({
+      user,
+      tokens,
+      isAuthenticated: true,
+      error: null,
+    });
   },
 
   // Signup
@@ -124,27 +230,21 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
 
   // Logout
   logout: async () => {
+    clearQueryCache();
+    clearScreenFilters();
+
+    set({
+      user: null,
+      tokens: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
+    });
+
     try {
-      set({ isLoading: true });
-
       await apiLogout();
-
-      set({
-        user: null,
-        tokens: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: null,
-      });
-    } catch (_error) {
-      // Still clear local state even if API call fails
-      set({
-        user: null,
-        tokens: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: null,
-      });
+    } catch {
+      // Ignore logout API errors - local state is already cleared
     }
   },
 
@@ -161,6 +261,19 @@ export const useAuthStore = create<AuthStore>((set, _get) => ({
 
 // Selectors
 export const selectUser = (state: AuthStore) => state.user;
-export const selectIsAuthenticated = (state: AuthStore) => state.isAuthenticated;
+export const selectIsAuthenticated = (state: AuthStore) =>
+  state.isAuthenticated;
 export const selectIsLoading = (state: AuthStore) => state.isLoading;
 export const selectAuthError = (state: AuthStore) => state.error;
+
+// Single source of truth for per-user cleanup: whenever the authenticated
+// user's identity changes (login, logout, profile switch, signup), drop cached
+// screen filters and queries so nothing leaks across accounts.
+useAuthStore.subscribe((state, prevState) => {
+  const nextUserId = state.user?.public_id ?? null;
+  const prevUserId = prevState.user?.public_id ?? null;
+  if (nextUserId !== prevUserId) {
+    clearScreenFilters();
+    clearQueryCache();
+  }
+});

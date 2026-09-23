@@ -1,9 +1,8 @@
 /**
  * Profile API endpoints
- * Handles profile data and photo management
  */
 
-import { API_ENDPOINTS } from '@/constants';
+import { API_ENDPOINTS } from '@educard/shared';
 
 import { apiClient } from './client';
 
@@ -41,23 +40,21 @@ export interface UserProfile {
   last_name: string;
   full_name: string;
   phone?: string;
+  is_email_verified?: boolean;
+  is_mobile_verified?: boolean;
   gender?: string;
   blood_group?: string;
   date_of_birth?: string;
   role: string;
   profile_image?: string;
   address?: Address;
-  organization?: {
-    id: string;
-    name: string;
-    code: string;
-  };
   organization_role?: {
     id: number;
     code: string;
     name: string;
   };
   notification_opt_in?: boolean;
+  teacher_public_id?: string;
 }
 
 export interface UpdateProfilePayload {
@@ -91,7 +88,7 @@ interface ApiResponse<T> {
 export async function getMyProfilePhoto(): Promise<ProfileImage | null> {
   try {
     const response = await apiClient.get<ApiResponse<ProfileImage | null>>(
-      API_ENDPOINTS.ATTACHMENTS.MY_PHOTO
+      API_ENDPOINTS.ATTACHMENTS.MY_PHOTO,
     );
     return response.data.data;
   } catch {
@@ -103,14 +100,20 @@ export async function getMyProfilePhoto(): Promise<ProfileImage | null> {
  * Get current user's full profile
  */
 export async function getUserProfile(): Promise<UserProfile> {
-  const response = await apiClient.get<ApiResponse<UserProfile>>('/users/profile/me/');
+  const response =
+    await apiClient.get<ApiResponse<UserProfile>>('/users/profile/me/');
   return response.data.data;
 }
 
 /**
  * Update user profile information
  */
-export async function updateProfile(payload: UpdateProfilePayload): Promise<UserProfile> {
-  const response = await apiClient.patch<ApiResponse<UserProfile>>('/users/profile/me/', payload);
+export async function updateProfile(
+  payload: UpdateProfilePayload,
+): Promise<UserProfile> {
+  const response = await apiClient.patch<ApiResponse<UserProfile>>(
+    '/users/profile/me/',
+    payload,
+  );
   return response.data.data;
 }

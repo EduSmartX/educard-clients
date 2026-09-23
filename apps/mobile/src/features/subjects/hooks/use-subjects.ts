@@ -4,9 +4,20 @@
 
 import { QueryKeys } from '@educard/shared';
 import type { Subject } from '@educard/shared';
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useQuery,
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 import { DEFAULT_PAGE_SIZE } from '@/api/client';
+import {
+  handleMutationError,
+  type MutationOptions,
+} from '@/lib/mutation-utils';
+import { useCriticalOperation } from '@/providers/critical-operation-context';
+import { showToast } from '@/utils/toast';
 
 import {
   getSubjects,
@@ -22,9 +33,9 @@ import {
 export const subjectKeys = {
   all: QueryKeys.SUBJECTS.ALL,
   lists: () => QueryKeys.SUBJECTS.LISTS(),
-  list: (params?: SubjectQueryParams) =>
-    QueryKeys.SUBJECTS.LIST(params as Record<string, unknown> | undefined),
-  infinite: (params?: Omit<SubjectQueryParams, 'page'>) => QueryKeys.SUBJECTS.INFINITE(params),
+  list: (params?: SubjectQueryParams) => QueryKeys.SUBJECTS.LIST(params),
+  infinite: (params?: Omit<SubjectQueryParams, 'page'>) =>
+    QueryKeys.SUBJECTS.INFINITE(params),
   byClass: (classId: string) => QueryKeys.SUBJECTS.BY_CLASS(classId),
   details: () => QueryKeys.SUBJECTS.DETAILS(),
   detail: (id: string) => QueryKeys.SUBJECTS.DETAIL(id),
@@ -42,14 +53,14 @@ export function useSubjects(params?: Omit<SubjectQueryParams, 'page'>) {
         page_size: pageSize,
       }),
     initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: lastPage => {
       if (lastPage.pagination.has_next) {
         return lastPage.pagination.current_page + 1;
       }
       return undefined;
     },
-    select: (data) => ({
-      subjects: data.pages.flatMap((page) => page.data),
+    select: data => ({
+      subjects: data.pages.flatMap(page => page.data),
       totalCount: data.pages[0]?.pagination.count ?? 0,
       hasMore: data.pages[data.pages.length - 1]?.pagination.has_next ?? false,
     }),
@@ -69,51 +80,95 @@ export function useSubjectsByClass(classId: string) {
 }
 
 export function useSubjectDetail(publicId: string, isDeleted?: boolean) {
-  return useQuery({
+  return useQuery<Subject>({
     queryKey: [...subjectKeys.detail(publicId), isDeleted],
-    queryFn: () => getSubjectById(publicId, isDeleted),
+    queryFn: async () => {
+      const response = await getSubjectById(publicId, isDeleted);
+      return response.data;
+    },
     enabled: !!publicId,
   });
 }
 
-export function useCreateSubject() {
+export function useCreateSubject(options?: MutationOptions) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ data, forceCreate }: { data: Partial<Subject>; forceCreate?: boolean }) =>
-      createSubject(data, forceCreate),
-    onSuccess: () => {
+    mutationFn: ({
+      data,
+      forceCreate,
+    }: {
+      data: Partial<Subject>;
+      forceCreate?: boolean;
+    }) => createSubject(data, forceCreate),
+    onSuccess: response => {
+      showToast('success', response.message || 'Subject created successfully');
       void queryClient.invalidateQueries({ queryKey: subjectKeys.all });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to create subject', options?.onError);
     },
   });
 }
 
-export function useUpdateSubject() {
+export function useUpdateSubject(options?: MutationOptions) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ publicId, data }: { publicId: string; data: Partial<Subject> }) =>
-      updateSubject(publicId, data),
-    onSuccess: () => {
+    mutationFn: ({
+      publicId,
+      data,
+    }: {
+      publicId: string;
+      data: Partial<Subject>;
+    }) => updateSubject(publicId, data),
+    onSuccess: response => {
+      showToast('success', response.message || 'Subject updated successfully');
       void queryClient.invalidateQueries({ queryKey: subjectKeys.all });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to update subject', options?.onError);
     },
   });
 }
 
-export function useDeleteSubject() {
+export function useDeleteSubject(options?: MutationOptions) {
   const queryClient = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: (publicId: string) => deleteSubject(publicId),
-    onSuccess: () => {
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Deleting subject',
+        description: 'Removing the subject and related records...',
+      });
+    },
+    onSuccess: response => {
+      showToast('success', response?.message || 'Subject deleted successfully');
       void queryClient.invalidateQueries({ queryKey: subjectKeys.lists() });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to delete subject', options?.onError);
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 }
 
-export function useRestoreSubject() {
+export function useRestoreSubject(options?: MutationOptions) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (publicId: string) => restoreSubject(publicId),
-    onSuccess: () => {
+    onSuccess: response => {
+      showToast('success', response.message || 'Subject restored successfully');
       void queryClient.invalidateQueries({ queryKey: subjectKeys.all });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to restore subject', options?.onError);
     },
   });
 }

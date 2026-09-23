@@ -30,4 +30,6 @@ export {
   useDepartments,
   useSupervisors,
   useLeaveTypes,
+  useCurrentAcademicYear,
+  useAcademicYearBounds,
 } from './hooks/use-master-data';

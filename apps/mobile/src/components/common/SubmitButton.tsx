@@ -7,7 +7,6 @@
  *   <SubmitButton label="Delete" variant="danger" onPress={handleDelete} />
  */
 
-import { Colors } from '@educard/shared';
 import { LucideIcon } from 'lucide-react-native';
 import React from 'react';
 import {
@@ -54,7 +53,7 @@ export function SubmitButton({
   style,
   color,
 }: SubmitButtonProps) {
-  const buttonColor = color || VARIANT_COLORS[variant];
+  const buttonColor = color ?? VARIANT_COLORS[variant];
   const isDisabled = disabled || isLoading;
 
   return (
@@ -142,7 +141,12 @@ export function ButtonRow({
 }) {
   return (
     <View style={styles.buttonRow}>
-      <CancelButton label={cancelLabel} onPress={onCancel} fullWidth={false} style={{ flex: 1 }} />
+      <CancelButton
+        label={cancelLabel}
+        onPress={onCancel}
+        fullWidth={false}
+        style={styles.flex1}
+      />
       <SubmitButton
         label={submitLabel}
         onPress={onSubmit}
@@ -151,7 +155,7 @@ export function ButtonRow({
         icon={submitIcon}
         fullWidth={false}
         color={submitColor}
-        style={{ flex: 2 }}
+        style={styles.flex2}
       />
     </View>
   );
@@ -205,4 +209,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
   },
+  flex1: { flex: 1 },
+  flex2: { flex: 2 },
 });

@@ -19,7 +19,7 @@ const DEFAULT_LEAVE_COLOR: LeaveTypeColorScheme = { color: '#7c3aed', bg: '#ede9
 function matchLeaveType(name: string): LeaveTypeColorScheme {
   const n = name.toLowerCase();
   for (const [key, scheme] of Object.entries(LEAVE_TYPE_COLOR_MAP)) {
-    if (n.includes(key)) return scheme;
+    if (n.includes(key)) {return scheme;}
   }
   return DEFAULT_LEAVE_COLOR;
 }

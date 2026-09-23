@@ -80,9 +80,12 @@ export const API_ENDPOINTS = {
     CLASS_LEVEL: {
       LIST: (classId: string) => `/students/classes/${classId}/students/`,
       CREATE: (classId: string) => `/students/classes/${classId}/students/`,
-      DETAIL: (classId: string, studentId: string) => `/students/classes/${classId}/students/${studentId}/`,
-      DELETE: (classId: string, studentId: string) => `/students/classes/${classId}/students/${studentId}/`,
-      ACTIVATE: (classId: string, studentId: string) => `/students/classes/${classId}/students/${studentId}/activate/`,
+      DETAIL: (classId: string, studentId: string) =>
+        `/students/classes/${classId}/students/${studentId}/`,
+      DELETE: (classId: string, studentId: string) =>
+        `/students/classes/${classId}/students/${studentId}/`,
+      ACTIVATE: (classId: string, studentId: string) =>
+        `/students/classes/${classId}/students/${studentId}/activate/`,
     },
 
     BULK_TEMPLATE: "/students/bulk/template/",
@@ -90,6 +93,50 @@ export const API_ENDPOINTS = {
     BULK_EXPORT: "/students/bulk/export/",
 
     ASSIGN_PARENT: (id: string) => `/students/${id}/assign-parent/`,
+  },
+
+  // Student Portal - self-service endpoints for the authenticated student user
+  // Each module mounts its own `student/...` sub-path under its own app prefix
+  // (there is no single unified `/student/` namespace on the backend).
+  STUDENT_PORTAL: {
+    DASHBOARD: "/students/student/dashboard/",
+    ANNOUNCEMENTS: {
+      LIST: "/notifications/student/announcements/",
+      DETAIL: (publicId: string) =>
+        `/notifications/student/announcements/${publicId}/`,
+    },
+    ATTENDANCE: {
+      SUMMARY: "/attendance/student/summary/",
+      CALENDAR: "/attendance/student/calendar/",
+      YEARLY_REPORT: "/attendance/student/yearly-report/",
+    },
+    EXAMS: {
+      SESSIONS: "/exams/student/sessions/",
+      SESSION_DETAIL: (publicId: string) =>
+        `/exams/student/sessions/${publicId}/`,
+    },
+    FEE: {
+      SUMMARY: "/fee/student/summary/",
+      PAYMENTS: "/fee/student/payments/",
+      COMPONENTS: "/fee/student/components/",
+      COMPONENT_OPT_OUT: (publicId: string) =>
+        `/fee/student/components/${publicId}/opt-out/`,
+      COMPONENT_OPT_IN: (publicId: string) =>
+        `/fee/student/components/${publicId}/opt-in/`,
+    },
+    TIMETABLE: "/timetable/student/",
+    HOMEWORK: {
+      LIST: "/homework/student/",
+      DETAIL: (publicId: string) => `/homework/student/${publicId}/`,
+      SUBMIT: (publicId: string) => `/homework/student/${publicId}/submit/`,
+    },
+    LEAVE: {
+      ENABLED: "/leave/student/enabled/",
+      BALANCE: "/leave/student/balance/",
+      REQUESTS: "/leave/student/requests/",
+      REQUEST_DETAIL: (publicId: string) =>
+        `/leave/student/requests/${publicId}/`,
+    },
   },
 
   TEACHERS: {
@@ -314,6 +361,68 @@ export const API_ENDPOINTS = {
       DETAIL: (id: string) => `/timetable/entries/${id}/`,
       UPDATE: (id: string) => `/timetable/entries/${id}/`,
       DELETE: (id: string) => `/timetable/entries/${id}/`,
+    },
+  },
+
+  // Fee Management
+  FEE: {
+    // Admin endpoints
+    ADMIN: {
+      STRUCTURES: {
+        LIST: "/fee/admin/structures/",
+        CREATE: "/fee/admin/structures/",
+        DETAIL: (id: string) => `/fee/admin/structures/${id}/`,
+        UPDATE: (id: string) => `/fee/admin/structures/${id}/`,
+        DELETE: (id: string) => `/fee/admin/structures/${id}/`,
+        CLASS_CHANGE_IMPACT: (id: string) =>
+          `/fee/admin/structures/${id}/class-change-impact/`,
+      },
+      STUDENT_FEES: {
+        LIST: "/fee/admin/student-fees/",
+        CREATE: "/fee/admin/student-fees/",
+        DETAIL: (id: string) => `/fee/admin/student-fees/${id}/`,
+        UPDATE: (id: string) => `/fee/admin/student-fees/${id}/`,
+        DELETE: (id: string) => `/fee/admin/student-fees/${id}/`,
+        ELIGIBLE_STUDENTS: "/fee/admin/student-fees/eligible-students/",
+        PAYMENT_STATUS: (id: string) =>
+          `/fee/admin/student-fees/${id}/payment_status/`,
+        UPDATE_COMPONENTS: (id: string) =>
+          `/fee/admin/student-fees/${id}/update-components/`,
+        REVIEW_COMPONENT_REQUESTS: (id: string) =>
+          `/fee/admin/student-fees/${id}/review-component-requests/`,
+      },
+      PAYMENTS: {
+        LIST: "/fee/admin/payments/",
+        CREATE: "/fee/admin/payments/",
+        DETAIL: (id: string) => `/fee/admin/payments/${id}/`,
+      },
+      DASHBOARD: {
+        LIST: "/fee/admin/dashboard/",
+        DEFAULTERS: "/fee/admin/dashboard/defaulters/",
+      },
+      REMINDERS: {
+        CREATE: "/fee/admin/reminders/",
+        BULK: "/fee/admin/reminders/bulk/",
+      },
+    },
+    // Parent/Student endpoints (read-only)
+    PARENT: {
+      LIST: "/fee/parent/fees/",
+      DETAIL: (id: string) => `/fee/parent/fees/${id}/`,
+      PAYMENTS: (id: string) => `/fee/parent/fees/${id}/payments/`,
+    },
+  },
+
+  FEEDBACK: {
+    LIST: "/feedback/entries/",
+    CREATE: "/feedback/entries/",
+    DETAIL: (id: string) => `/feedback/entries/${id}/`,
+
+    REVIEWS: {
+      LIST: "/feedback/reviews/",
+      CREATE: "/feedback/reviews/",
+      ME: "/feedback/reviews/me/",
+      PUBLIC: "/feedback/reviews/public/",
     },
   },
 } as const;

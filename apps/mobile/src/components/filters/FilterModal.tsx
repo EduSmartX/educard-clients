@@ -3,9 +3,8 @@
  * Supports select chips, toggle switches with vibrant colors
  */
 
-import { LinearGradient } from 'expo-linear-gradient';
 import { X, RotateCcw, SlidersHorizontal } from 'lucide-react-native';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -15,11 +14,13 @@ import {
   StyleSheet,
   Pressable,
   Switch,
-  Dimensions,
+  type TextStyle,
+  type ViewStyle,
 } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+import { SearchableSelect } from '@/components/ui';
+import { FormDatePicker } from '@/components/forms/FormDatePicker';
+import { LinearGradient } from '@/lib/linear-gradient';
 
 // ── Color palette for chips ──────────────────────────────────────
 const CHIP_COLORS = [
@@ -32,6 +33,9 @@ const CHIP_COLORS = [
   { bg: '#fce7f3', active: '#db2777', text: '#be185d', activeBg: '#db2777' }, // pink
 ];
 
+// Switch a select from chips to a searchable dropdown past this many options.
+const SEARCHABLE_THRESHOLD = 5;
+
 // ── Types ────────────────────────────────────────────────────────
 export interface FilterOption {
   value: string;
@@ -42,17 +46,18 @@ export interface FilterOption {
 export interface FilterField {
   name: string;
   label: string;
-  type: 'select' | 'toggle';
+  type: 'select' | 'toggle' | 'date';
   options?: FilterOption[];
   icon?: string; // emoji for section header
+  placeholder?: string;
 }
 
 interface FilterModalProps {
   visible: boolean;
   onClose: () => void;
-  onApply: (filters: Record<string, any>) => void;
+  onApply: (filters: Record<string, unknown>) => void;
   fields: FilterField[];
-  currentFilters: Record<string, any>;
+  currentFilters: Record<string, unknown>;
   title?: string;
 }
 
@@ -64,28 +69,33 @@ export function FilterModal({
   currentFilters,
   title = 'Filters',
 }: FilterModalProps) {
-  const [localFilters, setLocalFilters] = useState<Record<string, any>>({});
+  const [localFilters, setLocalFilters] = useState<Record<string, unknown>>({});
+  const wasVisible = useRef(false);
 
+  // Seed local state only when the sheet opens; callers may pass a new
+  // `currentFilters` reference every render, which must not wipe selections.
   useEffect(() => {
-    if (visible) {
+    if (visible && !wasVisible.current) {
       setLocalFilters({ ...currentFilters });
     }
+    wasVisible.current = visible;
   }, [visible, currentFilters]);
 
   const activeCount = useMemo(() => {
-    return Object.values(localFilters).filter((v) => v !== '' && v !== undefined && v !== false)
-      .length;
+    return Object.values(localFilters).filter(
+      v => v !== '' && v !== undefined && v !== false,
+    ).length;
   }, [localFilters]);
 
   const handleSelectOption = (fieldName: string, value: string) => {
-    setLocalFilters((prev) => ({
+    setLocalFilters(prev => ({
       ...prev,
       [fieldName]: prev[fieldName] === value ? '' : value,
     }));
   };
 
   const handleToggle = (fieldName: string) => {
-    setLocalFilters((prev) => ({
+    setLocalFilters(prev => ({
       ...prev,
       [fieldName]: !prev[fieldName],
     }));
@@ -93,10 +103,11 @@ export function FilterModal({
 
   const handleReset = () => {
     setLocalFilters({});
+    onApply({});
   };
 
   const handleApply = () => {
-    const cleaned: Record<string, any> = {};
+    const cleaned: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(localFilters)) {
       if (v !== '' && v !== undefined && v !== false) {
         cleaned[k] = v;
@@ -106,10 +117,16 @@ export function FilterModal({
     onClose();
   };
 
-  const getChipColor = (sectionIdx: number) => CHIP_COLORS[sectionIdx % CHIP_COLORS.length];
+  const getChipColor = (sectionIdx: number) =>
+    CHIP_COLORS[sectionIdx % CHIP_COLORS.length];
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent
+      onRequestClose={onClose}
+    >
       <Pressable style={styles.backdrop} onPress={onClose} />
       <View style={styles.sheet}>
         {/* Drag handle */}
@@ -144,11 +161,7 @@ export function FilterModal({
 
             if (field.type === 'toggle') {
               return (
-                <Animated.View
-                  key={field.name}
-                  entering={FadeInDown.delay(sectionIdx * 80)}
-                  style={styles.toggleSection}
-                >
+                <View key={field.name} style={styles.toggleSection}>
                   <Text style={styles.toggleLabel}>
                     {field.icon ? `${field.icon}  ` : ''}
                     {field.label}
@@ -157,58 +170,89 @@ export function FilterModal({
                     value={!!localFilters[field.name]}
                     onValueChange={() => handleToggle(field.name)}
                     trackColor={{ false: '#e2e8f0', true: '#c4b5fd' }}
-                    thumbColor={localFilters[field.name] ? '#7c3aed' : '#94a3b8'}
+                    thumbColor={
+                      localFilters[field.name] ? '#7c3aed' : '#94a3b8'
+                    }
                   />
-                </Animated.View>
+                </View>
               );
             }
 
-            // select type
-            const selectOptions = (field.options || []).filter((o) => o.value !== '');
+            if (field.type === 'date') {
+              return (
+                <View key={field.name} style={styles.section}>
+                  <FormDatePicker
+                    label={`${field.icon ? `${field.icon}  ` : ''}${field.label}`}
+                    value={(localFilters[field.name] as string) ?? ''}
+                    onChange={v =>
+                      setLocalFilters(prev => ({ ...prev, [field.name]: v }))
+                    }
+                    placeholder={field.placeholder}
+                  />
+                </View>
+              );
+            }
 
+            // select type — chips for short lists, searchable dropdown when long
+            const selectOptions = (field.options ?? []).filter(
+              o => o.value !== '',
+            );
             return (
-              <Animated.View
-                key={field.name}
-                entering={FadeInDown.delay(sectionIdx * 80)}
-                style={styles.section}
-              >
+              <View key={field.name} style={styles.section}>
                 <Text style={styles.sectionTitle}>
                   {field.icon ? `${field.icon}  ` : ''}
                   {field.label}
                 </Text>
-                <View style={styles.chipRow}>
-                  {selectOptions.map((opt) => {
-                    const isActive = localFilters[field.name] === opt.value;
-                    return (
-                      <TouchableOpacity
-                        key={opt.value}
-                        activeOpacity={0.7}
-                        onPress={() => handleSelectOption(field.name, opt.value)}
-                        style={[
-                          styles.chip,
-                          {
-                            backgroundColor: isActive ? colors.activeBg : colors.bg,
-                            borderColor: isActive ? colors.active : 'transparent',
-                          },
-                        ]}
-                      >
-                        {opt.icon && <Text style={styles.chipIcon}>{opt.icon}</Text>}
-                        <Text
-                          style={[
-                            styles.chipText,
-                            {
-                              color: isActive ? '#fff' : colors.text,
-                              fontWeight: isActive ? '700' : '500',
-                            },
-                          ]}
+                {selectOptions.length > SEARCHABLE_THRESHOLD ? (
+                  <SearchableSelect
+                    value={(localFilters[field.name] as string) ?? ''}
+                    onValueChange={v =>
+                      setLocalFilters(prev => ({ ...prev, [field.name]: v }))
+                    }
+                    options={[
+                      { value: '', label: `All ${field.label}` },
+                      ...selectOptions.map(o => ({
+                        value: o.value,
+                        label: o.label,
+                      })),
+                    ]}
+                    placeholder={`All ${field.label}`}
+                    searchPlaceholder={`Search ${field.label.toLowerCase()}...`}
+                    emptyText={`No ${field.label.toLowerCase()} found`}
+                  />
+                ) : (
+                  <View style={styles.chipRow}>
+                    {selectOptions.map(opt => {
+                      const isActive = localFilters[field.name] === opt.value;
+                      const chipStyle: ViewStyle = {
+                        backgroundColor: isActive ? colors.activeBg : colors.bg,
+                        borderColor: isActive ? colors.active : 'transparent',
+                      };
+                      const chipTextStyle: TextStyle = {
+                        color: isActive ? '#fff' : colors.text,
+                        fontWeight: isActive ? '700' : '500',
+                      };
+                      return (
+                        <TouchableOpacity
+                          key={opt.value}
+                          activeOpacity={0.7}
+                          onPress={() =>
+                            handleSelectOption(field.name, opt.value)
+                          }
+                          style={[styles.chip, chipStyle]}
                         >
-                          {opt.label}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </Animated.View>
+                          {opt.icon && (
+                            <Text style={styles.chipIcon}>{opt.icon}</Text>
+                          )}
+                          <Text style={[styles.chipText, chipTextStyle]}>
+                            {opt.label}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                )}
+              </View>
             );
           })}
         </ScrollView>

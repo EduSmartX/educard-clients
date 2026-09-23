@@ -32,17 +32,21 @@ export const makeDeletedToggle = (entity: string): FilterField => ({
 
 const GENDER_LABELS: Record<string, string> = { M: 'Male', F: 'Female', O: 'Other' };
 
-export type FilterLabel = { key: string; label: string; value: any };
+export type FilterLabel = { key: string; label: string; value: unknown };
 
 /** Resolve gender label from a filter value. `key` is the backend param name. */
-export function getGenderLabel(filters: Record<string, any>, key = 'gender'): FilterLabel | null {
-  const val = filters[key];
+export function getGenderLabel(
+  filters: Record<string, unknown>,
+  key = 'gender'
+): FilterLabel | null {
+  const val = filters[key] as string | undefined;
   if (!val) return null;
-  return { key, label: GENDER_LABELS[val] || val, value: val };
+  const label = GENDER_LABELS[val];
+  return { key, label: label ?? val, value: val };
 }
 
 /** Resolve is_deleted label */
-export function getDeletedLabel(filters: Record<string, any>): FilterLabel | null {
+export function getDeletedLabel(filters: Record<string, unknown>): FilterLabel | null {
   if (!filters.is_deleted) return null;
   return { key: 'is_deleted', label: 'Deleted', value: true };
 }

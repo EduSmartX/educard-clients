@@ -12,7 +12,6 @@ import type {
   AddressTypeValue,
   GenderValue,
   BloodGroupValue,
-  UserRoleValue,
 } from "../constants";
 
 // API Response Types
@@ -42,6 +41,14 @@ export interface ApiDetailResponse<T> {
   message: string;
   code: number;
   data: T;
+}
+
+/** Response for operations that only need the message (update, delete, etc.) */
+export interface ApiMessageResponse {
+  success: boolean;
+  message: string;
+  code?: number;
+  data?: unknown;
 }
 
 export interface ApiErrorResponse {

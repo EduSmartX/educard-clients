@@ -1,0 +1,279 @@
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import { toast } from 'sonner';
+import { ErrorMessages } from '@/constants';
+import { tokenManager } from '@/lib/token-manager';
+
+// API Base URL from environment
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  'https://educard-backend-api-272236662775.asia-south1.run.app/api';
+
+// Define proper types for API error responses
+interface ApiErrorResponse {
+  success?: boolean;
+  message?: string;
+  detail?: string;
+  non_field_errors?: string[];
+  errors?: Array<{ email: string; error: string }> | Record<string, string | string[]>;
+  data?: unknown;
+  code?: number;
+  [key: string]: unknown;
+}
+
+// Create axios instance
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 90000,
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request interceptor - Add auth token from memory
+apiClient.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    const token = tokenManager.getAccessToken();
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error: AxiosError) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor - Handle errors
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }; // NOSONAR
+
+    // Skip token refresh for login/auth endpoints - let the form handle the error
+    const isAuthEndpoint =
+      originalRequest?.url?.includes('/auth/login') ||
+      originalRequest?.url?.includes('/auth/register') ||
+      originalRequest?.url?.includes('/auth/otp/');
+
+    // Handle 401 Unauthorized - Token expired (but not for auth endpoints)
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
+      originalRequest._retry = true;
+
+      try {
+        // Refresh uses HttpOnly cookie automatically (withCredentials)
+        const response = await axios.post(
+          `${API_BASE_URL}/auth/token/refresh/`,
+          {},
+          { withCredentials: true }
+        );
+
+        const { access } = response.data;
+        tokenManager.setAccessToken(access);
+
+        if (originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${access}`;
+        }
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+        // Refresh token failed, logout user completely
+        tokenManager.clear();
+        localStorage.removeItem('user');
+        localStorage.removeItem('organization');
+
+        // Broadcast logout to all tabs
+        localStorage.setItem('logout-event', Date.now().toString());
+        localStorage.removeItem('logout-event');
+
+        window.location.href = '/auth/login';
+        throw refreshError;
+      }
+    }
+
+    // Handle other errors
+    handleApiError(error);
+    throw error;
+  }
+);
+
+/**
+ * Determine if the error should be silently handled (no toast shown)
+ */
+function shouldSkipToast(error: AxiosError): boolean {
+  if (!error.response) {
+    return false;
+  }
+
+  const status = error.response.status;
+  const data = error.response.data as ApiErrorResponse;
+
+  // OTP validation errors - handled by form
+  if (
+    error.config?.url?.includes('/otp/') &&
+    status === 400 &&
+    data.detail &&
+    data.errors &&
+    Array.isArray(data.errors)
+  ) {
+    return true;
+  }
+
+  // Login errors - handled by login form
+  if (error.config?.url?.includes('/auth/login') && status === 401) {
+    return true;
+  }
+
+  // Field-level validation errors - handled by form fields
+  if (status === 400 && data.errors && typeof data.errors === 'object') {
+    return true;
+  }
+
+  // Standard backend error responses - handled by mutation onError handlers
+  if (
+    status === 400 &&
+    data.success === false &&
+    typeof data.message === 'string' &&
+    data.message.length > 0
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Get toast message for a specific HTTP status code
+ */
+function getToastMessageForStatus(status: number, data: ApiErrorResponse): string | null {
+  switch (status) {
+    case 400:
+      if (data.message && typeof data.message === 'string') {
+        return data.message;
+      }
+      if (data.detail) {
+        return data.detail;
+      }
+      if (data.non_field_errors) {
+        return data.non_field_errors[0];
+      }
+      return ErrorMessages.INVALID_REQUEST;
+    case 401:
+      return null; // Handled by auth interceptor
+    case 403:
+      return ErrorMessages.FORBIDDEN_ACTION;
+    case 404:
+      return ErrorMessages.NOT_FOUND;
+    case 409:
+      return data.message || data.detail || ErrorMessages.CONFLICT;
+    case 422:
+      return ErrorMessages.VALIDATION_ERROR;
+    case 429:
+      return ErrorMessages.TOO_MANY_REQUESTS;
+    case 500:
+      return ErrorMessages.SERVER_ERROR;
+    case 503:
+      return ErrorMessages.SERVICE_UNAVAILABLE;
+    default:
+      return data.message || data.detail || ErrorMessages.GENERIC_RETRY;
+  }
+}
+
+/**
+ * Handle API errors and show toast notifications
+ */
+function handleApiError(error: AxiosError): void {
+  if (error.response) {
+    if (shouldSkipToast(error)) {
+      return;
+    }
+
+    const message = getToastMessageForStatus(
+      error.response.status,
+      error.response.data as ApiErrorResponse
+    );
+    if (message) {
+      toast.error(message);
+    }
+  } else if (error.request) {
+    toast.error(ErrorMessages.NO_SERVER_RESPONSE);
+  } else {
+    toast.error(ErrorMessages.GENERIC_RETRY);
+  }
+}
+
+/**
+ * Parse error response to get field-specific errors
+ */
+export function parseApiErrors(error: AxiosError): Record<string, string> {
+  const errors: Record<string, string> = {};
+
+  if (error.response?.data) {
+    const data = error.response.data as ApiErrorResponse;
+
+    // Django REST Framework error format
+    Object.keys(data).forEach((key) => {
+      const value = data[key];
+      if (Array.isArray(value)) {
+        errors[key] = value[0];
+      } else if (typeof value === 'string') {
+        errors[key] = value;
+      }
+    });
+  }
+
+  return errors;
+}
+
+/**
+ * Parse OTP validation errors from backend
+ * Handles the specific format: { detail: string, errors: Array<{ email: string, error: string }> }
+ */
+export interface OtpValidationError {
+  email: string;
+  error: string;
+}
+
+export function parseOtpErrors(error: AxiosError): {
+  detail: string | null;
+  errors: OtpValidationError[];
+} {
+  if (error.response?.data) {
+    const data = error.response.data as ApiErrorResponse;
+
+    // Check if it's the OTP validation error format
+    if (data.detail && data.errors && Array.isArray(data.errors)) {
+      return {
+        detail: data.detail,
+        errors: data.errors as OtpValidationError[], // NOSONAR
+      };
+    }
+  }
+
+  return {
+    detail: null,
+    errors: [],
+  };
+}
+
+/**
+ * Check if error is a network error
+ */
+export function isNetworkError(error: AxiosError): boolean {
+  return !error.response && Boolean(error.request);
+}
+
+/**
+ * Check if error is a server error (5xx)
+ */
+export function isServerError(error: AxiosError): boolean {
+  return Boolean(error.response && error.response.status >= 500);
+}
+
+/**
+ * Check if error is a client error (4xx)
+ */
+export function isClientError(error: AxiosError): boolean {
+  return Boolean(error.response && error.response.status >= 400 && error.response.status < 500);
+}
+
+export default apiClient;

@@ -1,11 +1,27 @@
 /**
- * FormDropdown - Modal picker for selecting from a list
+ * FormDropdown - Reusable searchable modal picker for selecting from a list
  * Used for class master, blood group, class teacher, etc.
  */
 
-import { ChevronDown, Search, X, Check, AlertCircle } from 'lucide-react-native';
+import {
+  ChevronDown,
+  Search,
+  X,
+  Check,
+  AlertCircle,
+} from 'lucide-react-native';
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, FlatList, StyleSheet, TextInput } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Modal,
+  FlatList,
+  StyleSheet,
+  TextInput,
+  KeyboardAvoidingView,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface Option {
   value: string;
@@ -23,6 +39,7 @@ interface FormDropdownProps {
   searchable?: boolean;
   disabled?: boolean;
   loading?: boolean;
+  emptyMessage?: string;
 }
 
 export function FormDropdown({
@@ -33,17 +50,21 @@ export function FormDropdown({
   error,
   required,
   placeholder = 'Select...',
-  searchable = false,
+  searchable = true,
   disabled,
   loading,
+  emptyMessage = 'No options found',
 }: FormDropdownProps) {
   const [visible, setVisible] = useState(false);
   const [search, setSearch] = useState('');
+  const insets = useSafeAreaInsets();
 
-  const selectedLabel = options.find((o) => o.value === value)?.label;
+  const selectedLabel = options.find(o => o.value === value)?.label;
   const filtered =
     searchable && search
-      ? options.filter((o) => o.label.toLowerCase().includes(search.toLowerCase()))
+      ? options.filter(o =>
+          o.label.toLowerCase().includes(search.toLowerCase()),
+        )
       : options;
 
   const handleSelect = (val: string) => {
@@ -59,11 +80,18 @@ export function FormDropdown({
         {required && <Text style={styles.required}> *</Text>}
       </Text>
       <TouchableOpacity
-        style={[styles.trigger, error && styles.triggerError, disabled && styles.triggerDisabled]}
+        style={[
+          styles.trigger,
+          error && styles.triggerError,
+          disabled && styles.triggerDisabled,
+        ]}
         onPress={() => !disabled && setVisible(true)}
         activeOpacity={0.7}
       >
-        <Text style={[styles.triggerText, !selectedLabel && styles.placeholder]}>
+        <Text
+          style={[styles.triggerText, !selectedLabel && styles.placeholder]}
+          numberOfLines={1}
+        >
           {loading ? 'Loading...' : (selectedLabel ?? placeholder)}
         </Text>
         <ChevronDown size={18} color={error ? '#ef4444' : '#94a3b8'} />
@@ -76,9 +104,18 @@ export function FormDropdown({
       )}
 
       {visible && (
-        <Modal visible={visible} animationType="slide" transparent>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modal}>
+        <Modal
+          visible={visible}
+          animationType="slide"
+          transparent
+          statusBarTranslucent
+          onRequestClose={() => {
+            setVisible(false);
+            setSearch('');
+          }}
+        >
+          <KeyboardAvoidingView style={styles.modalOverlay} behavior="padding">
+            <View style={[styles.modal, { paddingBottom: insets.bottom + 20 }]}>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>{label}</Text>
                 <TouchableOpacity
@@ -107,7 +144,7 @@ export function FormDropdown({
 
               <FlatList
                 data={filtered}
-                keyExtractor={(item) => item.value}
+                keyExtractor={item => item.value}
                 renderItem={({ item }) => {
                   const selected = item.value === value;
                   return (
@@ -115,14 +152,21 @@ export function FormDropdown({
                       style={[styles.option, selected && styles.optionSelected]}
                       onPress={() => handleSelect(item.value)}
                     >
-                      <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
+                      <Text
+                        style={[
+                          styles.optionText,
+                          selected && styles.optionTextSelected,
+                        ]}
+                      >
                         {item.label}
                       </Text>
                       {selected && <Check size={18} color="#7c3aed" />}
                     </TouchableOpacity>
                   );
                 }}
-                ListEmptyComponent={<Text style={styles.empty}>No options found</Text>}
+                ListEmptyComponent={
+                  <Text style={styles.empty}>{emptyMessage}</Text>
+                }
               />
 
               {value ? (
@@ -138,7 +182,7 @@ export function FormDropdown({
                 </TouchableOpacity>
               ) : null}
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </Modal>
       )}
     </View>
@@ -146,34 +190,47 @@ export function FormDropdown({
 }
 
 const styles = StyleSheet.create({
-  container: { marginBottom: 16 },
-  label: { fontSize: 14, fontWeight: '600', color: '#334155', marginBottom: 6 },
+  container: { marginBottom: 14 },
+  label: { fontSize: 13, fontWeight: '500', color: '#475569', marginBottom: 6 },
   labelError: { color: '#dc2626' },
   required: { color: '#ef4444' },
   trigger: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: '#e2e8f0',
     borderRadius: 12,
     paddingHorizontal: 14,
-    paddingVertical: 13,
-    backgroundColor: '#f8fafc',
+    paddingVertical: 12,
+    backgroundColor: '#ffffff',
   },
-  triggerError: { borderColor: '#ef4444', backgroundColor: '#fef2f2', borderWidth: 2 },
+  triggerError: {
+    borderColor: '#ef4444',
+    backgroundColor: '#fef2f2',
+    borderWidth: 1.5,
+  },
   triggerDisabled: { opacity: 0.5 },
-  triggerText: { fontSize: 15, color: '#1e293b', flex: 1 },
+  triggerText: { fontSize: 14, color: '#1e293b', flex: 1, marginRight: 8 },
   placeholder: { color: '#94a3b8' },
-  errorRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, marginLeft: 4 },
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+    marginLeft: 4,
+  },
   error: { fontSize: 12, color: '#ef4444', flex: 1 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
   modal: {
     backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '70%',
-    paddingBottom: 20,
   },
   modalHeader: {
     flexDirection: 'row',

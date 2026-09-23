@@ -8,7 +8,7 @@ import { makeDeletedToggle, getDeletedLabel, type FilterLabel } from './SharedFi
 
 export const CLASS_FILTER_FIELDS: FilterField[] = [makeDeletedToggle('classes')];
 
-export function getClassFilterLabels(filters: Record<string, any>): FilterLabel[] {
+export function getClassFilterLabels(filters: Record<string, unknown>): FilterLabel[] {
   const result: FilterLabel[] = [];
 
   const deleted = getDeletedLabel(filters);

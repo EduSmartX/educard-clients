@@ -1,0 +1,579 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
+import type { AxiosError } from 'axios';
+import { resendOtp, sendOtps, sendPhoneOtp, verifyOtp, verifyPhoneOtp } from '@/lib/api/otp-api';
+import { registerOrganization } from '@/lib/api/organization-api';
+import { parseOtpErrors } from '@/lib/api';
+import { getErrorMessage } from '@/lib/utils/error-handler';
+import { ROUTES } from '@/constants/app-config';
+import { ErrorMessages, SuccessMessages } from '@/constants';
+import { useCriticalOperation } from '@/providers/critical-operation-provider';
+import {
+  createStep1Schema,
+  createStep3Schema,
+  step2Schema,
+  step4Schema,
+  type CompleteSignupData,
+  type SignupStep,
+  type Step1Data,
+  type Step2Data,
+  type Step3Data,
+  type Step4Data,
+} from '../utils/signup.schemas';
+import {
+  buildOrganizationRegistrationPayload,
+  buildOtpSendRequests,
+  getOtpSendSuccessMessage,
+  getOtpVerifyBlockingMessage,
+  normalizeStep3DataForSave,
+  OTP_RESEND_COOLDOWN_SECONDS,
+  shouldSkipOtpResend,
+  type OtpSentEmails,
+} from '../utils/signup.utils';
+
+/** Start a 1-second-tick countdown (in seconds) used to gate OTP resends. */
+function startResendCooldown(setCooldown: React.Dispatch<React.SetStateAction<number>>) {
+  setCooldown(OTP_RESEND_COOLDOWN_SECONDS);
+  const timer = setInterval(() => {
+    setCooldown((prev) => {
+      if (prev <= 1) {
+        clearInterval(timer);
+        return 0;
+      }
+      return prev - 1;
+    });
+  }, 1000);
+}
+
+/** Handle OTP send errors with field-level mapping */
+function handleStep1Error(
+  error: unknown,
+  data: Step1Data,
+  step1Form: ReturnType<typeof useForm<Step1Data>>,
+  useSameEmail: boolean
+) {
+  const otpErrors = parseOtpErrors(error as AxiosError);
+  if (!otpErrors.detail || otpErrors.errors.length === 0) {
+    toast.error(getErrorMessage(error, ErrorMessages.AUTH.SEND_VERIFICATION_CODES_FAILED));
+    return;
+  }
+  otpErrors.errors.forEach((err) => {
+    if (err.email === data.adminEmail) {
+      step1Form.setError('adminEmail', { type: 'manual', message: err.error });
+    }
+    if (!useSameEmail && err.email === data.orgEmail) {
+      step1Form.setError('orgEmail', { type: 'manual', message: err.error });
+    }
+  });
+}
+
+/** Verify a single OTP (admin or org) — extracted to reduce hook complexity */
+async function performOtpVerification(params: {
+  otpValue: string | undefined;
+  email: string;
+  setVerifying: (v: boolean) => void;
+  setVerified: (v: boolean) => void;
+  successMsg: string;
+}) {
+  const { otpValue, email, setVerifying, setVerified, successMsg } = params;
+  if (!otpValue?.length || otpValue.length !== 6) {
+    toast.error(ErrorMessages.AUTH.INVALID_OTP);
+    return;
+  }
+
+  setVerifying(true);
+  try {
+    const response = await verifyOtp(email, otpValue, 'organization_registration');
+    if (response.success) {
+      setVerified(true);
+      toast.success(successMsg);
+    } else {
+      toast.error(response.message || ErrorMessages.AUTH.VERIFY_OTP_FAILED);
+    }
+  } catch (error: unknown) {
+    toast.error(getErrorMessage(error, ErrorMessages.AUTH.VERIFY_OTP_FAILED));
+  } finally {
+    setVerifying(false);
+  }
+}
+
+/** Submit Step 1 (send OTPs) — extracted to reduce hook complexity */
+async function performStep1Submit(params: {
+  data: Step1Data;
+  useSameEmail: boolean;
+  step1Form: ReturnType<typeof useForm<Step1Data>>;
+  step2Form: ReturnType<typeof useForm<Step2Data>>;
+  setIsLoading: (v: boolean) => void;
+  setFormData: React.Dispatch<React.SetStateAction<Partial<CompleteSignupData>>>;
+  setCurrentStep: (step: SignupStep) => void;
+  otpSentEmails: OtpSentEmails | null;
+  otpSentAt: number | null;
+  setOtpSentEmails: (v: OtpSentEmails) => void;
+  setOtpSentAt: (v: number) => void;
+  setAdminOtpVerified: (v: boolean) => void;
+  setOrgOtpVerified: (v: boolean) => void;
+  setAdminResendCooldown: React.Dispatch<React.SetStateAction<number>>;
+  setOrgResendCooldown: React.Dispatch<React.SetStateAction<number>>;
+}) {
+  const {
+    data,
+    useSameEmail,
+    step1Form,
+    step2Form,
+    setIsLoading,
+    setFormData,
+    setCurrentStep,
+    otpSentEmails,
+    otpSentAt,
+    setOtpSentEmails,
+    setOtpSentAt,
+    setAdminOtpVerified,
+    setOrgOtpVerified,
+    setAdminResendCooldown,
+    setOrgResendCooldown,
+  } = params;
+
+  const updatedData = useSameEmail ? { ...data, orgEmail: data.adminEmail } : data;
+
+  // Skip resending if unchanged and still within cooldown
+  if (
+    shouldSkipOtpResend({
+      data,
+      useSameEmail,
+      lastSentEmails: otpSentEmails,
+      lastSentAt: otpSentAt,
+    })
+  ) {
+    setFormData((prev) => ({ ...prev, ...updatedData }));
+    toast.info(ErrorMessages.AUTH.OTP_ALREADY_SENT_RECENTLY);
+    setCurrentStep(2);
+    return;
+  }
+
+  setIsLoading(true);
+  try {
+    const emails = buildOtpSendRequests(useSameEmail, data);
+    const response = await sendOtps(emails);
+
+    if (!response.all_success) {
+      const failedEmails = response.results.filter((r) => !r.success);
+      toast.error(
+        `${ErrorMessages.AUTH.SEND_OTP_FAILED} ${failedEmails.map((r) => r.email).join(', ')}`
+      );
+      return;
+    }
+
+    // Reset stale verified state/OTP fields for the new codes
+    setAdminOtpVerified(false);
+    setOrgOtpVerified(false);
+    step2Form.setValue('adminOtp', '');
+    step2Form.setValue('orgOtp', '');
+    step2Form.clearErrors();
+    setOtpSentEmails({ adminEmail: updatedData.adminEmail, orgEmail: updatedData.orgEmail });
+    setOtpSentAt(Date.now());
+    startResendCooldown(setAdminResendCooldown);
+    if (!useSameEmail) {
+      startResendCooldown(setOrgResendCooldown);
+    }
+
+    setFormData((prev) => ({ ...prev, ...updatedData }));
+    toast.success(getOtpSendSuccessMessage(useSameEmail, data));
+    setCurrentStep(2);
+  } catch (error: unknown) {
+    handleStep1Error(error, data, step1Form, useSameEmail);
+  } finally {
+    setIsLoading(false);
+  }
+}
+
+/** Submit Step 4 (final registration) — extracted to reduce hook complexity */
+async function performStep4Submit(params: {
+  data: Step4Data;
+  formData: Partial<CompleteSignupData>;
+  setIsLoading: (v: boolean) => void;
+  navigate: ReturnType<typeof useNavigate>;
+}) {
+  const { data, formData, setIsLoading, navigate } = params;
+  setIsLoading(true);
+  try {
+    const completeData = { ...formData, ...data } as CompleteSignupData;
+    const registrationData = buildOrganizationRegistrationPayload(completeData);
+    const response = await registerOrganization(registrationData);
+
+    if (!response?.success || !response.data) {
+      return;
+    }
+    navigate(ROUTES.AUTH.REGISTRATION_SUCCESS, {
+      state: {
+        organizationName: response.data.organization_info.name,
+        organizationType: response.data.organization_info.type,
+        organizationEmail: response.data.organization_info.email,
+        adminName: `${response.data.admin_info.first_name} ${response.data.admin_info.last_name}`,
+        adminEmail: response.data.admin_info.email,
+      },
+    });
+  } catch (error: unknown) {
+    toast.error(getErrorMessage(error, ErrorMessages.AUTH.REGISTRATION_FAILED));
+  } finally {
+    setIsLoading(false);
+  }
+}
+
+export function useSignupForm() {
+  const navigate = useNavigate();
+  const { beginCriticalOperation, endCriticalOperation } = useCriticalOperation();
+  const [currentStep, setCurrentStep] = useState<SignupStep>(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState<Partial<CompleteSignupData>>({});
+
+  const [useSameEmail, setUseSameEmail] = useState(false);
+  const [includeAddress, setIncludeAddress] = useState(false);
+  const [isAddressExiting, setIsAddressExiting] = useState(false);
+
+  // OTP verification states
+  const [adminOtpVerified, setAdminOtpVerified] = useState(false);
+  const [orgOtpVerified, setOrgOtpVerified] = useState(false);
+  const [verifyingAdmin, setVerifyingAdmin] = useState(false);
+  const [verifyingOrg, setVerifyingOrg] = useState(false);
+  const [adminPhoneOtpVerified, setAdminPhoneOtpVerified] = useState(false);
+  const [sendingAdminPhoneOtp, setSendingAdminPhoneOtp] = useState(false);
+  const [verifyingAdminPhoneOtp, setVerifyingAdminPhoneOtp] = useState(false);
+  const [adminPhoneResendCooldown, setAdminPhoneResendCooldown] = useState(0);
+
+  // Last emails/time an OTP was sent, to gate the resend cooldown
+  const [otpSentEmails, setOtpSentEmails] = useState<OtpSentEmails | null>(null);
+  const [otpSentAt, setOtpSentAt] = useState<number | null>(null);
+  const [adminResendCooldown, setAdminResendCooldown] = useState(0);
+  const [orgResendCooldown, setOrgResendCooldown] = useState(0);
+
+  // Step forms
+  const step1Form = useForm<Step1Data>({
+    resolver: zodResolver(createStep1Schema(useSameEmail)),
+    defaultValues: formData as Step1Data,
+  });
+
+  const step2Form = useForm<Step2Data>({
+    resolver: zodResolver(step2Schema),
+    defaultValues: formData as Step2Data,
+  });
+
+  const step3Form = useForm<Step3Data>({
+    resolver: zodResolver(createStep3Schema(includeAddress)),
+    defaultValues: { ...formData, country: 'India' } as Step3Data,
+  });
+
+  useEffect(() => {
+    step3Form.clearErrors();
+  }, [includeAddress, step3Form]);
+
+  const step4Form = useForm<Step4Data>({
+    resolver: zodResolver(step4Schema),
+    defaultValues: {
+      ...formData,
+      notificationOptIn: true,
+      canTeachSubject: true,
+      employeeId: '',
+      adminPhoneOtp: '',
+    } as Step4Data,
+  });
+
+  const adminPhoneValue = step4Form.watch('phoneNumber');
+  useEffect(() => {
+    if (!adminPhoneValue || adminPhoneValue === '+91') {
+      setAdminPhoneOtpVerified(false);
+      setAdminPhoneResendCooldown(0);
+      step4Form.setValue('adminPhoneOtp', '');
+      return;
+    }
+    setAdminPhoneOtpVerified(false);
+    setAdminPhoneResendCooldown(0);
+    step4Form.setValue('adminPhoneOtp', '');
+  }, [adminPhoneValue, step4Form]);
+
+  // Watch adminEmail and sync to orgEmail when toggle is on
+  const adminEmailValue = step1Form.watch('adminEmail');
+  useEffect(() => {
+    if (useSameEmail && adminEmailValue) {
+      step1Form.setValue('orgEmail', adminEmailValue, { shouldValidate: true });
+      step1Form.clearErrors('orgEmail');
+    }
+  }, [useSameEmail, adminEmailValue, step1Form]);
+
+  // Step 1: Send OTPs
+  const handleStep1Submit = async (data: Step1Data) => {
+    beginCriticalOperation({
+      title: 'Sending verification codes',
+      description: 'Please wait while we send OTPs to your email addresses.',
+    });
+    try {
+      await performStep1Submit({
+        data,
+        useSameEmail,
+        step1Form,
+        step2Form,
+        setIsLoading,
+        setFormData,
+        setCurrentStep,
+        otpSentEmails,
+        otpSentAt,
+        setOtpSentEmails,
+        setOtpSentAt,
+        setAdminOtpVerified,
+        setOrgOtpVerified,
+        setAdminResendCooldown,
+        setOrgResendCooldown,
+      });
+    } finally {
+      endCriticalOperation();
+    }
+  };
+
+  // Step 2: Verify OTPs
+  const handleVerifyOtp = async (type: 'admin' | 'org') => {
+    const config = {
+      admin: {
+        otpField: 'adminOtp' as const,
+        email: formData.adminEmail!,
+        setVerifying: setVerifyingAdmin,
+        setVerified: setAdminOtpVerified,
+        successMsg: SuccessMessages.AUTH.ADMIN_EMAIL_VERIFIED,
+      },
+      org: {
+        otpField: 'orgOtp' as const,
+        email: formData.orgEmail!,
+        setVerifying: setVerifyingOrg,
+        setVerified: setOrgOtpVerified,
+        successMsg: SuccessMessages.AUTH.ORG_EMAIL_VERIFIED,
+      },
+    };
+    const { otpField, email, setVerifying, setVerified, successMsg } = config[type];
+    const otpValue = step2Form.getValues(otpField);
+    beginCriticalOperation({
+      title: 'Verifying OTP',
+      description: 'Please wait while we verify your email code.',
+    });
+    try {
+      await performOtpVerification({ otpValue, email, setVerifying, setVerified, successMsg });
+    } finally {
+      endCriticalOperation();
+    }
+  };
+
+  const handleVerifyAdminOtp = () => handleVerifyOtp('admin');
+  const handleVerifyOrgOtp = () => handleVerifyOtp('org');
+
+  // Resend OTP, resetting verified state/entered code for that field
+  const handleResendOtp = async (type: 'admin' | 'org') => {
+    const email = type === 'admin' ? formData.adminEmail : formData.orgEmail;
+    if (!email) {
+      return;
+    }
+
+    const otpField = type === 'admin' ? ('adminOtp' as const) : ('orgOtp' as const);
+    const category = type === 'admin' ? ('admin' as const) : ('organization' as const);
+    const setVerified = type === 'admin' ? setAdminOtpVerified : setOrgOtpVerified;
+    const setCooldown = type === 'admin' ? setAdminResendCooldown : setOrgResendCooldown;
+
+    beginCriticalOperation({
+      title: 'Resending verification code',
+      description: 'Please wait while we send a new OTP.',
+    });
+    try {
+      const result = await resendOtp(email, category, 'organization_registration');
+      if (result.success) {
+        setVerified(false);
+        step2Form.setValue(otpField, '');
+        step2Form.clearErrors(otpField);
+        setOtpSentAt(Date.now());
+        startResendCooldown(setCooldown);
+        toast.success(`New verification code sent to ${email}`);
+      } else {
+        toast.error(result.message || ErrorMessages.AUTH.SEND_OTP_FAILED);
+      }
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, ErrorMessages.AUTH.SEND_OTP_FAILED));
+    } finally {
+      endCriticalOperation();
+    }
+  };
+
+  const handleResendAdminOtp = () => handleResendOtp('admin');
+  const handleResendOrgOtp = () => handleResendOtp('org');
+
+  const handleStep2Submit = (data: Step2Data) => {
+    const isVerified = useSameEmail ? adminOtpVerified : adminOtpVerified && orgOtpVerified;
+    if (!isVerified) {
+      toast.error(getOtpVerifyBlockingMessage(useSameEmail));
+      return;
+    }
+
+    if (useSameEmail) {
+      setOrgOtpVerified(true);
+      step2Form.setValue('orgOtp', data.adminOtp);
+    }
+
+    setFormData((prev) => ({ ...prev, ...data }));
+    toast.success(SuccessMessages.AUTH.EMAIL_VERIFICATION_COMPLETE);
+    setCurrentStep(3);
+  };
+
+  // Step 3: Organization details
+  const handleStep3Submit = (data: Step3Data) => {
+    const normalizedData = normalizeStep3DataForSave(includeAddress, data);
+    setFormData((prev) => ({ ...prev, ...normalizedData }));
+    setCurrentStep(4);
+  };
+
+  // Step 4: Final registration
+  const handleStep4Submit = async (data: Step4Data) => {
+    const hasPhone = Boolean(data.phoneNumber && data.phoneNumber !== '+91');
+    if (hasPhone && !adminPhoneOtpVerified) {
+      toast.error(ErrorMessages.AUTH.ADMIN_PHONE_OTP_REQUIRED);
+      return;
+    }
+    beginCriticalOperation({
+      title: 'Creating organization account',
+      description: 'Please wait while we finalize registration and send notifications.',
+    });
+    try {
+      await performStep4Submit({ data, formData, setIsLoading, navigate });
+    } finally {
+      endCriticalOperation();
+    }
+  };
+
+  const handleSendAdminPhoneOtp = async () => {
+    const phone = (step4Form.getValues('phoneNumber') || '').trim();
+    if (!phone || phone === '+91') {
+      toast.error(ErrorMessages.AUTH.ADMIN_PHONE_REQUIRED);
+      return;
+    }
+
+    beginCriticalOperation({
+      title: 'Sending mobile OTP',
+      description: 'Please wait while we send OTP to your phone number.',
+    });
+    setSendingAdminPhoneOtp(true);
+    try {
+      const response = await sendPhoneOtp(phone, 'organization_registration');
+      if (response.success) {
+        setAdminPhoneOtpVerified(false);
+        step4Form.setValue('adminPhoneOtp', '');
+        startResendCooldown(setAdminPhoneResendCooldown);
+        toast.success(SuccessMessages.AUTH.ADMIN_PHONE_OTP_SENT);
+      } else {
+        toast.error(response.message || ErrorMessages.AUTH.SEND_OTP_FAILED);
+      }
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, ErrorMessages.AUTH.SEND_OTP_FAILED));
+    } finally {
+      setSendingAdminPhoneOtp(false);
+      endCriticalOperation();
+    }
+  };
+
+  const handleVerifyAdminPhoneOtp = async () => {
+    const phone = (step4Form.getValues('phoneNumber') || '').trim();
+    const otpCode = (step4Form.getValues('adminPhoneOtp') || '').trim();
+    if (!phone || phone === '+91') {
+      toast.error(ErrorMessages.AUTH.ADMIN_PHONE_REQUIRED);
+      return;
+    }
+    if (otpCode.length !== 6) {
+      toast.error(ErrorMessages.AUTH.INVALID_OTP);
+      return;
+    }
+
+    beginCriticalOperation({
+      title: 'Verifying mobile OTP',
+      description: 'Please wait while we verify your phone code.',
+    });
+    setVerifyingAdminPhoneOtp(true);
+    try {
+      const response = await verifyPhoneOtp(phone, otpCode, 'organization_registration');
+      if (response.success) {
+        setAdminPhoneOtpVerified(true);
+        toast.success(SuccessMessages.AUTH.ADMIN_PHONE_VERIFIED);
+      } else {
+        toast.error(response.message || ErrorMessages.AUTH.VERIFY_OTP_FAILED);
+      }
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, ErrorMessages.AUTH.VERIFY_OTP_FAILED));
+    } finally {
+      setVerifyingAdminPhoneOtp(false);
+      endCriticalOperation();
+    }
+  };
+
+  const goToPreviousStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep((prev) => (prev - 1) as SignupStep);
+    }
+  };
+
+  // Pre-computed conditional values for Step 2
+  const otpSentMessage = useSameEmail
+    ? `We've sent a 6-digit verification code to ${formData.adminEmail}`
+    : `We've sent 6-digit verification codes to both email addresses. Check your inbox!`;
+  const adminOtpLabel = useSameEmail ? 'Email Verification Code' : 'Administrator Email Code';
+  const adminOtpIcon = useSameEmail ? '📧' : '👤';
+  const adminOtpInputClass = adminOtpVerified
+    ? 'border-green-300 bg-green-50 text-green-700'
+    : 'border-gray-300 focus:border-teal-400 focus:ring-4 focus:ring-teal-50';
+  const adminVerifyBtnClass = adminOtpVerified
+    ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-200'
+    : 'bg-gradient-to-r from-teal-500 to-cyan-600 text-white hover:scale-105 hover:shadow-xl';
+
+  return {
+    // State
+    currentStep,
+    isLoading,
+    formData,
+    useSameEmail,
+    setUseSameEmail,
+    includeAddress,
+    setIncludeAddress,
+    isAddressExiting,
+    setIsAddressExiting,
+    adminOtpVerified,
+    orgOtpVerified,
+    verifyingAdmin,
+    verifyingOrg,
+    adminPhoneOtpVerified,
+    sendingAdminPhoneOtp,
+    verifyingAdminPhoneOtp,
+    adminResendCooldown,
+    orgResendCooldown,
+    adminPhoneResendCooldown,
+
+    // Forms
+    step1Form,
+    step2Form,
+    step3Form,
+    step4Form,
+
+    // Handlers
+    handleStep1Submit,
+    handleStep2Submit,
+    handleStep3Submit,
+    handleStep4Submit,
+    handleVerifyAdminOtp,
+    handleVerifyOrgOtp,
+    handleResendAdminOtp,
+    handleResendOrgOtp,
+    handleSendAdminPhoneOtp,
+    handleVerifyAdminPhoneOtp,
+    goToPreviousStep,
+    navigate,
+
+    // Computed
+    otpSentMessage,
+    adminOtpLabel,
+    adminOtpIcon,
+    adminOtpInputClass,
+    adminVerifyBtnClass,
+  };
+}

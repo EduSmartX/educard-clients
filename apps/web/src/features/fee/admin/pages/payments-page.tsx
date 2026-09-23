@@ -1,0 +1,442 @@
+/**
+ * Payments Page
+ * Lists all fee payments with filtering
+ */
+
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { SearchableSelect } from '@/components/ui/searchable-select';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Download, Filter, X, CreditCard, IndianRupee, Plus, Search } from 'lucide-react';
+import { format } from 'date-fns';
+import { downloadFile } from '@/lib/utils';
+import { ROUTES } from '@/constants/app-config';
+import { useFilterParams } from '@/hooks/use-filter-params';
+import { PageHeader } from '@/components/common';
+import { PaymentHistoryTable } from '../components/payment-history-table';
+import { usePayments } from '../../hooks/use-fee-queries';
+import { useClasses } from '@/features/classes/hooks/use-classes';
+import { useStudents } from '@/features/students/hooks/use-students';
+import { type PaymentModeType, PAYMENT_MODE_OPTIONS } from '@educard/shared';
+
+// Format currency with Indian abbreviations: K, L, Cr
+const formatCurrency = (amount: number | string | undefined) => {
+  const num = typeof amount === 'string' ? Number.parseFloat(amount) : (amount ?? 0);
+  if (num >= 10000000) {
+    return `₹${(num / 10000000).toFixed(2)} Cr`;
+  }
+  if (num >= 100000) {
+    return `₹${(num / 100000).toFixed(2)} L`;
+  }
+  if (num >= 1000) {
+    return `₹${(num / 1000).toFixed(1)} K`;
+  }
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(num);
+};
+
+export function PaymentsPage() {
+  const navigate = useNavigate();
+
+  // Filters
+  const {
+    filters,
+    search: searchQuery,
+    page: currentPage,
+    pageSize,
+    setFilter,
+    setSearch: setSearchQuery,
+    setPage: setCurrentPage,
+    setPageSize,
+  } = useFilterParams(
+    { class: 'all', student: 'all', payment_mode: 'all' },
+    { defaultPageSize: 25 }
+  );
+  const classFilter = filters.class;
+  const studentFilter = filters.student;
+  const paymentModeFilter = filters.payment_mode;
+  const setClassFilter = (v: string) => setFilter('class', v);
+  const setStudentFilter = (v: string) => setFilter('student', v);
+  const setPaymentModeFilter = (v: string) => setFilter('payment_mode', v);
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
+
+  // Data for filter dropdowns
+  const { data: classesData } = useClasses();
+  const { data: studentsData } = useStudents(
+    classFilter !== 'all'
+      ? { class_assigned__public_id: classFilter, page_size: 1000, embed_images: false }
+      : undefined
+  );
+
+  // Query — pass filters to API
+  const { data: paymentsData, isLoading } = usePayments({
+    search: searchQuery || undefined,
+    class_public_id: classFilter !== 'all' ? classFilter : undefined,
+    student_public_id: studentFilter !== 'all' ? studentFilter : undefined,
+    payment_mode: paymentModeFilter !== 'all' ? (paymentModeFilter as PaymentModeType) : undefined,
+    date_from: startDate ? format(startDate, 'yyyy-MM-dd') : undefined,
+    date_to: endDate ? format(endDate, 'yyyy-MM-dd') : undefined,
+    page: currentPage,
+    page_size: pageSize,
+  });
+
+  const handleExport = () => {
+    const payments = paymentsData?.data || [];
+    if (payments.length === 0) {
+      return;
+    }
+
+    const headers = [
+      'Receipt No',
+      'Student Name',
+      'Class',
+      'Fee Structure',
+      'Amount',
+      'Transaction Type',
+      'Payment Mode',
+      'Payment Date',
+      'UTR/Transaction ID',
+      'Remarks',
+    ];
+
+    const rows = payments.map((p) => [
+      p.receipt_number || '',
+      p.student_name || '',
+      p.class_name || '',
+      p.fee_structure_name || '',
+      p.amount,
+      p.transaction_type_display || p.transaction_type,
+      p.payment_mode_display || p.payment_mode,
+      p.payment_date ? format(new Date(p.payment_date), 'dd/MM/yyyy') : '',
+      p.utr_number || p.transaction_id || '',
+      p.remarks || '',
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const filename = `payments_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    downloadFile(blob, filename);
+  };
+
+  const handleDownloadReceipt = (_paymentId: string) => {
+    // TODO: Implement receipt download
+  };
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setClassFilter('all');
+    setStudentFilter('all');
+    setPaymentModeFilter('all');
+    setStartDate(undefined);
+    setEndDate(undefined);
+    setCurrentPage(1);
+  };
+
+  // When class changes, reset student filter and page
+  const handleClassChange = (val: string) => {
+    setClassFilter(val);
+    setStudentFilter('all');
+    setCurrentPage(1);
+  };
+
+  // Reset to page 1 when any filter changes
+  const handleFilterChange = (setter: (v: string) => void) => (val: string) => {
+    setter(val);
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val);
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters =
+    !!searchQuery ||
+    classFilter !== 'all' ||
+    studentFilter !== 'all' ||
+    paymentModeFilter !== 'all' ||
+    !!startDate ||
+    !!endDate;
+  const activeFilterCount = [
+    !!searchQuery,
+    classFilter !== 'all',
+    studentFilter !== 'all',
+    paymentModeFilter !== 'all',
+    !!startDate,
+    !!endDate,
+  ].filter(Boolean).length;
+
+  const classesArray = classesData?.data ?? [];
+  const studentsArray = studentsData?.data ?? [];
+
+  // Calculate totals from payments — credits add, debits (refunds) subtract
+  const paymentsArray = paymentsData?.data ?? [];
+  const totalGrossCollected = paymentsArray
+    .filter((p) => p.transaction_type !== 'debit')
+    .reduce((sum, p) => sum + (Number.parseFloat(String(p.amount)) || 0), 0);
+  const totalRefunded = paymentsArray
+    .filter((p) => p.transaction_type === 'debit')
+    .reduce((sum, p) => sum + (Number.parseFloat(String(p.amount)) || 0), 0);
+  const totalCollected = totalGrossCollected - totalRefunded; // net
+  const paymentCount = paymentsData?.pagination?.count ?? paymentsArray.length;
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Payments"
+        description="View payment history and download receipts"
+        actions={[
+          {
+            label: 'Record Payment',
+            onClick: () => navigate(ROUTES.FEES.PAYMENT_NEW),
+            variant: 'brand' as const,
+            icon: Plus,
+          },
+          {
+            label: 'Export',
+            onClick: handleExport,
+            variant: 'secondary' as const,
+            icon: Download,
+          },
+        ]}
+      />
+
+      {/* Summary Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {/* Gross Collected */}
+        <Card className="border-0 bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-emerald-100">Gross Collected</p>
+                <p className="mt-1 text-3xl font-bold">{formatCurrency(totalGrossCollected)}</p>
+                <p className="mt-1 text-xs text-emerald-200">All credit payments</p>
+              </div>
+              <div className="rounded-full bg-white/20 p-3">
+                <IndianRupee className="h-6 w-6" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Total Refunded */}
+        <Card className="border-0 bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/20">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-orange-100">Total Refunded</p>
+                <p className="mt-1 text-3xl font-bold">{formatCurrency(totalRefunded)}</p>
+                <p className="mt-1 text-xs text-orange-200">Refund payouts</p>
+              </div>
+              <div className="rounded-full bg-white/20 p-3">
+                <IndianRupee className="h-6 w-6" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Net Collected */}
+        <Card className="border-0 bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/20">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-violet-100">Net Collected</p>
+                <p className="mt-1 text-3xl font-bold">{formatCurrency(totalCollected)}</p>
+                <p className="mt-1 text-xs text-violet-200">Gross − Refunds</p>
+              </div>
+              <div className="rounded-full bg-white/20 p-3">
+                <IndianRupee className="h-6 w-6" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Total Transactions */}
+        <Card className="border-0 bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-blue-100">Total Transactions</p>
+                <p className="mt-1 text-3xl font-bold">{paymentCount}</p>
+                <p className="mt-1 text-xs text-blue-200">All payment records</p>
+              </div>
+              <div className="rounded-full bg-white/20 p-3">
+                <CreditCard className="h-6 w-6" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters Card */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col gap-4">
+            {/* Search + toggle row */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="relative flex-1">
+                <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                <Input
+                  placeholder="Search by student name..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                {activeFilterCount > 0 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-800">
+                    <Filter className="h-3.5 w-3.5" />
+                    {activeFilterCount} active
+                  </span>
+                )}
+                {hasActiveFilters && (
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1">
+                    <X className="h-4 w-4" />
+                    Clear Filters
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <div className="grid gap-4 border-t pt-4 sm:grid-cols-2 lg:grid-cols-3">
+              {/* Class Filter */}
+              <label className="block space-y-2">
+                <span className="text-sm font-medium">Class</span>
+                <SearchableSelect
+                  options={[
+                    { value: 'all', label: 'All Classes' },
+                    ...classesArray.map((cls) => {
+                      const label =
+                        cls.display_name ||
+                        (cls.class_master?.name
+                          ? `${cls.class_master.name} - ${cls.name}`
+                          : cls.name);
+                      return { value: cls.public_id, label };
+                    }),
+                  ]}
+                  value={classFilter}
+                  onValueChange={handleClassChange}
+                  placeholder="All Classes"
+                  searchPlaceholder="Search class..."
+                />
+              </label>
+
+              {/* Student Filter — only populated when class is selected */}
+              <label className="block space-y-2">
+                <span className="text-sm font-medium">Student</span>
+                <SearchableSelect
+                  options={[
+                    {
+                      value: 'all',
+                      label: classFilter === 'all' ? 'Select a class first' : 'All Students',
+                    },
+                    ...studentsArray.map((s) => ({
+                      value: s.public_id,
+                      label: s.full_name,
+                    })),
+                  ]}
+                  value={studentFilter}
+                  onValueChange={handleFilterChange(setStudentFilter)}
+                  placeholder={classFilter === 'all' ? 'Select a class first' : 'All Students'}
+                  searchPlaceholder="Search student..."
+                  disabled={classFilter === 'all'}
+                />
+              </label>
+
+              {/* Payment Mode Filter */}
+              <label className="block space-y-2">
+                <span className="text-sm font-medium">Payment Mode</span>
+                <SearchableSelect
+                  options={[
+                    { value: 'all', label: 'All Modes' },
+                    ...PAYMENT_MODE_OPTIONS.map((option) => ({
+                      value: option.value,
+                      label: option.label,
+                    })),
+                  ]}
+                  value={paymentModeFilter}
+                  onValueChange={handleFilterChange(setPaymentModeFilter)}
+                  placeholder="All Modes"
+                />
+              </label>
+
+              {/* From Date */}
+              <label className="block space-y-2">
+                <span className="text-sm font-medium">From Date</span>
+                <DatePicker
+                  value={startDate ?? null}
+                  onChange={(date) => setStartDate(date ?? undefined)}
+                  maxDate={endDate}
+                  placeholder="Pick a date"
+                />
+              </label>
+
+              {/* To Date */}
+              <label className="block space-y-2">
+                <span className="text-sm font-medium">To Date</span>
+                <DatePicker
+                  value={endDate ?? null}
+                  onChange={(date) => setEndDate(date ?? undefined)}
+                  minDate={startDate}
+                  placeholder="Pick a date"
+                />
+              </label>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Table */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg font-medium">
+            Payment History ({paymentsData?.pagination?.count ?? paymentsArray.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PaymentHistoryTable
+            data={paymentsArray}
+            isLoading={isLoading}
+            onDownloadReceipt={handleDownloadReceipt}
+            pagination={
+              paymentsData?.pagination
+                ? {
+                    current_page: currentPage,
+                    page_size: pageSize,
+                    count: paymentsData.pagination.count,
+                    total_pages:
+                      paymentsData.pagination.total_pages ??
+                      Math.ceil(paymentsData.pagination.count / pageSize),
+                    has_next: currentPage < (paymentsData.pagination.total_pages ?? 1),
+                    has_previous: currentPage > 1,
+                    next_page:
+                      currentPage < (paymentsData.pagination.total_pages ?? 1)
+                        ? currentPage + 1
+                        : null,
+                    previous_page: currentPage > 1 ? currentPage - 1 : null,
+                  }
+                : undefined
+            }
+            onPageChange={setCurrentPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setCurrentPage(1);
+            }}
+          />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

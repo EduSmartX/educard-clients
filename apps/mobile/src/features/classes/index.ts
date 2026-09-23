@@ -1,5 +1,5 @@
 /**
- * Classes Feature — Barrel Exports
+ * Classes Feature — Barrel Exports (data layer + list component)
  */
 
 export {
@@ -23,3 +23,6 @@ export {
   useDeleteClass,
   useRestoreClass,
 } from './hooks/use-classes';
+
+export { ClassList } from './components';
+export type { ClassListProps } from './components';

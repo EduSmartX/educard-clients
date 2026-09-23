@@ -52,7 +52,7 @@ function flattenErrors(
     // Check if this is a non-field error key
     if (key === "non_field_errors" || key === "non_field_error") {
       if (Array.isArray(value)) {
-        result.nonFieldErrors.push(...(value as string[]));
+        result.nonFieldErrors.push(...(value as string[])); // NOSONAR
       } else if (typeof value === "string") {
         result.nonFieldErrors.push(value);
       }
@@ -76,13 +76,133 @@ function flattenErrors(
     // Handle nested object (recurse)
     if (typeof value === "object" && value !== null) {
       const nested = flattenErrors(
-        value as Record<string, ErrorValue>,
+        value as Record<string, ErrorValue>, // NOSONAR
         fullKey,
       );
       Object.assign(result.fieldErrors, nested.fieldErrors);
       result.nonFieldErrors.push(...nested.nonFieldErrors);
     }
   });
+
+  return result;
+}
+
+/** Extract status code from error data */
+function extractStatusCode(
+  axiosError: AxiosErrorWrapper,
+  errorData: BackendErrorResponse,
+): number | undefined {
+  if (axiosError.response?.status) {
+    return axiosError.response.status;
+  }
+  return errorData.code;
+}
+
+/** Check if errors object has only a detail string and extract it */
+function extractDetailFromErrors(
+  errors: Record<string, ErrorValue>,
+): { detail: string; isOnlyDetail: boolean } | null {
+  if (!("detail" in errors) || typeof errors.detail !== "string") {
+    return null;
+  }
+  return {
+    detail: errors.detail,
+    isOnlyDetail: Object.keys(errors).length === 1,
+  };
+}
+
+/** Parse DRF-style top-level validation errors (no wrapper "errors" key) */
+function parseDrfTopLevelErrors(
+  errorData: BackendErrorResponse,
+  result: NormalizedError,
+): void {
+  if (errorData.errors || errorData.detail) {
+    return;
+  }
+  const rawObj = errorData as Record<string, unknown>;
+  const hasArrayValues = Object.values(rawObj).some(
+    (v) => Array.isArray(v) && v.length > 0 && typeof v[0] === "string",
+  );
+  if (!hasArrayValues) {
+    return;
+  }
+  result.isValidation = true;
+  const flattened = flattenErrors(rawObj as Record<string, ErrorValue>);
+  result.fieldErrors = flattened.fieldErrors;
+  result.nonFieldErrors = flattened.nonFieldErrors;
+}
+
+/** Parse structured errors from backend response */
+function parseStructuredErrors(
+  errorData: BackendErrorResponse,
+  result: NormalizedError,
+): boolean {
+  if (!errorData.errors || typeof errorData.errors !== "object") {
+    return false;
+  }
+
+  const errorsObj = errorData.errors as Record<string, ErrorValue>; // NOSONAR
+  const detailResult = extractDetailFromErrors(errorsObj);
+  if (detailResult) {
+    result.message = detailResult.detail;
+    if (detailResult.isOnlyDetail) {
+      return true; // signal early return
+    }
+  }
+
+  result.isValidation = true;
+  const flattened = flattenErrors(errorData.errors);
+  result.fieldErrors = flattened.fieldErrors;
+  result.nonFieldErrors = flattened.nonFieldErrors;
+  return false;
+}
+
+/** Apply default messages for validation/failed cases */
+function applyDefaultMessages(
+  errorData: BackendErrorResponse,
+  result: NormalizedError,
+): void {
+  const isDefaultMessage = result.message === "An unexpected error occurred";
+
+  if (result.isValidation && isDefaultMessage) {
+    result.message = "Validation error occurred";
+  }
+
+  if (errorData.success === false && isDefaultMessage) {
+    result.message = "Request failed";
+  }
+}
+
+/** Parse object-shaped errors (axios response or backend error) */
+function parseObjectError(
+  error: object,
+  result: NormalizedError,
+): NormalizedError {
+  const possibleAxiosError = error as AxiosErrorWrapper;
+  const possibleBackendError = error as BackendErrorResponse;
+
+  const errorData = possibleAxiosError.response?.data || possibleBackendError;
+
+  result.statusCode = extractStatusCode(possibleAxiosError, errorData);
+  result.message = errorData.message || errorData.detail || result.message;
+
+  // Simple detail-only error
+  if (errorData.detail && !errorData.errors) {
+    result.message = errorData.detail;
+    return result;
+  }
+
+  // Structured errors from backend
+  const shouldReturn = parseStructuredErrors(errorData, result);
+  if (shouldReturn) {
+    return result;
+  }
+
+  // Top-level DRF validation errors
+  parseDrfTopLevelErrors(errorData, result);
+
+  // Apply sensible defaults
+  applyDefaultMessages(errorData, result);
 
   return result;
 }
@@ -96,18 +216,16 @@ export function parseError(error: unknown): NormalizedError {
     isValidation: false,
   };
 
-  // Handle null/undefined
-  if (!error) return result;
+  if (!error) {
+    return result;
+  }
 
-  // Handle string errors
   if (typeof error === "string") {
     result.message = error;
     return result;
   }
 
-  // Handle Error instances
   if (error instanceof Error) {
-    // Check if it's an axios error with response data
     if ("response" in error && typeof error === "object") {
       const axiosError = error as AxiosErrorWrapper;
       if (axiosError.response?.data) {
@@ -118,64 +236,8 @@ export function parseError(error: unknown): NormalizedError {
     return result;
   }
 
-  // Handle object errors (axios response or backend error)
   if (typeof error === "object") {
-    const possibleAxiosError = error as AxiosErrorWrapper;
-    const possibleBackendError = error as BackendErrorResponse;
-
-    // If it has response.data, it's an axios wrapper
-    const errorData = possibleAxiosError.response?.data || possibleBackendError;
-
-    // Get status code
-    if (possibleAxiosError.response?.status) {
-      result.statusCode = possibleAxiosError.response.status;
-    } else if (errorData.code) {
-      result.statusCode = errorData.code;
-    }
-
-    // Extract main message
-    result.message = errorData.message || errorData.detail || result.message;
-
-    // Check for simple detail-only errors
-    if (errorData.detail && !errorData.errors) {
-      result.message = errorData.detail;
-      return result;
-    }
-
-    // Check if errors object contains a detail field
-    if (errorData.errors && typeof errorData.errors === "object") {
-      const errorsObj = errorData.errors as Record<string, ErrorValue>;
-      if ("detail" in errorsObj && typeof errorsObj.detail === "string") {
-        result.message = errorsObj.detail;
-        if (Object.keys(errorsObj).length === 1) {
-          return result;
-        }
-      }
-    }
-
-    // Parse errors object (supports nested structures)
-    if (errorData.errors && typeof errorData.errors === "object") {
-      result.isValidation = true;
-      const flattened = flattenErrors(errorData.errors);
-      result.fieldErrors = flattened.fieldErrors;
-      result.nonFieldErrors = flattened.nonFieldErrors;
-    }
-
-    // If we have validation errors but no message, set a better default
-    if (
-      result.isValidation &&
-      result.message === "An unexpected error occurred"
-    ) {
-      result.message = "Validation error occurred";
-    }
-
-    // Special case: If success=false but no other message
-    if (
-      errorData.success === false &&
-      result.message === "An unexpected error occurred"
-    ) {
-      result.message = "Request failed";
-    }
+    return parseObjectError(error, result);
   }
 
   return result;
@@ -187,7 +249,7 @@ export function getErrorMessage(error: unknown, fallback?: string): string {
 
   // Priority 1: non-field errors (general validation messages)
   if (normalized.nonFieldErrors.length > 0) {
-    return normalized.nonFieldErrors.join('\n');
+    return normalized.nonFieldErrors.join("\n");
   }
 
   // Priority 2: field errors - combine them for user display
@@ -197,29 +259,37 @@ export function getErrorMessage(error: unknown, fallback?: string): string {
     if (fieldErrorKeys.length === 1) {
       const msg = normalized.fieldErrors[fieldErrorKeys[0]];
       // If message is long/descriptive, use it directly
-      if (msg.length > 50 || msg.includes('.') || msg.includes('!')) {
+      if (msg.length > 50 || msg.includes(".") || msg.includes("!")) {
         return msg;
       }
       // Otherwise include field name
-      const fieldLabel = fieldErrorKeys[0].replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      const fieldLabel = fieldErrorKeys[0]
+        .replaceAll("_", " ")
+        .replace(/\b\w/g, (l) => l.toUpperCase());
       return `${fieldLabel}: ${msg}`;
     }
-    
+
     // Multiple field errors - combine them
-    return fieldErrorKeys.map(key => {
-      const msg = normalized.fieldErrors[key];
-      if (msg.length > 50 || msg.includes('.') || msg.includes('!')) {
-        return msg;
-      }
-      const fieldLabel = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-      return `${fieldLabel}: ${msg}`;
-    }).join('\n');
+    return fieldErrorKeys
+      .map((key) => {
+        const msg = normalized.fieldErrors[key];
+        if (msg.length > 50 || msg.includes(".") || msg.includes("!")) {
+          return msg;
+        }
+        const fieldLabel = key
+          .replaceAll("_", " ")
+          .replace(/\b\w/g, (l) => l.toUpperCase());
+        return `${fieldLabel}: ${msg}`;
+      })
+      .join("\n");
   }
 
   // Priority 3: message from response (but not generic "Validation error occurred")
-  if (normalized.message && 
-      normalized.message !== "Validation error occurred" && 
-      normalized.message !== "An unexpected error occurred") {
+  if (
+    normalized.message &&
+    normalized.message !== "Validation error occurred" &&
+    normalized.message !== "An unexpected error occurred"
+  ) {
     return normalized.message;
   }
 
@@ -259,13 +329,27 @@ export function getErrorTitle(error: unknown): string {
   const normalized = parseError(error);
   const code = normalized.statusCode;
 
-  if (!code) return "Error";
-  if (code >= 500) return "Server Error";
-  if (code === 404) return "Not Found";
-  if (code === 403) return "Access Denied";
-  if (code === 401) return "Authentication Required";
-  if (code === 400 && normalized.isValidation) return "Validation Error";
-  if (code >= 400) return "Request Error";
+  if (!code) {
+    return "Error";
+  }
+  if (code >= 500) {
+    return "Server Error";
+  }
+  if (code === 404) {
+    return "Not Found";
+  }
+  if (code === 403) {
+    return "Access Denied";
+  }
+  if (code === 401) {
+    return "Authentication Required";
+  }
+  if (code === 400 && normalized.isValidation) {
+    return "Validation Error";
+  }
+  if (code >= 400) {
+    return "Request Error";
+  }
 
   return "Error";
 }
@@ -280,77 +364,194 @@ export function parseApiError(error: unknown): ApiError {
   };
 }
 
+/** Format a field name from snake_case to Title Case */
+function formatFieldLabel(fieldName: string): string {
+  return fieldName
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (l) => l.toUpperCase());
+}
+
+/** Check if a message is self-descriptive (long or contains punctuation) */
+function isDescriptiveMessage(msg: string): boolean {
+  return msg.length > 50 || msg.includes(".") || msg.includes("!");
+}
+
+const SKIP_FIELDS = new Set(["has_deleted_duplicate", "deleted_record_id"]);
+const NON_FIELD_KEYS = new Set(["non_field_errors", "non_field_error"]);
+const META_FIELDS = new Set(["success", "code", "data", "message"]);
+
+/** Process an array field value into error messages */
+function processArrayFieldValue(fieldName: string, value: unknown[]): string[] {
+  if (value.length === 0) {
+    return [];
+  }
+  if (NON_FIELD_KEYS.has(fieldName)) {
+    return value.filter((v) => typeof v === "string") as string[];
+  }
+  const msg = value[0];
+  if (typeof msg === "string") {
+    return [
+      isDescriptiveMessage(msg)
+        ? msg
+        : `${formatFieldLabel(fieldName)}: ${msg}`,
+    ];
+  }
+  return [];
+}
+
+/** Process a string field value into error messages */
+function processStringFieldValue(fieldName: string, value: string): string[] {
+  if (NON_FIELD_KEYS.has(fieldName) || fieldName === "detail") {
+    return [value];
+  }
+  return [
+    isDescriptiveMessage(value)
+      ? value
+      : `${formatFieldLabel(fieldName)}: ${value}`,
+  ];
+}
+
+/** Process a nested object field value into error messages */
+function processObjectFieldValue(
+  fieldName: string,
+  value: Record<string, unknown>,
+): string[] {
+  const msgs: string[] = [];
+  Object.entries(value).forEach(([nestedField, nestedValue]) => {
+    if (
+      Array.isArray(nestedValue) &&
+      nestedValue.length > 0 &&
+      typeof nestedValue[0] === "string"
+    ) {
+      const fullFieldName = `${fieldName}.${nestedField}`;
+      msgs.push(`${formatFieldLabel(fullFieldName)}: ${nestedValue[0]}`);
+    }
+  });
+  return msgs;
+}
+
+/** Extract error messages from a field errors object */
+function extractFieldErrors(errors: Record<string, unknown>): string[] {
+  const errorMessages: string[] = [];
+
+  Object.entries(errors).forEach(([fieldName, value]) => {
+    if (SKIP_FIELDS.has(fieldName)) {
+      return;
+    }
+
+    if (Array.isArray(value)) {
+      errorMessages.push(...processArrayFieldValue(fieldName, value));
+    } else if (typeof value === "string") {
+      errorMessages.push(...processStringFieldValue(fieldName, value));
+    } else if (typeof value === "object" && value !== null) {
+      errorMessages.push(
+        ...processObjectFieldValue(fieldName, value as Record<string, unknown>),
+      );
+    }
+  });
+
+  return errorMessages;
+}
+
+/** Extract top-level DRF field errors (when no errors/detail/message wrapper) */
+function extractTopLevelErrors(rawData: Record<string, unknown>): string[] {
+  const topLevelErrors: string[] = [];
+  Object.entries(rawData).forEach(([fieldName, value]) => {
+    if (SKIP_FIELDS.has(fieldName) || META_FIELDS.has(fieldName)) {
+      return;
+    }
+    if (
+      Array.isArray(value) &&
+      value.length > 0 &&
+      typeof value[0] === "string"
+    ) {
+      if (NON_FIELD_KEYS.has(fieldName)) {
+        topLevelErrors.push(...(value as string[]));
+      } else {
+        topLevelErrors.push(`${formatFieldLabel(fieldName)}: ${value[0]}`);
+      }
+    } else if (typeof value === "string" && fieldName !== "status_code") {
+      topLevelErrors.push(value);
+    }
+  });
+  return topLevelErrors;
+}
+
+const GENERIC_MESSAGES = new Set([
+  "Validation error occurred",
+  "Validation error occurred.",
+  "Please check your input and try again.",
+  "An unexpected error occurred. Please try again.",
+]);
+
+/** Try to extract a non-generic message from data.message */
+function extractDataMessage(data: { message?: unknown }): string | null {
+  if (
+    data.message &&
+    typeof data.message === "string" &&
+    !GENERIC_MESSAGES.has(data.message)
+  ) {
+    return data.message;
+  }
+  return null;
+}
+
+/** Try to extract non_field_errors from raw data */
+function extractNonFieldErrors(
+  rawData: Record<string, unknown>,
+): string | null {
+  const nfe = rawData.non_field_errors;
+  if (Array.isArray(nfe) && nfe.length > 0) {
+    return nfe.filter((v: unknown) => typeof v === "string").join("\n");
+  }
+  if (typeof nfe === "string") {
+    return nfe;
+  }
+  return null;
+}
+
 /** Extract error message for display */
 export function extractApiError(
   err: unknown,
   fallback = "Something went wrong",
 ): string {
   const data = (err as AxiosErrorWrapper)?.response?.data;
-  if (!data) return (err as Error)?.message || fallback;
+  if (!data) {
+    return (err as Error)?.message || fallback;
+  }
 
-  // First check for errors object (Django validation errors)
+  // Priority 1: Backend sends a specific "message" field
+  const directMessage = extractDataMessage(data);
+  if (directMessage) {
+    return directMessage;
+  }
+
+  // Priority 2: Extract from errors object (field-level details)
   if (data.errors && typeof data.errors === "object") {
-    const errorMessages: string[] = [];
-    
-    Object.entries(data.errors).forEach(([fieldName, value]) => {
-      // Skip internal flags
-      if (fieldName === 'has_deleted_duplicate' || fieldName === 'deleted_record_id') {
-        return;
-      }
-      
-      // Handle array of error messages
-      if (Array.isArray(value) && value.length > 0) {
-        // For non_field_errors, add directly
-        if (fieldName === 'non_field_errors' || fieldName === 'non_field_error') {
-          errorMessages.push(...value.filter(v => typeof v === 'string'));
-        } else {
-          // For field errors, check if message is already descriptive
-          const msg = value[0];
-          if (typeof msg === 'string') {
-            // If message is already descriptive (long sentence), use it directly
-            if (msg.length > 50 || msg.includes('.') || msg.includes('!')) {
-              errorMessages.push(msg);
-            } else {
-              // Convert snake_case to Title Case for short messages
-              const fieldLabel = fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-              errorMessages.push(`${fieldLabel}: ${msg}`);
-            }
-          }
-        }
-      } else if (typeof value === 'string') {
-        if (fieldName === 'non_field_errors' || fieldName === 'non_field_error' || fieldName === 'detail') {
-          errorMessages.push(value);
-        } else {
-          const fieldLabel = fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-          errorMessages.push(`${fieldLabel}: ${value}`);
-        }
-      } else if (typeof value === 'object' && value !== null) {
-        // Handle nested errors (e.g., student_data.email)
-        Object.entries(value as Record<string, unknown>).forEach(([nestedField, nestedValue]) => {
-          if (Array.isArray(nestedValue) && nestedValue.length > 0 && typeof nestedValue[0] === 'string') {
-            const fieldLabel = `${fieldName}.${nestedField}`.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-            errorMessages.push(`${fieldLabel}: ${nestedValue[0]}`);
-          }
-        });
-      }
-    });
-    
+    const errorMessages = extractFieldErrors(data.errors);
     if (errorMessages.length > 0) {
-      return errorMessages.join('\n');
+      return errorMessages.join("\n");
+    }
+  }
+
+  // Check for top-level DRF validation errors
+  const rawData: Record<string, unknown> = data as Record<string, unknown>;
+  const nfeResult = extractNonFieldErrors(rawData);
+  if (nfeResult) {
+    return nfeResult;
+  }
+
+  // Check for top-level field errors
+  if (!data.errors && !data.detail && !data.message) {
+    const topLevelErrors = extractTopLevelErrors(rawData);
+    if (topLevelErrors.length > 0) {
+      return topLevelErrors.join("\n");
     }
   }
 
   // Check for detail field (common in DRF errors)
-  if (data.detail && typeof data.detail === 'string') {
+  if (data.detail && typeof data.detail === "string") {
     return data.detail;
-  }
-
-  // Check for message field (our custom response format)
-  if (data.message && typeof data.message === 'string') {
-    // Don't return generic validation message if we couldn't extract specific errors
-    if (data.message !== 'Validation error occurred' && data.message !== 'Validation error occurred.') {
-      return data.message;
-    }
   }
 
   return fallback;
@@ -360,7 +561,9 @@ export function extractApiError(
 export function isDeletedDuplicateError(error: unknown): boolean {
   const axiosError = error as AxiosErrorWrapper;
   const data = axiosError?.response?.data;
-  if (!data?.errors) return false;
+  if (!data?.errors) {
+    return false;
+  }
 
   const hasDuplicate = data.errors.has_deleted_duplicate;
   if (
@@ -392,16 +595,26 @@ export function getDeletedDuplicateMessage(error: unknown): string {
         "You can modify here, or go to 'View Deleted' to restore it.",
       );
 
-  if (!data?.errors) return fallback;
+  if (!data?.errors) {
+    return fallback;
+  }
   const errors = data.errors;
 
-  if (Array.isArray(errors.non_field_errors) && errors.non_field_errors.length > 0)
-    return normalize(errors.non_field_errors[0] as string);
-  if (typeof errors.non_field_errors === "string")
+  if (
+    Array.isArray(errors.non_field_errors) &&
+    errors.non_field_errors.length > 0
+  ) {
+    return normalize(errors.non_field_errors[0]);
+  }
+  if (typeof errors.non_field_errors === "string") {
     return normalize(errors.non_field_errors);
-  if (typeof errors.detail === "string") return normalize(errors.detail);
-  if (Array.isArray(errors.detail) && errors.detail.length > 0)
-    return normalize(errors.detail[0] as string);
+  }
+  if (typeof errors.detail === "string") {
+    return normalize(errors.detail);
+  }
+  if (Array.isArray(errors.detail) && errors.detail.length > 0) {
+    return normalize(errors.detail[0]);
+  }
 
   return fallback;
 }
@@ -409,11 +622,19 @@ export function getDeletedDuplicateMessage(error: unknown): string {
 /** Extract deleted record ID from error */
 export function getDeletedRecordId(error: unknown): string | null {
   const errors = (error as AxiosErrorWrapper)?.response?.data?.errors;
-  if (!errors) return null;
+  if (!errors) {
+    return null;
+  }
 
-  if (typeof errors.deleted_record_id === "string") return errors.deleted_record_id;
-  if (Array.isArray(errors.deleted_record_id) && errors.deleted_record_id.length > 0)
-    return errors.deleted_record_id[0] as string;
+  if (typeof errors.deleted_record_id === "string") {
+    return errors.deleted_record_id;
+  }
+  if (
+    Array.isArray(errors.deleted_record_id) &&
+    errors.deleted_record_id.length > 0
+  ) {
+    return errors.deleted_record_id[0];
+  }
 
   return null;
 }

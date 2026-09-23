@@ -126,16 +126,7 @@ export interface StudentAttendanceReport {
   records: ComprehensiveAttendanceRecord[];
 }
 
-// Holiday Types
-
-export interface Holiday {
-  public_id: string;
-  name: string;
-  date: string;
-  type: "public" | "school" | "optional";
-  description?: string;
-  is_recurring?: boolean;
-}
+// NOTE: Holiday types are now in ./holiday.ts for the complete implementation
 
 // Employee Timesheet Types
 

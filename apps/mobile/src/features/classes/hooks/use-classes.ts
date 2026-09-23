@@ -3,10 +3,21 @@
  */
 
 import { QueryKeys } from '@educard/shared';
-import type { Class } from '@educard/shared';
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import type { Class, ClassDetail } from '@educard/shared';
+import {
+  useQuery,
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 import { DEFAULT_PAGE_SIZE } from '@/api/client';
+import {
+  handleMutationError,
+  type MutationOptions,
+} from '@/lib/mutation-utils';
+import { useCriticalOperation } from '@/providers/critical-operation-context';
+import { showToast } from '@/utils/toast';
 
 import {
   getClasses,
@@ -21,12 +32,21 @@ import {
 export const classKeys = {
   all: QueryKeys.CLASSES.ALL,
   lists: () => QueryKeys.CLASSES.LISTS(),
-  list: (params?: ClassQueryParams) =>
-    QueryKeys.CLASSES.LIST(params as Record<string, unknown> | undefined),
-  infinite: (params?: Omit<ClassQueryParams, 'page'>) => QueryKeys.CLASSES.INFINITE(params),
+  list: (params?: ClassQueryParams) => QueryKeys.CLASSES.LIST(params),
+  infinite: (params?: Omit<ClassQueryParams, 'page'>) =>
+    QueryKeys.CLASSES.INFINITE(params),
   details: () => QueryKeys.CLASSES.DETAILS(),
   detail: (id: string) => QueryKeys.CLASSES.DETAIL(id),
 };
+
+/** Deleting/restoring a class cascades to its students and subjects. */
+function invalidateClassCascade(
+  queryClient: ReturnType<typeof useQueryClient>,
+) {
+  void queryClient.invalidateQueries({ queryKey: classKeys.all });
+  void queryClient.invalidateQueries({ queryKey: QueryKeys.STUDENTS.ALL });
+  void queryClient.invalidateQueries({ queryKey: QueryKeys.SUBJECTS.ALL });
+}
 
 export function useClasses(params?: Omit<ClassQueryParams, 'page'>) {
   const pageSize = params?.page_size ?? DEFAULT_PAGE_SIZE;
@@ -40,14 +60,14 @@ export function useClasses(params?: Omit<ClassQueryParams, 'page'>) {
         page_size: pageSize,
       }),
     initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: lastPage => {
       if (lastPage.pagination.has_next) {
         return lastPage.pagination.current_page + 1;
       }
       return undefined;
     },
-    select: (data) => ({
-      classes: data.pages.flatMap((page) => page.data),
+    select: data => ({
+      classes: data.pages.flatMap(page => page.data),
       totalCount: data.pages[0]?.pagination.count ?? 0,
       hasMore: data.pages[data.pages.length - 1]?.pagination.has_next ?? false,
     }),
@@ -60,16 +80,13 @@ export function useClasses(params?: Omit<ClassQueryParams, 'page'>) {
 
 /**
  * Hook to fetch managed classes for forms (student/subject creation)
- *
- * For teachers: Returns only classes where they are the class teacher
- * For admins: Returns all classes
- *
- * @param formType - 'student' or 'subject' to indicate which form is using this
  */
 export function useManagedClasses(formType: 'student' | 'subject' = 'student') {
   const params: ClassQueryParams = {
     page_size: 100,
-    ...(formType === 'student' ? { for_student_form: true } : { for_subject_form: true }),
+    ...(formType === 'student'
+      ? { for_student_form: true }
+      : { for_subject_form: true }),
   };
 
   return useInfiniteQuery({
@@ -80,18 +97,18 @@ export function useManagedClasses(formType: 'student' | 'subject' = 'student') {
         page: pageParam,
       }),
     initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: lastPage => {
       if (lastPage.pagination.has_next) {
         return lastPage.pagination.current_page + 1;
       }
       return undefined;
     },
-    select: (data) => ({
-      classes: data.pages.flatMap((page) => page.data),
+    select: data => ({
+      classes: data.pages.flatMap(page => page.data),
       totalCount: data.pages[0]?.pagination.count ?? 0,
       hasMore: data.pages[data.pages.length - 1]?.pagination.has_next ?? false,
     }),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
@@ -99,51 +116,102 @@ export function useManagedClasses(formType: 'student' | 'subject' = 'student') {
 }
 
 export function useClassDetail(publicId: string, isDeleted?: boolean) {
-  return useQuery({
+  return useQuery<ClassDetail>({
     queryKey: [...classKeys.detail(publicId), isDeleted],
-    queryFn: () => getClassById(publicId, isDeleted),
+    queryFn: async () => {
+      const response = await getClassById(publicId, isDeleted);
+      return response.data;
+    },
     enabled: !!publicId,
   });
 }
 
-export function useCreateClass() {
+export function useCreateClass(options?: MutationOptions) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ data, forceCreate }: { data: Partial<Class>; forceCreate?: boolean }) =>
-      createClass(data, forceCreate),
-    onSuccess: () => {
+    mutationFn: ({
+      data,
+      forceCreate,
+    }: {
+      data: Partial<Class>;
+      forceCreate?: boolean;
+    }) => createClass(data, forceCreate),
+    onSuccess: response => {
+      showToast('success', response.message || 'Class created successfully');
       void queryClient.invalidateQueries({ queryKey: classKeys.all });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to create class', options?.onError);
     },
   });
 }
 
-export function useUpdateClass() {
+export function useUpdateClass(options?: MutationOptions) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ publicId, data }: { publicId: string; data: Partial<Class> }) =>
-      updateClass(publicId, data),
-    onSuccess: () => {
+    mutationFn: ({
+      publicId,
+      data,
+    }: {
+      publicId: string;
+      data: Partial<Class>;
+    }) => updateClass(publicId, data),
+    onSuccess: response => {
+      showToast('success', response.message || 'Class updated successfully');
       void queryClient.invalidateQueries({ queryKey: classKeys.all });
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to update class', options?.onError);
     },
   });
 }
 
-export function useDeleteClass() {
+export function useDeleteClass(options?: MutationOptions) {
   const queryClient = useQueryClient();
+  const { beginCriticalOperation, endCriticalOperation } =
+    useCriticalOperation();
   return useMutation({
     mutationFn: (publicId: string) => deleteClass(publicId),
+    onMutate: () => {
+      beginCriticalOperation({
+        title: 'Deleting class',
+        description: 'Removing the class and its related records...',
+      });
+    },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: classKeys.lists() });
+      showToast('success', 'Class deleted successfully');
+      invalidateClassCascade(queryClient);
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(error, 'Failed to delete class', options?.onError);
+    },
+    onSettled: () => {
+      endCriticalOperation();
     },
   });
 }
 
-export function useRestoreClass() {
+export function useRestoreClass(options?: MutationOptions) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (publicId: string) => restoreClass(publicId),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: classKeys.all });
+    onSuccess: response => {
+      showToast(
+        'success',
+        response.message || 'Class reactivated successfully',
+      );
+      invalidateClassCascade(queryClient);
+      options?.onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      handleMutationError(
+        error,
+        'Failed to reactivate class',
+        options?.onError,
+      );
     },
   });
 }

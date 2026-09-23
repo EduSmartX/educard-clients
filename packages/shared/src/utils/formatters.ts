@@ -42,10 +42,10 @@ export function getRelativeTime(date: Date): string {
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
 
-  if (minutes < 1) return "Just now";
-  if (minutes < 60) return `${minutes} min${minutes > 1 ? "s" : ""} ago`;
-  if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
-  if (days < 7) return `${days} day${days > 1 ? "s" : ""} ago`;
+  if (minutes < 1) {return "Just now";}
+  if (minutes < 60) {return `${minutes} min${minutes > 1 ? "s" : ""} ago`;}
+  if (hours < 24) {return `${hours} hour${hours > 1 ? "s" : ""} ago`;}
+  if (days < 7) {return `${days} day${days > 1 ? "s" : ""} ago`;}
 
   return formatDate(date, "short");
 }
@@ -66,9 +66,21 @@ export function formatCurrency(
 }
 
 /**
+ * Check if phone number is masked (contains asterisks from backend)
+ */
+export function isPhoneMasked(phone: string): boolean {
+  return phone.includes("*");
+}
+
+/**
  * Format phone number
+ * If phone is masked, return as-is
  */
 export function formatPhoneNumber(phone: string): string {
+  // If phone is masked, return as-is
+  if (isPhoneMasked(phone)) {
+    return phone;
+  }
   const cleaned = phone.replace(/\D/g, "");
   if (cleaned.length === 10) {
     return `+91 ${cleaned.slice(0, 5)} ${cleaned.slice(5)}`;
@@ -92,7 +104,7 @@ export function getInitials(name: string): string {
  * Truncate text with ellipsis
  */
 export function truncateText(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text;
+  if (text.length <= maxLength) {return text;}
   return `${text.slice(0, maxLength - 3)}...`;
 }
 
@@ -103,7 +115,7 @@ export const truncate = truncateText;
  * Capitalize first letter
  */
 export function capitalize(text: string): string {
-  if (!text) return "";
+  if (!text) {return "";}
   return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 }
 
@@ -111,6 +123,6 @@ export function capitalize(text: string): string {
  * Calculate percentage
  */
 export function calculatePercentage(value: number, total: number): number {
-  if (total === 0) return 0;
+  if (total === 0) {return 0;}
   return Math.round((value / total) * 100);
 }

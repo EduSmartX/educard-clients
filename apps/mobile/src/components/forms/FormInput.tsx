@@ -4,24 +4,24 @@
  */
 
 import { AlertCircle } from 'lucide-react-native';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   View,
   Text,
   TextInput,
   StyleSheet,
   type TextInputProps,
-  type NativeSyntheticEvent,
-  type TextInputFocusEventData,
 } from 'react-native';
 
-interface FormInputProps extends TextInputProps {
+export interface FormInputProps extends TextInputProps {
   label: string;
   error?: string;
   required?: boolean;
   hint?: string;
   /** Called on blur with field value — use for per-field validation */
   onBlurValidate?: () => void;
+  /** Optional trailing element rendered inside the input (e.g. a contacts picker button). */
+  rightSlot?: ReactNode;
 }
 
 export function FormInput({
@@ -32,11 +32,12 @@ export function FormInput({
   style,
   onBlurValidate,
   onBlur,
+  rightSlot,
   ...props
 }: FormInputProps) {
   const [focused, setFocused] = useState(false);
 
-  const handleBlur = (e: NativeSyntheticEvent<TextInputFocusEventData>) => {
+  const handleBlur: NonNullable<TextInputProps['onBlur']> = e => {
     setFocused(false);
     onBlurValidate?.();
     onBlur?.(e);
@@ -66,46 +67,56 @@ export function FormInput({
           onFocus={() => setFocused(true)}
           {...props}
         />
+        {rightSlot}
       </View>
-      {hasError ? (
+      {hasError && (
         <View style={styles.errorRow}>
           <AlertCircle size={13} color="#ef4444" />
           <Text style={styles.error}>{error}</Text>
         </View>
-      ) : hint ? (
-        <Text style={styles.hint}>{hint}</Text>
-      ) : null}
+      )}
+      {!hasError && hint && <Text style={styles.hint}>{hint}</Text>}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { marginBottom: 16 },
-  label: { fontSize: 14, fontWeight: '600', color: '#334155', marginBottom: 6 },
+  container: { marginBottom: 14 },
+  label: { fontSize: 13, fontWeight: '500', color: '#475569', marginBottom: 6 },
   labelError: { color: '#dc2626' },
   required: { color: '#ef4444' },
   inputWrapper: {
-    borderWidth: 1.5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
     borderColor: '#e2e8f0',
     borderRadius: 12,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#ffffff',
   },
   inputWrapperError: {
     borderColor: '#ef4444',
     backgroundColor: '#fef2f2',
-    borderWidth: 2,
+    borderWidth: 1.5,
   },
   inputWrapperFocused: {
-    borderColor: '#7c3aed',
-    backgroundColor: '#faf5ff',
+    borderColor: '#8b5cf6',
+    backgroundColor: '#ffffff',
+    borderWidth: 1.5,
   },
   input: {
+    flex: 1,
     paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
+    paddingVertical: 11,
+    fontSize: 14,
     color: '#1e293b',
   },
-  errorRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, marginLeft: 4 },
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+    marginLeft: 4,
+  },
   error: { fontSize: 12, color: '#ef4444', flex: 1 },
   hint: { fontSize: 12, color: '#94a3b8', marginTop: 4, marginLeft: 4 },
 });

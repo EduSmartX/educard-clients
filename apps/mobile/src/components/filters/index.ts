@@ -1,16 +1,53 @@
 /**
- * Filters Components Index
- * Export all filter-related components
+ * Filters Components Index (slice)
+ * Per-entity filter configs are added here as list screens are migrated.
  */
 
-export { FilterModal, type FilterField, type FilterOption } from './FilterModal';
+export {
+  FilterModal,
+  type FilterField,
+  type FilterOption,
+} from './FilterModal';
 export { ActiveFilters } from './ActiveFilters';
-export { type FilterLabel } from './SharedFilterFields';
-export { TEACHER_FILTER_FIELDS, getTeacherFilterLabels } from './TeacherFilters';
+export {
+  GENDER_FILTER_FIELD,
+  makeDeletedToggle,
+  getGenderLabel,
+  getDeletedLabel,
+  type FilterLabel,
+} from './SharedFilterFields';
+export {
+  buildSubjectFilterFields,
+  SUBJECT_FILTER_FIELDS,
+  getSubjectFilterLabels,
+} from './SubjectFilters';
+export { CLASS_FILTER_FIELDS, getClassFilterLabels } from './ClassFilters';
+export {
+  FEEDBACK_FILTER_FIELDS,
+  getFeedbackFilterLabels,
+} from './FeedbackFilters';
+export {
+  TEACHER_FILTER_FIELDS,
+  getTeacherFilterLabels,
+} from './TeacherFilters';
 export {
   STUDENT_FILTER_FIELDS,
-  getStudentFilterLabels,
   useStudentFilterFields,
+  getStudentFilterLabels,
 } from './StudentFilters';
-export { SUBJECT_FILTER_FIELDS, getSubjectFilterLabels } from './SubjectFilters';
-export { CLASS_FILTER_FIELDS, getClassFilterLabels } from './ClassFilters';
+export {
+  ClassFilterDropdown,
+  getClassLabel,
+  buildClassOptions,
+  type ClassOption,
+} from './ClassFilterDropdown';
+export {
+  buildFeeStructureFilterFields,
+  getFeeStructureFilterLabels,
+  type FeeClassOption,
+} from './FeeStructureFilters';
+export {
+  PAYMENT_FILTER_FIELDS,
+  getPaymentFilterLabels,
+  type PaymentFiltersState,
+} from './PaymentFilters';

@@ -18,6 +18,7 @@ export interface OrganizationPreference {
   applicable_values: string[] | null;
   description: string;
   value: string | string[];
+  depends_on: string | null;
 }
 
 export interface GroupedPreference {

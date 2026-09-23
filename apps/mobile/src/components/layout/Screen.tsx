@@ -3,9 +3,9 @@
  * Handles safe area and common screen layout
  */
 
-import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { View, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, StatusBar } from 'react-native';
+import { KeyboardAwareScrollView } from '@/lib/keyboard-aware-scroll-view';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface ScreenProps {
@@ -30,35 +30,46 @@ export function Screen({
   contentContainerClassName = '',
 }: ScreenProps) {
   const Container = safeArea ? SafeAreaView : View;
+  const barStyle =
+    statusBarStyle === 'light'
+      ? 'light-content'
+      : statusBarStyle === 'dark'
+        ? 'dark-content'
+        : 'default';
 
   const content = scrollable ? (
-    <ScrollView
+    <KeyboardAwareScrollView
       className="flex-1"
       contentContainerClassName={`flex-grow ${contentContainerClassName}`}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
+      enableOnAndroid
+      extraScrollHeight={20}
     >
       {children}
-    </ScrollView>
+    </KeyboardAwareScrollView>
   ) : (
     <View className={`flex-1 ${contentContainerClassName}`}>{children}</View>
   );
 
-  const wrappedContent = keyboardAvoiding ? (
-    <KeyboardAvoidingView
-      className="flex-1"
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-    >
-      {content}
-    </KeyboardAvoidingView>
-  ) : (
-    content
-  );
+  // KeyboardAwareScrollView already handles keyboard avoidance when scrollable
+  const wrappedContent =
+    keyboardAvoiding && !scrollable ? (
+      <KeyboardAwareScrollView
+        className="flex-1"
+        enableOnAndroid
+        extraScrollHeight={20}
+        keyboardShouldPersistTaps="handled"
+      >
+        {content}
+      </KeyboardAwareScrollView>
+    ) : (
+      content
+    );
 
   return (
     <>
-      <StatusBar style={statusBarStyle} />
+      <StatusBar barStyle={barStyle} />
       <Container className="flex-1" style={{ backgroundColor }} edges={edges}>
         {wrappedContent}
       </Container>
