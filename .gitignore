@@ -65,3 +65,4 @@ web-build/
 .vercel
 .env*.local
 *.keystore
+*.jks
