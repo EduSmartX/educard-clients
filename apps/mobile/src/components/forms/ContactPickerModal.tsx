@@ -108,7 +108,10 @@ export function ContactPickerModal({
     >
       <KeyboardAvoidingView
         style={styles.modalOverlay}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        // Bottom-sheet with a fixed-height list; search input sits near the
+        // top so it's never obscured — JS 'height' resize here would fight
+        // with the Modal's own slide-in animation on Android, causing flicker.
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.modal}>
           <View style={styles.modalHeader}>

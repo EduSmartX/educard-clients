@@ -117,7 +117,11 @@ export function FormDropdown({
         >
           <KeyboardAvoidingView
             style={styles.modalOverlay}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            // Bottom-sheet with maxHeight 70%; search input sits near the top
+            // so it's never obscured — JS 'height' resize here would fight
+            // with the Modal's own slide-in animation + autoFocus keyboard
+            // opening simultaneously, causing visible flicker on Android.
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           >
             <View style={[styles.modal, { paddingBottom: insets.bottom + 20 }]}>
               <View style={styles.modalHeader}>
