@@ -20,6 +20,7 @@ import {
   StyleSheet,
   TextInput,
   KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -114,7 +115,10 @@ export function FormDropdown({
             setSearch('');
           }}
         >
-          <KeyboardAvoidingView style={styles.modalOverlay} behavior="padding">
+          <KeyboardAvoidingView
+            style={styles.modalOverlay}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          >
             <View style={[styles.modal, { paddingBottom: insets.bottom + 20 }]}>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>{label}</Text>

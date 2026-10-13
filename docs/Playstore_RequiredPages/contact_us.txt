@@ -1,0 +1,59 @@
+# Contact Us
+
+**EDUCARD TECHNOLOGIES**
+
+We are here to help with questions about EduCard, account access, school-management features, technical issues, and privacy-related concerns.
+
+If you use EduCard as a school administrator, teacher, or parent, please contact us using the details below.
+
+## General Support
+
+For assistance with EduCard, account-related questions, technical issues, or feedback, contact:
+
+**Email:** support@educard.info  
+**Website:** https://educard.info
+
+Please describe your issue clearly so that our support team can understand your request and provide appropriate assistance.
+
+## Account Deletion Requests
+
+### Administrator Accounts
+
+Administrators who want to delete their EduCard accounts can email support@educard.info.
+
+Please use the subject line: **EduCard Account Deletion Request**.
+
+Include your registered email address, organization name, and account role. We may request additional information to verify your identity before processing the request.
+
+### Teacher and Parent Accounts
+
+Teacher and Parent accounts are managed by the Organization Admin.
+
+Please contact your school's or organization's Organization Admin to request account deletion. If you cannot contact your Organization Admin, email support@educard.info for assistance.
+
+For additional information, visit:
+
+https://educard.info/account-deletion
+
+## Privacy and Data Protection
+
+For questions about personal information, data retention, privacy rights, or the handling of student information, please email support@educard.info.
+
+Please do not include passwords, authentication codes, or unnecessary sensitive student information in your email.
+
+You can review our Privacy Policy here:
+
+https://educard.info/privacy-policy
+
+## Technical Support
+
+When reporting a technical issue, please provide a description of the problem, the affected feature, and any relevant error message. Avoid sending confidential information unless it is specifically necessary and requested through an appropriate channel.
+
+## Our Website
+
+Visit https://educard.info to learn more about EduCard and access our published policies.
+
+**EDUCARD TECHNOLOGIES**  
+Email: support@educard.info  
+Website: https://educard.info
+

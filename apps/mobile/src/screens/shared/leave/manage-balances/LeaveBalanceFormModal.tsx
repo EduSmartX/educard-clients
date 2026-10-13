@@ -121,7 +121,9 @@ export function LeaveBalanceFormModal({
     >
       <KeyboardAvoidingView
         style={styles.overlay}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        // 'height' on Android works even inside <Modal>, unlike relying on
+        // the Activity's windowSoftInputMode (which Modal's own window ignores).
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <View style={styles.card}>
           <View style={styles.header}>

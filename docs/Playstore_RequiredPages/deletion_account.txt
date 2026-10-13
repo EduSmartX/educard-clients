@@ -1,0 +1,72 @@
+# EduCard Account Deletion
+
+**Operated by EDUCARD TECHNOLOGIES**  
+**Last Updated:** October 12, 2026
+
+EduCard respects your privacy and provides a process for requesting account deletion. The procedure depends on your account type and the organization associated with your account.
+
+## 1. How to Request Account Deletion
+
+### Administrator Accounts
+
+If you are an administrator who wants to delete your EduCard account, follow these steps:
+
+1. Send an email to **support@educard.info**.
+2. Use the subject line **EduCard Account Deletion Request**.
+3. Include your registered email address, organization name, and account role.
+4. Clearly state that you are requesting deletion of your EduCard account.
+
+We may contact you to verify your identity and authorization before processing the request.
+
+### Teacher and Parent Accounts
+
+Teacher and Parent accounts are managed by the Organization Admin.
+
+To request deletion:
+
+1. Contact your school's or organization's Organization Admin.
+2. Ask the Organization Admin to delete your EduCard account.
+3. If you cannot contact your Organization Admin or need assistance, email **support@educard.info**.
+
+The Organization Admin is responsible for managing teacher and parent accounts within the organization.
+
+## 2. What Happens When Your Account Is Deleted?
+
+EduCard's current account-deletion scope is account-only.
+
+When an account is deleted:
+
+- Access to the deleted account is removed.
+- The account can no longer be used to sign in.
+- Personal information associated with the account is handled according to the applicable data-retention and deletion requirements.
+- School or organizational records may remain where necessary for legitimate educational, administrative, accounting, or legal purposes.
+
+Deleting a user's account does not automatically delete every record associated with that user. For example, attendance, academic, homework, or fee records may need to remain available to the school or organization.
+
+Information that is no longer required will be deleted or anonymized where appropriate, subject to applicable retention requirements.
+
+## 3. Data Retention After Account Deletion
+
+Personal information retained in our systems following account deletion is retained for **up to 90 days after account deletion**, unless a longer period is required or permitted under applicable legal or legitimate retention requirements.
+
+Once the applicable retention period ends, information will be deleted or anonymized where appropriate.
+
+Certain school or organizational records may be retained separately by the relevant school or organization under its applicable record-retention requirements. Such records are not necessarily removed when an individual account is deleted.
+
+## 4. Verification and Processing
+
+We may verify the identity and authority of the person submitting a deletion request to prevent unauthorized deletion.
+
+The time required to process a request may depend on verification, the account type, the Organization Admin's involvement, and any applicable retention obligations.
+
+If additional information is required, we will contact the requester using the information provided.
+
+## 5. Need Help?
+
+For administrator account-deletion requests or assistance with teacher and parent account deletion, contact:
+
+**EDUCARD TECHNOLOGIES**  
+Email: support@educard.info  
+Subject: EduCard Account Deletion Request  
+Website: https://educard.info
+

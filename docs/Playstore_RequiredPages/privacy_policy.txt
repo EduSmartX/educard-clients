@@ -1,0 +1,174 @@
+# Privacy Policy
+
+**Effective Date:** October 12, 2026  
+**Last Updated:** October 12, 2026
+
+EDUCARD TECHNOLOGIES ("EduCard", "we", "our", or "us") respects your privacy and is committed to protecting the personal information processed through the EduCard website and mobile application.
+
+This Privacy Policy explains how we collect, use, store, disclose, and protect information when administrators, teachers, parents, and other authorized users access or use EduCard.
+
+By using EduCard, you acknowledge that you have read this Privacy Policy.
+
+## 1. Information We Collect
+
+Depending on the features enabled by your school or organization and how you use the application, EduCard may process the following categories of information.
+
+### 1.1 Account Information
+
+- Name and username
+- Email address and phone number
+- Account role and organization association
+- Authentication information required to provide secure account access
+- Profile information provided by the user or organization
+
+Passwords, where used, should be stored in a securely protected form and not as readable plain text.
+
+### 1.2 School and Organization Information
+
+- School or organization name and related details
+- Teacher and parent account information
+- Student names, class, section, and related school information
+- Information necessary to associate users with their school or organization
+
+### 1.3 Educational and Administrative Records
+
+Depending on the features used, EduCard may process:
+
+- Student attendance records
+- Homework, assignments, and submissions
+- Leave requests and approvals
+- Academic marks, grades, and performance information
+- Fee records and related financial or refund information
+- School announcements, messages, and notifications
+
+These records may contain information about children and are intended to be accessed only for authorized educational or administrative purposes.
+
+### 1.4 Technical Information
+
+The application may process technical information required to operate and maintain the service, such as device or push-notification identifiers, application diagnostics, and technical logs, where those features are enabled.
+
+We do not intend to collect precise location information unless a specific feature requires it and the appropriate disclosure and permissions are provided.
+
+## 2. How We Use Information
+
+We use personal information for purposes such as:
+
+- Creating and managing user accounts
+- Authenticating users and controlling access based on account roles
+- Providing school-management and educational features
+- Managing attendance, homework, leave, academic, and fee-related activities
+- Delivering relevant notifications and school communications
+- Responding to support requests and account-deletion requests
+- Maintaining service reliability, security, and performance
+- Detecting, investigating, and preventing unauthorized access, misuse, or fraud
+- Meeting applicable legal and regulatory obligations
+
+We aim to process personal information only for purposes relevant to providing and maintaining EduCard.
+
+## 3. School and Organization Responsibilities
+
+EduCard supports schools and organizations in managing educational and administrative activities.
+
+Schools and organizations are responsible for ensuring that they have an appropriate legal basis, permissions, and authorizations to provide personal information to EduCard and to use that information for their intended purposes.
+
+Organization Admins are responsible for managing authorized users within their organizations, including teacher and parent accounts, and for ensuring that access to school information is appropriately controlled.
+
+Parents or guardians should contact their school or Organization Admin regarding the handling of student information associated with their school account.
+
+## 4. Sharing of Information
+
+We do not sell personal information to third parties.
+
+Information may be disclosed to the following categories of recipients where necessary:
+
+- **Schools and organizations:** Authorized administrators and personnel may access information needed for school-management activities.
+- **Service providers:** Hosting, database, messaging, notification, and infrastructure providers may process information to operate the application.
+- **Legal and regulatory authorities:** Information may be disclosed when required by applicable law or valid legal process.
+- **Security and protection:** Information may be processed or disclosed when reasonably necessary to investigate security incidents, prevent misuse, or protect users and the service.
+
+Service providers are expected to handle information according to their applicable obligations and the services they provide.
+
+## 5. Data Storage and Security
+
+EduCard uses technical and organizational measures intended to protect personal information against unauthorized access, alteration, disclosure, loss, or misuse.
+
+No method of electronic storage or transmission can be guaranteed to be completely secure. We therefore cannot promise absolute security, but we work to protect information appropriate to the nature of the service.
+
+Users should keep their login credentials confidential and promptly report suspected unauthorized access.
+
+## 6. Data Retention
+
+We retain personal information for as long as necessary to provide the service, fulfill the purposes described in this Policy, comply with applicable obligations, resolve disputes, and protect the legitimate interests of users and the service.
+
+### Account Deletion and the 90-Day Retention Period
+
+When an account is deleted, the account's login access is removed. Personal information associated with the deleted account that remains in our systems for deletion processing or other applicable purposes is retained for **up to 90 days after account deletion**, unless a longer period is required or permitted for a legitimate legal obligation or another applicable retention requirement.
+
+After the applicable retention period, information will be deleted or anonymized where appropriate, subject to legitimate retention requirements and technical limitations such as secure backup lifecycle processes.
+
+Certain school or organizational records, including attendance, academic, homework, or fee records, may remain under the control of the relevant school or organization where necessary for legitimate educational, administrative, accounting, or legal purposes. Such records are not necessarily deleted solely because an individual user's login account is deleted.
+
+## 7. Account Deletion
+
+EduCard provides different account-deletion procedures depending on the user's role.
+
+### Administrator Accounts
+
+Administrators may request account deletion by emailing **support@educard.info**. The request should include the registered email address, organization name, and account role.
+
+We may request additional information to verify the requester's identity and authority before processing the request.
+
+### Teacher and Parent Accounts
+
+Teacher and Parent accounts are managed by the Organization Admin. Users should contact their school's or organization's Organization Admin and request account deletion.
+
+If a user cannot contact their Organization Admin, they may email support@educard.info for assistance.
+
+Account deletion removes the affected account's access. It does not automatically mean that every associated school record is erased. Any information retained after deletion will be handled in accordance with the retention practices described in this Policy and applicable requirements.
+
+Further instructions are available at:
+
+https://educard.info/account-deletion
+
+## 8. Children's Information
+
+EduCard is designed to support school-management activities and may process student information, including information about children.
+
+Schools and organizations using EduCard are responsible for obtaining any permissions, consents, or authorizations required under applicable law before providing or processing children's information.
+
+Access to student information should be limited to authorized users for legitimate educational or administrative purposes. Parents and guardians may contact the relevant school or Organization Admin regarding student information and applicable privacy rights.
+
+## 9. Your Privacy Rights
+
+Depending on applicable law and the circumstances of processing, users may have rights to request access to, correction of, or deletion of their personal information, or to raise concerns about how it is handled.
+
+Users should direct requests concerning school-managed records to their school or Organization Admin. Requests concerning administrator accounts or EduCard's handling of personal information may be sent to support@educard.info.
+
+We may need to verify identity and authority before responding to a request.
+
+## 10. Third-Party Services
+
+EduCard may rely on third-party infrastructure or service providers to host, store, transmit, or support application data.
+
+Those providers may have their own privacy policies and terms governing their services. Where required, additional information about relevant providers and their data practices should be made available to users.
+
+## 11. International Processing
+
+Depending on the infrastructure and service providers used, information may be stored or processed in locations outside the user's location. Where applicable, such processing will be subject to relevant legal requirements and appropriate safeguards.
+
+## 12. Changes to This Privacy Policy
+
+We may update this Privacy Policy to reflect changes in EduCard's features, operations, service providers, or legal requirements.
+
+The updated version will be published on this page with a revised "Last Updated" date. Users should review this page periodically for changes.
+
+## 13. Contact Us
+
+For privacy questions, data-related concerns, or administrator account-deletion requests, contact:
+
+**EDUCARD TECHNOLOGIES**  
+Email: support@educard.info  
+Website: https://educard.info
+
+For teacher or parent account-deletion requests, please contact your Organization Admin first.
+

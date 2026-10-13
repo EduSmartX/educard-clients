@@ -286,6 +286,12 @@ const FeedbackDetailPage = lazy(() => import('./features/feedback/pages/feedback
 // Coming Soon
 const ComingSoonPage = lazy(() => import('./pages/coming-soon-page'));
 
+// Public legal / Play Store required pages
+const PrivacyPolicyPage = lazy(() => import('./pages/privacy-policy-page'));
+const TermsOfServicePage = lazy(() => import('./pages/terms-of-service-page'));
+const ContactPage = lazy(() => import('./pages/contact-page'));
+const AccountDeletionPage = lazy(() => import('./pages/account-deletion-page'));
+
 function App() {
   const { isReady } = useAuthInit();
   useKeyboardFieldVisibility();
@@ -300,6 +306,10 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/account-deletion" element={<AccountDeletionPage />} />
           <Route path={ROUTES.AUTH.LOGIN} element={<LoginPage />} />
           <Route path={ROUTES.AUTH.SIGNUP} element={<SignupPage />} />
           <Route path={ROUTES.AUTH.REGISTRATION_SUCCESS} element={<RegistrationSuccessPage />} />
