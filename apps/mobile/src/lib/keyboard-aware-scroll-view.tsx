@@ -28,10 +28,10 @@ import {
 } from 'react-native';
 
 /** Gap kept between the focused input and the top of the keyboard. */
-const DEFAULT_KEYBOARD_GAP = 24;
+const DEFAULT_KEYBOARD_GAP = 60;
 
 /** Never sit flush against the keyboard, even if a screen asks for a smaller gap. */
-const MIN_KEYBOARD_GAP = 24;
+const MIN_KEYBOARD_GAP = 60;
 
 /** Lets the row finish laying out (error text, expanding sections) before measuring. */
 const MEASURE_DELAY_MS = 50;
@@ -188,7 +188,10 @@ export const KeyboardAwareScrollView = forwardRef<
   return (
     <KeyboardAvoidingView
       style={containerStyle ?? styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      // 'height' on Android is JS-driven (keyboard event based) and works even
+      // inside <Modal>, where the native windowSoftInputMode="adjustResize"
+      // never applies because Modal renders into its own separate window.
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
         ref={scrollRef}

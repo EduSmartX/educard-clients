@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView,
   Linking,
   Modal,
+  Platform,
   StyleSheet,
   Text,
   TextInput,
@@ -105,7 +106,10 @@ export function ContactPickerModal({
       statusBarTranslucent
       onRequestClose={handleClose}
     >
-      <KeyboardAvoidingView style={styles.modalOverlay} behavior="padding">
+      <KeyboardAvoidingView
+        style={styles.modalOverlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
         <View style={styles.modal}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Choose a contact</Text>

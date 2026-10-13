@@ -15,6 +15,7 @@ import {
   StyleSheet,
   TextInput,
   KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -133,7 +134,10 @@ export function SearchableMultiSelect({
         statusBarTranslucent
         onRequestClose={close}
       >
-        <KeyboardAvoidingView style={styles.overlay} behavior="padding">
+        <KeyboardAvoidingView
+          style={styles.overlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
           <View style={[styles.modal, { paddingBottom: insets.bottom + 20 }]}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{label ?? 'Select'}</Text>

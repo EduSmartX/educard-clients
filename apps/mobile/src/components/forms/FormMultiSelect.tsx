@@ -14,6 +14,7 @@ import {
   StyleSheet,
   TextInput,
   KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -136,7 +137,10 @@ export function FormMultiSelect({
         statusBarTranslucent
         onRequestClose={() => setVisible(false)}
       >
-        <KeyboardAvoidingView style={styles.overlay} behavior="padding">
+        <KeyboardAvoidingView
+          style={styles.overlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
           <View style={[styles.modal, { paddingBottom: insets.bottom + 16 }]}>
             {/* Header */}
             <View style={styles.modalHeader}>

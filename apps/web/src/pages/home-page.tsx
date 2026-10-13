@@ -595,6 +595,7 @@ export default function HomePage() {
               {[
                 { label: 'Privacy Policy', path: '/privacy-policy' },
                 { label: 'Terms of Service', path: '/terms-of-service' },
+                { label: 'Account Deletion', path: '/account-deletion' },
                 { label: 'Contact', path: '/contact' },
               ].map((link) => (
                 <button

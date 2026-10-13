@@ -1,0 +1,142 @@
+# Terms and Conditions
+
+**Effective Date:** October 12, 2026  
+**Last Updated:** October 12, 2026
+
+Welcome to EduCard, operated by EDUCARD TECHNOLOGIES ("EduCard", "we", "our", or "us").
+
+These Terms and Conditions govern your access to and use of the EduCard website, mobile application, and related services.
+
+By accessing or using EduCard, you agree to these Terms. If you do not agree, you should stop using the service.
+
+## 1. About EduCard
+
+EduCard is a school-management platform intended to support authorized educational and administrative activities, which may include student information management, attendance, homework, leave requests, academic records, fee-related information, notifications, and communication between schools, teachers, and parents.
+
+The features available to you depend on your account role, organization, and the functionality enabled for your school.
+
+## 2. Eligibility and Authorized Use
+
+EduCard may be used by authorized administrators, teachers, parents, and other permitted users.
+
+Users must provide accurate information when creating or maintaining accounts and must use the service only for lawful and authorized purposes.
+
+Where an account is created or managed by a school or Organization Admin, the user must follow the applicable access arrangements established by that organization.
+
+## 3. Accounts and Access
+
+Access to EduCard may be provisioned or managed by EduCard or an authorized Organization Admin, depending on the account type and organizational setup.
+
+Users are responsible for keeping their login credentials confidential and for activities performed through their accounts, subject to applicable law.
+
+Users must notify their Organization Admin or EduCard support if they suspect unauthorized access, credential misuse, or a security issue.
+
+Organization Admins are responsible for appropriately managing user access within their organizations.
+
+## 4. User Responsibilities
+
+When using EduCard, you agree to:
+
+- Provide accurate and up-to-date information where required.
+- Use the service only for authorized educational or administrative activities.
+- Respect the privacy and confidentiality of students, parents, teachers, and other users.
+- Access only the records and features you are authorized to use.
+- Avoid unauthorized access, interference with service operations, or attempts to bypass security controls.
+- Avoid uploading unlawful, misleading, malicious, or unauthorized content.
+- Comply with applicable laws, school policies, and organizational procedures.
+
+You must not use EduCard to misuse personal information, harass other users, distribute harmful software, or engage in fraudulent or unlawful activity.
+
+## 5. Responsibilities of Schools and Organization Admins
+
+Schools and organizations using EduCard are responsible for:
+
+- Ensuring they are authorized to provide personal and educational information to the platform.
+- Obtaining required permissions or consents under applicable law.
+- Assigning appropriate account roles and access permissions.
+- Managing teacher and parent accounts within their organizations.
+- Maintaining appropriate oversight of school records and organizational data.
+- Following applicable requirements for educational records, privacy, and data retention.
+
+EduCard provides software tools to support school-management activities but does not replace the school's own legal, administrative, or safeguarding responsibilities.
+
+## 6. Privacy and Personal Information
+
+Your use of EduCard is also governed by our Privacy Policy:
+
+https://educard.info/privacy-policy
+
+The Privacy Policy explains how information may be collected, used, stored, shared, and retained.
+
+Users should review the Privacy Policy before using the service.
+
+## 7. Account Deletion
+
+Administrator accounts may request deletion by emailing support@educard.info.
+
+Teacher and Parent accounts are managed by the Organization Admin and should be deleted through that process.
+
+Account deletion removes account access but does not necessarily remove every school or organizational record associated with the account. Certain records may be retained for legitimate educational, administrative, accounting, or legal purposes.
+
+Further details are available at:
+
+https://educard.info/account-deletion
+
+## 8. Availability and Changes to the Service
+
+We aim to provide a reliable service but do not guarantee that EduCard will always be available, uninterrupted, or free from errors.
+
+We may update, modify, maintain, suspend, or discontinue features where reasonably necessary for security, maintenance, operational, technical, or business reasons, subject to applicable law and any separate agreement with a school or organization.
+
+Where reasonably practicable, we will seek to minimize disruption caused by planned maintenance or significant changes.
+
+## 9. Suspension and Termination
+
+Access to an account may be restricted or suspended where necessary to protect the service, investigate suspected misuse, address security risks, comply with legal obligations, or enforce these Terms.
+
+Where appropriate and legally permitted, the affected user or organization may be informed of the reason for the restriction.
+
+Schools and Organization Admins may also manage accounts under their organizational responsibilities and applicable agreements.
+
+## 10. Intellectual Property
+
+EduCard and its associated software, branding, design, and original content are owned by or licensed to EDUCARD TECHNOLOGIES, except for content belonging to users or other third parties.
+
+You may not copy, modify, distribute, reverse engineer, or commercially exploit protected parts of the service except where permitted by law or with the appropriate authorization.
+
+Information and materials submitted by schools or users remain subject to their respective rights and applicable agreements.
+
+## 11. Third-Party Services
+
+EduCard may rely on third-party services to support hosting, communications, notifications, storage, or other functionality.
+
+Third-party services may be subject to separate terms and privacy policies. EduCard is not responsible for independent third-party services beyond the responsibilities imposed on us by applicable law or a separate agreement.
+
+## 12. Disclaimer and Limitation of Liability
+
+To the extent permitted by applicable law, EduCard is provided on an "as available" basis. We do not guarantee that the service will be uninterrupted, error-free, or suitable for every particular purpose.
+
+To the extent permitted by law, EDUCARD TECHNOLOGIES will not be liable for indirect or consequential losses arising from the use of or inability to use the service.
+
+Nothing in these Terms excludes or limits liability that cannot legally be excluded or limited. Any additional limitations are subject to applicable law and any separate agreement with the relevant school or organization.
+
+## 13. Changes to These Terms
+
+We may revise these Terms to reflect changes in the service, business operations, or legal requirements.
+
+The updated Terms will be published on this page with a revised "Last Updated" date. Continued use of the service after an update takes effect may constitute acceptance where permitted by applicable law.
+
+## 14. Governing Law
+
+These Terms are subject to the laws applicable to the operation of EduCard and the relevant user or organization, without excluding mandatory legal protections that apply in a particular jurisdiction.
+
+Any disputes will be handled by the courts or other forums with jurisdiction under applicable law.
+
+## 15. Contact Us
+
+For questions about these Terms or the EduCard service, contact:
+
+**EDUCARD TECHNOLOGIES**  
+Email: support@educard.info  
+Website: https://educard.info
+

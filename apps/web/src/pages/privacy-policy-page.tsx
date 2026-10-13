@@ -24,320 +24,346 @@ export default function PrivacyPolicyPage() {
       {/* Content */}
       <main className="mx-auto max-w-5xl px-6 py-12 lg:px-16">
         <h1 className="mb-2 text-3xl font-bold">Privacy Policy</h1>
-        <p className="text-muted-foreground mb-8 text-sm">Last updated: July 1, 2026</p>
+        <p className="text-muted-foreground mb-8 text-sm">
+          Effective Date: October 12, 2026 &middot; Last Updated: October 12, 2026
+        </p>
 
         <div className="prose prose-gray max-w-none space-y-8">
-          {/* 1. Introduction */}
           <section>
-            <h2 className="text-xl font-semibold">1. Introduction</h2>
-            <p className="text-muted-foreground mt-2">
-              Welcome to {BRANDING.APP_NAME}, a product of{' '}
-              <strong>{BRANDING.LEGAL_ENTITY_NAME}</strong>. We are committed to protecting your
-              personal information and your right to privacy. This Privacy Policy explains how we
-              collect, use, disclose, and safeguard your information when you use our platform (web
-              and mobile applications).
+            <p className="text-muted-foreground">
+              {BRANDING.LEGAL_ENTITY_NAME} (&quot;EduCard&quot;, &quot;we&quot;, &quot;our&quot;, or
+              &quot;us&quot;) respects your privacy and is committed to protecting the personal
+              information processed through the EduCard website and mobile application.
             </p>
             <p className="text-muted-foreground mt-2">
-              By using our services, you consent to the data practices described in this policy. If
-              you do not agree with the terms of this Privacy Policy, please do not access or use
-              our platform.
+              This Privacy Policy explains how we collect, use, store, disclose, and protect
+              information when administrators, teachers, parents, and other authorized users access
+              or use EduCard.
+            </p>
+            <p className="text-muted-foreground mt-2">
+              By using EduCard, you acknowledge that you have read this Privacy Policy.
             </p>
           </section>
 
-          {/* 2. Definitions */}
           <section>
-            <h2 className="text-xl font-semibold">2. Definitions</h2>
-            <ul className="text-muted-foreground mt-2 list-disc space-y-2 pl-6">
-              <li>
-                <strong>&quot;Platform&quot;</strong> refers to {BRANDING.APP_NAME} web and mobile
-                applications operated by {BRANDING.LEGAL_ENTITY_NAME}.
-              </li>
-              <li>
-                <strong>&quot;Institution&quot;</strong> refers to schools, colleges, or educational
-                organizations that register on and use the Platform.
-              </li>
-              <li>
-                <strong>&quot;User&quot;</strong> refers to administrators, teachers, parents,
-                students, or staff accessing the Platform through an Institution.
-              </li>
-              <li>
-                <strong>&quot;Personal Data&quot;</strong> refers to any information that identifies
-                or can be used to identify a User directly or indirectly.
-              </li>
-              <li>
-                <strong>&quot;We&quot;, &quot;Us&quot;, &quot;Our&quot;</strong> refers to{' '}
-                {BRANDING.LEGAL_ENTITY_NAME}.
-              </li>
+            <h2 className="text-xl font-semibold">1. Information We Collect</h2>
+            <p className="text-muted-foreground mt-2">
+              Depending on the features enabled by your school or organization and how you use the
+              application, EduCard may process the following categories of information.
+            </p>
+
+            <h3 className="mt-3 text-base font-semibold">1.1 Account Information</h3>
+            <ul className="text-muted-foreground mt-2 list-disc space-y-1 pl-6">
+              <li>Name and username</li>
+              <li>Email address and phone number</li>
+              <li>Account role and organization association</li>
+              <li>Authentication information required to provide secure account access</li>
+              <li>Profile information provided by the user or organization</li>
             </ul>
-          </section>
-
-          {/* 3. Company Information */}
-          <section>
-            <h2 className="text-xl font-semibold">3. Company Information</h2>
             <p className="text-muted-foreground mt-2">
-              <strong>{BRANDING.LEGAL_ENTITY_NAME}</strong>
-              <br />
-              Address: {BRANDING.CONTACT.ADDRESS}
-              <br />
-              Email: {BRANDING.CONTACT.EMAIL}
-              <br />
-              Phone: {BRANDING.CONTACT.PHONE}
-              <br />
-              Website: https://educard.info
+              Passwords, where used, should be stored in a securely protected form and not as
+              readable plain text.
             </p>
-          </section>
 
-          {/* 4. Information We Collect */}
-          <section>
-            <h2 className="text-xl font-semibold">4. Information We Collect</h2>
-            <p className="text-muted-foreground mt-2">
-              We collect information that you provide directly and information collected
-              automatically:
-            </p>
             <h3 className="mt-3 text-base font-semibold">
-              4.1 Information Provided by Institutions
+              1.2 School and Organization Information
             </h3>
             <ul className="text-muted-foreground mt-2 list-disc space-y-1 pl-6">
-              <li>Organization name, address, and registration details</li>
-              <li>Administrator contact information (name, email, phone)</li>
-              <li>Staff and teacher profiles</li>
-              <li>Student records (name, class, roll number, parent details)</li>
+              <li>School or organization name and related details</li>
+              <li>Teacher and parent account information</li>
+              <li>Student names, class, section, and related school information</li>
+              <li>Information necessary to associate users with their school or organization</li>
             </ul>
-            <h3 className="mt-3 text-base font-semibold">4.2 Information from Users</h3>
-            <ul className="text-muted-foreground mt-2 list-disc space-y-1 pl-6">
-              <li>Account credentials (email, phone number, password)</li>
-              <li>Profile information (name, role, photo)</li>
-              <li>Communication data (leave requests, notifications preferences)</li>
-            </ul>
+
             <h3 className="mt-3 text-base font-semibold">
-              4.3 Automatically Collected Information
+              1.3 Educational and Administrative Records
             </h3>
-            <ul className="text-muted-foreground mt-2 list-disc space-y-1 pl-6">
-              <li>Device information (device type, operating system, browser)</li>
-              <li>Usage data (pages visited, features used, timestamps)</li>
-              <li>IP address and approximate location</li>
-              <li>Push notification tokens (for mobile app notifications)</li>
-            </ul>
-          </section>
-
-          {/* 5. How We Use Your Information */}
-          <section>
-            <h2 className="text-xl font-semibold">5. How We Use Your Information</h2>
-            <p className="text-muted-foreground mt-2">We use collected information to:</p>
-            <ul className="text-muted-foreground mt-2 list-disc space-y-1 pl-6">
-              <li>Provide and maintain our school management services</li>
-              <li>Authenticate users and secure accounts (OTP verification, login)</li>
-              <li>Send transactional notifications (attendance alerts, fee reminders, OTPs)</li>
-              <li>Enable communication between institutions, teachers, and parents</li>
-              <li>Generate reports and analytics for institutional administrators</li>
-              <li>Improve and personalize user experience</li>
-              <li>Ensure platform security and prevent misuse</li>
-              <li>Comply with legal obligations</li>
-            </ul>
-          </section>
-
-          {/* 6. Children's Privacy */}
-          <section>
-            <h2 className="text-xl font-semibold">6. Children&apos;s Privacy</h2>
             <p className="text-muted-foreground mt-2">
-              {BRANDING.APP_NAME} services are intended for use by educational institutions. Student
-              data, including data of minors (children under 18 years), is collected and processed
-              only under the authorization and direction of the respective educational institution.
+              Depending on the features used, EduCard may process:
+            </p>
+            <ul className="text-muted-foreground mt-2 list-disc space-y-1 pl-6">
+              <li>Student attendance records</li>
+              <li>Homework, assignments, and submissions</li>
+              <li>Leave requests and approvals</li>
+              <li>Academic marks, grades, and performance information</li>
+              <li>Fee records and related financial or refund information</li>
+              <li>School announcements, messages, and notifications</li>
+            </ul>
+            <p className="text-muted-foreground mt-2">
+              These records may contain information about children and are intended to be accessed
+              only for authorized educational or administrative purposes.
+            </p>
+
+            <h3 className="mt-3 text-base font-semibold">1.4 Technical Information</h3>
+            <p className="text-muted-foreground mt-2">
+              The application may process technical information required to operate and maintain the
+              service, such as device or push-notification identifiers, application diagnostics, and
+              technical logs, where those features are enabled.
             </p>
             <p className="text-muted-foreground mt-2">
-              We do not knowingly collect personal information directly from children. All student
-              data is managed by authorized institution administrators and parent/guardian accounts.
-              Institutions are responsible for obtaining necessary consents from parents or
-              guardians before entering student data into the platform.
+              We do not intend to collect precise location information unless a specific feature
+              requires it and the appropriate disclosure and permissions are provided.
             </p>
           </section>
 
-          {/* 7. Data Security */}
           <section>
-            <h2 className="text-xl font-semibold">7. Data Security</h2>
+            <h2 className="text-xl font-semibold">2. How We Use Information</h2>
             <p className="text-muted-foreground mt-2">
-              We implement reasonable administrative, technical, and physical safeguards designed to
-              protect personal information against unauthorized access, disclosure, alteration, or
-              destruction. These measures include:
+              We use personal information for purposes such as:
             </p>
             <ul className="text-muted-foreground mt-2 list-disc space-y-1 pl-6">
-              <li>Encryption of data in transit (TLS/SSL) and at rest</li>
-              <li>Secure password hashing (Argon2)</li>
-              <li>Role-based access controls within the platform</li>
-              <li>Regular security audits and vulnerability assessments</li>
-              <li>Multi-tenant data isolation between institutions</li>
+              <li>Creating and managing user accounts</li>
+              <li>Authenticating users and controlling access based on account roles</li>
+              <li>Providing school-management and educational features</li>
+              <li>Managing attendance, homework, leave, academic, and fee-related activities</li>
+              <li>Delivering relevant notifications and school communications</li>
+              <li>Responding to support requests and account-deletion requests</li>
+              <li>Maintaining service reliability, security, and performance</li>
+              <li>
+                Detecting, investigating, and preventing unauthorized access, misuse, or fraud
+              </li>
+              <li>Meeting applicable legal and regulatory obligations</li>
             </ul>
             <p className="text-muted-foreground mt-2">
-              However, no method of electronic storage or transmission over the internet is 100%
-              secure. While we strive to use commercially acceptable means to protect your data, we
-              cannot guarantee absolute security.
+              We aim to process personal information only for purposes relevant to providing and
+              maintaining EduCard.
             </p>
           </section>
 
-          {/* 8. Data Sharing */}
           <section>
-            <h2 className="text-xl font-semibold">8. Data Sharing &amp; Disclosure</h2>
+            <h2 className="text-xl font-semibold">3. School and Organization Responsibilities</h2>
             <p className="text-muted-foreground mt-2">
-              We do not sell, rent, or trade your personal data to third parties. We may share
-              information only in the following circumstances:
+              EduCard supports schools and organizations in managing educational and administrative
+              activities.
             </p>
-            <ul className="text-muted-foreground mt-2 list-disc space-y-1 pl-6">
-              <li>
-                <strong>Within your Institution:</strong> Data is accessible to authorized
-                administrators, teachers, and parents within the same institution as per role-based
-                permissions.
-              </li>
-              <li>
-                <strong>Service Providers:</strong> Trusted third-party providers who assist in
-                operating our platform (hosting, email delivery, SMS notifications) under strict
-                confidentiality agreements.
-              </li>
-              <li>
-                <strong>Legal Requirements:</strong> When required by law, regulation, court order,
-                or governmental authority.
-              </li>
-              <li>
-                <strong>Safety:</strong> To protect the rights, property, or safety of{' '}
-                {BRANDING.LEGAL_ENTITY_NAME}, our users, or the public.
-              </li>
-            </ul>
-          </section>
-
-          {/* 9. Third-Party Services */}
-          <section>
-            <h2 className="text-xl font-semibold">9. Third-Party Services</h2>
             <p className="text-muted-foreground mt-2">
-              We may use trusted third-party infrastructure and service providers for:
+              Schools and organizations are responsible for ensuring that they have an appropriate
+              legal basis, permissions, and authorizations to provide personal information to
+              EduCard and to use that information for their intended purposes.
             </p>
-            <ul className="text-muted-foreground mt-2 list-disc space-y-1 pl-6">
-              <li>Cloud hosting and data storage</li>
-              <li>Email delivery and transactional communications</li>
-              <li>SMS and push notification services</li>
-              <li>Analytics and performance monitoring</li>
-              <li>Payment processing (where applicable)</li>
-            </ul>
             <p className="text-muted-foreground mt-2">
-              These providers are bound by contractual obligations to keep personal information
-              confidential and use it only for the purposes for which we disclose it to them.
+              Organization Admins are responsible for managing authorized users within their
+              organizations, including teacher and parent accounts, and for ensuring that access to
+              school information is appropriately controlled.
+            </p>
+            <p className="text-muted-foreground mt-2">
+              Parents or guardians should contact their school or Organization Admin regarding the
+              handling of student information associated with their school account.
             </p>
           </section>
 
-          {/* 10. Cookies & Analytics */}
           <section>
-            <h2 className="text-xl font-semibold">10. Cookies &amp; Analytics</h2>
+            <h2 className="text-xl font-semibold">4. Sharing of Information</h2>
             <p className="text-muted-foreground mt-2">
-              We may use cookies, local storage, and similar technologies to:
+              We do not sell personal information to third parties.
+            </p>
+            <p className="text-muted-foreground mt-2">
+              Information may be disclosed to the following categories of recipients where
+              necessary:
             </p>
             <ul className="text-muted-foreground mt-2 list-disc space-y-1 pl-6">
-              <li>Maintain user sessions and authentication state</li>
-              <li>Remember user preferences and settings</li>
-              <li>Analyze platform usage to improve performance and features</li>
-              <li>Ensure security and detect fraudulent activity</li>
+              <li>
+                <strong>Schools and organizations:</strong> Authorized administrators and personnel
+                may access information needed for school-management activities.
+              </li>
+              <li>
+                <strong>Service providers:</strong> Hosting, database, messaging, notification, and
+                infrastructure providers may process information to operate the application.
+              </li>
+              <li>
+                <strong>Legal and regulatory authorities:</strong> Information may be disclosed when
+                required by applicable law or valid legal process.
+              </li>
+              <li>
+                <strong>Security and protection:</strong> Information may be processed or disclosed
+                when reasonably necessary to investigate security incidents, prevent misuse, or
+                protect users and the service.
+              </li>
             </ul>
             <p className="text-muted-foreground mt-2">
-              You can control cookie settings through your browser preferences. Disabling cookies
-              may affect certain features of the platform.
+              Service providers are expected to handle information according to their applicable
+              obligations and the services they provide.
             </p>
           </section>
 
-          {/* 11. Data Retention */}
           <section>
-            <h2 className="text-xl font-semibold">11. Data Retention</h2>
+            <h2 className="text-xl font-semibold">5. Data Storage and Security</h2>
             <p className="text-muted-foreground mt-2">
-              We retain personal data only for as long as necessary to:
+              EduCard uses technical and organizational measures intended to protect personal
+              information against unauthorized access, alteration, disclosure, loss, or misuse.
             </p>
-            <ul className="text-muted-foreground mt-2 list-disc space-y-1 pl-6">
-              <li>Provide the services requested by the Institution</li>
-              <li>Comply with legal and regulatory obligations</li>
-              <li>Resolve disputes and enforce agreements</li>
-              <li>Maintain records as required by applicable educational regulations</li>
-            </ul>
             <p className="text-muted-foreground mt-2">
-              When an Institution terminates their account, we will delete or anonymize their data
-              within a reasonable period, unless retention is required by law. Institutions may
-              request data export before account closure.
+              No method of electronic storage or transmission can be guaranteed to be completely
+              secure. We therefore cannot promise absolute security, but we work to protect
+              information appropriate to the nature of the service.
+            </p>
+            <p className="text-muted-foreground mt-2">
+              Users should keep their login credentials confidential and promptly report suspected
+              unauthorized access.
             </p>
           </section>
 
-          {/* 12. Your Rights */}
           <section>
-            <h2 className="text-xl font-semibold">12. Your Rights</h2>
+            <h2 className="text-xl font-semibold">6. Data Retention</h2>
             <p className="text-muted-foreground mt-2">
-              Subject to applicable laws, you have the following rights regarding your personal
-              data:
+              We retain personal information for as long as necessary to provide the service,
+              fulfill the purposes described in this Policy, comply with applicable obligations,
+              resolve disputes, and protect the legitimate interests of users and the service.
             </p>
-            <ul className="text-muted-foreground mt-2 list-disc space-y-1 pl-6">
-              <li>
-                <strong>Access:</strong> Request a copy of your personal data held by us
-              </li>
-              <li>
-                <strong>Correction:</strong> Request correction of inaccurate or incomplete data
-              </li>
-              <li>
-                <strong>Deletion:</strong> Request deletion of your data (subject to legal retention
-                requirements)
-              </li>
-              <li>
-                <strong>Portability:</strong> Request export of your data in a machine-readable
-                format
-              </li>
-              <li>
-                <strong>Objection:</strong> Object to processing of your data for specific purposes
-              </li>
-              <li>
-                <strong>Withdraw Consent:</strong> Withdraw consent where processing is based on
-                consent
-              </li>
-            </ul>
+
+            <h3 className="mt-3 text-base font-semibold">
+              Account Deletion and the 90-Day Retention Period
+            </h3>
             <p className="text-muted-foreground mt-2">
-              To exercise any of these rights, contact us at{' '}
+              When an account is deleted, the account&apos;s login access is removed. Personal
+              information associated with the deleted account that remains in our systems for
+              deletion processing or other applicable purposes is retained for{' '}
+              <strong>up to 90 days after account deletion</strong>, unless a longer period is
+              required or permitted for a legitimate legal obligation or another applicable
+              retention requirement.
+            </p>
+            <p className="text-muted-foreground mt-2">
+              After the applicable retention period, information will be deleted or anonymized where
+              appropriate, subject to legitimate retention requirements and technical limitations
+              such as secure backup lifecycle processes.
+            </p>
+            <p className="text-muted-foreground mt-2">
+              Certain school or organizational records, including attendance, academic, homework, or
+              fee records, may remain under the control of the relevant school or organization where
+              necessary for legitimate educational, administrative, accounting, or legal purposes.
+              Such records are not necessarily deleted solely because an individual user&apos;s
+              login account is deleted.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold">7. Account Deletion</h2>
+            <p className="text-muted-foreground mt-2">
+              EduCard provides different account-deletion procedures depending on the user&apos;s
+              role.
+            </p>
+
+            <h3 className="mt-3 text-base font-semibold">Administrator Accounts</h3>
+            <p className="text-muted-foreground mt-2">
+              Administrators may request account deletion by emailing{' '}
               <a href={`mailto:${BRANDING.CONTACT.EMAIL}`} className="text-primary hover:underline">
                 {BRANDING.CONTACT.EMAIL}
-              </a>{' '}
-              . We will respond within 30 days of receiving your request.
+              </a>
+              . The request should include the registered email address, organization name, and
+              account role.
+            </p>
+            <p className="text-muted-foreground mt-2">
+              We may request additional information to verify the requester&apos;s identity and
+              authority before processing the request.
+            </p>
+
+            <h3 className="mt-3 text-base font-semibold">Teacher and Parent Accounts</h3>
+            <p className="text-muted-foreground mt-2">
+              Teacher and Parent accounts are managed by the Organization Admin. Users should
+              contact their school&apos;s or organization&apos;s Organization Admin and request
+              account deletion.
+            </p>
+            <p className="text-muted-foreground mt-2">
+              If a user cannot contact their Organization Admin, they may email{' '}
+              {BRANDING.CONTACT.EMAIL} for assistance.
+            </p>
+            <p className="text-muted-foreground mt-2">
+              Account deletion removes the affected account&apos;s access. It does not automatically
+              mean that every associated school record is erased. Any information retained after
+              deletion will be handled in accordance with the retention practices described in this
+              Policy and applicable requirements.
+            </p>
+            <p className="text-muted-foreground mt-2">
+              Further instructions are available at{' '}
+              <button
+                type="button"
+                className="text-primary hover:underline"
+                onClick={() => navigate('/account-deletion')}
+              >
+                educard.info/account-deletion
+              </button>
+              .
             </p>
           </section>
 
-          {/* 13. Governing Law */}
           <section>
-            <h2 className="text-xl font-semibold">13. Governing Law</h2>
+            <h2 className="text-xl font-semibold">8. Children&apos;s Information</h2>
             <p className="text-muted-foreground mt-2">
-              This Privacy Policy shall be governed by and interpreted in accordance with the laws
-              of India, including the Information Technology Act, 2000 and the Digital Personal Data
-              Protection Act, 2023 (as applicable). Any disputes arising from this policy shall be
-              subject to the exclusive jurisdiction of courts in Madanapalle, Andhra Pradesh, India.
+              EduCard is designed to support school-management activities and may process student
+              information, including information about children.
+            </p>
+            <p className="text-muted-foreground mt-2">
+              Schools and organizations using EduCard are responsible for obtaining any permissions,
+              consents, or authorizations required under applicable law before providing or
+              processing children&apos;s information.
+            </p>
+            <p className="text-muted-foreground mt-2">
+              Access to student information should be limited to authorized users for legitimate
+              educational or administrative purposes. Parents and guardians may contact the relevant
+              school or Organization Admin regarding student information and applicable privacy
+              rights.
             </p>
           </section>
 
-          {/* 14. Changes to This Policy */}
           <section>
-            <h2 className="text-xl font-semibold">14. Changes to This Policy</h2>
+            <h2 className="text-xl font-semibold">9. Your Privacy Rights</h2>
             <p className="text-muted-foreground mt-2">
-              We may update this Privacy Policy from time to time to reflect changes in our
-              practices, technology, legal requirements, or other factors. We will notify users of
-              material changes by:
+              Depending on applicable law and the circumstances of processing, users may have rights
+              to request access to, correction of, or deletion of their personal information, or to
+              raise concerns about how it is handled.
             </p>
-            <ul className="text-muted-foreground mt-2 list-disc space-y-1 pl-6">
-              <li>
-                Posting the updated policy on this page with a new &quot;Last updated&quot; date
-              </li>
-              <li>
-                Sending email notifications to Institution administrators for significant changes
-              </li>
-              <li>Displaying in-app notifications where appropriate</li>
-            </ul>
+            <p className="text-muted-foreground mt-2">
+              Users should direct requests concerning school-managed records to their school or
+              Organization Admin. Requests concerning administrator accounts or EduCard&apos;s
+              handling of personal information may be sent to {BRANDING.CONTACT.EMAIL}.
+            </p>
+            <p className="text-muted-foreground mt-2">
+              We may need to verify identity and authority before responding to a request.
+            </p>
           </section>
 
-          {/* 15. Contact Us */}
           <section>
-            <h2 className="text-xl font-semibold">15. Contact Us</h2>
+            <h2 className="text-xl font-semibold">10. Third-Party Services</h2>
             <p className="text-muted-foreground mt-2">
-              If you have questions, concerns, or requests regarding this Privacy Policy or our data
-              practices, please contact us:
+              EduCard may rely on third-party infrastructure or service providers to host, store,
+              transmit, or support application data.
+            </p>
+            <p className="text-muted-foreground mt-2">
+              Those providers may have their own privacy policies and terms governing their
+              services. Where required, additional information about relevant providers and their
+              data practices should be made available to users.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold">11. International Processing</h2>
+            <p className="text-muted-foreground mt-2">
+              Depending on the infrastructure and service providers used, information may be stored
+              or processed in locations outside the user&apos;s location. Where applicable, such
+              processing will be subject to relevant legal requirements and appropriate safeguards.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold">12. Changes to This Privacy Policy</h2>
+            <p className="text-muted-foreground mt-2">
+              We may update this Privacy Policy to reflect changes in EduCard&apos;s features,
+              operations, service providers, or legal requirements.
+            </p>
+            <p className="text-muted-foreground mt-2">
+              The updated version will be published on this page with a revised &quot;Last
+              Updated&quot; date. Users should review this page periodically for changes.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold">13. Contact Us</h2>
+            <p className="text-muted-foreground mt-2">
+              For privacy questions, data-related concerns, or administrator account-deletion
+              requests, contact:
             </p>
             <div className="mt-3 rounded-lg border bg-slate-50 p-4">
               <p className="text-sm font-semibold">{BRANDING.LEGAL_ENTITY_NAME}</p>
-              <p className="text-muted-foreground mt-1 text-sm">{BRANDING.CONTACT.ADDRESS}</p>
               <p className="text-muted-foreground mt-1 text-sm">
                 Email:{' '}
                 <a
@@ -347,9 +373,12 @@ export default function PrivacyPolicyPage() {
                   {BRANDING.CONTACT.EMAIL}
                 </a>
               </p>
-              <p className="text-muted-foreground mt-1 text-sm">Phone: {BRANDING.CONTACT.PHONE}</p>
               <p className="text-muted-foreground mt-1 text-sm">Website: https://educard.info</p>
             </div>
+            <p className="text-muted-foreground mt-3">
+              For teacher or parent account-deletion requests, please contact your Organization
+              Admin first.
+            </p>
           </section>
         </div>
       </main>
@@ -365,6 +394,13 @@ export default function PrivacyPolicyPage() {
               onClick={() => navigate('/terms-of-service')}
             >
               Terms of Service
+            </button>
+            <button
+              type="button"
+              className="text-muted-foreground hover:text-foreground text-xs transition-colors"
+              onClick={() => navigate('/account-deletion')}
+            >
+              Account Deletion
             </button>
             <button
               type="button"
