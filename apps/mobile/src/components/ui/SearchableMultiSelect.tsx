@@ -136,7 +136,10 @@ export function SearchableMultiSelect({
       >
         <KeyboardAvoidingView
           style={styles.overlay}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          // Bottom-sheet; search input sits near the top so it's never
+          // obscured — JS 'height' resize here would fight with the Modal's
+          // own slide-in animation on Android, causing flicker.
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <View style={[styles.modal, { paddingBottom: insets.bottom + 20 }]}>
             <View style={styles.modalHeader}>
