@@ -5,11 +5,12 @@
 import { API_ENDPOINTS, getErrorMessage } from '@educard/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState, useCallback } from 'react';
-import { Alert, PermissionsAndroid, Platform } from 'react-native';
+import { Alert } from 'react-native';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 
 import { apiClient } from '@/api/client';
 import { useAuthStore } from '@/lib/auth-store';
+import { ensureCameraPermission } from '@/lib/permissions';
 
 interface UseProfileImageOptions {
   /** The user's public_id (not teacher/student public_id) */
@@ -74,17 +75,8 @@ export function useProfileImage({
 
     async function launchPicker(source: 'camera' | 'gallery') {
       try {
-        if (source === 'camera' && Platform.OS === 'android') {
-          const granted = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.CAMERA,
-          );
-          if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-            Alert.alert(
-              'Permission Required',
-              'Camera permission is required to take a photo.',
-            );
-            return;
-          }
+        if (source === 'camera' && !(await ensureCameraPermission())) {
+          return;
         }
 
         const result =
@@ -92,11 +84,15 @@ export function useProfileImage({
             ? await launchCamera({
                 mediaType: 'photo',
                 quality: 0.8,
+                maxWidth: 1024,
+                maxHeight: 1024,
                 saveToPhotos: false,
               })
             : await launchImageLibrary({
                 mediaType: 'photo',
                 quality: 0.8,
+                maxWidth: 1024,
+                maxHeight: 1024,
                 selectionLimit: 1,
               });
 
@@ -120,11 +116,9 @@ export function useProfileImage({
           asset.fileName ?? asset.uri.split('/').pop() ?? 'photo.jpg';
         const fileType = asset.type ?? 'image/jpeg';
 
+        // Pass the picker's file:// uri unchanged, as every other upload site does.
         const fileData: FormDataFile = {
-          uri:
-            Platform.OS === 'android'
-              ? asset.uri
-              : asset.uri.replace('file://', ''),
+          uri: asset.uri,
           name: fileName,
           type: fileType,
         };

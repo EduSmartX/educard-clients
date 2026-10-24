@@ -29,7 +29,7 @@ import {
   useWindowDimensions,
   Image,
 } from 'react-native';
-import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import {
   TodaySchedule,
@@ -318,14 +318,11 @@ export default function AdminDashboardScreen() {
             <Star size={16} color="#10b981" />
           </View>
           <View style={styles.adminLinksGrid}>
-            {adminLinks.map((link, index) => {
+            {adminLinks.map(link => {
               const LinkIcon = link.icon;
               return (
-                <Animated.View
+                <View
                   key={link.id}
-                  entering={ZoomIn.delay(450 + index * 60)
-                    .springify()
-                    .damping(14)}
                   style={[
                     styles.adminLinkItem,
                     viewportWidth >= 768
@@ -347,7 +344,7 @@ export default function AdminDashboardScreen() {
                     </LinearGradient>
                     <Text style={styles.adminLinkLabel}>{link.title}</Text>
                   </PressableScale>
-                </Animated.View>
+                </View>
               );
             })}
           </View>

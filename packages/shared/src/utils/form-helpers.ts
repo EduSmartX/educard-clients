@@ -180,13 +180,18 @@ export function buildTeacherPayload(
     const addr = stripEmpty({
       address_type: safeTrim(form.address_type),
       street_address: safeTrim(form.street_address),
+      address_line_2: safeTrim(form.address_line_2),
       city: safeTrim(form.city),
       state: safeTrim(form.state),
-      postal_code: safeTrim(form.postal_code),
+      // The Address model column is zip_code; the backend ignores "postal_code".
+      zip_code: safeTrim(form.postal_code),
       country: safeTrim(form.country),
     });
     if (Object.keys(addr).length > 0) {
-      user.address = { ...addr, address_type: form.address_type || "user_current" };
+      user.address = {
+        ...addr,
+        address_type: form.address_type || "user_current",
+      };
     }
   }
 
@@ -203,7 +208,11 @@ export function buildStudentPayload(
   const user: Record<string, unknown> = {
     first_name: safeTrim(form.first_name),
     last_name: safeTrim(form.last_name),
-    email: safeTrim(form.email) || `student_${Date.now()}@placeholder.com`,
+    // Send the real email as-is (including "" to allow clearing it on edit).
+    // Do NOT fabricate a fake placeholder address — students are allowed to
+    // have no email, and multiple students may legitimately share the same
+    // email (see StudentProfileLinkConfig.MAX_STUDENTS_PER_EMAIL).
+    email: safeTrim(form.email) || "",
     role: "student",
     ...stripEmpty({
       phone: safeTrim(form.phone),
@@ -240,9 +249,11 @@ export function buildStudentPayload(
 
     const addr = stripEmpty({
       street_address: safeTrim(form.street_address),
+      address_line_2: safeTrim(form.address_line_2),
       city: safeTrim(form.city),
       state: safeTrim(form.state),
-      postal_code: safeTrim(form.postal_code),
+      // The Address model column is zip_code; the backend ignores "postal_code".
+      zip_code: safeTrim(form.postal_code),
       country: safeTrim(form.country),
     });
     if (Object.keys(addr).length > 0) {

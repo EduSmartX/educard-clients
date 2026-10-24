@@ -1,13 +1,16 @@
 /**
- * GradientHeader
- * Reusable hero header: gradient background, decorative circles, greeting,
- * a notification bell with badge, an optional right slot, and an optional content slot.
+ * GradientHeader — Shadow & Fabric Insulated Version
  */
 
 import { Bell } from 'lucide-react-native';
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import React, { useEffect } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+} from 'react-native';
 
 import { LinearGradient } from '@/lib/linear-gradient';
 
@@ -45,22 +48,18 @@ export function GradientHeader({
     >
       {decorative && (
         <>
-          <Animated.View
-            entering={FadeIn.delay(100).duration(800)}
-            style={styles.circle1}
-          />
-          <Animated.View
-            entering={FadeIn.delay(200).duration(800)}
-            style={styles.circle2}
-          />
-          <Animated.View
-            entering={FadeIn.delay(300).duration(800)}
-            style={styles.circle3}
-          />
+          <View style={styles.circle1} />
+          <View style={styles.circle2} />
+          <View style={styles.circle3} />
         </>
       )}
 
-      <Animated.View entering={FadeInDown.delay(100).springify().damping(15)}>
+      {/* 
+        INSULATION LAYER: 
+        Wrapping the inner components in a standard, clean layout View container 
+        strips the shadow calculation conflict away from the text components under Fabric.
+      */}
+      <View style={styles.innerWrapper}>
         <View style={styles.row}>
           <View style={styles.textCol}>
             {greeting ? <Text style={styles.greeting}>{greeting}</Text> : null}
@@ -69,6 +68,7 @@ export function GradientHeader({
             </Text>
             {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
           </View>
+
           <View style={styles.right}>
             {onNotificationPress ? (
               <TouchableOpacity
@@ -90,19 +90,25 @@ export function GradientHeader({
           </View>
         </View>
         {children}
-      </Animated.View>
+      </View>
     </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   header: {
-    paddingTop: 52,
+    paddingTop: Platform.OS === 'ios' ? 64 : 48,
     paddingBottom: 24,
     paddingHorizontal: 20,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
     overflow: 'hidden',
+    // Removed any trace of shadow parameters from the gradient wrapper itself
+  },
+  innerWrapper: {
+    width: '100%',
+    backgroundColor: 'transparent',
+    zIndex: 10,
   },
   circle1: {
     position: 'absolute',
@@ -133,8 +139,9 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
+    width: '100%',
   },
   textCol: { flex: 1, paddingRight: 12 },
   greeting: { fontSize: 13, color: 'rgba(255,255,255,0.85)', marginBottom: 2 },

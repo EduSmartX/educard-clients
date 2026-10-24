@@ -62,6 +62,7 @@ const INITIAL_FORM: StudentFormState = {
   previous_school_class: '',
   previous_school_address: '',
   street_address: '',
+  address_line_2: '',
   city: '',
   state: '',
   postal_code: '',

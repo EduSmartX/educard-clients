@@ -30,6 +30,11 @@ import {
   FormDropdown,
   FormDatePicker,
 } from '@/components/forms';
+import {
+  AddressForm,
+  SNAKE_CASE_ADDRESS_KEYS,
+  toAddressData,
+} from '@/components/forms/AddressForm';
 import { LinearGradient } from '@/lib/linear-gradient';
 import type { SharedStackNavigation } from '@/navigation/types';
 import { headerStyles, layoutStyles } from '@/styles';
@@ -54,6 +59,7 @@ export interface StudentFormState {
   previous_school_class: string;
   previous_school_address: string;
   street_address: string;
+  address_line_2: string;
   city: string;
   state: string;
   postal_code: string;
@@ -442,37 +448,19 @@ export function StudentFormBase({
             </TouchableOpacity>
             {addressExpanded && (
               <View style={s.collapseBody}>
-                <FormInput
-                  label="Street Address"
-                  value={form.street_address}
-                  onChangeText={v => updateField('street_address', v)}
-                  placeholder="Enter street address"
-                />
-                <FormInput
-                  label="City"
-                  value={form.city}
-                  onChangeText={v => updateField('city', v)}
-                  placeholder="Enter city"
-                />
-                <FormInput
-                  label="State"
-                  value={form.state}
-                  onChangeText={v => updateField('state', v)}
-                  placeholder="Enter state"
-                />
-                <FormInput
-                  label="Postal Code"
-                  value={form.postal_code}
-                  onChangeText={v => updateField('postal_code', v)}
-                  placeholder="Enter postal code"
-                  keyboardType="numeric"
-                  maxLength={6}
-                />
-                <FormInput
-                  label="Country"
-                  value={form.country}
-                  onChangeText={v => updateField('country', v)}
-                  placeholder="Enter country"
+                <AddressForm
+                  values={toAddressData(form)}
+                  onChange={(field, value) =>
+                    updateField(SNAKE_CASE_ADDRESS_KEYS[field], value)
+                  }
+                  errors={{
+                    streetAddress: errors.street_address,
+                    city: errors.city,
+                    state: errors.state,
+                    zipCode: errors.postal_code,
+                    country: errors.country,
+                  }}
+                  showHeader={false}
                 />
               </View>
             )}

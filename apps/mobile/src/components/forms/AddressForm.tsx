@@ -67,6 +67,37 @@ export interface AddressErrors {
   country?: string;
 }
 
+/**
+ * Snake_case form keys used by the student/teacher/profile screens, so they can
+ * render AddressForm without changing their own form state shape.
+ */
+export const SNAKE_CASE_ADDRESS_KEYS: Record<keyof AddressData, string> = {
+  streetAddress: 'street_address',
+  addressLine2: 'address_line_2',
+  city: 'city',
+  state: 'state',
+  zipCode: 'postal_code',
+  country: 'country',
+};
+
+export function toAddressData(
+  form: object,
+  keys: Record<keyof AddressData, string> = SNAKE_CASE_ADDRESS_KEYS,
+): AddressData {
+  const read = (field: keyof AddressData) => {
+    const value = (form as Record<string, unknown>)[keys[field]];
+    return typeof value === 'string' ? value : '';
+  };
+  return {
+    streetAddress: read('streetAddress'),
+    addressLine2: read('addressLine2'),
+    city: read('city'),
+    state: read('state'),
+    zipCode: read('zipCode'),
+    country: read('country'),
+  };
+}
+
 interface AddressFormProps {
   values: AddressData;
   onChange: (field: keyof AddressData, value: string) => void;
@@ -80,8 +111,14 @@ interface AddressFormProps {
   defaultExpanded?: boolean;
 }
 
-const toOptions = (choices: readonly string[]) =>
-  choices.map(choice => ({ value: choice, label: choice }));
+/**
+ * Picker options, keeping a saved value that is not in the bundled list (older
+ * free-text records such as "Bengaluru") so editing never silently blanks it.
+ */
+const toOptions = (choices: readonly string[], current = '') =>
+  (current && !choices.includes(current) ? [current, ...choices] : choices).map(
+    choice => ({ value: choice, label: choice }),
+  );
 
 /** Google's spelling only fills a picker if it matches an option exactly. */
 const matchOption = (choices: readonly string[], value: string) =>
@@ -179,7 +216,7 @@ export function AddressForm({
     <View style={styles.fieldContainer}>
       {renderLabel(label, false)}
       <SearchableSelect
-        options={toOptions(choices)}
+        options={toOptions(choices, values[field] ?? '')}
         value={values[field] ?? ''}
         onValueChange={onSelect}
         title={label}

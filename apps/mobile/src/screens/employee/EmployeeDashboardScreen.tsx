@@ -25,7 +25,7 @@ import {
   useWindowDimensions,
   Image,
 } from 'react-native';
-import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import {
   TodaySchedule,
@@ -309,14 +309,11 @@ export default function EmployeeDashboardScreen() {
             <Star size={16} color="#10b981" />
           </View>
           <View style={styles.quickActionsGrid}>
-            {quickActions.map((action, index) => {
+            {quickActions.map(action => {
               const ActionIcon = action.icon;
               return (
-                <Animated.View
+                <View
                   key={action.id}
-                  entering={ZoomIn.delay(550 + index * 60)
-                    .springify()
-                    .damping(14)}
                   style={[
                     styles.quickActionItem,
                     viewportWidth >= 768
@@ -338,7 +335,7 @@ export default function EmployeeDashboardScreen() {
                     </LinearGradient>
                     <Text style={styles.quickActionLabel}>{action.title}</Text>
                   </PressableScale>
-                </Animated.View>
+                </View>
               );
             })}
           </View>
