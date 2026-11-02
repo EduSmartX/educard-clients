@@ -52,6 +52,8 @@ export default function TeacherDetailScreen() {
           <DetailRow label="Full Name" value={teacher?.user?.full_name} />
           <DetailRow label="Email" value={teacher?.user?.email} />
           <DetailRow label="Phone" value={phoneDisplay} />
+          {/* Backend returns username only to admins, the user themselves and their supervisor. */}
+          <DetailRow label="Username" value={teacher?.user?.username} />
           <DetailRow label="Gender" value={teacher?.user?.gender} />
           <DetailRow
             label="Date of Birth"
