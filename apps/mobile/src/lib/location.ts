@@ -9,6 +9,7 @@
 
 import { PermissionsAndroid, Platform } from 'react-native';
 import Config from 'react-native-config';
+import { PERMISSIONS, RESULTS, check, request } from 'react-native-permissions';
 
 export interface ResolvedAddress {
   streetAddress: string;
@@ -140,6 +141,14 @@ interface GeocodeResponse {
 }
 
 async function ensureLocationPermission(): Promise<boolean> {
+  if (Platform.OS === 'ios') {
+    let status = await check(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
+    if (status === RESULTS.DENIED) {
+      status = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
+    }
+    return status === RESULTS.GRANTED || status === RESULTS.LIMITED;
+  }
+
   if (Platform.OS !== 'android') {
     return true;
   }
@@ -175,7 +184,9 @@ function getCurrentPosition(): Promise<{
         // W3C Geolocation error codes: 1=PERMISSION_DENIED, 2=POSITION_UNAVAILABLE
         // (commonly means device Location Services/GPS is turned off), 3=TIMEOUT.
         console.warn(
-          `[location] getCurrentPosition failed: code=${error.code ?? 'unknown'} message="${error.message}"`,
+          `[location] getCurrentPosition failed: code=${
+            error.code ?? 'unknown'
+          } message="${error.message}"`,
         );
         if (error.code === 2) {
           reject(new Error(LOCATION_SERVICES_DISABLED));

@@ -61,6 +61,7 @@ const INITIAL_FORM: TeacherFormState = {
   subjects: [],
   address_type: ADDRESS_TYPE.USER_CURRENT,
   street_address: '',
+  address_line_2: '',
   city: '',
   state: '',
   postal_code: '',

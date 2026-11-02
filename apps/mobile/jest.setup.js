@@ -39,6 +39,10 @@ jest.mock('react-native-image-picker', () => ({
   launchImageLibrary: jest.fn(() => Promise.resolve({ didCancel: true })),
 }));
 
+jest.mock('react-native-permissions', () =>
+  require('react-native-permissions/mock'),
+);
+
 jest.mock('@react-native-community/datetimepicker', () => {
   const { View } = require('react-native');
   return { __esModule: true, default: View };

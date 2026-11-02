@@ -4,6 +4,10 @@ export const COMPANY_NAME = import.meta.env.VITE_COMPANY_NAME || 'EduCard';
 export const APP_VERSION = import.meta.env.VITE_APP_VERSION || '1.0.0';
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
+// Mobile app store links (each badge is hidden until its URL is set)
+export const PLAY_STORE_URL = import.meta.env.VITE_PLAY_STORE_URL || '';
+export const APP_STORE_URL = import.meta.env.VITE_APP_STORE_URL || '';
+
 // Pagination
 export const DEFAULT_PAGE_SIZE = 25;
 export const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];

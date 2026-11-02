@@ -5,8 +5,29 @@ require Pod::Executable.execute_command('node', ['-p',
     {paths: [process.argv[1]]},
   )', __dir__]).strip
 
+def node_require(script)
+  # Resolve script with node to allow for hoisting
+  require Pod::Executable.execute_command('node', ['-p',
+    "require.resolve(
+      '#{script}',
+      {paths: [process.argv[1]]},
+    )", __dir__]).strip
+end
+
+node_require('react-native-permissions/scripts/setup.rb')
+
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
+
+# iOS permission handlers compiled into react-native-permissions.
+# Keep in sync with the usage descriptions in EduCard/Info.plist.
+setup_permissions([
+  'Camera',
+  'Contacts',
+  'LocationWhenInUse',
+  'Notifications',
+  'PhotoLibrary',
+])
 
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
@@ -14,7 +35,11 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
-target 'EducardMobile' do
+project 'EduCard.xcodeproj'
+pod 'GoogleUtilities', :modular_headers => true
+pod 'GoogleDataTransport', :modular_headers => true
+pod 'nanopb', :modular_headers => true
+target 'EduCard' do
   config = use_native_modules!
 
   use_react_native!(
