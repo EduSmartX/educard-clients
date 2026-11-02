@@ -3,7 +3,7 @@
  */
 
 import { Bell } from 'lucide-react-native';
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
