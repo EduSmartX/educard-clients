@@ -10,7 +10,7 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "Select react-native-config env file"
-               scriptText = "# Release/Archive builds use .env.production (App Store API); Debug uses .env.&#10;# react-native-config reads /tmp/envfile, so it must be rewritten on every build.&#10;if [ &quot;${CONFIGURATION}&quot; = &quot;Release&quot; ]; then&#10;  echo &quot;.env.production&quot; &gt; /tmp/envfile&#10;else&#10;  echo &quot;.env&quot; &gt; /tmp/envfile&#10;fi&#10;">
+               scriptText = "# ENVFILE overrides the default (e.g. ENVFILE=.env.development for dev TestFlight builds).&#10;# Otherwise Release/Archive builds use .env.production (App Store API); Debug uses .env.&#10;# react-native-config reads /tmp/envfile, so it must be rewritten on every build.&#10;if [ -n &quot;${ENVFILE}&quot; ]; then&#10;  echo &quot;${ENVFILE}&quot; &gt; /tmp/envfile&#10;elif [ &quot;${CONFIGURATION}&quot; = &quot;Release&quot; ]; then&#10;  echo &quot;.env.production&quot; &gt; /tmp/envfile&#10;else&#10;  echo &quot;.env&quot; &gt; /tmp/envfile&#10;fi&#10;">
                <EnvironmentBuildable>
                   <BuildableReference
                      BuildableIdentifier = "primary"

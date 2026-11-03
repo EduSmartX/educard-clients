@@ -70,6 +70,7 @@ yarn-error.log
 .env
 .env.local
 .env.production
+.env.development
 .env*.local
 
 # Firebase app config (contains API keys; public repo). Keep a local copy;
