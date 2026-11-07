@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
+import { AppStoreBadges } from '@/components/common';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { COMPANY_NAME, ROUTES } from '@/constants/app-config';
@@ -292,6 +293,16 @@ export default function HomePage() {
               >
                 Explore Features
               </Button>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              className="space-y-3"
+            >
+              <p className="text-muted-foreground text-sm font-medium">Get the mobile app</p>
+              <AppStoreBadges />
             </motion.div>
 
             {/* Stats with counter animation */}
@@ -590,6 +601,7 @@ export default function HomePage() {
               <span>📧 {BRANDING.CONTACT.EMAIL}</span>
               <span>📞 {BRANDING.CONTACT.PHONE}</span>
             </div>
+            <AppStoreBadges className="justify-center" />
             <p className="text-muted-foreground text-center text-sm">{BRANDING.COPYRIGHT.TEXT}</p>
             <div className="flex flex-wrap justify-center gap-6">
               {[

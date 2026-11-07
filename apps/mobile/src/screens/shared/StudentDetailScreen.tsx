@@ -39,6 +39,7 @@ export default function StudentDetailScreen() {
           <DetailRow label="Full Name" value={student?.full_name} />
           <DetailRow label="Email" value={student?.user_info?.email} />
           <DetailRow label="Phone" value={student?.user_info?.phone} />
+          <DetailRow label="Username" value={student?.user_info?.username} />
           <DetailRow label="Gender" value={student?.user_info?.gender} />
           <DetailRow
             label="Date of Birth"

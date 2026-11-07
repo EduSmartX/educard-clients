@@ -1,4 +1,5 @@
 export { Logo } from './logo';
+export { AppStoreBadges } from './app-store-badges';
 export { UserAvatar } from './user-avatar';
 export { StudentAvatar } from './student-avatar';
 export { SubjectAvatar } from './subject-avatar';

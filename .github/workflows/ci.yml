@@ -441,18 +441,18 @@ jobs:
           SENTRY_DSN=
           POSTHOG_KEY=
           POSTHOG_HOST=
-          GOOGLE_GEOCODING_API_KEY=${{ secrets.MOBILE_GOOGLE_GEOCODING_API_KEY }}
+          GOOGLE_GEOCODING_API_KEY=${{ secrets.GOOGLE_GEOCODING_API_KEY }}
           EOF
 
       - name: Verify Google Geocoding API key is present
         run: |
-          if [ -z "${{ secrets.MOBILE_GOOGLE_GEOCODING_API_KEY }}" ]; then
-            echo "::warning::MOBILE_GOOGLE_GEOCODING_API_KEY secret is empty or not set — 'Use my location' will be disabled in this build."
+          if [ -z "${{ secrets.GOOGLE_GEOCODING_API_KEY }}" ]; then
+            echo "::warning::GOOGLE_GEOCODING_API_KEY secret is empty or not set — 'Use my location' will be disabled in this build."
           else
-            echo "MOBILE_GOOGLE_GEOCODING_API_KEY is set (length: ${#MOBILE_GOOGLE_GEOCODING_API_KEY})."
+            echo "GOOGLE_GEOCODING_API_KEY is set (length: ${#GOOGLE_GEOCODING_API_KEY})."
           fi
         env:
-          MOBILE_GOOGLE_GEOCODING_API_KEY: ${{ secrets.MOBILE_GOOGLE_GEOCODING_API_KEY }}
+          GOOGLE_GEOCODING_API_KEY: ${{ secrets.GOOGLE_GEOCODING_API_KEY }}
 
       - name: Prepare Android keystore
         if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' }}
@@ -533,7 +533,7 @@ jobs:
           SENTRY_DSN=
           POSTHOG_KEY=
           POSTHOG_HOST=
-          GOOGLE_GEOCODING_API_KEY=${{ secrets.MOBILE_GOOGLE_GEOCODING_API_KEY }}
+          GOOGLE_GEOCODING_API_KEY=${{ secrets.GOOGLE_GEOCODING_API_KEY }}
           EOF
 
       - name: Verify production API and geocoding key are present
@@ -543,14 +543,14 @@ jobs:
             exit 1
           fi
 
-          if [ -z "${{ secrets.MOBILE_GOOGLE_GEOCODING_API_KEY }}" ]; then
-            echo "::warning::MOBILE_GOOGLE_GEOCODING_API_KEY secret is empty or not set — 'Use my location' will be disabled in this build."
+          if [ -z "${{ secrets.GOOGLE_GEOCODING_API_KEY }}" ]; then
+            echo "::warning::GOOGLE_GEOCODING_API_KEY secret is empty or not set — 'Use my location' will be disabled in this build."
           else
-            echo "MOBILE_GOOGLE_GEOCODING_API_KEY is set (length: ${#MOBILE_GOOGLE_GEOCODING_API_KEY})."
+            echo "GOOGLE_GEOCODING_API_KEY is set (length: ${#GOOGLE_GEOCODING_API_KEY})."
           fi
         env:
           MOBILE_API_URL_PROD: ${{ secrets.MOBILE_API_URL_PROD }}
-          MOBILE_GOOGLE_GEOCODING_API_KEY: ${{ secrets.MOBILE_GOOGLE_GEOCODING_API_KEY }}
+          GOOGLE_GEOCODING_API_KEY: ${{ secrets.GOOGLE_GEOCODING_API_KEY }}
 
       - name: Prepare production Android keystore
         if: ${{ env.ANDROID_PROD_KEYSTORE_BASE64 != '' }}
@@ -654,8 +654,18 @@ jobs:
           SENTRY_DSN=
           POSTHOG_KEY=
           POSTHOG_HOST=
-          GOOGLE_GEOCODING_API_KEY=${{ secrets.MOBILE_GOOGLE_GEOCODING_API_KEY }}
+          GOOGLE_GEOCODING_API_KEY=${{ secrets.GOOGLE_GEOCODING_API_KEY }}
           EOF
+
+      - name: Verify Google Geocoding API key is present
+        run: |
+          if [ -z "$GOOGLE_GEOCODING_API_KEY" ]; then
+            echo "::warning::GOOGLE_GEOCODING_API_KEY secret is empty or not set — 'Use my location' will be disabled in this build."
+          else
+            echo "GOOGLE_GEOCODING_API_KEY is set (length: ${#GOOGLE_GEOCODING_API_KEY})."
+          fi
+        env:
+          GOOGLE_GEOCODING_API_KEY: ${{ secrets.GOOGLE_GEOCODING_API_KEY }}
 
       - name: Verify production API URL
         env:

@@ -1,3 +1,10 @@
+import {
+  COUNTRY_OPTIONS,
+  INDIA_COUNTRY_NAME,
+  INDIA_STATE_NAMES,
+  getIndiaDistricts,
+  isIndia,
+} from '@educard/shared';
 import * as React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,6 +15,20 @@ import { getCurrentLocationAddress } from '@/lib/location-utils';
 import { MapPin, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ADDRESS_TYPE_OPTIONS, CommonUiText, ErrorMessages, SuccessMessages } from '@/constants';
+
+/**
+ * Picker options, keeping a saved value that is not in the bundled list (older
+ * free-text records such as "Bengaluru") so editing never silently blanks it.
+ */
+const toOptions = (choices: readonly string[], current = '') =>
+  (current && !choices.includes(current) ? [current, ...choices] : choices).map((choice) => ({
+    value: choice,
+    label: choice,
+  }));
+
+/** Google's spelling only fills a picker if it matches an option exactly. */
+const matchOption = (choices: readonly string[], value: string) =>
+  choices.find((choice) => choice.toLowerCase() === value.trim().toLowerCase()) ?? '';
 
 interface FieldNames {
   addressType?: string;
@@ -66,6 +87,29 @@ export function AddressForm({
 
   const labelSize = compact ? 'text-xs' : 'text-sm';
 
+  const country: string = form.watch(getFieldName('country')) || '';
+  const state: string = form.watch(getFieldName('state')) || '';
+  const city: string = form.watch(getFieldName('city')) || '';
+  const countryIsIndia = isIndia(country);
+
+  const fieldError = (field: keyof FieldNames) =>
+    form.formState.errors[getFieldName(field)]?.message as string | undefined;
+
+  const setField = (field: keyof FieldNames, value: string) =>
+    form.setValue(getFieldName(field), value, { shouldValidate: true, shouldDirty: true });
+
+  // Narrower values stop matching once a broader one changes.
+  const handleCountryChange = (value: string) => {
+    setField('country', value);
+    setField('state', '');
+    setField('city', '');
+  };
+
+  const handleStateChange = (value: string) => {
+    setField('state', value);
+    setField('city', '');
+  };
+
   // Only offer "Use My Location" when a real Google Maps API key is configured.
   // Without it, the form simply renders as a normal manual-entry address form.
   const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -81,10 +125,21 @@ export function AddressForm({
       form.setValue(getFieldName('streetAddress'), locationData.streetAddress, {
         shouldValidate: true,
       });
-      form.setValue(getFieldName('city'), locationData.city, { shouldValidate: true });
-      form.setValue(getFieldName('state'), locationData.state, { shouldValidate: true });
       form.setValue(getFieldName('zipCode'), locationData.zipCode, { shouldValidate: true });
-      form.setValue(getFieldName('country'), locationData.country, { shouldValidate: true });
+      if (isIndia(locationData.country)) {
+        // Google's spelling only fills a picker if it matches an option exactly.
+        const matchedState = matchOption(INDIA_STATE_NAMES, locationData.state);
+        setField('country', INDIA_COUNTRY_NAME);
+        setField('state', matchedState);
+        setField(
+          'city',
+          matchedState ? matchOption(getIndiaDistricts(matchedState), locationData.city) : ''
+        );
+      } else {
+        setField('country', locationData.country);
+        setField('state', locationData.state);
+        setField('city', locationData.city);
+      }
 
       toast.success(SuccessMessages.LOCATION.AUTO_FILLED);
     } catch (error) {
@@ -172,53 +227,25 @@ export function AddressForm({
         </div>
       )}
 
-      {/* Street Address */}
-      <div className="space-y-2">
-        <Label
-          htmlFor={getFieldName('streetAddress')}
-          className={`${labelSize} flex items-center gap-2`}
-        >
-          Address Line 1{required && <span className="text-red-500">*</span>}
-        </Label>
-        <Input
-          id={getFieldName('streetAddress')}
-          placeholder="123 Main Street"
-          disabled={disabled}
-          className="bg-gray-50 focus:bg-white"
-          error={form.formState.errors[getFieldName('streetAddress')]?.message as string}
-          {...form.register(getFieldName('streetAddress'))}
-        />
-      </div>
-
-      {/* Address Line 2 */}
-      <div className="space-y-2">
-        <Label htmlFor={getFieldName('addressLine2')} className={labelSize}>
-          <span className="text-sm font-normal text-gray-500">Address Line 2 (Optional)</span>
-        </Label>
-        <Input
-          id={getFieldName('addressLine2')}
-          placeholder="Suite, Building, Floor"
-          disabled={disabled}
-          className="bg-gray-50 focus:bg-white"
-          {...form.register(getFieldName('addressLine2'))}
-        />
-      </div>
-
-      {/* City & State */}
+      {/* Country -> State -> City cascade (same order as the mobile app). India
+          uses searchable pickers from the bundled state/district data; any other
+          country falls back to free text, since we have no reference data for it. */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor={getFieldName('city')} className={labelSize}>
-            City
+          <Label htmlFor={getFieldName('country')} className={labelSize}>
+            Country
             {required && <span className="ml-1 text-red-500">*</span>}
           </Label>
-          <Input
-            id={getFieldName('city')}
-            placeholder="City"
-            disabled={disabled}
+          <SearchableSelect
+            options={toOptions(COUNTRY_OPTIONS, country)}
+            value={country}
+            onValueChange={handleCountryChange}
+            placeholder="Select country"
+            searchPlaceholder="Search country..."
             className="bg-gray-50 focus:bg-white"
-            error={form.formState.errors[getFieldName('city')]?.message as string}
-            {...form.register(getFieldName('city'))}
+            disabled={disabled}
           />
+          {fieldError('country') && <p className="text-sm text-red-600">{fieldError('country')}</p>}
         </div>
 
         <div className="space-y-2">
@@ -226,46 +253,112 @@ export function AddressForm({
             State
             {required && <span className="ml-1 text-red-500">*</span>}
           </Label>
-          <Input
-            id={getFieldName('state')}
-            placeholder="State"
-            disabled={disabled}
-            className="bg-gray-50 focus:bg-white"
-            error={form.formState.errors[getFieldName('state')]?.message as string}
-            {...form.register(getFieldName('state'))}
-          />
+          {countryIsIndia ? (
+            <>
+              <SearchableSelect
+                options={toOptions(INDIA_STATE_NAMES, state)}
+                value={state}
+                onValueChange={handleStateChange}
+                placeholder="Select state"
+                searchPlaceholder="Search state..."
+                className="bg-gray-50 focus:bg-white"
+                disabled={disabled}
+              />
+              {fieldError('state') && <p className="text-sm text-red-600">{fieldError('state')}</p>}
+            </>
+          ) : (
+            <Input
+              id={getFieldName('state')}
+              placeholder="State"
+              disabled={disabled}
+              className="bg-gray-50 focus:bg-white"
+              error={fieldError('state')}
+              {...form.register(getFieldName('state'))}
+            />
+          )}
         </div>
       </div>
 
-      {/* ZIP Code & Country */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor={getFieldName('zipCode')} className={labelSize}>
-            ZIP Code
-            {required && <span className="ml-1 text-red-500">*</span>}
-          </Label>
+      <div className="space-y-2">
+        <Label htmlFor={getFieldName('city')} className={labelSize}>
+          {countryIsIndia ? 'City / District' : 'City'}
+          {required && <span className="ml-1 text-red-500">*</span>}
+        </Label>
+        {countryIsIndia ? (
+          <>
+            <SearchableSelect
+              options={toOptions(getIndiaDistricts(state), city)}
+              value={city}
+              onValueChange={(value: string) => setField('city', value)}
+              placeholder={state ? 'Select district' : 'Select a state first'}
+              searchPlaceholder="Search district..."
+              className="bg-gray-50 focus:bg-white"
+              disabled={disabled || !state}
+            />
+            {fieldError('city') && <p className="text-sm text-red-600">{fieldError('city')}</p>}
+          </>
+        ) : (
           <Input
-            id={getFieldName('zipCode')}
-            placeholder="12345"
+            id={getFieldName('city')}
+            placeholder="City"
             disabled={disabled}
             className="bg-gray-50 focus:bg-white"
-            error={form.formState.errors[getFieldName('zipCode')]?.message as string}
-            {...form.register(getFieldName('zipCode'))}
+            error={fieldError('city')}
+            {...form.register(getFieldName('city'))}
           />
-        </div>
+        )}
+      </div>
 
-        <div className="space-y-2">
-          <Label htmlFor={getFieldName('country')} className={labelSize}>
-            Country
-          </Label>
-          <Input
-            id={getFieldName('country')}
-            defaultValue="India"
-            disabled={disabled}
-            className="bg-gray-50 focus:bg-white"
-            {...form.register(getFieldName('country'))}
-          />
-        </div>
+      {/* Street Address */}
+      <div className="space-y-2">
+        <Label
+          htmlFor={getFieldName('streetAddress')}
+          className={`${labelSize} flex items-center gap-2`}
+        >
+          Street Address{required && <span className="text-red-500">*</span>}
+        </Label>
+        <Input
+          id={getFieldName('streetAddress')}
+          placeholder="123 Main Street"
+          disabled={disabled}
+          className="bg-gray-50 focus:bg-white"
+          error={fieldError('streetAddress')}
+          {...form.register(getFieldName('streetAddress'))}
+        />
+      </div>
+
+      {/* Address Line 2 */}
+      <div className="space-y-2">
+        <Label htmlFor={getFieldName('addressLine2')} className={labelSize}>
+          <span className="text-sm font-normal text-gray-500">
+            {countryIsIndia ? 'Area / Mandal (Optional)' : 'Address Line 2 (Optional)'}
+          </span>
+        </Label>
+        <Input
+          id={getFieldName('addressLine2')}
+          placeholder={countryIsIndia ? 'Area, Mandal or Landmark' : 'Apartment, Suite, Building'}
+          disabled={disabled}
+          className="bg-gray-50 focus:bg-white"
+          {...form.register(getFieldName('addressLine2'))}
+        />
+      </div>
+
+      {/* PIN / ZIP Code */}
+      <div className="space-y-2">
+        <Label htmlFor={getFieldName('zipCode')} className={labelSize}>
+          {countryIsIndia ? 'PIN Code' : 'ZIP / Postal Code'}
+          {required && <span className="ml-1 text-red-500">*</span>}
+        </Label>
+        <Input
+          id={getFieldName('zipCode')}
+          placeholder={countryIsIndia ? '123456' : '12345'}
+          inputMode="numeric"
+          maxLength={countryIsIndia ? 6 : 10}
+          disabled={disabled}
+          className="bg-gray-50 focus:bg-white md:max-w-xs"
+          error={fieldError('zipCode')}
+          {...form.register(getFieldName('zipCode'))}
+        />
       </div>
     </div>
   );

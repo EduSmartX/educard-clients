@@ -70,7 +70,14 @@ yarn-error.log
 .env
 .env.local
 .env.production
+.env.development
 .env*.local
+
+# Firebase app config (contains API keys; public repo). Keep a local copy;
+# CI should write it from a GitHub secret.
+**/GoogleService-Info.plist
+**/google-services.json
+*.expo-backup
 
 # Yarn
 .yarn/*

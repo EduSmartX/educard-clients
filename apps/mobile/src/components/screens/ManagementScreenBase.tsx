@@ -24,7 +24,6 @@ import {
   Image,
 } from 'react-native';
 import type { DimensionValue } from 'react-native';
-import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 
 import { useClasses } from '@/features/classes';
 import { useStudents } from '@/features/students';
@@ -150,23 +149,11 @@ export function ManagementScreenBase({
         end={{ x: 1, y: 1 }}
         style={styles.header}
       >
-        <Animated.View
-          entering={FadeIn.delay(100).duration(800)}
-          style={styles.circle1}
-        />
-        <Animated.View
-          entering={FadeIn.delay(200).duration(800)}
-          style={styles.circle2}
-        />
-        <Animated.View
-          entering={FadeIn.delay(300).duration(800)}
-          style={styles.circle3}
-        />
+        <View style={styles.circle1} />
+        <View style={styles.circle2} />
+        <View style={styles.circle3} />
 
-        <Animated.View
-          entering={FadeInDown.delay(100).springify().damping(15)}
-          style={styles.headerContent}
-        >
+        <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
             <View style={styles.headerTitleRow}>
               <Layers size={20} color="rgba(255,255,255,0.8)" />
@@ -194,7 +181,7 @@ export function ManagementScreenBase({
               </View>
             )}
           </TouchableOpacity>
-        </Animated.View>
+        </View>
       </LinearGradient>
 
       <ScrollView
@@ -203,19 +190,12 @@ export function ManagementScreenBase({
         contentContainerStyle={[styles.scrollContent, scrollPadding]}
       >
         <View style={styles.gridContainer}>
-          {items.map((item, index) => {
+          {items.map(item => {
             const ItemIcon = item.icon;
             const count = counts[item.id];
             const countColor = { color: item.gradient[0] };
             return (
-              <Animated.View
-                key={item.id}
-                entering={ZoomIn.delay(200 + index * 60)
-                  .springify()
-                  .damping(13)
-                  .stiffness(120)}
-                style={[styles.gridItem, gridItemStyle]}
-              >
+              <View key={item.id} style={[styles.gridItem, gridItemStyle]}>
                 <TouchableOpacity
                   style={[styles.iconCard, isTablet && styles.iconCardTablet]}
                   onPress={() => handleNavigate(item.screen)}
@@ -240,7 +220,7 @@ export function ManagementScreenBase({
                     </View>
                   )}
                 </TouchableOpacity>
-              </Animated.View>
+              </View>
             );
           })}
         </View>

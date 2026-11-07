@@ -39,6 +39,11 @@ import {
   FormDatePicker,
   KeyboardAwareForm,
 } from '@/components/forms';
+import {
+  AddressForm,
+  SNAKE_CASE_ADDRESS_KEYS,
+  toAddressData,
+} from '@/components/forms/AddressForm';
 import { getMediaUrl } from '@/constants/config';
 import { useMyProfilePhoto, useUserProfile, useUpdateProfile } from '@/hooks';
 import { useProfileImage } from '@/hooks/useProfileImage';
@@ -434,55 +439,13 @@ export default function ProfileScreen() {
 
             {addressExpanded && (
               <View style={s.addressFields}>
-                <FormInput
-                  label="Street Address"
-                  value={form.street_address}
-                  onChangeText={v => updateField('street_address', v)}
-                  placeholder="Enter street address"
+                <AddressForm
+                  values={toAddressData(form)}
+                  onChange={(field, value) =>
+                    updateField(SNAKE_CASE_ADDRESS_KEYS[field], value)
+                  }
+                  showHeader={false}
                 />
-                <FormInput
-                  label="Address Line 2"
-                  value={form.address_line_2}
-                  onChangeText={v => updateField('address_line_2', v)}
-                  placeholder="Apartment, suite, etc. (optional)"
-                />
-                <View style={s.row}>
-                  <View style={s.halfField}>
-                    <FormInput
-                      label="City"
-                      value={form.city}
-                      onChangeText={v => updateField('city', v)}
-                      placeholder="City"
-                    />
-                  </View>
-                  <View style={s.halfField}>
-                    <FormInput
-                      label="State"
-                      value={form.state}
-                      onChangeText={v => updateField('state', v)}
-                      placeholder="State"
-                    />
-                  </View>
-                </View>
-                <View style={s.row}>
-                  <View style={s.halfField}>
-                    <FormInput
-                      label="Zip Code"
-                      value={form.postal_code}
-                      onChangeText={v => updateField('postal_code', v)}
-                      placeholder="Zip Code"
-                      keyboardType="number-pad"
-                    />
-                  </View>
-                  <View style={s.halfField}>
-                    <FormInput
-                      label="Country"
-                      value={form.country}
-                      onChangeText={v => updateField('country', v)}
-                      placeholder="Country"
-                    />
-                  </View>
-                </View>
               </View>
             )}
           </View>
