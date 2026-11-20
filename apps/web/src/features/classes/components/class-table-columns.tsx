@@ -32,7 +32,7 @@ export function createClassListColumns({
       accessor: (row) => (
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="font-medium">
-            {row.class_master.name}
+            {row.class_master?.name ?? '—'}
           </Badge>
           <span className="text-gray-500">-</span>
           <Badge variant="outline">{row.name}</Badge>

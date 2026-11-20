@@ -30,7 +30,7 @@ import {
   type FeeStructure,
   type FeeStructureCreatePayload,
   type FeeComponent,
-  type ComponentType,
+  type ComponentTypeValue as ComponentType,
   FEE_UI_TEXT,
 } from '@educard/shared';
 import { applyFieldErrors } from '@/lib/utils/error-handler';

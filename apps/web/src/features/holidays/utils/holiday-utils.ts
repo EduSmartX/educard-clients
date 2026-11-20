@@ -4,7 +4,7 @@
  */
 
 import { addDays, differenceInDays, format, isSameDay, parseISO, startOfDay } from 'date-fns';
-import type { Holiday, HolidayColors, HolidayType } from '../types';
+import type { Holiday, HolidayColors, HolidayTypeValue as HolidayType } from '../types';
 
 /**
  * Get color configuration for a holiday type

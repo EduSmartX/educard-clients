@@ -3,5 +3,6 @@
  */
 
 export * from './attendance-helpers';
-export * from './get-day-status';
+// get-day-status has its own, looser WorkingDayPolicy; import that one from the module directly.
+export { getDayStatus, type DayStatusResult } from './get-day-status';
 export * from './is-last-working-day';

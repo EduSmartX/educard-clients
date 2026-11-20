@@ -1,3 +1,4 @@
+import type { DefaultValues } from 'react-hook-form';
 import { ADDRESS_TYPE } from '@/constants';
 import { getTenDigitPhoneNumber } from '@/lib/phone-utils';
 import type { CreateStudentPayload, Student } from '../types';
@@ -29,7 +30,8 @@ export const STUDENT_FORM_FIELD_ERROR_MAP = {
   guardian_relationship: 'guardian_relationship',
 } as const;
 
-export const STUDENT_FORM_DEFAULT_VALUES: StudentFormData = {
+// Default/initial values are partial: required fields such as gender start unselected.
+export const STUDENT_FORM_DEFAULT_VALUES: DefaultValues<StudentFormData> = {
   first_name: '',
   last_name: '',
   roll_number: '',
@@ -58,7 +60,9 @@ export const STUDENT_FORM_DEFAULT_VALUES: StudentFormData = {
   country: '',
 };
 
-export function getStudentFormValuesFromInitialData(initialData: Student): StudentFormData {
+export function getStudentFormValuesFromInitialData(
+  initialData: Student
+): DefaultValues<StudentFormData> {
   const userInfo = initialData.user_info;
   const address = userInfo.address;
 

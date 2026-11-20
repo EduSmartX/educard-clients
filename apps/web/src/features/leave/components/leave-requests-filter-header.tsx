@@ -8,7 +8,8 @@ import { Badge } from '@/components/ui/badge';
 
 interface LeaveRequestsFilterHeaderProps {
   activeFiltersCount: number;
-  onToggleFilters: () => void;
+  /** Shows a "Filters" toggle; omit when the filter panel is always visible. */
+  onToggleFilters?: () => void;
   onReset: () => void;
 }
 
@@ -25,15 +26,17 @@ export function LeaveRequestsFilterHeader({
           Clear ({activeFiltersCount})
         </Button>
       )}
-      <Button variant="outline" size="sm" onClick={onToggleFilters} className="gap-2">
-        <Filter className="h-4 w-4" />
-        Filters
-        {activeFiltersCount > 0 && (
-          <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 text-xs">
-            {activeFiltersCount}
-          </Badge>
-        )}
-      </Button>
+      {onToggleFilters && (
+        <Button variant="outline" size="sm" onClick={onToggleFilters} className="gap-2">
+          <Filter className="h-4 w-4" />
+          Filters
+          {activeFiltersCount > 0 && (
+            <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 text-xs">
+              {activeFiltersCount}
+            </Badge>
+          )}
+        </Button>
+      )}
     </div>
   );
 }

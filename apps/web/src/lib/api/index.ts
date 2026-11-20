@@ -9,7 +9,7 @@
  */
 
 // Re-export API client
-export { default as api } from './api';
+export { default as api } from '../api';
 
 // Re-export API services
 export * from './auth-api';

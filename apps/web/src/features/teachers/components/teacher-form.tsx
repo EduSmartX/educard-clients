@@ -107,6 +107,8 @@ interface TeacherFormProps {
   isLoading?: boolean;
   onSuccess: () => void;
   onCancel: () => void;
+  /** Shows a Delete button in the form actions (edit mode). */
+  onDelete?: () => void;
 }
 
 export function TeacherForm({
@@ -116,6 +118,7 @@ export function TeacherForm({
   isLoading: isLoadingData,
   onSuccess,
   onCancel,
+  onDelete,
 }: TeacherFormProps) {
   const [useQuickAdd, setUseQuickAdd] = useState(false);
   const [isAddressExpanded, setIsAddressExpanded] = useState(false);
@@ -576,6 +579,8 @@ export function TeacherForm({
           <FormActions
             mode={mode}
             onCancel={onCancel}
+            onDelete={onDelete}
+            showDelete={Boolean(onDelete)}
             isSubmitting={isLoading}
             submitLabel={mode === 'create' ? 'Create Teacher' : 'Update Teacher'}
           />

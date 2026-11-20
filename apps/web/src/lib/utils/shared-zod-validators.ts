@@ -25,18 +25,27 @@ export const cleanPhoneNumber = (phone: string): string => {
   return phone.replaceAll(/\D/g, '');
 };
 
-export const emailSchema = (required = true) => {
-  const base = z
+const emailBase = () =>
+  z
     .string()
     .email('Please enter a valid email address')
     .max(255, 'Email must not exceed 255 characters')
     .transform((val) => val.trim().toLowerCase());
 
+// Overloads keep a required field typed `string` instead of `string | undefined`.
+export function emailSchema(
+  required?: true
+): z.ZodPipeline<z.ZodString, ReturnType<typeof emailBase>>;
+export function emailSchema(
+  required: false
+): z.ZodUnion<[z.ZodOptional<ReturnType<typeof emailBase>>, z.ZodLiteral<''>]>;
+export function emailSchema(required: boolean): z.ZodTypeAny;
+export function emailSchema(required = true): z.ZodTypeAny {
   if (required) {
-    return z.string().min(1, 'Email is required').pipe(base);
+    return z.string().min(1, 'Email is required').pipe(emailBase());
   }
-  return base.optional().or(z.literal(''));
-};
+  return emailBase().optional().or(z.literal(''));
+}
 
 export const phoneSchema = (required = false) => {
   const validator = z
@@ -60,13 +69,40 @@ export const phoneSchema = (required = false) => {
   return required ? validator : validator.optional();
 };
 
-export const nameSchema = (fieldName: string, required = true, minLength = 2, maxLength = 100) => {
-  const base = z
+const nameBase = (fieldName: string, maxLength: number) =>
+  z
     .string()
     .max(maxLength, `${fieldName} must not exceed ${maxLength} characters`)
     .regex(NAME_REGEX, `${fieldName} can only contain letters, spaces, hyphens, and apostrophes`)
     .transform((val) => val.trim());
 
+type NameBase = ReturnType<typeof nameBase>;
+
+export function nameSchema(
+  fieldName: string,
+  required?: true,
+  minLength?: number,
+  maxLength?: number
+): z.ZodPipeline<z.ZodString, NameBase>;
+export function nameSchema(
+  fieldName: string,
+  required: false,
+  minLength?: number,
+  maxLength?: number
+): z.ZodOptional<NameBase>;
+export function nameSchema(
+  fieldName: string,
+  required: boolean,
+  minLength?: number,
+  maxLength?: number
+): z.ZodTypeAny;
+export function nameSchema(
+  fieldName: string,
+  required = true,
+  minLength = 2,
+  maxLength = 100
+): z.ZodTypeAny {
+  const base = nameBase(fieldName, maxLength);
   if (required) {
     return z
       .string()
@@ -75,10 +111,10 @@ export const nameSchema = (fieldName: string, required = true, minLength = 2, ma
       .pipe(base);
   }
   return base.optional();
-};
+}
 
-export const employeeIdSchema = (required = true, maxLength = 50) => {
-  const base = z
+const employeeIdBase = (maxLength: number) =>
+  z
     .string()
     .trim()
     .max(maxLength, `Employee ID must not exceed ${maxLength} characters`)
@@ -88,11 +124,24 @@ export const employeeIdSchema = (required = true, maxLength = 50) => {
     )
     .transform((val) => val.toUpperCase());
 
+type EmployeeIdBase = ReturnType<typeof employeeIdBase>;
+
+export function employeeIdSchema(
+  required?: true,
+  maxLength?: number
+): z.ZodPipeline<z.ZodString, EmployeeIdBase>;
+export function employeeIdSchema(
+  required: false,
+  maxLength?: number
+): z.ZodOptional<EmployeeIdBase>;
+export function employeeIdSchema(required: boolean, maxLength?: number): z.ZodTypeAny;
+export function employeeIdSchema(required = true, maxLength = 50): z.ZodTypeAny {
+  const base = employeeIdBase(maxLength);
   if (required) {
     return z.string().trim().min(1, 'Employee ID is required').pipe(base);
   }
   return base.optional();
-};
+}
 
 export const dateSchema = (fieldName: string, required = false) => {
   const validator = z.string().refine((val) => !val || !Number.isNaN(Date.parse(val)), {

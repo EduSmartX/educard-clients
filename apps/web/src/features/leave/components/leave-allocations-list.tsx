@@ -219,7 +219,6 @@ export function LeaveAllocationsList({
                   onClick={() => {
                     setFilters({});
                     setAppliedSearchQuery('');
-                    setShowFilters(false);
 
                     // Update parent state
                     if (onSearch) {
