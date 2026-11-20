@@ -200,7 +200,7 @@ export default function ShipmentTrackingScreen() {
         <EmptyState
           icon={<PackageSearch size={40} color="#9ca3af" />}
           message="Shipment not found"
-          subMessage="The code may be wrong, or it belongs to another school."
+          subMessage="The code may be wrong, or you are not assigned to it."
         />
       ) : (
         <ScrollView

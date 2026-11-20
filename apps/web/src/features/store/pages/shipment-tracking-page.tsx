@@ -189,7 +189,7 @@ export default function ShipmentTrackingPage() {
         <PackageSearch className="text-muted-foreground mx-auto h-10 w-10" aria-hidden />
         <p className="mt-3 font-medium">Shipment not found</p>
         <p className="text-muted-foreground text-sm">
-          The code may be wrong, or this shipment belongs to another school.
+          The code may be wrong, or you are not assigned to this shipment.
         </p>
       </div>
     );

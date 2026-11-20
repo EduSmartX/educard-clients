@@ -298,7 +298,7 @@ export interface ShipmentTracking {
   events: ShipmentEvent[];
   tracking_url: string;
   qr_svg: string;
-  /** True for EduCard shipment staff, who may record the next checkpoint. */
+  /** True for EduCard store admins and the staff assigned to this shipment. */
   can_update: boolean;
   next_statuses: { value: ShipmentStatus; label: string }[];
 }
