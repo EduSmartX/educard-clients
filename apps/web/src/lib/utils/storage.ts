@@ -23,7 +23,7 @@ export function getStoredUserRole(): string | null {
 
 export const AUTH_STORAGE_EVENT = 'auth-user-changed';
 
-export function updateStoredUser(updates: Record<string, unknown>): void {
+export function updateStoredUser(updates: object): void {
   const current = getParsedLocalStorageItem<Record<string, unknown>>('user');
   if (!current) {
     return;

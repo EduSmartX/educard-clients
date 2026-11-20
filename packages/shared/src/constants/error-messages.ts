@@ -706,9 +706,22 @@ export const FormPlaceholders = {
   ENTER_SCHOOL_NAME: "Enter school name",
   WEBSITE_GENERIC_EXAMPLE: "e.g., https://www.school.com",
 
-  // Password
+  // Password / sign-in
   CREATE_STRONG_PASSWORD: "Create a strong password",
   REENTER_NEW_PASSWORD: "Re-enter new password",
+  ENTER_USERNAME_OR_EMAIL: "Enter username or email",
+  ENTER_PASSWORD: "Enter password",
+  ENTER_CURRENT_PASSWORD: "Enter current password",
+  ENTER_NEW_PASSWORD: "Enter new password",
+
+  // Leave policy / requests
+  LEAVE_POLICY_NAME_EXAMPLE: "e.g., Teachers Casual Leave 2026",
+  LEAVE_POLICY_DETAILS: "Describe who this policy applies to and any rules",
+  MAX_CARRY_FORWARD_DAYS: "Enter maximum carry forward days",
+  PROVIDE_CANCELLATION_REASON: "Tell us why you are cancelling this request",
+
+  // Academic year
+  ACADEMIC_YEAR_EXAMPLE: "e.g., 2026-27",
 
   // Search
   SEARCH_CLASSES: "Search classes...",
@@ -720,6 +733,7 @@ export const FormPlaceholders = {
   SELECT_DATE: "Select date",
   SELECT_START_DATE: "Select start date",
   SELECT_END_DATE: "Select end date",
+  PICK_A_DATE: "Pick a date",
 } as const;
 
 /**
@@ -734,6 +748,7 @@ export const AttendanceUiText = {
   TIMESHEET: "Timesheet",
   SUMMARY_PAGE_TITLE: "Attendance Summary",
   SUMMARY_PAGE_DESC: "Today's attendance overview across all classes",
+  LOADING_ATTENDANCE: "Loading attendance...",
 
   // Form labels
   CLASS_LABEL: "Class",

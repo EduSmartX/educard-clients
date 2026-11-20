@@ -6,7 +6,7 @@
  * This file contains interface definitions that use those types.
  */
 
-import type { SaturdayOffPatternType } from '../constants/attendance';
+import type { HolidayTypeValue, SaturdayOffPatternType } from '../constants/attendance';
 
 // =============================================================================
 // Holiday Interfaces
@@ -30,7 +30,7 @@ export interface Holiday {
   public_id: string;
   start_date: string;
   end_date: string;
-  holiday_type: string;
+  holiday_type: HolidayTypeValue;
   description: string;
   created_at?: string;
   updated_at?: string;
@@ -48,14 +48,14 @@ export interface HolidayListParams {
 export interface HolidayCreatePayload {
   start_date: string;
   end_date?: string;
-  holiday_type: string;
+  holiday_type: HolidayTypeValue;
   description: string;
 }
 
 export interface HolidayUpdatePayload {
   start_date?: string;
   end_date?: string;
-  holiday_type?: string;
+  holiday_type?: HolidayTypeValue;
   description?: string;
 }
 

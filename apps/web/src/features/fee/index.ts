@@ -5,8 +5,7 @@
 // Admin module
 export * from './admin';
 
-// Parent module
-export * from './parent';
+// Parents and students see fees through features/student/fee.
 
 // Shared components
 export * from './components';

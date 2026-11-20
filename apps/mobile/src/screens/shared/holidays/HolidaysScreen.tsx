@@ -7,7 +7,12 @@
  * - Teacher: View-only access (no CRUD buttons)
  */
 
-import { Colors, getRoleGradient, extractApiError } from '@educard/shared';
+import {
+  Colors,
+  getRoleGradient,
+  extractApiError,
+  type HolidayTypeValue,
+} from '@educard/shared';
 import { useNavigation } from '@react-navigation/native';
 import {
   ChevronLeft,
@@ -82,7 +87,12 @@ export default function HolidayCalendarScreen() {
     visible: false,
     editing: null,
   });
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    description: string;
+    holiday_type: HolidayTypeValue | '';
+    start_date: string;
+    end_date: string;
+  }>({
     description: '',
     holiday_type: '',
     start_date: '',

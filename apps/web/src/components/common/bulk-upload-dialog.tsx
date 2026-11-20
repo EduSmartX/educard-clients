@@ -9,7 +9,7 @@ import { AlertCircle, CheckCircle2, Download, Loader2, Upload, X } from 'lucide-
 import { useCallback, useRef, useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button, type ButtonProps } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
@@ -52,6 +52,19 @@ export interface BulkUploadResponse {
   code: number;
 }
 
+/**
+ * What an upload endpoint may return before normalization. Modules report row errors
+ * in different shapes; `transformErrors` turns any of them into BulkUploadError[].
+ */
+type RawBulkUploadResult = Omit<BulkUploadResult, 'errors'> & { errors?: unknown };
+
+interface RawBulkUploadResponse {
+  success: boolean;
+  message: string;
+  data: RawBulkUploadResult;
+  code?: number;
+}
+
 // Client-side validation result type
 export interface ClientValidationResult {
   isValid: boolean;
@@ -67,13 +80,13 @@ interface BulkUploadDialogProps {
   title: string;
   description: string;
   triggerLabel?: string;
-  triggerVariant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'destructive';
+  triggerVariant?: ButtonProps['variant'];
   triggerClassName?: string;
   triggerDisabled?: boolean;
 
   // API functions
   downloadTemplate: () => Promise<Blob>;
-  uploadFile: (file: File) => Promise<BulkUploadResponse>;
+  uploadFile: (file: File) => Promise<RawBulkUploadResponse>;
 
   // Cache configuration
   invalidateQueryKeys: string[];
@@ -244,16 +257,12 @@ export function BulkUploadDialog({
   };
 
   // Normalize result from a successful response
-  const normalizeSuccessResult = (result: BulkUploadResult): BulkUploadResult => {
+  const normalizeSuccessResult = (raw: RawBulkUploadResult): BulkUploadResult => {
+    const result: BulkUploadResult = { ...raw, errors: transformErrors(raw.errors) };
     if (result.successful_count !== undefined && result.created_count === undefined) {
       result.created_count = result.successful_count;
     }
     result.total_rows ??= (result.created_count || 0) + (result.failed_count || 0);
-    if (result.errors) {
-      result.errors = transformErrors(result.errors);
-    } else {
-      result.errors = [];
-    }
     return result;
   };
 

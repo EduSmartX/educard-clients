@@ -1,4 +1,3 @@
-import { TimesheetStatus } from '@educard/shared/constants';
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -183,9 +182,8 @@ export function AttendanceSummaryPage() {
   const handleNotifyPending = () => {
     // Get all pending classes with class teachers
     const pendingWithTeachers =
-      summaryData?.classes.filter(
-        (c) => c.submission_status === TimesheetStatus.SUBMITTED && c.class_teacher
-      ) || [];
+      summaryData?.classes.filter((c) => c.submission_status === 'pending' && c.class_teacher) ||
+      [];
 
     if (pendingWithTeachers.length === 0) {
       toast.info('No pending classes with assigned class teachers to notify.');

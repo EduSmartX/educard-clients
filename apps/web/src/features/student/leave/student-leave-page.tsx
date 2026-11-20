@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { DatePicker } from '@/components/ui/date-picker';
 import { PageHeader } from '@/components/common';
 import { useLeaveBalance, useLeaveRequests, useApplyLeave } from './hooks';
-import { parseApiError } from '@/lib/utils/error-handler';
+import { getErrorMessage } from '@/lib/utils/error-handler';
 
 const STATUS_STYLES: Record<string, { color: string; emoji: string }> = {
   pending: { color: 'bg-amber-100 text-amber-700', emoji: '⏳' },
@@ -73,7 +73,7 @@ export default function StudentLeavePage() {
           resetForm();
         },
         onError: (err) => {
-          toast.error(parseApiError(err) || 'Failed to submit leave request');
+          toast.error(getErrorMessage(err, 'Failed to submit leave request'));
         },
       }
     );

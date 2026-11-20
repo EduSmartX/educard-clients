@@ -40,5 +40,4 @@ export {
   isValidPhone,
   loginSchema,
   signupSchema,
-  studentSchema,
 } from '@educard/shared';

@@ -50,6 +50,13 @@
       "ws@8": "^8.21.0",
       "@tootallnate/once": "^2.0.1",
       "fast-xml-parser@<5.7.0": ">=5.7.0"
+    },
+    "packageExtensions": {
+      "@hookform/resolvers@3": {
+        "peerDependencies": {
+          "zod": "^3.22.0"
+        }
+      }
     }
   }
 }

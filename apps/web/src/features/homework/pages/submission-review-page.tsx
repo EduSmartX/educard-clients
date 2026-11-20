@@ -305,6 +305,8 @@ export default function SubmissionReviewPage() {
     );
   }
 
+  const submissionHistory = submission.submission_history ?? [];
+
   return (
     <div className="space-y-6">
       <PageHeader title="Review Submission" icon={MessageSquare} />
@@ -437,68 +439,51 @@ export default function SubmissionReviewPage() {
           )}
 
           {/* Submission History */}
-          {(submission as Record<string, unknown>).submission_history &&
-            (
-              (submission as Record<string, unknown>).submission_history as Array<
-                Record<string, unknown>
-              >
-            ).length > 0 && (
-              <Card>
-                <CardHeader className="px-4 py-3">
-                  <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                    <Clock className="h-4 w-4" />
-                    Previous Submissions (
-                    {
-                      (
-                        (submission as Record<string, unknown>).submission_history as Array<
-                          Record<string, unknown>
+          {submissionHistory.length > 0 && (
+            <Card>
+              <CardHeader className="px-4 py-3">
+                <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                  <Clock className="h-4 w-4" />
+                  Previous Submissions ({submissionHistory.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="divide-y px-4 pt-0 pb-4">
+                {submissionHistory.map((past, idx, arr) => (
+                  <div key={past.public_id || idx} className="space-y-1.5 py-3 first:pt-0">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-slate-500">
+                        Attempt #{arr.length - idx} —{' '}
+                        {past.submitted_at
+                          ? format(new Date(past.submitted_at), 'MMM d, h:mm a')
+                          : ''}
+                      </span>
+                      {past.review_outcome && (
+                        <Badge
+                          variant="outline"
+                          className={`border-0 px-2 py-0.5 text-[10px] ${
+                            past.review_outcome === 'rejected'
+                              ? 'bg-red-50 text-red-700'
+                              : 'bg-green-50 text-green-700'
+                          }`}
                         >
-                      ).length
-                    }
-                    )
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="divide-y px-4 pt-0 pb-4">
-                  {(
-                    (submission as Record<string, unknown>).submission_history as Array<
-                      Record<string, string | null>
-                    >
-                  ).map((past, idx, arr) => (
-                    <div key={past.public_id || idx} className="space-y-1.5 py-3 first:pt-0">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-slate-500">
-                          Attempt #{arr.length - idx} —{' '}
-                          {past.submitted_at
-                            ? format(new Date(past.submitted_at), 'MMM d, h:mm a')
-                            : ''}
-                        </span>
-                        {past.review_outcome && (
-                          <Badge
-                            variant="outline"
-                            className={`border-0 px-2 py-0.5 text-[10px] ${
-                              past.review_outcome === 'rejected'
-                                ? 'bg-red-50 text-red-700'
-                                : 'bg-green-50 text-green-700'
-                            }`}
-                          >
-                            {past.review_outcome === 'rejected' ? '❌ Rejected' : '✅ Approved'}
-                          </Badge>
-                        )}
-                      </div>
-                      {past.notes && <p className="text-xs text-slate-600">{past.notes}</p>}
-                      {past.feedback && (
-                        <div className="rounded bg-slate-50 p-2 text-xs">
-                          <span className="font-medium text-slate-500">
-                            Feedback{past.reviewed_by_name ? ` (${past.reviewed_by_name})` : ''}:
-                          </span>{' '}
-                          <span className="text-slate-700">{past.feedback}</span>
-                        </div>
+                          {past.review_outcome === 'rejected' ? '❌ Rejected' : '✅ Approved'}
+                        </Badge>
                       )}
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
+                    {past.notes && <p className="text-xs text-slate-600">{past.notes}</p>}
+                    {past.feedback && (
+                      <div className="rounded bg-slate-50 p-2 text-xs">
+                        <span className="font-medium text-slate-500">
+                          Feedback{past.reviewed_by_name ? ` (${past.reviewed_by_name})` : ''}:
+                        </span>{' '}
+                        <span className="text-slate-700">{past.feedback}</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <div className="lg:col-span-1">

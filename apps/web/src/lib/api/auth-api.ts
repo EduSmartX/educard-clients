@@ -256,15 +256,15 @@ export const authApi = {
     // If profile_image exists, send as multipart/form-data
     if (formData.profile_image) {
       const form = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          // Convert value to string for FormData
-          form.append(
-            key,
-            typeof value === 'object' && !(value instanceof File)
-              ? JSON.stringify(value)
-              : String(value)
-          );
+      Object.entries(formData).forEach(([key, value]: [string, unknown]) => {
+        if (value === undefined || value === null) {
+          return;
+        }
+        // Files go up as-is; String(file) would send the text "[object File]".
+        if (value instanceof File) {
+          form.append(key, value);
+        } else {
+          form.append(key, typeof value === 'object' ? JSON.stringify(value) : String(value));
         }
       });
       const { data } = await api.patch('/auth/me/', form, {

@@ -42,12 +42,12 @@ function getExamFormTitle(isCreate: boolean, isEdit: boolean): string {
   return 'View Exam';
 }
 
-function findDuplicateExam(
+function findDuplicateExam<T extends { subject_public_id: string }>(
   isCreate: boolean,
   sessionId: string,
   subjectId: string,
-  existingExams: Array<{ subject_public_id: string; public_id: string }>
-) {
+  existingExams: T[]
+): T | null {
   if (!isCreate || !sessionId || !subjectId) {
     return null;
   }
@@ -83,8 +83,8 @@ function getExamFormActionsConfig(
   return {
     primaryAction: {
       label: isCreate ? 'Create Exam' : 'Save Changes',
-      type: 'submit',
-      icon: isCreate ? 'create' : 'save',
+      type: 'submit' as const,
+      icon: isCreate ? ('create' as const) : ('save' as const),
       isLoading: isPending,
       disabled: isPending,
     },

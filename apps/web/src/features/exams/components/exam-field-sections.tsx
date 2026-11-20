@@ -15,9 +15,9 @@ import {
   type ExamStatus,
   type ExamSession,
   type Class,
-  type SubjectItem,
   type Exam,
 } from '@educard/shared';
+import type { Subject as SubjectItem } from '@/features/subjects/types/subject';
 
 // --- Session Field ---
 
@@ -171,7 +171,7 @@ export function SubjectField({
           key={`subject-${subjectId || 'empty'}`}
           options={subjectsList.map((subject) => ({
             value: subject.public_id,
-            label: subject.subject_info?.name ?? subject.name,
+            label: subject.subject_info.name,
           }))}
           value={subjectId}
           onValueChange={setSubjectId}
