@@ -4,6 +4,10 @@ import { toast } from 'sonner';
 import {
   CUSTOM_FEATURES_KEY,
   PRODUCT_ATTRIBUTE_INPUT_TYPE,
+  PRODUCT_KIND,
+  STORE_CONFIG_KEY,
+  getErrorMessage,
+  type BookSet,
   type CartItemConfiguration,
   type CatalogProduct,
 } from '@educard/shared';
@@ -21,7 +25,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { useAddCartItem } from '../hooks/use-store';
-import { formatCurrency, isConfigurationComplete } from '../utils/store-format';
+import {
+  formatCurrency,
+  isConfigurationComplete,
+  orderScopedAttributes,
+} from '../utils/store-format';
+import { BookSetPicker, IdCardClassPicker } from './class-resolved-pickers';
 
 interface ProductConfigDialogProps {
   product: CatalogProduct | null;
@@ -47,6 +56,11 @@ export function ProductConfigDialog({ product, open, onOpenChange }: ProductConf
   const [configuration, setConfiguration] = useState<CartItemConfiguration>({});
   const [customFeatures, setCustomFeatures] = useState<CustomFeatureRow[]>([]);
   const [quantity, setQuantity] = useState(1);
+  // ID cards: the chosen class section, and whether an approved template covers it.
+  const [classPublicId, setClassPublicId] = useState('');
+  const [classHasTemplate, setClassHasTemplate] = useState(false);
+  // Book sets: the chosen approved set, which also sets the price.
+  const [bookSet, setBookSet] = useState<BookSet | undefined>();
   const addItem = useAddCartItem();
 
   if (!product) {
@@ -61,7 +75,14 @@ export function ProductConfigDialog({ product, open, onOpenChange }: ProductConf
     setConfiguration({});
     setCustomFeatures([]);
     setQuantity(1);
+    setClassPublicId('');
+    setClassHasTemplate(false);
+    setBookSet(undefined);
   };
+
+  const isIdCard = product.kind === PRODUCT_KIND.ID_CARD;
+  const isBookSet = product.kind === PRODUCT_KIND.BOOK_SET;
+  const lineAttributes = orderScopedAttributes(product.attributes);
 
   const addCustomRow = () => {
     setCustomFeatures((current) => [...current, { id: Date.now(), name: '', value: '' }]);
@@ -91,6 +112,12 @@ export function ProductConfigDialog({ product, open, onOpenChange }: ProductConf
     if (Object.keys(custom).length > 0) {
       payload[CUSTOM_FEATURES_KEY] = custom;
     }
+    if (isIdCard) {
+      payload[STORE_CONFIG_KEY.CLASS] = classPublicId;
+    }
+    if (isBookSet && bookSet) {
+      payload[STORE_CONFIG_KEY.BOOK_SET] = bookSet.public_id;
+    }
 
     addItem.mutate(
       { product_public_id: product.public_id, quantity, configuration: payload },
@@ -101,20 +128,23 @@ export function ProductConfigDialog({ product, open, onOpenChange }: ProductConf
           onOpenChange(false);
         },
         onError: (error: unknown) => {
-          const message =
-            (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-            'Could not add this item to the cart';
-          toast.error(message);
+          toast.error(getErrorMessage(error, 'Could not add this item to the cart'));
         },
       }
     );
   };
 
-  const complete = isConfigurationComplete(product.attributes, configuration);
+  const kindComplete = isIdCard
+    ? Boolean(classPublicId) && classHasTemplate
+    : isBookSet
+      ? Boolean(bookSet)
+      : true;
+  const complete = kindComplete && isConfigurationComplete(product.attributes, configuration);
   const incompleteCustomRow = customFeatures.some(
     (row) => Boolean(row.name.trim()) !== Boolean(row.value.trim())
   );
-  const lineTotal = Number(product.price) * quantity;
+  const unitPrice = isBookSet ? Number(bookSet?.price ?? 0) : Number(product.price);
+  const lineTotal = unitPrice * quantity;
 
   return (
     <Dialog
@@ -130,12 +160,25 @@ export function ProductConfigDialog({ product, open, onOpenChange }: ProductConf
         <DialogHeader>
           <DialogTitle>{product.name}</DialogTitle>
           <DialogDescription>
-            {formatCurrency(product.price)} per {product.unit_label}
+            {isBookSet
+              ? 'Priced from the approved book list for the class'
+              : `${formatCurrency(product.price)} per ${product.unit_label}`}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5">
-          {product.attributes.map((attribute) => (
+          {isIdCard && (
+            <IdCardClassPicker
+              value={classPublicId}
+              onChange={(next, hasTemplate) => {
+                setClassPublicId(next);
+                setClassHasTemplate(hasTemplate);
+              }}
+            />
+          )}
+          {isBookSet && <BookSetPicker value={bookSet?.public_id ?? ''} onChange={setBookSet} />}
+
+          {lineAttributes.map((attribute) => (
             <div key={attribute.code} className="space-y-2">
               <Label>
                 {attribute.display_name}

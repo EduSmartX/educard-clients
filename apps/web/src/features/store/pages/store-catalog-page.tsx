@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, ShoppingCart } from 'lucide-react';
+import { Settings2, ShoppingBag, ShoppingCart } from 'lucide-react';
 import type { CatalogProduct } from '@educard/shared';
 import { PageHeader } from '@/components/common';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -41,6 +41,12 @@ export default function StoreCatalogPage() {
         icon={ShoppingBag}
         actions={[
           {
+            label: 'Store setup',
+            icon: Settings2,
+            variant: 'outline',
+            onClick: () => navigate(ROUTES.STORE.SETUP),
+          },
+          {
             label: cartCount > 0 ? `Cart (${cartCount})` : 'Cart',
             icon: ShoppingCart,
             variant: 'outline',
@@ -79,7 +85,12 @@ export default function StoreCatalogPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {products.map((product) => (
-            <ProductCard key={product.public_id} product={product} onConfigure={setSelected} />
+            <ProductCard
+              key={product.public_id}
+              product={product}
+              onConfigure={setSelected}
+              onSetup={() => navigate(ROUTES.STORE.SETUP)}
+            />
           ))}
         </div>
       )}

@@ -37,6 +37,7 @@ import {
   ShoppingBag,
   ShoppingCart,
   Package,
+  Settings2,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
 import { ROUTES } from '@/constants/app-config';
@@ -339,6 +340,12 @@ export const adminSidebarConfig: SidebarSection[] = [
         label: 'Orders',
         icon: Package,
         path: ROUTES.STORE.ORDERS,
+      },
+      {
+        id: 'store-setup',
+        label: 'Store Setup',
+        icon: Settings2,
+        path: ROUTES.STORE.SETUP,
       },
     ],
   },

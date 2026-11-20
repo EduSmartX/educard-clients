@@ -48,6 +48,7 @@ import FeedbackDetailScreen from '@/screens/shared/feedback/FeedbackDetailScreen
 import StoreCatalogScreen from '@/screens/shared/store/StoreCatalogScreen';
 import StoreCartScreen from '@/screens/shared/store/StoreCartScreen';
 import StoreOrdersScreen from '@/screens/shared/store/StoreOrdersScreen';
+import ShipmentTrackingScreen from '@/screens/shared/store/ShipmentTrackingScreen';
 import HelpSupportScreen from '@/screens/shared/HelpSupportScreen';
 import HolidaysScreen from '@/screens/shared/holidays/HolidaysScreen';
 import HomeworkDetailScreen from '@/screens/shared/homework/HomeworkDetailScreen';
@@ -197,6 +198,10 @@ export function MainStackNavigator({ role }: MainStackNavigatorProps) {
         <Stack.Screen name="StoreCatalog" component={StoreCatalogScreen} />
         <Stack.Screen name="StoreCart" component={StoreCartScreen} />
         <Stack.Screen name="StoreOrders" component={StoreOrdersScreen} />
+        <Stack.Screen
+          name="ShipmentTracking"
+          component={ShipmentTrackingScreen}
+        />
         <Stack.Screen name="Profile">
           {() =>
             isStudentPortalRole(role) ? (

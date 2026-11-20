@@ -50,6 +50,15 @@ function describeConfiguration(item: CartItem): string {
       continue;
     }
 
+    // Class, template and book set are server snapshots; show their names.
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      const name = (value as { name?: unknown }).name;
+      if (typeof name === 'string' && name) {
+        parts.push(`${code.replace(/_/g, ' ')}: ${name}`);
+      }
+      continue;
+    }
+
     parts.push(
       Array.isArray(value)
         ? `${code}: ${value.length} selected`

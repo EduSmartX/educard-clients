@@ -283,6 +283,10 @@ export const QueryKeys = {
     CART: ["store", "cart"] as const,
     ORDERS: (params?: object) => ["store", "orders", params] as const,
     ORDER_DETAIL: (id: string) => ["store", "orders", "detail", id] as const,
+    ID_CARD_TEMPLATES: (params?: object) =>
+      ["store", "id-card-templates", params] as const,
+    BOOK_SETS: (params?: object) => ["store", "book-sets", params] as const,
+    TRACKING: (token: string) => ["store", "tracking", token] as const,
   },
 } as const;
 

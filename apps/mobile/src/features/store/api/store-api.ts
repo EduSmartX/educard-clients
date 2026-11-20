@@ -10,9 +10,14 @@ import {
   type Cart,
   type CatalogProduct,
   type CatalogQueryParams,
+  type BookSet,
+  type IdCardTemplate,
   type Order,
   type OrderQueryParams,
   type PlaceOrderPayload,
+  type ShipmentEventPayload,
+  type ShipmentTracking,
+  type SubmissionQueryParams,
   type UpdateCartItemPayload,
   type UpdateOrderStatusPayload,
 } from '@educard/shared';
@@ -88,6 +93,42 @@ export async function updateOrderStatus(
 ): Promise<ApiDetailResponse<Order>> {
   const response = await apiClient.patch(
     API_ENDPOINTS.STORE.ORDER_DETAIL(publicId),
+    payload,
+  );
+  return response.data;
+}
+
+export async function getIdCardTemplates(
+  params?: SubmissionQueryParams,
+): Promise<ApiDetailResponse<IdCardTemplate[]>> {
+  const response = await apiClient.get(API_ENDPOINTS.STORE.ID_CARD_TEMPLATES, {
+    params,
+  });
+  return response.data;
+}
+
+export async function getBookSets(
+  params?: SubmissionQueryParams,
+): Promise<ApiDetailResponse<BookSet[]>> {
+  const response = await apiClient.get(API_ENDPOINTS.STORE.BOOK_SETS, {
+    params,
+  });
+  return response.data;
+}
+
+export async function getShipmentTracking(
+  token: string,
+): Promise<ApiDetailResponse<ShipmentTracking>> {
+  const response = await apiClient.get(API_ENDPOINTS.STORE.TRACK(token));
+  return response.data;
+}
+
+export async function recordShipmentEvent(
+  token: string,
+  payload: ShipmentEventPayload,
+): Promise<ApiDetailResponse<ShipmentTracking>> {
+  const response = await apiClient.post(
+    API_ENDPOINTS.STORE.TRACK_EVENTS(token),
     payload,
   );
   return response.data;

@@ -429,6 +429,15 @@ export const API_ENDPOINTS = {
   STORE: {
     CATALOG: "/store/catalog/",
     CATALOG_IMAGE: (publicId: string) => `/store/catalog/${publicId}/image/`,
+    CATALOG_PROPERTIES: (publicId: string) =>
+      `/store/catalog/${publicId}/properties/`,
+    ID_CARD_TEMPLATES: "/store/id-card-templates/",
+    ID_CARD_TEMPLATE_DETAIL: (publicId: string) =>
+      `/store/id-card-templates/${publicId}/`,
+    BOOK_SETS: "/store/book-sets/",
+    BOOK_SET_DETAIL: (publicId: string) => `/store/book-sets/${publicId}/`,
+    TRACK: (token: string) => `/store/track/${token}/`,
+    TRACK_EVENTS: (token: string) => `/store/track/${token}/events/`,
     CART: "/store/cart/",
     CART_ITEMS: "/store/cart/items/",
     CART_ITEM_DETAIL: (publicId: string) => `/store/cart/items/${publicId}/`,

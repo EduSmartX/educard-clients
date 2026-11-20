@@ -3,14 +3,22 @@
  */
 
 import {
+  APPROVAL_STATUS,
   CUSTOM_FEATURES_KEY,
   PRODUCT_ATTRIBUTE_INPUT_TYPE,
+  PRODUCT_ATTRIBUTE_SCOPE,
+  PRODUCT_KIND,
+  STORE_CONFIG_KEY,
+  getErrorMessage,
+  type BookSet,
   type CartItemConfiguration,
   type CatalogProduct,
+  type Class,
+  type IdCardTemplate,
 } from '@educard/shared';
 import { useNavigation } from '@react-navigation/native';
 import { ChevronLeft, Plus, ShoppingCart, X } from 'lucide-react-native';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   FlatList,
   Image,
@@ -26,7 +34,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SubmitButton } from '@/components/common';
 import { EmptyState, LoadingState } from '@/components/common/ListStates';
-import { useAddCartItem, useCart, useCatalog } from '@/features/store';
+import { useClasses } from '@/features/classes';
+import {
+  useAddCartItem,
+  useBookSets,
+  useCart,
+  useCatalog,
+  useIdCardTemplates,
+} from '@/features/store';
 import type { SharedStackNavigation } from '@/navigation/types';
 import { layoutStyles } from '@/styles';
 import { showToast } from '@/utils/toast';
@@ -52,16 +67,45 @@ function parseListValue(raw: string): string[] {
     .filter(Boolean);
 }
 
+/** School-level attributes are set once on the web Store Setup page, not per line. */
+function lineAttributes(product: CatalogProduct) {
+  return product.attributes.filter(
+    attribute => attribute.scope !== PRODUCT_ATTRIBUTE_SCOPE.ORGANIZATION,
+  );
+}
+
 function isComplete(
   product: CatalogProduct,
   configuration: CartItemConfiguration,
 ): boolean {
-  return product.attributes
+  return lineAttributes(product)
     .filter(attribute => attribute.is_required)
     .every(attribute => {
       const value = configuration[attribute.code];
       return Array.isArray(value) ? value.length > 0 : Boolean(value);
     });
+}
+
+/** One entry per grade: templates and book sets are approved per grade. */
+function classLabel(section: Class): string {
+  return (
+    section.display_name ||
+    [section.class_master?.name, section.name].filter(Boolean).join(' - ')
+  );
+}
+
+/** The approved template that will print for a section: its grade's, else the default. */
+function resolveTemplate(
+  templates: IdCardTemplate[],
+  section: Class | undefined,
+): IdCardTemplate | undefined {
+  const grade = section?.class_master?.name;
+  return (
+    templates.find(
+      template =>
+        !template.is_default && Boolean(grade) && template.class_name === grade,
+    ) ?? templates.find(template => template.is_default)
+  );
 }
 
 export default function StoreCatalogScreen() {
@@ -72,19 +116,61 @@ export default function StoreCatalogScreen() {
   const [configuration, setConfiguration] = useState<CartItemConfiguration>({});
   const [customFeatures, setCustomFeatures] = useState<CustomFeatureRow[]>([]);
   const [quantity, setQuantity] = useState('1');
+  const [classId, setClassId] = useState('');
+  const [bookSet, setBookSet] = useState<BookSet | undefined>();
+
+  const isIdCard = selected?.kind === PRODUCT_KIND.ID_CARD;
+  const isBookSet = selected?.kind === PRODUCT_KIND.BOOK_SET;
 
   const { data, isLoading } = useCatalog();
   const { data: cartResponse } = useCart();
+  const { data: classesData } = useClasses({ page_size: 100 });
+  const { data: templatesResponse } = useIdCardTemplates(
+    { status: APPROVAL_STATUS.APPROVED },
+    isIdCard,
+  );
+  const { data: bookSetsResponse } = useBookSets(
+    { status: APPROVAL_STATUS.APPROVED },
+    isBookSet,
+  );
   const addItem = useAddCartItem();
 
   const products = data?.data ?? [];
   const cartCount = cartResponse?.data?.item_count ?? 0;
+  const classes = useMemo(() => classesData?.classes ?? [], [classesData]);
+  const templates = templatesResponse?.data ?? [];
+  const bookSets = bookSetsResponse?.data ?? [];
+  const selectedClass = classes.find(section => section.public_id === classId);
+  const template = selectedClass
+    ? resolveTemplate(templates, selectedClass)
+    : undefined;
+
+  const visibleAttributes = selected ? lineAttributes(selected) : [];
+
+  const kindComplete = isIdCard
+    ? Boolean(template)
+    : isBookSet
+      ? Boolean(bookSet)
+      : true;
 
   const closeModal = () => {
     setSelected(null);
     setConfiguration({});
     setCustomFeatures([]);
     setQuantity('1');
+    setClassId('');
+    setBookSet(undefined);
+  };
+
+  const openProduct = (product: CatalogProduct) => {
+    if (product.setup_required) {
+      showToast(
+        'info',
+        `Set ${product.missing_properties.join(', ')} for ${product.name} in Store Setup on the web first.`,
+      );
+      return;
+    }
+    setSelected(product);
   };
 
   const handleAdd = () => {
@@ -105,6 +191,12 @@ export default function StoreCatalogScreen() {
     if (Object.keys(custom).length > 0) {
       payload[CUSTOM_FEATURES_KEY] = custom;
     }
+    if (isIdCard) {
+      payload[STORE_CONFIG_KEY.CLASS] = classId;
+    }
+    if (isBookSet && bookSet) {
+      payload[STORE_CONFIG_KEY.BOOK_SET] = bookSet.public_id;
+    }
 
     addItem.mutate(
       {
@@ -117,7 +209,8 @@ export default function StoreCatalogScreen() {
           showToast('success', `${selected.name} added to cart`);
           closeModal();
         },
-        onError: () => showToast('error', 'Could not add this item'),
+        onError: error =>
+          showToast('error', getErrorMessage(error, 'Could not add this item')),
       },
     );
   };
@@ -125,7 +218,7 @@ export default function StoreCatalogScreen() {
   const renderProduct = ({ item }: { item: CatalogProduct }) => (
     <TouchableOpacity
       style={styles.card}
-      onPress={() => setSelected(item)}
+      onPress={() => openProduct(item)}
       activeOpacity={0.8}
     >
       {item.image_url ? (
@@ -137,8 +230,13 @@ export default function StoreCatalogScreen() {
         <Text style={styles.cardTitle}>{item.name}</Text>
         <Text style={styles.cardMeta}>{item.category_name}</Text>
         <Text style={styles.cardPrice}>
-          {formatCurrency(item.price)} / {item.unit_label}
+          {item.kind === PRODUCT_KIND.BOOK_SET
+            ? 'Priced per class'
+            : `${formatCurrency(item.price)} / ${item.unit_label}`}
         </Text>
+        {item.setup_required && (
+          <Text style={styles.setupRequired}>Setup required</Text>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -186,12 +284,110 @@ export default function StoreCatalogScreen() {
           >
             <Text style={styles.modalTitle}>{selected?.name}</Text>
             <Text style={styles.cardMeta}>
-              {selected ? formatCurrency(selected.price) : ''} /{' '}
-              {selected?.unit_label}
+              {isBookSet
+                ? bookSet
+                  ? `${formatCurrency(bookSet.price)} / set`
+                  : 'Priced from the class book list'
+                : `${selected ? formatCurrency(selected.price) : ''} / ${selected?.unit_label ?? ''}`}
             </Text>
 
             <ScrollView style={styles.modalScroll}>
-              {selected?.attributes.map(attribute => (
+              {isIdCard && (
+                <View style={styles.field}>
+                  <Text style={styles.label}>Class *</Text>
+                  <View style={styles.optionRow}>
+                    {classes.map(section => {
+                      const active = section.public_id === classId;
+                      return (
+                        <TouchableOpacity
+                          key={section.public_id}
+                          style={[styles.option, active && styles.optionActive]}
+                          onPress={() => setClassId(section.public_id)}
+                        >
+                          <Text
+                            style={[
+                              styles.optionText,
+                              active && styles.optionTextActive,
+                            ]}
+                          >
+                            {classLabel(section)}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                  {selectedClass && template && (
+                    <View style={styles.templateRow}>
+                      {template.image_url ? (
+                        <Image
+                          source={{ uri: template.image_url }}
+                          style={styles.templateThumb}
+                        />
+                      ) : null}
+                      <Text style={styles.hint}>
+                        {template.name} (
+                        {template.is_default
+                          ? 'school default'
+                          : template.class_name}
+                        )
+                      </Text>
+                    </View>
+                  )}
+                  {selectedClass && !template && (
+                    <Text style={styles.setupRequired}>
+                      No approved ID card template for{' '}
+                      {classLabel(selectedClass)}. Upload one in Store Setup on
+                      the web.
+                    </Text>
+                  )}
+                </View>
+              )}
+
+              {isBookSet && (
+                <View style={styles.field}>
+                  <Text style={styles.label}>Book set *</Text>
+                  {bookSets.length === 0 ? (
+                    <Text style={styles.setupRequired}>
+                      No approved book sets yet. Request one in Store Setup on
+                      the web.
+                    </Text>
+                  ) : (
+                    <View style={styles.optionRow}>
+                      {bookSets.map(set => {
+                        const active = set.public_id === bookSet?.public_id;
+                        return (
+                          <TouchableOpacity
+                            key={set.public_id}
+                            style={[
+                              styles.option,
+                              active && styles.optionActive,
+                            ]}
+                            onPress={() => setBookSet(set)}
+                          >
+                            <Text
+                              style={[
+                                styles.optionText,
+                                active && styles.optionTextActive,
+                              ]}
+                            >
+                              {set.class_name} — {set.name}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  )}
+                  {bookSet?.items.map((book, index) => (
+                    <Text key={`${book.title}-${index}`} style={styles.hint}>
+                      {book.title}
+                      {book.quantity > 1 ? ` × ${book.quantity}` : ''} ·{' '}
+                      {formatCurrency(book.line_total)}
+                    </Text>
+                  ))}
+                </View>
+              )}
+
+              {visibleAttributes.map(attribute => (
                 <View key={attribute.code} style={styles.field}>
                   <Text style={styles.label}>
                     {attribute.display_name}
@@ -360,7 +556,11 @@ export default function StoreCatalogScreen() {
                 label="Add to cart"
                 onPress={handleAdd}
                 isLoading={addItem.isPending}
-                disabled={!selected || !isComplete(selected, configuration)}
+                disabled={
+                  !selected ||
+                  !kindComplete ||
+                  !isComplete(selected, configuration)
+                }
               />
             </View>
           </View>
@@ -462,6 +662,19 @@ const styles = StyleSheet.create({
   addButton: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   addButtonText: { fontSize: 13, fontWeight: '600', color: '#2563eb' },
   hint: { fontSize: 12, color: '#6b7280' },
+  setupRequired: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#ef4444',
+    marginTop: 4,
+  },
+  templateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 8,
+  },
+  templateThumb: { width: 64, height: 40, borderRadius: 4 },
   customRow: {
     flexDirection: 'row',
     alignItems: 'center',

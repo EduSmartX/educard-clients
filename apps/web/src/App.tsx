@@ -287,6 +287,8 @@ const FeedbackDetailPage = lazy(() => import('./features/feedback/pages/feedback
 const StoreCatalogPage = lazy(() => import('./features/store/pages/store-catalog-page'));
 const StoreCartPage = lazy(() => import('./features/store/pages/store-cart-page'));
 const StoreOrdersPage = lazy(() => import('./features/store/pages/store-orders-page'));
+const StoreSetupPage = lazy(() => import('./features/store/pages/store-setup-page'));
+const ShipmentTrackingPage = lazy(() => import('./features/store/pages/shipment-tracking-page'));
 
 // Coming Soon
 const ComingSoonPage = lazy(() => import('./pages/coming-soon-page'));
@@ -483,6 +485,9 @@ function App() {
             <Route path={ROUTES.STORE.CATALOG} element={<StoreCatalogPage />} />
             <Route path={ROUTES.STORE.CART} element={<StoreCartPage />} />
             <Route path={ROUTES.STORE.ORDERS} element={<StoreOrdersPage />} />
+            <Route path={ROUTES.STORE.SETUP} element={<StoreSetupPage />} />
+            {/* Shipment QR target: school admins and EduCard staff; enforced by the API */}
+            <Route path={ROUTES.STORE.TRACK} element={<ShipmentTrackingPage />} />
 
             {/* Calendar - Coming Soon */}
             <Route

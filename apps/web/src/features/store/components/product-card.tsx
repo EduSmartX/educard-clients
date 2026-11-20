@@ -1,5 +1,5 @@
-import { ImageOff, Plus } from 'lucide-react';
-import type { CatalogProduct } from '@educard/shared';
+import { ImageOff, Plus, Settings2 } from 'lucide-react';
+import { PRODUCT_KIND, type CatalogProduct } from '@educard/shared';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -8,9 +8,11 @@ import { formatCurrency } from '../utils/store-format';
 interface ProductCardProps {
   product: CatalogProduct;
   onConfigure: (product: CatalogProduct) => void;
+  /** Called instead of `onConfigure` while required school settings are missing. */
+  onSetup: (product: CatalogProduct) => void;
 }
 
-export function ProductCard({ product, onConfigure }: ProductCardProps) {
+export function ProductCard({ product, onConfigure, onSetup }: ProductCardProps) {
   const specs = Object.entries(product.specifications ?? {}).slice(0, 3);
 
   return (
@@ -41,6 +43,12 @@ export function ProductCard({ product, onConfigure }: ProductCardProps) {
           <p className="text-muted-foreground line-clamp-2 text-sm">{product.description}</p>
         )}
 
+        {product.setup_required && (
+          <Badge variant="destructive" className="font-normal">
+            Set {product.missing_properties.join(', ')} first
+          </Badge>
+        )}
+
         {specs.length > 0 && (
           <dl className="text-muted-foreground space-y-1 text-xs">
             {specs.map(([key, value]) => (
@@ -54,11 +62,22 @@ export function ProductCard({ product, onConfigure }: ProductCardProps) {
       </CardContent>
 
       <CardFooter className="flex items-center justify-between border-t pt-4">
-        <span className="font-semibold">{formatCurrency(product.price)}</span>
-        <Button size="sm" onClick={() => onConfigure(product)}>
-          <Plus className="mr-1 h-4 w-4" />
-          Add
-        </Button>
+        <span className="font-semibold">
+          {product.kind === PRODUCT_KIND.BOOK_SET
+            ? 'Priced per class'
+            : formatCurrency(product.price)}
+        </span>
+        {product.setup_required ? (
+          <Button size="sm" variant="outline" onClick={() => onSetup(product)}>
+            <Settings2 className="mr-1 h-4 w-4" />
+            Set up
+          </Button>
+        ) : (
+          <Button size="sm" onClick={() => onConfigure(product)}>
+            <Plus className="mr-1 h-4 w-4" />
+            Add
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );

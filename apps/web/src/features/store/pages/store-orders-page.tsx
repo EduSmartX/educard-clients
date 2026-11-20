@@ -1,10 +1,13 @@
-import { Package } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Download, MapPin, Package, Truck } from 'lucide-react';
 import { toast } from 'sonner';
 import {
+  ORDER_STATUS,
   ORDER_STATUS_LABELS,
-  ORDER_STATUS_TRANSITIONS,
+  ORGANIZATION_CANCELLABLE_ORDER_STATUSES,
+  getErrorMessage,
   type Order,
-  type OrderStatus,
+  type ShipmentSummary,
 } from '@educard/shared';
 import { PageHeader } from '@/components/common';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +15,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useOrders, useUpdateOrderStatus } from '../hooks/use-store';
-import { describeConfiguration, formatCurrency } from '../utils/store-format';
+import {
+  describeConfiguration,
+  formatCurrency,
+  formatDate,
+  qrSvgDataUri,
+  trackingPath,
+} from '../utils/store-format';
 
 const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
   pending: 'secondary',
@@ -22,21 +31,64 @@ const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'destructive' | '
   cancelled: 'destructive',
 };
 
+function ShipmentRow({ shipment }: { shipment: ShipmentSummary }) {
+  const navigate = useNavigate();
+  const qrUri = qrSvgDataUri(shipment.qr_svg);
+
+  return (
+    <div className="flex flex-wrap items-center gap-4 rounded-md border p-3">
+      <img
+        src={qrUri}
+        alt={`QR code for shipment ${shipment.shipment_number}`}
+        className="h-20 w-20 rounded bg-white p-1"
+      />
+      <div className="min-w-0 flex-1 space-y-1 text-sm">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-medium">{shipment.shipment_number}</span>
+          <Badge variant="secondary">{shipment.status_label}</Badge>
+        </div>
+        {shipment.current_location && (
+          <p className="text-muted-foreground flex items-center gap-1">
+            <MapPin className="h-3.5 w-3.5" aria-hidden />
+            {shipment.current_location}
+          </p>
+        )}
+        <p className="text-muted-foreground">
+          {shipment.delivered_at
+            ? `Delivered ${formatDate(shipment.delivered_at)}`
+            : shipment.expected_delivery_date
+              ? `Expected by ${formatDate(shipment.expected_delivery_date)}`
+              : 'Delivery date to be confirmed'}
+        </p>
+      </div>
+      <div className="flex gap-2">
+        <Button size="sm" variant="outline" asChild>
+          <a href={qrUri} download={`${shipment.shipment_number}-qr.svg`}>
+            <Download className="mr-1 h-4 w-4" />
+            QR
+          </a>
+        </Button>
+        <Button size="sm" onClick={() => navigate(trackingPath(shipment.tracking_token))}>
+          <Truck className="mr-1 h-4 w-4" />
+          Track
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function OrderCard({ order }: { order: Order }) {
   const updateStatus = useUpdateOrderStatus();
-  const nextStatuses = ORDER_STATUS_TRANSITIONS[order.status] ?? [];
+  const cancellable = ORGANIZATION_CANCELLABLE_ORDER_STATUSES.includes(order.status);
+  const shipments = order.shipments ?? [];
 
-  const handleTransition = (status: string) => {
+  const handleCancel = () => {
     updateStatus.mutate(
-      { publicId: order.public_id, status: status as OrderStatus },
+      { publicId: order.public_id, status: ORDER_STATUS.CANCELLED },
       {
-        onSuccess: () => toast.success(`Order marked ${ORDER_STATUS_LABELS[status]}`),
-        onError: (error: unknown) => {
-          const message =
-            (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-            'Could not update this order';
-          toast.error(message);
-        },
+        onSuccess: () => toast.success(`Order ${order.order_number} cancelled`),
+        onError: (error: unknown) =>
+          toast.error(getErrorMessage(error, 'Could not cancel this order')),
       }
     );
   };
@@ -77,19 +129,28 @@ function OrderCard({ order }: { order: Order }) {
 
         {order.notes && <p className="text-muted-foreground text-sm">Note: {order.notes}</p>}
 
-        {nextStatuses.length > 0 && (
-          <div className="flex flex-wrap gap-2 border-t pt-3">
-            {nextStatuses.map((status) => (
-              <Button
-                key={status}
-                size="sm"
-                variant={status === 'cancelled' ? 'outline' : 'default'}
-                disabled={updateStatus.isPending}
-                onClick={() => handleTransition(status)}
-              >
-                Mark {ORDER_STATUS_LABELS[status] ?? status}
-              </Button>
+        {shipments.length > 0 && (
+          <div className="space-y-2 border-t pt-3">
+            <p className="text-sm font-medium">Shipments</p>
+            {shipments.map((shipment) => (
+              <ShipmentRow key={shipment.tracking_token} shipment={shipment} />
             ))}
+          </div>
+        )}
+
+        {cancellable && (
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
+            <p className="text-muted-foreground text-xs">
+              EduCard confirms and ships the order. You can cancel until packing starts.
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={updateStatus.isPending}
+              onClick={handleCancel}
+            >
+              Cancel order
+            </Button>
           </div>
         )}
       </CardContent>
@@ -105,7 +166,7 @@ export default function StoreOrdersPage() {
     <div className="space-y-6">
       <PageHeader
         title="Orders"
-        description="Track the school's store orders through to delivery"
+        description="Follow each order from EduCard confirmation to delivery at school"
         icon={Package}
       />
 

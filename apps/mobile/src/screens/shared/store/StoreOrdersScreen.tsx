@@ -1,15 +1,18 @@
 /**
- * Store Orders Screen - track placed orders through to delivery
+ * Store Orders Screen - follow placed orders and their shipments to delivery.
+ * EduCard confirms and ships orders; the school can cancel until packing starts.
  */
 
 import {
+  ORDER_STATUS,
   ORDER_STATUS_LABELS,
-  ORDER_STATUS_TRANSITIONS,
+  ORGANIZATION_CANCELLABLE_ORDER_STATUSES,
+  getErrorMessage,
   type Order,
-  type OrderStatus,
+  type ShipmentSummary,
 } from '@educard/shared';
 import { useNavigation } from '@react-navigation/native';
-import { ChevronLeft, Package } from 'lucide-react-native';
+import { ChevronLeft, MapPin, Package } from 'lucide-react-native';
 import {
   FlatList,
   StyleSheet,
@@ -17,6 +20,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SvgXml } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EmptyState, LoadingState } from '@/components/common/ListStates';
@@ -41,6 +45,44 @@ function formatCurrency(amount: string | number): string {
   }).format(Number(amount));
 }
 
+function formatDate(value: string | null): string {
+  return value ? new Date(value).toLocaleDateString() : '';
+}
+
+function ShipmentRow({
+  shipment,
+  onTrack,
+}: {
+  shipment: ShipmentSummary;
+  onTrack: () => void;
+}) {
+  return (
+    <TouchableOpacity style={styles.shipment} onPress={onTrack}>
+      <View style={styles.qr}>
+        <SvgXml xml={shipment.qr_svg} width={64} height={64} />
+      </View>
+      <View style={styles.shipmentBody}>
+        <Text style={styles.shipmentNumber}>{shipment.shipment_number}</Text>
+        <Text style={styles.shipmentStatus}>{shipment.status_label}</Text>
+        {shipment.current_location ? (
+          <View style={styles.locationRow}>
+            <MapPin size={12} color="#6b7280" />
+            <Text style={styles.meta}>{shipment.current_location}</Text>
+          </View>
+        ) : null}
+        <Text style={styles.meta}>
+          {shipment.delivered_at
+            ? `Delivered ${formatDate(shipment.delivered_at)}`
+            : shipment.expected_delivery_date
+              ? `Expected by ${formatDate(shipment.expected_delivery_date)}`
+              : 'Delivery date to be confirmed'}
+        </Text>
+      </View>
+      <Text style={styles.trackLink}>Track</Text>
+    </TouchableOpacity>
+  );
+}
+
 export default function StoreOrdersScreen() {
   const navigation = useNavigation<SharedStackNavigation>();
   const insets = useSafeAreaInsets();
@@ -50,19 +92,26 @@ export default function StoreOrdersScreen() {
 
   const orders = data?.data ?? [];
 
-  const handleTransition = (publicId: string, status: string) => {
+  const handleCancel = (order: Order) => {
     updateStatus.mutate(
-      { publicId, status: status as OrderStatus },
+      { publicId: order.public_id, status: ORDER_STATUS.CANCELLED },
       {
         onSuccess: () =>
-          showToast('success', `Order marked ${ORDER_STATUS_LABELS[status]}`),
-        onError: () => showToast('error', 'Could not update this order'),
+          showToast('success', `Order ${order.order_number} cancelled`),
+        onError: error =>
+          showToast(
+            'error',
+            getErrorMessage(error, 'Could not cancel this order'),
+          ),
       },
     );
   };
 
   const renderOrder = ({ item }: { item: Order }) => {
-    const nextStatuses = ORDER_STATUS_TRANSITIONS[item.status] ?? [];
+    const cancellable = ORGANIZATION_CANCELLABLE_ORDER_STATUSES.includes(
+      item.status,
+    );
+    const shipments = item.shipments ?? [];
 
     return (
       <View style={styles.card}>
@@ -110,20 +159,35 @@ export default function StoreOrdersScreen() {
           </Text>
         </View>
 
-        {nextStatuses.length > 0 && (
-          <View style={styles.actions}>
-            {nextStatuses.map(status => (
-              <TouchableOpacity
-                key={status}
-                style={styles.actionButton}
-                disabled={updateStatus.isPending}
-                onPress={() => handleTransition(item.public_id, status)}
-              >
-                <Text style={styles.actionText}>
-                  Mark {ORDER_STATUS_LABELS[status] ?? status}
-                </Text>
-              </TouchableOpacity>
+        {shipments.length > 0 && (
+          <View style={styles.shipments}>
+            <Text style={styles.sectionTitle}>Shipments</Text>
+            {shipments.map(shipment => (
+              <ShipmentRow
+                key={shipment.tracking_token}
+                shipment={shipment}
+                onTrack={() =>
+                  navigation.navigate('ShipmentTracking', {
+                    token: shipment.tracking_token,
+                  })
+                }
+              />
             ))}
+          </View>
+        )}
+
+        {cancellable && (
+          <View style={styles.actions}>
+            <Text style={[styles.meta, styles.actionsHint]}>
+              You can cancel until EduCard starts packing.
+            </Text>
+            <TouchableOpacity
+              style={styles.actionButton}
+              disabled={updateStatus.isPending}
+              onPress={() => handleCancel(item)}
+            >
+              <Text style={styles.actionText}>Cancel order</Text>
+            </TouchableOpacity>
           </View>
         )}
       </View>
@@ -208,13 +272,43 @@ const styles = StyleSheet.create({
   },
   totalLabel: { fontSize: 14, color: '#6b7280' },
   totalValue: { fontSize: 15, fontWeight: '700', color: '#111827' },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
+  shipments: {
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+    marginTop: 10,
+    paddingTop: 10,
+    gap: 8,
+  },
+  sectionTitle: { fontSize: 13, fontWeight: '600', color: '#374151' },
+  shipment: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 10,
+    padding: 8,
+  },
+  qr: { backgroundColor: '#fff', padding: 2, borderRadius: 6 },
+  shipmentBody: { flex: 1 },
+  shipmentNumber: { fontSize: 13, fontWeight: '700', color: '#111827' },
+  shipmentStatus: { fontSize: 12, fontWeight: '600', color: '#2563eb' },
+  locationRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  trackLink: { fontSize: 13, fontWeight: '600', color: '#2563eb' },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginTop: 12,
+  },
+  actionsHint: { flex: 1 },
   actionButton: {
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#2563eb',
+    borderColor: '#ef4444',
   },
-  actionText: { fontSize: 13, fontWeight: '600', color: '#2563eb' },
+  actionText: { fontSize: 13, fontWeight: '600', color: '#ef4444' },
 });

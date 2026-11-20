@@ -2,24 +2,38 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   QueryKeys,
   type AddCartItemPayload,
+  type BookSetPayload,
   type CatalogQueryParams,
   type OrderQueryParams,
   type PlaceOrderPayload,
+  type ShipmentEventPayload,
+  type SubmissionQueryParams,
+  type SubmitIdCardTemplatePayload,
   type UpdateOrderStatusPayload,
 } from '@educard/shared';
 import {
   addCartItem,
   clearCart,
+  fetchBookSets,
   fetchCart,
   fetchCatalog,
+  fetchIdCardTemplates,
   fetchOrderDetail,
   fetchOrders,
+  fetchShipmentTracking,
   placeOrder,
+  recordShipmentEvent,
   removeCartItem,
   resetProductImage,
+  reviseBookSet,
+  submitBookSet,
+  submitIdCardTemplate,
   updateCartItem,
   updateOrderStatus,
+  updateProductProperties,
   uploadProductImage,
+  withdrawBookSet,
+  withdrawIdCardTemplate,
 } from '../api/store-api';
 
 export function useCatalog(params?: CatalogQueryParams) {
@@ -128,6 +142,88 @@ export function useResetProductImage() {
     mutationFn: (publicId: string) => resetProductImage(publicId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QueryKeys.STORE.ALL });
+    },
+  });
+}
+
+/** Any store write can change setup status, templates or prices, so refresh it all. */
+function useStoreMutation<TVariables, TResult>(
+  mutationFn: (variables: TVariables) => Promise<TResult>
+) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QueryKeys.STORE.ALL });
+    },
+  });
+}
+
+export function useUpdateProductProperties() {
+  return useStoreMutation(
+    ({ publicId, properties }: { publicId: string; properties: Record<string, string> }) =>
+      updateProductProperties(publicId, { properties })
+  );
+}
+
+export function useIdCardTemplates(params?: SubmissionQueryParams) {
+  return useQuery({
+    queryKey: QueryKeys.STORE.ID_CARD_TEMPLATES(params),
+    queryFn: () => fetchIdCardTemplates(params),
+  });
+}
+
+export function useSubmitIdCardTemplate() {
+  return useStoreMutation(
+    ({ payload, image }: { payload: SubmitIdCardTemplatePayload; image: File }) =>
+      submitIdCardTemplate(payload, image)
+  );
+}
+
+export function useWithdrawIdCardTemplate() {
+  return useStoreMutation((publicId: string) => withdrawIdCardTemplate(publicId));
+}
+
+export function useBookSets(params?: SubmissionQueryParams) {
+  return useQuery({
+    queryKey: QueryKeys.STORE.BOOK_SETS(params),
+    queryFn: () => fetchBookSets(params),
+  });
+}
+
+export function useSaveBookSet() {
+  return useStoreMutation(
+    ({ publicId, payload }: { publicId?: string; payload: BookSetPayload }) =>
+      publicId ? reviseBookSet(publicId, payload) : submitBookSet(payload)
+  );
+}
+
+export function useWithdrawBookSet() {
+  return useStoreMutation((publicId: string) => withdrawBookSet(publicId));
+}
+
+export function useShipmentTracking(token: string) {
+  return useQuery({
+    queryKey: QueryKeys.STORE.TRACKING(token),
+    queryFn: () => fetchShipmentTracking(token),
+    enabled: Boolean(token),
+    retry: false,
+  });
+}
+
+export function useRecordShipmentEvent(token: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: ShipmentEventPayload) => recordShipmentEvent(token, payload),
+    onSuccess: (response) => {
+      queryClient.setQueryData(QueryKeys.STORE.TRACKING(token), response);
+      // Order status may have moved to delivered; refresh lists that show it.
+      queryClient.invalidateQueries({
+        queryKey: QueryKeys.STORE.ALL,
+        predicate: (query) => query.queryKey[1] !== 'tracking',
+      });
     },
   });
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -24,8 +24,22 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
+/**
+ * The in-app path a user was sent to login from, if it is safe to return to.
+ * SECURITY_NOTE: only same-app absolute paths; "//host" and URLs are refused.
+ */
+function getReturnPath(state: unknown): string | null {
+  const from = (state as { from?: unknown } | null)?.from;
+  if (typeof from !== 'string' || !from.startsWith('/') || from.startsWith('//')) {
+    return null;
+  }
+  return from === ROUTES.AUTH.LOGIN ? null : from;
+}
+
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnPath = getReturnPath(location.state);
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -93,7 +107,9 @@ export default function LoginPage() {
       }
 
       toast.success(SuccessMessages.LOGIN_SUCCESS);
-      navigate(getDashboardRoute(response.user.role));
+      navigate(returnPath ?? getDashboardRoute(response.user.role), {
+        replace: Boolean(returnPath),
+      });
     } catch (error) {
       const apiError = error as { response?: { data?: { message?: string; detail?: string } } };
       const errorMessage =

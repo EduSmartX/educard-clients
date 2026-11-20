@@ -27,7 +27,8 @@ export function ProtectedLayout() {
   useStorageListener();
 
   if (!tokenManager.isAuthenticated() || !user) {
-    return <Navigate to={ROUTES.AUTH.LOGIN} replace />;
+    // Remember where they were going (e.g. a scanned shipment QR) so login can return there.
+    return <Navigate to={ROUTES.AUTH.LOGIN} replace state={{ from: location.pathname }} />;
   }
 
   if (user.force_password_reset && location.pathname !== ROUTES.SET_NEW_PASSWORD) {

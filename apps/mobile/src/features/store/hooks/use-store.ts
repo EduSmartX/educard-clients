@@ -5,15 +5,21 @@ import type {
   OrderQueryParams,
   OrderStatus,
   PlaceOrderPayload,
+  ShipmentEventPayload,
+  SubmissionQueryParams,
 } from '@educard/shared';
 
 import {
   addCartItem,
   clearCart,
+  getBookSets,
   getCart,
   getCatalog,
+  getIdCardTemplates,
   getOrders,
+  getShipmentTracking,
   placeOrder,
+  recordShipmentEvent,
   removeCartItem,
   updateCartItem,
   updateOrderStatus,
@@ -26,6 +32,11 @@ export const storeKeys = {
   cart: () => [...storeKeys.all, 'cart'] as const,
   orders: (params?: OrderQueryParams) =>
     [...storeKeys.all, 'orders', params] as const,
+  idCardTemplates: (params?: SubmissionQueryParams) =>
+    [...storeKeys.all, 'id-card-templates', params] as const,
+  bookSets: (params?: SubmissionQueryParams) =>
+    [...storeKeys.all, 'book-sets', params] as const,
+  tracking: (token: string) => [...storeKeys.all, 'tracking', token] as const,
 };
 
 export function useCatalog(params?: CatalogQueryParams) {
@@ -107,6 +118,51 @@ export function useUpdateOrderStatus() {
     }) => updateOrderStatus(publicId, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: storeKeys.all });
+    },
+  });
+}
+
+export function useIdCardTemplates(
+  params?: SubmissionQueryParams,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: storeKeys.idCardTemplates(params),
+    queryFn: () => getIdCardTemplates(params),
+    enabled,
+  });
+}
+
+export function useBookSets(params?: SubmissionQueryParams, enabled = true) {
+  return useQuery({
+    queryKey: storeKeys.bookSets(params),
+    queryFn: () => getBookSets(params),
+    enabled,
+  });
+}
+
+export function useShipmentTracking(token: string) {
+  return useQuery({
+    queryKey: storeKeys.tracking(token),
+    queryFn: () => getShipmentTracking(token),
+    enabled: Boolean(token),
+    retry: false,
+  });
+}
+
+export function useRecordShipmentEvent(token: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: ShipmentEventPayload) =>
+      recordShipmentEvent(token, payload),
+    onSuccess: response => {
+      queryClient.setQueryData(storeKeys.tracking(token), response);
+      // The order may now be delivered; refresh everything except this screen.
+      queryClient.invalidateQueries({
+        queryKey: storeKeys.all,
+        predicate: query => query.queryKey[1] !== 'tracking',
+      });
     },
   });
 }

@@ -287,6 +287,9 @@ export const ROUTES = {
     CATALOG: '/store',
     CART: '/store/cart',
     ORDERS: '/store/orders',
+    SETUP: '/store/setup',
+    // Path printed into shipment QR codes by the backend ({FRONTEND_URL}/track/<token>).
+    TRACK: '/track/:token',
   },
   EXCEPTIONAL_WORK: '/exceptional-work',
   TIMETABLE: '/timetable',
