@@ -5,7 +5,6 @@
 import { PRODUCT_KIND, type CatalogProduct } from '@educard/shared';
 import { useNavigation } from '@react-navigation/native';
 import { ChevronLeft, Settings2, ShoppingCart } from 'lucide-react-native';
-import { useState } from 'react';
 import {
   FlatList,
   Image,
@@ -23,12 +22,9 @@ import type { SharedStackNavigation } from '@/navigation/types';
 import { layoutStyles } from '@/styles';
 import { showToast } from '@/utils/toast';
 
-import { ProductConfigSheet } from './ProductConfigSheet';
-
 export default function StoreCatalogScreen() {
   const navigation = useNavigation<SharedStackNavigation>();
   const insets = useSafeAreaInsets();
-  const [selected, setSelected] = useState<CatalogProduct | null>(null);
 
   const { data, isLoading } = useCatalog();
   const { data: cartResponse } = useCart();
@@ -47,7 +43,7 @@ export default function StoreCatalogScreen() {
       navigation.navigate('StoreSetup');
       return;
     }
-    setSelected(product);
+    navigation.navigate('StoreOrder', { productId: product.public_id });
   };
 
   const renderProduct = ({ item }: { item: CatalogProduct }) => (
@@ -126,11 +122,6 @@ export default function StoreCatalogScreen() {
           contentContainerStyle={styles.list}
         />
       )}
-
-      <ProductConfigSheet
-        product={selected}
-        onClose={() => setSelected(null)}
-      />
     </View>
   );
 }

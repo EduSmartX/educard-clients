@@ -1,14 +1,13 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Settings2, ShoppingBag, ShoppingCart } from 'lucide-react';
-import type { CatalogProduct } from '@educard/shared';
 import { PageHeader } from '@/components/common';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ROUTES } from '@/constants/app-config';
 import { ProductCard } from '../components/product-card';
-import { ProductConfigDialog } from '../components/product-config-dialog';
 import { useCart, useCatalog } from '../hooks/use-store';
+import { storeOrderPath } from '../utils/store-format';
 
 const ALL_CATEGORIES = 'all';
 
@@ -19,7 +18,6 @@ const CATEGORY_TAB_CLASS =
 export default function StoreCatalogPage() {
   const navigate = useNavigate();
   const [category, setCategory] = useState(ALL_CATEGORIES);
-  const [selected, setSelected] = useState<CatalogProduct | null>(null);
 
   // Load the whole catalog once and filter locally, so every category tab stays visible.
   const { data, isLoading } = useCatalog({ page_size: 100 });
@@ -100,18 +98,12 @@ export default function StoreCatalogPage() {
             <ProductCard
               key={product.public_id}
               product={product}
-              onConfigure={setSelected}
+              onConfigure={(item) => navigate(storeOrderPath(item.public_id))}
               onSetup={() => navigate(ROUTES.STORE.SETUP)}
             />
           ))}
         </div>
       )}
-
-      <ProductConfigDialog
-        product={selected}
-        open={Boolean(selected)}
-        onOpenChange={(open) => !open && setSelected(null)}
-      />
     </div>
   );
 }

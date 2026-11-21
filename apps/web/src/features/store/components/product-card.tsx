@@ -76,7 +76,7 @@ export function ProductCard({ product, onConfigure, onSetup }: ProductCardProps)
         ) : (
           <Button size="sm" onClick={() => onConfigure(product)}>
             <Plus className="mr-1 h-4 w-4" />
-            Add
+            Order
           </Button>
         )}
       </CardFooter>

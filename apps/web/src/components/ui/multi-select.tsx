@@ -27,6 +27,8 @@ interface MultiSelectProps {
   emptyMessage?: string;
   className?: string;
   disabled?: boolean;
+  /** Show at most this many chips, then "+N more" (default: show all). */
+  maxBadges?: number;
 }
 
 export function MultiSelect({
@@ -38,6 +40,7 @@ export function MultiSelect({
   emptyMessage = 'No items found.',
   className,
   disabled,
+  maxBadges,
 }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState('');
@@ -83,7 +86,7 @@ export function MultiSelect({
         >
           <div className="flex flex-1 flex-wrap gap-1 text-left">
             {value.length > 0 ? (
-              selectedLabels.map((label, index) => (
+              selectedLabels.slice(0, maxBadges ?? selectedLabels.length).map((label, index) => (
                 <Badge key={value[index]} variant="secondary" className="mr-1">
                   {label}
                   <button
@@ -99,6 +102,9 @@ export function MultiSelect({
               ))
             ) : (
               <span>{placeholder}</span>
+            )}
+            {maxBadges !== undefined && selectedLabels.length > maxBadges && (
+              <Badge variant="outline">+{selectedLabels.length - maxBadges} more</Badge>
             )}
           </div>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

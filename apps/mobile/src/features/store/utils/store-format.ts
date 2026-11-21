@@ -2,6 +2,7 @@ import {
   PRODUCT_ATTRIBUTE_INPUT_TYPE,
   PRODUCT_ATTRIBUTE_SCOPE,
   STORE_CONFIG_KEY,
+  STORE_UI_MANAGED_KEYS,
   type CartItemConfiguration,
   type CatalogProduct,
   type Class,
@@ -51,10 +52,15 @@ export function resolveTemplate(
   );
 }
 
-/** Attributes picked per cart line; school-level ones live on Store Setup. */
+/**
+ * Attributes picked per cart line. School-level ones live on Store Setup, and class /
+ * student keys are chosen with the order screen's own controls.
+ */
 export function lineAttributes(product: CatalogProduct): ProductAttribute[] {
   return product.attributes.filter(
-    attribute => attribute.scope !== PRODUCT_ATTRIBUTE_SCOPE.ORGANIZATION,
+    attribute =>
+      attribute.scope !== PRODUCT_ATTRIBUTE_SCOPE.ORGANIZATION &&
+      !STORE_UI_MANAGED_KEYS.includes(attribute.code),
   );
 }
 
@@ -73,19 +79,6 @@ export function perStudentAttributes(
 ): ProductAttribute[] {
   return attributes.filter(
     attribute => attribute.input_type !== PRODUCT_ATTRIBUTE_INPUT_TYPE.LIST,
-  );
-}
-
-/** True when at least one student is ticked and each has every required value. */
-export function isSelectionComplete(
-  selection: StudentSelection,
-  attributes: ProductAttribute[],
-): boolean {
-  const required = attributes.filter(attribute => attribute.is_required);
-  const rows = Object.values(selection);
-  return (
-    rows.length > 0 &&
-    rows.every(values => required.every(item => Boolean(values[item.code])))
   );
 }
 

@@ -50,7 +50,22 @@ export const STORE_CONFIG_KEY = {
   STUDENT_IDS: "student_ids",
   /** Uniform-style per-student lines: [{ student, size, ... }]. */
   STUDENTS: "students",
+  /** ID cards: true = every current student of the chosen class (no IDs needed). */
+  ALL_STUDENTS: "all_students",
 } as const;
+
+/**
+ * Line keys the store UI fills itself (class, students, book set). The catalog may
+ * still declare them as attributes for validation, but they are never shown as
+ * free-text fields.
+ */
+export const STORE_UI_MANAGED_KEYS: readonly string[] = [
+  STORE_CONFIG_KEY.CLASS,
+  STORE_CONFIG_KEY.BOOK_SET,
+  STORE_CONFIG_KEY.STUDENT_IDS,
+  STORE_CONFIG_KEY.STUDENTS,
+  STORE_CONFIG_KEY.ALL_STUDENTS,
+];
 
 /** Strip the "/api" prefix from server-returned paths so apiClient can call them. */
 export function apiRelativePath(path: string): string {

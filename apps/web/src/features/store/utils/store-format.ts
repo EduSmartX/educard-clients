@@ -3,6 +3,7 @@ import {
   PRODUCT_ATTRIBUTE_INPUT_TYPE,
   PRODUCT_ATTRIBUTE_SCOPE,
   STORE_CONFIG_KEY,
+  STORE_UI_MANAGED_KEYS,
   type CartItemConfiguration,
   type Class,
   type ConfigurationSnapshot,
@@ -42,9 +43,21 @@ function humanize(code: string): string {
   return code.replace(/_/g, ' ').replace(/^\w/, (letter) => letter.toUpperCase());
 }
 
-/** Attributes the buyer fills in per cart line; school-level ones live on Store Setup. */
+/**
+ * Attributes the buyer fills in per cart line. School-level ones live on Store Setup,
+ * and class / student keys are picked with the order page's own controls.
+ */
 export function orderScopedAttributes(attributes: ProductAttribute[]): ProductAttribute[] {
-  return attributes.filter((attribute) => attribute.scope !== PRODUCT_ATTRIBUTE_SCOPE.ORGANIZATION);
+  return attributes.filter(
+    (attribute) =>
+      attribute.scope !== PRODUCT_ATTRIBUTE_SCOPE.ORGANIZATION &&
+      !STORE_UI_MANAGED_KEYS.includes(attribute.code)
+  );
+}
+
+/** In-app route of a product's order page. */
+export function storeOrderPath(productPublicId: string): string {
+  return `/store/order/${encodeURIComponent(productPublicId)}`;
 }
 
 export function organizationScopedAttributes(attributes: ProductAttribute[]): ProductAttribute[] {
@@ -100,16 +113,6 @@ export function perStudentAttributes(attributes: ProductAttribute[]): ProductAtt
   );
 }
 
-/** True when at least one student is ticked and each has every required value. */
-export function isSelectionComplete(
-  selection: StudentSelection,
-  attributes: ProductAttribute[]
-): boolean {
-  const required = attributes.filter((attribute) => attribute.is_required);
-  const rows = Object.values(selection);
-  return rows.length > 0 && rows.every((values) => required.every((a) => Boolean(values[a.code])));
-}
-
 /** Each student's own values on a per-student line, for a breakdown list. */
 export function lineStudentSizes(configuration: CartItemConfiguration): StudentSizeEntry[] {
   const entries = configuration?.[STORE_CONFIG_KEY.STUDENTS];
@@ -130,11 +133,20 @@ export function describeConfiguration(
 
   const students = lineStudentCount(configuration);
   if (students !== undefined) {
-    parts.push(`${students} ${students === 1 ? 'student' : 'students'}`);
+    const noun = students === 1 ? 'student' : 'students';
+    parts.push(
+      configuration[STORE_CONFIG_KEY.ALL_STUDENTS] === true
+        ? `All ${students} ${noun} of the class`
+        : `${students} ${noun}`
+    );
   }
 
   for (const [code, value] of entries) {
-    if (code === STORE_CONFIG_KEY.STUDENT_IDS || code === STORE_CONFIG_KEY.STUDENTS) {
+    if (
+      code === STORE_CONFIG_KEY.STUDENT_IDS ||
+      code === STORE_CONFIG_KEY.STUDENTS ||
+      code === STORE_CONFIG_KEY.ALL_STUDENTS
+    ) {
       continue;
     }
     if (code === CUSTOM_FEATURES_KEY || code === STORE_CONFIG_KEY.ORGANIZATION_PROPERTIES) {

@@ -99,6 +99,7 @@ export type CartItemConfiguration = Record<
   string,
   | string
   | string[]
+  | boolean
   | CustomFeatures
   | ConfigurationSnapshot
   | StudentSizeEntry[]

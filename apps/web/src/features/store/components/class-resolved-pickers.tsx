@@ -1,11 +1,10 @@
 /**
- * Pickers for products whose cart line depends on class-specific approved data:
- * ID cards (the grade's approved template) and book sets (an approved class book list).
+ * Class pickers (per grade or per section) and the approved class book-set picker.
  */
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
-import { APPROVAL_STATUS, type BookSet, type Class, type IdCardTemplate } from '@educard/shared';
+import { APPROVAL_STATUS, type BookSet, type Class } from '@educard/shared';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -17,9 +16,8 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { ROUTES } from '@/constants/app-config';
 import { useClasses } from '@/features/classes/hooks/use-classes';
-import { getMediaUrl } from '@/lib/utils/media-utils';
-import { useBookSets, useIdCardTemplates } from '../hooks/use-store';
-import { ALL_CLASSES, classLabel, formatCurrency, resolveTemplate } from '../utils/store-format';
+import { useBookSets } from '../hooks/use-store';
+import { ALL_CLASSES, classLabel, formatCurrency } from '../utils/store-format';
 
 interface ClassSelectProps {
   value: string;
@@ -122,74 +120,6 @@ export function SectionSelect({
         ))}
       </SelectContent>
     </Select>
-  );
-}
-
-interface IdCardClassPickerProps {
-  value: string;
-  onChange: (classPublicId: string, template: IdCardTemplate | undefined) => void;
-}
-
-export function IdCardClassPicker({ value, onChange }: IdCardClassPickerProps) {
-  const { data: classesResponse, isLoading: classesLoading } = useClasses({ page_size: 100 });
-  const { data: templatesResponse, isLoading: templatesLoading } = useIdCardTemplates({
-    status: APPROVAL_STATUS.APPROVED,
-  });
-
-  const classes = useMemo(() => classesResponse?.data ?? [], [classesResponse]);
-  const templates = templatesResponse?.data ?? [];
-  const selected = classes.find((section) => section.public_id === value);
-  const template = selected ? resolveTemplate(templates, selected) : undefined;
-
-  if (classesLoading || templatesLoading) {
-    return <Skeleton className="h-10 w-full" />;
-  }
-
-  return (
-    <div className="space-y-2">
-      <Label>
-        Class<span className="text-destructive ml-1">*</span>
-      </Label>
-      <Select
-        value={value}
-        onValueChange={(next) => {
-          const section = classes.find((item) => item.public_id === next);
-          onChange(next, resolveTemplate(templates, section));
-        }}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder="Choose the class these cards are for" />
-        </SelectTrigger>
-        <SelectContent>
-          {classes.map((section) => (
-            <SelectItem key={section.public_id} value={section.public_id}>
-              {classLabel(section)}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      {selected && template && (
-        <div className="bg-muted/50 flex items-center gap-3 rounded-md border p-2">
-          {!template.can_preview && template.image_url && (
-            <img
-              src={getMediaUrl(template.image_url)}
-              alt={`${template.name} preview`}
-              className="h-14 w-22 rounded object-cover"
-            />
-          )}
-          <div className="text-sm">
-            <p className="font-medium">{template.name}</p>
-            <p className="text-muted-foreground text-xs">
-              {template.is_default ? 'School default template' : `${template.class_name} template`}
-            </p>
-          </div>
-        </div>
-      )}
-      {selected && !template && (
-        <SetupHint>No approved ID card template for {classLabel(selected)} yet.</SetupHint>
-      )}
-    </div>
   );
 }
 

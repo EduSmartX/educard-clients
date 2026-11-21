@@ -286,6 +286,8 @@ export const ROUTES = {
   STORE: {
     CATALOG: '/store',
     CART: '/store/cart',
+    // One product's order page; build links with storeOrderPath(publicId).
+    ORDER: '/store/order/:productId',
     ORDERS: '/store/orders',
     SETUP: '/store/setup',
     // Path printed into shipment QR codes by the backend ({FRONTEND_URL}/track/<token>).

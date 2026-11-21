@@ -65,13 +65,19 @@ function describeConfiguration(item: CartItem): string {
   const parts: string[] = [];
   const students = lineStudentCount(item.configuration);
   if (students !== undefined) {
-    parts.push(`${students} ${students === 1 ? 'student' : 'students'}`);
+    const noun = students === 1 ? 'student' : 'students';
+    parts.push(
+      item.configuration[STORE_CONFIG_KEY.ALL_STUDENTS] === true
+        ? `All ${students} ${noun} of the class`
+        : `${students} ${noun}`,
+    );
   }
 
   for (const [code, value] of Object.entries(item.configuration ?? {})) {
     if (
       code === STORE_CONFIG_KEY.STUDENT_IDS ||
-      code === STORE_CONFIG_KEY.STUDENTS
+      code === STORE_CONFIG_KEY.STUDENTS ||
+      code === STORE_CONFIG_KEY.ALL_STUDENTS
     ) {
       continue;
     }
