@@ -431,6 +431,15 @@ export const API_ENDPOINTS = {
     CATALOG_IMAGE: (publicId: string) => `/store/catalog/${publicId}/image/`,
     CATALOG_PROPERTIES: (publicId: string) =>
       `/store/catalog/${publicId}/properties/`,
+    CATALOG_LOOKS: (publicId: string) => `/store/catalog/${publicId}/looks/`,
+    CATALOG_CLASS_LOOK: (publicId: string) =>
+      `/store/catalog/${publicId}/looks/classes/`,
+    CATALOG_PHOTOS: (publicId: string) => `/store/catalog/${publicId}/photos/`,
+    CATALOG_PHOTO_DETAIL: (publicId: string, photoId: string) =>
+      `/store/catalog/${publicId}/photos/${photoId}/`,
+    ID_CARD_DESIGNS: "/store/id-card-designs/",
+    ID_CARD_TEMPLATE_PREVIEW: (publicId: string) =>
+      `/store/id-card-templates/${publicId}/preview/`,
     ID_CARD_TEMPLATES: "/store/id-card-templates/",
     ID_CARD_TEMPLATE_DETAIL: (publicId: string) =>
       `/store/id-card-templates/${publicId}/`,

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import type { StudentSizeEntry } from '@educard/shared';
 import { PageHeader } from '@/components/common';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,7 +19,36 @@ import {
   useRemoveCartItem,
   useUpdateCartItem,
 } from '../hooks/use-store';
-import { describeConfiguration, formatCurrency } from '../utils/store-format';
+import {
+  describeConfiguration,
+  formatCurrency,
+  lineStudentCount,
+  lineStudentSizes,
+} from '../utils/store-format';
+
+/** Collapsible "who gets which size" list for a per-student line. */
+function StudentSizesBreakdown({ entries }: { entries: StudentSizeEntry[] }) {
+  return (
+    <details className="mt-1 text-sm">
+      <summary className="text-primary cursor-pointer select-none">Sizes by student</summary>
+      <ul className="text-muted-foreground mt-1 max-h-40 space-y-0.5 overflow-y-auto">
+        {entries.map((entry) => {
+          const values = Object.entries(entry)
+            .filter(([key, value]) => !['student', 'name', 'roll_number'].includes(key) && value)
+            .map(([key, value]) => `${key.replace(/_/g, ' ')}: ${value}`)
+            .join(', ');
+          return (
+            <li key={entry.student}>
+              <span className="text-foreground">{entry.name ?? entry.student}</span>
+              {entry.roll_number ? ` (Roll ${entry.roll_number})` : ''}
+              {values ? ` · ${values}` : ''}
+            </li>
+          );
+        })}
+      </ul>
+    </details>
+  );
+}
 
 export default function StoreCartPage() {
   const navigate = useNavigate();
@@ -88,6 +118,8 @@ export default function StoreCartPage() {
           <div className="space-y-4 lg:col-span-2">
             {items.map((item) => {
               const summary = describeConfiguration(item.configuration);
+              const perStudent = lineStudentCount(item.configuration) !== undefined;
+              const sizes = lineStudentSizes(item.configuration);
               return (
                 <Card key={item.public_id}>
                   <CardContent className="flex flex-col gap-4 pt-6 sm:flex-row sm:items-center">
@@ -102,6 +134,7 @@ export default function StoreCartPage() {
                     <div className="flex-1">
                       <p className="font-medium">{item.product_name}</p>
                       {summary && <p className="text-muted-foreground text-sm">{summary}</p>}
+                      {sizes.length > 0 && <StudentSizesBreakdown entries={sizes} />}
                       <p className="text-muted-foreground mt-1 text-sm">
                         {formatCurrency(item.unit_price)} each
                       </p>
@@ -112,8 +145,14 @@ export default function StoreCartPage() {
                         type="number"
                         min={1}
                         aria-label={`Quantity for ${item.product_name}`}
+                        title={
+                          perStudent
+                            ? 'One per student. Remove the line and add it again to change students.'
+                            : undefined
+                        }
                         className="w-24"
                         value={item.quantity}
+                        disabled={perStudent}
                         onChange={(event) =>
                           updateItem.mutate({
                             publicId: item.public_id,

@@ -1,7 +1,10 @@
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   QueryKeys,
   type AddCartItemPayload,
+  type AdoptIdCardDesignPayload,
+  type ClassLookPayload,
   type BookSetPayload,
   type CatalogQueryParams,
   type OrderQueryParams,
@@ -13,6 +16,14 @@ import {
 } from '@educard/shared';
 import {
   addCartItem,
+  addProductPhoto,
+  adoptIdCardDesign,
+  fetchCardPreview,
+  fetchIdCardDesigns,
+  fetchProductLooks,
+  removeProductPhoto,
+  saveClassLook,
+  setPrimaryProductPhoto,
   clearCart,
   fetchBookSets,
   fetchCart,
@@ -201,6 +212,76 @@ export function useSaveBookSet() {
 
 export function useWithdrawBookSet() {
   return useStoreMutation((publicId: string) => withdrawBookSet(publicId));
+}
+
+export function useIdCardDesigns() {
+  return useQuery({
+    queryKey: QueryKeys.STORE.ID_CARD_DESIGNS,
+    queryFn: fetchIdCardDesigns,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useAdoptIdCardDesign() {
+  return useStoreMutation((payload: AdoptIdCardDesignPayload) => adoptIdCardDesign(payload));
+}
+
+/**
+ * Object URL for a rendered card PNG (auth-protected, so it cannot be a plain <img src>).
+ * The URL is revoked when the preview changes or the component unmounts.
+ */
+export function useCardPreview(path: string | undefined, student?: string) {
+  const query = useQuery({
+    queryKey: QueryKeys.STORE.CARD_PREVIEW(path ?? '', student),
+    queryFn: () => fetchCardPreview(path as string, student),
+    enabled: Boolean(path),
+    staleTime: 5 * 60 * 1000,
+  });
+  const [url, setUrl] = useState<string>('');
+  useEffect(() => {
+    if (!query.data) {
+      setUrl('');
+      return undefined;
+    }
+    const objectUrl = URL.createObjectURL(query.data);
+    setUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [query.data]);
+  return { url, isLoading: query.isLoading, isError: query.isError };
+}
+
+export function useProductLooks(publicId: string | undefined) {
+  return useQuery({
+    queryKey: QueryKeys.STORE.LOOKS(publicId ?? ''),
+    queryFn: () => fetchProductLooks(publicId as string),
+    enabled: Boolean(publicId),
+  });
+}
+
+export function useSaveClassLook(publicId: string) {
+  return useStoreMutation((payload: ClassLookPayload) => saveClassLook(publicId, payload));
+}
+
+export function useAddProductPhoto(publicId: string) {
+  return useStoreMutation(
+    ({
+      image,
+      ...options
+    }: {
+      image: File;
+      class_public_id?: string;
+      caption?: string;
+      is_primary?: boolean;
+    }) => addProductPhoto(publicId, image, options)
+  );
+}
+
+export function useSetPrimaryProductPhoto(publicId: string) {
+  return useStoreMutation((photoId: string) => setPrimaryProductPhoto(publicId, photoId));
+}
+
+export function useRemoveProductPhoto(publicId: string) {
+  return useStoreMutation((photoId: string) => removeProductPhoto(publicId, photoId));
 }
 
 export function useShipmentTracking(token: string) {

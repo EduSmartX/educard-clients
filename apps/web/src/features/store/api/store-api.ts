@@ -4,7 +4,12 @@
 import apiClient from '@/lib/api';
 import {
   API_ENDPOINTS,
+  apiRelativePath,
   type AddCartItemPayload,
+  type AdoptIdCardDesignPayload,
+  type ClassLookPayload,
+  type IdCardDesign,
+  type ProductLooks,
   type ApiDetailResponse,
   type ApiListResponse,
   type ApiMessageResponse,
@@ -162,6 +167,85 @@ export async function reviseBookSet(
 
 export async function withdrawBookSet(publicId: string): Promise<ApiMessageResponse> {
   const response = await apiClient.delete(API_ENDPOINTS.STORE.BOOK_SET_DETAIL(publicId));
+  return response.data;
+}
+
+export async function fetchIdCardDesigns(): Promise<ApiDetailResponse<IdCardDesign[]>> {
+  const response = await apiClient.get(API_ENDPOINTS.STORE.ID_CARD_DESIGNS);
+  return response.data;
+}
+
+export async function adoptIdCardDesign(
+  payload: AdoptIdCardDesignPayload
+): Promise<ApiDetailResponse<IdCardTemplate>> {
+  const response = await apiClient.post(API_ENDPOINTS.STORE.ID_CARD_TEMPLATES, payload);
+  return response.data;
+}
+
+/** A rendered card side (PNG) from a server preview path, as a Blob. */
+export async function fetchCardPreview(path: string, student?: string): Promise<Blob> {
+  const response = await apiClient.get(apiRelativePath(path), {
+    params: student ? { student } : undefined,
+    responseType: 'blob',
+  });
+  return response.data;
+}
+
+export async function fetchProductLooks(
+  publicId: string
+): Promise<ApiDetailResponse<ProductLooks>> {
+  const response = await apiClient.get(API_ENDPOINTS.STORE.CATALOG_LOOKS(publicId));
+  return response.data;
+}
+
+export async function saveClassLook(
+  publicId: string,
+  payload: ClassLookPayload
+): Promise<ApiDetailResponse<ProductLooks>> {
+  const response = await apiClient.put(API_ENDPOINTS.STORE.CATALOG_CLASS_LOOK(publicId), payload);
+  return response.data;
+}
+
+export async function addProductPhoto(
+  publicId: string,
+  image: File,
+  options: { class_public_id?: string; caption?: string; is_primary?: boolean } = {}
+): Promise<ApiDetailResponse<ProductLooks>> {
+  const formData = new FormData();
+  formData.append('image', image);
+  if (options.class_public_id) {
+    formData.append('class_public_id', options.class_public_id);
+  }
+  if (options.caption) {
+    formData.append('caption', options.caption);
+  }
+  if (options.is_primary) {
+    formData.append('is_primary', 'true');
+  }
+  const response = await apiClient.post(API_ENDPOINTS.STORE.CATALOG_PHOTOS(publicId), formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data;
+}
+
+export async function setPrimaryProductPhoto(
+  publicId: string,
+  photoId: string
+): Promise<ApiDetailResponse<ProductLooks>> {
+  const response = await apiClient.patch(
+    API_ENDPOINTS.STORE.CATALOG_PHOTO_DETAIL(publicId, photoId),
+    { is_primary: true }
+  );
+  return response.data;
+}
+
+export async function removeProductPhoto(
+  publicId: string,
+  photoId: string
+): Promise<ApiDetailResponse<ProductLooks>> {
+  const response = await apiClient.delete(
+    API_ENDPOINTS.STORE.CATALOG_PHOTO_DETAIL(publicId, photoId)
+  );
   return response.data;
 }
 

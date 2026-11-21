@@ -1,5 +1,6 @@
 import {
   CUSTOM_FEATURES_KEY,
+  PRODUCT_ATTRIBUTE_INPUT_TYPE,
   PRODUCT_ATTRIBUTE_SCOPE,
   STORE_CONFIG_KEY,
   type CartItemConfiguration,
@@ -7,6 +8,7 @@ import {
   type ConfigurationSnapshot,
   type IdCardTemplate,
   type ProductAttribute,
+  type StudentSizeEntry,
 } from '@educard/shared';
 
 /** Sentinel for "no class": a school-wide default template. */
@@ -78,6 +80,42 @@ export function formatCurrency(amount: string | number): string {
   }).format(Number(amount));
 }
 
+/**
+ * Number of named students on a line (ID cards, per-student sizes), else undefined.
+ * Such lines hold one piece per student, so their quantity cannot be edited.
+ */
+export function lineStudentCount(configuration: CartItemConfiguration): number | undefined {
+  const named =
+    configuration?.[STORE_CONFIG_KEY.STUDENT_IDS] ?? configuration?.[STORE_CONFIG_KEY.STUDENTS];
+  return Array.isArray(named) ? named.length : undefined;
+}
+
+/** Students ticked while ordering, mapped to their own values (empty for ID cards). */
+export type StudentSelection = Record<string, Record<string, string>>;
+
+/** Attributes that can be filled per student; free lists stay line-level. */
+export function perStudentAttributes(attributes: ProductAttribute[]): ProductAttribute[] {
+  return attributes.filter(
+    (attribute) => attribute.input_type !== PRODUCT_ATTRIBUTE_INPUT_TYPE.LIST
+  );
+}
+
+/** True when at least one student is ticked and each has every required value. */
+export function isSelectionComplete(
+  selection: StudentSelection,
+  attributes: ProductAttribute[]
+): boolean {
+  const required = attributes.filter((attribute) => attribute.is_required);
+  const rows = Object.values(selection);
+  return rows.length > 0 && rows.every((values) => required.every((a) => Boolean(values[a.code])));
+}
+
+/** Each student's own values on a per-student line, for a breakdown list. */
+export function lineStudentSizes(configuration: CartItemConfiguration): StudentSizeEntry[] {
+  const entries = configuration?.[STORE_CONFIG_KEY.STUDENTS];
+  return Array.isArray(entries) ? (entries as StudentSizeEntry[]) : [];
+}
+
 /** Turn a stored configuration into "Size: M · Embroidery: Crest" for display. */
 export function describeConfiguration(
   configuration: CartItemConfiguration,
@@ -90,7 +128,15 @@ export function describeConfiguration(
 
   const parts: string[] = [];
 
+  const students = lineStudentCount(configuration);
+  if (students !== undefined) {
+    parts.push(`${students} ${students === 1 ? 'student' : 'students'}`);
+  }
+
   for (const [code, value] of entries) {
+    if (code === STORE_CONFIG_KEY.STUDENT_IDS || code === STORE_CONFIG_KEY.STUDENTS) {
+      continue;
+    }
     if (code === CUSTOM_FEATURES_KEY || code === STORE_CONFIG_KEY.ORGANIZATION_PROPERTIES) {
       for (const [name, custom] of Object.entries(value as Record<string, string>)) {
         parts.push(`${humanize(name)}: ${custom}`);

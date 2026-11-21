@@ -5,7 +5,7 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
-import { APPROVAL_STATUS, type BookSet, type Class } from '@educard/shared';
+import { APPROVAL_STATUS, type BookSet, type Class, type IdCardTemplate } from '@educard/shared';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -89,9 +89,45 @@ function SetupHint({ children }: { children: React.ReactNode }) {
   );
 }
 
+interface SectionSelectProps {
+  value: string;
+  onChange: (classPublicId: string) => void;
+  placeholder?: string;
+  /** Offer "No specific class", stored as ALL_CLASSES. */
+  allowNone?: boolean;
+}
+
+/** One entry per class section (students belong to a section, not a grade). */
+export function SectionSelect({
+  value,
+  onChange,
+  placeholder = 'Choose a class',
+  allowNone = false,
+}: SectionSelectProps) {
+  const { data, isLoading } = useClasses({ page_size: 100 });
+  if (isLoading) {
+    return <Skeleton className="h-10 w-full" />;
+  }
+  return (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger>
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        {allowNone && <SelectItem value={ALL_CLASSES}>No specific class</SelectItem>}
+        {(data?.data ?? []).map((section) => (
+          <SelectItem key={section.public_id} value={section.public_id}>
+            {classLabel(section)}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 interface IdCardClassPickerProps {
   value: string;
-  onChange: (classPublicId: string, hasTemplate: boolean) => void;
+  onChange: (classPublicId: string, template: IdCardTemplate | undefined) => void;
 }
 
 export function IdCardClassPicker({ value, onChange }: IdCardClassPickerProps) {
@@ -118,7 +154,7 @@ export function IdCardClassPicker({ value, onChange }: IdCardClassPickerProps) {
         value={value}
         onValueChange={(next) => {
           const section = classes.find((item) => item.public_id === next);
-          onChange(next, Boolean(resolveTemplate(templates, section)));
+          onChange(next, resolveTemplate(templates, section));
         }}
       >
         <SelectTrigger>
@@ -135,7 +171,7 @@ export function IdCardClassPicker({ value, onChange }: IdCardClassPickerProps) {
 
       {selected && template && (
         <div className="bg-muted/50 flex items-center gap-3 rounded-md border p-2">
-          {template.image_url && (
+          {!template.can_preview && template.image_url && (
             <img
               src={getMediaUrl(template.image_url)}
               alt={`${template.name} preview`}

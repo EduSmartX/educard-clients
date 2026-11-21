@@ -97,7 +97,11 @@ export interface ConfigurationSnapshot {
  */
 export type CartItemConfiguration = Record<
   string,
-  string | string[] | CustomFeatures | ConfigurationSnapshot
+  | string
+  | string[]
+  | CustomFeatures
+  | ConfigurationSnapshot
+  | StudentSizeEntry[]
 >;
 
 export interface CartItem {
@@ -189,15 +193,96 @@ interface ReviewedSubmission {
   reviewed_at: string | null;
 }
 
+export type CardOrientation = "landscape" | "portrait";
+
+export type CardSide = "front" | "back";
+
+/**
+ * A render-ready ID card design. Preview URLs are API paths ("/api/store/...") that
+ * return a PNG rendered exactly as the card prints; fetch them with auth.
+ */
+export interface IdCardDesign {
+  public_id: string;
+  name: string;
+  description: string;
+  orientation: CardOrientation;
+  is_library: boolean;
+  has_back: boolean;
+  front_preview_url: string;
+  back_preview_url: string;
+}
+
+export interface IdCardTemplateDesign {
+  public_id: string;
+  name: string;
+  orientation: CardOrientation;
+  is_library: boolean;
+  has_back: boolean;
+}
+
 export interface IdCardTemplate extends ReviewedSubmission {
   is_default: boolean;
+  /** The artwork the school picked or uploaded. */
   image_url: string;
+  /** EduCard's print design; null until EduCard builds one from an upload. */
+  design: IdCardTemplateDesign | null;
+  can_preview: boolean;
+  front_preview_url: string;
+  back_preview_url: string;
 }
 
 export interface SubmitIdCardTemplatePayload {
   name: string;
   /** A class section's public ID; the template applies to that section's grade. */
   class_public_id?: string;
+}
+
+export interface AdoptIdCardDesignPayload {
+  design_public_id: string;
+  /** Omit for the school-wide default. */
+  class_public_id?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Product looks: school-wide and per class (grade)
+// ---------------------------------------------------------------------------
+
+export interface ProductPhoto {
+  public_id: string;
+  caption: string;
+  is_primary: boolean;
+  class_name: string;
+  image_url: string;
+}
+
+export interface ProductLookScope {
+  properties: Record<string, string>;
+  photos: ProductPhoto[];
+}
+
+export interface ProductClassLook extends ProductLookScope {
+  class_master_id: number;
+  class_name: string;
+}
+
+export interface ProductLooks {
+  school: ProductLookScope;
+  classes: ProductClassLook[];
+}
+
+export interface ClassLookPayload {
+  /** Any section of the grade; the override applies to the whole grade. */
+  class_public_id: string;
+  /** Send {} to clear the class's overrides. */
+  properties: Record<string, string>;
+}
+
+/** One student's own sizes on a per-student cart line. */
+export interface StudentSizeEntry {
+  student: string;
+  name?: string;
+  roll_number?: string;
+  [attribute: string]: string | undefined;
 }
 
 export interface BookSetItem {

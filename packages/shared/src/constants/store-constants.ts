@@ -46,7 +46,16 @@ export const STORE_CONFIG_KEY = {
   TEMPLATE: "template",
   BOOK_SET: "book_set",
   ORGANIZATION_PROPERTIES: "organization_properties",
+  /** ID cards: the chosen students' public IDs (one card each). */
+  STUDENT_IDS: "student_ids",
+  /** Uniform-style per-student lines: [{ student, size, ... }]. */
+  STUDENTS: "students",
 } as const;
+
+/** Strip the "/api" prefix from server-returned paths so apiClient can call them. */
+export function apiRelativePath(path: string): string {
+  return path.replace(/^\/api(?=\/)/, "");
+}
 
 export const APPROVAL_STATUS = {
   PENDING: "pending",
