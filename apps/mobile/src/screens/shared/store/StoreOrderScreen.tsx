@@ -838,6 +838,23 @@ export default function StoreOrderScreen() {
       </View>
       {isLoading ? (
         <LoadingState color={ORDER_COLOURS.accent} />
+      ) : product && !product.is_published ? (
+        <View style={styles.content}>
+          <Notice tone="warning">
+            {product.name} is not published yet. Set it up and publish it before
+            ordering.
+          </Notice>
+          <TouchableOpacity
+            style={[s.secondaryButton, styles.missingAction]}
+            onPress={() =>
+              navigation.replace('StoreProductSetup', {
+                productId: product.public_id,
+              })
+            }
+          >
+            <Text style={s.secondaryButtonText}>Set up & publish</Text>
+          </TouchableOpacity>
+        </View>
       ) : product ? (
         <OrderForm key={product.public_id} product={product} />
       ) : (
@@ -872,6 +889,7 @@ const styles = StyleSheet.create({
   headerSpacer: { width: 24 },
   content: { padding: 16, paddingBottom: 32 },
   missing: { padding: 24, textAlign: 'center' },
+  missingAction: { marginTop: 12 },
   hero: {
     flexDirection: 'row',
     alignItems: 'center',

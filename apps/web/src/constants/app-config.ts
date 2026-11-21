@@ -290,6 +290,8 @@ export const ROUTES = {
     ORDER: '/store/order/:productId',
     ORDERS: '/store/orders',
     SETUP: '/store/setup',
+    // One product's setup & publish page; build links with storeProductSetupPath(publicId).
+    PRODUCT_SETUP: '/store/setup/products/:productId',
     // Path printed into shipment QR codes by the backend ({FRONTEND_URL}/track/<token>).
     TRACK: '/track/:token',
   },

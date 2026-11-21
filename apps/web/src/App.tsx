@@ -287,6 +287,7 @@ const FeedbackDetailPage = lazy(() => import('./features/feedback/pages/feedback
 const StoreCatalogPage = lazy(() => import('./features/store/pages/store-catalog-page'));
 const StoreCartPage = lazy(() => import('./features/store/pages/store-cart-page'));
 const StoreOrderPage = lazy(() => import('./features/store/pages/store-order-page'));
+const StoreProductSetupPage = lazy(() => import('./features/store/pages/store-product-setup-page'));
 const StoreOrdersPage = lazy(() => import('./features/store/pages/store-orders-page'));
 const StoreSetupPage = lazy(() => import('./features/store/pages/store-setup-page'));
 const ShipmentTrackingPage = lazy(() => import('./features/store/pages/shipment-tracking-page'));
@@ -488,6 +489,7 @@ function App() {
             <Route path={ROUTES.STORE.ORDER} element={<StoreOrderPage />} />
             <Route path={ROUTES.STORE.ORDERS} element={<StoreOrdersPage />} />
             <Route path={ROUTES.STORE.SETUP} element={<StoreSetupPage />} />
+            <Route path={ROUTES.STORE.PRODUCT_SETUP} element={<StoreProductSetupPage />} />
             {/* Shipment QR target: school admins and EduCard staff; enforced by the API */}
             <Route path={ROUTES.STORE.TRACK} element={<ShipmentTrackingPage />} />
 

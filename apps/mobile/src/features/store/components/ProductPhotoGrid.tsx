@@ -53,7 +53,7 @@ export function ProductPhotoGrid({
       return;
     }
     add.mutate(
-      { image, classPublicId },
+      { image, classPublicIds: classPublicId ? [classPublicId] : [] },
       { onSuccess: () => showToast('success', 'Photo added'), onError },
     );
   };

@@ -9,7 +9,7 @@ import { formatCurrency } from '../utils/store-format';
 interface ProductCardProps {
   product: CatalogProduct;
   onConfigure: (product: CatalogProduct) => void;
-  /** Called instead of `onConfigure` while required school settings are missing. */
+  /** Called instead of `onConfigure` until the school has published the product. */
   onSetup: (product: CatalogProduct) => void;
 }
 
@@ -44,9 +44,9 @@ export function ProductCard({ product, onConfigure, onSetup }: ProductCardProps)
           <p className="text-muted-foreground line-clamp-2 text-sm">{product.description}</p>
         )}
 
-        {product.setup_required && (
-          <Badge variant="destructive" className="font-normal">
-            Set {product.missing_properties.join(', ')} first
+        {!product.is_published && (
+          <Badge className="bg-amber-100 font-normal text-amber-800 hover:bg-amber-100">
+            Not published yet
           </Badge>
         )}
 
@@ -68,10 +68,10 @@ export function ProductCard({ product, onConfigure, onSetup }: ProductCardProps)
             ? 'Priced per class'
             : formatCurrency(product.price)}
         </span>
-        {product.setup_required ? (
+        {!product.is_published ? (
           <Button size="sm" variant="outline" onClick={() => onSetup(product)}>
             <Settings2 className="mr-1 h-4 w-4" />
-            Set up
+            Set up & publish
           </Button>
         ) : (
           <Button size="sm" onClick={() => onConfigure(product)}>

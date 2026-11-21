@@ -7,7 +7,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ROUTES } from '@/constants/app-config';
 import { ProductCard } from '../components/product-card';
 import { useCart, useCatalog } from '../hooks/use-store';
-import { storeOrderPath } from '../utils/store-format';
+import { storeOrderPath, storeProductSetupPath } from '../utils/store-format';
 
 const ALL_CATEGORIES = 'all';
 
@@ -99,7 +99,7 @@ export default function StoreCatalogPage() {
               key={product.public_id}
               product={product}
               onConfigure={(item) => navigate(storeOrderPath(item.public_id))}
-              onSetup={() => navigate(ROUTES.STORE.SETUP)}
+              onSetup={(item) => navigate(storeProductSetupPath(item.public_id))}
             />
           ))}
         </div>

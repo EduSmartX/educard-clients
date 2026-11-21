@@ -431,6 +431,10 @@ export const API_ENDPOINTS = {
     CATALOG_IMAGE: (publicId: string) => `/store/catalog/${publicId}/image/`,
     CATALOG_PROPERTIES: (publicId: string) =>
       `/store/catalog/${publicId}/properties/`,
+    CATALOG_CUSTOMIZATION: (publicId: string) =>
+      `/store/catalog/${publicId}/customization/`,
+    CATALOG_PUBLISH: (publicId: string) =>
+      `/store/catalog/${publicId}/publish/`,
     CATALOG_LOOKS: (publicId: string) => `/store/catalog/${publicId}/looks/`,
     CATALOG_CLASS_LOOK: (publicId: string) =>
       `/store/catalog/${publicId}/looks/classes/`,

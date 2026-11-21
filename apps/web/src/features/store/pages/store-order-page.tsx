@@ -63,6 +63,7 @@ import {
   orderScopedAttributes,
   perStudentAttributes,
   resolveTemplate,
+  storeProductSetupPath,
   type StudentSelection,
 } from '../utils/store-format';
 
@@ -589,14 +590,15 @@ export default function StoreOrderPage() {
             <Link to={ROUTES.STORE.CATALOG}>Back to store</Link>
           </Button>
         </div>
-      ) : product.setup_required ? (
+      ) : !product.is_published ? (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
-          <p className="font-medium">Finish the school settings first</p>
+          <p className="font-medium">{product.name} is not published yet</p>
           <p className="mt-1 text-sm">
-            Set {product.missing_properties.join(', ')} for {product.name} in Store setup.
+            Review it, fill in everything EduCard marks as mandatory, then publish it. After that it
+            can be ordered.
           </p>
           <Button asChild className="mt-4" variant="outline">
-            <Link to={ROUTES.STORE.SETUP}>Open Store setup</Link>
+            <Link to={storeProductSetupPath(product.public_id)}>Set up & publish</Link>
           </Button>
         </div>
       ) : (

@@ -55,6 +55,11 @@ export function orderScopedAttributes(attributes: ProductAttribute[]): ProductAt
   );
 }
 
+/** In-app route of a product's setup & publish page. */
+export function storeProductSetupPath(productPublicId: string): string {
+  return `/store/setup/products/${encodeURIComponent(productPublicId)}`;
+}
+
 /** In-app route of a product's order page. */
 export function storeOrderPath(productPublicId: string): string {
   return `/store/order/${encodeURIComponent(productPublicId)}`;

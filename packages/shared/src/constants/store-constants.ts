@@ -72,6 +72,11 @@ export function apiRelativePath(path: string): string {
   return path.replace(/^\/api(?=\/)/, "");
 }
 
+export const PUBLISH_STATUS = {
+  DRAFT: "draft",
+  PUBLISHED: "published",
+} as const;
+
 export const APPROVAL_STATUS = {
   PENDING: "pending",
   APPROVED: "approved",

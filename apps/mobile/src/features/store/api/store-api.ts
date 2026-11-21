@@ -17,6 +17,7 @@ import {
   type ClassLookPayload,
   type IdCardDesign,
   type IdCardTemplate,
+  type ProductCustomizationPayload,
   type ProductLooks,
   type Order,
   type OrderQueryParams,
@@ -129,15 +130,40 @@ export interface UploadFile {
   type: string;
 }
 
-function multipart(fields: Record<string, string | UploadFile | undefined>) {
+function multipart(
+  fields: Record<string, string | string[] | UploadFile | undefined>,
+) {
   const formData = new FormData();
   for (const [key, value] of Object.entries(fields)) {
     if (value === undefined || value === '') {
       continue;
     }
-    formData.append(key, value as unknown as Blob);
+    // Lists (e.g. class_public_ids) are sent as repeated fields.
+    for (const item of Array.isArray(value) ? value : [value]) {
+      formData.append(key, item as unknown as Blob);
+    }
   }
   return formData;
+}
+
+export async function saveProductCustomization(
+  publicId: string,
+  payload: ProductCustomizationPayload,
+): Promise<ApiDetailResponse<CatalogProduct>> {
+  const response = await apiClient.patch(
+    API_ENDPOINTS.STORE.CATALOG_CUSTOMIZATION(publicId),
+    payload,
+  );
+  return response.data;
+}
+
+export async function unpublishProduct(
+  publicId: string,
+): Promise<ApiDetailResponse<CatalogProduct>> {
+  const response = await apiClient.delete(
+    API_ENDPOINTS.STORE.CATALOG_PUBLISH(publicId),
+  );
+  return response.data;
 }
 
 const MULTIPART = {
@@ -177,11 +203,11 @@ export async function adoptIdCardDesign(
 export async function uploadIdCardTemplate(
   name: string,
   image: UploadFile,
-  classPublicId?: string,
-): Promise<ApiDetailResponse<IdCardTemplate>> {
+  classPublicIds: string[] = [],
+): Promise<ApiDetailResponse<IdCardTemplate | IdCardTemplate[]>> {
   const response = await apiClient.post(
     API_ENDPOINTS.STORE.ID_CARD_TEMPLATES,
-    multipart({ name, image, class_public_id: classPublicId }),
+    multipart({ name, image, class_public_ids: classPublicIds }),
     MULTIPART,
   );
   return response.data;
@@ -239,11 +265,11 @@ export async function saveClassLook(
 export async function addProductPhoto(
   publicId: string,
   image: UploadFile,
-  classPublicId?: string,
+  classPublicIds: string[] = [],
 ): Promise<ApiDetailResponse<ProductLooks>> {
   const response = await apiClient.post(
     API_ENDPOINTS.STORE.CATALOG_PHOTOS(publicId),
-    multipart({ image, class_public_id: classPublicId }),
+    multipart({ image, class_public_ids: classPublicIds }),
     MULTIPART,
   );
   return response.data;

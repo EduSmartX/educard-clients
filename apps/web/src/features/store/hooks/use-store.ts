@@ -9,6 +9,7 @@ import {
   type CatalogQueryParams,
   type OrderQueryParams,
   type PlaceOrderPayload,
+  type ProductCustomizationPayload,
   type ShipmentEventPayload,
   type SubmissionQueryParams,
   type SubmitIdCardTemplatePayload,
@@ -23,6 +24,8 @@ import {
   fetchProductLooks,
   removeProductPhoto,
   saveClassLook,
+  saveProductCustomization,
+  unpublishProduct,
   setPrimaryProductPhoto,
   clearCart,
   fetchBookSets,
@@ -214,6 +217,16 @@ export function useWithdrawBookSet() {
   return useStoreMutation((publicId: string) => withdrawBookSet(publicId));
 }
 
+export function useSaveProductCustomization(publicId: string) {
+  return useStoreMutation((payload: ProductCustomizationPayload) =>
+    saveProductCustomization(publicId, payload)
+  );
+}
+
+export function useUnpublishProduct(publicId: string) {
+  return useStoreMutation(() => unpublishProduct(publicId));
+}
+
 export function useIdCardDesigns() {
   return useQuery({
     queryKey: QueryKeys.STORE.ID_CARD_DESIGNS,
@@ -270,6 +283,7 @@ export function useAddProductPhoto(publicId: string) {
     }: {
       image: File;
       class_public_id?: string;
+      class_public_ids?: string[];
       caption?: string;
       is_primary?: boolean;
     }) => addProductPhoto(publicId, image, options)

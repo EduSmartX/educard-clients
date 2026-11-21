@@ -22,6 +22,7 @@ import {
   type Order,
   type OrderQueryParams,
   type PlaceOrderPayload,
+  type ProductCustomizationPayload,
   type ShipmentEventPayload,
   type ShipmentTracking,
   type SubmissionQueryParams,
@@ -30,6 +31,24 @@ import {
   type UpdateOrderStatusPayload,
   type UpdateProductPropertiesPayload,
 } from '@educard/shared';
+
+export async function saveProductCustomization(
+  publicId: string,
+  payload: ProductCustomizationPayload
+): Promise<ApiDetailResponse<CatalogProduct>> {
+  const response = await apiClient.patch(
+    API_ENDPOINTS.STORE.CATALOG_CUSTOMIZATION(publicId),
+    payload
+  );
+  return response.data;
+}
+
+export async function unpublishProduct(
+  publicId: string
+): Promise<ApiDetailResponse<CatalogProduct>> {
+  const response = await apiClient.delete(API_ENDPOINTS.STORE.CATALOG_PUBLISH(publicId));
+  return response.data;
+}
 
 export async function fetchCatalog(
   params?: CatalogQueryParams
@@ -134,6 +153,9 @@ export async function submitIdCardTemplate(
   if (payload.class_public_id) {
     formData.append('class_public_id', payload.class_public_id);
   }
+  for (const classId of payload.class_public_ids ?? []) {
+    formData.append('class_public_ids', classId);
+  }
   const response = await apiClient.post(API_ENDPOINTS.STORE.ID_CARD_TEMPLATES, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
@@ -209,12 +231,21 @@ export async function saveClassLook(
 export async function addProductPhoto(
   publicId: string,
   image: File,
-  options: { class_public_id?: string; caption?: string; is_primary?: boolean } = {}
+  options: {
+    class_public_id?: string;
+    /** Show the same photo for several classes (one upload). */
+    class_public_ids?: string[];
+    caption?: string;
+    is_primary?: boolean;
+  } = {}
 ): Promise<ApiDetailResponse<ProductLooks>> {
   const formData = new FormData();
   formData.append('image', image);
   if (options.class_public_id) {
     formData.append('class_public_id', options.class_public_id);
+  }
+  for (const classId of options.class_public_ids ?? []) {
+    formData.append('class_public_ids', classId);
   }
   if (options.caption) {
     formData.append('caption', options.caption);

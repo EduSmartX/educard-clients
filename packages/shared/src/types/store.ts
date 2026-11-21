@@ -67,6 +67,28 @@ export interface CatalogProduct {
   /** Required school-level properties still unset; non-empty blocks ordering. */
   missing_properties: string[];
   setup_required: boolean;
+  /** EduCard's master wording; `name` / `description` are the school's when customised. */
+  master_name: string;
+  master_description: string;
+  custom_name: string;
+  custom_description: string;
+  is_customized: boolean;
+  /** Only published products can be ordered. */
+  publish_status: PublishStatus;
+  is_published: boolean;
+  published_at: string | null;
+  /** What still stops publishing (mandatory fields, approved design...); empty = ready. */
+  publish_blockers: string[];
+}
+
+export type PublishStatus = "draft" | "published";
+
+/** The school's version of a product; `publish: true` also opens it for ordering. */
+export interface ProductCustomizationPayload {
+  name?: string;
+  description?: string;
+  properties?: Record<string, string>;
+  publish?: boolean;
 }
 
 export interface UpdateProductPropertiesPayload {
@@ -236,12 +258,16 @@ export interface SubmitIdCardTemplatePayload {
   name: string;
   /** A class section's public ID; the template applies to that section's grade. */
   class_public_id?: string;
+  /** Several classes at once (one template per grade). Omit/empty = whole school. */
+  class_public_ids?: string[];
 }
 
 export interface AdoptIdCardDesignPayload {
   design_public_id: string;
   /** Omit for the school-wide default. */
   class_public_id?: string;
+  /** Several classes at once (one template per grade). */
+  class_public_ids?: string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -273,7 +299,9 @@ export interface ProductLooks {
 
 export interface ClassLookPayload {
   /** Any section of the grade; the override applies to the whole grade. */
-  class_public_id: string;
+  class_public_id?: string;
+  /** Several classes at once; each stands for its whole grade. */
+  class_public_ids?: string[];
   /** Send {} to clear the class's overrides. */
   properties: Record<string, string>;
 }

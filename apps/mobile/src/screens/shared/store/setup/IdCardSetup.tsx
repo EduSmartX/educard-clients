@@ -13,7 +13,7 @@ import {
   type IdCardTemplate,
 } from '@educard/shared';
 import { ImagePlus, Upload } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -28,10 +28,7 @@ import {
 
 import { SubmitButton } from '@/components/common';
 import { getMediaUrl } from '@/constants/config';
-import { useClasses } from '@/features/classes';
 import {
-  classLabel,
-  oneSectionPerGrade,
   pickStoreImage,
   useAdoptIdCardDesign,
   useIdCardDesigns,
@@ -41,6 +38,13 @@ import {
   type UploadFile,
 } from '@/features/store';
 import { CardPreviewImage } from '@/features/store/components/CardPreviewImage';
+import {
+  ClassScopePicker,
+  WHOLE_SCHOOL_SCOPE,
+  isScopeComplete,
+  scopeClassIds,
+  type ClassScope,
+} from '@/features/store/components/ClassScopePicker';
 import { storeStyles as s } from '@/features/store/components/store-styles';
 import { showToast } from '@/utils/toast';
 
@@ -59,43 +63,6 @@ function StatusBadge({ status }: { status: ApprovalStatus }) {
     >
       {APPROVAL_STATUS_LABELS[status] ?? status}
     </Text>
-  );
-}
-
-/** "Whole school" plus one chip per grade; value '' means school-wide. */
-function ScopeChips({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  const { data } = useClasses({ page_size: 100 });
-  const grades = useMemo(() => oneSectionPerGrade(data?.classes ?? []), [data]);
-  const chip = (key: string, label: string) => {
-    const active = value === key;
-    return (
-      <TouchableOpacity
-        key={key || 'school'}
-        style={[s.option, active && s.optionActive]}
-        onPress={() => onChange(key)}
-      >
-        <Text style={[s.optionText, active && s.optionTextActive]}>
-          {label}
-        </Text>
-      </TouchableOpacity>
-    );
-  };
-  return (
-    <View style={s.optionRow}>
-      {chip('', 'Whole school')}
-      {grades.map(section =>
-        chip(
-          section.public_id,
-          section.class_master?.name ?? classLabel(section),
-        ),
-      )}
-    </View>
   );
 }
 
@@ -176,10 +143,10 @@ function AdoptSheet({
   design: IdCardDesign | null;
   onClose: () => void;
 }) {
-  const [scope, setScope] = useState('');
+  const [scope, setScope] = useState<ClassScope>(WHOLE_SCHOOL_SCOPE);
   const adopt = useAdoptIdCardDesign();
   const close = () => {
-    setScope('');
+    setScope(WHOLE_SCHOOL_SCOPE);
     onClose();
   };
   return (
@@ -197,7 +164,7 @@ function AdoptSheet({
             from their profiles when the cards are printed.
           </Text>
           <Text style={s.label}>For</Text>
-          <ScopeChips value={scope} onChange={setScope} />
+          <ClassScopePicker value={scope} onChange={setScope} />
           <View style={styles.sheetActions}>
             <TouchableOpacity style={styles.cancel} onPress={close}>
               <Text style={styles.cancelText}>Cancel</Text>
@@ -205,12 +172,13 @@ function AdoptSheet({
             <SubmitButton
               label="Use design"
               isLoading={adopt.isPending}
+              disabled={!isScopeComplete(scope)}
               onPress={() =>
                 design &&
                 adopt.mutate(
                   {
                     design_public_id: design.public_id,
-                    class_public_id: scope || undefined,
+                    class_public_ids: scopeClassIds(scope),
                   },
                   {
                     onSuccess: () => {
@@ -241,12 +209,12 @@ function UploadSheet({
   onClose: () => void;
 }) {
   const [name, setName] = useState('');
-  const [scope, setScope] = useState('');
+  const [scope, setScope] = useState<ClassScope>(WHOLE_SCHOOL_SCOPE);
   const [image, setImage] = useState<UploadFile>();
   const upload = useUploadIdCardTemplate();
   const close = () => {
     setName('');
-    setScope('');
+    setScope(WHOLE_SCHOOL_SCOPE);
     setImage(undefined);
     onClose();
   };
@@ -275,7 +243,7 @@ function UploadSheet({
           </View>
           <View style={s.field}>
             <Text style={s.label}>For</Text>
-            <ScopeChips value={scope} onChange={setScope} />
+            <ClassScopePicker value={scope} onChange={setScope} />
           </View>
           <View style={s.field}>
             {image ? (
@@ -304,14 +272,14 @@ function UploadSheet({
             <SubmitButton
               label="Send to EduCard"
               isLoading={upload.isPending}
-              disabled={!name.trim() || !image}
+              disabled={!name.trim() || !image || !isScopeComplete(scope)}
               onPress={() =>
                 image &&
                 upload.mutate(
                   {
                     name: name.trim(),
                     image,
-                    classPublicId: scope || undefined,
+                    classPublicIds: scopeClassIds(scope),
                   },
                   {
                     onSuccess: () => {

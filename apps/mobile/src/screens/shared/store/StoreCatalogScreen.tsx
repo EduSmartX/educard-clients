@@ -33,14 +33,11 @@ export default function StoreCatalogScreen() {
   const cartCount = cartResponse?.data?.item_count ?? 0;
 
   const openProduct = (product: CatalogProduct) => {
-    if (product.setup_required) {
-      showToast(
-        'info',
-        `Set ${product.missing_properties.join(', ')} for ${
-          product.name
-        } first.`,
-      );
-      navigation.navigate('StoreSetup');
+    if (!product.is_published) {
+      showToast('info', `Set up and publish ${product.name} first.`);
+      navigation.navigate('StoreProductSetup', {
+        productId: product.public_id,
+      });
       return;
     }
     navigation.navigate('StoreOrder', { productId: product.public_id });
@@ -69,8 +66,10 @@ export default function StoreCatalogScreen() {
             ? 'Priced per class'
             : `${formatCurrency(item.price)} / ${item.unit_label}`}
         </Text>
-        {item.setup_required && (
-          <Text style={styles.setupRequired}>Setup required</Text>
+        {!item.is_published && (
+          <Text style={styles.setupRequired}>
+            Not published · tap to set up
+          </Text>
         )}
       </View>
     </TouchableOpacity>

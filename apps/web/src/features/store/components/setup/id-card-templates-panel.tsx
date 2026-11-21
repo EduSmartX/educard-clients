@@ -34,35 +34,46 @@ import {
   useSubmitIdCardTemplate,
   useWithdrawIdCardTemplate,
 } from '../../hooks/use-store';
-import { ALL_CLASSES, formatDate } from '../../utils/store-format';
+import { formatDate } from '../../utils/store-format';
 import { CardPreview } from '../card-preview';
-import { ClassSelect } from '../class-resolved-pickers';
+import {
+  ClassScopePicker,
+  WHOLE_SCHOOL_SCOPE,
+  isScopeComplete,
+  scopeClassIds,
+  type ClassScope,
+} from '../class-scope-picker';
 import { ApprovalBadge, ReviewNotes } from './approval-badge';
 
 const ACCEPTED_TYPES = 'image/png,image/jpeg,image/webp';
 const MAX_SIZE_MB = 5;
 
-function ScopeField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+function ScopeField({ value, onChange }: { value: ClassScope; onChange: (v: ClassScope) => void }) {
   return (
     <div className="space-y-2">
       <Label>Use for</Label>
-      <ClassSelect value={value} onChange={onChange} allowAllClasses />
+      <ClassScopePicker
+        value={value}
+        onChange={onChange}
+        wholeSchoolLabel="Whole school (default)"
+      />
       <p className="text-muted-foreground text-xs">
-        A class design replaces the school default for that class only.
+        A class design replaces the school default for those classes only. Pick several classes to
+        give them all the same design.
       </p>
     </div>
   );
 }
 
 function AdoptDesignDialog({ design, onClose }: { design: IdCardDesign; onClose: () => void }) {
-  const [classId, setClassId] = useState(ALL_CLASSES);
+  const [scope, setScope] = useState<ClassScope>(WHOLE_SCHOOL_SCOPE);
   const adopt = useAdoptIdCardDesign();
 
   const handleAdopt = () => {
     adopt.mutate(
       {
         design_public_id: design.public_id,
-        class_public_id: classId === ALL_CLASSES ? undefined : classId,
+        class_public_ids: scopeClassIds(scope),
       },
       {
         onSuccess: () => {
@@ -100,10 +111,10 @@ function AdoptDesignDialog({ design, onClose }: { design: IdCardDesign; onClose:
               />
             )}
           </div>
-          <ScopeField value={classId} onChange={setClassId} />
+          <ScopeField value={scope} onChange={setScope} />
         </div>
         <DialogFooter>
-          <Button onClick={handleAdopt} disabled={adopt.isPending}>
+          <Button onClick={handleAdopt} disabled={!isScopeComplete(scope) || adopt.isPending}>
             {adopt.isPending ? 'Saving…' : 'Use this design'}
           </Button>
         </DialogFooter>
@@ -114,7 +125,7 @@ function AdoptDesignDialog({ design, onClose }: { design: IdCardDesign; onClose:
 
 function UploadTemplateDialog({ onClose }: { onClose: () => void }) {
   const [name, setName] = useState('');
-  const [classId, setClassId] = useState(ALL_CLASSES);
+  const [scope, setScope] = useState<ClassScope>(WHOLE_SCHOOL_SCOPE);
   const [file, setFile] = useState<File | null>(null);
   const submit = useSubmitIdCardTemplate();
 
@@ -134,7 +145,7 @@ function UploadTemplateDialog({ onClose }: { onClose: () => void }) {
       {
         payload: {
           name: name.trim(),
-          class_public_id: classId === ALL_CLASSES ? undefined : classId,
+          class_public_ids: scopeClassIds(scope),
         },
         image: file,
       },
@@ -169,7 +180,7 @@ function UploadTemplateDialog({ onClose }: { onClose: () => void }) {
               onChange={(event) => setName(event.target.value)}
             />
           </div>
-          <ScopeField value={classId} onChange={setClassId} />
+          <ScopeField value={scope} onChange={setScope} />
           <div className="space-y-2">
             <Label htmlFor="template-file">
               Artwork (PNG, JPG or WebP, up to {MAX_SIZE_MB} MB)
@@ -183,7 +194,10 @@ function UploadTemplateDialog({ onClose }: { onClose: () => void }) {
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleSubmit} disabled={!name.trim() || !file || submit.isPending}>
+          <Button
+            onClick={handleSubmit}
+            disabled={!name.trim() || !file || !isScopeComplete(scope) || submit.isPending}
+          >
             {submit.isPending ? 'Uploading…' : 'Send to EduCard'}
           </Button>
         </DialogFooter>

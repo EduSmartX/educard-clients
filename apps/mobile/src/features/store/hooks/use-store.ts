@@ -7,6 +7,7 @@ import type {
   OrderQueryParams,
   OrderStatus,
   PlaceOrderPayload,
+  ProductCustomizationPayload,
   ShipmentEventPayload,
   SubmissionQueryParams,
 } from '@educard/shared';
@@ -30,7 +31,9 @@ import {
   removeCartItem,
   removeProductPhoto,
   saveClassLook,
+  saveProductCustomization,
   setPrimaryProductPhoto,
+  unpublishProduct,
   updateCartItem,
   updateOrderStatus,
   updateProductProperties,
@@ -208,13 +211,24 @@ export function useUploadIdCardTemplate() {
     ({
       name,
       image,
-      classPublicId,
+      classPublicIds,
     }: {
       name: string;
       image: UploadFile;
-      classPublicId?: string;
-    }) => uploadIdCardTemplate(name, image, classPublicId),
+      /** Empty = whole school; otherwise one template per chosen class. */
+      classPublicIds?: string[];
+    }) => uploadIdCardTemplate(name, image, classPublicIds),
   );
+}
+
+export function useSaveProductCustomization(publicId: string) {
+  return useStoreMutation((payload: ProductCustomizationPayload) =>
+    saveProductCustomization(publicId, payload),
+  );
+}
+
+export function useUnpublishProduct(publicId: string) {
+  return useStoreMutation(() => unpublishProduct(publicId));
 }
 
 export function useWithdrawIdCardTemplate() {
@@ -250,8 +264,14 @@ export function useSaveClassLook(publicId: string) {
 
 export function useAddProductPhoto(publicId: string) {
   return useStoreMutation(
-    ({ image, classPublicId }: { image: UploadFile; classPublicId?: string }) =>
-      addProductPhoto(publicId, image, classPublicId),
+    ({
+      image,
+      classPublicIds,
+    }: {
+      image: UploadFile;
+      /** Empty = whole school; several classes share one upload. */
+      classPublicIds?: string[];
+    }) => addProductPhoto(publicId, image, classPublicIds),
   );
 }
 
