@@ -5,6 +5,10 @@ import { BookSetsPanel } from '../components/setup/book-sets-panel';
 import { IdCardTemplatesPanel } from '../components/setup/id-card-templates-panel';
 import { ProductSettingsPanel } from '../components/setup/product-settings-panel';
 
+/** Same light-blue selected state as the catalog's category filter. */
+const SELECTED_TAB_CLASS =
+  'data-[state=active]:bg-sky-100 data-[state=active]:text-sky-800 data-[state=active]:shadow-none';
+
 export default function StoreSetupPage() {
   return (
     <div className="space-y-6">
@@ -16,9 +20,15 @@ export default function StoreSetupPage() {
 
       <Tabs defaultValue="products">
         <TabsList>
-          <TabsTrigger value="products">Product settings</TabsTrigger>
-          <TabsTrigger value="templates">ID card templates</TabsTrigger>
-          <TabsTrigger value="books">Book sets</TabsTrigger>
+          <TabsTrigger value="products" className={SELECTED_TAB_CLASS}>
+            Product settings
+          </TabsTrigger>
+          <TabsTrigger value="templates" className={SELECTED_TAB_CLASS}>
+            ID card templates
+          </TabsTrigger>
+          <TabsTrigger value="books" className={SELECTED_TAB_CLASS}>
+            Book sets
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="products" className="pt-4">
           <ProductSettingsPanel />
