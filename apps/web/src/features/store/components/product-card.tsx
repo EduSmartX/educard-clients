@@ -3,6 +3,7 @@ import { PRODUCT_KIND, type CatalogProduct } from '@educard/shared';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { getMediaUrl } from '@/lib/utils/media-utils';
 import { formatCurrency } from '../utils/store-format';
 
 interface ProductCardProps {
@@ -20,9 +21,9 @@ export function ProductCard({ product, onConfigure, onSetup }: ProductCardProps)
       <div className="bg-muted flex h-40 items-center justify-center">
         {product.image_url ? (
           <img
-            src={product.image_url}
+            src={getMediaUrl(product.image_url)}
             alt={product.name}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-contain"
             loading="lazy"
           />
         ) : (

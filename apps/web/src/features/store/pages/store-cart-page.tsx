@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { ROUTES } from '@/constants/app-config';
+import { getMediaUrl } from '@/lib/utils/media-utils';
 import {
   useCart,
   useClearCart,
@@ -90,6 +91,14 @@ export default function StoreCartPage() {
               return (
                 <Card key={item.public_id}>
                   <CardContent className="flex flex-col gap-4 pt-6 sm:flex-row sm:items-center">
+                    {item.image_url && (
+                      <img
+                        src={getMediaUrl(item.image_url)}
+                        alt=""
+                        className="bg-muted h-16 w-24 shrink-0 rounded-md object-contain"
+                        loading="lazy"
+                      />
+                    )}
                     <div className="flex-1">
                       <p className="font-medium">{item.product_name}</p>
                       {summary && <p className="text-muted-foreground text-sm">{summary}</p>}

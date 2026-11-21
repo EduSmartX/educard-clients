@@ -17,6 +17,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { ROUTES } from '@/constants/app-config';
 import { useClasses } from '@/features/classes/hooks/use-classes';
+import { getMediaUrl } from '@/lib/utils/media-utils';
 import { useBookSets, useIdCardTemplates } from '../hooks/use-store';
 import { ALL_CLASSES, classLabel, formatCurrency, resolveTemplate } from '../utils/store-format';
 
@@ -136,7 +137,7 @@ export function IdCardClassPicker({ value, onChange }: IdCardClassPickerProps) {
         <div className="bg-muted/50 flex items-center gap-3 rounded-md border p-2">
           {template.image_url && (
             <img
-              src={template.image_url}
+              src={getMediaUrl(template.image_url)}
               alt={`${template.name} preview`}
               className="h-14 w-22 rounded object-cover"
             />

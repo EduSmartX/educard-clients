@@ -24,6 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { getMediaUrl } from '@/lib/utils/media-utils';
 import { useAddCartItem } from '../hooks/use-store';
 import {
   formatCurrency,
@@ -203,7 +204,7 @@ export function ProductConfigDialog({ product, open, onOpenChange }: ProductConf
                       >
                         {option.image_url && (
                           <img
-                            src={option.image_url}
+                            src={getMediaUrl(option.image_url)}
                             alt=""
                             className="h-6 w-6 rounded object-cover"
                           />

@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { getMediaUrl } from '@/lib/utils/media-utils';
 import { useCatalog, useUpdateProductProperties } from '../../hooks/use-store';
 import { organizationScopedAttributes } from '../../utils/store-format';
 
@@ -85,7 +86,7 @@ function ProductSettingsCard({ product }: { product: CatalogProduct }) {
                     >
                       {option.image_url && (
                         <img
-                          src={option.image_url}
+                          src={getMediaUrl(option.image_url)}
                           alt=""
                           className="h-5 w-5 rounded object-cover"
                         />

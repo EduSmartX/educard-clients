@@ -12,26 +12,36 @@ import { useCart, useCatalog } from '../hooks/use-store';
 
 const ALL_CATEGORIES = 'all';
 
+/** Selected category reads as a light-blue pill rather than the default white tab. */
+const CATEGORY_TAB_CLASS =
+  'data-[state=active]:bg-sky-100 data-[state=active]:text-sky-800 data-[state=active]:shadow-none';
+
 export default function StoreCatalogPage() {
   const navigate = useNavigate();
   const [category, setCategory] = useState(ALL_CATEGORIES);
   const [selected, setSelected] = useState<CatalogProduct | null>(null);
 
-  const { data, isLoading } = useCatalog(
-    category === ALL_CATEGORIES ? undefined : { category, page_size: 100 }
-  );
+  // Load the whole catalog once and filter locally, so every category tab stays visible.
+  const { data, isLoading } = useCatalog({ page_size: 100 });
   const { data: cartResponse } = useCart();
 
-  const products = useMemo(() => data?.data ?? [], [data]);
+  const allProducts = useMemo(() => data?.data ?? [], [data]);
+  const products = useMemo(
+    () =>
+      category === ALL_CATEGORIES
+        ? allProducts
+        : allProducts.filter((product) => product.category_code === category),
+    [allProducts, category]
+  );
   const cartCount = cartResponse?.data?.item_count ?? 0;
 
   const categories = useMemo(() => {
     const unique = new Map<string, string>();
-    for (const product of products) {
+    for (const product of allProducts) {
       unique.set(product.category_code, product.category_name);
     }
     return Array.from(unique, ([code, name]) => ({ code, name }));
-  }, [products]);
+  }, [allProducts]);
 
   return (
     <div className="space-y-6">
@@ -58,9 +68,11 @@ export default function StoreCatalogPage() {
       {categories.length > 0 && (
         <Tabs value={category} onValueChange={setCategory}>
           <TabsList>
-            <TabsTrigger value={ALL_CATEGORIES}>All</TabsTrigger>
+            <TabsTrigger value={ALL_CATEGORIES} className={CATEGORY_TAB_CLASS}>
+              All
+            </TabsTrigger>
             {categories.map((item) => (
-              <TabsTrigger key={item.code} value={item.code}>
+              <TabsTrigger key={item.code} value={item.code} className={CATEGORY_TAB_CLASS}>
                 {item.name}
               </TabsTrigger>
             ))}

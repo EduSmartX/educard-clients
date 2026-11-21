@@ -19,6 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getMediaUrl } from '@/lib/utils/media-utils';
 import {
   useIdCardTemplates,
   useSubmitIdCardTemplate,
@@ -141,7 +142,7 @@ function TemplateCard({ template }: { template: IdCardTemplate }) {
       <div className="bg-muted flex h-36 items-center justify-center">
         {template.image_url ? (
           <img
-            src={template.image_url}
+            src={getMediaUrl(template.image_url)}
             alt={`${template.name} design`}
             className="h-full w-full object-contain"
             loading="lazy"

@@ -106,6 +106,8 @@ export interface CartItem {
   product_code: string;
   product_name: string;
   image_path: string;
+  /** The line's picture: its ID card template, else the school's product image. */
+  image_url: string;
   quantity: number;
   unit_price: string;
   configuration: CartItemConfiguration;

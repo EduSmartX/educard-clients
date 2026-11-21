@@ -34,6 +34,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SubmitButton } from '@/components/common';
 import { EmptyState, LoadingState } from '@/components/common/ListStates';
+import { getMediaUrl } from '@/constants/config';
 import { useClasses } from '@/features/classes';
 import {
   useAddCartItem,
@@ -222,7 +223,11 @@ export default function StoreCatalogScreen() {
       activeOpacity={0.8}
     >
       {item.image_url ? (
-        <Image source={{ uri: item.image_url }} style={styles.thumb} />
+        <Image
+          source={{ uri: getMediaUrl(item.image_url) }}
+          style={styles.thumb}
+          resizeMode="contain"
+        />
       ) : (
         <View style={[styles.thumb, styles.thumbFallback]} />
       )}
@@ -320,7 +325,7 @@ export default function StoreCatalogScreen() {
                     <View style={styles.templateRow}>
                       {template.image_url ? (
                         <Image
-                          source={{ uri: template.image_url }}
+                          source={{ uri: getMediaUrl(template.image_url) }}
                           style={styles.templateThumb}
                         />
                       ) : null}
