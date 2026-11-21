@@ -92,6 +92,7 @@ export type SharedStackParamList = {
   StoreCatalog: undefined;
   StoreCart: undefined;
   StoreOrders: undefined;
+  StoreSetup: undefined;
   ShipmentTracking: { token: string };
   Profile: undefined;
   SwitchProfile: undefined;

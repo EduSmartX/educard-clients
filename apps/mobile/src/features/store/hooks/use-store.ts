@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   AddCartItemPayload,
+  AdoptIdCardDesignPayload,
   CatalogQueryParams,
+  ClassLookPayload,
   OrderQueryParams,
   OrderStatus,
   PlaceOrderPayload,
@@ -11,18 +13,30 @@ import type {
 
 import {
   addCartItem,
+  addProductPhoto,
+  adoptIdCardDesign,
   clearCart,
   getBookSets,
+  getCardPreview,
   getCart,
   getCatalog,
+  getIdCardDesigns,
   getIdCardTemplates,
   getOrders,
+  getProductLooks,
   getShipmentTracking,
   placeOrder,
   recordShipmentEvent,
   removeCartItem,
+  removeProductPhoto,
+  saveClassLook,
+  setPrimaryProductPhoto,
   updateCartItem,
   updateOrderStatus,
+  updateProductProperties,
+  uploadIdCardTemplate,
+  withdrawIdCardTemplate,
+  type UploadFile,
 } from '../api/store-api';
 
 export const storeKeys = {
@@ -37,6 +51,10 @@ export const storeKeys = {
   bookSets: (params?: SubmissionQueryParams) =>
     [...storeKeys.all, 'book-sets', params] as const,
   tracking: (token: string) => [...storeKeys.all, 'tracking', token] as const,
+  designs: () => [...storeKeys.all, 'id-card-designs'] as const,
+  looks: (publicId: string) => [...storeKeys.all, 'looks', publicId] as const,
+  cardPreview: (path: string, student?: string) =>
+    [...storeKeys.all, 'card-preview', path, student ?? ''] as const,
 };
 
 export function useCatalog(params?: CatalogQueryParams) {
@@ -139,6 +157,114 @@ export function useBookSets(params?: SubmissionQueryParams, enabled = true) {
     queryFn: () => getBookSets(params),
     enabled,
   });
+}
+
+/** Store Setup writes: refresh every store query (catalog images follow looks). */
+function useStoreMutation<TVariables, TResult>(
+  mutationFn: (variables: TVariables) => Promise<TResult>,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: () => {
+      // Rendered card previews do not change with these writes; keep them cached.
+      queryClient.invalidateQueries({
+        queryKey: storeKeys.all,
+        predicate: query => query.queryKey[1] !== 'card-preview',
+      });
+    },
+  });
+}
+
+export function useUpdateProductProperties() {
+  return useStoreMutation(
+    ({
+      publicId,
+      properties,
+    }: {
+      publicId: string;
+      properties: Record<string, string>;
+    }) => updateProductProperties(publicId, properties),
+  );
+}
+
+export function useIdCardDesigns(enabled = true) {
+  return useQuery({
+    queryKey: storeKeys.designs(),
+    queryFn: getIdCardDesigns,
+    staleTime: 5 * 60 * 1000,
+    enabled,
+  });
+}
+
+export function useAdoptIdCardDesign() {
+  return useStoreMutation((payload: AdoptIdCardDesignPayload) =>
+    adoptIdCardDesign(payload),
+  );
+}
+
+export function useUploadIdCardTemplate() {
+  return useStoreMutation(
+    ({
+      name,
+      image,
+      classPublicId,
+    }: {
+      name: string;
+      image: UploadFile;
+      classPublicId?: string;
+    }) => uploadIdCardTemplate(name, image, classPublicId),
+  );
+}
+
+export function useWithdrawIdCardTemplate() {
+  return useStoreMutation((publicId: string) =>
+    withdrawIdCardTemplate(publicId),
+  );
+}
+
+/** Data URI of a rendered card side, optionally with one student's details. */
+export function useCardPreview(path: string | undefined, student?: string) {
+  return useQuery({
+    queryKey: storeKeys.cardPreview(path ?? '', student),
+    queryFn: () => getCardPreview(path as string, student),
+    enabled: Boolean(path),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+}
+
+export function useProductLooks(publicId: string | undefined) {
+  return useQuery({
+    queryKey: storeKeys.looks(publicId ?? ''),
+    queryFn: () => getProductLooks(publicId as string),
+    enabled: Boolean(publicId),
+  });
+}
+
+export function useSaveClassLook(publicId: string) {
+  return useStoreMutation((payload: ClassLookPayload) =>
+    saveClassLook(publicId, payload),
+  );
+}
+
+export function useAddProductPhoto(publicId: string) {
+  return useStoreMutation(
+    ({ image, classPublicId }: { image: UploadFile; classPublicId?: string }) =>
+      addProductPhoto(publicId, image, classPublicId),
+  );
+}
+
+export function useSetPrimaryProductPhoto(publicId: string) {
+  return useStoreMutation((photoId: string) =>
+    setPrimaryProductPhoto(publicId, photoId),
+  );
+}
+
+export function useRemoveProductPhoto(publicId: string) {
+  return useStoreMutation((photoId: string) =>
+    removeProductPhoto(publicId, photoId),
+  );
 }
 
 export function useShipmentTracking(token: string) {

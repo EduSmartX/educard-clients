@@ -48,6 +48,7 @@ import FeedbackDetailScreen from '@/screens/shared/feedback/FeedbackDetailScreen
 import StoreCatalogScreen from '@/screens/shared/store/StoreCatalogScreen';
 import StoreCartScreen from '@/screens/shared/store/StoreCartScreen';
 import StoreOrdersScreen from '@/screens/shared/store/StoreOrdersScreen';
+import StoreSetupScreen from '@/screens/shared/store/StoreSetupScreen';
 import ShipmentTrackingScreen from '@/screens/shared/store/ShipmentTrackingScreen';
 import HelpSupportScreen from '@/screens/shared/HelpSupportScreen';
 import HolidaysScreen from '@/screens/shared/holidays/HolidaysScreen';
@@ -198,6 +199,7 @@ export function MainStackNavigator({ role }: MainStackNavigatorProps) {
         <Stack.Screen name="StoreCatalog" component={StoreCatalogScreen} />
         <Stack.Screen name="StoreCart" component={StoreCartScreen} />
         <Stack.Screen name="StoreOrders" component={StoreOrdersScreen} />
+        <Stack.Screen name="StoreSetup" component={StoreSetupScreen} />
         <Stack.Screen
           name="ShipmentTracking"
           component={ShipmentTrackingScreen}

@@ -21,6 +21,7 @@ import {
   Building2,
   Repeat,
   Users,
+  Settings2,
   ShoppingBag,
   Package,
   type LucideIcon,
@@ -163,6 +164,15 @@ export default function SettingsScreen() {
         iconColor: '#0891b2',
         iconBg: '#cffafe',
         screen: 'StoreOrders',
+      },
+      {
+        id: 'store-setup',
+        title: 'Store Setup',
+        subtitle: 'Product looks, photos and ID card designs',
+        icon: Settings2,
+        iconColor: '#4f46e5',
+        iconBg: '#e0e7ff',
+        screen: 'StoreSetup',
       },
       {
         id: 'holidays',

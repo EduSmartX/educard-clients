@@ -2,7 +2,11 @@
  * Store Cart Screen - review lines and place the order
  */
 
-import { CUSTOM_FEATURES_KEY, type CartItem } from '@educard/shared';
+import {
+  CUSTOM_FEATURES_KEY,
+  STORE_CONFIG_KEY,
+  type CartItem,
+} from '@educard/shared';
 import { useNavigation } from '@react-navigation/native';
 import { ChevronLeft, ShoppingCart, Trash2 } from 'lucide-react-native';
 import { useState } from 'react';
@@ -19,6 +23,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SubmitButton } from '@/components/common';
 import { EmptyState, LoadingState } from '@/components/common/ListStates';
 import {
+  describeStudentSizes,
+  formatCurrency,
+  lineStudentCount,
+  lineStudentSizes,
   useCart,
   useClearCart,
   usePlaceOrder,
@@ -29,18 +37,44 @@ import type { SharedStackNavigation } from '@/navigation/types';
 import { layoutStyles } from '@/styles';
 import { showToast } from '@/utils/toast';
 
-function formatCurrency(amount: string | number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 2,
-  }).format(Number(amount));
+/** Tap to show which student gets which size. */
+function StudentSizesBreakdown({ item }: { item: CartItem }) {
+  const [open, setOpen] = useState(false);
+  const lines = describeStudentSizes(lineStudentSizes(item.configuration));
+  if (lines.length === 0) {
+    return null;
+  }
+  return (
+    <View>
+      <TouchableOpacity onPress={() => setOpen(current => !current)}>
+        <Text style={styles.link}>
+          {open ? 'Hide sizes by student' : 'Sizes by student'}
+        </Text>
+      </TouchableOpacity>
+      {open &&
+        lines.map(line => (
+          <Text key={line} style={styles.cardMeta}>
+            {line}
+          </Text>
+        ))}
+    </View>
+  );
 }
 
 function describeConfiguration(item: CartItem): string {
   const parts: string[] = [];
+  const students = lineStudentCount(item.configuration);
+  if (students !== undefined) {
+    parts.push(`${students} ${students === 1 ? 'student' : 'students'}`);
+  }
 
   for (const [code, value] of Object.entries(item.configuration ?? {})) {
+    if (
+      code === STORE_CONFIG_KEY.STUDENT_IDS ||
+      code === STORE_CONFIG_KEY.STUDENTS
+    ) {
+      continue;
+    }
     if (code === CUSTOM_FEATURES_KEY) {
       for (const [name, custom] of Object.entries(
         value as Record<string, string>,
@@ -99,12 +133,15 @@ export default function StoreCartScreen() {
 
   const renderItem = ({ item }: { item: CartItem }) => {
     const summary = describeConfiguration(item);
+    // One piece per named student: change the students, not the count.
+    const perStudent = lineStudentCount(item.configuration) !== undefined;
     return (
       <View style={styles.card}>
         <View style={styles.cardTop}>
           <View style={styles.cardInfo}>
             <Text style={styles.cardTitle}>{item.product_name}</Text>
             {summary ? <Text style={styles.cardMeta}>{summary}</Text> : null}
+            <StudentSizesBreakdown item={item} />
             <Text style={styles.cardMeta}>
               {formatCurrency(item.unit_price)} each
             </Text>
@@ -118,31 +155,37 @@ export default function StoreCartScreen() {
         </View>
 
         <View style={styles.cardBottom}>
-          <View style={styles.stepper}>
-            <TouchableOpacity
-              style={styles.stepperButton}
-              onPress={() =>
-                updateItem.mutate({
-                  publicId: item.public_id,
-                  quantity: Math.max(1, item.quantity - 1),
-                })
-              }
-            >
-              <Text style={styles.stepperText}>−</Text>
-            </TouchableOpacity>
-            <Text style={styles.quantity}>{item.quantity}</Text>
-            <TouchableOpacity
-              style={styles.stepperButton}
-              onPress={() =>
-                updateItem.mutate({
-                  publicId: item.public_id,
-                  quantity: item.quantity + 1,
-                })
-              }
-            >
-              <Text style={styles.stepperText}>+</Text>
-            </TouchableOpacity>
-          </View>
+          {perStudent ? (
+            <Text style={styles.cardMeta}>
+              Qty {item.quantity} · one per student
+            </Text>
+          ) : (
+            <View style={styles.stepper}>
+              <TouchableOpacity
+                style={styles.stepperButton}
+                onPress={() =>
+                  updateItem.mutate({
+                    publicId: item.public_id,
+                    quantity: Math.max(1, item.quantity - 1),
+                  })
+                }
+              >
+                <Text style={styles.stepperText}>−</Text>
+              </TouchableOpacity>
+              <Text style={styles.quantity}>{item.quantity}</Text>
+              <TouchableOpacity
+                style={styles.stepperButton}
+                onPress={() =>
+                  updateItem.mutate({
+                    publicId: item.public_id,
+                    quantity: item.quantity + 1,
+                  })
+                }
+              >
+                <Text style={styles.stepperText}>+</Text>
+              </TouchableOpacity>
+            </View>
+          )}
           <Text style={styles.lineTotal}>
             {formatCurrency(item.line_total)}
           </Text>
@@ -237,6 +280,7 @@ const styles = StyleSheet.create({
   cardInfo: { flex: 1, paddingRight: 12 },
   cardTitle: { fontSize: 15, fontWeight: '600', color: '#111827' },
   cardMeta: { fontSize: 12, color: '#6b7280', marginTop: 2 },
+  link: { fontSize: 12, fontWeight: '600', color: '#2563eb', marginTop: 4 },
   cardBottom: {
     flexDirection: 'row',
     alignItems: 'center',

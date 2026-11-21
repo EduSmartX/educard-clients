@@ -41,7 +41,8 @@ export type MenuTarget =
   | 'ExceptionalWork'
   | 'StoreCatalog'
   | 'StoreCart'
-  | 'StoreOrders';
+  | 'StoreOrders'
+  | 'StoreSetup';
 
 // Compile-time guard: every non-tab MenuTarget must be a registered shared screen.
 type SharedMenuTarget = Exclude<MenuTarget, 'Settings'>;
