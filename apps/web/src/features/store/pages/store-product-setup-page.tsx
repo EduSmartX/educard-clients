@@ -12,7 +12,6 @@ import {
   ArrowLeft,
   CheckCircle2,
   Circle,
-  ImageOff,
   ImagePlus,
   RotateCcw,
   Trash2,
@@ -20,6 +19,7 @@ import {
 import { toast } from 'sonner';
 import {
   PRODUCT_KIND,
+  STORE_UI_MANAGED_KEYS,
   getErrorMessage,
   type CatalogProduct,
   type ProductAttribute,
@@ -33,7 +33,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { ROUTES } from '@/constants/app-config';
 import { cn } from '@/lib/utils';
-import { getMediaUrl } from '@/lib/utils/media-utils';
 import {
   ClassScopePicker,
   WHOLE_SCHOOL_SCOPE,
@@ -43,6 +42,12 @@ import {
   type ClassScope,
 } from '../components/class-scope-picker';
 import { AttributeField } from '../components/order/attribute-field';
+import {
+  CustomFeaturesEditor,
+  customFeaturesPayload,
+  type CustomFeatureRow,
+} from '../components/order/custom-features-editor';
+import { ProductImageCarousel } from '../components/product-image-carousel';
 import { OptionPill, OrderStep } from '../components/order/order-step';
 import { ProductPhotoGallery } from '../components/setup/product-photo-gallery';
 import {
@@ -282,6 +287,14 @@ function ClassDifferences({
 function ProductSetupForm({ product }: { product: CatalogProduct }) {
   const [name, setName] = useState(product.name);
   const [description, setDescription] = useState(product.description);
+  const [instructions, setInstructions] = useState(product.instructions);
+  const [customRows, setCustomRows] = useState<CustomFeatureRow[]>(() =>
+    Object.entries(product.custom_fields ?? {}).map(([label, value], index) => ({
+      id: index + 1,
+      name: label,
+      value,
+    }))
+  );
   const [values, setValues] = useState<Record<string, string>>(
     () => product.organization_properties ?? {}
   );
@@ -291,6 +304,9 @@ function ProductSetupForm({ product }: { product: CatalogProduct }) {
   const grades = useGradeOptions();
 
   const attributes = organizationScopedAttributes(product.attributes);
+  const orderAttributes = product.attributes.filter(
+    (attribute) => attribute.scope === 'order' && !STORE_UI_MANAGED_KEYS.includes(attribute.code)
+  );
   const required = attributes.filter((attribute) => attribute.is_required);
   const requiredNames = required.map((attribute) => attribute.display_name || attribute.code);
   // Server-side needs that are not form fields (approved ID card design, book list).
@@ -314,7 +330,14 @@ function ProductSetupForm({ product }: { product: CatalogProduct }) {
 
   const submit = (publish: boolean) =>
     save.mutate(
-      { name, description, properties: values, publish },
+      {
+        name,
+        description,
+        properties: values,
+        instructions,
+        custom_fields: customFeaturesPayload(customRows),
+        publish,
+      },
       {
         onSuccess: (response) => toast.success(response.message),
         onError: (error: unknown) => toast.error(getErrorMessage(error, 'Could not save')),
@@ -332,18 +355,13 @@ function ProductSetupForm({ product }: { product: CatalogProduct }) {
           title="Product information"
           description="Shown to your staff when ordering. Leave as is to use EduCard's wording."
         >
-          <div className="grid gap-4 sm:grid-cols-[8rem_minmax(0,1fr)]">
-            <div className="bg-muted flex aspect-square items-center justify-center overflow-hidden rounded-lg border">
-              {product.image_url ? (
-                <img
-                  src={getMediaUrl(product.image_url)}
-                  alt=""
-                  className="h-full w-full object-contain"
-                />
-              ) : (
-                <ImageOff className="text-muted-foreground h-8 w-8" aria-hidden />
-              )}
-            </div>
+          <div className="grid gap-5 sm:grid-cols-[16rem_minmax(0,1fr)]">
+            <ProductImageCarousel
+              images={product.images}
+              alt={product.name}
+              className="aspect-square"
+              thumbnails
+            />
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="product-name">Name</Label>
@@ -440,6 +458,65 @@ function ProductSetupForm({ product }: { product: CatalogProduct }) {
               . At least one approved list is needed to publish.
             </p>
           )}
+        </OrderStep>
+
+        {orderAttributes.length > 0 && (
+          <OrderStep
+            step={nextStep()}
+            title="Chosen when ordering"
+            description="These are picked on each order (or per student). Shown here so you know what staff will be asked for."
+          >
+            <ul className="divide-y rounded-lg border">
+              {orderAttributes.map((attribute) => (
+                <li
+                  key={attribute.code}
+                  className="flex flex-wrap items-center justify-between gap-2 p-3"
+                >
+                  <div className="min-w-0">
+                    <p className="font-medium">{attribute.display_name}</p>
+                    {attribute.options.length > 0 && (
+                      <p className="text-muted-foreground truncate text-sm">
+                        {attribute.options.map((option) => option.display_label).join(', ')}
+                      </p>
+                    )}
+                  </div>
+                  {attribute.is_required ? (
+                    <Badge className="bg-rose-100 text-rose-800 hover:bg-rose-100">Mandatory</Badge>
+                  ) : (
+                    <Badge className="bg-sky-100 text-sky-800 hover:bg-sky-100">Optional</Badge>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </OrderStep>
+        )}
+
+        <OrderStep
+          step={nextStep()}
+          title="Your own details (optional)"
+          description="Instructions and extra fields of your own for this product. EduCard sees them on every order."
+        >
+          <div className="space-y-2">
+            <Label htmlFor="product-instructions">Instructions for EduCard</Label>
+            <Textarea
+              id="product-instructions"
+              rows={3}
+              maxLength={2000}
+              placeholder="e.g. Pack by class, deliver to the front office"
+              value={instructions}
+              onChange={(event) => setInstructions(event.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Your own fields</Label>
+            <CustomFeaturesEditor
+              rows={customRows}
+              onChange={setCustomRows}
+              namePlaceholder="Field name, e.g. Crest"
+              valuePlaceholder="Value, e.g. Gold lion on the pocket"
+              addLabel="Add a field"
+            />
+          </div>
         </OrderStep>
 
         {product.kind !== PRODUCT_KIND.BOOK_SET && (

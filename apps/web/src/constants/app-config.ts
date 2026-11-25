@@ -292,6 +292,11 @@ export const ROUTES = {
     SETUP: '/store/setup',
     // One product's setup & publish page; build links with storeProductSetupPath(publicId).
     PRODUCT_SETUP: '/store/setup/products/:productId',
+    // Designed ID cards the school approves before EduCard prints (email links land on PROOF).
+    PROOFS: '/store/proofs',
+    PROOF: '/store/proofs/:proofId',
+    // Send the school's own ID card artwork to EduCard (optional ?product=<school product id>).
+    ID_CARD_UPLOAD: '/store/setup/id-cards/upload',
     // Path printed into shipment QR codes by the backend ({FRONTEND_URL}/track/<token>).
     TRACK: '/track/:token',
   },

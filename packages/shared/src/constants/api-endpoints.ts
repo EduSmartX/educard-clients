@@ -456,6 +456,10 @@ export const API_ENDPOINTS = {
     CART_ITEM_DETAIL: (publicId: string) => `/store/cart/items/${publicId}/`,
     ORDERS: "/store/orders/",
     ORDER_DETAIL: (publicId: string) => `/store/orders/${publicId}/`,
+    PROOFS: "/store/proofs/",
+    PROOF_DETAIL: (publicId: string) => `/store/proofs/${publicId}/`,
+    PROOF_DECISION: (publicId: string) => `/store/proofs/${publicId}/decision/`,
+    STUDENT_CARD: (studentId: string) => `/store/student-cards/${studentId}/`,
   },
 } as const;
 

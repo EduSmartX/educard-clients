@@ -1,10 +1,10 @@
-import { ImageOff, Plus, Settings2 } from 'lucide-react';
+import { Plus, Settings2 } from 'lucide-react';
 import { PRODUCT_KIND, type CatalogProduct } from '@educard/shared';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { getMediaUrl } from '@/lib/utils/media-utils';
 import { formatCurrency } from '../utils/store-format';
+import { ProductImageCarousel } from './product-image-carousel';
 
 interface ProductCardProps {
   product: CatalogProduct;
@@ -18,17 +18,8 @@ export function ProductCard({ product, onConfigure, onSetup }: ProductCardProps)
 
   return (
     <Card className="flex flex-col overflow-hidden">
-      <div className="bg-muted flex h-40 items-center justify-center">
-        {product.image_url ? (
-          <img
-            src={getMediaUrl(product.image_url)}
-            alt={product.name}
-            className="h-full w-full object-contain"
-            loading="lazy"
-          />
-        ) : (
-          <ImageOff className="text-muted-foreground h-10 w-10" aria-hidden />
-        )}
+      <div className="p-3 pb-0">
+        <ProductImageCarousel images={product.images} alt={product.name} className="h-40" />
       </div>
 
       <CardContent className="flex-1 space-y-3 pt-4">

@@ -31,9 +31,18 @@ export function hasHalfFilledRow(rows: CustomFeatureRow[]): boolean {
 interface CustomFeaturesEditorProps {
   rows: CustomFeatureRow[];
   onChange: (rows: CustomFeatureRow[]) => void;
+  namePlaceholder?: string;
+  valuePlaceholder?: string;
+  addLabel?: string;
 }
 
-export function CustomFeaturesEditor({ rows, onChange }: CustomFeaturesEditorProps) {
+export function CustomFeaturesEditor({
+  rows,
+  onChange,
+  namePlaceholder = 'Feature, e.g. Embroidery',
+  valuePlaceholder = 'Value, e.g. School crest on pocket',
+  addLabel = 'Add a detail',
+}: CustomFeaturesEditorProps) {
   const update = (id: number, patch: Partial<CustomFeatureRow>) =>
     onChange(rows.map((row) => (row.id === id ? { ...row, ...patch } : row)));
 
@@ -42,12 +51,12 @@ export function CustomFeaturesEditor({ rows, onChange }: CustomFeaturesEditorPro
       {rows.map((row) => (
         <div key={row.id} className="flex items-center gap-2">
           <Input
-            placeholder="Feature, e.g. Embroidery"
+            placeholder={namePlaceholder}
             value={row.name}
             onChange={(event) => update(row.id, { name: event.target.value })}
           />
           <Input
-            placeholder="Value, e.g. School crest on pocket"
+            placeholder={valuePlaceholder}
             value={row.value}
             onChange={(event) => update(row.id, { value: event.target.value })}
           />
@@ -70,7 +79,7 @@ export function CustomFeaturesEditor({ rows, onChange }: CustomFeaturesEditorPro
         onClick={() => onChange([...rows, { id: Date.now(), name: '', value: '' }])}
       >
         <Plus className="mr-1 h-4 w-4" />
-        Add a detail
+        {addLabel}
       </Button>
     </div>
   );

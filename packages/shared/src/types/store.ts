@@ -72,6 +72,12 @@ export interface CatalogProduct {
   master_description: string;
   custom_name: string;
   custom_description: string;
+  /** The school's own notes for EduCard on this product; sent with every order line. */
+  instructions: string;
+  /** The school's own fields (name -> value); sent with every order line. */
+  custom_fields: Record<string, string>;
+  /** Every picture to show, the school's own first; EduCard's default when it has none. */
+  images: string[];
   is_customized: boolean;
   /** Only published products can be ordered. */
   publish_status: PublishStatus;
@@ -88,6 +94,8 @@ export interface ProductCustomizationPayload {
   name?: string;
   description?: string;
   properties?: Record<string, string>;
+  instructions?: string;
+  custom_fields?: Record<string, string>;
   publish?: boolean;
 }
 
@@ -231,6 +239,8 @@ export interface IdCardDesign {
   orientation: CardOrientation;
   is_library: boolean;
   has_back: boolean;
+  /** EduCard's ID card product this design is made for; empty = any ID card product. */
+  product_name: string;
   front_preview_url: string;
   back_preview_url: string;
 }
@@ -244,6 +254,9 @@ export interface IdCardTemplateDesign {
 }
 
 export interface IdCardTemplate extends ReviewedSubmission {
+  /** The school's ID card product this card is for; empty = any ID card product. */
+  product_public_id: string;
+  product_name: string;
   is_default: boolean;
   /** The artwork the school picked or uploaded. */
   image_url: string;
@@ -260,10 +273,14 @@ export interface SubmitIdCardTemplatePayload {
   class_public_id?: string;
   /** Several classes at once (one template per grade). Omit/empty = whole school. */
   class_public_ids?: string[];
+  /** The school's ID card product (catalog `public_id`) this card is for. */
+  product_public_id?: string;
 }
 
 export interface AdoptIdCardDesignPayload {
   design_public_id: string;
+  /** The school's ID card product (catalog `public_id`) this card is for. */
+  product_public_id?: string;
   /** Omit for the school-wide default. */
   class_public_id?: string;
   /** Several classes at once (one template per grade). */
@@ -424,4 +441,83 @@ export interface ShipmentEventPayload {
   location?: string;
   note?: string;
   expected_delivery_date?: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// ID card proofs: the designed cards the school approves before EduCard prints
+// ---------------------------------------------------------------------------
+
+export type ProofStatus =
+  | "sent"
+  | "changes_requested"
+  | "approved"
+  | "superseded";
+export type ProofRole = "admin" | "class_teacher";
+export type ProofDecisionValue = "approved" | "changes_requested";
+
+export interface FlaggedStudent {
+  student: string;
+  note: string;
+}
+
+/** One required approver's answer (empty `decision` until they answer). */
+export interface ProofDecisionRow {
+  role: ProofRole;
+  role_label: string;
+  /** Name of the class teacher who has to approve; empty for the school admin. */
+  required_person: string;
+  decision: ProofDecisionValue | "";
+  decided_by: string;
+  decided_at: string | null;
+  comment: string;
+  flagged_students: FlaggedStudent[];
+}
+
+export interface IdCardProofSummary {
+  public_id: string;
+  order_number: string;
+  product_name: string;
+  class_name: string;
+  student_count: number;
+  version: number;
+  status: ProofStatus;
+  status_label: string;
+  notes: string;
+  sent_at: string;
+  approved_at: string | null;
+  decisions: ProofDecisionRow[];
+  /** The caller's approver role for this proof. */
+  my_role: ProofRole | "";
+  can_decide: boolean;
+  my_decision: ProofDecisionValue | "";
+}
+
+export interface ProofStudent {
+  public_id: string;
+  name: string;
+  roll_number: string;
+  front_preview_url: string;
+  /** Empty when the design has no back. */
+  back_preview_url: string;
+}
+
+export interface IdCardProofDetail extends IdCardProofSummary {
+  orientation: CardOrientation;
+  students: ProofStudent[];
+}
+
+export interface ProofDecisionPayload {
+  decision: ProofDecisionValue;
+  comment?: string;
+  flagged_students?: FlaggedStudent[];
+}
+
+/** A student's card rendered from the school's approved design. */
+export interface StudentCard {
+  available: boolean;
+  design_name?: string;
+  orientation?: CardOrientation;
+  front_preview_url?: string;
+  back_preview_url?: string;
+  required_fields?: string[];
 }

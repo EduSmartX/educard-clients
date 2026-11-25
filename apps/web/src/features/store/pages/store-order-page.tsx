@@ -129,7 +129,9 @@ function OrderForm({ product }: { product: CatalogProduct }) {
   const section = (classesResponse?.data ?? []).find((item) => item.public_id === classId);
   const { data: templatesResponse } = useIdCardTemplates({ status: APPROVAL_STATUS.APPROVED });
   const template =
-    isIdCard && section ? resolveTemplate(templatesResponse?.data ?? [], section) : undefined;
+    isIdCard && section
+      ? resolveTemplate(templatesResponse?.data ?? [], section, product.public_id)
+      : undefined;
 
   const classStudents = useClassStudents(choosesStudents && hasClass ? classId : undefined);
   const chosenStudents = useMemo(

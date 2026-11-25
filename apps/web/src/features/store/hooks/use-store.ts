@@ -9,6 +9,8 @@ import {
   type CatalogQueryParams,
   type OrderQueryParams,
   type PlaceOrderPayload,
+  type ProofDecisionPayload,
+  type ProofStatus,
   type ProductCustomizationPayload,
   type ShipmentEventPayload,
   type SubmissionQueryParams,
@@ -19,7 +21,11 @@ import {
   addCartItem,
   addProductPhoto,
   adoptIdCardDesign,
+  decideProof,
   fetchCardPreview,
+  fetchProofDetail,
+  fetchProofs,
+  fetchStudentCard,
   fetchIdCardDesigns,
   fetchProductLooks,
   removeProductPhoto,
@@ -114,6 +120,42 @@ export function useOrders(params?: OrderQueryParams) {
     queryKey: QueryKeys.STORE.ORDERS(params),
     queryFn: () => fetchOrders(params),
     refetchOnMount: 'always',
+  });
+}
+
+export function useProofs(status?: ProofStatus) {
+  return useQuery({
+    queryKey: QueryKeys.STORE.PROOFS({ status }),
+    queryFn: () => fetchProofs(status),
+    refetchOnMount: 'always',
+  });
+}
+
+export function useProofDetail(publicId: string) {
+  return useQuery({
+    queryKey: QueryKeys.STORE.PROOF_DETAIL(publicId),
+    queryFn: () => fetchProofDetail(publicId),
+    enabled: Boolean(publicId),
+  });
+}
+
+export function useDecideProof(publicId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: ProofDecisionPayload) => decideProof(publicId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['store', 'proofs'] });
+    },
+  });
+}
+
+/** The card a student prints with, rendered from the school's approved design. */
+export function useStudentCard(studentId: string | undefined) {
+  return useQuery({
+    queryKey: QueryKeys.STORE.STUDENT_CARD(studentId ?? ''),
+    queryFn: () => fetchStudentCard(studentId as string),
+    enabled: Boolean(studentId),
   });
 }
 
@@ -227,10 +269,10 @@ export function useUnpublishProduct(publicId: string) {
   return useStoreMutation(() => unpublishProduct(publicId));
 }
 
-export function useIdCardDesigns() {
+export function useIdCardDesigns(product?: string) {
   return useQuery({
-    queryKey: QueryKeys.STORE.ID_CARD_DESIGNS,
-    queryFn: fetchIdCardDesigns,
+    queryKey: [...QueryKeys.STORE.ID_CARD_DESIGNS, product ?? ''],
+    queryFn: () => fetchIdCardDesigns(product),
     staleTime: 5 * 60 * 1000,
   });
 }

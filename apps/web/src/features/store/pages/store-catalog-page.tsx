@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ROUTES } from '@/constants/app-config';
 import { ProductCard } from '../components/product-card';
+import { StoreEmptyState } from '../components/store-empty-state';
 import { useCart, useCatalog } from '../hooks/use-store';
 import { storeOrderPath, storeProductSetupPath } from '../utils/store-format';
 
@@ -85,13 +86,10 @@ export default function StoreCatalogPage() {
           ))}
         </div>
       ) : products.length === 0 ? (
-        <div className="rounded-lg border border-dashed py-16 text-center">
-          <ShoppingBag className="text-muted-foreground mx-auto h-10 w-10" aria-hidden />
-          <p className="mt-3 font-medium">No products available yet</p>
-          <p className="text-muted-foreground text-sm">
-            Your administrator has not enabled any store products for this school.
-          </p>
-        </div>
+        <StoreEmptyState
+          title="No products available yet"
+          description="{company} has not added any store products for your school yet. Check back soon."
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {products.map((product) => (

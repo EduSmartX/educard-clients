@@ -25,7 +25,7 @@ import { pickStoreImage } from '../utils/pick-image';
 import { storeStyles as s } from './store-styles';
 
 /** EduCard's per-scope cap (StoreLimits.MAX_PRODUCT_IMAGES). */
-const MAX_PHOTOS = 8;
+const MAX_PHOTOS = 5;
 
 interface ProductPhotoGridProps {
   productPublicId: string;

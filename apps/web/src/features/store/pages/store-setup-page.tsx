@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import { Settings2 } from 'lucide-react';
 import { PageHeader } from '@/components/common';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,6 +11,11 @@ const SELECTED_TAB_CLASS =
   'data-[state=active]:bg-sky-100 data-[state=active]:text-sky-800 data-[state=active]:shadow-none';
 
 export default function StoreSetupPage() {
+  // ?tab=templates opens the ID card tab (used when coming back from the upload page).
+  const [searchParams] = useSearchParams();
+  const tab = searchParams.get('tab');
+  const initialTab = tab === 'templates' || tab === 'books' ? tab : 'products';
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -18,7 +24,7 @@ export default function StoreSetupPage() {
         icon={Settings2}
       />
 
-      <Tabs defaultValue="products">
+      <Tabs defaultValue={initialTab}>
         <TabsList>
           <TabsTrigger value="products" className={SELECTED_TAB_CLASS}>
             Product settings

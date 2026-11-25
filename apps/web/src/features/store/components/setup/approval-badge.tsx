@@ -1,15 +1,20 @@
 import { APPROVAL_STATUS, APPROVAL_STATUS_LABELS, type ApprovalStatus } from '@educard/shared';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
-const VARIANT: Record<ApprovalStatus, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  [APPROVAL_STATUS.PENDING]: 'secondary',
-  [APPROVAL_STATUS.APPROVED]: 'default',
-  [APPROVAL_STATUS.REJECTED]: 'destructive',
-  [APPROVAL_STATUS.SUPERSEDED]: 'outline',
+const TONE: Record<ApprovalStatus, string> = {
+  [APPROVAL_STATUS.PENDING]: 'bg-amber-100 text-amber-800 hover:bg-amber-100',
+  [APPROVAL_STATUS.APPROVED]: 'bg-emerald-100 text-emerald-800 hover:bg-emerald-100',
+  [APPROVAL_STATUS.REJECTED]: 'bg-rose-100 text-rose-800 hover:bg-rose-100',
+  [APPROVAL_STATUS.SUPERSEDED]: 'bg-slate-100 text-slate-600 hover:bg-slate-100',
 };
 
 export function ApprovalBadge({ status }: { status: ApprovalStatus }) {
-  return <Badge variant={VARIANT[status]}>{APPROVAL_STATUS_LABELS[status] ?? status}</Badge>;
+  return (
+    <Badge className={cn('shrink-0 font-medium', TONE[status])}>
+      {APPROVAL_STATUS_LABELS[status] ?? status}
+    </Badge>
+  );
 }
 
 /** EduCard's reason, shown when a submission was rejected. */

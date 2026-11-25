@@ -17,7 +17,7 @@ import {
 } from '../../hooks/use-store';
 
 /** EduCard's per-scope cap (StoreLimits.MAX_PRODUCT_IMAGES). */
-const MAX_PHOTOS = 8;
+const MAX_PHOTOS = 5;
 
 interface ProductPhotoGalleryProps {
   productPublicId: string;

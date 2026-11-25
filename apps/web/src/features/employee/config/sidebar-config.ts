@@ -256,6 +256,12 @@ export const employeeSidebarConfig: SidebarSection[] = [
     defaultCollapsed: true,
     items: [
       {
+        id: 'id-card-approvals',
+        label: 'ID Card Approvals',
+        icon: ClipboardCheck,
+        path: ROUTES.STORE.PROOFS,
+      },
+      {
         id: 'feedback',
         label: 'Feedback',
         icon: MessageSquare,

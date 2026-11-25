@@ -9,6 +9,11 @@ import {
   type AdoptIdCardDesignPayload,
   type ClassLookPayload,
   type IdCardDesign,
+  type IdCardProofDetail,
+  type IdCardProofSummary,
+  type ProofDecisionPayload,
+  type ProofStatus,
+  type StudentCard,
   type ProductLooks,
   type ApiDetailResponse,
   type ApiListResponse,
@@ -156,6 +161,9 @@ export async function submitIdCardTemplate(
   for (const classId of payload.class_public_ids ?? []) {
     formData.append('class_public_ids', classId);
   }
+  if (payload.product_public_id) {
+    formData.append('product_public_id', payload.product_public_id);
+  }
   const response = await apiClient.post(API_ENDPOINTS.STORE.ID_CARD_TEMPLATES, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
@@ -192,8 +200,13 @@ export async function withdrawBookSet(publicId: string): Promise<ApiMessageRespo
   return response.data;
 }
 
-export async function fetchIdCardDesigns(): Promise<ApiDetailResponse<IdCardDesign[]>> {
-  const response = await apiClient.get(API_ENDPOINTS.STORE.ID_CARD_DESIGNS);
+/** EduCard's designs; with `product` only those usable for that school product. */
+export async function fetchIdCardDesigns(
+  product?: string
+): Promise<ApiDetailResponse<IdCardDesign[]>> {
+  const response = await apiClient.get(API_ENDPOINTS.STORE.ID_CARD_DESIGNS, {
+    params: product ? { product } : undefined,
+  });
   return response.data;
 }
 
@@ -205,6 +218,35 @@ export async function adoptIdCardDesign(
 }
 
 /** A rendered card side (PNG) from a server preview path, as a Blob. */
+export async function fetchProofs(
+  status?: ProofStatus
+): Promise<ApiDetailResponse<IdCardProofSummary[]>> {
+  const response = await apiClient.get(API_ENDPOINTS.STORE.PROOFS, {
+    params: status ? { status } : undefined,
+  });
+  return response.data;
+}
+
+export async function fetchProofDetail(
+  publicId: string
+): Promise<ApiDetailResponse<IdCardProofDetail>> {
+  const response = await apiClient.get(API_ENDPOINTS.STORE.PROOF_DETAIL(publicId));
+  return response.data;
+}
+
+export async function decideProof(
+  publicId: string,
+  payload: ProofDecisionPayload
+): Promise<ApiDetailResponse<IdCardProofSummary>> {
+  const response = await apiClient.post(API_ENDPOINTS.STORE.PROOF_DECISION(publicId), payload);
+  return response.data;
+}
+
+export async function fetchStudentCard(studentId: string): Promise<ApiDetailResponse<StudentCard>> {
+  const response = await apiClient.get(API_ENDPOINTS.STORE.STUDENT_CARD(studentId));
+  return response.data;
+}
+
 export async function fetchCardPreview(path: string, student?: string): Promise<Blob> {
   const response = await apiClient.get(apiRelativePath(path), {
     params: student ? { student } : undefined,

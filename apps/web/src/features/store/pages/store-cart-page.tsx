@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ShoppingCart, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { StudentSizeEntry } from '@educard/shared';
@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { ROUTES } from '@/constants/app-config';
 import { getMediaUrl } from '@/lib/utils/media-utils';
+import { StoreEmptyState } from '../components/store-empty-state';
 import {
   useCart,
   useClearCart,
@@ -106,13 +107,15 @@ export default function StoreCartPage() {
       />
 
       {items.length === 0 ? (
-        <div className="rounded-lg border border-dashed py-16 text-center">
-          <ShoppingCart className="text-muted-foreground mx-auto h-10 w-10" aria-hidden />
-          <p className="mt-3 font-medium">Your cart is empty</p>
-          <Button asChild className="mt-4">
-            <Link to={ROUTES.STORE.CATALOG}>Browse the store</Link>
-          </Button>
-        </div>
+        <StoreEmptyState
+          title="Your cart is empty"
+          description="Add ID cards, uniforms and supplies from the store to see them here."
+          action={{
+            label: 'Browse the store',
+            icon: ShoppingCart,
+            onClick: () => navigate(ROUTES.STORE.CATALOG),
+          }}
+        />
       ) : (
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="space-y-4 lg:col-span-2">

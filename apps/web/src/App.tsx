@@ -287,7 +287,12 @@ const FeedbackDetailPage = lazy(() => import('./features/feedback/pages/feedback
 const StoreCatalogPage = lazy(() => import('./features/store/pages/store-catalog-page'));
 const StoreCartPage = lazy(() => import('./features/store/pages/store-cart-page'));
 const StoreOrderPage = lazy(() => import('./features/store/pages/store-order-page'));
+const StoreIdCardUploadPage = lazy(
+  () => import('./features/store/pages/store-id-card-upload-page')
+);
 const StoreProductSetupPage = lazy(() => import('./features/store/pages/store-product-setup-page'));
+const StoreProofsPage = lazy(() => import('./features/store/pages/store-proofs-page'));
+const StoreProofReviewPage = lazy(() => import('./features/store/pages/store-proof-review-page'));
 const StoreOrdersPage = lazy(() => import('./features/store/pages/store-orders-page'));
 const StoreSetupPage = lazy(() => import('./features/store/pages/store-setup-page'));
 const ShipmentTrackingPage = lazy(() => import('./features/store/pages/shipment-tracking-page'));
@@ -488,8 +493,12 @@ function App() {
             <Route path={ROUTES.STORE.CART} element={<StoreCartPage />} />
             <Route path={ROUTES.STORE.ORDER} element={<StoreOrderPage />} />
             <Route path={ROUTES.STORE.ORDERS} element={<StoreOrdersPage />} />
+            {/* ID card approvals: school admin and the class teacher (enforced by the API) */}
+            <Route path={ROUTES.STORE.PROOFS} element={<StoreProofsPage />} />
+            <Route path={ROUTES.STORE.PROOF} element={<StoreProofReviewPage />} />
             <Route path={ROUTES.STORE.SETUP} element={<StoreSetupPage />} />
             <Route path={ROUTES.STORE.PRODUCT_SETUP} element={<StoreProductSetupPage />} />
+            <Route path={ROUTES.STORE.ID_CARD_UPLOAD} element={<StoreIdCardUploadPage />} />
             {/* Shipment QR target: school admins and EduCard staff; enforced by the API */}
             <Route path={ROUTES.STORE.TRACK} element={<ShipmentTrackingPage />} />
 

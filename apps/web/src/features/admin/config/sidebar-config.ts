@@ -342,6 +342,12 @@ export const adminSidebarConfig: SidebarSection[] = [
         path: ROUTES.STORE.ORDERS,
       },
       {
+        id: 'store-proofs',
+        label: 'ID Card Approvals',
+        icon: ClipboardCheck,
+        path: ROUTES.STORE.PROOFS,
+      },
+      {
         id: 'store-setup',
         label: 'Store Setup',
         icon: Settings2,

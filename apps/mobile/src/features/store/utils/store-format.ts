@@ -38,18 +38,33 @@ export function oneSectionPerGrade(sections: Class[]): Class[] {
   return Array.from(byGrade.values());
 }
 
-/** The approved template that will print for a section: its grade's, else the default. */
+/**
+ * The approved template that will print for a section of an ID card product: the
+ * product's own card first (its grade's, else its school-wide one), then the same two
+ * for general cards that are not tied to a product.
+ */
 export function resolveTemplate(
   templates: IdCardTemplate[],
   section: Class | undefined,
+  productId?: string,
 ): IdCardTemplate | undefined {
   const grade = section?.class_master?.name;
-  return (
-    templates.find(
-      template =>
-        !template.is_default && Boolean(grade) && template.class_name === grade,
-    ) ?? templates.find(template => template.is_default)
-  );
+  const pools = [
+    ...(productId
+      ? [templates.filter(item => item.product_public_id === productId)]
+      : []),
+    templates.filter(item => !item.product_public_id),
+  ];
+  for (const pool of pools) {
+    const found =
+      pool.find(
+        item => !item.is_default && Boolean(grade) && item.class_name === grade,
+      ) ?? pool.find(item => item.is_default);
+    if (found) {
+      return found;
+    }
+  }
+  return undefined;
 }
 
 /**

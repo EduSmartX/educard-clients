@@ -140,7 +140,11 @@ function OrderForm({ product }: { product: CatalogProduct }) {
   );
   const template =
     isIdCard && section
-      ? resolveTemplate(templatesResponse?.data ?? [], section)
+      ? resolveTemplate(
+          templatesResponse?.data ?? [],
+          section,
+          product.public_id,
+        )
       : undefined;
   const bookSets = bookSetsResponse?.data ?? [];
 
