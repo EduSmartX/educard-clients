@@ -14,6 +14,7 @@ export * from './deleted-view-toggle';
 export * from './header-action-rows';
 export { ActionButtonGroup } from './action-button-group';
 export { PageHeader } from './page-header';
+export { InfoPoints } from './info-points';
 export { ContactSupportCard } from './contact-support-card';
 export * from './form-actions';
 export { ResourceListLayout } from './resource-list-layout';

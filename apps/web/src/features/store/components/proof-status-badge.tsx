@@ -9,6 +9,21 @@ const TONE: Record<ProofStatus, string> = {
   superseded: 'bg-slate-100 text-slate-600 hover:bg-slate-100',
 };
 
-export function ProofStatusBadge({ status, label }: { status: ProofStatus; label: string }) {
-  return <Badge className={cn('shrink-0 font-medium', TONE[status])}>{label}</Badge>;
+const CANCELLED_TONE = 'bg-rose-100 text-rose-800 hover:bg-rose-100';
+
+/** `cancelled`: the order was cancelled, so the proof is shown in red whatever its status. */
+export function ProofStatusBadge({
+  status,
+  label,
+  cancelled = false,
+}: {
+  status: ProofStatus;
+  label: string;
+  cancelled?: boolean;
+}) {
+  return (
+    <Badge className={cn('shrink-0 font-medium', cancelled ? CANCELLED_TONE : TONE[status])}>
+      {label}
+    </Badge>
+  );
 }

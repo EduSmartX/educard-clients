@@ -50,6 +50,9 @@ import {
 import { ProductImageCarousel } from '../components/product-image-carousel';
 import { OptionPill, OrderStep } from '../components/order/order-step';
 import { ProductPhotoGallery } from '../components/setup/product-photo-gallery';
+import { IdCardTemplatesPanel } from '../components/setup/id-card-templates-panel';
+
+const ID_CARD_DESIGN_ANCHOR = 'id-card-design';
 import {
   useAddProductPhoto,
   useCatalog,
@@ -311,12 +314,17 @@ function ProductSetupForm({ product }: { product: CatalogProduct }) {
   const requiredNames = required.map((attribute) => attribute.display_name || attribute.code);
   // Server-side needs that are not form fields (approved ID card design, book list).
   const otherBlockers = product.publish_blockers.filter((item) => !requiredNames.includes(item));
-  const checklist = [
+  const checklist: { label: string; done: boolean; anchor?: string }[] = [
     ...required.map((attribute) => ({
       label: attribute.display_name,
       done: Boolean(values[attribute.code]),
     })),
-    ...otherBlockers.map((item) => ({ label: item, done: false })),
+    ...otherBlockers.map((item) => ({
+      label: item,
+      done: false,
+      // The only non-form need on an ID card product is its design: jump to that step.
+      anchor: product.kind === PRODUCT_KIND.ID_CARD ? ID_CARD_DESIGN_ANCHOR : undefined,
+    })),
   ];
   const ready = checklist.every((item) => item.done);
 
@@ -491,6 +499,19 @@ function ProductSetupForm({ product }: { product: CatalogProduct }) {
           </OrderStep>
         )}
 
+        {product.kind === PRODUCT_KIND.ID_CARD && (
+          <div id={ID_CARD_DESIGN_ANCHOR} className="scroll-mt-24">
+            <OrderStep
+              step={nextStep()}
+              title="ID card design (mandatory)"
+              description="The design your cards are printed with. Pick an EduCard design (live at once), or upload your own artwork for EduCard to turn into a printable design."
+              complete={otherBlockers.length === 0}
+            >
+              <IdCardTemplatesPanel fixedProductId={product.public_id} />
+            </OrderStep>
+          </div>
+        )}
+
         <OrderStep
           step={nextStep()}
           title="Your own details (optional)"
@@ -535,7 +556,8 @@ function ProductSetupForm({ product }: { product: CatalogProduct }) {
                   <ProductPhotoGallery
                     productPublicId={product.public_id}
                     photos={looks.data?.data.school.photos ?? []}
-                    emptyHint="No school photos yet: EduCard's picture is shown."
+                    emptyHint="No school photos yet, so EduCard's pictures below are shown."
+                    fallbackImages={product.images}
                   />
                 </div>
                 {classesWithPhotos.map((look) => (
@@ -591,9 +613,23 @@ function ProductSetupForm({ product }: { product: CatalogProduct }) {
                     ) : (
                       <Circle className="h-4 w-4 text-amber-500" aria-hidden />
                     )}
-                    <span className={cn(item.done && 'text-muted-foreground line-through')}>
-                      {item.label}
-                    </span>
+                    {item.anchor && !item.done ? (
+                      <button
+                        type="button"
+                        className="text-left font-medium text-sky-700 underline-offset-2 hover:underline dark:text-sky-400"
+                        onClick={() =>
+                          document
+                            .getElementById(item.anchor as string)
+                            ?.scrollIntoView({ behavior: 'smooth' })
+                        }
+                      >
+                        {item.label}: choose it
+                      </button>
+                    ) : (
+                      <span className={cn(item.done && 'text-muted-foreground line-through')}>
+                        {item.label}
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -601,7 +637,7 @@ function ProductSetupForm({ product }: { product: CatalogProduct }) {
             {!ready && (
               <p className="flex items-start gap-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-                Fill every mandatory field to publish.
+                Complete every item above to publish.
               </p>
             )}
             {product.is_published ? (

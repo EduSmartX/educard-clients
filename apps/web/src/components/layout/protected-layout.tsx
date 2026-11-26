@@ -11,6 +11,7 @@ import { getMediaUrl } from '@/lib/utils/media-utils';
 import { getThemeConfig } from '@/lib/utils/theme-utils';
 import { cn } from '@/lib/utils';
 import { useTeacherManagementContext } from '@/features/leave/hooks/use-teacher-management-context';
+import { useIdCardStatus } from '@/features/store/hooks/use-store';
 import { tokenManager } from '@/lib/token-manager';
 import { CriticalOperationProvider } from '@/providers/critical-operation-provider';
 
@@ -22,6 +23,11 @@ export function ProtectedLayout() {
   const { user, organization } = useAuth();
   const { data: profilePhoto } = useMyProfilePhoto();
   const { data: managementContext } = useTeacherManagementContext();
+  // "ID Card Review" shows only once the school has an approved ID card design.
+  const canSeeIdCards = user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.TEACHER;
+  const { data: hasApprovedIdCard = false } = useIdCardStatus(
+    canSeeIdCards && tokenManager.isAuthenticated()
+  );
   const location = useLocation();
 
   useStorageListener();
@@ -44,6 +50,7 @@ export function ProtectedLayout() {
 
   const isAdmin = user?.role === USER_ROLES.ADMIN;
   const isSupervisor = isAdmin || managementContext?.can_review_requests || false;
+  const isClassTeacher = isAdmin || (managementContext?.class_teacher_for?.length ?? 0) > 0;
   const isStudent = user?.role === USER_ROLES.STUDENT;
 
   // Show class name alongside role for students
@@ -68,6 +75,8 @@ export function ProtectedLayout() {
           sidebarSections={getSidebarConfig()}
           userRole={userRoleFormatted}
           isSupervisor={isSupervisor}
+          isClassTeacher={isClassTeacher}
+          hasApprovedIdCard={hasApprovedIdCard}
         >
           <Outlet />
         </DashboardLayout>

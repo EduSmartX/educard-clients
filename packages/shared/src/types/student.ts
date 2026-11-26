@@ -168,6 +168,8 @@ export interface UpdateStudentPayload {
 export interface StudentQueryParams extends BaseQueryParams {
   class_master_id?: string;
   class_assigned__public_id?: string;
+  /** One or more class section public IDs, comma-separated. */
+  class_id?: string;
   user__public_id?: string;
   user__gender?: string;
   for_attendance?: boolean;

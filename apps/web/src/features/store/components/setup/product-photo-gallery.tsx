@@ -25,6 +25,8 @@ interface ProductPhotoGalleryProps {
   /** Any section of the grade; omit for school-wide photos. */
   classPublicId?: string;
   emptyHint: string;
+  /** EduCard's pictures, shown (read-only) while the school has none of its own. */
+  fallbackImages?: string[];
 }
 
 export function ProductPhotoGallery({
@@ -32,6 +34,7 @@ export function ProductPhotoGallery({
   photos,
   classPublicId,
   emptyHint,
+  fallbackImages = [],
 }: ProductPhotoGalleryProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const add = useAddProductPhoto(productPublicId);
@@ -57,7 +60,26 @@ export function ProductPhotoGallery({
   return (
     <div className="space-y-2">
       {photos.length === 0 ? (
-        <p className="text-muted-foreground text-xs">{emptyHint}</p>
+        <div className="space-y-2">
+          {emptyHint && <p className="text-muted-foreground text-xs">{emptyHint}</p>}
+          {fallbackImages.length > 0 && (
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+              {fallbackImages.map((url, index) => (
+                <div key={url} className="bg-muted relative overflow-hidden rounded-md border">
+                  <img
+                    src={getMediaUrl(url)}
+                    alt={`EduCard picture ${index + 1}`}
+                    className="aspect-square w-full object-contain"
+                    loading="lazy"
+                  />
+                  <span className="absolute top-1 left-1 rounded bg-slate-900/70 px-1.5 text-[10px] font-medium text-white">
+                    {index === 0 ? 'EduCard · shown' : 'EduCard'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       ) : (
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
           {photos.map((photo) => (

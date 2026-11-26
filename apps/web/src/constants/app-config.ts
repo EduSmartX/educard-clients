@@ -234,6 +234,8 @@ export const ROUTES = {
   STUDENTS_NEW: '/students/new',
   STUDENTS_VIEW: '/students/:id',
   STUDENTS_EDIT: '/students/:id/edit',
+  /** Admin / class teacher: step through a class checking each student's ID card. */
+  ID_CARD_REVIEW: '/id-card-review',
   TEACHERS: '/teachers',
   TEACHERS_NEW: '/teachers/new',
   TEACHERS_VIEW: '/teachers/:id',

@@ -1,15 +1,21 @@
 export type UserRole = 'admin' | 'employee' | 'parent';
 
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import type { CompositeNavigationProp } from '@react-navigation/native';
+import type {
+  CompositeNavigationProp,
+  NavigatorScreenParams,
+} from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import type { ProfileSummary } from '@/api/auth';
 
 export type RootStackParamList = {
   Auth: undefined;
-  Main: undefined;
+  /** Optionally straight to a screen, e.g. from a scanned shipment QR. */
+  Main: NavigatorScreenParams<SharedStackParamList> | undefined;
   ForcePasswordChange: undefined;
+  /** A scanned shipment QR (app link); opens signed in or not. */
+  ShipmentLink: { token: string };
 };
 
 export type AuthStackParamList = {
@@ -96,6 +102,11 @@ export type SharedStackParamList = {
   StoreOrder: { productId: string };
   StoreProductSetup: { productId: string };
   ShipmentTracking: { token: string };
+  /** ID card proofs the school admin / class teacher approves. */
+  StoreProofs: undefined;
+  StoreProofReview: { proofId: string };
+  /** Step through a class's students and check each ID card. */
+  IdCardReview: { classId?: string; studentId?: string } | undefined;
   Profile: undefined;
   SwitchProfile: undefined;
   SyncProfiles: undefined;

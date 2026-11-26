@@ -5,9 +5,6 @@
 
 import {
   SHIPMENT_LOCATION_REQUIRED_STATUSES,
-  SHIPMENT_PROGRESS_STEPS,
-  SHIPMENT_STATUS,
-  SHIPMENT_STATUS_LABELS,
   getErrorMessage,
   type ShipmentStatus,
   type ShipmentTracking,
@@ -17,7 +14,7 @@ import {
   useRoute,
   type RouteProp,
 } from '@react-navigation/native';
-import { Check, ChevronLeft, PackageSearch } from 'lucide-react-native';
+import { ChevronLeft, PackageSearch } from 'lucide-react-native';
 import { useState } from 'react';
 import {
   ScrollView,
@@ -33,6 +30,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SubmitButton } from '@/components/common';
 import { EmptyState, LoadingState } from '@/components/common/ListStates';
 import { useRecordShipmentEvent, useShipmentTracking } from '@/features/store';
+import { ShipmentProgress } from '@/features/store/components/ShipmentProgress';
 import type {
   SharedStackNavigation,
   SharedStackParamList,
@@ -44,40 +42,6 @@ const PRIMARY = '#2563eb';
 
 function formatDate(value: string | null): string {
   return value ? new Date(value).toLocaleDateString() : '';
-}
-
-function ProgressTracker({ status }: { status: ShipmentStatus }) {
-  if (status === SHIPMENT_STATUS.CANCELLED) {
-    return <Text style={styles.cancelled}>This shipment was cancelled</Text>;
-  }
-  const currentIndex = SHIPMENT_PROGRESS_STEPS.indexOf(
-    status as (typeof SHIPMENT_PROGRESS_STEPS)[number],
-  );
-
-  return (
-    <View style={styles.progress}>
-      {SHIPMENT_PROGRESS_STEPS.map((step, index) => {
-        const done = index <= currentIndex;
-        return (
-          <View key={step} style={styles.step}>
-            <View style={[styles.stepDot, done && styles.stepDotDone]}>
-              {done ? (
-                <Check size={12} color="#fff" />
-              ) : (
-                <Text style={styles.stepIndex}>{index + 1}</Text>
-              )}
-            </View>
-            <Text
-              style={[styles.stepLabel, done && styles.stepLabelDone]}
-              numberOfLines={2}
-            >
-              {SHIPMENT_STATUS_LABELS[step]}
-            </Text>
-          </View>
-        );
-      })}
-    </View>
-  );
 }
 
 function RecordUpdate({
@@ -233,7 +197,7 @@ export default function ShipmentTrackingScreen() {
                 <SvgXml xml={shipment.qr_svg} width={96} height={96} />
               </View>
             </View>
-            <ProgressTracker status={shipment.status} />
+            <ShipmentProgress status={shipment.status} color={PRIMARY} />
           </View>
 
           {shipment.can_update && (
@@ -325,22 +289,6 @@ const styles = StyleSheet.create({
   value: { fontSize: 14, fontWeight: '600', color: '#111827' },
   note: { fontSize: 13, color: '#374151', marginTop: 2 },
   qr: { backgroundColor: '#fff', padding: 2, borderRadius: 8 },
-  cancelled: { color: '#ef4444', fontWeight: '600' },
-  progress: { flexDirection: 'row', justifyContent: 'space-between' },
-  step: { flex: 1, alignItems: 'center', gap: 4 },
-  stepDot: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    borderWidth: 2,
-    borderColor: '#d1d5db',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepDotDone: { backgroundColor: PRIMARY, borderColor: PRIMARY },
-  stepIndex: { fontSize: 11, color: '#6b7280' },
-  stepLabel: { fontSize: 10, color: '#6b7280', textAlign: 'center' },
-  stepLabelDone: { color: '#111827', fontWeight: '600' },
   optionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   option: {
     paddingHorizontal: 12,

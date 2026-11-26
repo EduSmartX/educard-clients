@@ -5,12 +5,17 @@
  */
 
 import { Megaphone } from 'lucide-react-native';
+import { useMemo } from 'react';
 
 import {
   ManagementScreenBase,
   createManagementItems,
   type ManagementItem,
 } from '@/components/screens/ManagementScreenBase';
+import {
+  idCardReviewTile,
+  useShowIdCardReview,
+} from '@/features/store/store-menu-items';
 
 // Admins reach announcements from the Admin tab instead.
 const employeeItems: ManagementItem[] = [
@@ -26,7 +31,11 @@ const employeeItems: ManagementItem[] = [
 ];
 
 export default function ManagementScreen() {
-  return (
-    <ManagementScreenBase items={employeeItems} settingsScreen="Settings" />
+  // Teachers check their classes' cards once the school has an approved design.
+  const showIdCards = useShowIdCardReview();
+  const items = useMemo(
+    () => (showIdCards ? [...employeeItems, idCardReviewTile] : employeeItems),
+    [showIdCards],
   );
+  return <ManagementScreenBase items={items} settingsScreen="Settings" />;
 }

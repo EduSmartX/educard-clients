@@ -26,6 +26,7 @@ import {
   fetchProofDetail,
   fetchProofs,
   fetchStudentCard,
+  fetchIdCardStatus,
   fetchIdCardDesigns,
   fetchProductLooks,
   removeProductPhoto,
@@ -39,6 +40,7 @@ import {
   fetchCatalog,
   fetchIdCardTemplates,
   fetchOrderDetail,
+  fetchOrderFilterOptions,
   fetchOrders,
   fetchShipmentTracking,
   placeOrder,
@@ -120,6 +122,18 @@ export function useOrders(params?: OrderQueryParams) {
     queryKey: QueryKeys.STORE.ORDERS(params),
     queryFn: () => fetchOrders(params),
     refetchOnMount: 'always',
+    // Keep the current list on screen while a new filter or page loads.
+    placeholderData: (previous) => previous,
+  });
+}
+
+/** Statuses and ordered products for the order filters. */
+export function useOrderFilterOptions() {
+  return useQuery({
+    queryKey: QueryKeys.STORE.ORDER_FILTERS,
+    queryFn: fetchOrderFilterOptions,
+    staleTime: 5 * 60 * 1000,
+    select: (response) => response.data,
   });
 }
 
@@ -159,6 +173,20 @@ export function useStudentCard(studentId: string | undefined) {
   });
 }
 
+/**
+ * Whether the school has an approved ID card design. "ID Card Review" stays hidden until
+ * it does. Only school admins and teachers can ask (`enabled`).
+ */
+export function useIdCardStatus(enabled = true) {
+  return useQuery({
+    queryKey: QueryKeys.STORE.ID_CARD_STATUS,
+    queryFn: fetchIdCardStatus,
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    select: (response) => response.data?.has_approved_design ?? false,
+  });
+}
+
 export function useOrderDetail(publicId: string) {
   return useQuery({
     queryKey: QueryKeys.STORE.ORDER_DETAIL(publicId),
@@ -171,8 +199,8 @@ export function useUpdateOrderStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ publicId, status }: { publicId: string } & UpdateOrderStatusPayload) =>
-      updateOrderStatus(publicId, { status }),
+    mutationFn: ({ publicId, ...payload }: { publicId: string } & UpdateOrderStatusPayload) =>
+      updateOrderStatus(publicId, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QueryKeys.STORE.ALL });
     },

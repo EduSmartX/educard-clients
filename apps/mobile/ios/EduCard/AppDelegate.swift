@@ -24,6 +24,30 @@ class AppDelegate: RCTAppDelegate {
     )
   }
 
+  // Links that open the app go to React Native's Linking (see src/lib/app-links.ts):
+  // educard://… custom-scheme links ...
+  func application(
+    _ app: UIApplication,
+    open url: URL,
+    options: [UIApplication.OpenURLOptionsKey: Any] = [:]
+  ) -> Bool {
+    return RCTLinkingManager.application(app, open: url, options: options)
+  }
+
+  // ... and Universal Links: a scanned shipment QR (https://<backend>/shipments/<token>/)
+  // opens the app when it is installed (domains in EduCard.entitlements).
+  func application(
+    _ application: UIApplication,
+    continue userActivity: NSUserActivity,
+    restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void
+  ) -> Bool {
+    return RCTLinkingManager.application(
+      application,
+      continue: userActivity,
+      restorationHandler: restorationHandler
+    )
+  }
+
   override func sourceURL(for bridge: RCTBridge) -> URL? {
     self.bundleURL()
   }

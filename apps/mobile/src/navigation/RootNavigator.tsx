@@ -1,11 +1,13 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+import { useShipmentLink } from '@/lib/app-links';
 import { useAuthStore } from '@/lib/auth-store';
 import { requestStartupPermissions } from '@/lib/permissions';
 import ForcePasswordChangeScreen from '@/screens/auth/ForcePasswordChangeScreen';
+import ShipmentLinkScreen from '@/screens/shared/store/ShipmentLinkScreen';
 
 import { AuthNavigator } from './AuthNavigator';
 import { MainStackNavigator } from './MainStackNavigator';
@@ -42,6 +44,17 @@ export function RootNavigator() {
     void requestStartupPermissions();
   }, []);
 
+  // A scanned shipment QR opened the app: show that shipment (signed in or not).
+  const shipmentLink = useShipmentLink();
+  const [navReady, setNavReady] = useState(false);
+  const { token: linkToken, clear: clearLink } = shipmentLink;
+  useEffect(() => {
+    if (linkToken && navReady && navigationRef.isReady()) {
+      navigationRef.navigate('ShipmentLink', { token: linkToken });
+      clearLink();
+    }
+  }, [linkToken, navReady, clearLink]);
+
   if (!isInitialized) {
     return (
       <View style={styles.loader}>
@@ -51,7 +64,11 @@ export function RootNavigator() {
   }
 
   return (
-    <NavigationContainer ref={navigationRef} theme={navTheme}>
+    <NavigationContainer
+      ref={navigationRef}
+      theme={navTheme}
+      onReady={() => setNavReady(true)}
+    >
       <Stack.Navigator
         screenOptions={{ headerShown: false, animation: 'fade' }}
       >
@@ -67,6 +84,11 @@ export function RootNavigator() {
             {() => <MainStackNavigator role={role} />}
           </Stack.Screen>
         )}
+        <Stack.Screen
+          name="ShipmentLink"
+          component={ShipmentLinkScreen}
+          options={{ animation: 'slide_from_right' }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

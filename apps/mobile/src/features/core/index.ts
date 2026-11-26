@@ -10,6 +10,7 @@ export {
   getSupervisors,
   getLeaveTypes,
   uploadProfilePhoto,
+  validateProfilePhoto,
 } from './api/master-api';
 
 // Re-export shared master types

@@ -2,29 +2,69 @@
  * Store constants shared by web and mobile.
  */
 
+/**
+ * An order's journey (before it is placed, the cart is the draft):
+ * ordered -> in_review -> awaiting_approval -> approved -> processing -> shipped -> delivered.
+ * Only ID card orders need approval; others skip those two steps. Mirrors the server.
+ */
 export const ORDER_STATUS = {
-  PENDING: "pending",
-  CONFIRMED: "confirmed",
+  ORDERED: "ordered",
+  IN_REVIEW: "in_review",
+  AWAITING_APPROVAL: "awaiting_approval",
+  APPROVED: "approved",
   PROCESSING: "processing",
+  SHIPPED: "shipped",
   DELIVERED: "delivered",
   CANCELLED: "cancelled",
 } as const;
 
 export const ORDER_STATUS_LABELS: Record<string, string> = {
-  pending: "Pending",
-  confirmed: "Confirmed",
+  ordered: "Ordered",
+  in_review: "In review",
+  awaiting_approval: "Waiting for approval",
+  approved: "Approved",
   processing: "Processing",
+  shipped: "Shipped",
   delivered: "Delivered",
   cancelled: "Cancelled",
 };
 
+/** What each step means, for the school. */
+export const ORDER_STATUS_HINTS: Record<string, string> = {
+  ordered: "Your order has reached EduCard.",
+  in_review: "EduCard is reviewing your order and preparing the ID cards.",
+  awaiting_approval:
+    "The ID cards are ready. The school admin and class teacher need to approve them.",
+  approved: "You approved the ID cards. EduCard will start printing.",
+  processing: "EduCard is printing / making your order.",
+  shipped: "Your order is on its way.",
+  delivered: "Your order has been delivered.",
+  cancelled: "This order was cancelled.",
+};
+
+/** The steps shown in the order's progress bar. */
+export function orderSteps(needsApproval: boolean): string[] {
+  return [
+    ORDER_STATUS.ORDERED,
+    ORDER_STATUS.IN_REVIEW,
+    ...(needsApproval
+      ? [ORDER_STATUS.AWAITING_APPROVAL, ORDER_STATUS.APPROVED]
+      : []),
+    ORDER_STATUS.PROCESSING,
+    ORDER_STATUS.SHIPPED,
+    ORDER_STATUS.DELIVERED,
+  ];
+}
+
 /**
- * A school may only cancel its own order, and only before EduCard starts packing it.
- * Confirming, shipping and delivery are driven by EduCard; mirrors the server rule.
+ * A school may cancel its own order until it has approved it (ordered, in review,
+ * waiting for approval). After that it calls EduCard, who can cancel until it ships.
+ * The order's `can_cancel` flag from the server is the source of truth.
  */
 export const ORGANIZATION_CANCELLABLE_ORDER_STATUSES: readonly string[] = [
-  "pending",
-  "confirmed",
+  "ordered",
+  "in_review",
+  "awaiting_approval",
 ];
 
 export const TERMINAL_ORDER_STATUSES = ["delivered", "cancelled"] as const;

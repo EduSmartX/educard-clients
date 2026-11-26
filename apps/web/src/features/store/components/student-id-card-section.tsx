@@ -4,10 +4,12 @@
  * it; for anyone else (or while no design is approved) the section stays out of the way.
  */
 import { IdCard } from 'lucide-react';
+import { InfoPoints } from '@/components/common';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { COMPANY_NAME } from '@/constants/app-config';
 import { CardSidesCarousel } from './card-sides-carousel';
+import { MissingCardFields } from './missing-card-fields';
 import { useStudentCard } from '../hooks/use-store';
 
 export function StudentIdCardSection({ studentId }: { studentId: string }) {
@@ -36,16 +38,25 @@ export function StudentIdCardSection({ studentId }: { studentId: string }) {
               orientation={card.orientation}
               alt="ID card"
             />
-            <p className="text-muted-foreground text-xs">
-              Design: {card.design_name}. Filled in from this student’s profile, so fix the profile
-              (name, photo, class, …) to change the card.
-            </p>
+            <MissingCardFields card={card} />
+            <InfoPoints
+              tone="muted"
+              items={[
+                <>
+                  Design: <span className="text-foreground font-medium">{card.design_name}</span>
+                </>,
+                'Filled in from this student’s profile: fix the profile (name, photo, class, …) to change the card.',
+              ]}
+            />
           </div>
         ) : (
-          <p className="text-muted-foreground text-sm">
-            No ID card design is approved for this student’s class yet. Choose or send one under
-            Store setup, and {COMPANY_NAME} will approve it.
-          </p>
+          <InfoPoints
+            tone="muted"
+            items={[
+              'No ID card design is approved for this student’s class yet.',
+              `Choose or send one under Store setup, and ${COMPANY_NAME} will approve it.`,
+            ]}
+          />
         )}
       </CardContent>
     </Card>

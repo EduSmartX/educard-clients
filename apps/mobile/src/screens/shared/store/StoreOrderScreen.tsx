@@ -49,13 +49,13 @@ import {
   MultiSelectModal,
   SingleSelectModal,
 } from '@/components/common/SelectionModal';
-import { getMediaUrl } from '@/constants/config';
 import { useClasses } from '@/features/classes';
 import {
   classLabel,
   formatCurrency,
   lineAttributes,
   perStudentAttributes,
+  productImageUrl,
   resolveTemplate,
   useAddCartItem,
   useBookSets,
@@ -81,6 +81,8 @@ import type {
 } from '@/navigation/types';
 import { layoutStyles } from '@/styles';
 import { showToast } from '@/utils/toast';
+
+import { IdCardOrderForm } from './order/IdCardOrderForm';
 
 type OrderMode = 'quantity' | 'students';
 type Audience = 'all' | 'specific';
@@ -402,9 +404,9 @@ function OrderForm({ product }: { product: CatalogProduct }) {
       >
         <View style={styles.hero}>
           <View style={styles.heroImage}>
-            {product.image_url ? (
+            {productImageUrl(product) ? (
               <Image
-                source={{ uri: getMediaUrl(product.image_url) }}
+                source={{ uri: productImageUrl(product) }}
                 style={styles.heroImageInner}
                 resizeMode="contain"
               />
@@ -859,6 +861,9 @@ export default function StoreOrderScreen() {
             <Text style={s.secondaryButtonText}>Set up & publish</Text>
           </TouchableOpacity>
         </View>
+      ) : product && product.kind === PRODUCT_KIND.ID_CARD ? (
+        // ID cards: several classes at once, students across classes, live preview.
+        <IdCardOrderForm key={product.public_id} product={product} />
       ) : product ? (
         <OrderForm key={product.public_id} product={product} />
       ) : (

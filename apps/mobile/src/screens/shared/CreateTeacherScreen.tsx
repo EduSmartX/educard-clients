@@ -26,12 +26,8 @@ import {
   type TeacherFormState,
   type FieldErrors,
 } from '@/components/screens/TeacherFormBase';
-import {
-  useRoleTypes,
-  useSupervisors,
-  useCoreSubjects,
-  uploadProfilePhoto,
-} from '@/features/core';
+import { useRoleTypes, useSupervisors, useCoreSubjects } from '@/features/core';
+import { useValidatedProfilePhoto } from '@/hooks/useValidatedProfilePhoto';
 import { useCreateTeacher, useRestoreTeacher } from '@/features/teachers';
 import { useDeletedDuplicateHandler } from '@/hooks/useDeletedDuplicateHandler';
 import { useToast } from '@/lib/toast-context';
@@ -85,7 +81,8 @@ export default function CreateTeacherScreen() {
 
   const [quickAdd, setQuickAdd] = useState(false);
   const [addressExpanded, setAddressExpanded] = useState(false);
-  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const { photoUri, isCheckingPhoto, onPhotoSelected, uploadAfterCreate } =
+    useValidatedProfilePhoto();
 
   const [form, setForm] = useState<TeacherFormState>(INITIAL_FORM);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -162,11 +159,7 @@ export default function CreateTeacherScreen() {
             duplicateHandler.closeDialog();
             const uid =
               response?.data?.user?.public_id || response?.user?.public_id;
-            if (photoUri && uid) {
-              uploadProfilePhoto(uid, photoUri, 'photo.jpg').catch(
-                () => undefined,
-              );
-            }
+            if (uid) uploadAfterCreate(uid, 'Teacher');
             navigation.goBack();
           },
           onError: (err: unknown) => {
@@ -202,7 +195,7 @@ export default function CreateTeacherScreen() {
         },
       );
     },
-    [createMutation, navigation, photoUri, duplicateHandler],
+    [createMutation, navigation, uploadAfterCreate, duplicateHandler],
   );
 
   const handleSubmit = useCallback(() => {
@@ -266,7 +259,7 @@ export default function CreateTeacherScreen() {
       title="Add New Teacher"
       subtitle="Add a new teacher to your organization"
       submitLabel="Create Teacher"
-      submitting={createMutation.isPending}
+      submitting={createMutation.isPending || isCheckingPhoto}
       form={form}
       errors={errors}
       apiError={apiError}
@@ -288,7 +281,7 @@ export default function CreateTeacherScreen() {
       basicInfoPhotoSlot={
         <FormPhotoUpload
           imageUri={photoUri}
-          onImageSelected={uri => setPhotoUri(uri)}
+          onImageSelected={uri => void onPhotoSelected(uri)}
           name={`${form.first_name} ${form.last_name}`.trim()}
           gender={form.gender}
         />

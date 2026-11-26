@@ -7,9 +7,12 @@ export type StoreAttributeInputType = "select" | "text" | "number" | "list";
 export type CartStatus = "active" | "ordered" | "abandoned";
 
 export type OrderStatus =
-  | "pending"
-  | "confirmed"
+  | "ordered"
+  | "in_review"
+  | "awaiting_approval"
+  | "approved"
   | "processing"
+  | "shipped"
   | "delivered"
   | "cancelled";
 
@@ -162,6 +165,8 @@ export interface AddCartItemPayload {
   product_public_id: string;
   quantity?: number;
   configuration?: CartItemConfiguration;
+  /** ID cards only: every student of each class, one cart line per class (all or none). */
+  classes?: string[];
 }
 
 export interface UpdateCartItemPayload {
@@ -181,6 +186,13 @@ export interface Order {
   public_id: string;
   order_number: string;
   status: OrderStatus;
+  status_label: string;
+  /** Has ID cards, so it goes through the school's approval. */
+  needs_approval: boolean;
+  /** The school can still cancel it by itself (until it approves). */
+  can_cancel: boolean;
+  /** Who cancelled it, when and why; null unless cancelled. */
+  cancellation: OrderCancellation | null;
   total_amount: string;
   notes: string;
   placed_at: string;
@@ -189,18 +201,47 @@ export interface Order {
   shipments: ShipmentSummary[];
 }
 
+export interface OrderCancellation {
+  by: string;
+  at: string | null;
+  reason: string;
+}
+
 export interface PlaceOrderPayload {
   notes?: string;
 }
 
 export interface UpdateOrderStatusPayload {
   status: OrderStatus;
+  /** Why the order is cancelled; included in the cancellation emails. */
+  reason?: string;
 }
 
+/** Order list filters (all optional, combined). Web and app use the same names. */
 export interface OrderQueryParams {
-  status?: OrderStatus;
+  /** One status, or several comma-separated ("shipped,delivered"). */
+  status?: OrderStatus | string;
+  /** Product code(s), comma-separated ("id_card"); see OrderFilterOptions.products. */
+  product?: string;
+  /** Placed on or after / on or before this date (YYYY-MM-DD). */
+  placed_from?: string;
+  placed_to?: string;
+  /** Part of the order number. */
+  search?: string;
   page?: number;
   page_size?: number;
+}
+
+export interface FilterOption {
+  value: string;
+  label: string;
+}
+
+/** GET /store/orders/filters/: what the order list can be filtered by. */
+export interface OrderFilterOptions {
+  statuses: FilterOption[];
+  /** Products this school has ordered (including ones no longer in the store). */
+  products: FilterOption[];
 }
 
 // ---------------------------------------------------------------------------
@@ -392,6 +433,8 @@ export interface ShipmentSummary {
   tracking_token: string;
   tracking_url: string;
   qr_svg: string;
+  /** The same QR as a PNG (download and print). */
+  qr_png_url: string;
 }
 
 export interface ShipmentLineDetail {
@@ -436,6 +479,32 @@ export interface ShipmentTracking {
   next_statuses: { value: ShipmentStatus; label: string }[];
 }
 
+/**
+ * What anyone with a shipment's QR link sees, no login (GET /store/shipments/<token>/):
+ * where it goes and what is in it. Student counts only, never names.
+ */
+export interface PublicShipment {
+  shipment_number: string;
+  status: ShipmentStatus;
+  status_label: string;
+  order_number: string;
+  school: { name: string; address: string; phone: string };
+  /** Google Maps search for the school's address; empty without an address. */
+  maps_url: string;
+  lines: ShipmentLine[];
+  units: number;
+  packed_at: string;
+  expected_delivery_date: string | null;
+  current_location: string;
+  carrier_name: string;
+  carrier_reference: string;
+  delivered_at: string | null;
+  /** Newest first. */
+  events: Omit<ShipmentEvent, "recorded_by_name">[];
+  /** The web page the QR opens when the app is not installed. */
+  public_url: string;
+}
+
 export interface ShipmentEventPayload {
   status: ShipmentStatus;
   location?: string;
@@ -471,6 +540,8 @@ export interface ProofDecisionRow {
   decided_at: string | null;
   comment: string;
   flagged_students: FlaggedStudent[];
+  /** Someone else's approval was enough, so this answer is no longer needed. */
+  not_needed: boolean;
 }
 
 export interface IdCardProofSummary {
@@ -488,8 +559,14 @@ export interface IdCardProofSummary {
   decisions: ProofDecisionRow[];
   /** The caller's approver role for this proof. */
   my_role: ProofRole | "";
+  /** Answers can be given or changed until printing starts (order processing or later). */
   can_decide: boolean;
   my_decision: ProofDecisionValue | "";
+  /** "any": one approver is enough; "all": everyone listed must approve. */
+  approval_rule: "any" | "all";
+  approval_rule_text: string;
+  order_status: OrderStatus;
+  order_status_label: string;
 }
 
 export interface ProofStudent {
@@ -499,17 +576,26 @@ export interface ProofStudent {
   front_preview_url: string;
   /** Empty when the design has no back. */
   back_preview_url: string;
+  /** Details the design prints that are empty for this student (the card prints without them). */
+  missing_fields: { field: string; label: string }[];
 }
 
 export interface IdCardProofDetail extends IdCardProofSummary {
   orientation: CardOrientation;
   students: ProofStudent[];
+  /** How many students' cards have missing details. */
+  incomplete_count: number;
 }
 
 export interface ProofDecisionPayload {
   decision: ProofDecisionValue;
   comment?: string;
   flagged_students?: FlaggedStudent[];
+}
+
+/** Whether the school's ID cards can be previewed yet (GET /store/id-card-status/). */
+export interface IdCardStatus {
+  has_approved_design: boolean;
 }
 
 /** A student's card rendered from the school's approved design. */
@@ -520,4 +606,6 @@ export interface StudentCard {
   front_preview_url?: string;
   back_preview_url?: string;
   required_fields?: string[];
+  /** Details the design prints that are empty for this student (e.g. Photo, Blood group). */
+  missing_fields?: { field: string; label: string }[];
 }

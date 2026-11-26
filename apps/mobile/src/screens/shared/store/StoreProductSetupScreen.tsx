@@ -39,10 +39,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SubmitButton } from '@/components/common';
 import { LoadingState } from '@/components/common/ListStates';
-import { getMediaUrl } from '@/constants/config';
 import {
   formatCurrency,
   pickStoreImage,
+  productImageUrl,
   schoolAttributes,
   useAddProductPhoto,
   useCatalog,
@@ -73,6 +73,7 @@ import type {
 import { layoutStyles } from '@/styles';
 import { showToast } from '@/utils/toast';
 
+import { IdCardSetup } from './setup/IdCardSetup';
 import { PublishBadge } from './setup/ProductLooksSetup';
 
 function PhotoUploader({ product }: { product: CatalogProduct }) {
@@ -316,9 +317,9 @@ function SetupForm({ product }: { product: CatalogProduct }) {
         >
           <View style={styles.infoRow}>
             <View style={styles.image}>
-              {product.image_url ? (
+              {productImageUrl(product) ? (
                 <Image
-                  source={{ uri: getMediaUrl(product.image_url) }}
+                  source={{ uri: productImageUrl(product) }}
                   style={styles.imageInner}
                   resizeMode="contain"
                 />
@@ -399,12 +400,6 @@ function SetupForm({ product }: { product: CatalogProduct }) {
               </View>
             ))
           )}
-          {product.kind === PRODUCT_KIND.ID_CARD && (
-            <Text style={s.hint}>
-              ID card designs are chosen in Store Setup → ID cards. At least one
-              approved design is needed to publish.
-            </Text>
-          )}
           {product.kind === PRODUCT_KIND.BOOK_SET && (
             <Text style={s.hint}>
               Class book lists are requested on the web. At least one approved
@@ -412,6 +407,16 @@ function SetupForm({ product }: { product: CatalogProduct }) {
             </Text>
           )}
         </OrderStep>
+
+        {product.kind === PRODUCT_KIND.ID_CARD && (
+          <OrderStep
+            step={nextStep()}
+            title="ID card design (mandatory)"
+            description="Pick one of EduCard's designs (live straight away) or upload your own artwork. At least one approved design is needed to publish."
+          >
+            <IdCardSetup />
+          </OrderStep>
+        )}
 
         {product.kind !== PRODUCT_KIND.BOOK_SET && (
           <OrderStep

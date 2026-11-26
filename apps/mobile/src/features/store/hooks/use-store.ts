@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import type {
   AddCartItemPayload,
   AdoptIdCardDesignPayload,
@@ -8,6 +13,8 @@ import type {
   OrderStatus,
   PlaceOrderPayload,
   ProductCustomizationPayload,
+  ProofDecisionPayload,
+  ProofStatus,
   ShipmentEventPayload,
   SubmissionQueryParams,
 } from '@educard/shared';
@@ -17,15 +24,22 @@ import {
   addProductPhoto,
   adoptIdCardDesign,
   clearCart,
+  decideProof,
   getBookSets,
   getCardPreview,
   getCart,
   getCatalog,
   getIdCardDesigns,
+  getIdCardStatus,
   getIdCardTemplates,
+  getOrderFilterOptions,
   getOrders,
   getProductLooks,
+  getProofDetail,
+  getProofs,
+  getPublicShipment,
   getShipmentTracking,
+  getStudentCard,
   placeOrder,
   recordShipmentEvent,
   removeCartItem,
@@ -48,7 +62,14 @@ export const storeKeys = {
     [...storeKeys.all, 'catalog', params] as const,
   cart: () => [...storeKeys.all, 'cart'] as const,
   orders: (params?: OrderQueryParams) =>
-    [...storeKeys.all, 'orders', params] as const,
+    // No params = the ['store', 'orders'] prefix, so invalidating it refreshes every
+    // order list (filtered or not, paged or not).
+    params
+      ? ([...storeKeys.all, 'orders', params] as const)
+      : ([...storeKeys.all, 'orders'] as const),
+  orderPages: (params?: OrderQueryParams) =>
+    [...storeKeys.all, 'orders', 'pages', params ?? {}] as const,
+  orderFilters: () => [...storeKeys.all, 'orders', 'filters'] as const,
   idCardTemplates: (params?: SubmissionQueryParams) =>
     [...storeKeys.all, 'id-card-templates', params] as const,
   bookSets: (params?: SubmissionQueryParams) =>
@@ -58,6 +79,15 @@ export const storeKeys = {
   looks: (publicId: string) => [...storeKeys.all, 'looks', publicId] as const,
   cardPreview: (path: string, student?: string) =>
     [...storeKeys.all, 'card-preview', path, student ?? ''] as const,
+  proofs: (status?: ProofStatus) =>
+    [...storeKeys.all, 'proofs', status ?? ''] as const,
+  proof: (publicId: string) =>
+    [...storeKeys.all, 'proofs', 'detail', publicId] as const,
+  studentCard: (studentId: string) =>
+    [...storeKeys.all, 'student-card', studentId] as const,
+  idCardStatus: () => [...storeKeys.all, 'id-card-status'] as const,
+  publicShipment: (token: string) =>
+    [...storeKeys.all, 'public-shipment', token] as const,
 };
 
 export function useCatalog(params?: CatalogQueryParams) {
@@ -126,6 +156,35 @@ export function useOrders(params?: OrderQueryParams) {
   });
 }
 
+/** The order list with filters, a page at a time (load more on scroll). */
+export function useOrderPages(params: OrderQueryParams) {
+  return useInfiniteQuery({
+    queryKey: storeKeys.orderPages(params),
+    queryFn: ({ pageParam }) => getOrders({ ...params, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: lastPage =>
+      lastPage.pagination?.has_next
+        ? lastPage.pagination.current_page + 1
+        : undefined,
+    select: data => ({
+      items: data.pages.flatMap(page => page.data),
+      totalCount: data.pages[0]?.pagination?.count ?? 0,
+    }),
+    // Keep the current list on screen while new filters load.
+    placeholderData: previous => previous,
+  });
+}
+
+/** Statuses and the products this school has ordered, for the order filters. */
+export function useOrderFilterOptions() {
+  return useQuery({
+    queryKey: storeKeys.orderFilters(),
+    queryFn: getOrderFilterOptions,
+    staleTime: 5 * 60 * 1000,
+    select: response => response.data,
+  });
+}
+
 export function useUpdateOrderStatus() {
   const queryClient = useQueryClient();
 
@@ -133,10 +192,12 @@ export function useUpdateOrderStatus() {
     mutationFn: ({
       publicId,
       status,
+      reason,
     }: {
       publicId: string;
       status: OrderStatus;
-    }) => updateOrderStatus(publicId, { status }),
+      reason?: string;
+    }) => updateOrderStatus(publicId, { status, reason }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: storeKeys.all });
     },
@@ -248,6 +309,59 @@ export function useCardPreview(path: string | undefined, student?: string) {
   });
 }
 
+// ── ID card proofs and a student's card ─────────────────────────────────────
+
+export function useProofs(status?: ProofStatus) {
+  return useQuery({
+    queryKey: storeKeys.proofs(status),
+    queryFn: () => getProofs(status),
+  });
+}
+
+export function useProofDetail(publicId: string | undefined) {
+  return useQuery({
+    queryKey: storeKeys.proof(publicId ?? ''),
+    queryFn: () => getProofDetail(publicId as string),
+    enabled: Boolean(publicId),
+  });
+}
+
+export function useDecideProof(publicId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: ProofDecisionPayload) =>
+      decideProof(publicId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [...storeKeys.all, 'proofs'] });
+      queryClient.invalidateQueries({ queryKey: storeKeys.proof(publicId) });
+      queryClient.invalidateQueries({ queryKey: storeKeys.orders() });
+    },
+  });
+}
+
+export function useStudentCard(studentId: string | undefined) {
+  return useQuery({
+    queryKey: storeKeys.studentCard(studentId ?? ''),
+    queryFn: () => getStudentCard(studentId as string),
+    enabled: Boolean(studentId),
+    retry: false,
+  });
+}
+
+/**
+ * Whether the school has an approved ID card design. "ID Card Review" stays hidden
+ * until it does. Only school admins and teachers can ask (`enabled`).
+ */
+export function useIdCardStatus(enabled = true) {
+  return useQuery({
+    queryKey: storeKeys.idCardStatus(),
+    queryFn: getIdCardStatus,
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    select: response => response.data?.has_approved_design ?? false,
+  });
+}
+
 export function useProductLooks(publicId: string | undefined) {
   return useQuery({
     queryKey: storeKeys.looks(publicId ?? ''),
@@ -285,6 +399,16 @@ export function useRemoveProductPhoto(publicId: string) {
   return useStoreMutation((photoId: string) =>
     removeProductPhoto(publicId, photoId),
   );
+}
+
+/** A shipment opened from its QR code; works signed in or not. */
+export function usePublicShipment(token: string) {
+  return useQuery({
+    queryKey: storeKeys.publicShipment(token),
+    queryFn: () => getPublicShipment(token),
+    enabled: Boolean(token),
+    retry: false,
+  });
 }
 
 export function useShipmentTracking(token: string) {

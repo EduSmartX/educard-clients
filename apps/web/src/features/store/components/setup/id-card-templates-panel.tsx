@@ -15,6 +15,7 @@ import {
   type IdCardDesign,
   type IdCardTemplate,
 } from '@educard/shared';
+import { InfoPoints } from '@/components/common';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -58,10 +59,13 @@ function ScopeField({ value, onChange }: { value: ClassScope; onChange: (v: Clas
         onChange={onChange}
         wholeSchoolLabel="Whole school (default)"
       />
-      <p className="text-muted-foreground text-xs">
-        A class design replaces the school default for those classes only. Pick several classes to
-        give them all the same design.
-      </p>
+      <InfoPoints
+        tone="muted"
+        items={[
+          'A class design replaces the school default for those classes only.',
+          'Pick several classes to give them all the same design.',
+        ]}
+      />
     </div>
   );
 }
@@ -267,7 +271,12 @@ function DesignLibrary({
   );
 }
 
-export function IdCardTemplatesPanel() {
+interface IdCardTemplatesPanelProps {
+  /** Show only this ID card product's cards (used on that product's setup page). */
+  fixedProductId?: string;
+}
+
+export function IdCardTemplatesPanel({ fixedProductId }: IdCardTemplatesPanelProps = {}) {
   const navigate = useNavigate();
   const [adopting, setAdopting] = useState<IdCardDesign | null>(null);
   const [pickedProduct, setPickedProduct] = useState('');
@@ -275,10 +284,10 @@ export function IdCardTemplatesPanel() {
   const { data: catalog } = useCatalog({ page_size: 100 });
 
   // A school can sell several ID card products (Student, Teacher...); each has its own cards.
-  const idCardProducts = (catalog?.data ?? []).filter(
-    (product) => product.kind === PRODUCT_KIND.ID_CARD
-  );
-  const productId = pickedProduct || idCardProducts[0]?.public_id || '';
+  const idCardProducts = fixedProductId
+    ? []
+    : (catalog?.data ?? []).filter((product) => product.kind === PRODUCT_KIND.ID_CARD);
+  const productId = fixedProductId || pickedProduct || idCardProducts[0]?.public_id || '';
   const templates = (data?.data ?? []).filter(
     // Cards made for this product, plus general ones that work for any ID card product;
     // replaced (superseded) cards are history, not shown.

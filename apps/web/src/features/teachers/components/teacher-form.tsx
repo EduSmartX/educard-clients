@@ -35,6 +35,7 @@ import {
   isDeletedDuplicateError,
   getDeletedDuplicateMessage,
   getDeletedRecordId,
+  getErrorMessage,
 } from '@/lib/utils/error-handler';
 import type { TeacherDetail, CreateTeacherPayload } from '../types';
 import {
@@ -173,8 +174,10 @@ export function TeacherForm({
       if (photoFile && createdTeacher?.data?.user?.public_id) {
         try {
           await uploadProfilePhotoForUser(createdTeacher.data.user.public_id, photoFile);
-        } catch {
-          toast.error('Teacher created but photo upload failed. You can upload it later.');
+        } catch (error) {
+          toast.error(
+            `Teacher created, but the photo was not saved: ${getErrorMessage(error, 'upload failed')} You can upload it later.`
+          );
         }
       }
       toast.success(SuccessMessages.TEACHER.CREATE_SUCCESS);

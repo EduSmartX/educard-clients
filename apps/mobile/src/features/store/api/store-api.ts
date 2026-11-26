@@ -14,14 +14,22 @@ import {
   type CatalogProduct,
   type CatalogQueryParams,
   type BookSet,
+  type IdCardProofDetail,
+  type IdCardProofSummary,
+  type ProofDecisionPayload,
+  type ProofStatus,
+  type StudentCard,
+  type IdCardStatus,
   type ClassLookPayload,
   type IdCardDesign,
   type IdCardTemplate,
   type ProductCustomizationPayload,
   type ProductLooks,
   type Order,
+  type OrderFilterOptions,
   type OrderQueryParams,
   type PlaceOrderPayload,
+  type PublicShipment,
   type ShipmentEventPayload,
   type ShipmentTracking,
   type SubmissionQueryParams,
@@ -84,6 +92,14 @@ export async function getOrders(
   params?: OrderQueryParams,
 ): Promise<ApiListResponse<Order>> {
   const response = await apiClient.get(API_ENDPOINTS.STORE.ORDERS, { params });
+  return response.data;
+}
+
+/** The statuses and the products this school has ordered, for the order filters. */
+export async function getOrderFilterOptions(): Promise<
+  ApiDetailResponse<OrderFilterOptions>
+> {
+  const response = await apiClient.get(API_ENDPOINTS.STORE.ORDER_FILTERS);
   return response.data;
 }
 
@@ -222,6 +238,55 @@ export async function withdrawIdCardTemplate(
   return response.data;
 }
 
+// ── ID card proofs: the school approves EduCard's designed cards ────────────
+
+export async function getProofs(
+  status?: ProofStatus,
+): Promise<ApiDetailResponse<IdCardProofSummary[]>> {
+  const response = await apiClient.get(API_ENDPOINTS.STORE.PROOFS, {
+    params: status ? { status } : undefined,
+  });
+  return response.data;
+}
+
+export async function getProofDetail(
+  publicId: string,
+): Promise<ApiDetailResponse<IdCardProofDetail>> {
+  const response = await apiClient.get(
+    API_ENDPOINTS.STORE.PROOF_DETAIL(publicId),
+  );
+  return response.data;
+}
+
+export async function decideProof(
+  publicId: string,
+  payload: ProofDecisionPayload,
+): Promise<ApiDetailResponse<IdCardProofSummary>> {
+  const response = await apiClient.post(
+    API_ENDPOINTS.STORE.PROOF_DECISION(publicId),
+    payload,
+  );
+  return response.data;
+}
+
+/** A student's ID card from the school's approved design, with missing details. */
+export async function getStudentCard(
+  studentId: string,
+): Promise<ApiDetailResponse<StudentCard>> {
+  const response = await apiClient.get(
+    API_ENDPOINTS.STORE.STUDENT_CARD(studentId),
+  );
+  return response.data;
+}
+
+/** Whether the school has an approved ID card design (school admin and teachers). */
+export async function getIdCardStatus(): Promise<
+  ApiDetailResponse<IdCardStatus>
+> {
+  const response = await apiClient.get(API_ENDPOINTS.STORE.ID_CARD_STATUS);
+  return response.data;
+}
+
 /**
  * A rendered card side as a data URI. Previews are auth-protected PNGs, so they
  * go through apiClient (token + refresh) instead of a bare <Image> URL.
@@ -300,6 +365,16 @@ export async function getShipmentTracking(
   token: string,
 ): Promise<ApiDetailResponse<ShipmentTracking>> {
   const response = await apiClient.get(API_ENDPOINTS.STORE.TRACK(token));
+  return response.data;
+}
+
+/** What a shipment QR shows, without a login (the screen a scanned QR opens). */
+export async function getPublicShipment(
+  token: string,
+): Promise<ApiDetailResponse<PublicShipment>> {
+  const response = await apiClient.get(
+    API_ENDPOINTS.STORE.SHIPMENT_PUBLIC(token),
+  );
   return response.data;
 }
 

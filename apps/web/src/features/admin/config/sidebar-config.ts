@@ -38,6 +38,7 @@ import {
   ShoppingCart,
   Package,
   Settings2,
+  IdCard,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
 import { ROUTES } from '@/constants/app-config';
@@ -85,6 +86,13 @@ export const adminSidebarConfig: SidebarSection[] = [
         label: 'Students',
         icon: GraduationCap,
         path: ROUTES.STUDENTS,
+      },
+      {
+        id: 'id-card-review',
+        label: 'ID Card Review',
+        icon: IdCard,
+        path: ROUTES.ID_CARD_REVIEW,
+        requiresApprovedIdCard: true,
       },
       {
         id: 'subjects',

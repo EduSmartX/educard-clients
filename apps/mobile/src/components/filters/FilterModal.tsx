@@ -18,7 +18,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { SearchableSelect } from '@/components/ui';
+import { SearchableMultiSelect, SearchableSelect } from '@/components/ui';
 import { FormDatePicker } from '@/components/forms/FormDatePicker';
 import { LinearGradient } from '@/lib/linear-gradient';
 
@@ -36,6 +36,14 @@ const CHIP_COLORS = [
 // Switch a select from chips to a searchable dropdown past this many options.
 const SEARCHABLE_THRESHOLD = 5;
 
+/** A filter counts as set unless empty, off or an empty multiselect. */
+function isSet(value: unknown): boolean {
+  if (Array.isArray(value)) {
+    return value.length > 0;
+  }
+  return value !== '' && value !== undefined && value !== false;
+}
+
 // ── Types ────────────────────────────────────────────────────────
 export interface FilterOption {
   value: string;
@@ -46,10 +54,13 @@ export interface FilterOption {
 export interface FilterField {
   name: string;
   label: string;
-  type: 'select' | 'toggle' | 'date';
+  /** multiselect: chips where several can be on; the value is a string[]. */
+  type: 'select' | 'multiselect' | 'toggle' | 'date';
   options?: FilterOption[];
   icon?: string; // emoji for section header
   placeholder?: string;
+  /** multiselect only: chips (default) or a searchable multi-select dropdown. */
+  display?: 'chips' | 'dropdown';
 }
 
 interface FilterModalProps {
@@ -82,9 +93,7 @@ export function FilterModal({
   }, [visible, currentFilters]);
 
   const activeCount = useMemo(() => {
-    return Object.values(localFilters).filter(
-      v => v !== '' && v !== undefined && v !== false,
-    ).length;
+    return Object.values(localFilters).filter(isSet).length;
   }, [localFilters]);
 
   const handleSelectOption = (fieldName: string, value: string) => {
@@ -92,6 +101,20 @@ export function FilterModal({
       ...prev,
       [fieldName]: prev[fieldName] === value ? '' : value,
     }));
+  };
+
+  const handleToggleOption = (fieldName: string, value: string) => {
+    setLocalFilters(prev => {
+      const chosen = Array.isArray(prev[fieldName])
+        ? (prev[fieldName] as string[])
+        : [];
+      return {
+        ...prev,
+        [fieldName]: chosen.includes(value)
+          ? chosen.filter(item => item !== value)
+          : [...chosen, value],
+      };
+    });
   };
 
   const handleToggle = (fieldName: string) => {
@@ -109,7 +132,7 @@ export function FilterModal({
   const handleApply = () => {
     const cleaned: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(localFilters)) {
-      if (v !== '' && v !== undefined && v !== false) {
+      if (isSet(v)) {
         cleaned[k] = v;
       }
     }
@@ -203,7 +226,25 @@ export function FilterModal({
                   {field.icon ? `${field.icon}  ` : ''}
                   {field.label}
                 </Text>
-                {selectOptions.length > SEARCHABLE_THRESHOLD ? (
+                {field.type === 'multiselect' &&
+                field.display === 'dropdown' ? (
+                  <SearchableMultiSelect
+                    title={field.label}
+                    options={selectOptions}
+                    value={
+                      Array.isArray(localFilters[field.name])
+                        ? (localFilters[field.name] as string[])
+                        : []
+                    }
+                    onChange={v =>
+                      setLocalFilters(prev => ({ ...prev, [field.name]: v }))
+                    }
+                    placeholder={field.placeholder ?? `All ${field.label}`}
+                    searchPlaceholder={`Search ${field.label.toLowerCase()}...`}
+                    emptyMessage={`No ${field.label.toLowerCase()} found`}
+                  />
+                ) : field.type === 'select' &&
+                  selectOptions.length > SEARCHABLE_THRESHOLD ? (
                   <SearchableSelect
                     value={(localFilters[field.name] as string) ?? ''}
                     onValueChange={v =>
@@ -223,7 +264,11 @@ export function FilterModal({
                 ) : (
                   <View style={styles.chipRow}>
                     {selectOptions.map(opt => {
-                      const isActive = localFilters[field.name] === opt.value;
+                      const current = localFilters[field.name];
+                      const isMulti = field.type === 'multiselect';
+                      const isActive = isMulti
+                        ? Array.isArray(current) && current.includes(opt.value)
+                        : current === opt.value;
                       const chipStyle: ViewStyle = {
                         backgroundColor: isActive ? colors.activeBg : colors.bg,
                         borderColor: isActive ? colors.active : 'transparent',
@@ -237,8 +282,12 @@ export function FilterModal({
                           key={opt.value}
                           activeOpacity={0.7}
                           onPress={() =>
-                            handleSelectOption(field.name, opt.value)
+                            isMulti
+                              ? handleToggleOption(field.name, opt.value)
+                              : handleSelectOption(field.name, opt.value)
                           }
+                          accessibilityRole={isMulti ? 'checkbox' : 'radio'}
+                          accessibilityState={{ checked: isActive }}
                           style={[styles.chip, chipStyle]}
                         >
                           {opt.icon && (

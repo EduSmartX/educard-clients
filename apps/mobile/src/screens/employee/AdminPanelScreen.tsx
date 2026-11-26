@@ -16,6 +16,9 @@ import {
   AdminPanelBase,
   type AdminPanelItem,
 } from '@/components/screens/AdminPanelBase';
+import { idCardApprovalsTile } from '@/features/store/store-menu-items';
+import { useAuthStore } from '@/lib/auth-store';
+import { isTeacherRole } from '@/utils/role-utils';
 
 const adminItems: AdminPanelItem[] = [
   {
@@ -63,10 +66,15 @@ const adminItems: AdminPanelItem[] = [
 ];
 
 export default function AdminPanelScreen() {
+  // Class teachers approve their classes' ID cards.
+  const role = useAuthStore(state => state.user?.role);
+  const items = isTeacherRole(role)
+    ? [idCardApprovalsTile, ...adminItems]
+    : adminItems;
   return (
     <AdminPanelBase
       subtitle="My requests & policies"
-      items={adminItems}
+      items={items}
       settingsScreen="Settings"
     />
   );

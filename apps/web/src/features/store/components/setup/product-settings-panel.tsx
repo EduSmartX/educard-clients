@@ -111,11 +111,23 @@ export function ProductSettingsPanel() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-muted-foreground text-sm">
-          Open a product to review it, fill in what EduCard needs, add your own pictures and
-          details, then publish it to start ordering.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <ol className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+          {[
+            'Open a product',
+            'Fill in what EduCard needs',
+            'Add your pictures and details',
+            'Publish to start ordering',
+          ].map((step, index, steps) => (
+            <li key={step} className="flex items-center gap-2">
+              <span className="bg-primary/10 text-primary flex h-5 w-5 items-center justify-center rounded-full text-xs font-semibold">
+                {index + 1}
+              </span>
+              <span className="text-foreground">{step}</span>
+              {index < steps.length - 1 && <span aria-hidden>→</span>}
+            </li>
+          ))}
+        </ol>
         <Badge variant="secondary">
           {published} of {products.length} published
         </Badge>

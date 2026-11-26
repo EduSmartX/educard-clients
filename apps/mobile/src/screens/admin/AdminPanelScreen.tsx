@@ -18,8 +18,15 @@ import {
   AdminPanelBase,
   type AdminPanelItem,
 } from '@/components/screens/AdminPanelBase';
+import {
+  idCardApprovalsTile,
+  storeSetupTile,
+} from '@/features/store/store-menu-items';
 
 const adminItems: AdminPanelItem[] = [
+  // ID cards: approve EduCard's designed cards; Store Setup picks the design.
+  idCardApprovalsTile,
+  storeSetupTile,
   {
     id: 'timesheet-approvals',
     title: 'Timesheet Approvals',

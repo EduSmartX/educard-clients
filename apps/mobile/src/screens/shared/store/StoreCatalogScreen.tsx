@@ -16,8 +16,12 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EmptyState, LoadingState } from '@/components/common/ListStates';
-import { getMediaUrl } from '@/constants/config';
-import { formatCurrency, useCart, useCatalog } from '@/features/store';
+import {
+  formatCurrency,
+  productImageUrl,
+  useCart,
+  useCatalog,
+} from '@/features/store';
 import type { SharedStackNavigation } from '@/navigation/types';
 import { layoutStyles } from '@/styles';
 import { showToast } from '@/utils/toast';
@@ -49,9 +53,9 @@ export default function StoreCatalogScreen() {
       onPress={() => openProduct(item)}
       activeOpacity={0.8}
     >
-      {item.image_url ? (
+      {productImageUrl(item) ? (
         <Image
-          source={{ uri: getMediaUrl(item.image_url) }}
+          source={{ uri: productImageUrl(item) }}
           style={styles.thumb}
           resizeMode="contain"
         />

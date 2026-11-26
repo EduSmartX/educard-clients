@@ -11,12 +11,37 @@ import {
   type StudentSizeEntry,
 } from '@educard/shared';
 
+import { getMediaUrl } from '@/constants/config';
+
+/**
+ * A product's main picture as a full URL, like the web store: the school's own upload
+ * first, else EduCard's default artwork. (`image_url` alone is empty until the school
+ * uploads its own picture.)
+ */
+export function productImageUrl(
+  product: Pick<CatalogProduct, 'images' | 'image_url'>,
+): string | undefined {
+  return getMediaUrl(product.images?.[0] || product.image_url);
+}
+
 export function formatCurrency(amount: string | number): string {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
     maximumFractionDigits: 2,
   }).format(Number(amount));
+}
+
+/** "26 Nov 2026" (empty for no date). */
+export function formatDate(value: string | null | undefined): string {
+  if (!value) {
+    return '';
+  }
+  return new Date(value).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
 }
 
 export function classLabel(section: Class): string {

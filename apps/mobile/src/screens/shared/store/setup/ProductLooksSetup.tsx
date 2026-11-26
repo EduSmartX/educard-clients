@@ -14,8 +14,7 @@ import {
   View,
 } from 'react-native';
 
-import { getMediaUrl } from '@/constants/config';
-import { useCatalog } from '@/features/store';
+import { productImageUrl, useCatalog } from '@/features/store';
 import { ORDER_COLOURS } from '@/features/store/components/OrderParts';
 import { storeStyles as s } from '@/features/store/components/store-styles';
 import type { SharedStackNavigation } from '@/navigation/types';
@@ -54,9 +53,9 @@ function ProductRow({ product }: { product: CatalogProduct }) {
       }
     >
       <View style={styles.thumb}>
-        {product.image_url ? (
+        {productImageUrl(product) ? (
           <Image
-            source={{ uri: getMediaUrl(product.image_url) }}
+            source={{ uri: productImageUrl(product) }}
             style={styles.thumbImage}
             resizeMode="contain"
           />

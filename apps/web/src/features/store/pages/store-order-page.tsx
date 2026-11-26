@@ -30,16 +30,24 @@ import {
   type BookSet,
   type CartItemConfiguration,
   type CatalogProduct,
+  type StudentListItem,
   type StudentSizeEntry,
 } from '@educard/shared';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MultiSelect } from '@/components/ui/multi-select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ROUTES } from '@/constants/app-config';
 import { useClasses } from '@/features/classes/hooks/use-classes';
+import { StudentMultiPicker } from '@/features/students/components/student-multi-picker';
 import { getMediaUrl } from '@/lib/utils/media-utils';
 import { BookSetPicker, SectionSelect } from '../components/class-resolved-pickers';
 import { AttributeField } from '../components/order/attribute-field';
@@ -49,6 +57,10 @@ import {
   hasHalfFilledRow,
   type CustomFeatureRow,
 } from '../components/order/custom-features-editor';
+import {
+  IdCardClassesPicker,
+  type ClassCardPlan,
+} from '../components/order/id-card-classes-picker';
 import { IdCardPreviewPanel } from '../components/order/id-card-preview-panel';
 import { ChoiceCard, OrderStep } from '../components/order/order-step';
 import { OrderSummary, type SummaryRow } from '../components/order/order-summary';
@@ -111,8 +123,11 @@ function OrderForm({ product }: { product: CatalogProduct }) {
 
   const [mode, setMode] = useState<OrderMode>('quantity');
   const [classId, setClassId] = useState('');
+  // ID cards: one or more classes (one cart line per class).
+  const [classIds, setClassIds] = useState<string[]>([]);
+  const [previewClassId, setPreviewClassId] = useState('');
   const [audience, setAudience] = useState<Audience>('all');
-  const [pickedIds, setPickedIds] = useState<string[]>([]);
+  const [picked, setPicked] = useState<StudentListItem[]>([]);
   const [sizes, setSizes] = useState<StudentSelection>({});
   const [configuration, setConfiguration] = useState<CartItemConfiguration>({});
   const [customRows, setCustomRows] = useState<CustomFeatureRow[]>([]);
@@ -123,41 +138,109 @@ function OrderForm({ product }: { product: CatalogProduct }) {
 
   const perStudent = isStandard && mode === 'students';
   const choosesStudents = isIdCard || perStudent;
-  const hasClass = Boolean(classId) && classId !== ALL_CLASSES;
+  // Several ID card classes: one cart line per class, all or chosen students of each.
+  const multiClass = isIdCard && classIds.length > 1;
+  const specific = audience === 'specific';
+  const activeClassId = isIdCard ? (classIds.length === 1 ? classIds[0] : '') : classId;
+  const hasClass = Boolean(activeClassId) && activeClassId !== ALL_CLASSES;
 
-  const { data: classesResponse } = useClasses({ page_size: 100 });
-  const section = (classesResponse?.data ?? []).find((item) => item.public_id === classId);
+  const { data: classesResponse, isLoading: classesLoading } = useClasses({ page_size: 100 });
+  const sections = useMemo(() => classesResponse?.data ?? [], [classesResponse]);
+  const section = sections.find((item) => item.public_id === activeClassId);
   const { data: templatesResponse } = useIdCardTemplates({ status: APPROVAL_STATUS.APPROVED });
+  const templates = useMemo(() => templatesResponse?.data ?? [], [templatesResponse]);
   const template =
-    isIdCard && section
-      ? resolveTemplate(templatesResponse?.data ?? [], section, product.public_id)
-      : undefined;
+    isIdCard && section ? resolveTemplate(templates, section, product.public_id) : undefined;
 
-  const classStudents = useClassStudents(choosesStudents && hasClass ? classId : undefined);
-  const chosenStudents = useMemo(
-    () =>
-      audience === 'all'
-        ? classStudents.students
-        : classStudents.students.filter((student) => pickedIds.includes(student.public_id)),
-    [audience, classStudents.students, pickedIds]
-  );
+  const classPlans: ClassCardPlan[] = useMemo(() => {
+    if (!isIdCard) {
+      return [];
+    }
+    return classIds.flatMap((id) => {
+      const item = sections.find((candidate) => candidate.public_id === id);
+      if (!item) {
+        return [];
+      }
+      const planTemplate = resolveTemplate(templates, item, product.public_id);
+      const students = item.student_count;
+      return [
+        {
+          section: item,
+          template: planTemplate,
+          students,
+          ready: Boolean(planTemplate) && students !== 0,
+        },
+      ];
+    });
+  }, [isIdCard, classIds, sections, templates, product.public_id]);
+  const readyPlans = classPlans.filter((plan) => plan.ready);
+  const previewPlan =
+    readyPlans.find((plan) => plan.section.public_id === previewClassId) ?? readyPlans[0];
+  const previewTemplate = multiClass ? previewPlan?.template : template;
+
+  const studentsClassId = multiClass
+    ? previewPlan?.section.public_id
+    : choosesStudents && hasClass
+      ? activeClassId
+      : undefined;
+  // The class total (for "All students") and the previewed class's students.
+  const classStudents = useClassStudents(studentsClassId);
+  // Classes the student picker searches in.
+  const pickerClassIds = multiClass
+    ? readyPlans.map((plan) => plan.section.public_id)
+    : hasClass
+      ? [activeClassId]
+      : [];
+  const chosenStudents = useMemo(() => {
+    if (!specific) {
+      return classStudents.students;
+    }
+    if (multiClass) {
+      // Preview the chosen students of the previewed class.
+      const inPreview = picked.filter(
+        (student) => student.class_id === previewPlan?.section.public_id
+      );
+      return inPreview.length > 0 ? inPreview : classStudents.students;
+    }
+    return picked;
+  }, [specific, multiClass, picked, previewPlan, classStudents.students]);
+  const pickedClassIds = new Set(picked.map((student) => student.class_id));
+  // Classes that get a cart line.
+  const orderedPlans = specific
+    ? readyPlans.filter((plan) => pickedClassIds.has(plan.section.public_id))
+    : readyPlans;
 
   const lineAttributes = orderScopedAttributes(product.attributes);
   const studentAttributes = perStudentAttributes(lineAttributes);
 
   // The server counts "all students" itself, so use the class total for that case.
-  const studentCount = audience === 'all' && isIdCard ? classStudents.total : chosenStudents.length;
+  const studentCount = specific
+    ? picked.length
+    : multiClass
+      ? readyPlans.reduce((sum, plan) => sum + (plan.students ?? 0), 0)
+      : isIdCard
+        ? classStudents.total
+        : chosenStudents.length;
   const pieces = choosesStudents ? studentCount : quantity;
   const unitPrice = isBookSet ? Number(bookSet?.price ?? 0) : Number(product.price);
+  const photoCheckStudents = specific ? picked : multiClass ? [] : chosenStudents;
   const noPhotoCount = isIdCard
-    ? chosenStudents.filter((s) => !s.profile_photo_url && !s.profile_photo_thumbnail).length
+    ? photoCheckStudents.filter((s) => !s.profile_photo_url && !s.profile_photo_thumbnail).length
     : 0;
 
   const chooseClass = (next: string) => {
     setClassId(next);
-    setPickedIds([]);
+    setPicked([]);
     setSizes({});
     setPreviewStudentId('');
+  };
+
+  const chooseClasses = (next: string[]) => {
+    setClassIds(next);
+    // Keep the students already picked from classes that are still chosen.
+    setPicked((current) => current.filter((student) => next.includes(student.class_id)));
+    setPreviewStudentId('');
+    setPreviewClassId('');
   };
 
   const chooseMode = (next: OrderMode) => {
@@ -171,14 +254,19 @@ function OrderForm({ product }: { product: CatalogProduct }) {
     if (isBookSet && !bookSet) {
       return 'Choose a book set.';
     }
-    if ((isIdCard || perStudent) && !hasClass) {
-      return 'Choose the class.';
-    }
-    if (isIdCard && !template) {
+    if (multiClass) {
+      if (readyPlans.length === 0) {
+        return 'None of the chosen classes has both an approved design and students.';
+      }
+      if (specific && picked.length === 0) {
+        return 'Pick the students.';
+      }
+    } else if ((isIdCard || perStudent) && !hasClass) {
+      return isIdCard ? 'Choose the classes.' : 'Choose the class.';
+    } else if (isIdCard && !template) {
       return 'This class has no approved ID card design yet.';
-    }
-    if (choosesStudents) {
-      if (classStudents.isLoading) {
+    } else if (choosesStudents) {
+      if (!specific && classStudents.isLoading) {
         return 'Loading students…';
       }
       if (studentCount === 0) {
@@ -207,14 +295,21 @@ function OrderForm({ product }: { product: CatalogProduct }) {
     if (Object.keys(custom).length > 0) {
       payload[CUSTOM_FEATURES_KEY] = custom;
     }
+    if (multiClass) {
+      // The classes go alongside; the server adds one line per class (all or these students).
+      if (specific) {
+        payload[STORE_CONFIG_KEY.STUDENT_IDS] = picked.map((student) => student.public_id);
+      }
+      return payload;
+    }
     if (hasClass) {
-      payload[STORE_CONFIG_KEY.CLASS] = classId;
+      payload[STORE_CONFIG_KEY.CLASS] = activeClassId;
     }
     if (isIdCard) {
       if (audience === 'all') {
         payload[STORE_CONFIG_KEY.ALL_STUDENTS] = true;
       } else {
-        payload[STORE_CONFIG_KEY.STUDENT_IDS] = pickedIds;
+        payload[STORE_CONFIG_KEY.STUDENT_IDS] = picked.map((student) => student.public_id);
       }
     }
     if (perStudent) {
@@ -238,10 +333,15 @@ function OrderForm({ product }: { product: CatalogProduct }) {
         // Per-student lines: the server counts one piece per student.
         quantity: choosesStudents ? undefined : quantity,
         configuration: buildPayload(),
+        ...(multiClass ? { classes: orderedPlans.map((plan) => plan.section.public_id) } : {}),
       },
       {
         onSuccess: () => {
-          toast.success(`${product.name} added to cart`);
+          toast.success(
+            multiClass
+              ? `${product.name} for ${orderedPlans.length} class${orderedPlans.length === 1 ? '' : 'es'} added to cart`
+              : `${product.name} added to cart`
+          );
           navigate(goToCart ? ROUTES.STORE.CART : ROUTES.STORE.CATALOG);
         },
         onError: (error: unknown) =>
@@ -254,7 +354,25 @@ function OrderForm({ product }: { product: CatalogProduct }) {
   if (isBookSet && bookSet) {
     summaryRows.push({ label: 'Book set', value: `${bookSet.class_name} · ${bookSet.name}` });
   }
-  if (section) {
+  if (multiClass) {
+    const designNames = Array.from(new Set(orderedPlans.map((plan) => plan.template?.name ?? '')));
+    summaryRows.push(
+      {
+        label: 'Classes',
+        value: `${orderedPlans.length} class${orderedPlans.length === 1 ? '' : 'es'}`,
+      },
+      {
+        label: 'For',
+        value: specific
+          ? `${studentCount} selected student${studentCount === 1 ? '' : 's'}`
+          : `All students (${studentCount})`,
+      },
+      {
+        label: 'Design',
+        value: designNames.length === 1 ? designNames[0] : "Each class's own design",
+      }
+    );
+  } else if (section) {
     summaryRows.push({ label: 'Class', value: classLabel(section) });
   } else if (isStandard && !perStudent) {
     summaryRows.push({ label: 'Look', value: 'Whole school' });
@@ -275,51 +393,48 @@ function OrderForm({ product }: { product: CatalogProduct }) {
   let step = 0;
   const nextStep = () => ++step;
 
-  const studentPicker = hasClass && (
+  const allCards = readyPlans.reduce((sum, plan) => sum + (plan.students ?? 0), 0);
+  const allDescription = multiClass
+    ? `Everyone in the ${readyPlans.length} class${readyPlans.length === 1 ? '' : 'es'} (${allCards} card${allCards === 1 ? '' : 's'})`
+    : classStudents.isLoading
+      ? 'Counting students…'
+      : `Everyone in ${section ? classLabel(section) : 'the class'} (${classStudents.total})`;
+
+  const studentPicker = pickerClassIds.length > 0 && (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Who is it for">
         <ChoiceCard
           icon={Users}
           title="All students"
-          description={
-            classStudents.isLoading
-              ? 'Counting students…'
-              : `Everyone in ${section ? classLabel(section) : 'the class'} (${classStudents.total})`
-          }
-          selected={audience === 'all'}
+          description={allDescription}
+          selected={!specific}
           onSelect={() => setAudience('all')}
         />
         <ChoiceCard
           icon={UserCheck}
           title="Specific students"
-          description="Search by name or roll number"
-          selected={audience === 'specific'}
+          description={
+            multiClass
+              ? 'Search across the chosen classes by name or roll number'
+              : 'Search by name or roll number'
+          }
+          selected={specific}
           onSelect={() => setAudience('specific')}
         />
       </div>
 
-      {audience === 'specific' && (
+      {specific && (
         <div className="space-y-2">
           <Label>Students</Label>
-          <MultiSelect
-            options={classStudents.options}
-            value={pickedIds}
-            onChange={setPickedIds}
-            placeholder={
-              classStudents.isLoading ? 'Loading students…' : 'Search and select students'
-            }
-            searchPlaceholder="Name or roll number"
-            emptyMessage="No matching students"
-            maxBadges={6}
-            disabled={classStudents.isLoading}
-          />
+          <StudentMultiPicker classIds={pickerClassIds} value={picked} onChange={setPicked} />
+          {multiClass && picked.length > 0 && (
+            <p className="text-muted-foreground text-xs">
+              {picked.length} student{picked.length === 1 ? '' : 's'} from {orderedPlans.length}{' '}
+              class{orderedPlans.length === 1 ? '' : 'es'}. Each class goes in the cart as its own
+              line, with its own design and approval.
+            </p>
+          )}
         </div>
-      )}
-
-      {classStudents.total > classStudents.students.length && audience === 'specific' && (
-        <p className="text-muted-foreground text-xs">
-          Showing the first {classStudents.students.length} of {classStudents.total} students.
-        </p>
       )}
 
       {isIdCard && noPhotoCount > 0 && (
@@ -339,14 +454,16 @@ function OrderForm({ product }: { product: CatalogProduct }) {
           <>
             <OrderStep
               step={nextStep()}
-              title="Choose the class"
-              description="The card design approved for this class is used."
-              complete={Boolean(template)}
+              title="Choose the classes"
+              description="One class, several, or all of them. Each class prints with the design approved for it."
+              complete={multiClass ? readyPlans.length > 0 : Boolean(template)}
             >
-              <SectionSelect
-                value={classId}
-                onChange={chooseClass}
-                placeholder="Choose the class these cards are for"
+              <IdCardClassesPicker
+                sections={sections}
+                isLoading={classesLoading}
+                value={classIds}
+                onChange={chooseClasses}
+                plans={classPlans}
               />
               {section && template && (
                 <p className="flex items-center gap-2 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
@@ -370,9 +487,11 @@ function OrderForm({ product }: { product: CatalogProduct }) {
               step={nextStep()}
               title="Who are the cards for?"
               description="One card per student, filled in from their profile."
-              complete={Boolean(template) && studentCount > 0}
+              complete={
+                (multiClass ? readyPlans.length > 0 : Boolean(template)) && studentCount > 0
+              }
             >
-              {hasClass && template ? (
+              {(multiClass || template) && studentPicker ? (
                 studentPicker
               ) : (
                 <p className="text-muted-foreground text-sm">Choose a class first.</p>
@@ -512,9 +631,32 @@ function OrderForm({ product }: { product: CatalogProduct }) {
       </div>
 
       <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-        {isIdCard && template && (
+        {multiClass && readyPlans.length > 1 && (
+          <div className="space-y-1.5">
+            <Label>Preview class</Label>
+            <Select
+              value={previewPlan?.section.public_id ?? ''}
+              onValueChange={(next) => {
+                setPreviewClassId(next);
+                setPreviewStudentId('');
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Choose a class to preview" />
+              </SelectTrigger>
+              <SelectContent>
+                {readyPlans.map((plan) => (
+                  <SelectItem key={plan.section.public_id} value={plan.section.public_id}>
+                    {classLabel(plan.section)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        {isIdCard && previewTemplate && (
           <IdCardPreviewPanel
-            template={template}
+            template={previewTemplate}
             students={chosenStudents}
             studentId={previewStudentId || chosenStudents[0]?.public_id || ''}
             onStudentChange={setPreviewStudentId}

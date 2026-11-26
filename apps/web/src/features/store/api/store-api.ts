@@ -14,6 +14,7 @@ import {
   type ProofDecisionPayload,
   type ProofStatus,
   type StudentCard,
+  type IdCardStatus,
   type ProductLooks,
   type ApiDetailResponse,
   type ApiListResponse,
@@ -25,6 +26,7 @@ import {
   type CatalogQueryParams,
   type IdCardTemplate,
   type Order,
+  type OrderFilterOptions,
   type OrderQueryParams,
   type PlaceOrderPayload,
   type ProductCustomizationPayload,
@@ -112,6 +114,12 @@ export async function removeCartItem(publicId: string): Promise<ApiDetailRespons
 
 export async function fetchOrders(params?: OrderQueryParams): Promise<ApiListResponse<Order>> {
   const response = await apiClient.get(API_ENDPOINTS.STORE.ORDERS, { params });
+  return response.data;
+}
+
+/** The statuses and the products this school has ordered, for the order filters. */
+export async function fetchOrderFilterOptions(): Promise<ApiDetailResponse<OrderFilterOptions>> {
+  const response = await apiClient.get(API_ENDPOINTS.STORE.ORDER_FILTERS);
   return response.data;
 }
 
@@ -244,6 +252,12 @@ export async function decideProof(
 
 export async function fetchStudentCard(studentId: string): Promise<ApiDetailResponse<StudentCard>> {
   const response = await apiClient.get(API_ENDPOINTS.STORE.STUDENT_CARD(studentId));
+  return response.data;
+}
+
+/** Whether the school has an approved ID card design (school admin and teachers). */
+export async function fetchIdCardStatus(): Promise<ApiDetailResponse<IdCardStatus>> {
+  const response = await apiClient.get(API_ENDPOINTS.STORE.ID_CARD_STATUS);
   return response.data;
 }
 

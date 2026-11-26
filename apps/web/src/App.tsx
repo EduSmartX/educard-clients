@@ -76,6 +76,7 @@ const StudentAnnouncementsPage = lazy(
 // Student pages
 const StudentsListPage = lazy(() => import('./features/students/pages/students-list-page'));
 const StudentFormPage = lazy(() => import('./features/students/pages/student-form-page'));
+const IdCardReviewPage = lazy(() => import('./features/students/pages/id-card-review-page'));
 
 // Teachers pages
 const TeachersPage = lazy(() =>
@@ -395,6 +396,7 @@ function App() {
             <Route path={ROUTES.STUDENTS_NEW} element={<StudentFormPage />} />
             <Route path={ROUTES.STUDENTS_VIEW} element={<StudentFormPage />} />
             <Route path={ROUTES.STUDENTS_EDIT} element={<StudentFormPage />} />
+            <Route path={ROUTES.ID_CARD_REVIEW} element={<IdCardReviewPage />} />
 
             {/* Teachers */}
             <Route path={ROUTES.TEACHERS} element={<TeachersPage />} />
