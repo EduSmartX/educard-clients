@@ -275,6 +275,29 @@ export const QueryKeys = {
     LEAVE_BALANCE: ["student-portal", "leave", "balance"] as const,
     LEAVE_REQUESTS: ["student-portal", "leave", "requests"] as const,
   },
+
+  // Store (catalog, cart, orders)
+  STORE: {
+    ALL: ["store"] as const,
+    CATALOG: (params?: object) => ["store", "catalog", params] as const,
+    CART: ["store", "cart"] as const,
+    ORDERS: (params?: object) => ["store", "orders", params] as const,
+    ORDER_DETAIL: (id: string) => ["store", "orders", "detail", id] as const,
+    ORDER_FILTERS: ["store", "orders", "filters"] as const,
+    ID_CARD_TEMPLATES: (params?: object) =>
+      ["store", "id-card-templates", params] as const,
+    BOOK_SETS: (params?: object) => ["store", "book-sets", params] as const,
+    TRACKING: (token: string) => ["store", "tracking", token] as const,
+    ID_CARD_DESIGNS: ["store", "id-card-designs"] as const,
+    PROOFS: (params?: object) => ["store", "proofs", params] as const,
+    PROOF_DETAIL: (id: string) => ["store", "proofs", "detail", id] as const,
+    STUDENT_CARD: (studentId: string) =>
+      ["store", "student-card", studentId] as const,
+    ID_CARD_STATUS: ["store", "id-card-status"] as const,
+    LOOKS: (publicId: string) => ["store", "looks", publicId] as const,
+    CARD_PREVIEW: (path: string, student?: string) =>
+      ["store", "card-preview", path, student ?? ""] as const,
+  },
 } as const;
 
 /**

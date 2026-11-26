@@ -35,6 +35,7 @@ import {
   isDeletedDuplicateError,
   getDeletedDuplicateMessage,
   getDeletedRecordId,
+  getErrorMessage,
 } from '@/lib/utils/error-handler';
 import type { TeacherDetail, CreateTeacherPayload } from '../types';
 import {
@@ -107,6 +108,8 @@ interface TeacherFormProps {
   isLoading?: boolean;
   onSuccess: () => void;
   onCancel: () => void;
+  /** Shows a Delete button in the form actions (edit mode). */
+  onDelete?: () => void;
 }
 
 export function TeacherForm({
@@ -116,6 +119,7 @@ export function TeacherForm({
   isLoading: isLoadingData,
   onSuccess,
   onCancel,
+  onDelete,
 }: TeacherFormProps) {
   const [useQuickAdd, setUseQuickAdd] = useState(false);
   const [isAddressExpanded, setIsAddressExpanded] = useState(false);
@@ -170,8 +174,10 @@ export function TeacherForm({
       if (photoFile && createdTeacher?.data?.user?.public_id) {
         try {
           await uploadProfilePhotoForUser(createdTeacher.data.user.public_id, photoFile);
-        } catch {
-          toast.error('Teacher created but photo upload failed. You can upload it later.');
+        } catch (error) {
+          toast.error(
+            `Teacher created, but the photo was not saved: ${getErrorMessage(error, 'upload failed')} You can upload it later.`
+          );
         }
       }
       toast.success(SuccessMessages.TEACHER.CREATE_SUCCESS);
@@ -576,6 +582,8 @@ export function TeacherForm({
           <FormActions
             mode={mode}
             onCancel={onCancel}
+            onDelete={onDelete}
+            showDelete={Boolean(onDelete)}
             isSubmitting={isLoading}
             submitLabel={mode === 'create' ? 'Create Teacher' : 'Update Teacher'}
           />

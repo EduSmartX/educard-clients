@@ -666,7 +666,7 @@ export default function TimetableOverridePage() {
                   }
 
                   const usedByOtherRows = new Set(
-                    selectedSlotIds.filter((id, idx) => idx !== index)
+                    selectedSlotIds.filter((_id, idx) => idx !== index)
                   );
                   const periodOptions = overridableSlots
                     .filter(

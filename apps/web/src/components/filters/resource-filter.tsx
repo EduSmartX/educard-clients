@@ -4,7 +4,7 @@
  * Supports text inputs, selects, date pickers, combobox, and multiselect
  */
 
-import { Filter, RotateCcw, X } from 'lucide-react';
+import { Filter, RotateCcw } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,6 +12,7 @@ import { Combobox } from '@/components/ui/combobox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker';
+import { MultiSelect } from '@/components/ui/multi-select';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Badge } from '@/components/ui/badge';
 import { useDebouncedCallback } from '@/hooks/use-debounced-callback';
@@ -57,14 +58,37 @@ export function ResourceFilter({
   onFieldChange,
   searchDebounceMs = DEFAULT_SEARCH_DEBOUNCE_MS,
 }: ResourceFilterProps) {
-  const [filters, setFilters] = useState<Record<string, string | string[]>>(defaultValues);
+  // Multiselect values travel to the parent as "a,b" strings (see emit); turn them back
+  // into lists when they come back in, or the picker would show nothing selected.
+  const multiselectNames = fields
+    .filter((field) => field.type === 'multiselect')
+    .map((field) => field.name)
+    .join('|');
+  const normalize = useCallback(
+    (values: Record<string, string | string[]>) => {
+      const names = multiselectNames ? multiselectNames.split('|') : [];
+      const result: Record<string, string | string[]> = { ...values };
+      for (const name of names) {
+        const value = result[name];
+        if (typeof value === 'string') {
+          result[name] = value.split(',').filter(Boolean);
+        }
+      }
+      return result;
+    },
+    [multiselectNames]
+  );
+
+  const [filters, setFilters] = useState<Record<string, string | string[]>>(() =>
+    normalize(defaultValues)
+  );
 
   // Mirror the applied values so clearing/removing a filter upstream resets the
   // inputs. Compared by value because the parent passes a fresh object each render.
   const appliedSignature = JSON.stringify(defaultValues);
   useEffect(() => {
-    setFilters(JSON.parse(appliedSignature) as Record<string, string | string[]>);
-  }, [appliedSignature]);
+    setFilters(normalize(JSON.parse(appliedSignature) as Record<string, string | string[]>));
+  }, [appliedSignature, normalize]);
 
   const emit = useCallback(
     (source: Record<string, string | string[]>) => {
@@ -137,14 +161,6 @@ export function ResourceFilter({
     }
     return value && value !== 'all';
   });
-
-  const handleRemoveMultiselectValue = (fieldName: string, valueToRemove: string) => {
-    const currentValues = filters[fieldName] as string[];
-    handleFilterChange(
-      fieldName,
-      currentValues.filter((v) => v !== valueToRemove)
-    );
-  };
 
   const activeFiltersCount = Object.values(filters).filter((value) => {
     if (Array.isArray(value)) {
@@ -276,70 +292,20 @@ export function ResourceFilter({
                     })()}
 
                   {field.type === 'multiselect' && field.options && (
-                    <div className="space-y-2">
-                      {(() => {
-                        const threshold = field.searchThreshold ?? 10;
-                        const showSearchThreshold = field.searchable ? 0 : threshold;
-
-                        return (
-                          <SearchableSelect
-                            options={[
-                              { value: 'all', label: 'Select an option', disabled: true },
-                              ...field.options
-                                .filter((opt) => {
-                                  const currentValues = Array.isArray(filters[field.name])
-                                    ? (filters[field.name] as string[])
-                                    : [];
-                                  return !currentValues.includes(opt.value);
-                                })
-                                .map((option) => ({ value: option.value, label: option.label })),
-                            ]}
-                            value={''}
-                            onValueChange={(value: string) => {
-                              if (value && value !== 'all') {
-                                const currentValues = Array.isArray(filters[field.name])
-                                  ? (filters[field.name] as string[])
-                                  : [];
-                                if (!currentValues.includes(value)) {
-                                  handleFilterChange(field.name, [...currentValues, value]);
-                                }
-                              }
-                            }}
-                            placeholder={field.placeholder || 'Select...'}
-                            searchPlaceholder={field.searchPlaceholder || 'Search...'}
-                            emptyText={field.emptyText || 'No results found.'}
-                            disabled={field.disabled}
-                            showSearchThreshold={showSearchThreshold}
-                          />
-                        );
-                      })()}
-
-                      {/* Selected items as chips */}
-                      {Array.isArray(filters[field.name]) &&
-                        (filters[field.name] as string[]).length > 0 && (
-                          <div className="flex flex-wrap gap-2">
-                            {(filters[field.name] as string[]).map((value) => {
-                              const option = field.options?.find((opt) => opt.value === value);
-                              return (
-                                <Badge key={value} variant="secondary" className="gap-1">
-                                  <span>{option?.label || value}</span>
-                                  {!field.disabled && (
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        handleRemoveMultiselectValue(field.name, value)
-                                      }
-                                      className="hover:bg-muted rounded-full p-0.5"
-                                    >
-                                      <X className="h-3 w-3" />
-                                    </button>
-                                  )}
-                                </Badge>
-                              );
-                            })}
-                          </div>
-                        )}
-                    </div>
+                    // Tick several in one go; the chosen ones show as badges in the box
+                    // (each removable), like every other multi-select in the app.
+                    <MultiSelect
+                      options={field.options}
+                      value={
+                        Array.isArray(filters[field.name]) ? (filters[field.name] as string[]) : []
+                      }
+                      onChange={(values) => handleFilterChange(field.name, values)}
+                      placeholder={field.placeholder || 'Select...'}
+                      searchPlaceholder={field.searchPlaceholder || 'Search...'}
+                      emptyMessage={field.emptyText || 'No results found.'}
+                      disabled={field.disabled}
+                      maxBadges={3}
+                    />
                   )}
 
                   {field.type === 'date' && (

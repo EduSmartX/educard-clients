@@ -256,6 +256,8 @@ export const API_ENDPOINTS = {
   ATTACHMENTS: {
     MY_PHOTO_UPLOAD: "/attachments/employee/profile-image/my-photo/upload/",
     MY_PHOTO: "/attachments/employee/profile-image/my-photo/",
+    /** Checks a profile photo (face, clarity, size) without saving it. */
+    VALIDATE_PHOTO: "/attachments/employee/profile-image/validate-photo/",
     USER_PHOTO_UPLOAD: (publicId: string) =>
       `/attachments/employee/profile-image/user/${publicId}/upload/`,
     USER_PHOTO: (publicId: string) =>
@@ -424,6 +426,48 @@ export const API_ENDPOINTS = {
       ME: "/feedback/reviews/me/",
       PUBLIC: "/feedback/reviews/public/",
     },
+  },
+
+  STORE: {
+    CATALOG: "/store/catalog/",
+    CATALOG_IMAGE: (publicId: string) => `/store/catalog/${publicId}/image/`,
+    CATALOG_PROPERTIES: (publicId: string) =>
+      `/store/catalog/${publicId}/properties/`,
+    CATALOG_CUSTOMIZATION: (publicId: string) =>
+      `/store/catalog/${publicId}/customization/`,
+    CATALOG_PUBLISH: (publicId: string) =>
+      `/store/catalog/${publicId}/publish/`,
+    CATALOG_LOOKS: (publicId: string) => `/store/catalog/${publicId}/looks/`,
+    CATALOG_CLASS_LOOK: (publicId: string) =>
+      `/store/catalog/${publicId}/looks/classes/`,
+    CATALOG_PHOTOS: (publicId: string) => `/store/catalog/${publicId}/photos/`,
+    CATALOG_PHOTO_DETAIL: (publicId: string, photoId: string) =>
+      `/store/catalog/${publicId}/photos/${photoId}/`,
+    ID_CARD_DESIGNS: "/store/id-card-designs/",
+    ID_CARD_TEMPLATE_PREVIEW: (publicId: string) =>
+      `/store/id-card-templates/${publicId}/preview/`,
+    ID_CARD_TEMPLATES: "/store/id-card-templates/",
+    ID_CARD_TEMPLATE_DETAIL: (publicId: string) =>
+      `/store/id-card-templates/${publicId}/`,
+    BOOK_SETS: "/store/book-sets/",
+    BOOK_SET_DETAIL: (publicId: string) => `/store/book-sets/${publicId}/`,
+    TRACK: (token: string) => `/store/track/${token}/`,
+    TRACK_EVENTS: (token: string) => `/store/track/${token}/events/`,
+    /** Public, no login: what a shipment QR shows (the app's shipment screen). */
+    SHIPMENT_PUBLIC: (token: string) => `/store/shipments/${token}/`,
+    CART: "/store/cart/",
+    CART_ITEMS: "/store/cart/items/",
+    CART_ITEM_DETAIL: (publicId: string) => `/store/cart/items/${publicId}/`,
+    ORDERS: "/store/orders/",
+    /** Statuses and ordered products, for the order list filters. */
+    ORDER_FILTERS: "/store/orders/filters/",
+    ORDER_DETAIL: (publicId: string) => `/store/orders/${publicId}/`,
+    PROOFS: "/store/proofs/",
+    PROOF_DETAIL: (publicId: string) => `/store/proofs/${publicId}/`,
+    PROOF_DECISION: (publicId: string) => `/store/proofs/${publicId}/decision/`,
+    STUDENT_CARD: (studentId: string) => `/store/student-cards/${studentId}/`,
+    /** Whether the school has an approved ID card design (gates "ID Card Review"). */
+    ID_CARD_STATUS: "/store/id-card-status/",
   },
 } as const;
 

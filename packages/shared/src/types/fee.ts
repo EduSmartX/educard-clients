@@ -190,7 +190,8 @@ export interface StudentFeeUpdatePayload {
   referral_name?: string;
   referral_code?: string;
   discount_reason?: string;
-  status?: "refunded";
+  /** Start a refund ("refunding"), or close it once processed ("refunded"). */
+  status?: "refunding" | "refunded";
 }
 
 export interface StudentFeeComponentUpdateItem {

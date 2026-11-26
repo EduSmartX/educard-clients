@@ -93,7 +93,7 @@ export function SubjectsList({
         emptyText: 'No classes found',
         options: classes.map((classItem) => ({
           value: classItem.public_id,
-          label: `${classItem.class_master.name} - ${classItem.name}`,
+          label: [classItem.class_master?.name, classItem.name].filter(Boolean).join(' - '),
         })),
       },
       {

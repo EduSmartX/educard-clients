@@ -21,6 +21,11 @@ import {
   Building2,
   Repeat,
   Users,
+  Settings2,
+  ShoppingBag,
+  Package,
+  ClipboardCheck,
+  IdCard,
   type LucideIcon,
 } from 'lucide-react-native';
 import { useMemo } from 'react';
@@ -35,13 +40,14 @@ import {
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
+import { useShowIdCardReview } from '@/features/store/store-menu-items';
 import { useProfileImageUrl } from '@/hooks';
 import { useAuthStore } from '@/lib/auth-store';
 import { LinearGradient } from '@/lib/linear-gradient';
 import { navigateToScreen, type MenuTarget } from '@/navigation/nav-targets';
 import type { AdminTabNavigation } from '@/navigation/types';
 import { headerStyles, layoutStyles } from '@/styles';
-import { isAdminRole } from '@/utils/role-utils';
+import { isAdminRole, isTeacherRole } from '@/utils/role-utils';
 
 const adminGradient = getRoleGradient('admin');
 
@@ -72,6 +78,27 @@ const switchProfileItem: SettingItem = {
   screen: 'SwitchProfile',
 };
 
+// ID cards: the school admin and class teachers check and approve their classes' cards.
+const idCardApprovalsItem: SettingItem = {
+  id: 'id-card-approvals',
+  title: 'ID Card Approvals',
+  subtitle: 'Approve the cards EduCard designed',
+  icon: ClipboardCheck,
+  iconColor: '#7c3aed',
+  iconBg: '#ede9fe',
+  screen: 'StoreProofs',
+};
+
+const idCardReviewItem: SettingItem = {
+  id: 'id-card-review',
+  title: 'ID Card Review',
+  subtitle: 'Check each student’s card and fix details',
+  icon: IdCard,
+  iconColor: '#0d9488',
+  iconBg: '#ccfbf1',
+  screen: 'IdCardReview',
+};
+
 const syncProfilesItem: SettingItem = {
   id: 'sync-profiles',
   title: 'Sync Profiles',
@@ -88,6 +115,12 @@ export default function SettingsScreen() {
   const { profileImageUrl } = useProfileImageUrl();
 
   const isAdmin = useMemo(() => isAdminRole(user?.role), [user?.role]);
+  const isTeacher = useMemo(() => isTeacherRole(user?.role), [user?.role]);
+  // Hidden until the school has an approved ID card design (same as the web sidebar).
+  const showIdCardReview = useShowIdCardReview();
+  const idCardItems = showIdCardReview
+    ? [idCardApprovalsItem, idCardReviewItem]
+    : [idCardApprovalsItem];
   const isStudent = useMemo(
     () => user?.role?.toLowerCase() === 'student',
     [user?.role],
@@ -144,6 +177,34 @@ export default function SettingsScreen() {
         iconBg: '#f3e8ff',
         screen: 'Announcements',
       },
+      {
+        id: 'store-catalog',
+        title: 'Store',
+        subtitle: 'Order ID cards, uniforms and supplies',
+        icon: ShoppingBag,
+        iconColor: '#ea580c',
+        iconBg: '#ffedd5',
+        screen: 'StoreCatalog',
+      },
+      {
+        id: 'store-orders',
+        title: 'Store Orders',
+        subtitle: 'Track placed orders through to delivery',
+        icon: Package,
+        iconColor: '#0891b2',
+        iconBg: '#cffafe',
+        screen: 'StoreOrders',
+      },
+      {
+        id: 'store-setup',
+        title: 'Store Setup',
+        subtitle: 'Product looks, photos and ID card designs',
+        icon: Settings2,
+        iconColor: '#4f46e5',
+        iconBg: '#e0e7ff',
+        screen: 'StoreSetup',
+      },
+      ...idCardItems,
       {
         id: 'holidays',
         title: 'Holiday Calendar',
@@ -219,9 +280,17 @@ export default function SettingsScreen() {
     ],
   };
 
+  // Class teachers check and approve their classes' ID cards.
+  const teacherIdCardSection: SettingSection = {
+    title: 'ID CARDS',
+    items: idCardItems,
+  };
+
   let sections: SettingSection[] = [appSection];
   if (isAdmin) {
     sections = [organizationSection, appSection];
+  } else if (isTeacher) {
+    sections = [teacherIdCardSection, appSection];
   } else if (isStudentPortal) {
     sections = [appSection];
   }

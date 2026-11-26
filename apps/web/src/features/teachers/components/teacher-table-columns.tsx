@@ -34,15 +34,15 @@ export function getTeacherColumns({
       header: 'Name',
       cell: ({ row }) => (
         <div className="flex flex-col">
-          <span className="font-medium text-gray-900">{row.original.user.full_name}</span>
-          <span className="text-sm text-gray-500">{row.original.user.email}</span>
+          <span className="font-medium text-gray-900">{row.original.full_name}</span>
+          <span className="text-sm text-gray-500">{row.original.email}</span>
         </div>
       ),
     },
     {
-      accessorKey: 'user.phone',
+      accessorKey: 'phone',
       header: 'Phone',
-      cell: ({ row }) => <span className="text-gray-700">{row.original.user.phone || '—'}</span>,
+      cell: ({ row }) => <span className="text-gray-700">{row.original.phone || '—'}</span>,
     },
     {
       accessorKey: 'designation',
@@ -52,24 +52,27 @@ export function getTeacherColumns({
     {
       id: 'subjects',
       header: 'Subjects',
-      cell: ({ row }) => (
-        <div className="flex flex-wrap gap-1">
-          {row.original.subjects.length > 0 ? (
-            row.original.subjects.slice(0, 3).map((subject) => (
-              <Badge key={subject.public_id} variant="secondary" className="text-xs">
-                {subject.name}
+      cell: ({ row }) => {
+        const subjects = row.original.subjects ?? [];
+        return (
+          <div className="flex flex-wrap gap-1">
+            {subjects.length > 0 ? (
+              subjects.slice(0, 3).map((subject) => (
+                <Badge key={subject.public_id} variant="secondary" className="text-xs">
+                  {subject.name}
+                </Badge>
+              ))
+            ) : (
+              <span className="text-sm text-gray-400">No subjects</span>
+            )}
+            {subjects.length > 3 && (
+              <Badge variant="secondary" className="text-xs">
+                +{subjects.length - 3}
               </Badge>
-            ))
-          ) : (
-            <span className="text-sm text-gray-400">No subjects</span>
-          )}
-          {row.original.subjects.length > 3 && (
-            <Badge variant="secondary" className="text-xs">
-              +{row.original.subjects.length - 3}
-            </Badge>
-          )}
-        </div>
-      ),
+            )}
+          </div>
+        );
+      },
     },
     {
       id: 'actions',

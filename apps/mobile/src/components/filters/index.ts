@@ -10,6 +10,12 @@ export {
 } from './FilterModal';
 export { ActiveFilters } from './ActiveFilters';
 export {
+  buildOrderFilterFields,
+  getOrderFilterLabels,
+  orderFilterParams,
+  type OrderFiltersState,
+} from './OrderFilters';
+export {
   GENDER_FILTER_FIELD,
   makeDeletedToggle,
   getGenderLabel,

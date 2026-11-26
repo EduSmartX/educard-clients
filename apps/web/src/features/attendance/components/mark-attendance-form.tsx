@@ -481,8 +481,6 @@ export function MarkAttendanceForm() {
                 period={period}
                 isViewMode={isViewMode}
                 onStudentChange={handleStudentChange}
-                onMarkAllPresent={handleMarkAllPresent}
-                onMarkAllAbsent={handleMarkAllAbsent}
               />
             </div>
           )}

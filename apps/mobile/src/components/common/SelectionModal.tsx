@@ -6,11 +6,13 @@
 
 import { Colors } from '@educard/shared';
 import { Check } from 'lucide-react-native';
+import { useState } from 'react';
 import {
   Modal,
   Pressable,
   ScrollView,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
   StyleSheet,
@@ -25,6 +27,8 @@ interface BaseSelectionModalProps {
   title: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  /** Pinned above the scrolling list, e.g. a search box. */
+  header?: React.ReactNode;
 }
 
 function BaseSelectionModal({
@@ -33,6 +37,7 @@ function BaseSelectionModal({
   title,
   children,
   footer,
+  header,
 }: Readonly<BaseSelectionModalProps>) {
   const insets = useSafeAreaInsets();
   return (
@@ -49,7 +54,13 @@ function BaseSelectionModal({
         >
           <View style={styles.modalHandle} />
           <Text style={styles.modalTitle}>{title}</Text>
-          <ScrollView style={styles.modalList}>{children}</ScrollView>
+          {header}
+          <ScrollView
+            style={styles.modalList}
+            keyboardShouldPersistTaps="handled"
+          >
+            {children}
+          </ScrollView>
           {footer}
         </Pressable>
       </Pressable>
@@ -159,6 +170,9 @@ interface MultiSelectModalProps<
   onSave?: (selectedValues: string[]) => void;
   formatLabel?: (option: T) => string;
   saveButtonText?: string;
+  /** Show a search box that filters options by label (default: off). */
+  searchable?: boolean;
+  searchPlaceholder?: string;
 }
 
 export function MultiSelectModal<
@@ -173,10 +187,26 @@ export function MultiSelectModal<
   onSave,
   formatLabel,
   saveButtonText,
+  searchable = false,
+  searchPlaceholder = 'Search…',
 }: Readonly<MultiSelectModalProps<T>>) {
+  const [search, setSearch] = useState('');
+  const labelOf = (option: T) =>
+    formatLabel ? formatLabel(option) : option.label;
+  const term = search.trim().toLowerCase();
+  const visibleOptions =
+    searchable && term
+      ? options.filter(option => labelOf(option).toLowerCase().includes(term))
+      : options;
+
+  const handleClose = () => {
+    setSearch('');
+    onClose();
+  };
+
   const handleSave = () => {
     onSave?.(selectedValues);
-    onClose();
+    handleClose();
   };
 
   const footer = onSave ? (
@@ -190,19 +220,34 @@ export function MultiSelectModal<
   return (
     <BaseSelectionModal
       visible={visible}
-      onClose={onClose}
+      onClose={handleClose}
       title={title}
       footer={footer}
+      header={
+        searchable ? (
+          <TextInput
+            style={styles.searchInput}
+            placeholder={searchPlaceholder}
+            placeholderTextColor="#9ca3af"
+            value={search}
+            onChangeText={setSearch}
+            autoCorrect={false}
+          />
+        ) : undefined
+      }
     >
-      {options.map(option => (
+      {visibleOptions.map(option => (
         <SelectionOption
           key={option.value}
-          label={formatLabel ? formatLabel(option) : option.label}
+          label={labelOf(option)}
           isSelected={selectedValues.includes(option.value)}
           onPress={() => onToggle(option.value, option)}
           showCheckbox
         />
       ))}
+      {visibleOptions.length === 0 && (
+        <Text style={styles.emptyText}>No matches</Text>
+      )}
     </BaseSelectionModal>
   );
 }
@@ -242,6 +287,23 @@ const styles = StyleSheet.create({
   modalList: {
     paddingHorizontal: 12,
     paddingTop: 8,
+  },
+  searchInput: {
+    marginHorizontal: 16,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    fontSize: 14,
+    color: '#111827',
+  },
+  emptyText: {
+    textAlign: 'center',
+    color: '#6b7280',
+    fontSize: 14,
+    paddingVertical: 16,
   },
   modalOption: {
     flexDirection: 'row',

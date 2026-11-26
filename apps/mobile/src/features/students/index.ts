@@ -23,5 +23,10 @@ export {
   useRestoreStudent,
 } from './hooks/use-students';
 
-export { StudentList, ExportStudentsModal } from './components';
+export {
+  StudentList,
+  ExportStudentsModal,
+  StudentPickerModal,
+  studentClassLabel,
+} from './components';
 export type { StudentListProps } from './components';

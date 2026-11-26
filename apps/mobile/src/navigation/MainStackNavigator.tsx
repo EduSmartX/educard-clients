@@ -45,6 +45,16 @@ import EditSubjectScreen from '@/screens/shared/EditSubjectScreen';
 import EditTeacherScreen from '@/screens/shared/EditTeacherScreen';
 import FeedbackScreen from '@/screens/shared/feedback/FeedbackScreen';
 import FeedbackDetailScreen from '@/screens/shared/feedback/FeedbackDetailScreen';
+import StoreCatalogScreen from '@/screens/shared/store/StoreCatalogScreen';
+import StoreCartScreen from '@/screens/shared/store/StoreCartScreen';
+import StoreOrdersScreen from '@/screens/shared/store/StoreOrdersScreen';
+import StoreSetupScreen from '@/screens/shared/store/StoreSetupScreen';
+import StoreOrderScreen from '@/screens/shared/store/StoreOrderScreen';
+import StoreProductSetupScreen from '@/screens/shared/store/StoreProductSetupScreen';
+import ShipmentTrackingScreen from '@/screens/shared/store/ShipmentTrackingScreen';
+import IdCardReviewScreen from '@/screens/shared/store/IdCardReviewScreen';
+import StoreProofReviewScreen from '@/screens/shared/store/StoreProofReviewScreen';
+import StoreProofsScreen from '@/screens/shared/store/StoreProofsScreen';
 import HelpSupportScreen from '@/screens/shared/HelpSupportScreen';
 import HolidaysScreen from '@/screens/shared/holidays/HolidaysScreen';
 import HomeworkDetailScreen from '@/screens/shared/homework/HomeworkDetailScreen';
@@ -191,6 +201,25 @@ export function MainStackNavigator({ role }: MainStackNavigatorProps) {
         <Stack.Screen name="HelpSupport" component={HelpSupportScreen} />
         <Stack.Screen name="Feedback" component={FeedbackScreen} />
         <Stack.Screen name="FeedbackDetail" component={FeedbackDetailScreen} />
+        <Stack.Screen name="StoreCatalog" component={StoreCatalogScreen} />
+        <Stack.Screen name="StoreCart" component={StoreCartScreen} />
+        <Stack.Screen name="StoreOrders" component={StoreOrdersScreen} />
+        <Stack.Screen name="StoreSetup" component={StoreSetupScreen} />
+        <Stack.Screen name="StoreOrder" component={StoreOrderScreen} />
+        <Stack.Screen
+          name="StoreProductSetup"
+          component={StoreProductSetupScreen}
+        />
+        <Stack.Screen
+          name="ShipmentTracking"
+          component={ShipmentTrackingScreen}
+        />
+        <Stack.Screen name="StoreProofs" component={StoreProofsScreen} />
+        <Stack.Screen
+          name="StoreProofReview"
+          component={StoreProofReviewScreen}
+        />
+        <Stack.Screen name="IdCardReview" component={IdCardReviewScreen} />
         <Stack.Screen name="Profile">
           {() =>
             isStudentPortalRole(role) ? (

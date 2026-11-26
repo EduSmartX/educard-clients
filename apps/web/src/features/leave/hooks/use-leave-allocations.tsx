@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
 import { ErrorMessages, SuccessMessages } from '@/constants';
 import { leaveApi } from '@/lib/api/leave-api';
-import { parseApiError } from '@/lib/utils/error-handler';
+import { getErrorMessage } from '@/lib/utils/error-handler';
 
 interface UseLeaveAllocationsParams {
   searchQuery?: string;
@@ -63,7 +63,7 @@ export function useDeleteLeaveAllocation() {
       queryClient.invalidateQueries({ queryKey: ['leave-balances'] });
     },
     onError: (error: unknown) => {
-      const errorMessage = parseApiError(error, ErrorMessages.LEAVE.DELETE_ALLOCATION_FAILED);
+      const errorMessage = getErrorMessage(error, ErrorMessages.LEAVE.DELETE_ALLOCATION_FAILED);
       toast.error(ErrorMessages.LEAVE.DELETE_ALLOCATION_FAILED, {
         description: errorMessage,
         icon: <AlertCircle className="h-4 w-4" />,

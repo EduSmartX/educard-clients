@@ -29,9 +29,9 @@ import {
   type FieldErrors,
 } from '@/components/screens/StudentFormBase';
 import { useManagedClasses } from '@/features/classes';
-import { uploadProfilePhoto } from '@/features/core';
 import { useCreateStudent, useRestoreStudent } from '@/features/students';
 import { useDeletedDuplicateHandler } from '@/hooks/useDeletedDuplicateHandler';
+import { useValidatedProfilePhoto } from '@/hooks/useValidatedProfilePhoto';
 import { useAuthStore } from '@/lib/auth-store';
 import { useToast } from '@/lib/toast-context';
 import type { SharedStackNavigation } from '@/navigation/types';
@@ -93,7 +93,8 @@ export default function CreateStudentScreen() {
   const [quickAdd, setQuickAdd] = useState(false);
   const [addressExpanded, setAddressExpanded] = useState(false);
   const [prevSchoolExpanded, setPrevSchoolExpanded] = useState(false);
-  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const { photoUri, isCheckingPhoto, onPhotoSelected, uploadAfterCreate } =
+    useValidatedProfilePhoto();
 
   const [form, setForm] = useState<StudentFormState>(INITIAL_FORM);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -158,11 +159,7 @@ export default function CreateStudentScreen() {
             const uid =
               response?.data?.user_info?.public_id ||
               response?.user_info?.public_id;
-            if (photoUri && uid) {
-              uploadProfilePhoto(uid, photoUri, 'photo.jpg').catch(
-                () => undefined,
-              );
-            }
+            if (uid) uploadAfterCreate(uid, 'Student');
             navigation.goBack();
           },
           onError: (err: unknown) => {
@@ -188,7 +185,7 @@ export default function CreateStudentScreen() {
         },
       );
     },
-    [createMutation, navigation, photoUri, duplicateHandler],
+    [createMutation, navigation, uploadAfterCreate, duplicateHandler],
   );
 
   const handleSubmit = useCallback(() => {
@@ -253,7 +250,7 @@ export default function CreateStudentScreen() {
       title="Add New Student"
       subtitle="Enroll a new student"
       submitLabel="Create Student"
-      submitting={createMutation.isPending}
+      submitting={createMutation.isPending || isCheckingPhoto}
       form={form}
       errors={errors}
       apiError={apiError}
@@ -276,7 +273,7 @@ export default function CreateStudentScreen() {
       basicInfoPhotoSlot={
         <FormPhotoUpload
           imageUri={photoUri}
-          onImageSelected={uri => setPhotoUri(uri)}
+          onImageSelected={uri => void onPhotoSelected(uri)}
           name={`${form.first_name} ${form.last_name}`.trim()}
           gender={form.gender}
         />

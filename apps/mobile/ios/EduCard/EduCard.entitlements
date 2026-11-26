@@ -4,5 +4,13 @@
   <dict>
     <key>aps-environment</key>
     <string>development</string>
+    <!-- Shipment QR links (https://<backend>/shipments/<token>/) open the app when it is
+         installed. The backend serves /.well-known/apple-app-site-association for these
+         hosts (MOBILE_IOS_APP_IDS). Add a host here if SITE_URL moves to a new domain. -->
+    <key>com.apple.developer.associated-domains</key>
+    <array>
+      <string>applinks:educard-backend-api-272236662775.asia-south1.run.app</string>
+      <string>applinks:educard-backend-api-prod-257994195992.asia-south1.run.app</string>
+    </array>
   </dict>
 </plist>

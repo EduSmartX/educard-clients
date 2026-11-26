@@ -12,6 +12,7 @@ import {
   DetailRow,
 } from '@/components/detail';
 import { getMediaUrl } from '@/constants/config';
+import { StudentIdCardSection } from '@/features/store/components/StudentIdCardSection';
 import { useStudentDetail } from '@/features/students';
 import type { SharedStackParamList } from '@/navigation/types';
 
@@ -34,6 +35,12 @@ export default function StudentDetailScreen() {
       avatarName={student?.full_name}
       avatarImageUri={getMediaUrl(student?.profile_photo_thumbnail)}
     >
+      {student && !isDeleted ? (
+        <Animated.View entering={FadeInDown.delay(50)}>
+          <StudentIdCardSection studentId={student.public_id} />
+        </Animated.View>
+      ) : null}
+
       <Animated.View entering={FadeInDown.delay(100)}>
         <DetailSection title="Personal Info" icon="👤">
           <DetailRow label="Full Name" value={student?.full_name} />

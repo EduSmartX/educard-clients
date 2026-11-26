@@ -16,9 +16,13 @@ import {
 } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import type { Holiday, CreateHolidayPayload, HolidayType } from '../types';
+import type { Holiday, CreateHolidayPayload, HolidayTypeValue as HolidayType } from '../types';
 import { getDefaultHolidayFormData } from '../utils/holiday-utils';
-import { useCreateHoliday, useUpdateHoliday, type FieldErrors } from '../hooks';
+import {
+  useCreateHoliday,
+  useUpdateHoliday,
+  type HolidayFieldErrors as FieldErrors,
+} from '../hooks';
 import { HolidayFormFields } from './holiday-form-fields';
 
 interface HolidayFormData {
@@ -57,7 +61,8 @@ export function HolidayFormDialog({
       setFormData({
         start_date: holiday.start_date,
         end_date: holiday.end_date || '',
-        holiday_type: holiday.holiday_type,
+        // Weekend rows come from the working-day policy and are never edited here.
+        holiday_type: holiday.holiday_type as HolidayFormData['holiday_type'],
         description: holiday.description,
       });
       setFieldErrors(undefined);

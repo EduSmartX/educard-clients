@@ -37,6 +37,7 @@ import {
   isDeletedDuplicateError,
   getDeletedDuplicateMessage,
   getDeletedRecordId,
+  getErrorMessage,
 } from '@/lib/utils/error-handler';
 import type { CreateStudentPayload, Student } from '../types';
 import { FormActions } from '@/components/form/form-actions';
@@ -74,6 +75,8 @@ interface StudentFormProps {
   onSuccess: () => void;
   onCancel: () => void;
   onDelete?: () => void;
+  /** Shown just above the Basic Information card (e.g. the ID card's missing details). */
+  beforeBasicInfo?: React.ReactNode;
 }
 
 export function StudentForm({
@@ -84,6 +87,7 @@ export function StudentForm({
   onSuccess,
   onCancel,
   onDelete: _onDelete,
+  beforeBasicInfo,
 }: Readonly<StudentFormProps>) {
   const [useQuickAdd, setUseQuickAdd] = useState(false);
   const [isAddressExpanded, setIsAddressExpanded] = useState(false);
@@ -181,8 +185,10 @@ export function StudentForm({
       if (photoFile && createdStudent?.user_info?.public_id) {
         try {
           await uploadProfilePhotoForUser(createdStudent.user_info.public_id, photoFile);
-        } catch {
-          toast.error('Student created but photo upload failed. You can upload it later.');
+        } catch (error) {
+          toast.error(
+            `Student created, but the photo was not saved: ${getErrorMessage(error, 'upload failed')} You can upload it later.`
+          );
         }
       }
       toast.success(SuccessMessages.STUDENT.CREATE_SUCCESS);
@@ -425,6 +431,7 @@ export function StudentForm({
             <MinimalStudentFields control={form.control} disabled={!isClassSelected} />
           ) : (
             <>
+              {beforeBasicInfo}
               {/* Basic Information */}
               <Card>
                 <CardHeader>

@@ -8,7 +8,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   Calendar,
   FileText,
-  Video,
   Users,
   AlertCircle,
   MoreVertical,
@@ -77,8 +76,12 @@ function getSubjectIcon(subjectName: string): string {
   return SUBJECT_ICONS.default;
 }
 
-function formatDueDate(dueDate: string, _dueTime: string | null): string {
-  const date = new Date(dueDate);
+function formatDueDate(dueDatetime: string): string {
+  const date = new Date(dueDatetime);
+  // date-fns `format` throws on an invalid date, which would break the whole list.
+  if (Number.isNaN(date.getTime())) {
+    return '—';
+  }
 
   if (isToday(date)) {
     return 'Today';
@@ -283,12 +286,6 @@ export const HomeworkCard = memo(
                   {homework.attachment_count} files
                 </span>
               )}
-              {homework.video_count > 0 && (
-                <span className="flex items-center gap-1">
-                  <Video className="h-4 w-4" />
-                  {homework.video_count} videos
-                </span>
-              )}
               <span className="flex items-center gap-1">
                 <Users className="h-4 w-4" />
                 {homework.submission_stats?.total_students || 0} students
@@ -331,7 +328,7 @@ export const HomeworkCard = memo(
                 )}
               >
                 {isOverdue ? <AlertCircle className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
-                <span>{formatDueDate(homework.due_date, homework.due_time)}</span>
+                <span>{formatDueDate(homework.due_datetime)}</span>
               </div>
             </div>
           </CardContent>

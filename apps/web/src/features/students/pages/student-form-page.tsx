@@ -18,6 +18,7 @@ import { ErrorMessages, SuccessMessages, ToastTitles } from '@/constants';
 import { useStudent } from '../hooks/use-students';
 import { useDeleteStudent, useReactivateStudent } from '../hooks/mutations';
 import { StudentForm } from '../components/student-form';
+import { StudentIdCardSection } from '@/features/store/components/student-id-card-section';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getErrorMessage } from '@/lib/utils/error-handler';
 
@@ -299,6 +300,9 @@ export default function StudentFormPage() {
         onCancel={handleBackToList}
         onDelete={mode === 'edit' ? handleDeleteClick : undefined}
       />
+
+      {/* ID card as it will print (school admin and class teacher only; hidden otherwise) */}
+      {mode === 'view' && id && !isViewingDeleted && <StudentIdCardSection studentId={id} />}
 
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmationDialog

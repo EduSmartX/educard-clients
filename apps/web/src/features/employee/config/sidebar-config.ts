@@ -28,6 +28,7 @@ import {
   RotateCcw,
   MessageSquare,
   Megaphone,
+  IdCard,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
 import { ROUTES } from '@/constants/app-config';
@@ -75,6 +76,14 @@ export const employeeSidebarConfig: SidebarSection[] = [
         label: 'Students',
         icon: GraduationCap,
         path: ROUTES.STUDENTS,
+      },
+      {
+        id: 'id-card-review',
+        label: 'ID Card Review',
+        icon: IdCard,
+        path: ROUTES.ID_CARD_REVIEW,
+        requiresClassTeacher: true,
+        requiresApprovedIdCard: true,
       },
       {
         id: 'subjects',
@@ -255,6 +264,12 @@ export const employeeSidebarConfig: SidebarSection[] = [
     title: 'SETTINGS',
     defaultCollapsed: true,
     items: [
+      {
+        id: 'id-card-approvals',
+        label: 'ID Card Approvals',
+        icon: ClipboardCheck,
+        path: ROUTES.STORE.PROOFS,
+      },
       {
         id: 'feedback',
         label: 'Feedback',

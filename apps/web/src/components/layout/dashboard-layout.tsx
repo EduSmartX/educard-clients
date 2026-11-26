@@ -11,6 +11,10 @@ interface DashboardLayoutProps {
   userRole?: string;
   /** Whether the user is a supervisor (can manage subordinates) */
   isSupervisor?: boolean;
+  /** Whether the user is an admin or the class teacher of at least one class */
+  isClassTeacher?: boolean;
+  /** Whether the school has an approved ID card design */
+  hasApprovedIdCard?: boolean;
 }
 
 /**
@@ -22,6 +26,8 @@ export function DashboardLayout({
   sidebarSections,
   userRole,
   isSupervisor = false,
+  isClassTeacher = false,
+  hasApprovedIdCard = false,
 }: Readonly<DashboardLayoutProps>) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const theme = getThemeConfig(userRole);
@@ -47,6 +53,8 @@ export function DashboardLayout({
           onNavigate={() => setIsSidebarOpen(false)}
           userRole={userRole}
           isSupervisor={isSupervisor}
+          isClassTeacher={isClassTeacher}
+          hasApprovedIdCard={hasApprovedIdCard}
         />
       </aside>
 

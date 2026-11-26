@@ -20,6 +20,7 @@ export { SectionHeader } from './SectionHeader';
 export type { SectionHeaderProps } from './SectionHeader';
 export { QuickActionsGrid } from './QuickActionsGrid';
 export type { QuickAction, QuickActionsGridProps } from './QuickActionsGrid';
+export { InfoPoints, InfoPointText } from './InfoPoints';
 export { SearchableSelect } from './SearchableSelect';
 export type { SearchableSelectOption } from './SearchableSelect';
 export { SearchableMultiSelect } from './SearchableMultiSelect';

@@ -234,6 +234,8 @@ export const ROUTES = {
   STUDENTS_NEW: '/students/new',
   STUDENTS_VIEW: '/students/:id',
   STUDENTS_EDIT: '/students/:id/edit',
+  /** Admin / class teacher: step through a class checking each student's ID card. */
+  ID_CARD_REVIEW: '/id-card-review',
   TEACHERS: '/teachers',
   TEACHERS_NEW: '/teachers/new',
   TEACHERS_VIEW: '/teachers/:id',
@@ -283,6 +285,23 @@ export const ROUTES = {
   HOLIDAYS: '/holidays',
   PREFERENCES: '/preferences',
   FEEDBACK: '/feedback',
+  STORE: {
+    CATALOG: '/store',
+    CART: '/store/cart',
+    // One product's order page; build links with storeOrderPath(publicId).
+    ORDER: '/store/order/:productId',
+    ORDERS: '/store/orders',
+    SETUP: '/store/setup',
+    // One product's setup & publish page; build links with storeProductSetupPath(publicId).
+    PRODUCT_SETUP: '/store/setup/products/:productId',
+    // Designed ID cards the school approves before EduCard prints (email links land on PROOF).
+    PROOFS: '/store/proofs',
+    PROOF: '/store/proofs/:proofId',
+    // Send the school's own ID card artwork to EduCard (optional ?product=<school product id>).
+    ID_CARD_UPLOAD: '/store/setup/id-cards/upload',
+    // Path printed into shipment QR codes by the backend ({FRONTEND_URL}/track/<token>).
+    TRACK: '/track/:token',
+  },
   EXCEPTIONAL_WORK: '/exceptional-work',
   TIMETABLE: '/timetable',
   TIMETABLE_SETUP: '/timetable/setup',

@@ -34,6 +34,11 @@ import {
   ClipboardEdit,
   Mail,
   MessageSquare,
+  ShoppingBag,
+  ShoppingCart,
+  Package,
+  Settings2,
+  IdCard,
 } from 'lucide-react';
 import type { SidebarSection } from '@/components/layout/dashboard-sidebar';
 import { ROUTES } from '@/constants/app-config';
@@ -81,6 +86,13 @@ export const adminSidebarConfig: SidebarSection[] = [
         label: 'Students',
         icon: GraduationCap,
         path: ROUTES.STUDENTS,
+      },
+      {
+        id: 'id-card-review',
+        label: 'ID Card Review',
+        icon: IdCard,
+        path: ROUTES.ID_CARD_REVIEW,
+        requiresApprovedIdCard: true,
       },
       {
         id: 'subjects',
@@ -312,6 +324,42 @@ export const adminSidebarConfig: SidebarSection[] = [
         label: 'Organization Preferences',
         icon: Sliders,
         path: ROUTES.PREFERENCES,
+      },
+    ],
+  },
+  {
+    title: 'STORE',
+    defaultCollapsed: true,
+    items: [
+      {
+        id: 'store-catalog',
+        label: 'Browse Store',
+        icon: ShoppingBag,
+        path: ROUTES.STORE.CATALOG,
+      },
+      {
+        id: 'store-cart',
+        label: 'Cart',
+        icon: ShoppingCart,
+        path: ROUTES.STORE.CART,
+      },
+      {
+        id: 'store-orders',
+        label: 'Orders',
+        icon: Package,
+        path: ROUTES.STORE.ORDERS,
+      },
+      {
+        id: 'store-proofs',
+        label: 'ID Card Approvals',
+        icon: ClipboardCheck,
+        path: ROUTES.STORE.PROOFS,
+      },
+      {
+        id: 'store-setup',
+        label: 'Store Setup',
+        icon: Settings2,
+        path: ROUTES.STORE.SETUP,
       },
     ],
   },

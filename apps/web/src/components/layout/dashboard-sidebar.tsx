@@ -12,6 +12,10 @@ export interface SidebarItem {
   badge?: string | number;
   children?: SidebarItem[];
   requiresSupervisor?: boolean;
+  /** Only for admins and teachers who are class teacher of at least one class. */
+  requiresClassTeacher?: boolean;
+  /** Only once the school has an approved ID card design. */
+  requiresApprovedIdCard?: boolean;
   matchPaths?: string[];
 }
 
@@ -28,6 +32,10 @@ interface DashboardSidebarProps {
   userRole?: string;
   /** Whether the user is a supervisor (can manage subordinates) */
   isSupervisor?: boolean;
+  /** Whether the user is an admin or the class teacher of at least one class */
+  isClassTeacher?: boolean;
+  /** Whether the school has an approved ID card design */
+  hasApprovedIdCard?: boolean;
 }
 
 function SidebarNavItem({
@@ -163,6 +171,8 @@ export function DashboardSidebar({
   onNavigate,
   userRole,
   isSupervisor = false,
+  isClassTeacher = false,
+  hasApprovedIdCard = false,
 }: DashboardSidebarProps) {
   const theme = getThemeConfig(userRole);
 
@@ -172,6 +182,12 @@ export function DashboardSidebar({
       ...section,
       items: section.items.filter((item) => {
         if (item.requiresSupervisor && !isSupervisor) {
+          return false;
+        }
+        if (item.requiresClassTeacher && !isClassTeacher) {
+          return false;
+        }
+        if (item.requiresApprovedIdCard && !hasApprovedIdCard) {
           return false;
         }
         return true;

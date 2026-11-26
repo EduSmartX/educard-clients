@@ -16,8 +16,9 @@ import {
   type Exam,
   type ExamSession,
   type Class,
-  type SubjectItem,
 } from '@educard/shared';
+// The class-subject API returns nested subject_info/class_info, as typed here.
+import type { Subject as SubjectItem } from '@/features/subjects/types/subject';
 
 interface ExamFormFieldsProps {
   readonly isView: boolean;

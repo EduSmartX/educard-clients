@@ -43,6 +43,28 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Shipment QR links (https://<backend>/shipments/<token>/) open the app when
+                 it is installed (App Links). The backend proves it trusts this app at
+                 /.well-known/assetlinks.json (MOBILE_ANDROID_CERT_SHA256). Add a host here
+                 if SITE_URL moves to a new domain. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" />
+                <data android:host="educard-backend-api-272236662775.asia-south1.run.app" />
+                <data android:host="educard-backend-api-prod-257994195992.asia-south1.run.app" />
+                <data android:pathPrefix="/shipments/" />
+            </intent-filter>
+
+            <!-- educard://shipments/<token> (testing, and links from other apps). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="educard" android:host="shipments" />
+            </intent-filter>
+
         </activity>
     </application>
 

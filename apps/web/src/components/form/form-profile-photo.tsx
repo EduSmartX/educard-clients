@@ -18,6 +18,8 @@ import api from '@/lib/api';
 import { API_ENDPOINTS } from '@/constants';
 import { getMediaUrl } from '@/lib/utils/media-utils';
 import { compressImage } from '@/lib/utils/image-compression';
+import { getErrorMessage } from '@/lib/utils/error-handler';
+import { validateProfilePhoto } from '@/lib/utils/upload-profile-photo';
 import { CameraCaptureDialog } from '@/components/form/camera-capture-dialog';
 import type { ProfileImage } from '@/features/profile/types/profile.types';
 
@@ -124,8 +126,9 @@ export function FormProfilePhoto({
         }
         setDeleted(false);
         toast.success('Profile photo uploaded.');
-      } catch {
-        toast.error('Failed to upload photo.');
+      } catch (error) {
+        // Show the server's reason (blurry, no face, ID card, too small...).
+        toast.error(getErrorMessage(error, 'Failed to upload photo.'));
       } finally {
         setIsUploading(false);
         setPreview(null);
@@ -166,7 +169,18 @@ export function FormProfilePhoto({
       }
 
       if (mode === 'create') {
-        // In create mode: show preview and pass file to parent
+        // The student/teacher does not exist yet, so check the photo now; otherwise a bad
+        // photo is only rejected after the record has been created.
+        setIsUploading(true);
+        try {
+          await validateProfilePhoto(processed);
+        } catch (error) {
+          toast.error(getErrorMessage(error, 'This photo cannot be used. Please try another.'));
+          return;
+        } finally {
+          setIsUploading(false);
+        }
+        // Valid: show preview and pass file to parent
         const objectUrl = URL.createObjectURL(processed);
         setPreview(objectUrl);
         onFileSelected?.(processed);

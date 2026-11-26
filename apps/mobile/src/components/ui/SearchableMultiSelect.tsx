@@ -29,6 +29,8 @@ interface SearchableMultiSelectProps {
   value: string[];
   onChange: (value: string[]) => void;
   label?: string;
+  /** The picker sheet's title (defaults to `label`, then "Select"). */
+  title?: string;
   placeholder?: string;
   searchPlaceholder?: string;
   emptyMessage?: string;
@@ -43,6 +45,7 @@ export function SearchableMultiSelect({
   value = [],
   onChange,
   label,
+  title,
   placeholder = 'Select items...',
   searchPlaceholder = 'Search...',
   emptyMessage = 'No items found.',
@@ -143,7 +146,9 @@ export function SearchableMultiSelect({
         >
           <View style={[styles.modal, { paddingBottom: insets.bottom + 20 }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{label ?? 'Select'}</Text>
+              <Text style={styles.modalTitle}>
+                {title ?? label ?? 'Select'}
+              </Text>
               <Text style={styles.modalCount}>
                 {value.length} of {options.length} selected
               </Text>

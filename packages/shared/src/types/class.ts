@@ -15,6 +15,7 @@ import type { AuditFields, BaseQueryParams, ClassMaster } from "./common";
 export interface ClassTeacher {
   public_id: string;
   full_name: string;
+  employee_id?: string;
   email?: string;
   phone?: string;
   profile_photo_thumbnail?: string | null;
@@ -121,4 +122,8 @@ export interface ClassQueryParams extends BaseQueryParams {
   academic_year?: string;
   is_active?: boolean;
   my_classes_only?: boolean;
+  /** Teachers: only classes they may add students to. */
+  for_student_form?: boolean;
+  /** Teachers: only classes they may assign subjects in. */
+  for_subject_form?: boolean;
 }

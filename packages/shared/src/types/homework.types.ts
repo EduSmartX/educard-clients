@@ -87,6 +87,8 @@ export interface HomeworkSubmissionDetail extends HomeworkSubmission {
   feedback: string;
   review_outcome: "approved" | "rejected" | "needs_revision" | null;
   attachments: HomeworkAttachment[];
+  /** Earlier attempts, newest first (teacher review view only). */
+  submission_history?: HomeworkSubmissionDetail[];
 }
 
 // ============== Dashboard & Analytics ==============
@@ -169,6 +171,8 @@ export interface HomeworkListParams {
   status?: HomeworkStatus;
   priority?: HomeworkPriority;
   assigned_date?: string; // Filter by the date for which homework was given (YYYY-MM-DD)
+  assigned_date_from?: string;
+  assigned_date_to?: string;
   due_date_from?: string;
   due_date_to?: string;
   ordering?: string;
